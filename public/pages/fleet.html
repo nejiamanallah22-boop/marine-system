@@ -1,646 +1,664 @@
-<!-- public/pages/fleet.html -->
-<div id="page-fleet">
-    <style>
-        #page-fleet{width:100%;max-width:100%;padding:0;margin:0;font-family:'Cairo',sans-serif;background:#0a0e1a;color:#e8edf5;min-height:100vh;position:relative;z-index:1}
-        .fleet-header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;flex-wrap:wrap;gap:12px;background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.06);position:sticky;top:64px;z-index:10}
-        .fleet-header-left{display:flex;align-items:center;gap:14px}
-        .fleet-header-left .header-icon{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);display:flex;align-items:center;justify-content:center;font-size:20px;color:#0a1628}
-        .fleet-header-left h2{font-size:22px;font-weight:800;background:linear-gradient(135deg,#f5d76e,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0}
-        .fleet-header-left p{font-size:12px;color:rgba(255,255,255,0.3);margin:0}
-        .fleet-header-actions{display:flex;gap:10px;flex-wrap:wrap}
-        .btn-action{padding:8px 18px;border:none;border-radius:30px;font-weight:600;font-size:0.8rem;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:8px;font-family:'Cairo',sans-serif}
-        .btn-action.primary{background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628}
-        .btn-action.primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(230,179,30,0.3)}
-        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;padding:16px 24px}
-        .stat-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px 18px;text-align:center;position:relative;overflow:hidden}
-        .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#e6b31e,#f5d76e);opacity:0.6}
-        .stat-card .number{font-size:26px;font-weight:800;color:#fff;line-height:1.2}
-        .stat-card .number.gold{color:#f5d76e}
-        .stat-card .number.green{color:#4ade80}
-        .stat-card .number.yellow{color:#fbbf24}
-        .stat-card .number.red{color:#f87171}
-        .stat-card .label{font-size:11px;color:rgba(255,255,255,0.3);margin-top:4px;font-weight:500}
-        .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06);padding:16px 20px;border-radius:14px;margin:0 24px 16px}
-        .input-grid input,.input-grid select{width:100%;padding:8px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;background:rgba(255,255,255,0.03);color:#e2e8f0;font-size:0.8rem;transition:all 0.3s;font-family:'Cairo',sans-serif}
-        .input-grid input:focus,.input-grid select:focus{border-color:#e6b31e;outline:none;box-shadow:0 0 0 4px rgba(230,179,30,0.06)}
-        .input-grid input::placeholder{color:rgba(255,255,255,0.15)}
-        .input-grid select option{background:#0a1628;color:#e2e8f0}
-        .input-grid .btn-save{grid-column:span 1;padding:8px 16px;border:none;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628}
-        .input-grid .btn-save:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(230,179,30,0.3)}
-        .filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px 24px;background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06)}
-        .filter-bar .search-input{flex:2 1 200px;min-width:150px;position:relative}
-        .filter-bar .search-input input{width:100%;padding:8px 16px 8px 40px;border-radius:30px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#e2e8f0;font-size:0.8rem;transition:all 0.3s;font-family:'Cairo',sans-serif}
-        .filter-bar .search-input input:focus{border-color:#e6b31e;outline:none}
-        .filter-bar .search-input .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.1)}
-        .filter-bar label{font-size:0.7rem;color:rgba(255,255,255,0.3);font-weight:600;display:flex;align-items:center;gap:4px}
-        .filter-bar select{padding:6px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#e2e8f0;font-size:0.75rem;min-width:100px;cursor:pointer;font-family:'Cairo',sans-serif}
-        .filter-bar select:focus{outline:none;border-color:#e6b31e}
-        .filter-bar select option{background:#0a1628;color:#e2e8f0}
-        .btn-filter{padding:6px 16px;border:none;border-radius:20px;font-weight:600;font-size:0.75rem;cursor:pointer;transition:all 0.3s;font-family:'Cairo',sans-serif;display:inline-flex;align-items:center;gap:6px}
-        .btn-filter.primary{background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628}
-        .btn-filter.primary:hover{transform:scale(1.04)}
-        .btn-filter.outline{background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.3)}
-        .btn-filter.outline:hover{background:rgba(255,255,255,0.04);color:#fff}
-        .table-wrapper{overflow-x:auto;padding:0 24px 24px}
-        .table-wrapper table{width:100%;border-collapse:collapse;font-size:0.78rem;min-width:900px;border-radius:14px;overflow:hidden}
-        thead{background:rgba(15,52,96,0.4);backdrop-filter:blur(12px);border-bottom:2px solid rgba(230,179,30,0.15)}
-        thead th{padding:12px 10px;text-align:right;font-weight:700;font-size:0.6rem;text-transform:uppercase;color:rgba(255,255,255,0.35);letter-spacing:0.8px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.03)}
-        thead th i{margin-left:6px;color:#e6b31e}
-        tbody td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,0.02);vertical-align:middle;color:rgba(255,255,255,0.6);font-size:0.78rem}
-        tbody tr:hover{background:rgba(255,255,255,0.03)}
-        .vessel-name{font-weight:700;color:#fff}
-        .status-badge{padding:3px 12px;border-radius:20px;font-size:0.65rem;font-weight:600;display:inline-block}
-        .status-badge.active{background:rgba(74,222,128,0.12);color:#4ade80}
-        .status-badge.damaged{background:rgba(225,112,85,0.12);color:#e17055}
-        .status-badge.maintenance{background:rgba(251,191,36,0.12);color:#fbbf24}
-        .btn-sm{padding:4px 10px;border:none;border-radius:20px;font-size:0.6rem;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:4px;font-family:'Cairo',sans-serif}
-        .btn-sm.edit{background:rgba(230,179,30,0.12);color:#e6b31e}
-        .btn-sm.edit:hover{background:#e6b31e;color:#0a1628;transform:scale(1.05)}
-        .btn-sm.delete{background:rgba(225,112,85,0.12);color:#e17055}
-        .btn-sm.delete:hover{background:#e17055;color:#fff;transform:scale(1.05)}
-        .empty-state{text-align:center;padding:60px 20px}
-        .empty-state .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.04);border-top-color:#e6b31e;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .empty-state h3{font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.2)}
-        .empty-state p{font-size:0.8rem;color:rgba(255,255,255,0.1)}
-        @media(max-width:768px){.fleet-header{flex-direction:column;align-items:flex-start;padding:12px 16px}.fleet-header-left{width:100%}.fleet-header-left h2{font-size:16px}.fleet-header-actions{width:100%;justify-content:flex-start}.stats-grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px 16px}.stat-card{padding:12px 14px}.stat-card .number{font-size:20px}.input-grid{grid-template-columns:1fr 1fr;padding:10px 12px;margin:0 12px 10px;gap:8px}.input-grid .btn-save{grid-column:span 2}.filter-bar{flex-direction:column;align-items:stretch;padding:10px 16px;gap:6px}.filter-bar select{min-width:100%}.table-wrapper{padding:0 12px 12px}.table-wrapper table{font-size:0.7rem;min-width:700px}thead th,tbody td{padding:6px 4px}.fleet-header-actions .btn-action{padding:6px 12px;font-size:0.7rem}}
-        @media(max-width:480px){.stats-grid{grid-template-columns:1fr 1fr;gap:6px}.stat-card{padding:10px 12px}.stat-card .number{font-size:18px}.stat-card .label{font-size:9px}.input-grid{grid-template-columns:1fr}.input-grid .btn-save{grid-column:span 1}.fleet-header-left .header-icon{width:36px;height:36px;font-size:16px}.fleet-header-left h2{font-size:14px}}
-    </style>
-
-    <!-- HEADER -->
-    <div class="fleet-header">
-        <div class="fleet-header-left">
-            <div class="header-icon"><i class="fas fa-ship"></i></div>
-            <div>
-                <h2>السجل العام للأسطول</h2>
-                <p>إدارة ومتابعة جميع المراكب البحرية</p>
-            </div>
-        </div>
-        <div class="fleet-header-actions">
-            <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
-        </div>
-    </div>
-
-    <!-- STATS -->
-    <div class="stats-grid">
-        <div class="stat-card"><div class="number gold" id="totalVessels">0</div><div class="label">🚢 إجمالي المراكب</div></div>
-        <div class="stat-card"><div class="number green" id="activeVessels">0</div><div class="label">✅ الصالح</div></div>
-        <div class="stat-card"><div class="number yellow" id="maintenanceVessels">0</div><div class="label">🔧 تحت الصيانة</div></div>
-        <div class="stat-card"><div class="number red" id="damagedVessels">0</div><div class="label">🟥 المعطوبة</div></div>
-    </div>
-
-    <!-- INPUT FORM -->
-    <div class="input-grid">
-        <input type="text" id="iName" placeholder="اسم المركب">
-        <input type="text" id="iNum" placeholder="الرقم">
-        <input type="number" id="iLen" placeholder="الطول (م)" step="0.1">
-        <select id="iReg"><option value="">الإقليم</option><option value="الشمال">🗺️ الشمال</option><option value="الساحل">🗺️ الساحل</option><option value="الوسط">🗺️ الوسط</option><option value="الجنوب">🗺️ الجنوب</option></select>
-        <select id="iZone"><option value="">المنطقة</option></select>
-        <input type="text" id="iPort" placeholder="الميناء">
-        <input type="text" id="iSupp" placeholder="مكان التعزيز">
-        <select id="iStat"><option value="صالح">✅ صالح</option><option value="معطب">❌ معطب</option><option value="صيانة">🔧 صيانة</option></select>
-        <input type="text" id="iBreak" placeholder="نوع العطب">
-        <input type="date" id="iDate" placeholder="تاريخ العطب">
-        <input type="date" id="iEnd" placeholder="تاريخ الانتهاء">
-        <input type="text" id="iRef" placeholder="المرجع">
-        <button class="btn-save" onclick="addVessel()"><i class="fas fa-save"></i> حفظ المركب</button>
-    </div>
-
-    <!-- FILTER -->
-    <div class="filter-bar">
-        <div class="search-input">
-            <input type="text" id="searchMain" placeholder="بحث في السجل..." onkeyup="renderTable()">
-            <span class="search-icon"><i class="fas fa-search"></i></span>
-        </div>
-        <label><i class="fas fa-tag"></i> الفئة:</label>
-        <select id="fCatMain" onchange="renderTable()"><option value="الكل">الكل</option></select>
-        <label><i class="fas fa-map"></i> الإقليم:</label>
-        <select id="fRegMain" onchange="renderTable()"><option value="الكل">الكل</option></select>
-        <button class="btn-filter primary" onclick="renderTable()"><i class="fas fa-filter"></i> فلترة</button>
-        <button class="btn-filter outline" onclick="clearSearch()"><i class="fas fa-undo-alt"></i> مسح</button>
-    </div>
-
-    <!-- TABLE -->
-    <div class="table-wrapper">
-        <table>
-            <thead><tr>
-                <th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th>
-                <th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th>
-                <th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th>
-            </tr></thead>
-            <tbody id="mainBody">
-                <tr><td colspan="13" class="empty-state"><div class="spinner"></div><h3>جاري التحميل...</h3></td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
 <script>
-    // ============================================================
-    // 🚢 FLEET - ربط مع الخادم (API)
-    // ============================================================
+    (function() {
+        "use strict";
 
-    // ===== الحالة العامة =====
-    var fleetData = [];
-    var editId = null;
-    var isLoading = false;
+        // ===== الحالة العامة =====
+        var fleetData = [];
+        var editId = null;
+        var isLoading = false;
+        var isInitialized = false; // لمنع التهيئة المزدوجة
 
-    // ===== الحصول على التوكن =====
-    function getToken() {
-        return sessionStorage.getItem('token') || localStorage.getItem('token') || null;
-    }
-
-    // ===== الحصول على الرأس مع التوكن =====
-    function getHeaders() {
-        var headers = { 'Content-Type': 'application/json' };
-        var token = getToken();
-        if (token) {
-            headers['Authorization'] = 'Bearer ' + token;
+        // ===== الحصول على التوكن =====
+        function getToken() {
+            return sessionStorage.getItem('token') || localStorage.getItem('token') || null;
         }
-        return headers;
-    }
 
-    // ===== عرض رسالة =====
-    function showToast(msg, type) {
-        type = type || 'info';
-        var container = document.getElementById('toastContainer');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toastContainer';
-            container.className = 'toast-container';
-            document.body.appendChild(container);
+        // ===== الحصول على الرأس مع التوكن =====
+        function getHeaders() {
+            var headers = { 'Content-Type': 'application/json' };
+            var token = getToken();
+            if (token) {
+                headers['Authorization'] = 'Bearer ' + token;
+            }
+            return headers;
         }
-        var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-        var toast = document.createElement('div');
-        toast.className = 'toast toast-' + type;
-        toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + msg;
-        container.appendChild(toast);
-        setTimeout(function() {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(30px)';
-            setTimeout(function() { toast.remove(); }, 300);
-        }, 3000);
-    }
 
-    // ===== جلب البيانات من الخادم =====
-    async function fetchVessels() {
-        try {
-            isLoading = true;
-            var tbody = document.getElementById('mainBody');
-            tbody.innerHTML = '<tr><td colspan="13" class="empty-state"><div class="spinner"></div><h3>جاري التحميل...</h3></td></tr>';
-
-            var response = await fetch('/api/vessels', {
-                method: 'GET',
-                headers: getHeaders(),
-                credentials: 'include'
-            });
-
-            if (response.status === 401) {
-                showToast('⚠️ جلسة منتهية، يرجى تسجيل الدخول', 'warning');
-                window.location.href = '/';
-                return [];
+        // ===== عرض رسالة (Toast) مع تحسين لمنع التكرار =====
+        function showToast(msg, type) {
+            type = type || 'info';
+            var container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
             }
+            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + msg;
+            container.appendChild(toast);
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(30px)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
+        }
 
-            if (!response.ok) {
-                throw new Error('فشل تحميل البيانات: ' + response.status);
-            }
+        // ===== جلب البيانات من الخادم =====
+        async function fetchVessels() {
+            try {
+                isLoading = true;
+                var tbody = document.getElementById('mainBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="13" class="empty-state"><div class="spinner"></div><h3>جاري التحميل...</h3></td></tr>';
+                }
 
-            var data = await response.json();
-            if (data.success && Array.isArray(data.vessels)) {
-                fleetData = data.vessels;
-                return fleetData;
-            } else {
+                var response = await fetch('/api/vessels', {
+                    method: 'GET',
+                    headers: getHeaders(),
+                    credentials: 'include'
+                });
+
+                if (response.status === 401) {
+                    showToast('⚠️ جلسة منتهية، يرجى تسجيل الدخول', 'warning');
+                    // استخدام replace بدلاً من href لمنع تكدس السجلات في History
+                    window.location.replace('/');
+                    return [];
+                }
+
+                if (!response.ok) {
+                    throw new Error('فشل تحميل البيانات: ' + response.status);
+                }
+
+                var data = await response.json();
+                if (data.success && Array.isArray(data.vessels)) {
+                    fleetData = data.vessels;
+                    return fleetData;
+                } else {
+                    fleetData = [];
+                    return [];
+                }
+
+            } catch (error) {
+                console.error('❌ Error fetching vessels:', error);
+                showToast('⚠️ حدث خطأ في تحميل المراكب', 'error');
                 fleetData = [];
                 return [];
+            } finally {
+                isLoading = false;
             }
-
-        } catch (error) {
-            console.error('❌ Error fetching vessels:', error);
-            showToast('⚠️ حدث خطأ في تحميل المراكب', 'error');
-            fleetData = [];
-            return [];
-        } finally {
-            isLoading = false;
-        }
-    }
-
-    // ===== حساب الفئة حسب الطول =====
-    function getCategory(len) {
-        var n = parseFloat(len);
-        if (isNaN(n) || n === 0) return 'غير محدد';
-        if (n === 11) return 'البروق';
-        if (n >= 8 && n < 12) return 'صقور';
-        if (n >= 12 && n < 30) return 'خوافر';
-        if (n >= 30) return 'طوافات';
-        return 'زوارق مزدوجة';
-    }
-
-    // ===== عرض الجدول =====
-    function renderTable() {
-        var search = document.getElementById('searchMain').value.toLowerCase().trim();
-        var catFilter = document.getElementById('fCatMain').value;
-        var regFilter = document.getElementById('fRegMain').value;
-
-        var filtered = fleetData.filter(function(v) {
-            var cat = getCategory(v.len);
-            if (catFilter !== 'الكل' && cat !== catFilter) return false;
-            if (regFilter !== 'الكل' && v.region !== regFilter) return false;
-            if (search) {
-                var text = [v.name, v.num, v.region, v.zone, v.port, v.stat, v.cat].join(' ').toLowerCase();
-                if (!text.includes(search)) return false;
-            }
-            return true;
-        });
-
-        var tbody = document.getElementById('mainBody');
-        if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">🔍 لا توجد مراكب مطابقة</td></tr>';
-            return;
         }
 
-        var html = '';
-        filtered.forEach(function(v) {
-            var cat = getCategory(v.len);
-            var statusColor = v.stat === 'صالح' ? '#4ade80' : v.stat === 'معطب' ? '#f87171' : '#fbbf24';
-            var statusLabel = v.stat === 'صالح' ? '✅ صالح' : v.stat === 'معطب' ? '❌ معطب' : '🔧 صيانة';
-
-            html += '<tr>' +
-                '<td class="vessel-name">' + escapeHtml(v.name) + '</td>' +
-                '<td>' + escapeHtml(v.num) + '</td>' +
-                '<td>' + escapeHtml(v.len) + '</td>' +
-                '<td>' + escapeHtml(cat) + '</td>' +
-                '<td>' + escapeHtml(v.region) + '</td>' +
-                '<td>' + escapeHtml(v.zone) + '</td>' +
-                '<td>' + escapeHtml(v.port) + '</td>' +
-                '<td>' + escapeHtml(v.supp) + '</td>' +
-                '<td style="color:' + statusColor + ';font-weight:700;">' + statusLabel + '</td>' +
-                '<td>' + escapeHtml(v.break || '-') + '</td>' +
-                '<td>' + formatDate(v.fDate) + '</td>' +
-                '<td>' + formatDate(v.eDate) + '</td>' +
-                '<td><button class="btn-sm edit" onclick="editVessel(\'' + v._id + '\')"><i class="fas fa-edit"></i></button> ' +
-                '<button class="btn-sm delete" onclick="deleteVessel(\'' + v._id + '\')"><i class="fas fa-trash"></i></button></td>' +
-                '</tr>';
-        });
-        tbody.innerHTML = html;
-    }
-
-    // ===== تحديث الإحصائيات =====
-    function updateStats() {
-        var total = fleetData.length;
-        var active = fleetData.filter(function(v) { return v.stat === 'صالح'; }).length;
-        var maintenance = fleetData.filter(function(v) { return v.stat === 'صيانة'; }).length;
-        var damaged = fleetData.filter(function(v) { return v.stat === 'معطب'; }).length;
-
-        document.getElementById('totalVessels').textContent = total;
-        document.getElementById('activeVessels').textContent = active;
-        document.getElementById('maintenanceVessels').textContent = maintenance;
-        document.getElementById('damagedVessels').textContent = damaged;
-    }
-
-    // ===== تحميل البيانات =====
-    async function loadData() {
-        await fetchVessels();
-        updateStats();
-        renderTable();
-    }
-
-    // ===== إضافة مركب =====
-    async function addVessel() {
-        var name = document.getElementById('iName').value.trim();
-        var num = document.getElementById('iNum').value.trim();
-        var len = document.getElementById('iLen').value;
-        var region = document.getElementById('iReg').value;
-        var zone = document.getElementById('iZone').value;
-        var port = document.getElementById('iPort').value.trim();
-        var supp = document.getElementById('iSupp').value.trim();
-        var stat = document.getElementById('iStat').value;
-        var breakType = document.getElementById('iBreak').value.trim();
-        var fDate = document.getElementById('iDate').value;
-        var eDate = document.getElementById('iEnd').value;
-        var ref = document.getElementById('iRef').value.trim();
-
-        if (!name || !num || !len || !region || !zone) {
-            showToast('⚠️ يرجى ملء جميع الحقول المطلوبة', 'warning');
-            return;
+        // ===== حساب الفئة حسب الطول =====
+        function getCategory(len) {
+            var n = parseFloat(len);
+            if (isNaN(n) || n === 0) return 'غير محدد';
+            if (n === 11) return 'البروق';
+            if (n >= 8 && n < 12) return 'صقور';
+            if (n >= 12 && n < 30) return 'خوافر';
+            if (n >= 30) return 'طوافات';
+            return 'زوارق مزدوجة';
         }
 
-        if ((stat === 'معطب' || stat === 'صيانة') && !fDate) {
-            showToast('⚠️ تاريخ العطب مطلوب', 'warning');
-            return;
-        }
+        // ===== عرض الجدول =====
+        function renderTable() {
+            var search = document.getElementById('searchMain');
+            var catFilter = document.getElementById('fCatMain');
+            var regFilter = document.getElementById('fRegMain');
+            var tbody = document.getElementById('mainBody');
 
-        var vesselData = {
-            name: name,
-            num: num,
-            len: parseFloat(len),
-            region: region,
-            zone: zone,
-            port: port || '-',
-            supp: supp || '-',
-            stat: stat,
-            break: breakType || '-',
-            fDate: fDate || null,
-            eDate: eDate || null,
-            ref: ref || ''
-        };
+            // التحقق من وجود العناصر قبل المتابعة (يمنع الأعطال)
+            if (!tbody || !search || !catFilter || !regFilter) return;
 
-        try {
-            var response = await fetch('/api/vessels', {
-                method: 'POST',
-                headers: getHeaders(),
-                credentials: 'include',
-                body: JSON.stringify(vesselData)
+            var searchVal = search.value.toLowerCase().trim();
+            var catVal = catFilter.value;
+            var regVal = regFilter.value;
+
+            var filtered = fleetData.filter(function(v) {
+                var cat = getCategory(v.len);
+                if (catVal !== 'الكل' && cat !== catVal) return false;
+                if (regVal !== 'الكل' && v.region !== regVal) return false;
+                if (searchVal) {
+                    var text = [v.name, v.num, v.region, v.zone, v.port, v.stat, v.cat].join(' ').toLowerCase();
+                    if (!text.includes(searchVal)) return false;
+                }
+                return true;
             });
 
-            if (response.status === 401) {
-                showToast('⚠️ جلسة منتهية، يرجى تسجيل الدخول', 'warning');
-                window.location.href = '/';
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">🔍 لا توجد مراكب مطابقة</td></tr>';
                 return;
             }
 
-            if (!response.ok) {
-                var errData = await response.json();
-                throw new Error(errData.error || 'فشل الإضافة');
-            }
+            var html = '';
+            filtered.forEach(function(v) {
+                var cat = getCategory(v.len);
+                var statusColor = v.stat === 'صالح' ? '#4ade80' : v.stat === 'معطب' ? '#f87171' : '#fbbf24';
+                var statusLabel = v.stat === 'صالح' ? '✅ صالح' : v.stat === 'معطب' ? '❌ معطب' : '🔧 صيانة';
 
-            var data = await response.json();
-            if (data.success) {
-                clearForm();
-                await loadData();
-                showToast('✅ تم إضافة المركب بنجاح', 'success');
-            } else {
-                throw new Error(data.error || 'فشل الإضافة');
-            }
+                // استخدام escapeHtml لسلامة النصوص
+                var name = escapeHtml(v.name);
+                var num = escapeHtml(v.num);
+                var region = escapeHtml(v.region);
+                var zone = escapeHtml(v.zone);
+                var port = escapeHtml(v.port);
+                var supp = escapeHtml(v.supp);
+                var breakT = escapeHtml(v.break || '-');
+                var ref = escapeHtml(v.ref || '');
 
-        } catch (error) {
-            console.error('❌ Add vessel error:', error);
-            showToast('❌ ' + error.message, 'error');
-        }
-    }
-
-    // ===== تعديل مركب =====
-    function editVessel(id) {
-        var v = fleetData.find(function(item) { return item._id === id; });
-        if (!v) {
-            showToast('⚠️ المركب غير موجود', 'error');
-            return;
-        }
-
-        editId = id;
-
-        document.getElementById('iName').value = v.name || '';
-        document.getElementById('iNum').value = v.num || '';
-        document.getElementById('iLen').value = v.len || '';
-        document.getElementById('iReg').value = v.region || '';
-        updateZones();
-        setTimeout(function() { document.getElementById('iZone').value = v.zone || ''; }, 50);
-        document.getElementById('iPort').value = v.port || '';
-        document.getElementById('iSupp').value = v.supp || '';
-        document.getElementById('iStat').value = v.stat || 'صالح';
-        document.getElementById('iBreak').value = v.break || '';
-        document.getElementById('iDate').value = v.fDate ? v.fDate.split('T')[0] : '';
-        document.getElementById('iEnd').value = v.eDate ? v.eDate.split('T')[0] : '';
-        document.getElementById('iRef').value = v.ref || '';
-
-        var btn = document.querySelector('.btn-save');
-        btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
-        btn.onclick = function() { updateVessel(); };
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        showToast('✏️ قم بتعديل البيانات ثم اضغط تحديث', 'info');
-    }
-
-    // ===== تحديث مركب =====
-    async function updateVessel() {
-        if (!editId) {
-            showToast('⚠️ لا يوجد مركب للتحديث', 'error');
-            return;
-        }
-
-        var name = document.getElementById('iName').value.trim();
-        var num = document.getElementById('iNum').value.trim();
-        var len = document.getElementById('iLen').value;
-        var region = document.getElementById('iReg').value;
-        var zone = document.getElementById('iZone').value;
-        var port = document.getElementById('iPort').value.trim();
-        var supp = document.getElementById('iSupp').value.trim();
-        var stat = document.getElementById('iStat').value;
-        var breakType = document.getElementById('iBreak').value.trim();
-        var fDate = document.getElementById('iDate').value;
-        var eDate = document.getElementById('iEnd').value;
-        var ref = document.getElementById('iRef').value.trim();
-
-        if (!name || !num || !len || !region || !zone) {
-            showToast('⚠️ يرجى ملء جميع الحقول المطلوبة', 'warning');
-            return;
-        }
-
-        var vesselData = {
-            name: name,
-            num: num,
-            len: parseFloat(len),
-            region: region,
-            zone: zone,
-            port: port || '-',
-            supp: supp || '-',
-            stat: stat,
-            break: breakType || '-',
-            fDate: fDate || null,
-            eDate: eDate || null,
-            ref: ref || ''
-        };
-
-        try {
-            var response = await fetch('/api/vessels/' + editId, {
-                method: 'PUT',
-                headers: getHeaders(),
-                credentials: 'include',
-                body: JSON.stringify(vesselData)
+                html += '<tr>' +
+                    '<td class="vessel-name">' + name + '</td>' +
+                    '<td>' + num + '</td>' +
+                    '<td>' + escapeHtml(v.len) + '</td>' +
+                    '<td>' + escapeHtml(cat) + '</td>' +
+                    '<td>' + region + '</td>' +
+                    '<td>' + zone + '</td>' +
+                    '<td>' + port + '</td>' +
+                    '<td>' + supp + '</td>' +
+                    '<td style="color:' + statusColor + ';font-weight:700;">' + statusLabel + '</td>' +
+                    '<td>' + breakT + '</td>' +
+                    '<td>' + formatDate(v.fDate) + '</td>' +
+                    '<td>' + formatDate(v.eDate) + '</td>' +
+                    '<td><button class="btn-sm edit" data-id="' + v._id + '"><i class="fas fa-edit"></i></button> ' +
+                    '<button class="btn-sm delete" data-id="' + v._id + '"><i class="fas fa-trash"></i></button></td>' +
+                    '</tr>';
             });
+            tbody.innerHTML = html;
 
-            if (response.status === 401) {
-                showToast('⚠️ جلسة منتهية، يرجى تسجيل الدخول', 'warning');
-                window.location.href = '/';
-                return;
-            }
-
-            if (!response.ok) {
-                var errData = await response.json();
-                throw new Error(errData.error || 'فشل التحديث');
-            }
-
-            var data = await response.json();
-            if (data.success) {
-                clearForm();
-                resetSaveButton();
-                editId = null;
-                await loadData();
-                showToast('✅ تم تحديث المركب بنجاح', 'success');
-            } else {
-                throw new Error(data.error || 'فشل التحديث');
-            }
-
-        } catch (error) {
-            console.error('❌ Update vessel error:', error);
-            showToast('❌ ' + error.message, 'error');
-        }
-    }
-
-    // ===== حذف مركب =====
-    async function deleteVessel(id) {
-        var v = fleetData.find(function(item) { return item._id === id; });
-        if (!v) {
-            showToast('⚠️ المركب غير موجود', 'error');
-            return;
-        }
-
-        if (!confirm('⚠️ هل أنت متأكد من حذف "' + v.name + '"؟')) return;
-
-        try {
-            var response = await fetch('/api/vessels/' + id, {
-                method: 'DELETE',
-                headers: getHeaders(),
-                credentials: 'include'
+            // ===== ربط الأحداث بطريقة آمنة بدلاً من onclick في HTML =====
+            tbody.querySelectorAll('.btn-sm.edit').forEach(function(btn) {
+                btn.onclick = function(e) {
+                    e.stopPropagation();
+                    editVessel(this.getAttribute('data-id'));
+                };
             });
-
-            if (response.status === 401) {
-                showToast('⚠️ جلسة منتهية، يرجى تسجيل الدخول', 'warning');
-                window.location.href = '/';
-                return;
-            }
-
-            if (!response.ok) {
-                var errData = await response.json();
-                throw new Error(errData.error || 'فشل الحذف');
-            }
-
-            var data = await response.json();
-            if (data.success) {
-                await loadData();
-                showToast('🗑️ تم حذف المركب بنجاح', 'success');
-            } else {
-                throw new Error(data.error || 'فشل الحذف');
-            }
-
-        } catch (error) {
-            console.error('❌ Delete vessel error:', error);
-            showToast('❌ ' + error.message, 'error');
-        }
-    }
-
-    // ===== دوال مساعدة =====
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/[&<>"']/g, function(m) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-        });
-    }
-
-    function formatDate(val) {
-        if (!val) return '-';
-        try {
-            var d = new Date(val);
-            if (isNaN(d.getTime())) return val;
-            return d.toLocaleDateString('ar-TN');
-        } catch { return val; }
-    }
-
-    function clearForm() {
-        ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'].forEach(function(id) {
-            document.getElementById(id).value = '';
-        });
-        document.getElementById('iReg').value = '';
-        document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
-        document.getElementById('iStat').value = 'صالح';
-        resetSaveButton();
-        editId = null;
-    }
-
-    function resetSaveButton() {
-        var btn = document.querySelector('.btn-save');
-        btn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
-        btn.onclick = addVessel;
-        editId = null;
-    }
-
-    function updateZones() {
-        var reg = document.getElementById('iReg').value;
-        var zoneSel = document.getElementById('iZone');
-        var zones = {
-            'الشمال': ['تونس', 'بنزرت', 'طبرقة'],
-            'الساحل': ['سوسة', 'المنستير', 'نابل'],
-            'الوسط': ['صفاقس', 'المهدية', 'قرقنة'],
-            'الجنوب': ['جرجيس', 'جربة', 'قابس']
-        };
-        zoneSel.innerHTML = '<option value="">المنطقة</option>';
-        if (zones[reg]) {
-            zones[reg].forEach(function(z) {
-                zoneSel.innerHTML += '<option value="' + z + '">' + z + '</option>';
+            tbody.querySelectorAll('.btn-sm.delete').forEach(function(btn) {
+                btn.onclick = function(e) {
+                    e.stopPropagation();
+                    deleteVessel(this.getAttribute('data-id'));
+                };
             });
         }
-    }
 
-    function clearSearch() {
-        document.getElementById('searchMain').value = '';
-        document.getElementById('fCatMain').value = 'الكل';
-        document.getElementById('fRegMain').value = 'الكل';
-        renderTable();
-        showToast('🔄 تم مسح الفلاتر', 'info');
-    }
+        // ===== تحديث الإحصائيات =====
+        function updateStats() {
+            var totalEl = document.getElementById('totalVessels');
+            var activeEl = document.getElementById('activeVessels');
+            var maintEl = document.getElementById('maintenanceVessels');
+            var damagedEl = document.getElementById('damagedVessels');
+            if (!totalEl || !activeEl || !maintEl || !damagedEl) return;
 
-    // ===== تهيئة الفلاتر =====
-    function initFilters() {
-        var cats = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
-        var catSelect = document.getElementById('fCatMain');
-        catSelect.innerHTML = '<option value="الكل">الكل</option>';
-        cats.forEach(function(c) {
-            catSelect.innerHTML += '<option value="' + c + '">' + c + '</option>';
-        });
+            var total = fleetData.length;
+            var active = fleetData.filter(function(v) { return v.stat === 'صالح'; }).length;
+            var maintenance = fleetData.filter(function(v) { return v.stat === 'صيانة'; }).length;
+            var damaged = fleetData.filter(function(v) { return v.stat === 'معطب'; }).length;
 
-        var regs = ['الشمال', 'الساحل', 'الوسط', 'الجنوب'];
-        var regSelect = document.getElementById('fRegMain');
-        regSelect.innerHTML = '<option value="الكل">الكل</option>';
-        regs.forEach(function(r) {
-            regSelect.innerHTML += '<option value="' + r + '">' + r + '</option>';
-        });
-    }
+            totalEl.textContent = total;
+            activeEl.textContent = active;
+            maintEl.textContent = maintenance;
+            damagedEl.textContent = damaged;
+        }
 
-    // ===== INIT =====
-    async function initFleet() {
-        console.log('🚢 Fleet page initializing...');
-        initFilters();
-        updateZones();
+        // ===== تحميل البيانات =====
+        async function loadData() {
+            await fetchVessels();
+            updateStats();
+            renderTable();
+        }
 
-        // ربط زر التحديث
-        var refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) {
-            refreshBtn.onclick = function() {
-                showToast('🔄 جاري تحديث البيانات...', 'info');
-                loadData();
+        // ===== دوال مساعدة =====
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+
+        function formatDate(val) {
+            if (!val) return '-';
+            try {
+                var d = new Date(val);
+                if (isNaN(d.getTime())) return val;
+                return d.toLocaleDateString('ar-TN');
+            } catch { return val; }
+        }
+
+        function clearForm() {
+            ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            var reg = document.getElementById('iReg');
+            if (reg) reg.value = '';
+            var zone = document.getElementById('iZone');
+            if (zone) zone.innerHTML = '<option value="">المنطقة</option>';
+            var stat = document.getElementById('iStat');
+            if (stat) stat.value = 'صالح';
+            resetSaveButton();
+            editId = null;
+        }
+
+        function resetSaveButton() {
+            var btn = document.querySelector('.btn-save');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
+                btn.onclick = function() { addVessel(); };
+            }
+            editId = null;
+        }
+
+        function updateZones() {
+            var reg = document.getElementById('iReg');
+            var zoneSel = document.getElementById('iZone');
+            if (!reg || !zoneSel) return;
+
+            var zones = {
+                'الشمال': ['تونس', 'بنزرت', 'طبرقة'],
+                'الساحل': ['سوسة', 'المنستير', 'نابل'],
+                'الوسط': ['صفاقس', 'المهدية', 'قرقنة'],
+                'الجنوب': ['جرجيس', 'جربة', 'قابس']
             };
+            zoneSel.innerHTML = '<option value="">المنطقة</option>';
+            if (zones[reg.value]) {
+                zones[reg.value].forEach(function(z) {
+                    zoneSel.innerHTML += '<option value="' + z + '">' + z + '</option>';
+                });
+            }
         }
 
-        await loadData();
-        console.log('✅ Fleet page ready, ' + fleetData.length + ' vessels loaded');
-    }
+        function clearSearch() {
+            var search = document.getElementById('searchMain');
+            var cat = document.getElementById('fCatMain');
+            var reg = document.getElementById('fRegMain');
+            if (search) search.value = '';
+            if (cat) cat.value = 'الكل';
+            if (reg) reg.value = 'الكل';
+            renderTable();
+            showToast('🔄 تم مسح الفلاتر', 'info');
+        }
 
-    // ===== تشغيل الصفحة =====
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        initFleet();
-    } else {
-        document.addEventListener('DOMContentLoaded', initFleet);
-    }
+        // ===== إضافة مركب =====
+        async function addVessel() {
+            var name = document.getElementById('iName');
+            var num = document.getElementById('iNum');
+            var len = document.getElementById('iLen');
+            var region = document.getElementById('iReg');
+            var zone = document.getElementById('iZone');
+            var port = document.getElementById('iPort');
+            var supp = document.getElementById('iSupp');
+            var stat = document.getElementById('iStat');
+            var breakT = document.getElementById('iBreak');
+            var fDate = document.getElementById('iDate');
+            var eDate = document.getElementById('iEnd');
+            var ref = document.getElementById('iRef');
 
-    // ===== EXPOSE =====
-    window.addVessel = addVessel;
-    window.editVessel = editVessel;
-    window.updateVessel = updateVessel;
-    window.deleteVessel = deleteVessel;
-    window.renderTable = renderTable;
-    window.clearSearch = clearSearch;
-    window.updateZones = updateZones;
-    window.initFleet = initFleet;
-    window.showToast = showToast;
-    window.loadData = loadData;
+            // التحقق من وجود العناصر
+            if (!name || !num || !len || !region || !zone) return;
+
+            var nameVal = name.value.trim();
+            var numVal = num.value.trim();
+            var lenVal = len.value;
+            var regionVal = region.value;
+            var zoneVal = zone.value;
+            var portVal = port ? port.value.trim() : '';
+            var suppVal = supp ? supp.value.trim() : '';
+            var statVal = stat ? stat.value : 'صالح';
+            var breakVal = breakT ? breakT.value.trim() : '';
+            var fDateVal = fDate ? fDate.value : '';
+            var eDateVal = eDate ? eDate.value : '';
+            var refVal = ref ? ref.value.trim() : '';
+
+            if (!nameVal || !numVal || !lenVal || !regionVal || !zoneVal) {
+                showToast('⚠️ يرجى ملء جميع الحقول المطلوبة', 'warning');
+                return;
+            }
+
+            if ((statVal === 'معطب' || statVal === 'صيانة') && !fDateVal) {
+                showToast('⚠️ تاريخ العطب مطلوب', 'warning');
+                return;
+            }
+
+            var vesselData = {
+                name: nameVal,
+                num: numVal,
+                len: parseFloat(lenVal),
+                region: regionVal,
+                zone: zoneVal,
+                port: portVal || '-',
+                supp: suppVal || '-',
+                stat: statVal,
+                break: breakVal || '-',
+                fDate: fDateVal || null,
+                eDate: eDateVal || null,
+                ref: refVal || ''
+            };
+
+            try {
+                var response = await fetch('/api/vessels', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify(vesselData)
+                });
+
+                if (response.status === 401) {
+                    showToast('⚠️ جلسة منتهية، يرجى تسجيل الدخول', 'warning');
+                    window.location.replace('/');
+                    return;
+                }
+
+                if (!response.ok) {
+                    var errData = await response.json();
+                    throw new Error(errData.error || 'فشل الإضافة');
+                }
+
+                var data = await response.json();
+                if (data.success) {
+                    clearForm();
+                    await loadData();
+                    showToast('✅ تم إضافة المركب بنجاح', 'success');
+                } else {
+                    throw new Error(data.error || 'فشل الإضافة');
+                }
+
+            } catch (error) {
+                console.error('❌ Add vessel error:', error);
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        // ===== تعديل مركب =====
+        function editVessel(id) {
+            var v = fleetData.find(function(item) { return item._id === id; });
+            if (!v) {
+                showToast('⚠️ المركب غير موجود', 'error');
+                return;
+            }
+
+            editId = id;
+
+            var name = document.getElementById('iName');
+            var num = document.getElementById('iNum');
+            var len = document.getElementById('iLen');
+            var region = document.getElementById('iReg');
+            var zone = document.getElementById('iZone');
+            var port = document.getElementById('iPort');
+            var supp = document.getElementById('iSupp');
+            var stat = document.getElementById('iStat');
+            var breakT = document.getElementById('iBreak');
+            var fDate = document.getElementById('iDate');
+            var eDate = document.getElementById('iEnd');
+            var ref = document.getElementById('iRef');
+
+            if (name) name.value = v.name || '';
+            if (num) num.value = v.num || '';
+            if (len) len.value = v.len || '';
+            if (region) region.value = v.region || '';
+            // تحديث المناطق بناءً على الإقليم الجديد
+            updateZones();
+            // تعيين المنطقة بعد التحديث مباشرة
+            if (zone) zone.value = v.zone || '';
+            if (port) port.value = v.port || '';
+            if (supp) supp.value = v.supp || '';
+            if (stat) stat.value = v.stat || 'صالح';
+            if (breakT) breakT.value = v.break || '';
+            if (fDate) fDate.value = v.fDate ? v.fDate.split('T')[0] : '';
+            if (eDate) eDate.value = v.eDate ? v.eDate.split('T')[0] : '';
+            if (ref) ref.value = v.ref || '';
+
+            var btn = document.querySelector('.btn-save');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
+                btn.onclick = function() { updateVessel(); };
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('✏️ قم بتعديل البيانات ثم اضغط تحديث', 'info');
+        }
+
+        // ===== تحديث مركب =====
+        async function updateVessel() {
+            if (!editId) {
+                showToast('⚠️ لا يوجد مركب للتحديث', 'error');
+                return;
+            }
+
+            var name = document.getElementById('iName');
+            var num = document.getElementById('iNum');
+            var len = document.getElementById('iLen');
+            var region = document.getElementById('iReg');
+            var zone = document.getElementById('iZone');
+            var port = document.getElementById('iPort');
+            var supp = document.getElementById('iSupp');
+            var stat = document.getElementById('iStat');
+            var breakT = document.getElementById('iBreak');
+            var fDate = document.getElementById('iDate');
+            var eDate = document.getElementById('iEnd');
+            var ref = document.getElementById('iRef');
+
+            if (!name || !num || !len || !region || !zone) return;
+
+            var nameVal = name.value.trim();
+            var numVal = num.value.trim();
+            var lenVal = len.value;
+            var regionVal = region.value;
+            var zoneVal = zone.value;
+            var portVal = port ? port.value.trim() : '';
+            var suppVal = supp ? supp.value.trim() : '';
+            var statVal = stat ? stat.value : 'صالح';
+            var breakVal = breakT ? breakT.value.trim() : '';
+            var fDateVal = fDate ? fDate.value : '';
+            var eDateVal = eDate ? eDate.value : '';
+            var refVal = ref ? ref.value.trim() : '';
+
+            if (!nameVal || !numVal || !lenVal || !regionVal || !zoneVal) {
+                showToast('⚠️ يرجى ملء جميع الحقول المطلوبة', 'warning');
+                return;
+            }
+
+            var vesselData = {
+                name: nameVal,
+                num: numVal,
+                len: parseFloat(lenVal),
+                region: regionVal,
+                zone: zoneVal,
+                port: portVal || '-',
+                supp: suppVal || '-',
+                stat: statVal,
+                break: breakVal || '-',
+                fDate: fDateVal || null,
+                eDate: eDateVal || null,
+                ref: refVal || ''
+            };
+
+            try {
+                var response = await fetch('/api/vessels/' + editId, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify(vesselData)
+                });
+
+                if (response.status === 401) {
+                    showToast('⚠️ جلسة منتهية، يرجى تسجيل الدخول', 'warning');
+                    window.location.replace('/');
+                    return;
+                }
+
+                if (!response.ok) {
+                    var errData = await response.json();
+                    throw new Error(errData.error || 'فشل التحديث');
+                }
+
+                var data = await response.json();
+                if (data.success) {
+                    clearForm();
+                    resetSaveButton();
+                    editId = null;
+                    await loadData();
+                    showToast('✅ تم تحديث المركب بنجاح', 'success');
+                } else {
+                    throw new Error(data.error || 'فشل التحديث');
+                }
+
+            } catch (error) {
+                console.error('❌ Update vessel error:', error);
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        // ===== حذف مركب =====
+        async function deleteVessel(id) {
+            var v = fleetData.find(function(item) { return item._id === id; });
+            if (!v) {
+                showToast('⚠️ المركب غير موجود', 'error');
+                return;
+            }
+
+            if (!confirm('⚠️ هل أنت متأكد من حذف "' + v.name + '"؟')) return;
+
+            try {
+                var response = await fetch('/api/vessels/' + id, {
+                    method: 'DELETE',
+                    headers: getHeaders(),
+                    credentials: 'include'
+                });
+
+                if (response.status === 401) {
+                    showToast('⚠️ جلسة منتهية، يرجى تسجيل الدخول', 'warning');
+                    window.location.replace('/');
+                    return;
+                }
+
+                if (!response.ok) {
+                    var errData = await response.json();
+                    throw new Error(errData.error || 'فشل الحذف');
+                }
+
+                var data = await response.json();
+                if (data.success) {
+                    await loadData();
+                    showToast('🗑️ تم حذف المركب بنجاح', 'success');
+                } else {
+                    throw new Error(data.error || 'فشل الحذف');
+                }
+
+            } catch (error) {
+                console.error('❌ Delete vessel error:', error);
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        // ===== تهيئة الفلاتر =====
+        function initFilters() {
+            var cats = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
+            var catSelect = document.getElementById('fCatMain');
+            if (catSelect) {
+                catSelect.innerHTML = '<option value="الكل">الكل</option>';
+                cats.forEach(function(c) {
+                    catSelect.innerHTML += '<option value="' + c + '">' + c + '</option>';
+                });
+            }
+
+            var regs = ['الشمال', 'الساحل', 'الوسط', 'الجنوب'];
+            var regSelect = document.getElementById('fRegMain');
+            if (regSelect) {
+                regSelect.innerHTML = '<option value="الكل">الكل</option>';
+                regs.forEach(function(r) {
+                    regSelect.innerHTML += '<option value="' + r + '">' + r + '</option>';
+                });
+            }
+        }
+
+        // ===== التهيئة الرئيسية (آمنة للتحميل الديناميكي) =====
+        function initFleet() {
+            // منع التهيئة المتكررة
+            if (isInitialized) return;
+            
+            try {
+                console.log('🚢 Fleet initializing...');
+
+                // التحقق من وجود العنصر الرئيسي في الصفحة
+                var page = document.getElementById('page-fleet');
+                if (!page) {
+                    console.warn('⚠️ page-fleet not found, retrying later...');
+                    return;
+                }
+
+                // التأكد من أن الصفحة مرئية (يمنع التشويش)
+                page.style.display = 'block';
+                page.style.width = '100%';
+
+                // تهيئة الفلاتر والمناطق
+                initFilters();
+                updateZones();
+
+                // ربط زر التحديث
+                var refreshBtn = document.getElementById('refreshBtn');
+                if (refreshBtn) {
+                    refreshBtn.onclick = function() {
+                        showToast('🔄 جاري تحديث البيانات...', 'info');
+                        loadData();
+                    };
+                }
+
+                // ربط تغيير الإقليم بمنطقة التحديد
+                var regSelect = document.getElementById('iReg');
+                if (regSelect) {
+                    regSelect.onchange = function() {
+                        updateZones();
+                    };
+                }
+
+                // ربط أحداث البحث والفلترة المباشرة
+                var searchMain = document.getElementById('searchMain');
+                if (searchMain) {
+                    searchMain.onkeyup = function() { renderTable(); };
+                }
+                var fCatMain = document.getElementById('fCatMain');
+                if (fCatMain) {
+                    fCatMain.onchange = function() { renderTable(); };
+                }
+                var fRegMain = document.getElementById('fRegMain');
+                if (fRegMain) {
+                    fRegMain.onchange = function() { renderTable(); };
+                }
+
+                // تحميل البيانات
+                loadData().then(function() {
+                    console.log('✅ Fleet page ready, ' + fleetData.length + ' vessels loaded');
+                });
+
+                isInitialized = true;
+
+            } catch (error) {
+                console.error('❌ Fleet initialization error:', error);
+                showToast('⚠️ حدث خطأ في تهيئة الصفحة، حاول التحديث', 'error');
+            }
+        }
+
+        // ===== تعريض الدوال للنطاق العام (لتكون متاحة للصفحة) =====
+        window.addVessel = addVessel;
+        window.editVessel = editVessel;
+        window.updateVessel = updateVessel;
+        window.deleteVessel = deleteVessel;
+        window.renderTable = renderTable;
+        window.clearSearch = clearSearch;
+        window.updateZones = updateZones;
+        window.initFleet = initFleet;
+        window.showToast = showToast;
+        window.loadData = loadData;
+
+        // ===== تشغيل التهيئة =====
+        // الانتظار قليلاً للتأكد من اكتمال تحميل DOM، خصوصاً في حال التحميل الديناميكي
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(initFleet, 0);
+            });
+        } else {
+            setTimeout(initFleet, 0);
+        }
+
+    })();
 </script>
-</div>
