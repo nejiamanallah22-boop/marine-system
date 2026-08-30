@@ -6,7 +6,9 @@
         var fleetData = [];
         var editId = null;
         var isLoading = false;
-        var isInitialized = false; // لمنع التهيئة المزدوجة
+        var isInitialized = false;
+        var initAttempts = 0;
+        var maxInitAttempts = 10; // إعادة المحاولة حتى 10 مرات
 
         // ===== الحصول على التوكن =====
         function getToken() {
@@ -23,7 +25,7 @@
             return headers;
         }
 
-        // ===== عرض رسالة (Toast) مع تحسين لمنع التكرار =====
+        // ===== عرض رسالة (Toast) =====
         function showToast(msg, type) {
             type = type || 'info';
             var container = document.getElementById('toastContainer');
@@ -62,7 +64,6 @@
 
                 if (response.status === 401) {
                     showToast('⚠️ جلسة منتهية، يرجى تسجيل الدخول', 'warning');
-                    // استخدام replace بدلاً من href لمنع تكدس السجلات في History
                     window.location.replace('/');
                     return [];
                 }
@@ -108,7 +109,6 @@
             var regFilter = document.getElementById('fRegMain');
             var tbody = document.getElementById('mainBody');
 
-            // التحقق من وجود العناصر قبل المتابعة (يمنع الأعطال)
             if (!tbody || !search || !catFilter || !regFilter) return;
 
             var searchVal = search.value.toLowerCase().trim();
@@ -137,27 +137,17 @@
                 var statusColor = v.stat === 'صالح' ? '#4ade80' : v.stat === 'معطب' ? '#f87171' : '#fbbf24';
                 var statusLabel = v.stat === 'صالح' ? '✅ صالح' : v.stat === 'معطب' ? '❌ معطب' : '🔧 صيانة';
 
-                // استخدام escapeHtml لسلامة النصوص
-                var name = escapeHtml(v.name);
-                var num = escapeHtml(v.num);
-                var region = escapeHtml(v.region);
-                var zone = escapeHtml(v.zone);
-                var port = escapeHtml(v.port);
-                var supp = escapeHtml(v.supp);
-                var breakT = escapeHtml(v.break || '-');
-                var ref = escapeHtml(v.ref || '');
-
                 html += '<tr>' +
-                    '<td class="vessel-name">' + name + '</td>' +
-                    '<td>' + num + '</td>' +
+                    '<td class="vessel-name">' + escapeHtml(v.name) + '</td>' +
+                    '<td>' + escapeHtml(v.num) + '</td>' +
                     '<td>' + escapeHtml(v.len) + '</td>' +
                     '<td>' + escapeHtml(cat) + '</td>' +
-                    '<td>' + region + '</td>' +
-                    '<td>' + zone + '</td>' +
-                    '<td>' + port + '</td>' +
-                    '<td>' + supp + '</td>' +
+                    '<td>' + escapeHtml(v.region) + '</td>' +
+                    '<td>' + escapeHtml(v.zone) + '</td>' +
+                    '<td>' + escapeHtml(v.port) + '</td>' +
+                    '<td>' + escapeHtml(v.supp) + '</td>' +
                     '<td style="color:' + statusColor + ';font-weight:700;">' + statusLabel + '</td>' +
-                    '<td>' + breakT + '</td>' +
+                    '<td>' + escapeHtml(v.break || '-') + '</td>' +
                     '<td>' + formatDate(v.fDate) + '</td>' +
                     '<td>' + formatDate(v.eDate) + '</td>' +
                     '<td><button class="btn-sm edit" data-id="' + v._id + '"><i class="fas fa-edit"></i></button> ' +
@@ -166,7 +156,7 @@
             });
             tbody.innerHTML = html;
 
-            // ===== ربط الأحداث بطريقة آمنة بدلاً من onclick في HTML =====
+            // ربط الأحداث
             tbody.querySelectorAll('.btn-sm.edit').forEach(function(btn) {
                 btn.onclick = function(e) {
                     e.stopPropagation();
@@ -293,7 +283,6 @@
             var eDate = document.getElementById('iEnd');
             var ref = document.getElementById('iRef');
 
-            // التحقق من وجود العناصر
             if (!name || !num || !len || !region || !zone) return;
 
             var nameVal = name.value.trim();
@@ -395,10 +384,8 @@
             if (num) num.value = v.num || '';
             if (len) len.value = v.len || '';
             if (region) region.value = v.region || '';
-            // تحديث المناطق بناءً على الإقليم الجديد
-            updateZones();
-            // تعيين المنطقة بعد التحديث مباشرة
-            if (zone) zone.value = v.zone || '';
+            updateZones(); // تحديث قائمة المناطق بناءً على الإقليم
+            if (zone) zone.value = v.zone || ''; // تعيين المنطقة المختارة
             if (port) port.value = v.port || '';
             if (supp) supp.value = v.supp || '';
             if (stat) stat.value = v.stat || 'صالح';
@@ -571,22 +558,32 @@
             }
         }
 
-        // ===== التهيئة الرئيسية (آمنة للتحميل الديناميكي) =====
+        // ===== التهيئة الرئيسية (تُستدعى مرة واحدة فقط) =====
         function initFleet() {
             // منع التهيئة المتكررة
-            if (isInitialized) return;
-            
-            try {
-                console.log('🚢 Fleet initializing...');
+            if (isInitialized) {
+                console.log('🚢 Fleet already initialized, skipping.');
+                return;
+            }
 
-                // التحقق من وجود العنصر الرئيسي في الصفحة
+            try {
+                console.log('🚢 Fleet initializing... (attempt ' + (initAttempts + 1) + ')');
+
+                // البحث عن العنصر الرئيسي
                 var page = document.getElementById('page-fleet');
                 if (!page) {
-                    console.warn('⚠️ page-fleet not found, retrying later...');
+                    console.warn('⚠️ page-fleet not found. Will retry...');
+                    // إذا لم يتم العثور على العنصر، حاول مرة أخرى بعد 100 مللي (حتى 10 مرات)
+                    if (initAttempts < maxInitAttempts) {
+                        initAttempts++;
+                        setTimeout(initFleet, 100);
+                    } else {
+                        console.error('❌ Failed to find #page-fleet after ' + maxInitAttempts + ' attempts.');
+                    }
                     return;
                 }
 
-                // التأكد من أن الصفحة مرئية (يمنع التشويش)
+                // التأكد من أن الصفحة مرئية
                 page.style.display = 'block';
                 page.style.width = '100%';
 
@@ -631,14 +628,20 @@
                 });
 
                 isInitialized = true;
+                initAttempts = 0; // إعادة تعيين المحاولات بعد النجاح
 
             } catch (error) {
                 console.error('❌ Fleet initialization error:', error);
                 showToast('⚠️ حدث خطأ في تهيئة الصفحة، حاول التحديث', 'error');
+                // في حالة الخطأ، يمكن إعادة المحاولة بعد فترة (اختياري)
+                if (initAttempts < maxInitAttempts) {
+                    initAttempts++;
+                    setTimeout(initFleet, 200);
+                }
             }
         }
 
-        // ===== تعريض الدوال للنطاق العام (لتكون متاحة للصفحة) =====
+        // ===== تعريض الدوال للنطاق العام =====
         window.addVessel = addVessel;
         window.editVessel = editVessel;
         window.updateVessel = updateVessel;
@@ -650,14 +653,19 @@
         window.showToast = showToast;
         window.loadData = loadData;
 
-        // ===== تشغيل التهيئة =====
-        // الانتظار قليلاً للتأكد من اكتمال تحميل DOM، خصوصاً في حال التحميل الديناميكي
+        // ===== بدء التهيئة فوراً =====
+        // نستدعي initFleet مباشرة، وهي ستعيد المحاولة إذا لزم الأمر
+        initFleet();
+
+        // كما نضيف مستمعاً لحدث DOMContentLoaded كإجراء احتياطي
+        // (لكن قد لا يُطلق في السيناريوهات الديناميكية)
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(initFleet, 0);
+                // إذا لم تكن قد تهيأت بعد، حاول مرة أخرى
+                if (!isInitialized) {
+                    initFleet();
+                }
             });
-        } else {
-            setTimeout(initFleet, 0);
         }
 
     })();
