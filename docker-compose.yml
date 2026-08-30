@@ -1,89 +1,91 @@
-# 🐳 Docker Compose - تشغيل النظام بالكامل
 version: '3.8'
 
 services:
   # ============================================================
-  # 🗄️ قاعدة البيانات
+  # 🗄️ MongoDB
   # ============================================================
   mongodb:
-    image: mongo:6
-    container_name: marine-mongodb
+    image: mongo:7.0
+    container_name: marine_mongodb
     restart: unless-stopped
+    ports:
+      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
       MONGO_INITDB_DATABASE: marine
     volumes:
       - mongodb_data:/data/db
-      - ./backend/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-    ports:
-      - "27017:27017"
+      - mongodb_backup:/backup
     networks:
-      - marine-network
+      - marine_network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
       retries: 5
 
   # ============================================================
-  # 🔐 الخادم الخلفي
+  # 🚀 Application
   # ============================================================
-  backend:
+  app:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    container_name: marine-backend
+    container_name: marine_app
     restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      PORT: 5000
-      MONGODB_URI: mongodb://admin:${MONGO_ROOT_PASSWORD}@mongodb:27017/marine?authSource=admin
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRY: 15m
-      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
-      REFRESH_TOKEN_EXPIRY: 7d
-      BCRYPT_ROUNDS: 12
-      FRONTEND_URL: http://localhost:80
-      LOG_LEVEL: info
-    volumes:
-      - ./backend/logs:/app/logs
     ports:
       - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://admin:${MONGODB_PASSWORD}@mongodb:27017/marine?authSource=admin
+    env_file:
+      - .env
     depends_on:
       mongodb:
         condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./backups:/app/backups
     networks:
-      - marine-network
+      - marine_network
     healthcheck:
-      test: curl -f http://localhost:5000/api/health || exit 1
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   # ============================================================
-  # 🖥️ الواجهة الأمامية
+  # 🔄 Backup Service
   # ============================================================
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: marine-frontend
+  backup:
+    image: alpine:latest
+    container_name: marine_backup
     restart: unless-stopped
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
+    volumes:
+      - mongodb_backup:/backup
+      - ./backups:/app/backups
     networks:
-      - marine-network
-
-# ============================================================
-# 📊 الشبكات والمجلدات
-# ============================================================
-networks:
-  marine-network:
-    driver: bridge
+      - marine_network
+    command: |
+      sh -c '
+        apk add --no-cache mongodb-tools curl
+        while true; do
+          sleep 86400
+          BACKUP_FILE="/backup/marine_$(date +%Y%m%d_%H%M%S).gz"
+          mongodump --host mongodb --username admin --password ${MONGODB_PASSWORD} --authenticationDatabase admin --db marine --gzip --archive=${BACKUP_FILE}
+          cp ${BACKUP_FILE} /app/backups/
+          find /app/backups -name "*.gz" -mtime +7 -delete
+        done
+      '
 
 volumes:
   mongodb_data:
     driver: local
+  mongodb_backup:
+    driver: local
+
+networks:
+  marine_network:
+    driver: bridge
