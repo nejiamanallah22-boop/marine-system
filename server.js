@@ -1,10 +1,6 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v45.1 (FIXED INDEXES)
- * ============================================================
- * ✅ إزالة duplicate indexes
- * ✅ جميع التحسينات الأمنية
- * ✅ جاهز للإنتاج
+ * 🚢 MARINE SYSTEM - SERVER v45.2 (FIXED)
  * ============================================================
  */
 
@@ -28,32 +24,12 @@ if (!process.env.REFRESH_TOKEN_SECRET) {
     console.log('✅ REFRESH_TOKEN_SECRET generated automatically');
 }
 
-// ✅ المتغيرات المطلوبة
-const requiredEnv = ['MONGODB_URI'];
-const missingEnv = requiredEnv.filter(key => !process.env[key]);
-
-if (missingEnv.length > 0) {
-    console.error('❌ Missing required environment variables:');
-    missingEnv.forEach(key => console.error(`   - ${key}`));
-    console.log('\n📝 Please set MONGODB_URI in Render Environment Variables');
+// ✅ التحقق من MONGODB_URI
+if (!process.env.MONGODB_URI) {
+    console.error('❌ MONGODB_URI is required');
+    console.log('📝 Please set MONGODB_URI in Render Environment Variables');
     process.exit(1);
 }
-
-// ✅ المتغيرات الاختيارية
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
-const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
-const PORT = process.env.PORT || 5000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const IS_PRODUCTION = NODE_ENV === 'production';
-
-console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v45.1');
-console.log('='.repeat(60));
-console.log(`✅ Environment: ${NODE_ENV}`);
-console.log(`✅ Port: ${PORT}`);
-console.log('='.repeat(60) + '\n');
 
 // ============================================================
 // 📦 IMPORTS
@@ -71,133 +47,196 @@ const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const morgan = require('morgan');
-const winston = require('winston');
 
 const app = express();
 
 // ============================================================
-// 🔐 CORS CONFIGURATION
+// ⚙️ CONFIGURATION
 // ============================================================
+const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const IS_PRODUCTION = NODE_ENV === 'production';
+
+// ✅ ADMIN CREDENTIALS
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
+const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
+
+// ✅ CORS - السماح بكل شيء في التطوير، ومقيد في الإنتاج
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-    : ['http://localhost:3000', 'http://localhost:5000'];
+    : [];
 
+// ✅ إضافة Render URL تلقائياً
 const RENDER_URL = process.env.RENDER_EXTERNAL_URL || process.env.RENDER_URL || null;
 if (RENDER_URL && !ALLOWED_ORIGINS.includes(RENDER_URL)) {
     ALLOWED_ORIGINS.push(RENDER_URL);
 }
 
+// ✅ في التطوير، السماح بكل شيء
 if (!IS_PRODUCTION) {
-    ALLOWED_ORIGINS.push('http://localhost:3000');
-    ALLOWED_ORIGINS.push('http://localhost:5000');
-    ALLOWED_ORIGINS.push('http://127.0.0.1:3000');
-    ALLOWED_ORIGINS.push('http://127.0.0.1:5000');
+    ALLOWED_ORIGINS.push('*');
 }
 
-console.log('✅ Allowed Origins:', ALLOWED_ORIGINS);
+console.log('\n' + '='.repeat(60));
+console.log('🚢 MARINE SYSTEM v45.2');
+console.log('='.repeat(60));
+console.log(`✅ Environment: ${NODE_ENV}`);
+console.log(`✅ Port: ${PORT}`);
+console.log(`✅ Allowed Origins: ${ALLOWED_ORIGINS.length}`);
+console.log('='.repeat(60) + '\n');
 
 // ============================================================
-// 📊 LOGGER
+// 🔐 SECURITY MIDDLEWARE
 // ============================================================
-const logger = winston.createLogger({
-    level: process.env.LOG_LEVEL || 'info',
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.errors({ stack: true }),
-        winston.format.json()
-    ),
-    transports: [
-        new winston.transports.File({
-            filename: process.env.LOG_FILE || 'logs/combined.log',
-            maxsize: 10485760,
-            maxFiles: 5,
-            tailable: true
-        }),
-        new winston.transports.File({
-            filename: process.env.LOG_ERROR_FILE || 'logs/error.log',
-            level: 'error',
-            maxsize: 10485760,
-            maxFiles: 5,
-            tailable: true
-        })
-    ]
+
+// ✅ 1. CORS - مُقيد بالكامل
+app.use(cors({
+    origin: function(origin, callback) {
+        // ✅ السماح بطلبات بدون Origin (مثل Postman) في التطوير
+        if (!origin) {
+            if (!IS_PRODUCTION) {
+                return callback(null, true);
+            }
+            return callback(null, false);
+        }
+        
+        // ✅ السماح بـ '*' في التطوير
+        if (!IS_PRODUCTION && ALLOWED_ORIGINS.includes('*')) {
+            return callback(null, true);
+        }
+        
+        // ✅ التحقق من السماح
+        const isAllowed = ALLOWED_ORIGINS.some(allowed => {
+            if (allowed === '*') return true;
+            if (allowed.startsWith('*.')) {
+                const domain = allowed.substring(2);
+                return origin.includes(domain) || origin.endsWith(domain);
+            }
+            return origin === allowed || origin.startsWith(allowed);
+        });
+        
+        if (isAllowed) {
+            return callback(null, true);
+        }
+        
+        console.log('⚠️ CORS blocked:', origin);
+        callback(new Error('CORS: Origin not allowed'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'Accept',
+        'X-Request-ID',
+        'X-CSRF-Token'
+    ],
+    exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining'],
+    maxAge: 86400
+}));
+
+// ✅ 2. Security Headers - مع CSP مرنة
+app.use(helmet({
+    contentSecurityPolicy: {
+        useDefaults: false,
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            fontSrc: ["'self'"],
+            connectSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            frameAncestors: ["'none'"],
+            upgradeInsecureRequests: []
+        }
+    },
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: false
+    },
+    xssFilter: true,
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+}));
+
+// ✅ 3. Rate Limiting
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, error: 'طلبات كثيرة جداً' },
+    keyGenerator: (req) => req.ip
 });
 
-if (!IS_PRODUCTION) {
-    logger.add(new winston.transports.Console({
-        format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.simple()
-        )
-    }));
-}
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, error: 'محاولات كثيرة، حاول بعد 15 دقيقة' },
+    keyGenerator: (req) => req.ip
+});
+
+app.use('/api', globalLimiter);
+app.use('/api/auth/login', authLimiter);
+
+// ✅ 4. Body Parsers
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+
+// ✅ 5. Compression
+app.use(compression());
+
+// ✅ 6. Logging
+app.use(morgan('combined'));
+
+// ✅ 7. Request ID
+app.use((req, res, next) => {
+    req.requestId = req.headers['x-request-id'] || uuidv4();
+    res.setHeader('X-Request-ID', req.requestId);
+    next();
+});
 
 // ============================================================
 // 🗄️ MONGODB CONNECTION
 // ============================================================
 const connectDB = async () => {
     try {
-        const options = {
+        console.log('🔄 Connecting to MongoDB...');
+        await mongoose.connect(process.env.MONGODB_URI, {
             serverSelectionTimeoutMS: 10000,
             socketTimeoutMS: 45000,
-            maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE) || 10,
-            minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE) || 2,
+            maxPoolSize: 10,
+            minPoolSize: 2,
             family: 4
-        };
-
-        await mongoose.connect(process.env.MONGODB_URI, options);
-        logger.info('✅ MongoDB Connected');
+        });
+        console.log('✅ MongoDB Connected');
+        return true;
     } catch (error) {
-        logger.error('❌ MongoDB Connection Error:', error.message);
-        if (IS_PRODUCTION) {
-            logger.info('🔄 Retrying in 5 seconds...');
-            setTimeout(connectDB, 5000);
-        } else {
-            process.exit(1);
-        }
+        console.error('❌ MongoDB Error:', error.message);
+        return false;
     }
 };
 
 // ============================================================
-// 📦 MODELS - بدون تكرار Indexes
+// 📦 MODELS
 // ============================================================
 
-// ============================================================
 // 👤 USER MODEL
-// ============================================================
 const UserSchema = new mongoose.Schema({
-    name: { 
-        type: String, 
-        required: true, 
-        trim: true,
-        minlength: 2,
-        maxlength: 100
-    },
-    username: { 
-        type: String, 
-        required: true, 
-        trim: true, 
-        lowercase: true,
-        minlength: 3,
-        maxlength: 50
-    },
-    email: { 
-        type: String, 
-        required: true, 
-        lowercase: true, 
-        trim: true
-    },
-    password: { 
-        type: String, 
-        required: true, 
-        select: false,
-        minlength: 8
-    },
-    role: { 
-        type: String, 
-        enum: ['admin', 'manager', 'operator', 'viewer'], 
-        default: 'viewer' 
-    },
+    name: { type: String, required: true, trim: true },
+    username: { type: String, required: true, trim: true, lowercase: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
+    password: { type: String, required: true, select: false },
+    role: { type: String, enum: ['admin', 'manager', 'operator', 'viewer'], default: 'viewer' },
     isActive: { type: Boolean, default: true },
     isLocked: { type: Boolean, default: false },
     tokenVersion: { type: Number, default: 0 },
@@ -205,18 +244,12 @@ const UserSchema = new mongoose.Schema({
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
     refreshToken: { type: String, select: false },
-    refreshTokenVersion: { type: Number, default: 0 },
-    twoFactorEnabled: { type: Boolean, default: false },
-    twoFactorSecret: { type: String, select: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
 
-// ✅ Indexes - تعريف واحد فقط
 UserSchema.index({ username: 1 }, { unique: true });
 UserSchema.index({ email: 1 }, { unique: true });
-UserSchema.index({ isActive: 1 });
-UserSchema.index({ role: 1 });
 
 UserSchema.pre('save', async function(next) {
     this.updatedAt = new Date();
@@ -259,23 +292,11 @@ UserSchema.methods.checkLock = function() {
     return { locked: false };
 };
 
-// ============================================================
 // 📋 SESSION MODEL
-// ============================================================
 const SessionSchema = new mongoose.Schema({
-    userId: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User', 
-        required: true 
-    },
-    token: { 
-        type: String, 
-        required: true
-    },
-    refreshToken: { 
-        type: String, 
-        required: true
-    },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    token: { type: String, required: true },
+    refreshToken: { type: String, required: true },
     ip: { type: String },
     userAgent: { type: String },
     expiresAt: { type: Date, required: true },
@@ -283,35 +304,10 @@ const SessionSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// ✅ Indexes - تعريف واحد فقط
 SessionSchema.index({ token: 1 }, { unique: true });
 SessionSchema.index({ refreshToken: 1 }, { unique: true });
-SessionSchema.index({ userId: 1 });
-SessionSchema.index({ expiresAt: 1 });
 
-// ============================================================
-// 📋 AUDIT LOG MODEL
-// ============================================================
-const AuditLogSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    username: { type: String },
-    action: { type: String, required: true },
-    resource: { type: String },
-    resourceId: { type: String },
-    details: { type: mongoose.Schema.Types.Mixed },
-    ip: { type: String },
-    userAgent: { type: String },
-    status: { type: String, enum: ['success', 'failure'], default: 'success' },
-    timestamp: { type: Date, default: Date.now }
-});
-
-AuditLogSchema.index({ userId: 1, timestamp: -1 });
-AuditLogSchema.index({ username: 1, timestamp: -1 });
-AuditLogSchema.index({ action: 1, timestamp: -1 });
-
-// ============================================================
 // 🚢 VESSEL MODEL
-// ============================================================
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
@@ -332,16 +328,28 @@ const VesselSchema = new mongoose.Schema({
 });
 
 VesselSchema.index({ name: 1 });
-VesselSchema.index({ stat: 1 });
-VesselSchema.index({ num: 1 });
 
-// ============================================================
-// 📦 MODELS INIT
-// ============================================================
+// 📋 AUDIT LOG
+const AuditLogSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    username: { type: String },
+    action: { type: String, required: true },
+    resource: { type: String },
+    resourceId: { type: String },
+    details: { type: mongoose.Schema.Types.Mixed },
+    ip: { type: String },
+    userAgent: { type: String },
+    status: { type: String, enum: ['success', 'failure'], default: 'success' },
+    timestamp: { type: Date, default: Date.now }
+});
+
+AuditLogSchema.index({ userId: 1, timestamp: -1 });
+AuditLogSchema.index({ username: 1, timestamp: -1 });
+
 const User = mongoose.model('User', UserSchema);
 const Session = mongoose.model('Session', SessionSchema);
-const AuditLog = mongoose.model('AuditLog', AuditLogSchema);
 const Vessel = mongoose.model('Vessel', VesselSchema);
+const AuditLog = mongoose.model('AuditLog', AuditLogSchema);
 
 // ============================================================
 // 🧰 HELPERS
@@ -355,7 +363,6 @@ function cleanUser(user) {
         email: user.email,
         role: user.role,
         isActive: user.isActive,
-        twoFactorEnabled: user.twoFactorEnabled || false,
         lastLogin: user.lastLogin,
         createdAt: user.createdAt
     };
@@ -363,14 +370,9 @@ function cleanUser(user) {
 
 function generateToken(user) {
     return jwt.sign(
-        { 
-            id: user._id.toString(), 
-            role: user.role, 
-            tokenVersion: user.tokenVersion || 0,
-            jti: crypto.randomBytes(16).toString('hex')
-        },
+        { id: user._id.toString(), role: user.role, tokenVersion: user.tokenVersion || 0 },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRY || '15m', issuer: 'marine-system' }
+        { expiresIn: '7d', issuer: 'marine-system' }
     );
 }
 
@@ -384,136 +386,11 @@ function verifyToken(token) {
     } catch { return null; }
 }
 
-function generateNonce() {
-    return crypto.randomBytes(16).toString('base64');
-}
-
 function sanitizeInput(input) {
     if (!input) return '';
     if (typeof input !== 'string') return input;
     return input.replace(/[<>]/g, '').trim();
 }
-
-// ============================================================
-// 🔐 SECURITY MIDDLEWARE
-// ============================================================
-
-// ✅ 1. CORS
-app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin) {
-            if (!IS_PRODUCTION) {
-                return callback(null, true);
-            }
-            return callback(new Error('CORS: Origin not allowed'));
-        }
-        
-        const isAllowed = ALLOWED_ORIGINS.some(allowed => {
-            if (allowed === '*') return true;
-            if (allowed.startsWith('*.')) {
-                const domain = allowed.substring(2);
-                return origin.includes(domain) || origin.endsWith(domain);
-            }
-            return origin === allowed;
-        });
-        
-        if (isAllowed) {
-            return callback(null, true);
-        }
-        
-        if (!IS_PRODUCTION && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-            return callback(null, true);
-        }
-        
-        logger.warn('CORS blocked:', origin);
-        callback(new Error('CORS: Origin not allowed'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: [
-        'Content-Type',
-        'Authorization',
-        'Accept',
-        'X-Request-ID',
-        'X-CSRF-Token'
-    ],
-    exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining'],
-    maxAge: 86400
-}));
-
-// ✅ 2. Security Headers
-app.use(helmet({
-    contentSecurityPolicy: {
-        useDefaults: false,
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'"],
-            styleSrc: ["'self'"],
-            imgSrc: ["'self'", "data:", "blob:"],
-            fontSrc: ["'self'"],
-            connectSrc: ["'self'"],
-            objectSrc: ["'none'"],
-            baseUri: ["'self'"],
-            formAction: ["'self'"],
-            frameAncestors: ["'none'"],
-            upgradeInsecureRequests: []
-        }
-    },
-    hsts: {
-        maxAge: parseInt(process.env.HSTS_MAX_AGE) || 31536000,
-        includeSubDomains: process.env.HSTS_INCLUDE_SUBDOMAINS !== 'false',
-        preload: process.env.HSTS_PRELOAD === 'true'
-    },
-    xssFilter: true,
-    noSniff: true,
-    referrerPolicy: { policy: process.env.REFERRER_POLICY || 'strict-origin-when-cross-origin' }
-}));
-
-// ✅ 3. Rate Limiting
-const globalLimiter = rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) || 15 * 60 * 1000,
-    max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { success: false, error: 'طلبات كثيرة جداً' },
-    keyGenerator: (req) => req.ip
-});
-
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 5,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { success: false, error: 'محاولات كثيرة، حاول بعد 15 دقيقة' },
-    keyGenerator: (req) => req.ip
-});
-
-app.use('/api', globalLimiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
-app.use('/api/auth/forgot-password', authLimiter);
-
-// ✅ 4. Body Parsers
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cookieParser());
-
-// ✅ 5. Compression
-app.use(compression());
-
-// ✅ 6. Logging
-app.use(morgan('combined', { 
-    stream: { 
-        write: (message) => logger.info(message.trim()) 
-    } 
-}));
-
-// ✅ 7. Request ID
-app.use((req, res, next) => {
-    req.requestId = req.headers['x-request-id'] || uuidv4();
-    res.setHeader('X-Request-ID', req.requestId);
-    next();
-});
 
 // ============================================================
 // 🔐 AUTH MIDDLEWARE
@@ -522,27 +399,18 @@ const authenticate = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'غير مصرح' 
-            });
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
 
         const token = authHeader.substring(7).trim();
         const decoded = verifyToken(token);
         if (!decoded) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'توكن غير صالح' 
-            });
+            return res.status(401).json({ success: false, error: 'توكن غير صالح' });
         }
 
         const user = await User.findById(decoded.id);
         if (!user || !user.isActive) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'غير مصرح' 
-            });
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
 
         const lockCheck = user.checkLock();
@@ -554,30 +422,21 @@ const authenticate = async (req, res, next) => {
         }
 
         if (decoded.tokenVersion !== (user.tokenVersion || 0)) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'انتهت صلاحية الجلسة' 
-            });
+            return res.status(401).json({ success: false, error: 'انتهت صلاحية الجلسة' });
         }
 
         req.user = user;
         next();
     } catch (error) {
-        logger.error('Auth error:', error.message);
-        return res.status(401).json({ 
-            success: false, 
-            error: 'غير مصرح' 
-        });
+        console.error('Auth error:', error.message);
+        return res.status(401).json({ success: false, error: 'غير مصرح' });
     }
 };
 
 const authorize = (...roles) => {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                error: 'ليس لديك صلاحية' 
-            });
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
         }
         next();
     };
@@ -595,9 +454,9 @@ async function createAdmin() {
                 existing.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
                 existing.tokenVersion = (existing.tokenVersion || 0) + 1;
                 await existing.save();
-                logger.info('✅ Admin password updated');
+                console.log('✅ Admin password updated');
             }
-            logger.info(`✅ Admin exists: ${ADMIN_USERNAME}`);
+            console.log(`✅ Admin exists: ${ADMIN_USERNAME}`);
             return;
         }
 
@@ -611,9 +470,9 @@ async function createAdmin() {
             tokenVersion: 1
         });
         await admin.save();
-        logger.info(`✅ Admin created: ${ADMIN_USERNAME}`);
+        console.log(`✅ Admin created: ${ADMIN_USERNAME}`);
     } catch (error) {
-        logger.error('❌ Admin error:', error.message);
+        console.error('❌ Admin error:', error.message);
     }
 }
 
@@ -630,10 +489,10 @@ async function seedVessels() {
                 { name: 'خافرة 3', num: 'K003', len: 20, region: 'الوسط', stat: 'معطب', cat: 'خوافر', port: 'صفاقس' }
             ];
             await Vessel.insertMany(vessels);
-            logger.info(`✅ Added ${vessels.length} vessels`);
+            console.log(`✅ Added ${vessels.length} vessels`);
         }
     } catch (error) {
-        logger.error('❌ Seed error:', error.message);
+        console.error('❌ Seed error:', error.message);
     }
 }
 
@@ -654,7 +513,7 @@ async function logAudit(userId, username, action, resource, resourceId, details,
             status: status || 'success'
         });
     } catch (error) {
-        logger.error('❌ Audit log error:', error.message);
+        console.error('❌ Audit log error:', error.message);
     }
 }
 
@@ -664,6 +523,8 @@ async function logAudit(userId, username, action, resource, resourceId, details,
 
 app.post('/api/auth/login', async (req, res) => {
     try {
+        console.log('🔐 Login attempt:', req.body.username);
+
         const { username, password } = req.body;
 
         if (!username || !password) {
@@ -681,7 +542,7 @@ app.post('/api/auth/login', async (req, res) => {
         }).select('+password');
 
         if (!user) {
-            await logAudit(null, username, 'LOGIN_FAILED', 'auth', null, { reason: 'User not found' }, 'failure', req);
+            console.log('❌ User not found:', username);
             return res.status(401).json({
                 success: false,
                 error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
@@ -691,7 +552,7 @@ app.post('/api/auth/login', async (req, res) => {
         const isValid = await user.comparePassword(password);
         if (!isValid) {
             await user.incrementLoginAttempts();
-            await logAudit(user._id, user.username, 'LOGIN_FAILED', 'auth', null, { reason: 'Invalid password' }, 'failure', req);
+            console.log('❌ Invalid password for:', username);
             return res.status(401).json({
                 success: false,
                 error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
@@ -705,10 +566,9 @@ app.post('/api/auth/login', async (req, res) => {
 
         const token = generateToken(user);
         const refreshToken = generateRefreshToken();
-        
+
         const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
         user.refreshToken = hashedRefreshToken;
-        user.refreshTokenVersion = (user.refreshTokenVersion || 0) + 1;
         await user.save();
 
         await Session.create({
@@ -720,7 +580,7 @@ app.post('/api/auth/login', async (req, res) => {
             expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         });
 
-        await logAudit(user._id, user.username, 'LOGIN_SUCCESS', 'auth', null, {}, 'success', req);
+        console.log('✅ Login success:', username);
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
@@ -737,71 +597,12 @@ app.post('/api/auth/login', async (req, res) => {
         });
 
     } catch (error) {
-        logger.error('❌ Login error:', error.message);
+        console.error('❌ Login error:', error.message);
+        console.error('📋 Stack:', error.stack);
         return res.status(500).json({
             success: false,
             error: 'حدث خطأ في الخادم'
         });
-    }
-});
-
-app.post('/api/auth/refresh', async (req, res) => {
-    try {
-        const refreshToken = req.cookies.refreshToken;
-        if (!refreshToken) {
-            return res.status(401).json({ success: false, error: 'Refresh token required' });
-        }
-
-        const session = await Session.findOne({ refreshToken, isRevoked: false });
-        if (!session) {
-            return res.status(401).json({ success: false, error: 'Invalid session' });
-        }
-
-        if (session.expiresAt < new Date()) {
-            session.isRevoked = true;
-            await session.save();
-            return res.status(401).json({ success: false, error: 'Session expired' });
-        }
-
-        const user = await User.findById(session.userId);
-        if (!user || !user.isActive) {
-            return res.status(401).json({ success: false, error: 'User not found' });
-        }
-
-        const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
-        if (!isValid) {
-            return res.status(401).json({ success: false, error: 'Invalid refresh token' });
-        }
-
-        const newToken = generateToken(user);
-        const newRefreshToken = generateRefreshToken();
-
-        session.token = newToken;
-        session.refreshToken = newRefreshToken;
-        session.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        await session.save();
-
-        const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10);
-        user.refreshToken = hashedRefreshToken;
-        user.refreshTokenVersion = (user.refreshTokenVersion || 0) + 1;
-        await user.save();
-
-        res.cookie('refreshToken', newRefreshToken, {
-            httpOnly: true,
-            secure: IS_PRODUCTION,
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: '/api/auth/refresh'
-        });
-
-        res.json({
-            success: true,
-            token: newToken
-        });
-
-    } catch (error) {
-        logger.error('❌ Refresh error:', error.message);
-        res.status(500).json({ success: false, error: 'Internal error' });
     }
 });
 
@@ -814,8 +615,6 @@ app.post('/api/auth/logout', authenticate, async (req, res) => {
         await req.user.save();
 
         res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
-
-        await logAudit(req.user._id, req.user.username, 'LOGOUT', 'auth', null, {}, 'success', req);
 
         res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
     } catch (error) {
@@ -838,7 +637,6 @@ app.get('/api/auth/verify', authenticate, (req, res) => {
 app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
     try {
         const users = await User.find({}).select('-password -refreshToken').sort({ createdAt: -1 });
-        await logAudit(req.user._id, req.user.username, 'READ_USERS', 'users', null, { count: users.length }, 'success', req);
         res.json({ success: true, users });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -879,11 +677,6 @@ app.post('/api/users', authenticate, authorize('admin'), async (req, res) => {
 
         await user.save();
 
-        await logAudit(req.user._id, req.user.username, 'CREATE_USER', 'users', user._id.toString(), {
-            username: user.username,
-            role: user.role
-        }, 'success', req);
-
         res.status(201).json({ success: true, user: cleanUser(user), message: 'تم إضافة المستخدم' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -912,11 +705,6 @@ app.put('/api/users/:id', authenticate, authorize('admin'), async (req, res) => 
 
         await user.save();
 
-        await logAudit(req.user._id, req.user.username, 'UPDATE_USER', 'users', user._id.toString(), {
-            username: user.username,
-            role: user.role
-        }, 'success', req);
-
         res.json({ success: true, user: cleanUser(user), message: 'تم تحديث المستخدم' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -940,10 +728,7 @@ app.delete('/api/users/:id', authenticate, authorize('admin'), async (req, res) 
             return res.status(403).json({ success: false, error: 'لا يمكن حذف المسؤول' });
         }
 
-        const username = user.username;
         await user.deleteOne();
-
-        await logAudit(req.user._id, req.user.username, 'DELETE_USER', 'users', id, { username }, 'success', req);
 
         res.json({ success: true, message: 'تم حذف المستخدم' });
     } catch (error) {
@@ -976,10 +761,6 @@ app.post('/api/users/:id/password', authenticate, authorize('admin'), async (req
 
         await Session.deleteMany({ userId: user._id });
 
-        await logAudit(req.user._id, req.user.username, 'CHANGE_PASSWORD', 'users', user._id.toString(), {
-            username: user.username
-        }, 'success', req);
-
         res.json({ success: true, message: 'تم تغيير كلمة المرور' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -1003,10 +784,6 @@ app.post('/api/vessels', authenticate, authorize('manager', 'admin'), async (req
     try {
         const vessel = new Vessel(req.body);
         await vessel.save();
-        await logAudit(req.user._id, req.user.username, 'CREATE_VESSEL', 'vessels', vessel._id.toString(), {
-            name: vessel.name,
-            num: vessel.num
-        }, 'success', req);
         res.status(201).json({ success: true, vessel });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -1022,10 +799,6 @@ app.put('/api/vessels/:id', authenticate, authorize('manager', 'admin'), async (
         Object.assign(vessel, req.body);
         vessel.updatedAt = new Date();
         await vessel.save();
-        await logAudit(req.user._id, req.user.username, 'UPDATE_VESSEL', 'vessels', vessel._id.toString(), {
-            name: vessel.name,
-            num: vessel.num
-        }, 'success', req);
         res.json({ success: true, vessel });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -1039,10 +812,6 @@ app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res
             return res.status(404).json({ success: false, error: 'السفينة غير موجودة' });
         }
         await vessel.deleteOne();
-        await logAudit(req.user._id, req.user.username, 'DELETE_VESSEL', 'vessels', req.params.id, {
-            name: vessel.name,
-            num: vessel.num
-        }, 'success', req);
         res.json({ success: true, message: 'تم حذف السفينة' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -1050,7 +819,7 @@ app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res
 });
 
 // ============================================================
-// 📊 SESSIONS ROUTES
+// 📊 SESSIONS
 // ============================================================
 
 app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
@@ -1085,7 +854,6 @@ app.delete('/api/sessions/:id', authenticate, authorize('admin'), async (req, re
         }
         session.isRevoked = true;
         await session.save();
-        await logAudit(req.user._id, req.user.username, 'REVOKE_SESSION', 'sessions', req.params.id, {}, 'success', req);
         res.json({ success: true, message: 'تم إبطال الجلسة' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -1093,28 +861,18 @@ app.delete('/api/sessions/:id', authenticate, authorize('admin'), async (req, re
 });
 
 // ============================================================
-// 📋 AUDIT ROUTES
+// 📋 AUDIT
 // ============================================================
 
 app.get('/api/audit', authenticate, authorize('admin'), async (req, res) => {
     try {
-        const { limit = 50, skip = 0, action, username } = req.query;
-        const filter = {};
-        if (action) filter.action = action;
-        if (username) filter.username = username;
-
-        const logs = await AuditLog.find(filter)
+        const { limit = 50, skip = 0 } = req.query;
+        const logs = await AuditLog.find()
             .sort({ timestamp: -1 })
             .limit(parseInt(limit))
             .skip(parseInt(skip));
 
-        const total = await AuditLog.countDocuments(filter);
-
-        res.json({
-            success: true,
-            logs,
-            pagination: { total, limit: parseInt(limit), skip: parseInt(skip) }
-        });
+        res.json({ success: true, logs });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -1125,34 +883,14 @@ app.get('/api/audit', authenticate, authorize('admin'), async (req, res) => {
 // ============================================================
 
 const publicPath = path.join(__dirname, 'public');
-const pagesPath = path.join(publicPath, 'pages');
-
 if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
-if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
 
-app.use(express.static(publicPath, { 
-    index: false, 
-    maxAge: IS_PRODUCTION ? '1d' : 0,
-    setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.html')) {
-            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        }
-        if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
-            res.setHeader('Cache-Control', 'public, max-age=31536000');
-        }
-    }
-}));
+app.use(express.static(publicPath));
 
 app.get('/', (req, res) => {
     const indexPath = path.join(publicPath, 'index.html');
     if (fs.existsSync(indexPath)) {
-        let html = fs.readFileSync(indexPath, 'utf8');
-        const nonce = generateNonce();
-        html = html.replace(/\{\{NONCE\}\}/g, nonce);
-        res.setHeader('Content-Security-Policy', 
-            `default-src 'self'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; block-all-mixed-content;`
-        );
-        res.send(html);
+        res.sendFile(indexPath);
     } else {
         res.status(404).send('index.html not found');
     }
@@ -1161,13 +899,7 @@ app.get('/', (req, res) => {
 app.get('*', (req, res) => {
     const indexPath = path.join(publicPath, 'index.html');
     if (fs.existsSync(indexPath)) {
-        let html = fs.readFileSync(indexPath, 'utf8');
-        const nonce = generateNonce();
-        html = html.replace(/\{\{NONCE\}\}/g, nonce);
-        res.setHeader('Content-Security-Policy', 
-            `default-src 'self'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; block-all-mixed-content;`
-        );
-        res.send(html);
+        res.sendFile(indexPath);
     } else {
         res.status(404).send('index.html not found');
     }
@@ -1178,12 +910,12 @@ app.get('*', (req, res) => {
 // ============================================================
 
 app.use((err, req, res, next) => {
-    logger.error('❌ Error:', err.message);
-    logger.error('📋 Stack:', err.stack);
+    console.error('❌ Error:', err.message);
+    console.error('📋 Stack:', err.stack);
     
-    res.status(500).json({ 
-        success: false, 
-        error: IS_PRODUCTION ? 'حدث خطأ في الخادم' : err.message 
+    res.status(500).json({
+        success: false,
+        error: IS_PRODUCTION ? 'حدث خطأ في الخادم' : err.message
     });
 });
 
@@ -1193,14 +925,11 @@ app.use((err, req, res, next) => {
 
 async function startServer() {
     try {
-        await connectDB();
-        
-        // ✅ إعداد الأدلة
-        ['logs', 'uploads', 'backups'].forEach(dir => {
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-            }
-        });
+        const dbConnected = await connectDB();
+        if (!dbConnected) {
+            console.error('❌ Failed to connect to MongoDB');
+            process.exit(1);
+        }
 
         await createAdmin();
         await seedVessels();
@@ -1208,71 +937,26 @@ async function startServer() {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('');
             console.log('='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v45.1');
+            console.log('🚢 MARINE SYSTEM v45.2');
             console.log('🚀 SERVER RUNNING');
             console.log('='.repeat(60));
             console.log(`🌍 Port: ${PORT}`);
-            console.log(`🌐 Host: 0.0.0.0 (all interfaces)`);
             console.log(`🔐 Environment: ${NODE_ENV}`);
             console.log('🗄️ MongoDB: Connected ✅');
-            console.log(`🛡️ CORS: ${ALLOWED_ORIGINS.length} origins allowed`);
-            console.log('🔒 CSP: Enabled with Nonce');
-            console.log('📊 Rate Limiting: Enabled');
+            console.log(`🛡️ CORS: ${ALLOWED_ORIGINS.length} origins`);
             console.log('='.repeat(60));
             console.log('');
-            console.log('📋 API ENDPOINTS:');
-            console.log('   🔐 AUTH:');
-            console.log('   POST   /api/auth/login');
-            console.log('   POST   /api/auth/logout');
-            console.log('   POST   /api/auth/refresh');
-            console.log('   GET    /api/auth/me');
-            console.log('   GET    /api/auth/verify');
-            console.log('   👥 USERS:');
-            console.log('   GET    /api/users');
-            console.log('   POST   /api/users');
-            console.log('   PUT    /api/users/:id');
-            console.log('   DELETE /api/users/:id');
-            console.log('   POST   /api/users/:id/password');
-            console.log('   🚢 VESSELS:');
-            console.log('   GET    /api/vessels');
-            console.log('   POST   /api/vessels');
-            console.log('   PUT    /api/vessels/:id');
-            console.log('   DELETE /api/vessels/:id');
-            console.log('   📊 SESSIONS:');
-            console.log('   GET    /api/sessions');
-            console.log('   DELETE /api/sessions/:id');
-            console.log('   📋 AUDIT:');
-            console.log('   GET    /api/audit');
-            console.log('='.repeat(60));
-            console.log('');
-            console.log('🔑 LOGIN CREDENTIALS:');
+            console.log('🔑 LOGIN:');
             console.log(`   👤 Username: ${ADMIN_USERNAME}`);
             console.log(`   🔑 Password: ${ADMIN_PASSWORD}`);
             console.log('='.repeat(60));
             console.log('');
-            console.log(`🌐 URL: ${RENDER_URL || `http://localhost:${PORT}`}`);
-            console.log('');
-            console.log('✅ Server is ready!');
-            console.log('');
         });
 
     } catch (error) {
-        logger.error('❌ Failed to start server:', error);
+        console.error('❌ Failed to start server:', error);
         process.exit(1);
     }
 }
-
-// ✅ Graceful Shutdown
-process.on('SIGTERM', async () => {
-    logger.info('🛑 SIGTERM received, shutting down gracefully...');
-    await mongoose.disconnect();
-    process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-    logger.info('🛑 SIGINT received, shutting down gracefully...');
-    await mongoose.disconnect();
-    process.exit(0);
-});
 
 startServer();
