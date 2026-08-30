@@ -5,12 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ============================================================
+         🔒 CSP - Hardened Security Policy
+         ============================================================
+         ⚠️ ملاحظة: هذه سياسة احتياطية فقط
+         CSP الحقيقية يجب أن تُرسل من الخادم كـ HTTP Header
+         ============================================================ -->
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self';
+                   script-src 'self' 'nonce-{{NONCE}}';
+                   style-src 'self' 'nonce-{{NONCE}}';
+                   img-src 'self' data: blob:;
+                   font-src 'self';
+                   connect-src 'self';
+                   object-src 'none';
+                   base-uri 'self';
+                   frame-ancestors 'none';
+                   form-action 'self';
+                   upgrade-insecure-requests;
+                   block-all-mixed-content;
+                   require-trusted-types-for 'script';">
 
-    <style>
+
+    <style nonce="{{NONCE}}">
         /* ============================================================
-           🎨 ENTERPRISE DESIGN SYSTEM
+           🔒 ENTERPRISE SECURE DESIGN SYSTEM v15.0
            ============================================================ */
         :root {
             --primary: #0f172a;
@@ -20,8 +39,10 @@
             --accent-hover: #2563eb;
             --success: #22c55e;
             --danger: #ef4444;
+            --danger-light: #fca5a5;
             --warning: #eab308;
             --info: #8b5cf6;
+            --info-dark: #7c3aed;
             --gold: #e6b31e;
             --gold-light: #f5d76e;
             --gold-dark: #c99a0e;
@@ -33,6 +54,32 @@
             --radius: 16px;
             --radius-sm: 8px;
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-primary: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* ============================================================
+           🔒 SELF-HOSTED FONTS
+           ============================================================ */
+        @font-face {
+            font-family: 'Cairo';
+            src: url('/fonts/Cairo-Regular.woff2') format('woff2'),
+                 url('/fonts/Cairo-Regular.woff') format('woff');
+            font-weight: 400;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Cairo';
+            src: url('/fonts/Cairo-Bold.woff2') format('woff2'),
+                 url('/fonts/Cairo-Bold.woff') format('woff');
+            font-weight: 700;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Cairo';
+            src: url('/fonts/Cairo-Black.woff2') format('woff2'),
+                 url('/fonts/Cairo-Black.woff') format('woff');
+            font-weight: 900;
+            font-display: swap;
         }
 
         * {
@@ -42,7 +89,7 @@
         }
 
         body {
-            font-family: 'Cairo', sans-serif;
+            font-family: var(--font-primary);
             background: var(--primary);
             color: var(--text);
             min-height: 100vh;
@@ -51,16 +98,9 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--primary);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 10px;
-        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--primary); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
         /* ============================================================
            🏦 LOGIN - BANK GRADE
@@ -217,6 +257,11 @@
             font-size: 13px;
         }
 
+        .input-wrapper input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .toggle-password {
             position: absolute;
             left: 12px;
@@ -227,6 +272,7 @@
             padding: 6px;
             border-radius: 6px;
             transition: all var(--transition);
+            font-size: 16px;
         }
 
         .toggle-password:hover {
@@ -284,6 +330,7 @@
             font-size: 13px;
             text-decoration: none;
             transition: all var(--transition);
+            cursor: pointer;
         }
 
         .forgot-link:hover {
@@ -349,13 +396,7 @@
             animation: fadeIn 0.3s ease;
         }
 
-        #accountLocked i {
-            color: var(--danger);
-        }
-        #accountLocked span {
-            color: var(--danger-light);
-            font-size: 13px;
-        }
+        #accountLocked span { color: var(--danger-light); font-size: 13px; }
         #accountLocked .lock-timer {
             color: var(--warning);
             font-weight: 700;
@@ -424,12 +465,8 @@
             animation: spin 0.7s linear infinite;
         }
 
-        .login-btn.loading .spinner {
-            display: inline-block;
-        }
-        .login-btn.loading .btn-text {
-            display: none;
-        }
+        .login-btn.loading .spinner { display: inline-block; }
+        .login-btn.loading .btn-text { display: none; }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -482,19 +519,6 @@
             font-size: 11px;
         }
 
-        .security-badge i {
-            font-size: 12px;
-        }
-        .security-badge i.fa-shield-alt {
-            color: var(--success);
-        }
-        .security-badge i.fa-fingerprint {
-            color: var(--accent);
-        }
-        .security-badge i.fa-lock {
-            color: var(--warning);
-        }
-
         .login-footer {
             display: flex;
             justify-content: space-between;
@@ -514,7 +538,7 @@
         }
 
         /* ============================================================
-           📱 MAIN APP
+           📱 MAIN APP - مختصر للتوفير
            ============================================================ */
         #mainApp {
             display: none;
@@ -591,16 +615,8 @@
             gap: 10px;
         }
 
-        .brand .brand-icon {
-            font-size: 22px;
-        }
-
-        .brand h1 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #fff;
-        }
-
+        .brand .brand-icon { font-size: 22px; }
+        .brand h1 { font-size: 16px; font-weight: 700; color: #fff; }
         .brand .brand-tag {
             font-size: 10px;
             font-weight: 400;
@@ -643,21 +659,16 @@
             width: 140px;
         }
 
-        .search-wrapper input:focus {
-            width: 200px;
-        }
-
+        .search-wrapper input:focus { width: 200px; }
         .search-wrapper input::placeholder {
             color: var(--text-dim);
             font-size: 12px;
         }
-
         .search-wrapper .search-icon {
             color: var(--text-dim);
             font-size: 13px;
             margin-left: 8px;
         }
-
         .search-wrapper .search-shortcut {
             font-size: 9px;
             color: var(--text-dim);
@@ -668,10 +679,7 @@
             margin-right: 6px;
         }
 
-        .notification-wrapper {
-            position: relative;
-        }
-
+        .notification-wrapper { position: relative; }
         .notif-btn {
             position: relative;
             background: none;
@@ -705,10 +713,7 @@
             display: none;
         }
 
-        .user-wrapper {
-            position: relative;
-        }
-
+        .user-wrapper { position: relative; }
         .user-btn {
             display: flex;
             align-items: center;
@@ -751,9 +756,7 @@
             transition: all var(--transition);
         }
 
-        .user-btn:hover .user-arrow {
-            color: #fff;
-        }
+        .user-btn:hover .user-arrow { color: #fff; }
 
         .user-dropdown {
             display: none;
@@ -776,7 +779,7 @@
             border: none;
             background: transparent;
             color: var(--text-muted);
-            font-family: 'Cairo', sans-serif;
+            font-family: var(--font-primary);
             font-size: 13px;
             text-align: right;
             cursor: pointer;
@@ -826,12 +829,8 @@
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .sidebar::-webkit-scrollbar {
-            width: 3px;
-        }
-        .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
+        .sidebar::-webkit-scrollbar { width: 3px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
         .sidebar::-webkit-scrollbar-thumb {
             background: var(--accent);
             border-radius: 10px;
@@ -852,16 +851,12 @@
             gap: 10px;
         }
 
-        .sidebar-brand .brand-icon {
-            font-size: 22px;
-        }
-
+        .sidebar-brand .brand-icon { font-size: 22px; }
         .sidebar-brand .brand-title {
             font-size: 15px;
             font-weight: 700;
             color: #fff;
         }
-
         .sidebar-brand .brand-subtitle {
             font-size: 10px;
             color: var(--text-dim);
@@ -927,6 +922,7 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
+            overflow-y: auto;
         }
 
         .nav-group {
@@ -956,7 +952,7 @@
             color: var(--text-muted);
             font-size: 13px;
             font-weight: 500;
-            font-family: inherit;
+            font-family: var(--font-primary);
             cursor: pointer;
             transition: all var(--transition);
             text-align: right;
@@ -964,12 +960,7 @@
             position: relative;
         }
 
-        .nav-btn i {
-            width: 18px;
-            text-align: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
+        .nav-btn i { width: 18px; text-align: center; font-size: 14px; flex-shrink: 0; }
 
         .nav-btn:hover {
             background: rgba(255, 255, 255, 0.04);
@@ -1061,9 +1052,7 @@
             color: var(--text-dim);
         }
 
-        .footer-version i {
-            color: var(--accent);
-        }
+        .footer-version i { color: var(--accent); }
 
         .footer-logout {
             display: flex;
@@ -1076,7 +1065,7 @@
             color: var(--danger);
             font-size: 13px;
             font-weight: 600;
-            font-family: inherit;
+            font-family: var(--font-primary);
             cursor: pointer;
             transition: all var(--transition);
             width: 100%;
@@ -1086,9 +1075,7 @@
             background: rgba(239, 68, 68, 0.12);
         }
 
-        .footer-logout i {
-            font-size: 13px;
-        }
+        .footer-logout i { font-size: 13px; }
 
         /* ============================================================
            📄 MAIN CONTENT
@@ -1214,18 +1201,10 @@
             border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
-        .toast-success {
-            background: rgba(16, 185, 129, 0.92);
-        }
-        .toast-error {
-            background: rgba(239, 68, 68, 0.92);
-        }
-        .toast-warning {
-            background: rgba(245, 158, 11, 0.92);
-        }
-        .toast-info {
-            background: rgba(59, 130, 246, 0.92);
-        }
+        .toast-success { background: rgba(16, 185, 129, 0.92); }
+        .toast-error { background: rgba(239, 68, 68, 0.92); }
+        .toast-warning { background: rgba(245, 158, 11, 0.92); }
+        .toast-info { background: rgba(59, 130, 246, 0.92); }
 
         @keyframes toastSlide {
             from { opacity: 0; transform: translateY(20px) scale(0.95); }
@@ -1317,15 +1296,13 @@
             border-radius: var(--radius-sm);
             font-size: 13px;
             font-weight: 600;
-            font-family: inherit;
+            font-family: var(--font-primary);
             cursor: pointer;
             transition: all var(--transition);
             text-decoration: none;
         }
 
-        .btn:active {
-            transform: scale(0.97);
-        }
+        .btn:active { transform: scale(0.97); }
 
         .btn-sm {
             padding: 4px 12px;
@@ -1336,7 +1313,6 @@
             background: var(--accent);
             color: #fff;
         }
-
         .btn-primary:hover {
             box-shadow: 0 4px 20px rgba(59, 130, 246, 0.25);
         }
@@ -1345,7 +1321,6 @@
             background: var(--success);
             color: #fff;
         }
-
         .btn-success:hover {
             box-shadow: 0 4px 20px rgba(34, 197, 94, 0.25);
         }
@@ -1354,7 +1329,6 @@
             background: var(--warning);
             color: var(--primary);
         }
-
         .btn-warning:hover {
             box-shadow: 0 4px 20px rgba(234, 179, 8, 0.25);
         }
@@ -1363,7 +1337,6 @@
             background: var(--danger);
             color: #fff;
         }
-
         .btn-danger:hover {
             box-shadow: 0 4px 20px rgba(239, 68, 68, 0.25);
         }
@@ -1372,7 +1345,6 @@
             background: linear-gradient(135deg, #e6b31e, #f5d76e);
             color: var(--primary);
         }
-
         .btn-gold:hover {
             box-shadow: 0 4px 20px rgba(230, 179, 30, 0.25);
         }
@@ -1382,7 +1354,6 @@
             border: 1px solid var(--border);
             color: var(--text);
         }
-
         .btn-outline:hover {
             background: rgba(255, 255, 255, 0.04);
             border-color: rgba(255, 255, 255, 0.12);
@@ -1393,7 +1364,6 @@
             color: var(--text-muted);
             border: 1px solid var(--border);
         }
-
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.06);
         }
@@ -1447,9 +1417,8 @@
         }
 
         @media print {
-            .main-header, .sidebar, .back-to-top, .toast-container, .modal-overlay, .no-print {
-                display: none !important;
-            }
+            .main-header, .sidebar, .back-to-top, .toast-container,
+            .modal-overlay, .no-print { display: none !important; }
             .main-content { margin-right: 0 !important; padding: 0 !important; }
         }
     </style>
@@ -1474,8 +1443,7 @@
                 </div>
 
                 <div id="accountLocked">
-                    <i class="fas fa-lock"></i>
-                    <span>تم قفل الحساب مؤقتاً. حاول بعد <span class="lock-timer" id="lockTimer">15:00</span></span>
+                    <span>🔒 تم قفل الحساب مؤقتاً. حاول بعد <span class="lock-timer" id="lockTimer">15:00</span></span>
                 </div>
 
                 <form id="loginForm" class="login-form" autocomplete="off" novalidate>
@@ -1483,7 +1451,7 @@
                     <div class="form-group">
                         <label class="form-label" for="username">اسم المستخدم</label>
                         <div class="input-wrapper">
-                            <i class="fas fa-user input-icon"></i>
+                            <span class="input-icon">👤</span>
                             <input type="text" id="username" placeholder="أدخل اسم المستخدم" autocomplete="username" required>
                         </div>
                     </div>
@@ -1491,10 +1459,10 @@
                     <div class="form-group">
                         <label class="form-label" for="password">كلمة المرور</label>
                         <div class="input-wrapper">
-                            <i class="fas fa-lock input-icon"></i>
+                            <span class="input-icon">🔒</span>
                             <input type="password" id="password" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
                             <button type="button" class="toggle-password" id="togglePassword">
-                                <i class="fas fa-eye"></i>
+                                👁️
                             </button>
                         </div>
                     </div>
@@ -1502,12 +1470,11 @@
                     <div class="form-group" id="otpGroup">
                         <label class="form-label" for="otpCode">رمز التحقق الثنائي (2FA)</label>
                         <div class="input-wrapper">
-                            <i class="fas fa-shield-alt input-icon"></i>
+                            <span class="input-icon">🛡️</span>
                             <input type="text" id="otpCode" placeholder="أدخل رمز 6 أرقام" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
                         </div>
                         <div class="otp-timer">
-                            <i class="fas fa-clock"></i>
-                            <span>الرمز صالح لمدة</span>
+                            <span>⏱️ الرمز صالح لمدة</span>
                             <span class="timer-text" id="otpTimer">05:00</span>
                             <button type="button" class="otp-resend" id="resendOtpBtn" disabled>إعادة الإرسال</button>
                         </div>
@@ -1519,7 +1486,7 @@
                             <span class="checkmark"></span>
                             تذكر الجهاز
                         </label>
-                        <a href="#" class="forgot-link" id="forgotPasswordLink">نسيت كلمة المرور؟</a>
+                        <a class="forgot-link" id="forgotPasswordLink">نسيت كلمة المرور؟</a>
                     </div>
 
                     <button type="submit" class="login-btn" id="loginButton">
@@ -1532,26 +1499,25 @@
                     <div id="loginError" class="error-msg"></div>
 
                     <div class="security-badges">
-                        <span class="security-badge"><i class="fas fa-shield-alt"></i> تشفير شامل</span>
-                        <span class="security-badge"><i class="fas fa-fingerprint"></i> 2FA مفعل</span>
-                        <span class="security-badge"><i class="fas fa-lock"></i> جلسة آمنة</span>
+                        <span class="security-badge">🛡️ تشفير شامل</span>
+                        <span class="security-badge">🔐 2FA مفعل</span>
+                        <span class="security-badge">🔒 جلسة آمنة</span>
                     </div>
                 </form>
 
                 <div class="login-footer">
                     <span>نظام إدارة الأسطول البحري</span>
-                    <span class="footer-version">Enterprise v8.0</span>
+                    <span class="footer-version">Enterprise v15.0</span>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ============================================================
-         📱 MAIN APP
+         📱 MAIN APP - مختصر للتوفير
          ============================================================ -->
     <div id="mainApp" style="display:none;">
 
-        <!-- HEADER -->
         <header class="main-header">
             <div class="header-container">
                 <div class="header-left">
@@ -1567,12 +1533,12 @@
                 <div class="header-right">
                     <div class="search-wrapper">
                         <input type="text" id="quickSearch" placeholder="بحث سريع...">
-                        <i class="fas fa-search search-icon"></i>
+                        <span class="search-icon">🔍</span>
                         <kbd class="search-shortcut">⌘K</kbd>
                     </div>
                     <div class="notification-wrapper">
                         <button class="notif-btn" id="notifBtn">
-                            <i class="fas fa-bell"></i>
+                            🔔
                             <span class="notif-badge" id="notifBadge">0</span>
                         </button>
                     </div>
@@ -1580,26 +1546,19 @@
                         <button class="user-btn" id="userBtn">
                             <div class="user-avatar" id="userAvatar"><span id="userInitial">م</span></div>
                             <span class="user-name" id="userDisplayName">المستخدم</span>
-                            <i class="fas fa-chevron-down user-arrow"></i>
+                            <span class="user-arrow">▼</span>
                         </button>
                         <div class="user-dropdown" id="userDropdown">
-                            <button class="dropdown-item" onclick="showToast('📋 جاري فتح الملف الشخصي...', 'info')">
-                                <i class="fas fa-user"></i> الملف الشخصي
-                            </button>
-                            <button class="dropdown-item" onclick="showToast('⚙️ جاري فتح الإعدادات...', 'info')">
-                                <i class="fas fa-cog"></i> الإعدادات
-                            </button>
+                            <button class="dropdown-item" data-action="profile">👤 الملف الشخصي</button>
+                            <button class="dropdown-item" data-action="settings">⚙️ الإعدادات</button>
                             <div class="dropdown-divider"></div>
-                            <button class="dropdown-item danger" id="logoutBtn">
-                                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                            </button>
+                            <button class="dropdown-item danger" id="logoutBtn">🚪 تسجيل الخروج</button>
                         </div>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- SIDEBAR -->
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand">
@@ -1620,61 +1579,8 @@
                 </div>
             </div>
 
-            <div class="sidebar-nav">
-                <div class="nav-group">
-                    <span class="nav-group-title">الرئيسية</span>
-                    <button class="nav-btn active" data-page="dashboard">
-                        <i class="fas fa-chart-pie"></i> لوحة التحكم
-                    </button>
-                    <button class="nav-btn" data-page="fleet">
-                        <i class="fas fa-ship"></i> السجل العام
-                        <span class="nav-badge" id="fleetBadge">0</span>
-                    </button>
-                </div>
-                <div class="nav-group">
-                    <span class="nav-group-title">إدارة الأسطول</span>
-                    <button class="nav-btn" data-page="maintenance">
-                        <i class="fas fa-wrench"></i> الصيانة
-                        <span class="nav-badge warning" id="maintenanceBadge">0</span>
-                    </button>
-                    <button class="nav-btn" data-page="efficiency">
-                        <i class="fas fa-chart-line"></i> الجاهزية
-                    </button>
-                    <button class="nav-btn" data-page="support">
-                        <i class="fas fa-headset"></i> الدعم
-                    </button>
-                </div>
-                <div class="nav-group">
-                    <span class="nav-group-title">العمليات</span>
-                    <button class="nav-btn" data-page="notes">
-                        <i class="fas fa-sticky-note"></i> Note Verbale
-                    </button>
-                    <button class="nav-btn" data-page="monitoring">
-                        <i class="fas fa-map-marked-alt"></i> المراقبة
-                        <span class="nav-badge success" id="sessionsBadge">0</span>
-                    </button>
-                </div>
-                <div class="nav-group">
-                    <span class="nav-group-title">الإدارة</span>
-                    <button class="nav-btn" data-page="users">
-                        <i class="fas fa-users"></i> المستخدمين
-                        <span class="nav-badge" id="usersBadge">0</span>
-                    </button>
-                    <button class="nav-btn" data-page="logs">
-                        <i class="fas fa-history"></i> السجلات
-                        <span class="nav-badge" id="logsBadge">0</span>
-                    </button>
-                </div>
-                <div class="nav-group">
-                    <span class="nav-group-title">متقدم</span>
-                    <button class="nav-btn" data-page="ai-assistant">
-                        <i class="fas fa-robot"></i> المساعد الذكي
-                        <span class="nav-badge success">AI</span>
-                    </button>
-                    <button class="nav-btn" data-page="settings">
-                        <i class="fas fa-cog"></i> الإعدادات
-                    </button>
-                </div>
+            <div class="sidebar-nav" id="sidebarNav">
+                <!-- يتم إنشاء الأزرار ديناميكياً من الخادم -->
             </div>
 
             <div class="sidebar-footer">
@@ -1683,16 +1589,14 @@
                     <span>متصل</span>
                 </div>
                 <div class="footer-version">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Enterprise v8.0 · آمن</span>
+                    🛡️ Enterprise v15.0 · آمن
                 </div>
                 <button class="footer-logout" id="sidebarLogoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                    🚪 تسجيل الخروج
                 </button>
             </div>
         </nav>
 
-        <!-- MAIN CONTENT -->
         <main class="main-content">
             <div class="page-container">
                 <div class="page-loader" id="pageLoader" style="display:none;">
@@ -1703,19 +1607,15 @@
             </div>
         </main>
 
-        <button class="back-to-top" id="backToTop">
-            <i class="fas fa-chevron-up"></i>
-        </button>
+        <button class="back-to-top" id="backToTop">⬆️</button>
 
         <div class="connection-status" id="connectionStatus">
-            <i class="fas fa-wifi"></i><span>غير متصل</span>
+            <span>📡 غير متصل</span>
         </div>
     </div>
 
-    <!-- TOAST -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- MODAL -->
     <div class="modal-overlay" id="modalOverlay" style="display:none;">
         <div class="modal-box">
             <div class="modal-header">
@@ -1731,82 +1631,63 @@
     </div>
 
     <!-- ============================================================
-    🚀 JAVASCRIPT - PAGE LOADER + LOGIN
+    🔒 JAVASCRIPT - ULTIMATE SECURE v15.0
     ============================================================ -->
-    <script>
+    <script nonce="{{NONCE}}">
         /**
          * ============================================================
-         * 🚢 MARINE SYSTEM v8.0 - PAGE LOADER
+         * 🔒 MARINE SYSTEM v15.0 - ULTIMATE SECURE
          * ============================================================
-         * ✅ تحميل الصفحات من المسارات الصحيحة
-         * ✅ استخراج وتنفيذ JavaScript المضمن
-         * ✅ معالجة الأخطاء
-         * ✅ مصادقة كاملة
+         * ✅ CSP: لا unsafe-eval، لا https: واسعة
+         * ✅ Nonce حقيقي من الخادم
+         * ✅ OTP في الذاكرة فقط
+         * ✅ جميع الصلاحيات من الخادم
+         * ✅ textContent في كل مكان
+         * ✅ CSRF Token مع كل طلب
          * ============================================================
          */
 
-        console.log('🚢 Marine System v8.0 - Loading...');
-
         // ============================================================
-        // 📦 CONFIGURATION - مسارات الصفحات
+        // 📦 ENVIRONMENT
         // ============================================================
 
-        const PAGES_CONFIG = {
-            paths: {
-                dashboard: '/pages/dashboard.html',
-                fleet: '/pages/fleet.html',
-                maintenance: '/pages/maintenance.html',
-                efficiency: '/pages/efficiency.html',
-                support: '/pages/support.html',
-                users: '/pages/users.html',
-                notes: '/pages/notes.html',
-                monitoring: '/pages/monitoring.html',
-                'ai-assistant': '/pages/ai-assistant.html',
-                settings: '/pages/settings.html',
-                logs: '/pages/logs.html',
-                profile: '/pages/profile.html'
-            },
-            titles: {
-                dashboard: 'لوحة التحكم',
-                fleet: 'السجل العام',
-                maintenance: 'الصيانة',
-                efficiency: 'الجاهزية',
-                support: 'الدعم',
-                users: 'المستخدمين',
-                notes: 'Note Verbale',
-                monitoring: 'المراقبة الشاملة',
-                'ai-assistant': 'المساعد الذكي',
-                settings: 'الإعدادات',
-                logs: 'السجلات',
-                profile: 'الملف الشخصي'
-            },
-            allowed: [
-                'dashboard', 'fleet', 'maintenance', 'efficiency',
-                'support', 'users', 'notes', 'monitoring',
-                'ai-assistant', 'settings', 'logs', 'profile'
-            ]
-        };
+        var IS_PRODUCTION = window.location.hostname !== 'localhost' &&
+            window.location.hostname !== '127.0.0.1' &&
+            window.location.hostname !== '0.0.0.0';
 
         // ============================================================
-        // 📦 STATE
+        // 📦 STATE - فقط في الذاكرة
         // ============================================================
 
-        let currentUser = null;
-        let isOtpStep = false;
+        var currentUser = null;
+        var isOtpStep = false;
+        var otpTransactionId = null;
+        var otpTimerInterval = null;
+        var otpSeconds = 300;
+        var currentPage = 'dashboard';
+        var csrfToken = null;
 
         // ============================================================
-        // 🔧 HELPERS
+        // 🔧 SECURE HELPERS
         // ============================================================
 
         function showToast(message, type) {
             type = type || 'info';
-            const container = document.getElementById('toastContainer');
+            var container = document.getElementById('toastContainer');
             if (!container) return;
 
-            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-            const toast = document.createElement('div');
+            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            var toast = document.createElement('div');
             toast.className = 'toast toast-' + type;
-            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + message;
+
+            var iconSpan = document.createElement('span');
+            iconSpan.textContent = icons[type] || 'ℹ️';
+
+            var msgSpan = document.createElement('span');
+            msgSpan.textContent = message;
+
+            toast.appendChild(iconSpan);
+            toast.appendChild(msgSpan);
             container.appendChild(toast);
 
             setTimeout(function() {
@@ -1816,133 +1697,320 @@
             }, 3000);
         }
 
-        function escapeHTML(text) {
-            if (!text) return '';
-            return String(text).replace(/[&<>"']/g, function(m) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-            });
-        }
-
-        function getToken() {
-            return localStorage.getItem('marine_token') ||
-                   localStorage.getItem('token') ||
-                   localStorage.getItem('accessToken') ||
-                   null;
-        }
-
-        function setToken(token) {
-            if (token) {
-                localStorage.setItem('marine_token', token);
-                localStorage.setItem('token', token);
-            } else {
-                localStorage.removeItem('marine_token');
-                localStorage.removeItem('token');
-                localStorage.removeItem('accessToken');
-            }
-        }
-
         function getRoleName(role) {
             var roles = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
             return roles[role] || role || 'مستخدم';
         }
 
         // ============================================================
-        // 🔐 LOGIN - مصادقة كاملة
+        // 🔐 CSRF
         // ============================================================
 
-        function doLogin() {
-            console.log('🔐 محاولة تسجيل الدخول');
+        async function getCSRFToken() {
+            try {
+                var response = await fetch('/api/auth/csrf-token', {
+                    credentials: 'include'
+                });
+                var data = await response.json();
+                if (data.success && data.token) {
+                    csrfToken = data.token;
+                    return csrfToken;
+                }
+            } catch (e) {
+                if (!IS_PRODUCTION) console.warn('CSRF token fetch failed');
+            }
+            return null;
+        }
 
-            var username = document.getElementById('username');
-            var password = document.getElementById('password');
-            var otpCode = document.getElementById('otpCode');
+        function addCSRFToken(headers) {
+            if (csrfToken) {
+                headers['X-CSRF-Token'] = csrfToken;
+            }
+            return headers;
+        }
+
+        // ============================================================
+        // 🔐 AUTHENTICATION - SERVER-SIDE ONLY
+        // ============================================================
+
+        async function doLogin() {
+            var username = document.getElementById('username').value.trim();
+            var password = document.getElementById('password').value;
+            var otpCode = document.getElementById('otpCode').value.trim();
+            var rememberMe = document.getElementById('rememberMe').checked;
             var errorEl = document.getElementById('loginError');
             var loginBtn = document.getElementById('loginButton');
 
-            var user = username.value.trim();
-            var pass = password.value.trim();
-
+            // ✅ في حالة 2FA
             if (isOtpStep) {
-                var otp = otpCode.value.trim();
-                if (!otp || otp.length < 6) {
+                if (!otpCode || otpCode.length < 6) {
                     errorEl.textContent = '⚠️ يرجى إدخال رمز التحقق المكون من 6 أرقام';
                     errorEl.classList.add('show');
                     return;
                 }
-                if (otp === '123456') {
-                    completeLogin({ user: { id: 1, name: 'أمان الله ناجي', username: 'admin', role: 'admin' } });
-                } else {
-                    errorEl.textContent = '❌ رمز التحقق غير صحيح';
+
+                try {
+                    loginBtn.disabled = true;
+                    loginBtn.classList.add('loading');
+
+                    var headers = { 'Content-Type': 'application/json' };
+                    addCSRFToken(headers);
+
+                    var response = await fetch('/api/auth/verify-otp', {
+                        method: 'POST',
+                        headers: headers,
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            otp: otpCode,
+                            transactionId: otpTransactionId
+                        })
+                    });
+
+                    var data = await response.json();
+
+                    if (data.success) {
+                        completeLogin(data.user);
+                    } else {
+                        errorEl.textContent = '❌ رمز التحقق غير صحيح';
+                        errorEl.classList.add('show');
+                        document.getElementById('otpCode').value = '';
+                        document.getElementById('otpCode').focus();
+                    }
+                } catch (error) {
+                    errorEl.textContent = '❌ حدث خطأ، يرجى المحاولة مرة أخرى';
                     errorEl.classList.add('show');
+                } finally {
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
                 }
+                return;
+            }
+
+            // ✅ التحقق من المدخلات
+            if (!username || !password) {
+                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
+                errorEl.classList.add('show');
                 return;
             }
 
             errorEl.className = 'error-msg';
             errorEl.textContent = '';
 
-            if (!user || !pass) {
-                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
-                errorEl.classList.add('show');
-                return;
-            }
-
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
 
-            // محاكاة تسجيل الدخول (في الإنتاج يتم الاتصال بالخادم)
-            setTimeout(function() {
-                loginBtn.disabled = false;
-                loginBtn.classList.remove('loading');
+            try {
+                await getCSRFToken();
 
-                if (user === 'admin' && pass === 'admin123') {
-                    // محاكاة 2FA
+                var headers = { 'Content-Type': 'application/json' };
+                addCSRFToken(headers);
+
+                var response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        rememberMe: rememberMe
+                    })
+                });
+
+                var data = await response.json();
+
+                if (data.success) {
+                    completeLogin(data.user);
+                } else if (data.requiresOtp) {
                     isOtpStep = true;
+                    otpTransactionId = data.transactionId;
+
                     document.getElementById('otpGroup').style.display = 'block';
-                    errorEl.className = 'error-msg success';
-                    errorEl.textContent = '✅ تم إرسال رمز التحقق (استخدم 123456)';
-                    errorEl.classList.add('show');
-                    loginBtn.querySelector('.btn-text').textContent = '🔐 تأكيد الرمز';
                     document.querySelector('.login-options').style.display = 'none';
+                    loginBtn.querySelector('.btn-text').textContent = '🔐 تأكيد الرمز';
+
+                    errorEl.className = 'error-msg success';
+                    errorEl.textContent = '✅ تم إرسال رمز التحقق';
+                    errorEl.classList.add('show');
+
+                    startOtpTimer();
                     showToast('📧 تم إرسال رمز التحقق', 'info');
                 } else {
                     errorEl.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
                     errorEl.classList.add('show');
-                    loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
                 }
-            }, 1000);
+            } catch (error) {
+                if (!IS_PRODUCTION) console.error('Login error:', error);
+                errorEl.textContent = '❌ حدث خطأ، يرجى المحاولة مرة أخرى';
+                errorEl.classList.add('show');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+            }
         }
 
-        function completeLogin(data) {
-            currentUser = data.user;
-            window.currentUser = data.user;
-            setToken('mock_token_' + Date.now());
+        function completeLogin(user) {
+            currentUser = user;
 
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
 
             updateUserDisplay();
+            buildSidebar();
             loadPage('dashboard');
-            showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
+            showToast('✅ مرحباً ' + (user.name || user.username), 'success');
 
-            isOtpStep = false;
-            document.getElementById('loginButton').querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
-            document.getElementById('otpGroup').style.display = 'none';
-            document.querySelector('.login-options').style.display = 'flex';
+            resetOtpState();
         }
 
-        function doLogout() {
+        async function doLogout() {
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+
+            try {
+                var headers = {};
+                addCSRFToken(headers);
+
+                var response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    if (!IS_PRODUCTION) console.warn('Logout API call failed');
+                }
+            } catch (e) {
+                if (!IS_PRODUCTION) console.warn('Logout API call error:', e);
+            }
+
+            // ✅ تنظيف الحالة المحلية
             currentUser = null;
-            window.currentUser = null;
-            setToken(null);
+            otpTransactionId = null;
+            resetOtpState();
+
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             document.getElementById('loginError').className = 'error-msg';
+            document.getElementById('loginButton').querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+            document.querySelector('.login-options').style.display = 'flex';
+
             showToast('👋 تم تسجيل الخروج', 'info');
         }
+
+        async function verifySession() {
+            try {
+                var response = await fetch('/api/auth/me', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.ok) {
+                    var data = await response.json();
+                    if (data.success && data.user) {
+                        currentUser = data.user;
+                        return true;
+                    }
+                }
+                return false;
+            } catch (error) {
+                if (!IS_PRODUCTION) console.error('Session verification failed:', error);
+                return false;
+            }
+        }
+
+        async function tryRestoreSession() {
+            var isValid = await verifySession();
+            if (isValid && currentUser) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                updateUserDisplay();
+                buildSidebar();
+                loadPage('dashboard');
+                return true;
+            }
+            return false;
+        }
+
+        // ============================================================
+        // ⏱️ OTP TIMER
+        // ============================================================
+
+        function startOtpTimer() {
+            clearInterval(otpTimerInterval);
+            otpSeconds = 300;
+            updateOtpDisplay();
+
+            otpTimerInterval = setInterval(function() {
+                otpSeconds--;
+                updateOtpDisplay();
+                if (otpSeconds <= 0) {
+                    clearInterval(otpTimerInterval);
+                    document.getElementById('resendOtpBtn').disabled = false;
+                    document.getElementById('otpTimer').textContent = '00:00';
+                }
+            }, 1000);
+        }
+
+        function updateOtpDisplay() {
+            var mins = Math.floor(otpSeconds / 60);
+            var secs = otpSeconds % 60;
+            document.getElementById('otpTimer').textContent =
+                String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+
+            if (otpSeconds <= 60) {
+                document.getElementById('otpTimer').style.color = 'var(--danger)';
+            } else {
+                document.getElementById('otpTimer').style.color = '';
+            }
+        }
+
+        function resetOtpState() {
+            isOtpStep = false;
+            otpTransactionId = null;
+            clearInterval(otpTimerInterval);
+            document.getElementById('otpGroup').style.display = 'none';
+            document.getElementById('otpCode').value = '';
+            document.getElementById('loginButton').querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+            document.querySelector('.login-options').style.display = 'flex';
+            document.getElementById('resendOtpBtn').disabled = true;
+        }
+
+        async function resendOtp() {
+            var btn = document.getElementById('resendOtpBtn');
+            btn.disabled = true;
+
+            try {
+                var headers = { 'Content-Type': 'application/json' };
+                addCSRFToken(headers);
+
+                var response = await fetch('/api/auth/resend-otp', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: JSON.stringify({ transactionId: otpTransactionId })
+                });
+
+                var data = await response.json();
+
+                if (data.success) {
+                    otpTransactionId = data.transactionId;
+                    startOtpTimer();
+                    showToast('📧 تم إعادة إرسال الرمز', 'success');
+                } else {
+                    showToast('❌ فشل إعادة الإرسال', 'error');
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                showToast('❌ حدث خطأ، يرجى المحاولة مرة أخرى', 'error');
+                btn.disabled = false;
+            }
+        }
+
+        // ============================================================
+        // 👤 USER DISPLAY
+        // ============================================================
 
         function updateUserDisplay() {
             if (!currentUser) return;
@@ -1955,20 +2023,24 @@
         }
 
         // ============================================================
-        // 🗺️ PAGE LOADER - تحميل الصفحات
+        // 🗺️ PAGE LOADER - SECURE SPA
         // ============================================================
 
         async function loadPage(pageName) {
-            console.log('📄 [PageLoader] تحميل الصفحة:', pageName);
-
-            // التحقق من الصلاحية
-            if (!PAGES_CONFIG.allowed.includes(pageName)) {
-                console.error('❌ [PageLoader] الصفحة غير مسموحة:', pageName);
-                showToast('⚠️ الصفحة غير موجودة', 'warning');
-                return;
+            if (!currentUser) {
+                var verified = await verifySession();
+                if (!verified) {
+                    showToast('⚠️ جلسة غير صالحة', 'warning');
+                    doLogout();
+                    return;
+                }
             }
 
-            // تحديث القائمة النشطة
+            var container = document.getElementById('pageContainer');
+            var loader = document.getElementById('pageLoader');
+
+            if (!container) return;
+
             document.querySelectorAll('.nav-btn').forEach(function(btn) {
                 btn.classList.remove('active');
                 if (btn.dataset.page === pageName) {
@@ -1976,119 +2048,267 @@
                 }
             });
 
-            var container = document.getElementById('pageContainer');
-            var loader = document.getElementById('pageLoader');
-
-            if (!container) {
-                console.error('❌ [PageLoader] container غير موجود');
-                return;
-            }
-
-            // إظهار مؤشر التحميل
             if (loader) loader.style.display = 'flex';
             container.innerHTML = '';
 
             try {
-                var path = PAGES_CONFIG.paths[pageName];
-                if (!path) {
-                    throw new Error('مسار الصفحة غير موجود');
-                }
+                var headers = { 'Accept': 'application/json' };
+                addCSRFToken(headers);
 
-                console.log('📡 [PageLoader] جلب من:', path);
-
-                var response = await fetch(path, {
-                    cache: 'no-store',
-                    headers: {
-                        'Accept': 'text/html',
-                        'Cache-Control': 'no-cache'
-                    }
+                var response = await fetch('/api/pages/' + pageName, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: headers
                 });
 
                 if (!response.ok) {
-                    throw new Error('HTTP ' + response.status + ' - ' + response.statusText);
+                    if (response.status === 401 || response.status === 403) {
+                        showToast('🔒 غير مصرح بالوصول', 'error');
+                        doLogout();
+                        return;
+                    }
+                    throw new Error('HTTP ' + response.status);
                 }
 
-                var html = await response.text();
+                var data = await response.json();
 
-                // ============================================================
-                // 🔥 استخراج HTML و Scripts بشكل منفصل
-                // ============================================================
-
-                var tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-
-                // استخراج جميع الـ script tags
-                var scripts = tempDiv.querySelectorAll('script');
-                var scriptContents = [];
-
-                scripts.forEach(function(script) {
-                    scriptContents.push(script.textContent);
-                    script.remove();
-                });
-
-                // عرض الـ HTML النظيف
-                container.innerHTML = tempDiv.innerHTML;
-
-                // 🔥 تنفيذ الـ scripts المستخرجة
-                scriptContents.forEach(function(content) {
-                    if (content && content.trim()) {
-                        try {
-                            var newScript = document.createElement('script');
-                            newScript.textContent = content;
-                            document.body.appendChild(newScript);
-                            setTimeout(function() {
-                                if (newScript.parentNode) {
-                                    newScript.remove();
-                                }
-                            }, 10);
-                        } catch (e) {
-                            console.warn('⚠️ [PageLoader] خطأ في تنفيذ script:', e.message);
-                        }
-                    }
-                });
-
-                // تحديث عنوان الصفحة
-                document.title = '⚓ ' + (PAGES_CONFIG.titles[pageName] || pageName);
-
-                console.log('✅ [PageLoader] تم تحميل الصفحة:', pageName);
-
+                if (data.success) {
+                    renderPageContent(container, data);
+                    document.title = '⚓ ' + (data.title || pageName);
+                    currentPage = pageName;
+                } else {
+                    throw new Error(data.error || 'فشل تحميل البيانات');
+                }
             } catch (error) {
-                console.error('❌ [PageLoader] خطأ في تحميل الصفحة:', error);
-
-                // عرض صفحة الخطأ
-                container.innerHTML = `
-                    <div style="text-align:center;padding:60px 20px;direction:rtl;">
-                        <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
-                        <h2 style="color:#f87171;">فشل تحميل الصفحة</h2>
-                        <p style="color:rgba(255,255,255,0.3);margin:12px 0;">
-                            ${escapeHTML(error.message)}
-                        </p>
-                        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
-                            <button onclick="loadPage('dashboard')" style="padding:8px 20px;border:none;border-radius:8px;background:var(--gold);color:#0a1628;cursor:pointer;font-weight:600;font-family:inherit;">
-                                📊 العودة للرئيسية
-                            </button>
-                            <button onclick="loadPage('${pageName}')" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:transparent;color:#e2e8f0;cursor:pointer;font-family:inherit;">
-                                🔄 إعادة المحاولة
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                showToast('❌ ' + error.message, 'error');
-
+                if (!IS_PRODUCTION) console.error('Page load error:', error);
+                renderErrorPage(container);
+                showToast('⚠️ حدث خطأ في تحميل الصفحة', 'error');
             } finally {
                 if (loader) loader.style.display = 'none';
             }
         }
 
+        function renderPageContent(container, data) {
+            container.innerHTML = '';
+
+            var titleEl = document.createElement('h2');
+            titleEl.textContent = data.title || 'الصفحة';
+            titleEl.style.cssText = 'font-size:24px;font-weight:700;margin-bottom:20px;color:#fff;';
+            container.appendChild(titleEl);
+
+            if (data.content) {
+                var contentDiv = document.createElement('div');
+                contentDiv.className = 'page-content';
+
+                if (typeof data.content === 'string') {
+                    var p = document.createElement('p');
+                    p.textContent = data.content;
+                    p.style.cssText = 'color:var(--text-muted);line-height:1.8;';
+                    contentDiv.appendChild(p);
+                } else if (Array.isArray(data.content)) {
+                    var list = document.createElement('ul');
+                    list.style.cssText = 'list-style:none;padding:0;display:grid;gap:12px;';
+
+                    data.content.forEach(function(item) {
+                        var li = document.createElement('li');
+                        li.style.cssText = 'padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid var(--border);';
+
+                        var title = document.createElement('div');
+                        title.textContent = item.title || 'عنصر';
+                        title.style.cssText = 'font-weight:600;color:#fff;';
+                        li.appendChild(title);
+
+                        if (item.description) {
+                            var desc = document.createElement('div');
+                            desc.textContent = item.description;
+                            desc.style.cssText = 'color:var(--text-muted);font-size:13px;margin-top:4px;';
+                            li.appendChild(desc);
+                        }
+
+                        list.appendChild(li);
+                    });
+                    contentDiv.appendChild(list);
+                }
+
+                container.appendChild(contentDiv);
+            }
+
+            if (data.stats) {
+                var statsGrid = document.createElement('div');
+                statsGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:20px;';
+
+                Object.entries(data.stats).forEach(function(_ref) {
+                    var key = _ref[0];
+                    var value = _ref[1];
+                    var card = document.createElement('div');
+                    card.style.cssText = 'padding:16px 20px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid var(--border);';
+
+                    var number = document.createElement('div');
+                    number.textContent = value;
+                    number.style.cssText = 'font-size:28px;font-weight:800;color:#fff;';
+                    card.appendChild(number);
+
+                    var label = document.createElement('div');
+                    label.textContent = key;
+                    label.style.cssText = 'color:var(--text-muted);font-size:13px;margin-top:4px;';
+                    card.appendChild(label);
+
+                    statsGrid.appendChild(card);
+                });
+
+                container.appendChild(statsGrid);
+            }
+        }
+
+        function renderErrorPage(container) {
+            container.innerHTML = '';
+
+            var wrapper = document.createElement('div');
+            wrapper.style.cssText = 'text-align:center;padding:60px 20px;direction:rtl;';
+
+            var icon = document.createElement('div');
+            icon.textContent = '⚠️';
+            icon.style.cssText = 'font-size:48px;margin-bottom:16px;';
+            wrapper.appendChild(icon);
+
+            var title = document.createElement('h2');
+            title.textContent = 'عذراً، حدث خطأ';
+            title.style.cssText = 'color:#f87171;';
+            wrapper.appendChild(title);
+
+            var msg = document.createElement('p');
+            msg.textContent = 'حدث خطأ أثناء تحميل الصفحة. يرجى المحاولة مرة أخرى.';
+            msg.style.cssText = 'color:rgba(255,255,255,0.3);margin:12px 0;';
+            wrapper.appendChild(msg);
+
+            var btnWrapper = document.createElement('div');
+            btnWrapper.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;';
+
+            var btn1 = document.createElement('button');
+            btn1.textContent = '📊 العودة للرئيسية';
+            btn1.onclick = function() { loadPage('dashboard'); };
+            btn1.style.cssText = 'padding:8px 20px;border:none;border-radius:8px;background:var(--gold);color:#0a1628;cursor:pointer;font-weight:600;font-family:inherit;';
+            btnWrapper.appendChild(btn1);
+
+            var btn2 = document.createElement('button');
+            btn2.textContent = '🔄 إعادة المحاولة';
+            btn2.onclick = function() { loadPage(currentPage); };
+            btn2.style.cssText = 'padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:transparent;color:#e2e8f0;cursor:pointer;font-family:inherit;';
+            btnWrapper.appendChild(btn2);
+
+            wrapper.appendChild(btnWrapper);
+            container.appendChild(wrapper);
+        }
+
         // ============================================================
-        // 🚀 INIT - تهيئة التطبيق
+        // 🔑 SIDEBAR - من الخادم فقط
         // ============================================================
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 DOM جاهز');
+        async function buildSidebar() {
+            var nav = document.getElementById('sidebarNav');
+            if (!nav) return;
 
-            // ===== LOGIN =====
+            try {
+                var response = await fetch('/api/menu', {
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) return;
+
+                var data = await response.json();
+                if (!data.success || !data.menu) return;
+
+                nav.innerHTML = '';
+
+                for (var g = 0; g < data.menu.length; g++) {
+                    var group = data.menu[g];
+                    if (!group.items || group.items.length === 0) continue;
+
+                    var groupDiv = document.createElement('div');
+                    groupDiv.className = 'nav-group';
+
+                    var title = document.createElement('span');
+                    title.className = 'nav-group-title';
+                    title.textContent = group.title;
+                    groupDiv.appendChild(title);
+
+                    for (var i = 0; i < group.items.length; i++) {
+                        var item = group.items[i];
+                        var btn = document.createElement('button');
+                        btn.className = 'nav-btn' + (item.page === currentPage ? ' active' : '');
+                        btn.dataset.page = item.page;
+
+                        var icon = document.createElement('span');
+                        icon.textContent = item.icon || '•';
+                        icon.style.cssText = 'width:18px;text-align:center;font-size:14px;';
+                        btn.appendChild(icon);
+
+                        var text = document.createTextNode(' ' + item.title);
+                        btn.appendChild(text);
+
+                        btn.addEventListener('click', function(page) {
+                            return function() {
+                                loadPage(page);
+                                if (window.innerWidth <= 992) {
+                                    document.getElementById('sidebar').classList.remove('open');
+                                    document.getElementById('menuToggle').classList.remove('active');
+                                }
+                            };
+                        }(item.page));
+
+                        groupDiv.appendChild(btn);
+                    }
+
+                    nav.appendChild(groupDiv);
+                }
+            } catch (error) {
+                if (!IS_PRODUCTION) console.error('Failed to build sidebar:', error);
+            }
+        }
+
+        // ============================================================
+        // 🔐 FORGOT PASSWORD - موحد
+        // ============================================================
+
+        async function handleForgotPassword() {
+            var email = prompt('📧 أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور:');
+            if (!email) return;
+
+            try {
+                var headers = { 'Content-Type': 'application/json' };
+                addCSRFToken(headers);
+
+                await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: JSON.stringify({ email: email.trim() })
+                });
+
+                showToast('📧 إذا كان البريد مسجلاً لدينا، فستصلك رسالة إعادة التعيين', 'success');
+            } catch (error) {
+                showToast('📧 إذا كان البريد مسجلاً لدينا، فستصلك رسالة إعادة التعيين', 'success');
+            }
+        }
+
+        // ============================================================
+        // 🚀 INIT
+        // ============================================================
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!IS_PRODUCTION) console.log('🔒 Marine System v15.0 initializing...');
+
+            await getCSRFToken();
+
+            var sessionRestored = await tryRestoreSession();
+
+            if (!sessionRestored) {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+            }
+
+            // ===== EVENTS =====
             document.getElementById('loginForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 doLogin();
@@ -2096,26 +2316,18 @@
 
             document.getElementById('togglePassword').onclick = function() {
                 var input = document.getElementById('password');
-                var icon = this.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.className = 'fas fa-eye-slash';
-                } else {
-                    input.type = 'password';
-                    icon.className = 'fas fa-eye';
-                }
+                var type = input.type === 'password' ? 'text' : 'password';
+                input.type = type;
+                this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
             };
 
             document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
                 e.preventDefault();
-                showToast('📧 سيتم إرسال رابط إعادة التعيين', 'info');
+                handleForgotPassword();
             });
 
-            document.getElementById('resendOtpBtn').addEventListener('click', function() {
-                showToast('📧 تم إعادة إرسال رمز التحقق', 'info');
-            });
+            document.getElementById('resendOtpBtn').addEventListener('click', resendOtp);
 
-            // ===== SIDEBAR =====
             document.getElementById('menuToggle').addEventListener('click', function() {
                 document.getElementById('sidebar').classList.toggle('open');
                 this.classList.toggle('active');
@@ -2126,19 +2338,6 @@
                 document.getElementById('menuToggle').classList.remove('active');
             });
 
-            // ===== NAV BUTTONS =====
-            document.querySelectorAll('.nav-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var page = this.dataset.page;
-                    if (page) loadPage(page);
-                    if (window.innerWidth <= 992) {
-                        document.getElementById('sidebar').classList.remove('open');
-                        document.getElementById('menuToggle').classList.remove('active');
-                    }
-                });
-            });
-
-            // ===== USER =====
             document.getElementById('userBtn').addEventListener('click', function(e) {
                 e.stopPropagation();
                 var dropdown = document.getElementById('userDropdown');
@@ -2149,11 +2348,17 @@
                 document.getElementById('userDropdown').style.display = 'none';
             });
 
-            // ===== LOGOUT =====
+            document.querySelectorAll('.dropdown-item[data-action]').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    var action = this.dataset.action;
+                    if (action === 'profile') loadPage('profile');
+                    else if (action === 'settings') loadPage('settings');
+                });
+            });
+
             document.getElementById('logoutBtn').addEventListener('click', doLogout);
             document.getElementById('sidebarLogoutBtn').addEventListener('click', doLogout);
 
-            // ===== BACK TO TOP =====
             document.getElementById('backToTop').addEventListener('click', function() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
@@ -2163,20 +2368,32 @@
                 btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
             });
 
-            // ===== NOTIFICATIONS =====
-            document.getElementById('notifBtn').addEventListener('click', function() {
-                showToast('📬 تم فتح الإشعارات', 'info');
+            document.getElementById('notifBtn').addEventListener('click', async function() {
+                try {
+                    var response = await fetch('/api/notifications', { credentials: 'include' });
+                    var data = await response.json();
+                    if (data.success) {
+                        showToast('📬 لديك ' + (data.count || 0) + ' إشعار', 'info');
+                    }
+                } catch (e) {
+                    showToast('📬 تم فتح الإشعارات', 'info');
+                }
             });
 
-            // ===== SEARCH =====
             document.addEventListener('keydown', function(e) {
                 if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                     e.preventDefault();
                     document.getElementById('quickSearch').focus();
                 }
+                if (e.key === 'Escape') {
+                    document.getElementById('quickSearch').blur();
+                }
+                if (e.ctrlKey && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
+                    e.preventDefault();
+                    doLogout();
+                }
             });
 
-            // ===== MODAL =====
             document.getElementById('modalClose').addEventListener('click', function() {
                 document.getElementById('modalOverlay').style.display = 'none';
             });
@@ -2187,35 +2404,33 @@
                 }
             });
 
-            // ===== CHECK TOKEN =====
-            var token = getToken();
-            if (token) {
-                // محاكاة التحقق من التوكن
-                console.log('✅ تم استعادة الجلسة');
-                // في الإنتاج يتم التحقق من الخادم
-            }
+            document.getElementById('modalCancel').addEventListener('click', function() {
+                document.getElementById('modalOverlay').style.display = 'none';
+            });
 
-            console.log('✅ Marine System v8.0 ready');
-            console.log('🔑 بيانات الدخول: admin / admin123');
-            console.log('🔐 رمز 2FA: 123456');
-            console.log('📄 عدد الصفحات: ' + Object.keys(PAGES_CONFIG.paths).length);
+            if (!IS_PRODUCTION) {
+                console.log('✅ Marine System v15.0 loaded');
+                console.log('🔒 CSP: Hardened - No unsafe-eval, No wildcard https:');
+                console.log('🔒 Security: Nonce-based, Server-side RBAC required');
+            }
         });
 
         // ============================================================
-        // 🌐 GLOBAL EXPOSURE
+        // 🌐 GLOBAL
         // ============================================================
 
         window.doLogin = doLogin;
         window.doLogout = doLogout;
         window.loadPage = loadPage;
         window.showToast = showToast;
-        window.currentUser = currentUser;
-        window.getToken = getToken;
-        window.setToken = setToken;
+        window.verifySession = verifySession;
+        window.resendOtp = resendOtp;
+        window.handleForgotPassword = handleForgotPassword;
+        window.getCSRFToken = getCSRFToken;
 
-        console.log('✅ Marine System v8.0 loaded successfully');
-        console.log('📊 صفحة السجل العام: /pages/fleet.html');
-        console.log('📄 جميع الصفحات يتم تحميلها عبر loadPage()');
+        if (!IS_PRODUCTION) {
+            console.log('🔒 No demo credentials - all authentication is server-side');
+        }
     </script>
 
 </body>
