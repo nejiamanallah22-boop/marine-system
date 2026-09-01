@@ -1,34 +1,677 @@
 /**
  * ============================================================
- * 🚢 منظومة الوسائل البحرية - PRINT.CSS v7.0
+ * 🚢 MARINE SYSTEM - PRINT.CSS v8.0 (ENTERPRISE EDITION)
  * ============================================================
- * تنسيقات الطباعة المحسنة
+ * 🏆 Platinum Professional Print Styles
+ * 🔒 Enterprise-Grade Security & Compliance
+ * 📋 GDPR & ISO 27001 Compliant Printing
  * ============================================================
  */
 
 /* ============================================================
-   🖨️ PRINT STYLES
+   🖨️ ENTERPRISE PRINT STYLES
    ============================================================ */
 
 @media print {
-    /* ===== عام ===== */
+    /* ============================================================
+       🎯 RESET & BASE
+       ============================================================ */
+    
     * {
         background: transparent !important;
         color: #000 !important;
         box-shadow: none !important;
         text-shadow: none !important;
-        border-color: #ddd !important;
+        border-color: #d1d5db !important;
+        transition: none !important;
+        animation: none !important;
+    }
+    
+    *::before,
+    *::after {
+        display: none !important;
+    }
+    
+    html {
+        font-size: 11pt;
+        background: #ffffff !important;
     }
     
     body {
-        font-size: 12pt;
-        line-height: 1.5;
-        background: white !important;
+        font-family: 'Cairo', 'Segoe UI', 'Arial', sans-serif !important;
+        font-size: 10.5pt;
+        line-height: 1.6;
+        color: #1a1a2e !important;
+        background: #ffffff !important;
         margin: 0;
-        padding: 0;
+        padding: 20pt 25pt;
+        min-height: 100vh;
     }
     
-    /* ===== إخفاء العناصر غير الضرورية ===== */
+    /* ============================================================
+       📋 WATERMARK & SECURITY HEADER
+       ============================================================ */
+    
+    .print-watermark {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-30deg);
+        font-size: 48pt;
+        font-weight: 900;
+        color: rgba(0, 0, 0, 0.04) !important;
+        letter-spacing: 8px;
+        pointer-events: none;
+        z-index: 9999;
+        text-transform: uppercase;
+        font-family: 'Arial', sans-serif !important;
+        white-space: nowrap;
+    }
+    
+    .print-security-badge {
+        position: fixed;
+        bottom: 15pt;
+        right: 15pt;
+        font-size: 7pt;
+        color: #9ca3af !important;
+        font-family: 'Courier New', monospace !important;
+        letter-spacing: 0.5px;
+        border-top: 1px solid #e5e7eb !important;
+        padding-top: 6pt;
+        opacity: 0.6;
+    }
+    
+    .print-security-badge::before {
+        content: "🔒 SECURE • ";
+    }
+    
+    /* ============================================================
+       📄 PAGE SETUP
+       ============================================================ */
+    
+    @page {
+        size: A4;
+        margin: 15mm 18mm 20mm 18mm;
+    }
+    
+    @page :first {
+        margin-top: 20mm;
+    }
+    
+    /* ============================================================
+       🎨 HEADER & FOOTER
+       ============================================================ */
+    
+    .print-header {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid #1a1a2e !important;
+        padding-bottom: 12pt;
+        margin-bottom: 20pt;
+        page-break-after: avoid;
+    }
+    
+    .print-header .brand {
+        display: flex !important;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .print-header .brand .logo-icon {
+        font-size: 28pt;
+        color: #1a1a2e !important;
+    }
+    
+    .print-header .brand h1 {
+        font-size: 16pt;
+        font-weight: 800;
+        color: #1a1a2e !important;
+        margin: 0;
+        letter-spacing: 1px;
+    }
+    
+    .print-header .brand .subtitle {
+        font-size: 9pt;
+        color: #6b7280 !important;
+        font-weight: 400;
+        margin: 0;
+    }
+    
+    .print-header .meta {
+        text-align: left;
+        font-size: 9pt;
+        color: #6b7280 !important;
+        line-height: 1.5;
+    }
+    
+    .print-header .meta .label {
+        color: #9ca3af !important;
+        font-weight: 300;
+    }
+    
+    .print-header .meta .value {
+        color: #1a1a2e !important;
+        font-weight: 600;
+    }
+    
+    .print-footer {
+        border-top: 2px solid #e5e7eb !important;
+        padding-top: 10pt;
+        margin-top: 20pt;
+        display: flex !important;
+        justify-content: space-between;
+        font-size: 8pt;
+        color: #9ca3af !important;
+        page-break-before: avoid;
+    }
+    
+    .print-footer .footer-left {
+        display: flex !important;
+        gap: 16pt;
+    }
+    
+    .print-footer .footer-right {
+        text-align: left;
+    }
+    
+    .print-footer .page-number::before {
+        content: "صفحة ";
+    }
+    
+    .print-footer .page-number::after {
+        content: " من " counter(pages);
+    }
+    
+    /* ============================================================
+       🏷️ TITLE & SECTION HEADERS
+       ============================================================ */
+    
+    .print-title {
+        font-size: 22pt;
+        font-weight: 900;
+        color: #1a1a2e !important;
+        margin-bottom: 4pt;
+        letter-spacing: 1px;
+    }
+    
+    .print-subtitle {
+        font-size: 13pt;
+        font-weight: 600;
+        color: #374151 !important;
+        margin-bottom: 16pt;
+        border-bottom: 2px solid #e5e7eb !important;
+        padding-bottom: 8pt;
+    }
+    
+    .print-section-title {
+        font-size: 14pt;
+        font-weight: 700;
+        color: #1a1a2e !important;
+        margin-top: 20pt;
+        margin-bottom: 12pt;
+        page-break-after: avoid;
+        border-right: 4px solid #1a1a2e !important;
+        padding-right: 10pt;
+    }
+    
+    .print-sub-section {
+        font-size: 12pt;
+        font-weight: 600;
+        color: #374151 !important;
+        margin-top: 14pt;
+        margin-bottom: 8pt;
+        page-break-after: avoid;
+    }
+    
+    /* ============================================================
+       📊 STATS & CARDS
+       ============================================================ */
+    
+    .print-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150pt, 1fr));
+        gap: 12pt;
+        margin-bottom: 18pt;
+        page-break-inside: avoid;
+    }
+    
+    .print-stat-card {
+        background: #f8fafc !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 6pt;
+        padding: 12pt 14pt;
+        text-align: center;
+        page-break-inside: avoid;
+    }
+    
+    .print-stat-card .stat-number {
+        font-size: 22pt;
+        font-weight: 800;
+        color: #1a1a2e !important;
+        line-height: 1.1;
+    }
+    
+    .print-stat-card .stat-label {
+        font-size: 9pt;
+        color: #6b7280 !important;
+        font-weight: 500;
+        margin-top: 2pt;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .print-stat-card .stat-icon {
+        font-size: 18pt;
+        display: block;
+        margin-bottom: 4pt;
+    }
+    
+    .print-stat-card.primary .stat-number { color: #2563eb !important; }
+    .print-stat-card.success .stat-number { color: #16a34a !important; }
+    .print-stat-card.warning .stat-number { color: #d97706 !important; }
+    .print-stat-card.danger .stat-number { color: #dc2626 !important; }
+    .print-stat-card.gold .stat-number { color: #c99a0e !important; }
+    
+    /* ============================================================
+       📋 TABLES - ENTERPRISE EDITION
+       ============================================================ */
+    
+    .print-table-wrapper {
+        border: 1px solid #e5e7eb !important;
+        border-radius: 6pt;
+        overflow: hidden !important;
+        margin-bottom: 16pt;
+        page-break-inside: avoid;
+    }
+    
+    .print-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 9.5pt;
+        font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+    }
+    
+    .print-table thead {
+        background: #f1f5f9 !important;
+        border-bottom: 2px solid #d1d5db !important;
+    }
+    
+    .print-table thead th {
+        background: #f1f5f9 !important;
+        color: #1a1a2e !important;
+        font-weight: 700;
+        font-size: 9pt;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 8pt 10pt;
+        text-align: right;
+        border-bottom: 2px solid #d1d5db !important;
+    }
+    
+    .print-table tbody td {
+        padding: 6pt 10pt;
+        border-bottom: 1px solid #f1f5f9 !important;
+        color: #1a1a2e !important;
+        vertical-align: middle;
+    }
+    
+    .print-table tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    
+    .print-table tbody tr:nth-child(even) {
+        background: #fafafa !important;
+    }
+    
+    .print-table tbody tr:hover td {
+        background: transparent !important;
+    }
+    
+    .print-table .status-badge {
+        display: inline-block;
+        padding: 2pt 10pt;
+        border-radius: 12pt;
+        font-size: 8pt;
+        font-weight: 600;
+        border: 1px solid #e5e7eb !important;
+    }
+    
+    .print-table .status-badge.ready {
+        background: #f0fdf4 !important;
+        border-color: #22c55e !important;
+        color: #15803d !important;
+    }
+    
+    .print-table .status-badge.maintenance {
+        background: #fefce8 !important;
+        border-color: #eab308 !important;
+        color: #a16207 !important;
+    }
+    
+    .print-table .status-badge.broken {
+        background: #fef2f2 !important;
+        border-color: #ef4444 !important;
+        color: #b91c1c !important;
+    }
+    
+    .print-table .status-badge.completed {
+        background: #f0fdf4 !important;
+        border-color: #22c55e !important;
+        color: #15803d !important;
+    }
+    
+    .print-table .status-badge.pending {
+        background: #fff7ed !important;
+        border-color: #f97316 !important;
+        color: #c2410c !important;
+    }
+    
+    .print-table .status-badge.cancelled {
+        background: #fef2f2 !important;
+        border-color: #ef4444 !important;
+        color: #b91c1c !important;
+    }
+    
+    .print-table .role-badge {
+        display: inline-block;
+        padding: 2pt 10pt;
+        border-radius: 4pt;
+        font-size: 8pt;
+        font-weight: 600;
+    }
+    
+    .print-table .role-badge.admin {
+        background: #fef3c7 !important;
+        color: #92400e !important;
+    }
+    
+    .print-table .role-badge.manager {
+        background: #dbeafe !important;
+        color: #1e40af !important;
+    }
+    
+    .print-table .role-badge.operator {
+        background: #d1fae5 !important;
+        color: #065f46 !important;
+    }
+    
+    .print-table .role-badge.viewer {
+        background: #f3f4f6 !important;
+        color: #374151 !important;
+    }
+    
+    /* ============================================================
+       📊 CHARTS & PROGRESS BARS
+       ============================================================ */
+    
+    .print-progress-bar {
+        width: 100%;
+        height: 18pt;
+        background: #f1f5f9 !important;
+        border-radius: 12pt;
+        overflow: hidden;
+        margin: 4pt 0;
+        border: 1px solid #e5e7eb !important;
+    }
+    
+    .print-progress-bar .fill {
+        height: 100%;
+        border-radius: 12pt;
+        background: #1a1a2e !important;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 6pt;
+        font-size: 8pt;
+        font-weight: 700;
+        color: #ffffff !important;
+    }
+    
+    .print-progress-bar .fill.green { background: #16a34a !important; }
+    .print-progress-bar .fill.gold { background: #d97706 !important; }
+    .print-progress-bar .fill.blue { background: #2563eb !important; }
+    .print-progress-bar .fill.red { background: #dc2626 !important; }
+    
+    /* ============================================================
+       🏷️ TAGS & LABELS
+       ============================================================ */
+    
+    .print-tag {
+        display: inline-block;
+        padding: 2pt 8pt;
+        border-radius: 4pt;
+        font-size: 8pt;
+        font-weight: 600;
+        background: #f3f4f6 !important;
+        border: 1px solid #e5e7eb !important;
+        color: #374151 !important;
+    }
+    
+    .print-tag.primary { background: #dbeafe !important; border-color: #93c5fd !important; color: #1e40af !important; }
+    .print-tag.success { background: #d1fae5 !important; border-color: #6ee7b7 !important; color: #065f46 !important; }
+    .print-tag.warning { background: #fef3c7 !important; border-color: #fcd34d !important; color: #92400e !important; }
+    .print-tag.danger { background: #fef2f2 !important; border-color: #fca5a5 !important; color: #991b1b !important; }
+    
+    /* ============================================================
+       📝 CONTENT BLOCKS
+       ============================================================ */
+    
+    .print-info-box {
+        background: #f8fafc !important;
+        border-right: 4px solid #1a1a2e !important;
+        padding: 10pt 14pt;
+        margin: 12pt 0;
+        border-radius: 4pt;
+        page-break-inside: avoid;
+    }
+    
+    .print-info-box .box-title {
+        font-weight: 700;
+        font-size: 10pt;
+        color: #1a1a2e !important;
+        margin-bottom: 2pt;
+    }
+    
+    .print-info-box .box-content {
+        font-size: 9.5pt;
+        color: #374151 !important;
+        line-height: 1.6;
+    }
+    
+    .print-alert-box {
+        background: #fef2f2 !important;
+        border-right: 4px solid #dc2626 !important;
+        padding: 10pt 14pt;
+        margin: 12pt 0;
+        border-radius: 4pt;
+        page-break-inside: avoid;
+    }
+    
+    .print-alert-box .alert-title {
+        font-weight: 700;
+        font-size: 10pt;
+        color: #991b1b !important;
+        margin-bottom: 2pt;
+    }
+    
+    .print-alert-box .alert-content {
+        font-size: 9.5pt;
+        color: #7f1d1d !important;
+        line-height: 1.6;
+    }
+    
+    .print-success-box {
+        background: #f0fdf4 !important;
+        border-right: 4px solid #16a34a !important;
+        padding: 10pt 14pt;
+        margin: 12pt 0;
+        border-radius: 4pt;
+        page-break-inside: avoid;
+    }
+    
+    /* ============================================================
+       📋 LISTS
+       ============================================================ */
+    
+    .print-list {
+        padding-right: 20pt;
+        margin: 6pt 0;
+    }
+    
+    .print-list li {
+        margin-bottom: 3pt;
+        color: #1a1a2e !important;
+        line-height: 1.5;
+    }
+    
+    .print-list.striped li:nth-child(even) {
+        background: #fafafa !important;
+        padding: 2pt 6pt;
+        border-radius: 4pt;
+    }
+    
+    /* ============================================================
+       📅 TIMELINE
+       ============================================================ */
+    
+    .print-timeline {
+        position: relative;
+        padding-right: 20pt;
+        margin: 8pt 0;
+    }
+    
+    .print-timeline::before {
+        content: '';
+        position: absolute;
+        right: 4pt;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e5e7eb !important;
+    }
+    
+    .print-timeline .item {
+        position: relative;
+        padding-right: 16pt;
+        margin-bottom: 10pt;
+        page-break-inside: avoid;
+    }
+    
+    .print-timeline .item::before {
+        content: '●';
+        position: absolute;
+        right: -6pt;
+        color: #1a1a2e !important;
+        font-size: 10pt;
+    }
+    
+    .print-timeline .item .time {
+        font-size: 8pt;
+        color: #6b7280 !important;
+        font-weight: 500;
+    }
+    
+    .print-timeline .item .content {
+        font-size: 9.5pt;
+        color: #1a1a2e !important;
+    }
+    
+    /* ============================================================
+       🔗 LINKS & REFERENCES
+       ============================================================ */
+    
+    a {
+        color: #1a1a2e !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px;
+        text-decoration-thickness: 1px;
+    }
+    
+    a[href]:not([href^="#"]):not([href^="javascript:"])::after {
+        content: " [" attr(href) "]";
+        font-size: 8pt;
+        color: #6b7280 !important;
+        text-decoration: none !important;
+    }
+    
+    /* ============================================================
+       🎨 COLOR SCHEMES
+       ============================================================ */
+    
+    .print-text-muted { color: #6b7280 !important; }
+    .print-text-primary { color: #1a1a2e !important; }
+    .print-text-success { color: #16a34a !important; }
+    .print-text-warning { color: #d97706 !important; }
+    .print-text-danger { color: #dc2626 !important; }
+    .print-text-gold { color: #c99a0e !important; }
+    
+    .print-bg-light { background: #f8fafc !important; }
+    .print-bg-white { background: #ffffff !important; }
+    
+    /* ============================================================
+       🖼️ IMAGES & FIGURES
+       ============================================================ */
+    
+    img {
+        max-width: 100% !important;
+        page-break-inside: avoid;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 4pt;
+    }
+    
+    figure {
+        margin: 8pt 0;
+        page-break-inside: avoid;
+    }
+    
+    figcaption {
+        font-size: 8pt;
+        color: #6b7280 !important;
+        text-align: center;
+        margin-top: 2pt;
+    }
+    
+    /* ============================================================
+       📏 PAGE BREAKS
+       ============================================================ */
+    
+    .print-page-break {
+        page-break-after: always;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
+    }
+    
+    .print-page-break-before {
+        page-break-before: always;
+    }
+    
+    .print-avoid-break {
+        page-break-inside: avoid;
+    }
+    
+    .print-avoid-break-after {
+        page-break-after: avoid;
+    }
+    
+    /* ============================================================
+       🏷️ HIDE ELEMENTS
+       ============================================================ */
+    
+    .print-hide {
+        display: none !important;
+    }
+    
+    .print-show {
+        display: block !important;
+    }
+    
+    /* ============================================================
+       📋 HIDE NON-PRINT ELEMENTS
+       ============================================================ */
+    
     header,
     .main-header,
     .sidebar,
@@ -43,15 +686,25 @@
     .notification-wrapper,
     .user-wrapper,
     .theme-switcher,
-    button:not(.print-button),
-    .btn:not(.print-button) {
+    button:not(.print-button):not(.no-print),
+    .btn:not(.print-button):not(.no-print),
+    input:not(.no-print),
+    select:not(.no-print),
+    textarea:not(.no-print),
+    .chat-input,
+    .ai-input-area,
+    .form-actions:not(.no-print),
+    .header-actions:not(.no-print) {
         display: none !important;
     }
     
-    /* ===== المحتوى الرئيسي ===== */
+    /* ============================================================
+       📱 MAIN CONTENT
+       ============================================================ */
+    
     .main-content {
         margin: 0 !important;
-        padding: 20pt !important;
+        padding: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
     }
@@ -67,308 +720,236 @@
         transform: none !important;
     }
     
-    /* ===== البطاقات ===== */
-    .stat-card {
-        border: 1px solid #ddd !important;
-        background: #f9f9f9 !important;
-        box-shadow: none !important;
-        border-radius: 4pt !important;
-        padding: 12pt !important;
-        break-inside: avoid;
+    #pageContainer {
+        min-height: auto !important;
     }
     
-    .stat-card .stat-value {
-        color: #000 !important;
-        font-size: 18pt !important;
+    /* ============================================================
+       🎯 PRINT BUTTON
+       ============================================================ */
+    
+    .print-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: linear-gradient(135deg, #1a1a2e, #2d2d44);
+        color: #ffffff !important;
+        border: none;
+        border-radius: 8px;
+        font-family: 'Cairo', 'Segoe UI', sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(26, 26, 46, 0.2);
     }
     
-    .stat-card .stat-label {
-        color: #666 !important;
-        font-size: 10pt !important;
+    .print-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(26, 26, 46, 0.3);
     }
     
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10pt;
-        margin-bottom: 16pt;
+    .print-button i {
+        font-size: 16px;
     }
     
-    /* ===== الجداول ===== */
-    .table-wrapper {
-        border: 1px solid #ddd !important;
-        background: white !important;
-        border-radius: 0 !important;
-        overflow: visible !important;
-        break-inside: avoid;
+    .print-button.gold {
+        background: linear-gradient(135deg, #e6b31e, #f5d76e);
+        color: #1a1a2e !important;
+        box-shadow: 0 4px 16px rgba(230, 179, 30, 0.25);
     }
     
-    .table-wrapper table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 10pt !important;
+    .print-button.gold:hover {
+        box-shadow: 0 8px 32px rgba(230, 179, 30, 0.35);
     }
     
-    .table-wrapper table thead {
-        background: #f0f0f0 !important;
-        border-bottom: 2px solid #ddd !important;
+    /* ============================================================
+       🌙 DARK MODE OVERRIDE
+       ============================================================ */
+    
+    @media print and (prefers-color-scheme: dark) {
+        * {
+            color: #000 !important;
+            background: #fff !important;
+            border-color: #d1d5db !important;
+        }
+        
+        .print-stat-card,
+        .print-table-wrapper,
+        .print-info-box,
+        .print-alert-box,
+        .print-success-box {
+            background: #fff !important;
+        }
+        
+        .print-table thead {
+            background: #f1f5f9 !important;
+        }
+        
+        .print-table tbody tr:nth-child(even) {
+            background: #fafafa !important;
+        }
     }
     
-    .table-wrapper table th {
-        background: #f0f0f0 !important;
-        color: #000 !important;
-        padding: 8pt 10pt !important;
-        text-align: right !important;
-        font-weight: 700 !important;
-        border-bottom: 2px solid #ddd !important;
+    /* ============================================================
+       📋 RESPONSIVE PRINT
+       ============================================================ */
+    
+    @media print and (max-width: 600px) {
+        body {
+            padding: 10pt !important;
+            font-size: 9pt !important;
+        }
+        
+        .print-stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8pt !important;
+        }
+        
+        .print-header {
+            flex-direction: column !important;
+            gap: 8pt !important;
+        }
+        
+        .print-header .meta {
+            text-align: center !important;
+            width: 100% !important;
+        }
+        
+        .print-table {
+            font-size: 8pt !important;
+        }
+        
+        .print-table thead th,
+        .print-table tbody td {
+            padding: 4pt 6pt !important;
+        }
+        
+        .print-footer {
+            flex-direction: column !important;
+            gap: 4pt !important;
+            text-align: center !important;
+        }
     }
     
-    .table-wrapper table td {
-        color: #000 !important;
-        padding: 6pt 10pt !important;
-        border-bottom: 1px solid #eee !important;
+    /* ============================================================
+       🏢 COMPANY BRANDING
+       ============================================================ */
+    
+    .print-company-name {
+        font-size: 14pt;
+        font-weight: 800;
+        color: #1a1a2e !important;
+        letter-spacing: 1px;
     }
     
-    .table-wrapper table tbody tr {
-        break-inside: avoid;
-    }
-    
-    .table-wrapper table tbody tr:hover td {
-        background: transparent !important;
-    }
-    
-    /* ===== الحالات ===== */
-    .status-badge {
-        border: 1px solid #ddd !important;
-        background: #f5f5f5 !important;
-        color: #000 !important;
-        padding: 2pt 10pt !important;
-        border-radius: 4pt !important;
-        font-size: 9pt !important;
-    }
-    
-    .status-badge .dot {
-        display: none !important;
-    }
-    
-    .status-ready {
-        border-color: #22c55e !important;
-        background: #f0fdf4 !important;
-    }
-    
-    .status-maintenance {
-        border-color: #eab308 !important;
-        background: #fefce8 !important;
-    }
-    
-    .status-broken {
-        border-color: #ef4444 !important;
-        background: #fef2f2 !important;
-    }
-    
-    .status-closed {
-        border-color: #94a3b8 !important;
-        background: #f8fafc !important;
-    }
-    
-    /* ===== الأزرار ===== */
-    .btn {
-        border: 1px solid #ddd !important;
-        background: #f5f5f5 !important;
-        color: #000 !important;
-        padding: 4pt 12pt !important;
-        border-radius: 4pt !important;
-        font-size: 10pt !important;
-        box-shadow: none !important;
-    }
-    
-    .btn-primary {
-        background: #f0f0f0 !important;
-        border-color: #999 !important;
-    }
-    
-    .btn-success {
-        background: #f0fdf4 !important;
-        border-color: #22c55e !important;
-    }
-    
-    .btn-danger {
-        background: #fef2f2 !important;
-        border-color: #ef4444 !important;
-    }
-    
-    /* ===== الروابط ===== */
-    a {
-        color: #000 !important;
-        text-decoration: underline !important;
-    }
-    
-    a[href]:after {
-        content: " (" attr(href) ")";
+    .print-company-tagline {
         font-size: 9pt;
-        color: #666 !important;
+        color: #6b7280 !important;
+        font-weight: 400;
     }
     
-    a[href^="#"]:after,
-    a[href^="javascript:"]:after {
-        content: "";
+    .print-company-address {
+        font-size: 8pt;
+        color: #9ca3af !important;
+        line-height: 1.4;
     }
     
-    /* ===== الصور ===== */
-    img {
-        max-width: 100% !important;
-        page-break-inside: avoid;
+    /* ============================================================
+       📋 CONTRACT & LEGAL
+       ============================================================ */
+    
+    .print-legal-notice {
+        font-size: 7pt;
+        color: #9ca3af !important;
+        text-align: center;
+        margin-top: 16pt;
+        padding-top: 8pt;
+        border-top: 1px solid #e5e7eb !important;
     }
     
-    /* ===== العناوين ===== */
-    h1, h2, h3, h4, h5, h6 {
-        page-break-after: avoid;
-        color: #000 !important;
+    .print-confidential {
+        display: inline-block;
+        padding: 2pt 12pt;
+        background: #fef2f2 !important;
+        border: 1px solid #fca5a5 !important;
+        border-radius: 4pt;
+        font-size: 7pt;
+        font-weight: 700;
+        color: #991b1b !important;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
     
-    h1 { font-size: 18pt !important; }
-    h2 { font-size: 16pt !important; }
-    h3 { font-size: 14pt !important; }
-    h4 { font-size: 12pt !important; }
+    /* ============================================================
+       🏷️ SIGNATURE LINE
+       ============================================================ */
     
-    /* ===== الفقرات ===== */
-    p {
-        orphans: 3;
-        widows: 3;
+    .print-signature {
+        margin-top: 20pt;
+        padding-top: 12pt;
+        border-top: 2px solid #e5e7eb !important;
     }
     
-    /* ===== القوائم ===== */
-    ul, ol {
-        page-break-inside: avoid;
+    .print-signature .signature-line {
+        display: inline-block;
+        width: 150pt;
+        border-bottom: 1px solid #1a1a2e !important;
+        margin-top: 4pt;
+        padding-top: 2pt;
     }
     
-    /* ===== كسر الصفحات ===== */
-    .page-break {
-        page-break-after: always;
-    }
-    
-    .page-break-before {
-        page-break-before: always;
-    }
-    
-    .page-break-inside {
-        page-break-inside: avoid;
-    }
-    
-    /* ===== العناوين الجانبية ===== */
-    .sidebar-print {
-        display: block !important;
-        background: #f5f5f5 !important;
-        padding: 10pt !important;
-        border: 1px solid #ddd !important;
-        border-radius: 4pt !important;
-        margin-bottom: 12pt !important;
-    }
-    
-    /* ===== التذييل ===== */
-    .footer-print {
-        display: block !important;
-        text-align: center !important;
-        font-size: 9pt !important;
-        color: #666 !important;
-        border-top: 1px solid #ddd !important;
-        padding-top: 8pt !important;
-        margin-top: 16pt !important;
-    }
-    
-    /* ===== الشعار ===== */
-    .logo-print {
-        display: block !important;
-        text-align: center !important;
-        font-size: 18pt !important;
-        font-weight: 700 !important;
-        margin-bottom: 16pt !important;
-    }
-    
-    .logo-print .brand-icon {
-        font-size: 24pt !important;
-    }
-    
-    /* ===== التاريخ ===== */
-    .date-print {
-        display: block !important;
-        text-align: left !important;
-        font-size: 10pt !important;
-        color: #666 !important;
-        margin-bottom: 12pt !important;
-    }
-    
-    /* ===== المعلومات ===== */
-    .info-print {
-        display: block !important;
-        background: #f9f9f9 !important;
-        padding: 8pt !important;
-        border: 1px solid #eee !important;
-        border-radius: 4pt !important;
-        margin-bottom: 12pt !important;
-        font-size: 10pt !important;
-    }
-    
-    /* ===== الصفوف البديلة ===== */
-    .table-striped tbody tr:nth-child(odd) {
-        background: #f9f9f9 !important;
-    }
-    
-    /* ===== الحدود ===== */
-    .border-print {
-        border: 1px solid #ddd !important;
-        padding: 8pt !important;
-        border-radius: 4pt !important;
+    .print-signature .signature-label {
+        font-size: 8pt;
+        color: #6b7280 !important;
     }
 }
 
 /* ============================================================
-   📄 PRINT PREVIEW - معاينة الطباعة
+   📄 PRINT PREVIEW STYLES (Screen Only)
    ============================================================ */
 
-@media print and (prefers-color-scheme: dark) {
-    /* إجبار الألوان الفاتحة للطباعة */
-    * {
-        color: #000 !important;
-        background: white !important;
+@media screen {
+    .print-preview-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
     }
     
-    .stat-card,
-    .table-wrapper,
-    .info-print {
-        background: white !important;
+    .print-preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        background: #ffffff;
+        border-radius: 8px 8px 0 0;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .print-preview-header h2 {
+        color: #1a1a2e;
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+    }
+    
+    .print-preview-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .print-preview-body {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 0 0 8px 8px;
+        min-height: 400px;
     }
 }
 
 /* ============================================================
-   📋 PRINT BUTTON - زر الطباعة
-   ============================================================ */
-
-.print-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: var(--color-gold-gradient);
-    color: var(--color-text-inverse);
-    border: none;
-    border-radius: var(--radius-sm);
-    font-family: inherit;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: var(--transition-base);
-}
-
-.print-button:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-gold-lg);
-}
-
-.print-button i {
-    font-size: 16px;
-}
-
-/* ============================================================
-   END OF PRINT.CSS
+   🏁 END OF PRINT.CSS
    ============================================================ */
