@@ -1,53 +1,60 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - PRINT.CSS v15.0 (RESPONSIVE PRINT)
+ * 🚢 MARINE SYSTEM - PRINT.CSS v18.0 (PRESERVE COLORS)
  * ============================================================
- * 📱 FULLY RESPONSIVE PRINT STYLES
- * 🎨 PROFESSIONAL COLORS & LAYOUT
- * 📋 PERFECT FOR ALL SCREEN SIZES
+ * 🎯 الحفاظ على الألوان والتنسيق الأصلي للصفحة
+ * 📋 نفس الألوان في الطباعة كما في الشاشة
  * ============================================================
  */
 
 /* ============================================================
-   🖨️ BASE PRINT STYLES
+   🖨️ PRINT STYLES - PRESERVE ORIGINAL COLORS
    ============================================================ */
 
 @media print {
     
-    /* ===== RESET ===== */
+    /* ============================================================
+       🎯 BASE - الحفاظ على الألوان والتنسيق
+       ============================================================ */
+    
     * {
         box-shadow: none !important;
         text-shadow: none !important;
         transition: none !important;
         animation: none !important;
+        /* ✅ لا نغير أي ألوان أو خلفيات */
     }
     
     html {
-        background: #f0f2f5 !important;
+        background: #0a1628 !important; /* ✅ خلفية داكنة */
     }
     
     body {
-        background: #ffffff !important;
-        color: #1a1a2e !important;
+        background: #0a1628 !important; /* ✅ خلفية داكنة */
+        color: #e2e8f0 !important; /* ✅ نص فاتح */
         font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif !important;
         font-size: 10pt !important;
         line-height: 1.6 !important;
         margin: 0 !important;
-        padding: 15pt 20pt !important;
+        padding: 20pt 25pt !important;
         width: 100% !important;
         direction: rtl !important;
-        box-shadow: 0 2px 20px rgba(0,0,0,0.06) !important;
-        border-radius: 4pt !important;
     }
     
-    /* ===== PAGE SETUP ===== */
+    /* ============================================================
+       📄 PAGE SETUP
+       ============================================================ */
+    
     @page {
         size: A4 portrait;
-        margin: 8mm 10mm 10mm 10mm;
-        background: #f0f2f5 !important;
+        margin: 10mm 12mm 12mm 12mm;
+        background: #0a1628 !important; /* ✅ خلفية داكنة للصفحة */
     }
     
-    /* ===== HIDE NON-PRINT ===== */
+    /* ============================================================
+       🗑️ HIDE NON-PRINT
+       ============================================================ */
+    
     header, .main-header, .sidebar, .nav, .menu-toggle,
     .back-to-top, .toast-container, .modal-overlay,
     .connection-status, .no-print, .search-wrapper,
@@ -59,7 +66,10 @@
         display: none !important;
     }
     
-    /* ===== MAIN CONTENT ===== */
+    /* ============================================================
+       📱 MAIN CONTENT
+       ============================================================ */
+    
     .main-content {
         margin: 0 !important;
         padding: 0 !important;
@@ -74,97 +84,112 @@
     }
     
     /* ============================================================
-       📊 STATS CARDS
+       📊 STATS CARDS - الحفاظ على الألوان
        ============================================================ */
     
     .stats-grid {
         display: grid !important;
         grid-template-columns: repeat(4, 1fr) !important;
-        gap: 10pt !important;
-        margin-bottom: 14pt !important;
+        gap: 12pt !important;
+        margin-bottom: 16pt !important;
         page-break-inside: avoid !important;
     }
     
     .stat-card {
-        background: linear-gradient(145deg, #f8fafc, #eef2f6) !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 6pt !important;
-        padding: 10pt 12pt !important;
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        border-radius: 12pt !important;
+        padding: 12pt 14pt !important;
         text-align: center !important;
         page-break-inside: avoid !important;
+        box-shadow: none !important;
     }
     
     .stat-card .stat-value {
-        font-size: 20pt !important;
-        font-weight: 800 !important;
-        color: #1a1a2e !important;
+        font-size: 22pt !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
         margin: 0 !important;
         line-height: 1.2 !important;
     }
     
     .stat-card .stat-label {
-        font-size: 8.5pt !important;
-        color: #475569 !important;
-        font-weight: 600 !important;
-        margin: 2pt 0 0 !important;
+        font-size: 9pt !important;
+        color: rgba(255,255,255,0.4) !important;
+        font-weight: 500 !important;
+        margin: 3pt 0 0 !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: 0.5px !important;
     }
     
     .stat-card .stat-icon {
-        font-size: 18pt !important;
+        font-size: 20pt !important;
         display: block !important;
-        margin-bottom: 3pt !important;
+        margin-bottom: 4pt !important;
     }
     
+    /* ✅ ألوان القيم كما هي في الصفحة */
+    .stat-card.total .stat-value { color: #60a5fa !important; }
+    .stat-card.active .stat-value { color: #4ade80 !important; }
+    .stat-card.broken .stat-value { color: #f87171 !important; }
+    .stat-card.maintenance .stat-value { color: #fbbf24 !important; }
+    .stat-card.completed .stat-value { color: #4ade80 !important; }
+    .stat-card.pending .stat-value { color: #fbbf24 !important; }
+    .stat-card.cancelled .stat-value { color: #f87171 !important; }
+    .stat-card.gold .stat-value { color: #f5d76e !important; }
+    
     /* ============================================================
-       📋 TABLES
+       📋 TABLES - الحفاظ على التنسيق
        ============================================================ */
     
     .table-wrapper {
-        border: 1px solid #d1d5db !important;
-        border-radius: 6pt !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        border-radius: 12pt !important;
         overflow: hidden !important;
-        margin: 10pt 0 14pt !important;
+        margin: 12pt 0 16pt !important;
         page-break-inside: avoid !important;
-        background: #ffffff !important;
+        background: rgba(255,255,255,0.02) !important;
     }
     
     .table-wrapper table {
         width: 100% !important;
         border-collapse: collapse !important;
-        font-size: 9pt !important;
-        background: #ffffff !important;
+        font-size: 9.5pt !important;
+        background: transparent !important;
     }
     
     .table-wrapper table thead {
-        background: #e5e7eb !important;
-        border-bottom: 2px solid #9ca3af !important;
+        background: rgba(255,255,255,0.04) !important;
+        border-bottom: 2px solid rgba(255,255,255,0.06) !important;
     }
     
     .table-wrapper table thead th {
-        background: #e5e7eb !important;
-        color: #1a1a2e !important;
-        font-weight: 700 !important;
-        font-size: 8.5pt !important;
+        background: rgba(255,255,255,0.04) !important;
+        color: rgba(255,255,255,0.7) !important;
+        font-weight: 600 !important;
+        font-size: 9pt !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.3px !important;
-        padding: 6pt 10pt !important;
+        letter-spacing: 0.5px !important;
+        padding: 8pt 12pt !important;
         text-align: center !important;
-        border-bottom: 2px solid #9ca3af !important;
+        border-bottom: 2px solid rgba(255,255,255,0.06) !important;
     }
     
     .table-wrapper table tbody td {
-        padding: 5pt 10pt !important;
-        border-bottom: 1px solid #e5e7eb !important;
-        color: #1a1a2e !important;
+        padding: 7pt 12pt !important;
+        border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+        color: rgba(255,255,255,0.8) !important;
         text-align: center !important;
         vertical-align: middle !important;
-        background: #ffffff !important;
+        background: transparent !important;
     }
     
     .table-wrapper table tbody tr:nth-child(even) td {
-        background: #f8fafc !important;
+        background: rgba(255,255,255,0.02) !important;
+    }
+    
+    .table-wrapper table tbody tr:hover td {
+        background: rgba(255,255,255,0.04) !important;
     }
     
     .table-wrapper table tbody tr:last-child td {
@@ -172,90 +197,91 @@
     }
     
     /* ============================================================
-       🏷️ STATUS BADGES
+       🏷️ STATUS BADGES - الألوان الأصلية
        ============================================================ */
     
     .status-badge {
         display: inline-block !important;
-        padding: 2pt 12pt !important;
-        border-radius: 12pt !important;
-        font-size: 8pt !important;
+        padding: 4pt 14pt !important;
+        border-radius: 20pt !important;
+        font-size: 8.5pt !important;
         font-weight: 600 !important;
-        border: 1px solid #d1d5db !important;
-        background: #f1f5f9 !important;
-        color: #1a1a2e !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        background: rgba(255,255,255,0.04) !important;
+        color: rgba(255,255,255,0.8) !important;
     }
     
     .status-badge .dot {
         display: none !important;
     }
     
+    /* ✅ ألوان الحالات الأصلية */
     .status-badge.ready,
     .status-badge.success,
     .status-badge.completed {
-        background: #dcfce7 !important;
-        border-color: #22c55e !important;
-        color: #166534 !important;
+        background: rgba(74,222,128,0.12) !important;
+        border-color: rgba(74,222,128,0.1) !important;
+        color: #4ade80 !important;
     }
     
     .status-badge.maintenance,
     .status-badge.in-progress,
     .status-badge.pending {
-        background: #fef9c3 !important;
-        border-color: #eab308 !important;
-        color: #854d0e !important;
+        background: rgba(251,191,36,0.12) !important;
+        border-color: rgba(251,191,36,0.1) !important;
+        color: #fbbf24 !important;
     }
     
     .status-badge.broken,
     .status-badge.danger,
     .status-badge.cancelled {
-        background: #fecaca !important;
-        border-color: #ef4444 !important;
-        color: #991b1b !important;
+        background: rgba(248,113,113,0.12) !important;
+        border-color: rgba(248,113,113,0.1) !important;
+        color: #f87171 !important;
     }
     
     .status-badge.inactive,
     .status-badge.closed {
-        background: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #475569 !important;
+        background: rgba(255,255,255,0.04) !important;
+        border-color: rgba(255,255,255,0.06) !important;
+        color: rgba(255,255,255,0.3) !important;
     }
     
     /* ============================================================
-       👤 ROLE BADGES
+       👤 ROLE BADGES - الألوان الأصلية
        ============================================================ */
     
     .role-badge {
         display: inline-block !important;
-        padding: 2pt 10pt !important;
-        border-radius: 4pt !important;
-        font-size: 7.5pt !important;
+        padding: 3pt 12pt !important;
+        border-radius: 20pt !important;
+        font-size: 8pt !important;
         font-weight: 600 !important;
-        border: 1px solid #d1d5db !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
     }
     
     .role-badge.admin {
-        background: #fef3c7 !important;
-        border-color: #f59e0b !important;
-        color: #92400e !important;
+        background: rgba(245,215,110,0.12) !important;
+        border-color: rgba(245,215,110,0.1) !important;
+        color: #f5d76e !important;
     }
     
     .role-badge.manager {
-        background: #dbeafe !important;
-        border-color: #3b82f6 !important;
-        color: #1e40af !important;
+        background: rgba(96,165,250,0.12) !important;
+        border-color: rgba(96,165,250,0.1) !important;
+        color: #60a5fa !important;
     }
     
     .role-badge.operator {
-        background: #d1fae5 !important;
-        border-color: #22c55e !important;
-        color: #065f46 !important;
+        background: rgba(74,222,128,0.12) !important;
+        border-color: rgba(74,222,128,0.1) !important;
+        color: #4ade80 !important;
     }
     
     .role-badge.viewer {
-        background: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #475569 !important;
+        background: rgba(255,255,255,0.04) !important;
+        border-color: rgba(255,255,255,0.06) !important;
+        color: rgba(255,255,255,0.3) !important;
     }
     
     /* ============================================================
@@ -263,24 +289,24 @@
        ============================================================ */
     
     .info-box {
-        background: #f1f5f9 !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 6pt !important;
-        padding: 10pt 14pt !important;
-        margin: 10pt 0 !important;
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        border-radius: 12pt !important;
+        padding: 12pt 16pt !important;
+        margin: 12pt 0 !important;
         page-break-inside: avoid !important;
     }
     
     .info-box .title {
         font-weight: 700 !important;
-        font-size: 9.5pt !important;
-        color: #1a1a2e !important;
-        margin-bottom: 3pt !important;
+        font-size: 10pt !important;
+        color: #e2e8f0 !important;
+        margin-bottom: 4pt !important;
     }
     
     .info-box .content {
         font-size: 9pt !important;
-        color: #1e293b !important;
+        color: rgba(255,255,255,0.6) !important;
         line-height: 1.6 !important;
     }
     
@@ -290,60 +316,61 @@
     
     .progress-bar {
         width: 100% !important;
-        height: 14pt !important;
-        background: #e5e7eb !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 8pt !important;
+        height: 16pt !important;
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        border-radius: 10pt !important;
         overflow: hidden !important;
-        margin: 3pt 0 !important;
+        margin: 4pt 0 !important;
     }
     
     .progress-bar .fill {
         height: 100% !important;
-        border-radius: 6pt !important;
-        background: #1a1a2e !important;
+        border-radius: 8pt !important;
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
-        padding-right: 4pt !important;
-        font-size: 7pt !important;
+        padding-right: 6pt !important;
+        font-size: 8pt !important;
         font-weight: 700 !important;
         color: #ffffff !important;
     }
     
-    .progress-bar .fill.green { background: #16a34a !important; }
-    .progress-bar .fill.gold { background: #d97706 !important; }
-    .progress-bar .fill.blue { background: #2563eb !important; }
-    .progress-bar .fill.red { background: #dc2626 !important; }
+    .progress-bar .fill.green { background: #4ade80 !important; }
+    .progress-bar .fill.gold { background: #fbbf24 !important; }
+    .progress-bar .fill.blue { background: #60a5fa !important; }
+    .progress-bar .fill.red { background: #f87171 !important; }
+    .progress-bar .fill.default { background: #e2e8f0 !important; }
     
     /* ============================================================
        🏷️ TITLES
        ============================================================ */
     
     .section-title {
-        font-size: 15pt !important;
-        font-weight: 800 !important;
-        color: #1a1a2e !important;
-        margin: 18pt 0 10pt !important;
-        padding-bottom: 5pt !important;
-        border-bottom: 2px solid #1a1a2e !important;
+        font-size: 16pt !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        margin: 20pt 0 12pt !important;
+        padding-bottom: 6pt !important;
+        border-bottom: 2px solid rgba(255,255,255,0.06) !important;
         page-break-after: avoid !important;
     }
     
     .page-title {
-        font-size: 20pt !important;
-        font-weight: 900 !important;
-        color: #1a1a2e !important;
+        font-size: 22pt !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
         margin: 0 0 4pt !important;
+        letter-spacing: 1px !important;
     }
     
     .page-subtitle {
-        font-size: 12pt !important;
-        font-weight: 700 !important;
-        color: #475569 !important;
-        margin: 0 0 14pt !important;
-        border-bottom: 1px solid #e5e7eb !important;
-        padding-bottom: 5pt !important;
+        font-size: 13pt !important;
+        font-weight: 600 !important;
+        color: rgba(255,255,255,0.4) !important;
+        margin: 0 0 16pt !important;
+        border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+        padding-bottom: 6pt !important;
     }
     
     /* ============================================================
@@ -351,15 +378,15 @@
        ============================================================ */
     
     a {
-        color: #1a1a2e !important;
+        color: #f5d76e !important;
         text-decoration: underline !important;
         font-weight: 600 !important;
     }
     
     a[href]:not([href^="#"]):not([href^="javascript:"])::after {
         content: " [" attr(href) "]" !important;
-        font-size: 7pt !important;
-        color: #6b7280 !important;
+        font-size: 8pt !important;
+        color: rgba(255,255,255,0.2) !important;
         text-decoration: none !important;
     }
     
@@ -371,53 +398,55 @@
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
-        border-bottom: 2px solid #1a1a2e !important;
-        padding-bottom: 10pt !important;
-        margin-bottom: 16pt !important;
+        border-bottom: 2px solid rgba(255,255,255,0.06) !important;
+        padding-bottom: 12pt !important;
+        margin-bottom: 18pt !important;
         page-break-after: avoid !important;
-        background: #ffffff !important;
+        background: transparent !important;
     }
     
     .print-header .brand {
         display: flex !important;
         align-items: center !important;
-        gap: 10px !important;
+        gap: 12px !important;
     }
     
     .print-header .brand .logo-icon {
-        font-size: 24pt !important;
+        font-size: 26pt !important;
+        color: #f5d76e !important;
     }
     
     .print-header .brand h1 {
-        font-size: 16pt !important;
+        font-size: 18pt !important;
         font-weight: 800 !important;
-        color: #1a1a2e !important;
+        color: #ffffff !important;
         margin: 0 !important;
+        letter-spacing: 1px !important;
     }
     
     .print-header .brand .subtitle {
-        font-size: 8pt !important;
-        color: #6b7280 !important;
+        font-size: 9pt !important;
+        color: rgba(255,255,255,0.3) !important;
         margin: 0 !important;
     }
     
     .print-header .meta {
         text-align: left !important;
-        font-size: 8pt !important;
-        color: #6b7280 !important;
-        line-height: 1.4 !important;
+        font-size: 9pt !important;
+        color: rgba(255,255,255,0.3) !important;
+        line-height: 1.5 !important;
     }
     
     .print-footer {
-        border-top: 1px solid #e5e7eb !important;
-        padding-top: 8pt !important;
-        margin-top: 16pt !important;
+        border-top: 1px solid rgba(255,255,255,0.06) !important;
+        padding-top: 10pt !important;
+        margin-top: 18pt !important;
         display: flex !important;
         justify-content: space-between !important;
-        font-size: 7.5pt !important;
-        color: #94a3b8 !important;
+        font-size: 8pt !important;
+        color: rgba(255,255,255,0.2) !important;
         page-break-before: avoid !important;
-        background: #ffffff !important;
+        background: transparent !important;
     }
     
     .print-footer .page-number::before {
@@ -452,7 +481,6 @@
        📱 RESPONSIVE PRINT
        ============================================================ */
     
-    /* ===== شاشات متوسطة (Tablet) ===== */
     @media print and (max-width: 768px) {
         body {
             font-size: 9pt !important;
@@ -494,7 +522,6 @@
         }
     }
     
-    /* ===== شاشات صغيرة (Mobile) ===== */
     @media print and (max-width: 480px) {
         body {
             font-size: 8pt !important;
@@ -522,11 +549,6 @@
             font-size: 14pt !important;
         }
         
-        .table-wrapper {
-            border-radius: 4pt !important;
-            margin: 6pt 0 10pt !important;
-        }
-        
         .table-wrapper table {
             font-size: 7pt !important;
         }
@@ -538,7 +560,6 @@
         
         .section-title {
             font-size: 12pt !important;
-            margin: 12pt 0 6pt !important;
         }
         
         .page-title {
@@ -549,133 +570,8 @@
             font-size: 10pt !important;
         }
         
-        .print-header .brand .logo-icon {
-            font-size: 18pt !important;
-        }
-        
         .print-header .brand h1 {
             font-size: 13pt !important;
-        }
-        
-        .print-header .brand .subtitle {
-            font-size: 7pt !important;
-        }
-        
-        .info-box {
-            padding: 6pt 10pt !important;
-            margin: 6pt 0 !important;
-        }
-        
-        .info-box .title {
-            font-size: 8pt !important;
-        }
-        
-        .info-box .content {
-            font-size: 7.5pt !important;
-        }
-        
-        .status-badge {
-            font-size: 7pt !important;
-            padding: 2pt 8pt !important;
-        }
-        
-        .role-badge {
-            font-size: 6.5pt !important;
-            padding: 1pt 6pt !important;
-        }
-    }
-    
-    /* ===== شاشات صغيرة جداً ===== */
-    @media print and (max-width: 360px) {
-        body {
-            font-size: 7pt !important;
-            padding: 5pt 6pt !important;
-        }
-        
-        .stats-grid {
-            grid-template-columns: 1fr 1fr !important;
-            gap: 4pt !important;
-        }
-        
-        .stat-card {
-            padding: 4pt 6pt !important;
-        }
-        
-        .stat-card .stat-value {
-            font-size: 12pt !important;
-        }
-        
-        .stat-card .stat-label {
-            font-size: 6pt !important;
-        }
-        
-        .table-wrapper table {
-            font-size: 6pt !important;
-        }
-        
-        .table-wrapper table thead th,
-        .table-wrapper table tbody td {
-            padding: 2pt 4pt !important;
-        }
-        
-        .section-title {
-            font-size: 10pt !important;
-        }
-        
-        .page-title {
-            font-size: 14pt !important;
-        }
-        
-        .print-header .brand h1 {
-            font-size: 11pt !important;
-        }
-    }
-    
-    /* ============================================================
-       🌗 DARK MODE OVERRIDE
-       ============================================================ */
-    
-    @media print and (prefers-color-scheme: dark) {
-        * {
-            color: #1a1a2e !important;
-            background: #ffffff !important;
-        }
-        
-        .stat-card {
-            background: #f8fafc !important;
-        }
-        
-        .table-wrapper table thead {
-            background: #e5e7eb !important;
-        }
-        
-        .table-wrapper table tbody td {
-            background: #ffffff !important;
-        }
-        
-        .table-wrapper table tbody tr:nth-child(even) td {
-            background: #f8fafc !important;
-        }
-        
-        .status-badge.ready,
-        .status-badge.success,
-        .status-badge.completed {
-            background: #dcfce7 !important;
-            color: #166534 !important;
-        }
-        
-        .status-badge.maintenance,
-        .status-badge.in-progress,
-        .status-badge.pending {
-            background: #fef9c3 !important;
-            color: #854d0e !important;
-        }
-        
-        .status-badge.broken,
-        .status-badge.danger,
-        .status-badge.cancelled {
-            background: #fecaca !important;
-            color: #991b1b !important;
         }
     }
 }
@@ -689,31 +585,26 @@
         display: inline-flex !important;
         align-items: center !important;
         gap: 8px !important;
-        padding: 8px 18px !important;
-        background: #1a1a2e !important;
-        color: #ffffff !important;
+        padding: 10px 22px !important;
+        background: linear-gradient(135deg, #e6b31e, #f5d76e) !important;
+        color: #0a1628 !important;
         border: none !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
         font-family: 'Cairo', sans-serif !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
         cursor: pointer !important;
         transition: all 0.3s ease !important;
+        box-shadow: 0 4px 16px rgba(230, 179, 30, 0.2) !important;
     }
     
     .print-button:hover {
-        background: #2d2d44 !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 8px 32px rgba(230, 179, 30, 0.3) !important;
     }
     
     .print-button i {
-        font-size: 14px !important;
-    }
-    
-    .print-button.gold {
-        background: linear-gradient(135deg, #e6b31e, #f5d76e) !important;
-        color: #1a1a2e !important;
+        font-size: 16px !important;
     }
 }
 
