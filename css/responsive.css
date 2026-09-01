@@ -1,762 +1,547 @@
-/**
- * ============================================================
- * 🚢 منظومة الوسائل البحرية - RESPONSIVE.CSS v7.0
- * ============================================================
- * تجاوب كامل مع جميع أحجام الشاشات
- * ============================================================
- */
-
 /* ============================================================
-   📱 BREAKPOINTS
-   ============================================================ */
-
-/* ===== شاشات كبيرة (Desktop) ===== */
-@media (min-width: 1200px) {
-    .container {
-        max-width: 1140px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .sidebar {
-        width: var(--sidebar-width);
-    }
-    
-    .main-content {
-        margin-right: var(--sidebar-width);
-    }
-}
-
-/* ===== شاشات متوسطة (Tablet/Laptop) ===== */
-@media (max-width: 1199px) and (min-width: 992px) {
-    .container {
-        max-width: 960px;
-        margin: 0 auto;
-        padding: 0 16px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .sidebar {
-        width: var(--sidebar-width);
-    }
-    
-    .main-content {
-        margin-right: var(--sidebar-width);
-    }
-    
-    .brand .brand-tag {
-        display: none;
-    }
-}
-
-/* ===== شاشات صغيرة (Tablet) ===== */
-@media (max-width: 991px) {
-    /* ===== هيكل عام ===== */
-    .container {
-        padding: 0 12px;
-    }
-    
-    /* ===== القائمة الجانبية ===== */
-    .sidebar {
-        position: fixed;
-        top: var(--header-height);
-        right: -320px;
-        width: 300px;
-        height: calc(100vh - var(--header-height));
-        transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        z-index: 100;
-        background: var(--bg-secondary);
-        border-left: 1px solid var(--border-color);
-        padding: 16px 12px;
-        overflow-y: auto;
-    }
-    
-    .sidebar.open {
-        right: 0;
-    }
-    
-    /* ===== زر القائمة ===== */
-    .menu-toggle {
-        display: flex !important;
-    }
-    
-    .sidebar-header {
-        display: flex !important;
-    }
-    
-    .sidebar-brand {
-        display: flex !important;
-    }
-    
-    /* ===== المحتوى ===== */
-    .main-content {
-        margin-right: 0;
-        padding: 14px 16px;
-    }
-    
-    /* ===== الهيدر ===== */
-    .brand h1 {
-        font-size: 16px;
-    }
-    
-    .brand .brand-tag {
-        display: none;
-    }
-    
-    .search-wrapper {
-        display: none;
-    }
-    
-    .user-name {
-        display: none;
-    }
-    
-    /* ===== البطاقات ===== */
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-    
-    /* ===== الجداول ===== */
-    .table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    .table-wrapper table {
-        min-width: 600px;
-    }
-    
-    /* ===== الإشعارات ===== */
-    .notif-dropdown {
-        min-width: 280px;
-        left: -100px;
-    }
-    
-    .user-dropdown {
-        left: -40px;
-    }
-}
-
-/* ===== شاشات صغيرة جداً (Mobile) ===== */
-@media (max-width: 767px) {
-    /* ===== عام ===== */
-    body {
-        font-size: 14px;
-    }
-    
-    .container {
-        padding: 0 8px;
-    }
-    
-    /* ===== الهيدر ===== */
-    .main-header {
-        height: 56px;
-    }
-    
-    :root {
-        --header-height: 56px;
-    }
-    
-    .header-container {
-        padding: 0 10px;
-    }
-    
-    .brand h1 {
-        font-size: 14px;
-    }
-    
-    .brand .brand-icon {
-        font-size: 18px;
-    }
-    
-    .menu-toggle span {
-        width: 20px;
-        height: 2px;
-    }
-    
-    .user-avatar {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-    }
-    
-    .notif-btn {
-        font-size: 17px;
-        padding: 4px;
-    }
-    
-    /* ===== القائمة الجانبية ===== */
-    .sidebar {
-        width: 280px;
-        right: -300px;
-        padding: 12px 10px;
-    }
-    
-    .sidebar .nav-btn {
-        padding: 8px 12px;
-        font-size: 13px;
-    }
-    
-    .sidebar .nav-btn i {
-        font-size: 14px;
-    }
-    
-    /* ===== المحتوى ===== */
-    .main-content {
-        padding: 10px 12px;
-    }
-    
-    /* ===== البطاقات ===== */
-    .stats-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    
-    .stat-card {
-        padding: 14px 16px;
-    }
-    
-    .stat-card .stat-value {
-        font-size: 20px;
-    }
-    
-    .stat-card .stat-label {
-        font-size: 12px;
-    }
-    
-    .stat-card .stat-icon {
-        font-size: 20px;
-    }
-    
-    /* ===== شاشة الدخول ===== */
-    .login-box {
-        padding: 28px 20px 24px;
-        border-radius: var(--radius-lg);
-    }
-    
-    .login-logo .logo-icon {
-        font-size: 38px;
-    }
-    
-    .login-logo .logo-text {
-        font-size: 18px;
-    }
-    
-    .login-subtitle {
-        font-size: 12px;
-    }
-    
-    .developer-info {
-        flex-wrap: wrap;
-        gap: 4px;
-        margin: 12px 0 20px;
-    }
-    
-    .developer-info .dev-name {
-        font-size: 14px;
-    }
-    
-    .developer-info .dev-version {
-        font-size: 10px;
-    }
-    
-    .input-wrapper input {
-        padding: 12px 40px 12px 12px;
-        font-size: 14px;
-    }
-    
-    .login-btn {
-        padding: 14px;
-        font-size: 15px;
-    }
-    
-    .login-options {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    
-    .login-footer {
-        flex-direction: column;
-        gap: 4px;
-        font-size: 10px;
-    }
-    
-    /* ===== الإشعارات ===== */
-    .notif-dropdown {
-        min-width: 260px;
-        left: -140px;
-        max-height: 350px;
-    }
-    
-    .notif-item {
-        padding: 8px 12px;
-    }
-    
-    /* ===== قائمة المستخدم ===== */
-    .user-dropdown {
-        min-width: 200px;
-        left: -60px;
-    }
-    
-    .dropdown-header {
-        padding: 12px 14px;
-    }
-    
-    .dropdown-item {
-        padding: 8px 14px;
-        font-size: 13px;
-    }
-    
-    /* ===== المودال ===== */
-    .modal-box {
-        max-width: 95%;
-        margin: 10px;
-    }
-    
-    .modal-header {
-        padding: 12px 16px;
-    }
-    
-    .modal-header h3 {
-        font-size: 16px;
-    }
-    
-    .modal-body {
-        padding: 16px;
-        max-height: 300px;
-    }
-    
-    .modal-footer {
-        padding: 12px 16px;
-        flex-wrap: wrap;
-    }
-    
-    /* ===== الزر العلوي ===== */
-    .back-to-top {
-        width: 38px;
-        height: 38px;
-        font-size: 16px;
-        bottom: 20px;
-        right: 20px;
-    }
-    
-    /* ===== حالة الاتصال ===== */
-    .connection-status {
-        font-size: 12px;
-        padding: 6px 16px;
-        bottom: 70px;
-    }
-}
-
-/* ===== شاشات صغيرة جداً (Small Mobile) ===== */
-@media (max-width: 480px) {
-    /* ===== عام ===== */
-    body {
-        font-size: 13px;
-    }
-    
-    /* ===== الهيدر ===== */
-    .brand h1 {
-        font-size: 12px;
-    }
-    
-    .brand .brand-icon {
-        font-size: 16px;
-    }
-    
-    .menu-toggle span {
-        width: 18px;
-        height: 2px;
-    }
-    
-    .header-right {
-        gap: 4px;
-    }
-    
-    .user-avatar {
-        width: 24px;
-        height: 24px;
-        font-size: 10px;
-    }
-    
-    .notif-btn {
-        font-size: 15px;
-    }
-    
-    /* ===== شاشة الدخول ===== */
-    .login-box {
-        padding: 20px 14px 18px;
-    }
-    
-    .login-logo .logo-icon {
-        font-size: 30px;
-    }
-    
-    .login-logo .logo-text {
-        font-size: 16px;
-    }
-    
-    .input-wrapper input {
-        padding: 10px 36px 10px 10px;
-        font-size: 13px;
-    }
-    
-    .login-btn {
-        padding: 12px;
-        font-size: 14px;
-    }
-    
-    /* ===== المحتوى ===== */
-    .main-content {
-        padding: 8px 10px;
-    }
-    
-    /* ===== البطاقات ===== */
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    
-    .stat-card {
-        padding: 12px 14px;
-    }
-    
-    .stat-card .stat-value {
-        font-size: 18px;
-    }
-    
-    /* ===== القائمة الجانبية ===== */
-    .sidebar {
-        width: 260px;
-        right: -280px;
-        padding: 10px 8px;
-    }
-    
-    .sidebar .nav-btn {
-        padding: 6px 10px;
-        font-size: 12px;
-    }
-    
-    .sidebar .nav-btn i {
-        font-size: 13px;
-    }
-    
-    .sidebar-footer {
-        font-size: 10px;
-        padding: 8px 0;
-    }
-    
-    /* ===== الإشعارات ===== */
-    .notif-dropdown {
-        min-width: 220px;
-        left: -160px;
-        max-height: 300px;
-    }
-    
-    .notif-header span {
-        font-size: 13px;
-    }
-    
-    .notif-item .notif-content .notif-title {
-        font-size: 12px;
-    }
-    
-    .notif-item .notif-content .notif-text {
-        font-size: 11px;
-    }
-    
-    /* ===== المودال ===== */
-    .modal-box {
-        max-width: 98%;
-    }
-    
-    .modal-header h3 {
-        font-size: 14px;
-    }
-    
-    .modal-body {
-        font-size: 13px;
-        padding: 12px;
-    }
-    
-    .modal-footer .btn {
-        font-size: 12px;
-        padding: 6px 14px;
-    }
-}
-
-/* ============================================================
-   🖨️ PRINT STYLES
+   🖨️ PRINT STYLES - PROFESSIONAL EDITION
    ============================================================ */
 
 @media print {
-    /* ===== إخفاء العناصر غير الضرورية ===== */
-    .main-header,
-    .sidebar,
-    .back-to-top,
-    .toast-container,
-    .modal-overlay,
-    .connection-status,
-    .no-print,
-    .menu-toggle,
-    .header-right .search-wrapper,
-    .header-right .notification-wrapper {
+    
+    /* ===== RESET & BASE ===== */
+    * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+        transition: none !important;
+        animation: none !important;
+    }
+    
+    html, body {
+        background: #ffffff !important;
+        color: #111827 !important;
+        font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif !important;
+        font-size: 10pt !important;
+        line-height: 1.5 !important;
+        margin: 0 !important;
+        padding: 15pt 20pt !important;
+        width: 100% !important;
+        direction: rtl !important;
+    }
+    
+    /* ===== PAGE SETUP ===== */
+    @page {
+        size: A4 portrait;
+        margin: 10mm 12mm 12mm 12mm;
+    }
+    
+    /* ===== HIDE NON-PRINT ===== */
+    header, .main-header, .sidebar, .nav, .menu-toggle,
+    .back-to-top, .toast-container, .modal-overlay,
+    .connection-status, .no-print, .search-wrapper,
+    .notification-wrapper, .user-wrapper, .theme-switcher,
+    .page-loader, .loading-spinner,
+    button:not(.print-button), .btn:not(.print-button),
+    input, select, textarea, .chat-input, .ai-input-area,
+    .form-actions:not(.no-print), .header-actions:not(.no-print) {
         display: none !important;
     }
     
-    /* ===== المحتوى ===== */
+    /* ===== MAIN CONTENT ===== */
     .main-content {
-        margin-right: 0 !important;
+        margin: 0 !important;
         padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .page-container, #pageContainer {
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: auto !important;
     }
     
     .page-content {
         animation: none !important;
-        padding: 20px !important;
+        opacity: 1 !important;
+        transform: none !important;
     }
     
-    /* ===== الجداول ===== */
-    .table-wrapper {
-        border: 1px solid #ddd !important;
-        background: white !important;
-        border-radius: 0 !important;
+    /* ============================================================
+       📊 STATS CARDS
+       ============================================================ */
+    
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 8pt !important;
+        margin-bottom: 12pt !important;
+        page-break-inside: avoid !important;
     }
     
-    .table-wrapper table {
-        min-width: 100% !important;
-    }
-    
-    .table-wrapper table th {
-        background: #f0f0f0 !important;
-        color: #000 !important;
-        border-bottom: 2px solid #ddd !important;
-        padding: 8px 12px !important;
-    }
-    
-    .table-wrapper table td {
-        color: #000 !important;
-        border-bottom: 1px solid #eee !important;
-        padding: 6px 12px !important;
-    }
-    
-    /* ===== البطاقات ===== */
     .stat-card {
-        border: 1px solid #ddd !important;
-        background: #f9f9f9 !important;
-        box-shadow: none !important;
+        background: #f8fafc !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 4pt !important;
+        padding: 8pt 10pt !important;
+        text-align: center !important;
+        page-break-inside: avoid !important;
     }
     
     .stat-card .stat-value {
-        color: #000 !important;
+        font-size: 18pt !important;
+        font-weight: 700 !important;
+        color: #111827 !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
     }
     
     .stat-card .stat-label {
-        color: #666 !important;
+        font-size: 8pt !important;
+        color: #4b5563 !important;
+        font-weight: 500 !important;
+        margin: 2pt 0 0 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
     }
     
-    /* ===== الحالات ===== */
+    .stat-card .stat-icon {
+        font-size: 16pt !important;
+        display: block !important;
+        margin-bottom: 2pt !important;
+    }
+    
+    /* ============================================================
+       📋 TABLES
+       ============================================================ */
+    
+    .table-wrapper {
+        border: 1px solid #d1d5db !important;
+        border-radius: 4pt !important;
+        overflow: hidden !important;
+        margin: 8pt 0 12pt !important;
+        page-break-inside: avoid !important;
+        background: #ffffff !important;
+    }
+    
+    .table-wrapper table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 9pt !important;
+        background: #ffffff !important;
+        min-width: 100% !important;
+    }
+    
+    .table-wrapper table thead {
+        background: #e5e7eb !important;
+        border-bottom: 2px solid #9ca3af !important;
+    }
+    
+    .table-wrapper table thead th {
+        background: #e5e7eb !important;
+        color: #111827 !important;
+        font-weight: 700 !important;
+        font-size: 8.5pt !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
+        padding: 6pt 8pt !important;
+        text-align: center !important;
+        border-bottom: 2px solid #9ca3af !important;
+    }
+    
+    .table-wrapper table tbody td {
+        padding: 5pt 8pt !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        color: #111827 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        background: #ffffff !important;
+    }
+    
+    .table-wrapper table tbody tr:nth-child(even) td {
+        background: #f9fafb !important;
+    }
+    
+    .table-wrapper table tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    
+    /* ============================================================
+       🏷️ STATUS BADGES
+       ============================================================ */
+    
     .status-badge {
-        border: 1px solid #ddd !important;
-        background: #f5f5f5 !important;
-        color: #000 !important;
+        display: inline-block !important;
+        padding: 2pt 10pt !important;
+        border-radius: 10pt !important;
+        font-size: 8pt !important;
+        font-weight: 600 !important;
+        border: 1px solid #d1d5db !important;
+        background: #f3f4f6 !important;
+        color: #111827 !important;
     }
     
     .status-badge .dot {
         display: none !important;
     }
     
-    /* ===== الأزرار ===== */
-    .btn {
-        border: 1px solid #ddd !important;
-        background: #f5f5f5 !important;
-        color: #000 !important;
-        box-shadow: none !important;
+    .status-badge.ready,
+    .status-badge.success,
+    .status-badge.completed {
+        background: #dcfce7 !important;
+        border-color: #22c55e !important;
+        color: #166534 !important;
     }
     
-    /* ===== عام ===== */
-    body {
-        background: white !important;
-        color: #000 !important;
+    .status-badge.maintenance,
+    .status-badge.in-progress,
+    .status-badge.pending {
+        background: #fef9c3 !important;
+        border-color: #eab308 !important;
+        color: #854d0e !important;
     }
+    
+    .status-badge.broken,
+    .status-badge.danger,
+    .status-badge.cancelled {
+        background: #fecaca !important;
+        border-color: #ef4444 !important;
+        color: #991b1b !important;
+    }
+    
+    .status-badge.inactive,
+    .status-badge.closed {
+        background: #f3f4f6 !important;
+        border-color: #9ca3af !important;
+        color: #4b5563 !important;
+    }
+    
+    /* ============================================================
+       👤 ROLE BADGES
+       ============================================================ */
+    
+    .role-badge {
+        display: inline-block !important;
+        padding: 2pt 8pt !important;
+        border-radius: 3pt !important;
+        font-size: 7.5pt !important;
+        font-weight: 600 !important;
+        border: 1px solid #d1d5db !important;
+    }
+    
+    .role-badge.admin {
+        background: #fef3c7 !important;
+        border-color: #f59e0b !important;
+        color: #92400e !important;
+    }
+    
+    .role-badge.manager {
+        background: #dbeafe !important;
+        border-color: #3b82f6 !important;
+        color: #1e40af !important;
+    }
+    
+    .role-badge.operator {
+        background: #d1fae5 !important;
+        border-color: #22c55e !important;
+        color: #065f46 !important;
+    }
+    
+    .role-badge.viewer {
+        background: #f3f4f6 !important;
+        border-color: #9ca3af !important;
+        color: #4b5563 !important;
+    }
+    
+    /* ============================================================
+       📝 INFO BOXES
+       ============================================================ */
+    
+    .info-box {
+        background: #f3f4f6 !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 4pt !important;
+        padding: 8pt 12pt !important;
+        margin: 8pt 0 !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .info-box .title {
+        font-weight: 700 !important;
+        font-size: 9pt !important;
+        color: #111827 !important;
+        margin-bottom: 2pt !important;
+    }
+    
+    .info-box .content {
+        font-size: 8.5pt !important;
+        color: #1f2937 !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* ============================================================
+       📊 PROGRESS BARS
+       ============================================================ */
+    
+    .progress-bar {
+        width: 100% !important;
+        height: 14pt !important;
+        background: #f3f4f6 !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 8pt !important;
+        overflow: hidden !important;
+        margin: 3pt 0 !important;
+    }
+    
+    .progress-bar .fill {
+        height: 100% !important;
+        border-radius: 8pt !important;
+        background: #1f2937 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        padding-right: 4pt !important;
+        font-size: 7pt !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+    }
+    
+    .progress-bar .fill.green { background: #16a34a !important; }
+    .progress-bar .fill.gold { background: #d97706 !important; }
+    .progress-bar .fill.blue { background: #2563eb !important; }
+    .progress-bar .fill.red { background: #dc2626 !important; }
+    
+    /* ============================================================
+       🏷️ TITLES & HEADERS
+       ============================================================ */
+    
+    .section-title {
+        font-size: 14pt !important;
+        font-weight: 700 !important;
+        color: #111827 !important;
+        margin: 16pt 0 8pt !important;
+        padding-bottom: 4pt !important;
+        border-bottom: 2px solid #111827 !important;
+        page-break-after: avoid !important;
+    }
+    
+    .page-title {
+        font-size: 18pt !important;
+        font-weight: 800 !important;
+        color: #111827 !important;
+        margin: 0 0 4pt !important;
+    }
+    
+    .page-subtitle {
+        font-size: 12pt !important;
+        font-weight: 600 !important;
+        color: #374151 !important;
+        margin: 0 0 12pt !important;
+        border-bottom: 1px solid #d1d5db !important;
+        padding-bottom: 4pt !important;
+    }
+    
+    /* ============================================================
+       🔗 LINKS
+       ============================================================ */
     
     a {
-        color: #000 !important;
+        color: #111827 !important;
         text-decoration: underline !important;
     }
     
-    /* ===== كسر الصفحات ===== */
+    a[href]:not([href^="#"]):not([href^="javascript:"])::after {
+        content: " (" attr(href) ")" !important;
+        font-size: 7pt !important;
+        color: #6b7280 !important;
+        text-decoration: none !important;
+    }
+    
+    /* ============================================================
+       📅 DATE
+       ============================================================ */
+    
+    .print-date {
+        font-size: 8pt !important;
+        color: #6b7280 !important;
+        margin-bottom: 8pt !important;
+        text-align: left !important;
+    }
+    
+    /* ============================================================
+       🏢 HEADER & FOOTER
+       ============================================================ */
+    
+    .print-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        border-bottom: 2px solid #111827 !important;
+        padding-bottom: 8pt !important;
+        margin-bottom: 14pt !important;
+        page-break-after: avoid !important;
+        background: #ffffff !important;
+    }
+    
+    .print-header .brand {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    
+    .print-header .brand .logo-icon {
+        font-size: 22pt !important;
+    }
+    
+    .print-header .brand h1 {
+        font-size: 14pt !important;
+        font-weight: 800 !important;
+        color: #111827 !important;
+        margin: 0 !important;
+    }
+    
+    .print-header .brand .subtitle {
+        font-size: 8pt !important;
+        color: #6b7280 !important;
+        margin: 0 !important;
+    }
+    
+    .print-header .meta {
+        text-align: left !important;
+        font-size: 8pt !important;
+        color: #6b7280 !important;
+        line-height: 1.4 !important;
+    }
+    
+    .print-footer {
+        border-top: 1px solid #d1d5db !important;
+        padding-top: 6pt !important;
+        margin-top: 14pt !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        font-size: 7pt !important;
+        color: #9ca3af !important;
+        page-break-before: avoid !important;
+        background: #ffffff !important;
+    }
+    
+    .print-footer .page-number::before {
+        content: "صفحة ";
+    }
+    
+    .print-footer .page-number::after {
+        content: " من " counter(pages);
+    }
+    
+    /* ============================================================
+       📏 PAGE BREAKS
+       ============================================================ */
+    
     .page-break {
-        page-break-after: always;
+        page-break-after: always !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
     }
     
-    .page-break-inside {
-        page-break-inside: avoid;
-    }
-}
-
-/* ============================================================
-   🌙 DARK MODE PREFERENCE - الوضع المظلم حسب تفضيل النظام
-   ============================================================ */
-
-@media (prefers-color-scheme: dark) {
-    /* التنسيقات الافتراضية للوضع المظلم موجودة في style.css */
-}
-
-/* ============================================================
-   🌞 LIGHT MODE PREFERENCE - الوضع الفاتح حسب تفضيل النظام
-   ============================================================ */
-
-@media (prefers-color-scheme: light) {
-    /* التنسيقات الافتراضية للوضع الفاتح موجودة في style.css */
-}
-
-/* ============================================================
-   🔄 REDUCED MOTION - تقليل الحركة لمن يحتاجونها
-   ============================================================ */
-
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-
-/* ============================================================
-   📱 ORIENTATION - اتجاه الشاشة
-   ============================================================ */
-
-@media (orientation: landscape) and (max-height: 500px) {
-    /* ===== شاشة الدخول في الوضع الأفقي ===== */
-    .login-box {
-        padding: 20px 30px;
-        max-width: 500px;
+    .page-break-before {
+        page-break-before: always !important;
     }
     
-    .login-logo .logo-icon {
-        font-size: 30px;
+    .avoid-break {
+        page-break-inside: avoid !important;
     }
     
-    .login-logo .logo-text {
-        font-size: 16px;
+    /* ============================================================
+       📱 RESPONSIVE PRINT
+       ============================================================ */
+    
+    @media print and (max-width: 600px) {
+        body {
+            font-size: 8pt !important;
+            padding: 8pt !important;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 4pt !important;
+        }
+        
+        .stat-card {
+            padding: 4pt 6pt !important;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 12pt !important;
+        }
+        
+        .table-wrapper table {
+            font-size: 7pt !important;
+        }
+        
+        .table-wrapper table thead th,
+        .table-wrapper table tbody td {
+            padding: 3pt 4pt !important;
+        }
+        
+        .print-header {
+            flex-direction: column !important;
+            gap: 4pt !important;
+        }
+        
+        .print-header .meta {
+            text-align: center !important;
+            width: 100% !important;
+        }
+        
+        .print-footer {
+            flex-direction: column !important;
+            gap: 2pt !important;
+            text-align: center !important;
+        }
     }
     
-    .developer-info {
-        margin: 8px 0 16px;
-        padding: 4px 0;
-    }
+    /* ============================================================
+       🌗 DARK MODE OVERRIDE
+       ============================================================ */
     
-    .form-group {
-        margin-bottom: 8px;
-    }
-    
-    .login-btn {
-        padding: 10px;
-        font-size: 14px;
-        margin-top: 8px;
-    }
-}
-
-/* ============================================================
-   🖥️ HIGH DPI SCREENS - شاشات عالية الدقة
-   ============================================================ */
-
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    /* تحسينات للشاشات عالية الدقة */
-    .brand .brand-icon {
-        image-rendering: auto;
-    }
-}
-
-/* ============================================================
-   📺 VERY LARGE SCREENS - شاشات كبيرة جداً
-   ============================================================ */
-
-@media (min-width: 1600px) {
-    .container {
-        max-width: 1400px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-    }
-    
-    .stat-card {
-        padding: 22px 24px;
-    }
-    
-    .stat-card .stat-value {
-        font-size: 34px;
-    }
-}
-
-/* ============================================================
-   🎯 UTILITY RESPONSIVE - فئات مساعدة للتجاوب
-   ============================================================ */
-
-/* ===== إخفاء/إظهار حسب الشاشة ===== */
-.hide-desktop { display: none; }
-.hide-tablet { display: block; }
-.hide-mobile { display: block; }
-
-@media (max-width: 991px) {
-    .hide-desktop { display: block; }
-    .hide-tablet { display: none; }
-}
-
-@media (max-width: 767px) {
-    .hide-tablet { display: block; }
-    .hide-mobile { display: none; }
-}
-
-@media (max-width: 480px) {
-    .hide-mobile { display: none; }
-    .show-mobile { display: block; }
-}
-
-/* ===== ترتيب الشبكة المتجاوب ===== */
-.grid-responsive {
-    display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-}
-
-@media (max-width: 767px) {
-    .grid-responsive {
-        grid-template-columns: 1fr;
-        gap: 12px;
+    @media print and (prefers-color-scheme: dark) {
+        * {
+            color: #111827 !important;
+            background: #ffffff !important;
+        }
+        
+        .stat-card {
+            background: #f8fafc !important;
+        }
+        
+        .table-wrapper table thead {
+            background: #e5e7eb !important;
+        }
+        
+        .table-wrapper table tbody td {
+            background: #ffffff !important;
+        }
+        
+        .table-wrapper table tbody tr:nth-child(even) td {
+            background: #f9fafb !important;
+        }
+        
+        .status-badge.ready,
+        .status-badge.success,
+        .status-badge.completed {
+            background: #dcfce7 !important;
+            color: #166534 !important;
+        }
+        
+        .status-badge.maintenance,
+        .status-badge.in-progress,
+        .status-badge.pending {
+            background: #fef9c3 !important;
+            color: #854d0e !important;
+        }
+        
+        .status-badge.broken,
+        .status-badge.danger,
+        .status-badge.cancelled {
+            background: #fecaca !important;
+            color: #991b1b !important;
+        }
     }
 }
-
-/* ===== عرض الصفوف المتجاوب ===== */
-.row-responsive {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.row-responsive > * {
-    flex: 1 1 200px;
-}
-
-@media (max-width: 767px) {
-    .row-responsive > * {
-        flex: 1 1 100%;
-    }
-}
-
-/* ============================================================
-   END OF RESPONSIVE STYLES
-   ============================================================ */
