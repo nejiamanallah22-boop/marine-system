@@ -1,35 +1,26 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - PRINT.CSS v8.0 (ENTERPRISE EDITION)
+ * 🚢 MARINE SYSTEM - PRINT.CSS v8.1 (ENTERPRISE EDITION)
  * ============================================================
- * 🏆 Platinum Professional Print Styles
- * 🔒 Enterprise-Grade Security & Compliance
- * 📋 GDPR & ISO 27001 Compliant Printing
+ * 🏆 الحفاظ على وضوح الجداول والمعلومات عند الطباعة
+ * 🔒 Enterprise-Grade Print Styles
  * ============================================================
  */
 
 /* ============================================================
-   🖨️ ENTERPRISE PRINT STYLES
+   🖨️ PRINT STYLES
    ============================================================ */
 
 @media print {
     /* ============================================================
-       🎯 RESET & BASE
+       🎯 RESET & BASE - الحفاظ على الخلفيات
        ============================================================ */
     
     * {
-        background: transparent !important;
-        color: #000 !important;
         box-shadow: none !important;
         text-shadow: none !important;
-        border-color: #d1d5db !important;
         transition: none !important;
         animation: none !important;
-    }
-    
-    *::before,
-    *::after {
-        display: none !important;
     }
     
     html {
@@ -46,10 +37,24 @@
         margin: 0;
         padding: 20pt 25pt;
         min-height: 100vh;
+        direction: rtl;
     }
     
     /* ============================================================
-       📋 WATERMARK & SECURITY HEADER
+       📄 PAGE SETUP
+       ============================================================ */
+    
+    @page {
+        size: A4;
+        margin: 15mm 18mm 20mm 18mm;
+    }
+    
+    @page :first {
+        margin-top: 20mm;
+    }
+    
+    /* ============================================================
+       📋 WATERMARK & SECURITY
        ============================================================ */
     
     .print-watermark {
@@ -86,20 +91,7 @@
     }
     
     /* ============================================================
-       📄 PAGE SETUP
-       ============================================================ */
-    
-    @page {
-        size: A4;
-        margin: 15mm 18mm 20mm 18mm;
-    }
-    
-    @page :first {
-        margin-top: 20mm;
-    }
-    
-    /* ============================================================
-       🎨 HEADER & FOOTER
+       🎨 HEADER & FOOTER - مع خلفيات محسنة
        ============================================================ */
     
     .print-header {
@@ -110,6 +102,7 @@
         padding-bottom: 12pt;
         margin-bottom: 20pt;
         page-break-after: avoid;
+        background: #ffffff !important;
     }
     
     .print-header .brand {
@@ -164,6 +157,7 @@
         font-size: 8pt;
         color: #9ca3af !important;
         page-break-before: avoid;
+        background: #ffffff !important;
     }
     
     .print-footer .footer-left {
@@ -225,7 +219,7 @@
     }
     
     /* ============================================================
-       📊 STATS & CARDS
+       📊 STATS & CARDS - مع خلفيات محسنة
        ============================================================ */
     
     .print-stats-grid {
@@ -274,15 +268,16 @@
     .print-stat-card.gold .stat-number { color: #c99a0e !important; }
     
     /* ============================================================
-       📋 TABLES - ENTERPRISE EDITION
+       📋 TABLES - ENTERPRISE EDITION (مع خلفيات ووضوح عالي)
        ============================================================ */
     
     .print-table-wrapper {
-        border: 1px solid #e5e7eb !important;
+        border: 1px solid #d1d5db !important;
         border-radius: 6pt;
         overflow: hidden !important;
         margin-bottom: 16pt;
         page-break-inside: avoid;
+        background: #ffffff !important;
     }
     
     .print-table {
@@ -290,15 +285,16 @@
         border-collapse: collapse !important;
         font-size: 9.5pt;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+        background: #ffffff !important;
     }
     
     .print-table thead {
-        background: #f1f5f9 !important;
-        border-bottom: 2px solid #d1d5db !important;
+        background: #e5e7eb !important;
+        border-bottom: 2px solid #9ca3af !important;
     }
     
     .print-table thead th {
-        background: #f1f5f9 !important;
+        background: #e5e7eb !important;
         color: #1a1a2e !important;
         font-weight: 700;
         font-size: 9pt;
@@ -306,72 +302,86 @@
         letter-spacing: 0.5px;
         padding: 8pt 10pt;
         text-align: right;
-        border-bottom: 2px solid #d1d5db !important;
+        border-bottom: 2px solid #9ca3af !important;
     }
     
     .print-table tbody td {
         padding: 6pt 10pt;
-        border-bottom: 1px solid #f1f5f9 !important;
+        border-bottom: 1px solid #e5e7eb !important;
         color: #1a1a2e !important;
         vertical-align: middle;
+        background: #ffffff !important;
     }
     
     .print-table tbody tr:last-child td {
         border-bottom: none !important;
     }
     
-    .print-table tbody tr:nth-child(even) {
-        background: #fafafa !important;
+    /* ✅ صفوف متناوبة مع خلفيات مختلفة للوضوح */
+    .print-table tbody tr:nth-child(even) td {
+        background: #f8fafc !important;
+    }
+    
+    .print-table tbody tr:nth-child(odd) td {
+        background: #ffffff !important;
     }
     
     .print-table tbody tr:hover td {
-        background: transparent !important;
+        background: #f1f5f9 !important;
     }
+    
+    /* ============================================================
+       🏷️ STATUS BADGES - مع خلفيات واضحة
+       ============================================================ */
     
     .print-table .status-badge {
         display: inline-block;
-        padding: 2pt 10pt;
+        padding: 3pt 12pt;
         border-radius: 12pt;
-        font-size: 8pt;
+        font-size: 8.5pt;
         font-weight: 600;
-        border: 1px solid #e5e7eb !important;
+        border: 1px solid #d1d5db !important;
     }
     
     .print-table .status-badge.ready {
-        background: #f0fdf4 !important;
+        background: #dcfce7 !important;
         border-color: #22c55e !important;
         color: #15803d !important;
     }
     
     .print-table .status-badge.maintenance {
-        background: #fefce8 !important;
+        background: #fef9c3 !important;
         border-color: #eab308 !important;
         color: #a16207 !important;
     }
     
     .print-table .status-badge.broken {
-        background: #fef2f2 !important;
+        background: #fecaca !important;
         border-color: #ef4444 !important;
-        color: #b91c1c !important;
+        color: #991b1b !important;
     }
     
     .print-table .status-badge.completed {
-        background: #f0fdf4 !important;
+        background: #dcfce7 !important;
         border-color: #22c55e !important;
         color: #15803d !important;
     }
     
     .print-table .status-badge.pending {
-        background: #fff7ed !important;
+        background: #fed7aa !important;
         border-color: #f97316 !important;
-        color: #c2410c !important;
+        color: #9a3412 !important;
     }
     
     .print-table .status-badge.cancelled {
-        background: #fef2f2 !important;
+        background: #fecaca !important;
         border-color: #ef4444 !important;
-        color: #b91c1c !important;
+        color: #991b1b !important;
     }
+    
+    /* ============================================================
+       👤 ROLE BADGES
+       ============================================================ */
     
     .print-table .role-badge {
         display: inline-block;
@@ -384,35 +394,39 @@
     .print-table .role-badge.admin {
         background: #fef3c7 !important;
         color: #92400e !important;
+        border: 1px solid #fcd34d !important;
     }
     
     .print-table .role-badge.manager {
         background: #dbeafe !important;
         color: #1e40af !important;
+        border: 1px solid #93c5fd !important;
     }
     
     .print-table .role-badge.operator {
         background: #d1fae5 !important;
         color: #065f46 !important;
+        border: 1px solid #6ee7b7 !important;
     }
     
     .print-table .role-badge.viewer {
         background: #f3f4f6 !important;
         color: #374151 !important;
+        border: 1px solid #d1d5db !important;
     }
     
     /* ============================================================
-       📊 CHARTS & PROGRESS BARS
+       📊 PROGRESS BARS
        ============================================================ */
     
     .print-progress-bar {
         width: 100%;
         height: 18pt;
-        background: #f1f5f9 !important;
+        background: #f3f4f6 !important;
         border-radius: 12pt;
         overflow: hidden;
         margin: 4pt 0;
-        border: 1px solid #e5e7eb !important;
+        border: 1px solid #d1d5db !important;
     }
     
     .print-progress-bar .fill {
@@ -434,31 +448,11 @@
     .print-progress-bar .fill.red { background: #dc2626 !important; }
     
     /* ============================================================
-       🏷️ TAGS & LABELS
-       ============================================================ */
-    
-    .print-tag {
-        display: inline-block;
-        padding: 2pt 8pt;
-        border-radius: 4pt;
-        font-size: 8pt;
-        font-weight: 600;
-        background: #f3f4f6 !important;
-        border: 1px solid #e5e7eb !important;
-        color: #374151 !important;
-    }
-    
-    .print-tag.primary { background: #dbeafe !important; border-color: #93c5fd !important; color: #1e40af !important; }
-    .print-tag.success { background: #d1fae5 !important; border-color: #6ee7b7 !important; color: #065f46 !important; }
-    .print-tag.warning { background: #fef3c7 !important; border-color: #fcd34d !important; color: #92400e !important; }
-    .print-tag.danger { background: #fef2f2 !important; border-color: #fca5a5 !important; color: #991b1b !important; }
-    
-    /* ============================================================
-       📝 CONTENT BLOCKS
+       📝 INFO BOXES - مع خلفيات واضحة
        ============================================================ */
     
     .print-info-box {
-        background: #f8fafc !important;
+        background: #f1f5f9 !important;
         border-right: 4px solid #1a1a2e !important;
         padding: 10pt 14pt;
         margin: 12pt 0;
@@ -475,7 +469,7 @@
     
     .print-info-box .box-content {
         font-size: 9.5pt;
-        color: #374151 !important;
+        color: #1a1a2e !important;
         line-height: 1.6;
     }
     
@@ -510,6 +504,33 @@
         page-break-inside: avoid;
     }
     
+    .print-warning-box {
+        background: #fffbeb !important;
+        border-right: 4px solid #d97706 !important;
+        padding: 10pt 14pt;
+        margin: 12pt 0;
+        border-radius: 4pt;
+        page-break-inside: avoid;
+    }
+    
+    /* ============================================================
+       🔗 LINKS
+       ============================================================ */
+    
+    a {
+        color: #1a1a2e !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px;
+        text-decoration-thickness: 1px;
+    }
+    
+    a[href]:not([href^="#"]):not([href^="javascript:"])::after {
+        content: " [" attr(href) "]";
+        font-size: 8pt;
+        color: #6b7280 !important;
+        text-decoration: none !important;
+    }
+    
     /* ============================================================
        📋 LISTS
        ============================================================ */
@@ -526,7 +547,7 @@
     }
     
     .print-list.striped li:nth-child(even) {
-        background: #fafafa !important;
+        background: #f8fafc !important;
         padding: 2pt 6pt;
         border-radius: 4pt;
     }
@@ -548,7 +569,7 @@
         top: 0;
         bottom: 0;
         width: 2px;
-        background: #e5e7eb !important;
+        background: #d1d5db !important;
     }
     
     .print-timeline .item {
@@ -578,25 +599,7 @@
     }
     
     /* ============================================================
-       🔗 LINKS & REFERENCES
-       ============================================================ */
-    
-    a {
-        color: #1a1a2e !important;
-        text-decoration: underline !important;
-        text-underline-offset: 2px;
-        text-decoration-thickness: 1px;
-    }
-    
-    a[href]:not([href^="#"]):not([href^="javascript:"])::after {
-        content: " [" attr(href) "]";
-        font-size: 8pt;
-        color: #6b7280 !important;
-        text-decoration: none !important;
-    }
-    
-    /* ============================================================
-       🎨 COLOR SCHEMES
+       🎨 COLOR UTILITIES
        ============================================================ */
     
     .print-text-muted { color: #6b7280 !important; }
@@ -608,29 +611,7 @@
     
     .print-bg-light { background: #f8fafc !important; }
     .print-bg-white { background: #ffffff !important; }
-    
-    /* ============================================================
-       🖼️ IMAGES & FIGURES
-       ============================================================ */
-    
-    img {
-        max-width: 100% !important;
-        page-break-inside: avoid;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 4pt;
-    }
-    
-    figure {
-        margin: 8pt 0;
-        page-break-inside: avoid;
-    }
-    
-    figcaption {
-        font-size: 8pt;
-        color: #6b7280 !important;
-        text-align: center;
-        margin-top: 2pt;
-    }
+    .print-bg-gray { background: #f3f4f6 !important; }
     
     /* ============================================================
        📏 PAGE BREAKS
@@ -669,7 +650,7 @@
     }
     
     /* ============================================================
-       📋 HIDE NON-PRINT ELEMENTS
+       📱 HIDE NON-PRINT ELEMENTS
        ============================================================ */
     
     header,
@@ -765,35 +746,123 @@
     }
     
     /* ============================================================
+       🏢 COMPANY BRANDING
+       ============================================================ */
+    
+    .print-company-name {
+        font-size: 14pt;
+        font-weight: 800;
+        color: #1a1a2e !important;
+        letter-spacing: 1px;
+    }
+    
+    .print-company-tagline {
+        font-size: 9pt;
+        color: #6b7280 !important;
+        font-weight: 400;
+    }
+    
+    .print-company-address {
+        font-size: 8pt;
+        color: #9ca3af !important;
+        line-height: 1.4;
+    }
+    
+    /* ============================================================
+       📋 LEGAL & CONFIDENTIAL
+       ============================================================ */
+    
+    .print-legal-notice {
+        font-size: 7pt;
+        color: #9ca3af !important;
+        text-align: center;
+        margin-top: 16pt;
+        padding-top: 8pt;
+        border-top: 1px solid #e5e7eb !important;
+    }
+    
+    .print-confidential {
+        display: inline-block;
+        padding: 2pt 12pt;
+        background: #fef2f2 !important;
+        border: 1px solid #fca5a5 !important;
+        border-radius: 4pt;
+        font-size: 7pt;
+        font-weight: 700;
+        color: #991b1b !important;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    
+    /* ============================================================
+       🏷️ SIGNATURE
+       ============================================================ */
+    
+    .print-signature {
+        margin-top: 20pt;
+        padding-top: 12pt;
+        border-top: 2px solid #e5e7eb !important;
+    }
+    
+    .print-signature .signature-line {
+        display: inline-block;
+        width: 150pt;
+        border-bottom: 1px solid #1a1a2e !important;
+        margin-top: 4pt;
+        padding-top: 2pt;
+    }
+    
+    .print-signature .signature-label {
+        font-size: 8pt;
+        color: #6b7280 !important;
+    }
+    
+    /* ============================================================
        🌙 DARK MODE OVERRIDE
        ============================================================ */
     
     @media print and (prefers-color-scheme: dark) {
         * {
-            color: #000 !important;
-            background: #fff !important;
-            border-color: #d1d5db !important;
+            color: #1a1a2e !important;
+            background: #ffffff !important;
         }
         
         .print-stat-card,
         .print-table-wrapper,
         .print-info-box,
         .print-alert-box,
-        .print-success-box {
-            background: #fff !important;
+        .print-success-box,
+        .print-warning-box {
+            background: #ffffff !important;
         }
         
         .print-table thead {
-            background: #f1f5f9 !important;
+            background: #e5e7eb !important;
         }
         
-        .print-table tbody tr:nth-child(even) {
-            background: #fafafa !important;
+        .print-table tbody tr:nth-child(even) td {
+            background: #f8fafc !important;
         }
+        
+        .print-table tbody tr:nth-child(odd) td {
+            background: #ffffff !important;
+        }
+        
+        .print-table .status-badge.ready { background: #dcfce7 !important; }
+        .print-table .status-badge.maintenance { background: #fef9c3 !important; }
+        .print-table .status-badge.broken { background: #fecaca !important; }
+        .print-table .status-badge.completed { background: #dcfce7 !important; }
+        .print-table .status-badge.pending { background: #fed7aa !important; }
+        .print-table .status-badge.cancelled { background: #fecaca !important; }
+        
+        .print-table .role-badge.admin { background: #fef3c7 !important; }
+        .print-table .role-badge.manager { background: #dbeafe !important; }
+        .print-table .role-badge.operator { background: #d1fae5 !important; }
+        .print-table .role-badge.viewer { background: #f3f4f6 !important; }
     }
     
     /* ============================================================
-       📋 RESPONSIVE PRINT
+       📱 RESPONSIVE PRINT
        ============================================================ */
     
     @media print and (max-width: 600px) {
@@ -832,82 +901,10 @@
             text-align: center !important;
         }
     }
-    
-    /* ============================================================
-       🏢 COMPANY BRANDING
-       ============================================================ */
-    
-    .print-company-name {
-        font-size: 14pt;
-        font-weight: 800;
-        color: #1a1a2e !important;
-        letter-spacing: 1px;
-    }
-    
-    .print-company-tagline {
-        font-size: 9pt;
-        color: #6b7280 !important;
-        font-weight: 400;
-    }
-    
-    .print-company-address {
-        font-size: 8pt;
-        color: #9ca3af !important;
-        line-height: 1.4;
-    }
-    
-    /* ============================================================
-       📋 CONTRACT & LEGAL
-       ============================================================ */
-    
-    .print-legal-notice {
-        font-size: 7pt;
-        color: #9ca3af !important;
-        text-align: center;
-        margin-top: 16pt;
-        padding-top: 8pt;
-        border-top: 1px solid #e5e7eb !important;
-    }
-    
-    .print-confidential {
-        display: inline-block;
-        padding: 2pt 12pt;
-        background: #fef2f2 !important;
-        border: 1px solid #fca5a5 !important;
-        border-radius: 4pt;
-        font-size: 7pt;
-        font-weight: 700;
-        color: #991b1b !important;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-    }
-    
-    /* ============================================================
-       🏷️ SIGNATURE LINE
-       ============================================================ */
-    
-    .print-signature {
-        margin-top: 20pt;
-        padding-top: 12pt;
-        border-top: 2px solid #e5e7eb !important;
-    }
-    
-    .print-signature .signature-line {
-        display: inline-block;
-        width: 150pt;
-        border-bottom: 1px solid #1a1a2e !important;
-        margin-top: 4pt;
-        padding-top: 2pt;
-    }
-    
-    .print-signature .signature-label {
-        font-size: 8pt;
-        color: #6b7280 !important;
-    }
 }
 
 /* ============================================================
-   📄 PRINT PREVIEW STYLES (Screen Only)
+   📄 PRINT PREVIEW (Screen Only)
    ============================================================ */
 
 @media screen {
