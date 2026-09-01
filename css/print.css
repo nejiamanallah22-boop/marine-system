@@ -1,117 +1,81 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - PRINT.CSS v10.0 (ULTIMATE EDITION)
+ * 🚢 MARINE SYSTEM - PRINT.CSS v11.0 (PROFESSIONAL CLEAR)
  * ============================================================
- * 🏆 PROFESSIONAL PRINT STYLES
- * 📋 PERFECT LAYOUT & COLOR PRESERVATION
- * 🎯 OPTIMIZED FOR FLEET REPORTS
+ * 🎯 Optimized for Clarity and Readability
+ * 📋 Perfect for Fleet Management Reports
  * ============================================================
  */
 
-/* ============================================================
-   🖨️ PRINT STYLES
-   ============================================================ */
-
 @media print {
     
-    /* ===== RESET ===== */
+    /* ============================================================
+       🖨️ BASE RESET
+       ============================================================ */
+    
     * {
         box-shadow: none !important;
         text-shadow: none !important;
         transition: none !important;
         animation: none !important;
-        background: none !important;
-    }
-    
-    /* ===== PAGE SETUP ===== */
-    @page {
-        size: A4 portrait;
-        margin: 10mm 12mm 12mm 12mm;
-    }
-    
-    html {
-        background: #ffffff !important;
+        background: none !important; /* ✅ نزيل الخلفيات الافتراضية */
     }
     
     body {
         background: #ffffff !important;
         color: #111827 !important;
-        font-family: 'Cairo', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
+        font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif !important;
         font-size: 10pt !important;
         line-height: 1.5 !important;
         margin: 0 !important;
-        padding: 0 !important;
+        padding: 15pt 20pt !important;
         width: 100% !important;
         min-height: 100vh !important;
     }
-    
+
     /* ============================================================
-       📄 HIDE NON-PRINT ELEMENTS
+       📄 PAGE SETUP
        ============================================================ */
     
-    header,
-    .main-header,
-    .sidebar,
-    .nav,
-    .menu-toggle,
-    .back-to-top,
-    .toast-container,
-    .modal-overlay,
-    .connection-status,
+    @page {
+        size: A4 portrait;
+        margin: 12mm 14mm 14mm 14mm;
+    }
+
+    /* ============================================================
+       🗑️ HIDE NON-PRINT ELEMENTS
+       ============================================================ */
+    
     .no-print,
-    .search-wrapper,
-    .notification-wrapper,
-    .user-wrapper,
-    .theme-switcher,
-    button:not(.print-button),
-    .btn:not(.print-button),
+    header, .main-header, .sidebar, .nav,
+    .menu-toggle, .back-to-top, .toast-container, .modal-overlay,
+    .search-wrapper, .notification-wrapper, .user-wrapper,
+    .theme-switcher, .page-loader, .loading-spinner,
+    button:not(.print-button), .btn:not(.print-button),
     input, select, textarea,
-    .chat-input,
-    .ai-input-area,
+    .chat-input, .ai-input-area,
     .form-actions:not(.no-print),
-    .header-actions:not(.no-print),
-    .page-loader,
-    .loading-spinner {
+    .header-actions:not(.no-print) {
         display: none !important;
     }
-    
+
     /* ============================================================
-       📱 MAIN CONTENT
+       🖨️ MAIN CONTENT
        ============================================================ */
     
-    .main-content {
+    .main-content, .page-container, #pageContainer {
         margin: 0 !important;
         padding: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
-    }
-    
-    .page-container {
-        max-width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-    
-    #pageContainer {
         min-height: auto !important;
-        padding: 0 !important;
-        margin: 0 !important;
     }
-    
-    .page-content {
-        padding: 0 !important;
-        margin: 0 !important;
-        animation: none !important;
-        opacity: 1 !important;
-        transform: none !important;
-    }
-    
+
     /* ============================================================
-       📊 STATS CARDS
+       📊 STATS CARDS - مع خلفيات للتمييز
        ============================================================ */
     
-    .stats-grid,
-    .print-stats-grid {
+    .stats-grid, .print-stats-grid {
         display: grid !important;
         grid-template-columns: repeat(4, 1fr) !important;
         gap: 8pt !important;
@@ -119,50 +83,39 @@
         page-break-inside: avoid !important;
     }
     
-    .stat-card,
-    .print-stat-card {
-        background: #f8fafc !important;
-        border: 1px solid #d1d5db !important;
+    .stat-card, .print-stat-card {
+        background: #f1f5f9 !important; /* ✅ خلفية رمادية فاتحة */
+        border: 1px solid #cbd5e1 !important;
         border-radius: 4pt !important;
         padding: 8pt 10pt !important;
         text-align: center !important;
         page-break-inside: avoid !important;
     }
     
-    .stat-card .stat-value,
-    .stat-card h4,
+    .stat-card .stat-value, .stat-card h4,
     .print-stat-card .stat-number {
         font-size: 18pt !important;
         font-weight: 700 !important;
-        color: #111827 !important;
+        color: #0f172a !important;
         margin: 0 !important;
         line-height: 1.2 !important;
     }
     
-    .stat-card .stat-label,
-    .print-stat-card .stat-label {
+    .stat-card .stat-label, .print-stat-card .stat-label {
         font-size: 8pt !important;
-        color: #4b5563 !important;
+        color: #475569 !important;
         font-weight: 500 !important;
-        margin: 2pt 0 0 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.3px !important;
+        margin: 2pt 0 0 !important;
     }
-    
-    .stat-card .stat-icon,
-    .print-stat-card .stat-icon {
-        font-size: 16pt !important;
-        display: block !important;
-        margin-bottom: 2pt !important;
-    }
-    
+
     /* ============================================================
-       📋 TABLES - PROFESSIONAL
+       📋 TABLES - الوضوح الكامل
        ============================================================ */
     
-    .table-container,
-    .print-table-wrapper {
-        border: 1px solid #d1d5db !important;
+    .table-container, .print-table-wrapper {
+        border: 1px solid #cbd5e1 !important;
         border-radius: 4pt !important;
         overflow: hidden !important;
         margin: 8pt 0 12pt !important;
@@ -170,101 +123,90 @@
         background: #ffffff !important;
     }
     
-    table,
-    .print-table {
+    table, .print-table {
         width: 100% !important;
         border-collapse: collapse !important;
         font-size: 9pt !important;
-        background: #ffffff !important;
     }
     
-    table thead,
-    .print-table thead {
-        background: #e5e7eb !important;
-        border-bottom: 2px solid #9ca3af !important;
+    table thead, .print-table thead {
+        background: #e2e8f0 !important; /* ✅ خلفية رمادية لعناوين الأعمدة */
+        border-bottom: 2px solid #94a3b8 !important;
     }
     
-    table thead th,
-    .print-table thead th {
-        background: #e5e7eb !important;
-        color: #111827 !important;
+    table thead th, .print-table thead th {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
         font-weight: 700 !important;
         font-size: 8.5pt !important;
         text-transform: uppercase !important;
         letter-spacing: 0.3px !important;
         padding: 6pt 8pt !important;
         text-align: center !important;
-        border-bottom: 2px solid #9ca3af !important;
+        border-bottom: 2px solid #94a3b8 !important;
     }
     
-    table tbody td,
-    .print-table tbody td {
+    table tbody td, .print-table tbody td {
         padding: 5pt 8pt !important;
-        border-bottom: 1px solid #e5e7eb !important;
-        color: #111827 !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        color: #0f172a !important;
         text-align: center !important;
         vertical-align: middle !important;
         background: #ffffff !important;
     }
     
+    /* ✅ صفوف متناوبة للوضوح */
     table tbody tr:nth-child(even) td,
     .print-table tbody tr:nth-child(even) td {
-        background: #f9fafb !important;
+        background: #f8fafc !important;
     }
     
     table tbody tr:last-child td {
         border-bottom: none !important;
     }
-    
+
     /* ============================================================
-       🏷️ STATUS BADGES - WITH COLORS
+       🏷️ STATUS BADGES - مع ألوان للتمييز
        ============================================================ */
     
-    .status-badge,
-    .print-status-badge {
+    .status-badge, .print-status-badge {
         display: inline-block !important;
         padding: 2pt 10pt !important;
         border-radius: 10pt !important;
         font-size: 8pt !important;
         font-weight: 600 !important;
-        border: 1px solid #d1d5db !important;
-        background: #f3f4f6 !important;
-        color: #111827 !important;
+        border: 1px solid #cbd5e1 !important;
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
     }
     
-    .status-badge.ready,
-    .status-badge.success,
-    .status-badge.completed {
-        background: #dcfce7 !important;
+    /* ✅ ألوان حالة واضحة وليست زاهية */
+    .status-badge.ready, .status-badge.success, .status-badge.completed {
+        background: #dcfce7 !important; /* أخضر فاتح */
         border-color: #22c55e !important;
         color: #166534 !important;
     }
     
-    .status-badge.maintenance,
-    .status-badge.in-progress,
-    .status-badge.pending {
-        background: #fef9c3 !important;
+    .status-badge.maintenance, .status-badge.in-progress, .status-badge.pending {
+        background: #fef9c3 !important; /* أصفر فاتح */
         border-color: #eab308 !important;
         color: #854d0e !important;
     }
     
-    .status-badge.broken,
-    .status-badge.danger,
-    .status-badge.cancelled {
-        background: #fecaca !important;
+    .status-badge.broken, .status-badge.danger, .status-badge.cancelled {
+        background: #fecaca !important; /* أحمر فاتح */
         border-color: #ef4444 !important;
         color: #991b1b !important;
     }
     
-    .status-badge.inactive,
-    .status-badge.closed {
-        background: #f3f4f6 !important;
-        border-color: #9ca3af !important;
-        color: #4b5563 !important;
+    .status-badge.inactive, .status-badge.closed {
+        background: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+        color: #475569 !important;
     }
-    
+
     /* ============================================================
-       👤 ROLE BADGES
+       👤 ROLE BADGES - مع خلفيات واضحة
        ============================================================ */
     
     .role-badge {
@@ -273,7 +215,8 @@
         border-radius: 3pt !important;
         font-size: 7.5pt !important;
         font-weight: 600 !important;
-        border: 1px solid #d1d5db !important;
+        border: 1px solid #cbd5e1 !important;
+        background: #f1f5f9 !important;
     }
     
     .role-badge.admin {
@@ -281,74 +224,66 @@
         border-color: #f59e0b !important;
         color: #92400e !important;
     }
-    
     .role-badge.manager {
         background: #dbeafe !important;
         border-color: #3b82f6 !important;
         color: #1e40af !important;
     }
-    
     .role-badge.operator {
         background: #d1fae5 !important;
         border-color: #22c55e !important;
         color: #065f46 !important;
     }
-    
     .role-badge.viewer {
-        background: #f3f4f6 !important;
-        border-color: #9ca3af !important;
-        color: #4b5563 !important;
+        background: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+        color: #475569 !important;
     }
-    
+
     /* ============================================================
        📝 INFO BOXES
        ============================================================ */
     
-    .info-box,
-    .print-info-box {
-        background: #f3f4f6 !important;
-        border: 1px solid #d1d5db !important;
+    .info-box, .print-info-box {
+        background: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
         border-radius: 4pt !important;
         padding: 8pt 12pt !important;
         margin: 8pt 0 !important;
         page-break-inside: avoid !important;
     }
     
-    .info-box .title,
-    .print-info-box .box-title {
+    .info-box .title, .print-info-box .box-title {
         font-weight: 700 !important;
         font-size: 9pt !important;
-        color: #111827 !important;
+        color: #0f172a !important;
         margin-bottom: 2pt !important;
     }
     
-    .info-box .content,
-    .print-info-box .box-content {
+    .info-box .content, .print-info-box .box-content {
         font-size: 8.5pt !important;
-        color: #1f2937 !important;
+        color: #1e293b !important;
         line-height: 1.5 !important;
     }
-    
+
     /* ============================================================
        📊 PROGRESS BARS
        ============================================================ */
     
-    .progress-bar,
-    .print-progress-bar {
+    .progress-bar, .print-progress-bar {
         width: 100% !important;
         height: 14pt !important;
-        background: #f3f4f6 !important;
-        border: 1px solid #d1d5db !important;
+        background: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
         border-radius: 8pt !important;
         overflow: hidden !important;
         margin: 3pt 0 !important;
     }
     
-    .progress-bar .fill,
-    .print-progress-bar .fill {
+    .progress-bar .fill, .print-progress-bar .fill {
         height: 100% !important;
         border-radius: 8pt !important;
-        background: #1f2937 !important;
+        background: #1e293b !important;
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
@@ -362,85 +297,47 @@
     .progress-bar .fill.gold { background: #d97706 !important; }
     .progress-bar .fill.blue { background: #2563eb !important; }
     .progress-bar .fill.red { background: #dc2626 !important; }
-    
+
     /* ============================================================
-       🏷️ SECTION TITLES
+       🏷️ HEADERS & TITLES
        ============================================================ */
     
-    .section-title,
-    .print-section-title {
-        font-size: 14pt !important;
-        font-weight: 700 !important;
-        color: #111827 !important;
-        margin: 16pt 0 8pt !important;
-        padding-bottom: 4pt !important;
-        border-bottom: 2px solid #111827 !important;
+    h1, h2, h3, h4, h5, h6 {
+        color: #0f172a !important;
         page-break-after: avoid !important;
     }
     
     .print-title {
         font-size: 18pt !important;
         font-weight: 800 !important;
-        color: #111827 !important;
         margin: 0 0 4pt !important;
     }
     
-    .print-subtitle {
-        font-size: 12pt !important;
-        font-weight: 600 !important;
-        color: #374151 !important;
-        margin: 0 0 12pt !important;
-        border-bottom: 1px solid #d1d5db !important;
+    .section-title, .print-section-title {
+        font-size: 14pt !important;
+        font-weight: 700 !important;
+        margin: 16pt 0 8pt !important;
         padding-bottom: 4pt !important;
+        border-bottom: 2px solid #0f172a !important;
+        page-break-after: avoid !important;
     }
-    
+
     /* ============================================================
        🔗 LINKS
        ============================================================ */
     
     a {
-        color: #111827 !important;
+        color: #0f172a !important;
         text-decoration: underline !important;
     }
     
     a[href]:not([href^="#"]):not([href^="javascript:"])::after {
         content: " (" attr(href) ")" !important;
         font-size: 7pt !important;
-        color: #6b7280 !important;
+        color: #475569 !important;
         text-decoration: none !important;
     }
-    
-    /* ============================================================
-       📅 DATE & TIME
-       ============================================================ */
-    
-    .print-date {
-        font-size: 8pt !important;
-        color: #6b7280 !important;
-        margin-bottom: 8pt !important;
-        text-align: left !important;
-    }
-    
-    /* ============================================================
-       📏 PAGE BREAKS
-       ============================================================ */
-    
-    .page-break {
-        page-break-after: always !important;
-        border: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        height: 0 !important;
-    }
-    
-    .page-break-before {
-        page-break-before: always !important;
-    }
-    
-    .avoid-break {
-        page-break-inside: avoid !important;
-    }
-    
+
     /* ============================================================
        🏢 HEADER & FOOTER
        ============================================================ */
@@ -449,11 +346,10 @@
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
-        border-bottom: 2px solid #111827 !important;
+        border-bottom: 2px solid #0f172a !important;
         padding-bottom: 8pt !important;
         margin-bottom: 14pt !important;
         page-break-after: avoid !important;
-        background: #ffffff !important;
     }
     
     .print-header .brand {
@@ -469,43 +365,34 @@
     .print-header .brand h1 {
         font-size: 14pt !important;
         font-weight: 800 !important;
-        color: #111827 !important;
+        color: #0f172a !important;
         margin: 0 !important;
     }
     
     .print-header .brand .subtitle {
         font-size: 8pt !important;
-        color: #6b7280 !important;
+        color: #475569 !important;
         margin: 0 !important;
     }
     
     .print-header .meta {
         text-align: left !important;
         font-size: 8pt !important;
-        color: #6b7280 !important;
+        color: #475569 !important;
         line-height: 1.4 !important;
     }
     
     .print-footer {
-        border-top: 1px solid #d1d5db !important;
+        border-top: 1px solid #cbd5e1 !important;
         padding-top: 6pt !important;
         margin-top: 14pt !important;
         display: flex !important;
         justify-content: space-between !important;
         font-size: 7pt !important;
-        color: #9ca3af !important;
+        color: #94a3b8 !important;
         page-break-before: avoid !important;
-        background: #ffffff !important;
     }
-    
-    /* ============================================================
-       🎯 PRINT BUTTON
-       ============================================================ */
-    
-    .print-button {
-        display: none !important;
-    }
-    
+
     /* ============================================================
        📱 RESPONSIVE PRINT
        ============================================================ */
@@ -513,34 +400,20 @@
     @media print and (max-width: 600px) {
         body {
             font-size: 8pt !important;
-            padding: 5pt !important;
+            padding: 8pt !important;
         }
         
-        .stats-grid,
-        .print-stats-grid {
+        .stats-grid, .print-stats-grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 4pt !important;
         }
         
-        .stat-card,
-        .print-stat-card {
-            padding: 4pt 6pt !important;
-        }
-        
-        .stat-card .stat-value,
-        .print-stat-card .stat-number {
-            font-size: 12pt !important;
-        }
-        
-        table,
-        .print-table {
+        table, .print-table {
             font-size: 7pt !important;
         }
         
-        table thead th,
-        .print-table thead th,
-        table tbody td,
-        .print-table tbody td {
+        table thead th, .print-table thead th,
+        table tbody td, .print-table tbody td {
             padding: 3pt 4pt !important;
         }
         
@@ -562,62 +435,32 @@
     }
     
     /* ============================================================
-       🌗 DARK MODE OVERRIDE
+       🌗 DARK MODE OVERRIDE (لضمان الوضوح)
        ============================================================ */
     
     @media print and (prefers-color-scheme: dark) {
         * {
-            color: #111827 !important;
+            color: #0f172a !important;
             background: #ffffff !important;
         }
         
-        .stat-card,
-        .print-stat-card {
-            background: #f8fafc !important;
+        .stat-card, .print-stat-card {
+            background: #f1f5f9 !important;
         }
-        
-        table thead,
-        .print-table thead {
-            background: #e5e7eb !important;
+        table thead, .print-table thead {
+            background: #e2e8f0 !important;
         }
-        
-        table tbody td,
-        .print-table tbody td {
+        table tbody td, .print-table tbody td {
             background: #ffffff !important;
         }
-        
         table tbody tr:nth-child(even) td,
         .print-table tbody tr:nth-child(even) td {
-            background: #f9fafb !important;
-        }
-        
-        .status-badge.ready,
-        .status-badge.success,
-        .status-badge.completed {
-            background: #dcfce7 !important;
-            color: #166534 !important;
-        }
-        
-        .status-badge.maintenance,
-        .status-badge.in-progress,
-        .status-badge.pending {
-            background: #fef9c3 !important;
-            color: #854d0e !important;
-        }
-        
-        .status-badge.broken,
-        .status-badge.danger,
-        .status-badge.cancelled {
-            background: #fecaca !important;
-            color: #991b1b !important;
+            background: #f8fafc !important;
         }
     }
 }
 
-/* ============================================================
-   🖥️ SCREEN STYLES FOR PRINT BUTTON
-   ============================================================ */
-
+/* 🖥️ زر الطباعة على الشاشة فقط */
 @media screen {
     .print-button {
         display: inline-flex !important;
@@ -639,10 +482,6 @@
         background: #2d2d44 !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-    }
-    
-    .print-button i {
-        font-size: 14px !important;
     }
 }
 
