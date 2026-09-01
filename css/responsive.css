@@ -1,10 +1,20 @@
+/**
+ * ============================================================
+ * 🚢 MARINE SYSTEM - PRINT.CSS v15.0 (RESPONSIVE PRINT)
+ * ============================================================
+ * 📱 FULLY RESPONSIVE PRINT STYLES
+ * 🎨 PROFESSIONAL COLORS & LAYOUT
+ * 📋 PERFECT FOR ALL SCREEN SIZES
+ * ============================================================
+ */
+
 /* ============================================================
-   🖨️ PRINT STYLES - PROFESSIONAL EDITION
+   🖨️ BASE PRINT STYLES
    ============================================================ */
 
 @media print {
     
-    /* ===== RESET & BASE ===== */
+    /* ===== RESET ===== */
     * {
         box-shadow: none !important;
         text-shadow: none !important;
@@ -12,22 +22,29 @@
         animation: none !important;
     }
     
-    html, body {
+    html {
+        background: #f0f2f5 !important;
+    }
+    
+    body {
         background: #ffffff !important;
-        color: #111827 !important;
+        color: #1a1a2e !important;
         font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif !important;
         font-size: 10pt !important;
-        line-height: 1.5 !important;
+        line-height: 1.6 !important;
         margin: 0 !important;
         padding: 15pt 20pt !important;
         width: 100% !important;
         direction: rtl !important;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.06) !important;
+        border-radius: 4pt !important;
     }
     
     /* ===== PAGE SETUP ===== */
     @page {
         size: A4 portrait;
-        margin: 10mm 12mm 12mm 12mm;
+        margin: 8mm 10mm 10mm 10mm;
+        background: #f0f2f5 !important;
     }
     
     /* ===== HIDE NON-PRINT ===== */
@@ -56,12 +73,6 @@
         min-height: auto !important;
     }
     
-    .page-content {
-        animation: none !important;
-        opacity: 1 !important;
-        transform: none !important;
-    }
-    
     /* ============================================================
        📊 STATS CARDS
        ============================================================ */
@@ -69,41 +80,41 @@
     .stats-grid {
         display: grid !important;
         grid-template-columns: repeat(4, 1fr) !important;
-        gap: 8pt !important;
-        margin-bottom: 12pt !important;
+        gap: 10pt !important;
+        margin-bottom: 14pt !important;
         page-break-inside: avoid !important;
     }
     
     .stat-card {
-        background: #f8fafc !important;
+        background: linear-gradient(145deg, #f8fafc, #eef2f6) !important;
         border: 1px solid #d1d5db !important;
-        border-radius: 4pt !important;
-        padding: 8pt 10pt !important;
+        border-radius: 6pt !important;
+        padding: 10pt 12pt !important;
         text-align: center !important;
         page-break-inside: avoid !important;
     }
     
     .stat-card .stat-value {
-        font-size: 18pt !important;
-        font-weight: 700 !important;
-        color: #111827 !important;
+        font-size: 20pt !important;
+        font-weight: 800 !important;
+        color: #1a1a2e !important;
         margin: 0 !important;
         line-height: 1.2 !important;
     }
     
     .stat-card .stat-label {
-        font-size: 8pt !important;
-        color: #4b5563 !important;
-        font-weight: 500 !important;
+        font-size: 8.5pt !important;
+        color: #475569 !important;
+        font-weight: 600 !important;
         margin: 2pt 0 0 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.3px !important;
     }
     
     .stat-card .stat-icon {
-        font-size: 16pt !important;
+        font-size: 18pt !important;
         display: block !important;
-        margin-bottom: 2pt !important;
+        margin-bottom: 3pt !important;
     }
     
     /* ============================================================
@@ -112,9 +123,9 @@
     
     .table-wrapper {
         border: 1px solid #d1d5db !important;
-        border-radius: 4pt !important;
+        border-radius: 6pt !important;
         overflow: hidden !important;
-        margin: 8pt 0 12pt !important;
+        margin: 10pt 0 14pt !important;
         page-break-inside: avoid !important;
         background: #ffffff !important;
     }
@@ -124,7 +135,6 @@
         border-collapse: collapse !important;
         font-size: 9pt !important;
         background: #ffffff !important;
-        min-width: 100% !important;
     }
     
     .table-wrapper table thead {
@@ -134,27 +144,27 @@
     
     .table-wrapper table thead th {
         background: #e5e7eb !important;
-        color: #111827 !important;
+        color: #1a1a2e !important;
         font-weight: 700 !important;
         font-size: 8.5pt !important;
         text-transform: uppercase !important;
         letter-spacing: 0.3px !important;
-        padding: 6pt 8pt !important;
+        padding: 6pt 10pt !important;
         text-align: center !important;
         border-bottom: 2px solid #9ca3af !important;
     }
     
     .table-wrapper table tbody td {
-        padding: 5pt 8pt !important;
+        padding: 5pt 10pt !important;
         border-bottom: 1px solid #e5e7eb !important;
-        color: #111827 !important;
+        color: #1a1a2e !important;
         text-align: center !important;
         vertical-align: middle !important;
         background: #ffffff !important;
     }
     
     .table-wrapper table tbody tr:nth-child(even) td {
-        background: #f9fafb !important;
+        background: #f8fafc !important;
     }
     
     .table-wrapper table tbody tr:last-child td {
@@ -167,13 +177,13 @@
     
     .status-badge {
         display: inline-block !important;
-        padding: 2pt 10pt !important;
-        border-radius: 10pt !important;
+        padding: 2pt 12pt !important;
+        border-radius: 12pt !important;
         font-size: 8pt !important;
         font-weight: 600 !important;
         border: 1px solid #d1d5db !important;
-        background: #f3f4f6 !important;
-        color: #111827 !important;
+        background: #f1f5f9 !important;
+        color: #1a1a2e !important;
     }
     
     .status-badge .dot {
@@ -206,9 +216,9 @@
     
     .status-badge.inactive,
     .status-badge.closed {
-        background: #f3f4f6 !important;
-        border-color: #9ca3af !important;
-        color: #4b5563 !important;
+        background: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+        color: #475569 !important;
     }
     
     /* ============================================================
@@ -217,8 +227,8 @@
     
     .role-badge {
         display: inline-block !important;
-        padding: 2pt 8pt !important;
-        border-radius: 3pt !important;
+        padding: 2pt 10pt !important;
+        border-radius: 4pt !important;
         font-size: 7.5pt !important;
         font-weight: 600 !important;
         border: 1px solid #d1d5db !important;
@@ -243,9 +253,9 @@
     }
     
     .role-badge.viewer {
-        background: #f3f4f6 !important;
-        border-color: #9ca3af !important;
-        color: #4b5563 !important;
+        background: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+        color: #475569 !important;
     }
     
     /* ============================================================
@@ -253,25 +263,25 @@
        ============================================================ */
     
     .info-box {
-        background: #f3f4f6 !important;
+        background: #f1f5f9 !important;
         border: 1px solid #d1d5db !important;
-        border-radius: 4pt !important;
-        padding: 8pt 12pt !important;
-        margin: 8pt 0 !important;
+        border-radius: 6pt !important;
+        padding: 10pt 14pt !important;
+        margin: 10pt 0 !important;
         page-break-inside: avoid !important;
     }
     
     .info-box .title {
         font-weight: 700 !important;
-        font-size: 9pt !important;
-        color: #111827 !important;
-        margin-bottom: 2pt !important;
+        font-size: 9.5pt !important;
+        color: #1a1a2e !important;
+        margin-bottom: 3pt !important;
     }
     
     .info-box .content {
-        font-size: 8.5pt !important;
-        color: #1f2937 !important;
-        line-height: 1.5 !important;
+        font-size: 9pt !important;
+        color: #1e293b !important;
+        line-height: 1.6 !important;
     }
     
     /* ============================================================
@@ -281,7 +291,7 @@
     .progress-bar {
         width: 100% !important;
         height: 14pt !important;
-        background: #f3f4f6 !important;
+        background: #e5e7eb !important;
         border: 1px solid #d1d5db !important;
         border-radius: 8pt !important;
         overflow: hidden !important;
@@ -290,8 +300,8 @@
     
     .progress-bar .fill {
         height: 100% !important;
-        border-radius: 8pt !important;
-        background: #1f2937 !important;
+        border-radius: 6pt !important;
+        background: #1a1a2e !important;
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
@@ -307,33 +317,33 @@
     .progress-bar .fill.red { background: #dc2626 !important; }
     
     /* ============================================================
-       🏷️ TITLES & HEADERS
+       🏷️ TITLES
        ============================================================ */
     
     .section-title {
-        font-size: 14pt !important;
-        font-weight: 700 !important;
-        color: #111827 !important;
-        margin: 16pt 0 8pt !important;
-        padding-bottom: 4pt !important;
-        border-bottom: 2px solid #111827 !important;
+        font-size: 15pt !important;
+        font-weight: 800 !important;
+        color: #1a1a2e !important;
+        margin: 18pt 0 10pt !important;
+        padding-bottom: 5pt !important;
+        border-bottom: 2px solid #1a1a2e !important;
         page-break-after: avoid !important;
     }
     
     .page-title {
-        font-size: 18pt !important;
-        font-weight: 800 !important;
-        color: #111827 !important;
+        font-size: 20pt !important;
+        font-weight: 900 !important;
+        color: #1a1a2e !important;
         margin: 0 0 4pt !important;
     }
     
     .page-subtitle {
         font-size: 12pt !important;
-        font-weight: 600 !important;
-        color: #374151 !important;
-        margin: 0 0 12pt !important;
-        border-bottom: 1px solid #d1d5db !important;
-        padding-bottom: 4pt !important;
+        font-weight: 700 !important;
+        color: #475569 !important;
+        margin: 0 0 14pt !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        padding-bottom: 5pt !important;
     }
     
     /* ============================================================
@@ -341,26 +351,16 @@
        ============================================================ */
     
     a {
-        color: #111827 !important;
+        color: #1a1a2e !important;
         text-decoration: underline !important;
+        font-weight: 600 !important;
     }
     
     a[href]:not([href^="#"]):not([href^="javascript:"])::after {
-        content: " (" attr(href) ")" !important;
+        content: " [" attr(href) "]" !important;
         font-size: 7pt !important;
         color: #6b7280 !important;
         text-decoration: none !important;
-    }
-    
-    /* ============================================================
-       📅 DATE
-       ============================================================ */
-    
-    .print-date {
-        font-size: 8pt !important;
-        color: #6b7280 !important;
-        margin-bottom: 8pt !important;
-        text-align: left !important;
     }
     
     /* ============================================================
@@ -371,9 +371,9 @@
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
-        border-bottom: 2px solid #111827 !important;
-        padding-bottom: 8pt !important;
-        margin-bottom: 14pt !important;
+        border-bottom: 2px solid #1a1a2e !important;
+        padding-bottom: 10pt !important;
+        margin-bottom: 16pt !important;
         page-break-after: avoid !important;
         background: #ffffff !important;
     }
@@ -381,17 +381,17 @@
     .print-header .brand {
         display: flex !important;
         align-items: center !important;
-        gap: 8px !important;
+        gap: 10px !important;
     }
     
     .print-header .brand .logo-icon {
-        font-size: 22pt !important;
+        font-size: 24pt !important;
     }
     
     .print-header .brand h1 {
-        font-size: 14pt !important;
+        font-size: 16pt !important;
         font-weight: 800 !important;
-        color: #111827 !important;
+        color: #1a1a2e !important;
         margin: 0 !important;
     }
     
@@ -409,13 +409,13 @@
     }
     
     .print-footer {
-        border-top: 1px solid #d1d5db !important;
-        padding-top: 6pt !important;
-        margin-top: 14pt !important;
+        border-top: 1px solid #e5e7eb !important;
+        padding-top: 8pt !important;
+        margin-top: 16pt !important;
         display: flex !important;
         justify-content: space-between !important;
-        font-size: 7pt !important;
-        color: #9ca3af !important;
+        font-size: 7.5pt !important;
+        color: #94a3b8 !important;
         page-break-before: avoid !important;
         background: #ffffff !important;
     }
@@ -452,14 +452,148 @@
        📱 RESPONSIVE PRINT
        ============================================================ */
     
-    @media print and (max-width: 600px) {
+    /* ===== شاشات متوسطة (Tablet) ===== */
+    @media print and (max-width: 768px) {
         body {
-            font-size: 8pt !important;
-            padding: 8pt !important;
+            font-size: 9pt !important;
+            padding: 12pt 16pt !important;
         }
         
         .stats-grid {
             grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8pt !important;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 18pt !important;
+        }
+        
+        .table-wrapper table {
+            font-size: 8pt !important;
+        }
+        
+        .table-wrapper table thead th,
+        .table-wrapper table tbody td {
+            padding: 5pt 8pt !important;
+        }
+        
+        .print-header {
+            flex-direction: column !important;
+            gap: 6pt !important;
+        }
+        
+        .print-header .meta {
+            text-align: center !important;
+            width: 100% !important;
+        }
+        
+        .print-footer {
+            flex-direction: column !important;
+            gap: 3pt !important;
+            text-align: center !important;
+        }
+    }
+    
+    /* ===== شاشات صغيرة (Mobile) ===== */
+    @media print and (max-width: 480px) {
+        body {
+            font-size: 8pt !important;
+            padding: 8pt 10pt !important;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 6pt !important;
+        }
+        
+        .stat-card {
+            padding: 6pt 8pt !important;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 14pt !important;
+        }
+        
+        .stat-card .stat-label {
+            font-size: 7pt !important;
+        }
+        
+        .stat-card .stat-icon {
+            font-size: 14pt !important;
+        }
+        
+        .table-wrapper {
+            border-radius: 4pt !important;
+            margin: 6pt 0 10pt !important;
+        }
+        
+        .table-wrapper table {
+            font-size: 7pt !important;
+        }
+        
+        .table-wrapper table thead th,
+        .table-wrapper table tbody td {
+            padding: 3pt 5pt !important;
+        }
+        
+        .section-title {
+            font-size: 12pt !important;
+            margin: 12pt 0 6pt !important;
+        }
+        
+        .page-title {
+            font-size: 16pt !important;
+        }
+        
+        .page-subtitle {
+            font-size: 10pt !important;
+        }
+        
+        .print-header .brand .logo-icon {
+            font-size: 18pt !important;
+        }
+        
+        .print-header .brand h1 {
+            font-size: 13pt !important;
+        }
+        
+        .print-header .brand .subtitle {
+            font-size: 7pt !important;
+        }
+        
+        .info-box {
+            padding: 6pt 10pt !important;
+            margin: 6pt 0 !important;
+        }
+        
+        .info-box .title {
+            font-size: 8pt !important;
+        }
+        
+        .info-box .content {
+            font-size: 7.5pt !important;
+        }
+        
+        .status-badge {
+            font-size: 7pt !important;
+            padding: 2pt 8pt !important;
+        }
+        
+        .role-badge {
+            font-size: 6.5pt !important;
+            padding: 1pt 6pt !important;
+        }
+    }
+    
+    /* ===== شاشات صغيرة جداً ===== */
+    @media print and (max-width: 360px) {
+        body {
+            font-size: 7pt !important;
+            padding: 5pt 6pt !important;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr 1fr !important;
             gap: 4pt !important;
         }
         
@@ -471,29 +605,29 @@
             font-size: 12pt !important;
         }
         
+        .stat-card .stat-label {
+            font-size: 6pt !important;
+        }
+        
         .table-wrapper table {
-            font-size: 7pt !important;
+            font-size: 6pt !important;
         }
         
         .table-wrapper table thead th,
         .table-wrapper table tbody td {
-            padding: 3pt 4pt !important;
+            padding: 2pt 4pt !important;
         }
         
-        .print-header {
-            flex-direction: column !important;
-            gap: 4pt !important;
+        .section-title {
+            font-size: 10pt !important;
         }
         
-        .print-header .meta {
-            text-align: center !important;
-            width: 100% !important;
+        .page-title {
+            font-size: 14pt !important;
         }
         
-        .print-footer {
-            flex-direction: column !important;
-            gap: 2pt !important;
-            text-align: center !important;
+        .print-header .brand h1 {
+            font-size: 11pt !important;
         }
     }
     
@@ -503,7 +637,7 @@
     
     @media print and (prefers-color-scheme: dark) {
         * {
-            color: #111827 !important;
+            color: #1a1a2e !important;
             background: #ffffff !important;
         }
         
@@ -520,7 +654,7 @@
         }
         
         .table-wrapper table tbody tr:nth-child(even) td {
-            background: #f9fafb !important;
+            background: #f8fafc !important;
         }
         
         .status-badge.ready,
@@ -545,3 +679,44 @@
         }
     }
 }
+
+/* ============================================================
+   🖥️ SCREEN STYLES FOR PRINT BUTTON
+   ============================================================ */
+
+@media screen {
+    .print-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 8px 18px !important;
+        background: #1a1a2e !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-family: 'Cairo', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .print-button:hover {
+        background: #2d2d44 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+    
+    .print-button i {
+        font-size: 14px !important;
+    }
+    
+    .print-button.gold {
+        background: linear-gradient(135deg, #e6b31e, #f5d76e) !important;
+        color: #1a1a2e !important;
+    }
+}
+
+/* ============================================================
+   🏁 END OF PRINT.CSS
+   ============================================================ */
