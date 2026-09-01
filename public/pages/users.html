@@ -1,118 +1,885 @@
-// ============================================================
-// 👥 USERS MANAGEMENT ENDPOINTS
-// ============================================================
-
-// الحصول على جميع المستخدمين
-app.get('/api/users', authenticate, (req, res) => {
-    db.all('SELECT id, username, name, role, two_fa_enabled, status, created_at FROM users', (err, users) => {
-        if (err) {
-            return res.status(500).json({ success: false, error: err.message });
+<!-- public/pages/users.html -->
+<div id="page-users">
+    <style>
+        /* ============================================================
+           👥 USERS PAGE STYLES
+           ============================================================ */
+        
+        .users-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
-        res.json({ success: true, users: users || [] });
-    });
-});
+        
+        .users-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: rgba(255,255,255,0.02);
+            padding: 16px 24px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        
+        .users-header h2 {
+            color: #fff;
+            margin: 0;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .users-header h2 .badge {
+            font-size: 11px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            background: rgba(66,133,244,0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(66,133,244,0.1);
+            font-weight: 400;
+        }
+        
+        .users-header .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .users-header .header-actions .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .users-header .header-actions .btn-primary {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: #fff;
+        }
+        
+        .users-header .header-actions .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 30px rgba(66,133,244,0.3);
+        }
+        
+        .users-header .header-actions .btn-outline {
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        
+        .users-header .header-actions .btn-outline:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        .users-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.02);
+            padding: 18px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.04);
+            text-align: center;
+        }
+        
+        .stat-card h4 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: #60a5fa;
+        }
+        
+        .stat-card p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            color: rgba(255,255,255,0.3);
+        }
+        
+        .stat-card .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card.total h4 { color: #60a5fa; }
+        .stat-card.active h4 { color: #4ade80; }
+        .stat-card.inactive h4 { color: #f87171; }
+        .stat-card.admins h4 { color: #f5d76e; }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.01);
+        }
+        
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        .users-table thead th {
+            padding: 12px 14px;
+            text-align: center;
+            color: rgba(255,255,255,0.4);
+            border-bottom: 2px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.02);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .users-table tbody td {
+            padding: 12px 14px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.7);
+            vertical-align: middle;
+        }
+        
+        .users-table tbody tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .users-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status-badge.active {
+            background: rgba(74,222,128,0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74,222,128,0.1);
+        }
+        
+        .status-badge.inactive {
+            background: rgba(248,113,113,0.15);
+            color: #f87171;
+            border: 1px solid rgba(248,113,113,0.1);
+        }
+        
+        .status-badge.locked {
+            background: rgba(251,191,36,0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251,191,36,0.1);
+        }
+        
+        .role-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .role-badge.admin {
+            background: rgba(245,215,110,0.15);
+            color: #f5d76e;
+            border: 1px solid rgba(245,215,110,0.1);
+        }
+        
+        .role-badge.manager {
+            background: rgba(96,165,250,0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(96,165,250,0.1);
+        }
+        
+        .role-badge.operator {
+            background: rgba(74,222,128,0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74,222,128,0.1);
+        }
+        
+        .role-badge.viewer {
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.4);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-sm:hover { opacity: 0.8; transform: scale(1.05); }
+        .btn-sm:active { transform: scale(0.95); }
+        
+        .btn-sm.btn-edit {
+            background: rgba(96,165,250,0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(96,165,250,0.1);
+        }
+        
+        .btn-sm.btn-delete {
+            background: rgba(248,113,113,0.15);
+            color: #f87171;
+            border: 1px solid rgba(248,113,113,0.1);
+        }
+        
+        .btn-sm.btn-toggle {
+            background: rgba(251,191,36,0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251,191,36,0.1);
+        }
+        
+        .btn-sm.btn-reset {
+            background: rgba(139,92,246,0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(139,92,246,0.1);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.2);
+        }
+        
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        /* ===== Form ===== */
+        .user-form {
+            display: none;
+            background: rgba(255,255,255,0.02);
+            border-radius: 14px;
+            padding: 24px;
+            margin: 20px 0;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        
+        .user-form.active {
+            display: block;
+            animation: slideDown 0.4s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-form .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .user-form .form-header h3 {
+            color: #fff;
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .user-form .form-header .btn-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 0 8px;
+        }
+        
+        .user-form .form-header .btn-close:hover {
+            color: #f87171;
+            transform: rotate(90deg);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            font-weight: 600;
+        }
+        
+        .form-group label .required {
+            color: #f87171;
+        }
+        
+        .form-group input,
+        .form-group select {
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4285f4;
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 4px rgba(66,133,244,0.06);
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+        
+        .form-group select option {
+            background: #1a2332;
+            color: #e2e8f0;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .form-actions .btn-save {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-actions .btn-save:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 30px rgba(66,133,244,0.3);
+        }
+        
+        .form-actions .btn-cancel {
+            padding: 12px 32px;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.4);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+        }
+        
+        .form-actions .btn-cancel:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .users-header { flex-direction: column; align-items: stretch; padding: 14px 18px; }
+            .users-header h2 { font-size: 20px; }
+            .users-stats { grid-template-columns: repeat(2, 1fr); }
+            .stat-card h4 { font-size: 22px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .users-table { font-size: 12px; }
+            .users-table thead th, .users-table tbody td { padding: 8px 10px; }
+        }
+        
+        @media (max-width: 480px) {
+            .users-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-card { padding: 12px 14px; }
+            .stat-card h4 { font-size: 18px; }
+            .users-header h2 { font-size: 18px; }
+            .header-actions .btn { font-size: 12px; padding: 8px 14px; }
+            .form-actions .btn-save, .form-actions .btn-cancel { width: 100%; justify-content: center; }
+        }
+    </style>
 
-// إضافة مستخدم جديد
-app.post('/api/users', authenticate, async (req, res) => {
-    const { name, username, password, role, two_fa_enabled } = req.body;
+    <!-- MAIN CONTAINER -->
+    <div class="users-container">
+        
+        <!-- HEADER -->
+        <div class="users-header">
+            <h2>
+                👥 إدارة المستخدمين
+                <span class="badge">v1.0</span>
+            </h2>
+            <div class="header-actions">
+                <button class="btn btn-primary" id="addUserBtn">➕ إضافة مستخدم</button>
+                <button class="btn btn-outline" id="refreshUsersBtn">🔄 تحديث</button>
+            </div>
+        </div>
 
-    if (!name || !username || !password) {
-        return res.status(400).json({ success: false, error: 'جميع الحقول مطلوبة' });
+        <!-- STATS -->
+        <div class="users-stats" id="usersStats">
+            <div class="stat-card total">
+                <div class="stat-icon">👥</div>
+                <h4 id="totalUsers">0</h4>
+                <p>إجمالي المستخدمين</p>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-icon">✅</div>
+                <h4 id="activeUsers">0</h4>
+                <p>نشط</p>
+            </div>
+            <div class="stat-card inactive">
+                <div class="stat-icon">❌</div>
+                <h4 id="inactiveUsers">0</h4>
+                <p>غير نشط</p>
+            </div>
+            <div class="stat-card admins">
+                <div class="stat-icon">⭐</div>
+                <h4 id="adminUsers">0</h4>
+                <p>مسؤولين</p>
+            </div>
+        </div>
+
+        <!-- USERS TABLE -->
+        <div id="usersTableContainer">
+            <div class="empty-state">
+                <div class="icon">⏳</div>
+                <p>جاري تحميل البيانات...</p>
+            </div>
+        </div>
+
+        <!-- ADD/EDIT USER FORM -->
+        <div class="user-form" id="userForm">
+            <div class="form-header">
+                <h3 id="formTitle">➕ إضافة مستخدم جديد</h3>
+                <button class="btn-close" id="formCloseBtn">✕</button>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>👤 اسم المستخدم <span class="required">*</span></label>
+                    <input type="text" id="userUsername" placeholder="اسم المستخدم">
+                </div>
+                <div class="form-group">
+                    <label>📧 البريد الإلكتروني <span class="required">*</span></label>
+                    <input type="email" id="userEmail" placeholder="البريد الإلكتروني">
+                </div>
+                <div class="form-group">
+                    <label>🔑 كلمة المرور <span class="required" id="passwordRequired">*</span></label>
+                    <input type="password" id="userPassword" placeholder="كلمة المرور">
+                </div>
+                <div class="form-group">
+                    <label>👔 الدور</label>
+                    <select id="userRole">
+                        <option value="admin">مسؤول</option>
+                        <option value="manager">مدير</option>
+                        <option value="operator">مشغل</option>
+                        <option value="viewer">مشاهد</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📊 الحالة</label>
+                    <select id="userStatus">
+                        <option value="active">نشط</option>
+                        <option value="inactive">غير نشط</option>
+                    </select>
+                </div>
+                <input type="hidden" id="userId" value="">
+            </div>
+            
+            <div class="form-actions">
+                <button class="btn-save" id="saveUserBtn">💾 حفظ</button>
+                <button class="btn-cancel" id="cancelUserBtn">❌ إلغاء</button>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- ============================================================
+    📦 JAVASCRIPT - USERS PAGE
+    ============================================================ -->
+    <script>
+    // ============================================================
+    // 👥 USERS PAGE - v1.0
+    // ============================================================
+
+    // ✅ استخدام المتغيرات العامة
+    var usersData = window.allUsers || [];
+    var currentUser = window.currentUser || null;
+
+    console.log('👥 Users page loaded');
+    console.log('👤 Current user:', currentUser?.name || 'Unknown');
+    console.log('👥 Users data:', usersData.length);
+
+    // ============================================================
+    // 1. HELPERS
+    // ============================================================
+
+    function getToken() {
+        var token = localStorage.getItem('token');
+        if (!token) {
+            console.warn('⚠️ No token found');
+            return null;
+        }
+        return token;
     }
 
-    try {
-        // التحقق من وجود المستخدم
-        const existing = await new Promise((resolve, reject) => {
-            db.get('SELECT id FROM users WHERE username = ?', [username], (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
+    function showToast(message, type) {
+        type = type || 'info';
+        var container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        var toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+        toast.innerHTML = '<span class="toast-icon">' + (type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'danger' ? '❌' : 'ℹ️') + '</span> <span>' + message + '</span> <button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
+        container.appendChild(toast);
+
+        setTimeout(function() {
+            if (toast.parentElement) toast.remove();
+        }, 5000);
+    }
+
+    // ============================================================
+    // 2. LOAD DATA
+    // ============================================================
+
+    async function loadUsersData() {
+        console.log('🔄 [USERS] Loading users data...');
+        
+        try {
+            var token = getToken();
+            if (!token) {
+                document.getElementById('usersTableContainer').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+                return;
+            }
+
+            var response = await fetch('/api/users', {
+                headers: { 'Authorization': 'Bearer ' + token }
             });
-        });
 
-        if (existing) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم موجود بالفعل' });
+            if (response.ok) {
+                var data = await response.json();
+                usersData = data.users || data || [];
+                window.allUsers = usersData;
+                console.log('✅ [USERS] Users loaded:', usersData.length);
+                renderUsers(usersData);
+                updateStats(usersData);
+                updateBadge('usersBadge', usersData.length);
+            } else {
+                console.error('❌ [USERS] API error:', response.status);
+                document.getElementById('usersTableContainer').innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>فشل تحميل البيانات</p></div>';
+            }
+        } catch (error) {
+            console.error('❌ [USERS] Load error:', error);
+            showToast('❌ فشل تحميل المستخدمين', 'danger');
+        }
+    }
+
+    // ============================================================
+    // 3. RENDER FUNCTIONS
+    // ============================================================
+
+    function updateStats(users) {
+        var total = users.length;
+        var active = users.filter(function(u) { return u.isActive !== false; }).length;
+        var inactive = users.filter(function(u) { return u.isActive === false; }).length;
+        var admins = users.filter(function(u) { return u.role === 'admin'; }).length;
+
+        document.getElementById('totalUsers').textContent = total;
+        document.getElementById('activeUsers').textContent = active;
+        document.getElementById('inactiveUsers').textContent = inactive;
+        document.getElementById('adminUsers').textContent = admins;
+    }
+
+    function renderUsers(users) {
+        var container = document.getElementById('usersTableContainer');
+        
+        if (!users || users.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>لا توجد مستخدمين</p></div>';
+            return;
         }
 
-        const hashedPassword = bcrypt.hashSync(password, 10);
-        const twoFaSecret = two_fa_enabled ? speakeasy.generateSecret().base32 : null;
+        var html = '<div class="table-container"><table class="users-table"><thead><tr>';
+        html += '<th>👤 المستخدم</th>';
+        html += '<th>📧 البريد الإلكتروني</th>';
+        html += '<th>👔 الدور</th>';
+        html += '<th>📊 الحالة</th>';
+        html += '<th>📅 آخر تسجيل دخول</th>';
+        html += '<th>⚙️ الإجراءات</th>';
+        html += '</tr></thead><tbody>';
 
-        const result = await new Promise((resolve, reject) => {
-            db.run(
-                'INSERT INTO users (name, username, password, role, two_fa_secret, two_fa_enabled, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [name, username, hashedPassword, role || 'viewer', twoFaSecret, two_fa_enabled ? 1 : 0, 'active'],
-                function(err) {
-                    if (err) reject(err);
-                    else resolve(this);
-                }
-            );
+        users.forEach(function(u) {
+            var roleMap = {
+                'admin': '<span class="role-badge admin">مسؤول</span>',
+                'manager': '<span class="role-badge manager">مدير</span>',
+                'operator': '<span class="role-badge operator">مشغل</span>',
+                'viewer': '<span class="role-badge viewer">مشاهد</span>'
+            };
+
+            var statusMap = {
+                true: '<span class="status-badge active">✅ نشط</span>',
+                false: '<span class="status-badge inactive">❌ غير نشط</span>'
+            };
+
+            var isActive = u.isActive !== false;
+            var lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ar-TN') : '-';
+
+            html += '<tr>';
+            html += '<td><strong>' + (u.name || u.username || '-') + '</strong></td>';
+            html += '<td>' + (u.email || '-') + '</td>';
+            html += '<td>' + (roleMap[u.role] || u.role || '-') + '</td>';
+            html += '<td>' + (statusMap[isActive] || '-') + '</td>';
+            html += '<td>' + lastLogin + '</td>';
+            html += '<td>';
+            html += '<button class="btn-sm btn-edit edit-btn" data-id="' + (u._id || u.id) + '">✏️</button> ';
+            html += '<button class="btn-sm btn-toggle toggle-btn" data-id="' + (u._id || u.id) + '" data-status="' + isActive + '">' + (isActive ? '🔒' : '🔓') + '</button> ';
+            html += '<button class="btn-sm btn-delete delete-btn" data-id="' + (u._id || u.id) + '">🗑️</button>';
+            html += '</td>';
+            html += '</tr>';
         });
 
-        logActivity(req.userId, 'create_user', `Created user: ${username}`);
-        res.json({ success: true, id: result.lastID });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
 
-    } catch (error) {
-        console.error('❌ Error creating user:', error);
-        res.status(500).json({ success: false, error: 'حدث خطأ في الخادم' });
+        // ربط الأحداث
+        container.querySelectorAll('.edit-btn').forEach(function(btn) {
+            btn.onclick = function() { editUser(this.dataset.id); };
+        });
+        container.querySelectorAll('.toggle-btn').forEach(function(btn) {
+            btn.onclick = function() { toggleUserStatus(this.dataset.id, this.dataset.status === 'true'); };
+        });
+        container.querySelectorAll('.delete-btn').forEach(function(btn) {
+            btn.onclick = function() { deleteUser(this.dataset.id); };
+        });
     }
-});
 
-// تحديث مستخدم
-app.put('/api/users/:id', authenticate, async (req, res) => {
-    const { id } = req.params;
-    const { name, username, password, role, two_fa_enabled, status } = req.body;
+    // ============================================================
+    // 4. CRUD OPERATIONS
+    // ============================================================
 
-    try {
-        let query = 'UPDATE users SET name = ?, username = ?, role = ?, two_fa_enabled = ?, status = ?';
-        const params = [name, username, role, two_fa_enabled ? 1 : 0, status || 'active'];
+    function toggleUserForm() {
+        var form = document.getElementById('userForm');
+        var isActive = form.classList.contains('active');
+        
+        if (isActive) {
+            form.classList.remove('active');
+            document.getElementById('formTitle').textContent = '➕ إضافة مستخدم جديد';
+            document.getElementById('userId').value = '';
+            document.getElementById('userUsername').value = '';
+            document.getElementById('userEmail').value = '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userRole').value = 'viewer';
+            document.getElementById('userStatus').value = 'active';
+            document.getElementById('passwordRequired').textContent = '*';
+        } else {
+            form.classList.add('active');
+        }
+    }
+
+    function editUser(id) {
+        var user = usersData.find(function(u) { return (u._id || u.id) == id; });
+        if (!user) {
+            showToast('⚠️ المستخدم غير موجود', 'warning');
+            return;
+        }
+
+        document.getElementById('formTitle').textContent = '✏️ تعديل مستخدم';
+        document.getElementById('userId').value = user._id || user.id;
+        document.getElementById('userUsername').value = user.username || '';
+        document.getElementById('userEmail').value = user.email || '';
+        document.getElementById('userPassword').value = '';
+        document.getElementById('userRole').value = user.role || 'viewer';
+        document.getElementById('userStatus').value = user.isActive !== false ? 'active' : 'inactive';
+        document.getElementById('passwordRequired').textContent = '(اتركها فارغة لتعديل)';
+
+        var form = document.getElementById('userForm');
+        form.classList.add('active');
+    }
+
+    async function saveUser() {
+        var id = document.getElementById('userId').value;
+        var username = document.getElementById('userUsername').value.trim();
+        var email = document.getElementById('userEmail').value.trim();
+        var password = document.getElementById('userPassword').value;
+        var role = document.getElementById('userRole').value;
+        var status = document.getElementById('userStatus').value;
+
+        if (!username) { showToast('⚠️ الرجاء إدخال اسم المستخدم', 'warning'); return; }
+        if (!email) { showToast('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning'); return; }
+        if (!id && !password) { showToast('⚠️ الرجاء إدخال كلمة المرور', 'warning'); return; }
+
+        var token = getToken();
+        if (!token) return;
+
+        var data = {
+            username: username,
+            email: email,
+            role: role,
+            isActive: status === 'active'
+        };
 
         if (password) {
-            const hashedPassword = bcrypt.hashSync(password, 10);
-            query += ', password = ?';
-            params.push(hashedPassword);
+            data.password = password;
         }
 
-        if (two_fa_enabled) {
-            const secret = speakeasy.generateSecret().base32;
-            query += ', two_fa_secret = ?';
-            params.push(secret);
-        }
+        try {
+            var url = id ? '/api/users/' + id : '/api/users';
+            var method = id ? 'PUT' : 'POST';
 
-        query += ' WHERE id = ?';
-        params.push(id);
-
-        await new Promise((resolve, reject) => {
-            db.run(query, params, function(err) {
-                if (err) reject(err);
-                else resolve(this);
+            var response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(data)
             });
-        });
 
-        logActivity(req.userId, 'update_user', `Updated user: ${username}`);
-        res.json({ success: true });
+            if (!response.ok) {
+                var error = await response.json();
+                throw new Error(error.error || 'فشل الحفظ');
+            }
 
-    } catch (error) {
-        console.error('❌ Error updating user:', error);
-        res.status(500).json({ success: false, error: 'حدث خطأ في الخادم' });
-    }
-});
-
-// حذف مستخدم
-app.delete('/api/users/:id', authenticate, (req, res) => {
-    const { id } = req.params;
-
-    // منع حذف المستخدم الحالي
-    if (id == req.userId) {
-        return res.status(400).json({ success: false, error: 'لا يمكن حذف حسابك الحالي' });
+            showToast('✅ ' + (id ? 'تم تحديث' : 'تم إضافة') + ' المستخدم بنجاح', 'success');
+            toggleUserForm();
+            await loadUsersData();
+        } catch (error) {
+            console.error('❌ Save user error:', error);
+            showToast('❌ ' + error.message, 'danger');
+        }
     }
 
-    db.run('DELETE FROM users WHERE id = ?', [id], function(err) {
-        if (err) {
-            return res.status(500).json({ success: false, error: err.message });
+    async function toggleUserStatus(id, currentStatus) {
+        var action = currentStatus ? 'تعطيل' : 'تفعيل';
+        if (!confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) return;
+
+        var token = getToken();
+        if (!token) return;
+
+        try {
+            var response = await fetch('/api/users/' + id, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ isActive: !currentStatus })
+            });
+
+            if (!response.ok) {
+                var error = await response.json();
+                throw new Error(error.error || 'فشل التغيير');
+            }
+
+            showToast('✅ تم ' + action + ' المستخدم بنجاح', 'success');
+            await loadUsersData();
+        } catch (error) {
+            console.error('❌ Toggle user error:', error);
+            showToast('❌ ' + error.message, 'danger');
         }
-        if (this.changes === 0) {
-            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+    }
+
+    async function deleteUser(id) {
+        if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+
+        var token = getToken();
+        if (!token) return;
+
+        try {
+            var response = await fetch('/api/users/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (!response.ok) {
+                var error = await response.json();
+                throw new Error(error.error || 'فشل الحذف');
+            }
+
+            showToast('✅ تم حذف المستخدم', 'success');
+            await loadUsersData();
+        } catch (error) {
+            console.error('❌ Delete user error:', error);
+            showToast('❌ ' + error.message, 'danger');
         }
-        logActivity(req.userId, 'delete_user', `Deleted user ID: ${id}`);
-        res.json({ success: true });
+    }
+
+    // ============================================================
+    // 5. INIT
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('👥 Users page loading...');
+
+        // ربط الأزرار
+        document.getElementById('addUserBtn').onclick = toggleUserForm;
+        document.getElementById('refreshUsersBtn').onclick = loadUsersData;
+        document.getElementById('formCloseBtn').onclick = toggleUserForm;
+        document.getElementById('cancelUserBtn').onclick = toggleUserForm;
+        document.getElementById('saveUserBtn').onclick = saveUser;
+
+        // تحميل البيانات
+        setTimeout(loadUsersData, 200);
+        setTimeout(loadUsersData, 800);
     });
-});
+
+    // ============================================================
+    // 6. EXPOSE GLOBALS
+    // ============================================================
+
+    window.loadUsersData = loadUsersData;
+    window.renderUsers = renderUsers;
+    window.updateStats = updateStats;
+    window.toggleUserForm = toggleUserForm;
+    window.saveUser = saveUser;
+    window.editUser = editUser;
+    window.toggleUserStatus = toggleUserStatus;
+    window.deleteUser = deleteUser;
+
+    console.log('✅ Users page script loaded');
+    </script>
+</div>
