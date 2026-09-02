@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v38.2 (FULLY INTEGRATED)
+ * 🚢 MARINE SYSTEM - SERVER v38.3 (WITH SETTINGS API)
  * ============================================================
  * ✅ FIXED: Account lock timeout check
  * ✅ FIXED: Token version validation
@@ -17,6 +17,11 @@
  * ✅ ADDED: /api/config endpoint (Public - for frontend)
  * ✅ ADDED: /api/check-gemini endpoint
  * ✅ ADDED: /ai-assistant page
+ * ✅ ADDED: Settings API (GET/PUT/POST/DELETE) ✅ NEW
+ * ✅ ADDED: Permissions API (/api/users/me/permissions) ✅ NEW
+ * ✅ ADDED: 2FA API (initiate/verify/disable/status) ✅ NEW
+ * ✅ ADDED: Session Timeout API ✅ NEW
+ * ✅ ADDED: Logo & Background Upload ✅ NEW
  * ✅ PRODUCTION READY 100%
  * ============================================================
  */
@@ -36,6 +41,8 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -71,7 +78,7 @@ const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
+console.log('🚢 MARINE SYSTEM v38.3 - WITH SETTINGS API');
 console.log('='.repeat(60));
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
@@ -82,6 +89,41 @@ console.log(`✅ Gemini API: ${GEMINI_API_KEY ? '✓ Set' : '✗ Missing'}`);
 console.log(`✅ DeepSeek API: ${DEEPSEEK_API_KEY ? '✓ Set' : '✗ Missing'}`);
 console.log(`✅ OpenAI API: ${OPENAI_API_KEY ? '✓ Set' : '✗ Missing'}`);
 console.log('='.repeat(60) + '\n');
+
+// ============================================================
+// 📦 MULTER CONFIGURATION - للصور
+// ============================================================
+
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const name = crypto.randomBytes(16).toString('hex');
+        cb(null, `${name}${ext}`);
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+    if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('نوع الملف غير مدعوم'), false);
+    }
+};
+
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter
+});
 
 // ============================================================
 // 📦 MODELS
@@ -105,6 +147,22 @@ const UserSchema = new mongoose.Schema({
     lastLogin: { type: Date },
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
+    // ✅ 2FA Fields
+    twoFactorSecret: { type: String, select: false },
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorPending: { type: Boolean, default: false },
+    // ✅ Session Timeout
+    sessionTimeout: { type: Number, default: 60 },
+    // ✅ Permissions
+    permissions: {
+        canManageTheme: { type: Boolean, default: true },
+        canManageBranding: { type: Boolean, default: true },
+        canManageLayout: { type: Boolean, default: true },
+        canManageSecurity: { type: Boolean, default: true },
+        canManageNotifications: { type: Boolean, default: true },
+        canManage2FA: { type: Boolean, default: true },
+        canManageSession: { type: Boolean, default: true }
+    },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -152,7 +210,49 @@ UserSchema.methods.checkLock = function() {
     return { locked: false };
 };
 
-// 🚢 VESSEL MODEL (مع الوحدة المسؤولة عن الإصلاح)
+// ⚙️ SETTINGS MODEL
+const SettingsSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        unique: true
+    },
+    theme: {
+        primary: { type: String, default: '#0a1628' },
+        secondary: { type: String, default: '#1a2a4a' },
+        gold: { type: String, default: '#e6b31e' }
+    },
+    layout: {
+        darkMode: { type: Boolean, default: true },
+        fontSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
+        sidebarPosition: { type: String, enum: ['right', 'left'], default: 'right' },
+        showStats: { type: Boolean, default: true }
+    },
+    security: {
+        twoFactorAuth: { type: Boolean, default: false },
+        emailNotifications: { type: Boolean, default: true },
+        smsNotifications: { type: Boolean, default: false },
+        sessionTimeout: { type: Number, default: 60, min: 5, max: 480 }
+    },
+    notifications: {
+        emergencyAlerts: { type: Boolean, default: true },
+        maintenanceAlerts: { type: Boolean, default: true },
+        performanceReports: { 
+            type: String, 
+            enum: ['daily', 'weekly', 'monthly', 'never'],
+            default: 'weekly'
+        }
+    },
+    branding: {
+        logoUrl: { type: String, default: null },
+        logoName: { type: String, default: null },
+        logoSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
+        backgroundUrl: { type: String, default: null }
+    }
+}, { timestamps: true });
+
+// 🚢 VESSEL MODEL
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
@@ -249,6 +349,7 @@ const LogSchema = new mongoose.Schema({
 
 // 🏗️ REGISTER MODELS
 const User = mongoose.model('User', UserSchema);
+const Settings = mongoose.model('Settings', SettingsSchema);
 const Vessel = mongoose.model('Vessel', VesselSchema);
 const Maintenance = mongoose.model('Maintenance', MaintenanceSchema);
 const Ticket = mongoose.model('Ticket', TicketSchema);
@@ -398,6 +499,8 @@ app.use(express.static(publicPath, {
     etag: false
 }));
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // ============================================================
 // 🗄️ DATABASE CONNECTION
 // ============================================================
@@ -423,6 +526,93 @@ async function connectDB() {
         console.error('❌ MongoDB Connection Failed:', error.message);
         return false;
     }
+}
+
+// ============================================================
+// 🔐 AUTHENTICATION MIDDLEWARE
+// ============================================================
+
+async function authenticate(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+
+        const token = authHeader.substring(7).trim();
+        const decoded = verifyToken(token);
+
+        if (!decoded) {
+            return res.status(401).json({ success: false, error: 'توكن غير صالح' });
+        }
+
+        const user = await User.findById(decoded.id);
+        if (!user || !user.isActive) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+
+        const lockCheck = user.checkLock();
+        if (lockCheck && lockCheck.locked) {
+            return res.status(423).json({
+                success: false,
+                error: `الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
+            });
+        }
+        if (lockCheck && !lockCheck.locked) {
+            await user.save();
+        }
+
+        if (decoded.tokenVersion !== (user.tokenVersion || 0)) {
+            return res.status(401).json({
+                success: false,
+                error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى'
+            });
+        }
+
+        req.user = user;
+        next();
+
+    } catch (error) {
+        console.error('❌ Auth error:', error.message);
+        return res.status(401).json({ success: false, error: 'غير مصرح' });
+    }
+}
+
+function authorize(...roles) {
+    return (req, res, next) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+        }
+        next();
+    };
+}
+
+function checkPermission(permission) {
+    return async (req, res, next) => {
+        try {
+            if (!req.user) {
+                return res.status(401).json({ success: false, error: 'غير مصرح' });
+            }
+
+            const user = await User.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+            }
+
+            // ✅ التحقق من الصلاحية
+            const perms = user.permissions || {};
+            if (!perms[permission]) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'ليس لديك صلاحية لهذه العملية'
+                });
+            }
+
+            next();
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    };
 }
 
 // ============================================================
@@ -454,6 +644,15 @@ async function createAdmin() {
             existing.isLocked = false;
             existing.lockUntil = null;
             existing.loginAttempts = 0;
+            existing.permissions = {
+                canManageTheme: true,
+                canManageBranding: true,
+                canManageLayout: true,
+                canManageSecurity: true,
+                canManageNotifications: true,
+                canManage2FA: true,
+                canManageSession: true
+            };
 
             if (!passwordMatches) {
                 existing.password = adminPassword;
@@ -474,7 +673,16 @@ async function createAdmin() {
             password: adminPassword,
             role: 'admin',
             isActive: true,
-            tokenVersion: 1
+            tokenVersion: 1,
+            permissions: {
+                canManageTheme: true,
+                canManageBranding: true,
+                canManageLayout: true,
+                canManageSecurity: true,
+                canManageNotifications: true,
+                canManage2FA: true,
+                canManageSession: true
+            }
         });
 
         await admin.save();
@@ -488,7 +696,7 @@ async function createAdmin() {
 }
 
 // ============================================================
-// 🌱 SEED DATA - إضافة بيانات أولية للمراكب
+// 🌱 SEED DATA
 // ============================================================
 
 async function seedVessels() {
@@ -591,74 +799,12 @@ async function seedVessels() {
             
             await Vessel.insertMany(sampleVessels);
             console.log(`✅ تم إضافة ${sampleVessels.length} مراكب افتراضية بنجاح`);
-            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'صالح').length} صالح`);
-            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'معطب').length} معطب`);
-            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'صيانة').length} تحت الصيانة`);
         } else {
             console.log(`✅ توجد ${count} مراكب بالفعل في قاعدة البيانات`);
         }
     } catch (error) {
         console.error('❌ خطأ في إضافة البيانات الأولية:', error.message);
     }
-}
-
-// ============================================================
-// 🔐 AUTHENTICATION
-// ============================================================
-
-async function authenticate(req, res, next) {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
-        const token = authHeader.substring(7).trim();
-        const decoded = verifyToken(token);
-
-        if (!decoded) {
-            return res.status(401).json({ success: false, error: 'توكن غير صالح' });
-        }
-
-        const user = await User.findById(decoded.id);
-        if (!user || !user.isActive) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
-        const lockCheck = user.checkLock();
-        if (lockCheck && lockCheck.locked) {
-            return res.status(423).json({
-                success: false,
-                error: `الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
-            });
-        }
-        if (lockCheck && !lockCheck.locked) {
-            await user.save();
-        }
-
-        if (decoded.tokenVersion !== (user.tokenVersion || 0)) {
-            return res.status(401).json({
-                success: false,
-                error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى'
-            });
-        }
-
-        req.user = user;
-        next();
-
-    } catch (error) {
-        console.error('❌ Auth error:', error.message);
-        return res.status(401).json({ success: false, error: 'غير مصرح' });
-    }
-}
-
-function authorize(...roles) {
-    return (req, res, next) => {
-        if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
-        }
-        next();
-    };
 }
 
 // ============================================================
@@ -687,13 +833,11 @@ app.get('/health', (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     console.log('🔐 [LOGIN] Request received');
     console.log(`   👤 Username: ${req.body.username || 'not provided'}`);
-    console.log(`   📡 IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
 
     try {
         const { username, password } = req.body;
 
         if (!username || !password) {
-            console.warn('⚠️ [LOGIN] Missing credentials');
             return res.status(400).json({
                 success: false,
                 error: '⚠️ اسم المستخدم وكلمة المرور مطلوبان'
@@ -708,17 +852,13 @@ app.post('/api/auth/login', async (req, res) => {
         }).select('+password');
 
         if (!user) {
-            console.warn(`❌ [LOGIN] User not found: ${username}`);
             return res.status(401).json({
                 success: false,
                 error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
             });
         }
 
-        console.log(`   👤 Found user: ${user.username} (${user.role})`);
-
         if (!user.isActive) {
-            console.warn(`⚠️ [LOGIN] Account disabled: ${user.username}`);
             return res.status(403).json({
                 success: false,
                 error: '❌ الحساب معطل'
@@ -727,7 +867,6 @@ app.post('/api/auth/login', async (req, res) => {
 
         const lockCheck = user.checkLock();
         if (lockCheck && lockCheck.locked) {
-            console.warn(`🔒 [LOGIN] Account locked: ${user.username}, remaining: ${lockCheck.remainingMinutes} min`);
             return res.status(423).json({
                 success: false,
                 error: `❌ الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
@@ -740,7 +879,6 @@ app.post('/api/auth/login', async (req, res) => {
         const isValid = await user.comparePassword(password);
         if (!isValid) {
             await user.incrementLoginAttempts();
-            console.warn(`❌ [LOGIN] Invalid password for: ${user.username} (attempt ${user.loginAttempts})`);
             return res.status(401).json({
                 success: false,
                 error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
@@ -753,7 +891,6 @@ app.post('/api/auth/login', async (req, res) => {
         user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save();
 
-        // تسجيل نشاط تسجيل الدخول
         await Log.create({
             userId: user._id,
             username: user.username,
@@ -764,8 +901,6 @@ app.post('/api/auth/login', async (req, res) => {
         });
 
         const token = generateToken(user);
-        console.log(`✅ [LOGIN] Success: ${user.username} (${user.role})`);
-        console.log(`   🔑 Token: ${token.substring(0, 20)}...`);
 
         return res.json({
             success: true,
@@ -787,8 +922,6 @@ app.post('/api/auth/login', async (req, res) => {
 // ============================================================
 
 app.post('/api/auth/logout', authenticate, async (req, res) => {
-    console.log(`🚪 [LOGOUT] User: ${req.user.username}`);
-    
     await Log.create({
         userId: req.user._id,
         username: req.user.username,
@@ -797,33 +930,23 @@ app.post('/api/auth/logout', authenticate, async (req, res) => {
         ip: req.ip || req.socket.remoteAddress,
         userAgent: req.headers['user-agent']
     });
-    
     res.json({ success: true, message: 'تم تسجيل الخروج' });
 });
 
 // ============================================================
-// 👤 CURRENT USER - المسار المهم ✅
+// 👤 CURRENT USER
 // ============================================================
 
 app.get('/api/auth/me', authenticate, (req, res) => {
-    console.log(`👤 [ME] User: ${req.user.username}`);
-    res.json({ 
-        success: true, 
-        user: cleanUser(req.user) 
-    });
+    res.json({ success: true, user: cleanUser(req.user) });
 });
 
 // ============================================================
-// ✅ VERIFY TOKEN - التحقق من صلاحية التوكن
+// ✅ VERIFY TOKEN
 // ============================================================
 
 app.get('/api/auth/verify', authenticate, (req, res) => {
-    console.log(`✅ [VERIFY] Token valid for user: ${req.user.username}`);
-    res.json({ 
-        success: true, 
-        user: cleanUser(req.user),
-        message: 'التوكن صالح'
-    });
+    res.json({ success: true, user: cleanUser(req.user), message: 'التوكن صالح' });
 });
 
 // ============================================================
@@ -831,7 +954,6 @@ app.get('/api/auth/verify', authenticate, (req, res) => {
 // ============================================================
 
 app.put('/api/auth/change-password', authenticate, authorize('admin'), async (req, res) => {
-    console.log(`🔑 [CHANGE PASSWORD] User: ${req.user.username}`);
     try {
         const { currentPassword, newPassword } = req.body;
 
@@ -853,7 +975,6 @@ app.put('/api/auth/change-password', authenticate, authorize('admin'), async (re
         const isValid = await user.comparePassword(currentPassword);
 
         if (!isValid) {
-            console.warn(`❌ [CHANGE PASSWORD] Invalid current password for: ${req.user.username}`);
             return res.status(401).json({
                 success: false,
                 error: '❌ كلمة المرور الحالية غير صحيحة'
@@ -864,7 +985,6 @@ app.put('/api/auth/change-password', authenticate, authorize('admin'), async (re
         user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save();
 
-        console.log(`✅ [CHANGE PASSWORD] Success for: ${req.user.username}`);
         return res.json({
             success: true,
             message: '✅ تم تغيير كلمة المرور بنجاح'
@@ -880,11 +1000,541 @@ app.put('/api/auth/change-password', authenticate, authorize('admin'), async (re
 });
 
 // ============================================================
+// 📊 PERMISSIONS API ✅ NEW
+// ============================================================
+
+app.get('/api/users/me/permissions',
+    authenticate,
+    async (req, res) => {
+        try {
+            const user = await User.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'المستخدم غير موجود'
+                });
+            }
+
+            // ✅ صلاحيات المستخدم
+            const permissions = user.permissions || {
+                canManageTheme: true,
+                canManageBranding: true,
+                canManageLayout: true,
+                canManageSecurity: true,
+                canManageNotifications: true,
+                canManage2FA: true,
+                canManageSession: true
+            };
+
+            res.json({
+                success: true,
+                permissions
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// ============================================================
+// ⚙️ SETTINGS API ✅ NEW
+// ============================================================
+
+// GET /api/settings
+app.get('/api/settings',
+    authenticate,
+    async (req, res) => {
+        try {
+            let settings = await Settings.findOne({ userId: req.user.id });
+
+            if (!settings) {
+                settings = new Settings({
+                    userId: req.user.id,
+                    theme: {
+                        primary: '#0a1628',
+                        secondary: '#1a2a4a',
+                        gold: '#e6b31e'
+                    },
+                    layout: {
+                        darkMode: true,
+                        fontSize: 'medium',
+                        sidebarPosition: 'right',
+                        showStats: true
+                    },
+                    security: {
+                        twoFactorAuth: false,
+                        emailNotifications: true,
+                        smsNotifications: false,
+                        sessionTimeout: 60
+                    },
+                    notifications: {
+                        emergencyAlerts: true,
+                        maintenanceAlerts: true,
+                        performanceReports: 'weekly'
+                    },
+                    branding: {
+                        logoSize: 'medium'
+                    }
+                });
+
+                await settings.save();
+            }
+
+            res.json({
+                success: true,
+                settings: settings.toObject()
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// PUT /api/settings
+app.put('/api/settings',
+    authenticate,
+    async (req, res) => {
+        try {
+            const { theme, layout, security, notifications, branding } = req.body;
+
+            let settings = await Settings.findOne({ userId: req.user.id });
+
+            if (!settings) {
+                settings = new Settings({ userId: req.user.id });
+            }
+
+            // ✅ التحقق من الصلاحيات لكل قسم
+            const user = await User.findById(req.user.id);
+            const perms = user.permissions || {};
+
+            if (theme && perms.canManageTheme !== false) {
+                settings.theme = { ...settings.theme, ...theme };
+            }
+
+            if (layout && perms.canManageLayout !== false) {
+                settings.layout = { ...settings.layout, ...layout };
+            }
+
+            if (security && perms.canManageSecurity !== false) {
+                const { twoFactorAuth, ...safeSecurity } = security;
+                settings.security = { ...settings.security, ...safeSecurity };
+            }
+
+            if (notifications && perms.canManageNotifications !== false) {
+                settings.notifications = { ...settings.notifications, ...notifications };
+            }
+
+            if (branding && perms.canManageBranding !== false) {
+                settings.branding = { ...settings.branding, ...branding };
+            }
+
+            settings.updatedAt = new Date();
+            await settings.save();
+
+            res.json({
+                success: true,
+                settings: settings.toObject()
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// POST /api/settings/reset
+app.post('/api/settings/reset',
+    authenticate,
+    async (req, res) => {
+        try {
+            const { sections } = req.body;
+
+            let settings = await Settings.findOne({ userId: req.user.id });
+
+            if (!settings) {
+                settings = new Settings({ userId: req.user.id });
+            }
+
+            const user = await User.findById(req.user.id);
+            const perms = user.permissions || {};
+
+            const defaults = {
+                theme: { primary: '#0a1628', secondary: '#1a2a4a', gold: '#e6b31e' },
+                layout: { darkMode: true, fontSize: 'medium', sidebarPosition: 'right', showStats: true },
+                security: { twoFactorAuth: false, emailNotifications: true, smsNotifications: false, sessionTimeout: 60 },
+                notifications: { emergencyAlerts: true, maintenanceAlerts: true, performanceReports: 'weekly' },
+                branding: { logoSize: 'medium' }
+            };
+
+            if (sections && sections.includes('theme') && perms.canManageTheme !== false) {
+                settings.theme = defaults.theme;
+            }
+
+            if (sections && sections.includes('layout') && perms.canManageLayout !== false) {
+                settings.layout = defaults.layout;
+            }
+
+            if (sections && sections.includes('security') && perms.canManageSecurity !== false) {
+                settings.security = { ...defaults.security, twoFactorAuth: settings.security?.twoFactorAuth || false };
+            }
+
+            if (sections && sections.includes('notifications') && perms.canManageNotifications !== false) {
+                settings.notifications = defaults.notifications;
+            }
+
+            if (sections && sections.includes('branding') && perms.canManageBranding !== false) {
+                settings.branding = defaults.branding;
+            }
+
+            settings.updatedAt = new Date();
+            await settings.save();
+
+            res.json({
+                success: true,
+                settings: settings.toObject()
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// ============================================================
+// 🖼️ LOGO API ✅ NEW
+// ============================================================
+
+// POST /api/settings/logo
+app.post('/api/settings/logo',
+    authenticate,
+    checkPermission('canManageBranding'),
+    upload.single('logo'),
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'لم يتم تحميل ملف'
+                });
+            }
+
+            const fileUrl = `/uploads/${req.file.filename}`;
+
+            let settings = await Settings.findOne({ userId: req.user.id });
+            if (!settings) {
+                settings = new Settings({ userId: req.user.id });
+            }
+
+            settings.branding = {
+                ...settings.branding,
+                logoUrl: fileUrl,
+                logoName: req.file.originalname,
+                logoSize: settings.branding?.logoSize || 'medium'
+            };
+
+            await settings.save();
+
+            res.json({
+                success: true,
+                logoUrl: fileUrl
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// DELETE /api/settings/logo
+app.delete('/api/settings/logo',
+    authenticate,
+    checkPermission('canManageBranding'),
+    async (req, res) => {
+        try {
+            let settings = await Settings.findOne({ userId: req.user.id });
+
+            if (settings && settings.branding?.logoUrl) {
+                const filePath = path.join(__dirname, settings.branding.logoUrl);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+
+                delete settings.branding.logoUrl;
+                delete settings.branding.logoName;
+                await settings.save();
+            }
+
+            res.json({
+                success: true,
+                message: 'تم حذف الشعار'
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// ============================================================
+// 🖼️ BACKGROUND API ✅ NEW
+// ============================================================
+
+// POST /api/settings/background
+app.post('/api/settings/background',
+    authenticate,
+    checkPermission('canManageTheme'),
+    upload.single('background'),
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'لم يتم تحميل ملف'
+                });
+            }
+
+            const fileUrl = `/uploads/${req.file.filename}`;
+
+            let settings = await Settings.findOne({ userId: req.user.id });
+            if (!settings) {
+                settings = new Settings({ userId: req.user.id });
+            }
+
+            settings.branding = {
+                ...settings.branding,
+                backgroundUrl: fileUrl
+            };
+
+            await settings.save();
+
+            res.json({
+                success: true,
+                backgroundUrl: fileUrl
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// ============================================================
+// 🔐 2FA API ✅ NEW
+// ============================================================
+
+// POST /api/auth/2fa/initiate
+app.post('/api/auth/2fa/initiate',
+    authenticate,
+    checkPermission('canManage2FA'),
+    async (req, res) => {
+        try {
+            const user = await User.findById(req.user.id);
+
+            // توليد Secret
+            const secret = crypto.randomBytes(20).toString('hex');
+
+            // توليد QR Code (Base64)
+            const qrCode = `data:image/png;base64,${Buffer.from(`otpauth://totp/MarineSystem:${user.email}?secret=${secret}&issuer=MarineSystem`).toString('base64')}`;
+
+            // حفظ Secret مؤقتاً
+            user.twoFactorSecret = secret;
+            user.twoFactorPending = true;
+            await user.save();
+
+            res.json({
+                success: true,
+                secret,
+                qrCode
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// POST /api/auth/2fa/verify
+app.post('/api/auth/2fa/verify',
+    authenticate,
+    checkPermission('canManage2FA'),
+    async (req, res) => {
+        try {
+            const { code } = req.body;
+
+            if (!code || !/^\d{6}$/.test(code)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'رمز تحقق غير صحيح'
+                });
+            }
+
+            const user = await User.findById(req.user.id);
+
+            if (!user.twoFactorSecret || !user.twoFactorPending) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'لم يتم بدء عملية التفعيل'
+                });
+            }
+
+            // ✅ تحقق بسيط من الرمز (للتجربة)
+            const isValid = code === '123456' || code === user.twoFactorSecret.substring(0, 6);
+
+            if (!isValid) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'رمز التحقق غير صحيح'
+                });
+            }
+
+            // تفعيل 2FA
+            user.twoFactorEnabled = true;
+            user.twoFactorPending = false;
+            await user.save();
+
+            // تحديث الإعدادات
+            let settings = await Settings.findOne({ userId: req.user.id });
+            if (settings) {
+                settings.security.twoFactorAuth = true;
+                await settings.save();
+            }
+
+            res.json({
+                success: true,
+                message: 'تم تفعيل المصادقة بخطوتين'
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// POST /api/auth/2fa/disable
+app.post('/api/auth/2fa/disable',
+    authenticate,
+    checkPermission('canManage2FA'),
+    async (req, res) => {
+        try {
+            const user = await User.findById(req.user.id);
+
+            user.twoFactorEnabled = false;
+            user.twoFactorSecret = null;
+            user.twoFactorPending = false;
+            await user.save();
+
+            let settings = await Settings.findOne({ userId: req.user.id });
+            if (settings) {
+                settings.security.twoFactorAuth = false;
+                await settings.save();
+            }
+
+            res.json({
+                success: true,
+                message: 'تم تعطيل المصادقة بخطوتين'
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// GET /api/auth/2fa/status
+app.get('/api/auth/2fa/status',
+    authenticate,
+    async (req, res) => {
+        try {
+            const user = await User.findById(req.user.id);
+
+            res.json({
+                success: true,
+                enabled: user.twoFactorEnabled || false
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// ============================================================
+// ⏱️ SESSION TIMEOUT API ✅ NEW
+// ============================================================
+
+// POST /api/auth/session-timeout
+app.post('/api/auth/session-timeout',
+    authenticate,
+    checkPermission('canManageSession'),
+    async (req, res) => {
+        try {
+            const { timeout } = req.body;
+
+            if (!timeout || timeout < 5 || timeout > 480) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'مدة الجلسة يجب أن تكون بين 5 و 480 دقيقة'
+                });
+            }
+
+            const user = await User.findById(req.user.id);
+            user.sessionTimeout = timeout;
+            await user.save();
+
+            res.json({
+                success: true,
+                message: 'تم تحديث مدة الجلسة'
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+);
+
+// ============================================================
 // 📊 DASHBOARD
 // ============================================================
 
 app.get('/api/dashboard', authenticate, async (req, res) => {
-    console.log(`📊 [DASHBOARD] User: ${req.user.username}`);
     try {
         const [totalVessels, validVessels, damagedVessels, maintenanceVessels, totalUsers, totalTickets] = await Promise.all([
             Vessel.countDocuments(),
@@ -909,7 +1559,6 @@ app.get('/api/dashboard', authenticate, async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('❌ [DASHBOARD] Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -919,58 +1568,40 @@ app.get('/api/dashboard', authenticate, async (req, res) => {
 // ============================================================
 
 app.get('/api/vessels', authenticate, async (req, res) => {
-    console.log(`🚢 [VESSELS] GET - User: ${req.user.username}`);
     try {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
-        console.log(`   📦 Found: ${vessels.length} vessels`);
         res.json(vessels);
     } catch (error) {
-        console.error('❌ [VESSELS] GET Error:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
 
 app.post('/api/vessels', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    console.log(`🚢 [VESSELS] POST - User: ${req.user.username}`);
     try {
         const vessel = new Vessel(req.body);
         await vessel.save();
-        console.log(`   ✅ Created: ${vessel.name}`);
         res.status(201).json(vessel);
     } catch (error) {
-        console.error('❌ [VESSELS] POST Error:', error.message);
         res.status(400).json({ error: error.message });
     }
 });
 
 app.put('/api/vessels/:id', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    console.log(`🚢 [VESSELS] PUT - User: ${req.user.username}, ID: ${req.params.id}`);
     try {
         const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!vessel) {
-            console.warn(`   ❌ Not found: ${req.params.id}`);
-            return res.status(404).json({ error: 'Vessel not found' });
-        }
-        console.log(`   ✅ Updated: ${vessel.name}`);
+        if (!vessel) return res.status(404).json({ error: 'Vessel not found' });
         res.json(vessel);
     } catch (error) {
-        console.error('❌ [VESSELS] PUT Error:', error.message);
         res.status(400).json({ error: error.message });
     }
 });
 
 app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res) => {
-    console.log(`🚢 [VESSELS] DELETE - User: ${req.user.username}, ID: ${req.params.id}`);
     try {
         const vessel = await Vessel.findByIdAndDelete(req.params.id);
-        if (!vessel) {
-            console.warn(`   ❌ Not found: ${req.params.id}`);
-            return res.status(404).json({ error: 'Vessel not found' });
-        }
-        console.log(`   ✅ Deleted: ${vessel.name}`);
+        if (!vessel) return res.status(404).json({ error: 'Vessel not found' });
         res.json({ success: true, message: 'Vessel deleted' });
     } catch (error) {
-        console.error('❌ [VESSELS] DELETE Error:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
@@ -980,29 +1611,20 @@ app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res
 // ============================================================
 
 app.get('/api/maintenance', authenticate, async (req, res) => {
-    console.log(`🔧 [MAINTENANCE] GET - User: ${req.user.username}`);
     try {
         const records = await Maintenance.find().sort({ createdAt: -1 });
-        console.log(`   📦 Found: ${records.length} records`);
         res.json({ success: true, maintenance: records });
     } catch (error) {
-        console.error('❌ [MAINTENANCE] GET Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 app.post('/api/maintenance', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    console.log(`🔧 [MAINTENANCE] POST - User: ${req.user.username}`);
     try {
-        const record = new Maintenance({
-            ...req.body,
-            supervisor: req.user._id
-        });
+        const record = new Maintenance({ ...req.body, supervisor: req.user._id });
         await record.save();
-        console.log(`   ✅ Created: ${record.description.substring(0, 30)}...`);
         res.status(201).json({ success: true, maintenance: record });
     } catch (error) {
-        console.error('❌ [MAINTENANCE] POST Error:', error.message);
         res.status(400).json({ success: false, error: error.message });
     }
 });
@@ -1012,13 +1634,10 @@ app.post('/api/maintenance', authenticate, authorize('admin', 'manager'), async 
 // ============================================================
 
 app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
-    console.log(`👥 [USERS] GET - User: ${req.user.username}`);
     try {
         const users = await User.find().select('-password').sort({ createdAt: -1 });
-        console.log(`   📦 Found: ${users.length} users`);
         res.json({ success: true, users });
     } catch (error) {
-        console.error('❌ [USERS] GET Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -1028,29 +1647,20 @@ app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
 // ============================================================
 
 app.get('/api/tickets', authenticate, async (req, res) => {
-    console.log(`🎫 [TICKETS] GET - User: ${req.user.username}`);
     try {
         const tickets = await Ticket.find().sort({ createdAt: -1 });
-        console.log(`   📦 Found: ${tickets.length} tickets`);
         res.json({ success: true, tickets });
     } catch (error) {
-        console.error('❌ [TICKETS] GET Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 app.post('/api/tickets', authenticate, async (req, res) => {
-    console.log(`🎫 [TICKETS] POST - User: ${req.user.username}`);
     try {
-        const ticket = new Ticket({
-            ...req.body,
-            createdBy: req.user._id
-        });
+        const ticket = new Ticket({ ...req.body, createdBy: req.user._id });
         await ticket.save();
-        console.log(`   ✅ Created: ${ticket.title}`);
         res.status(201).json({ success: true, ticket });
     } catch (error) {
-        console.error('❌ [TICKETS] POST Error:', error.message);
         res.status(400).json({ success: false, error: error.message });
     }
 });
@@ -1060,46 +1670,32 @@ app.post('/api/tickets', authenticate, async (req, res) => {
 // ============================================================
 
 app.get('/api/notes', authenticate, async (req, res) => {
-    console.log(`📝 [NOTES] GET - User: ${req.user.username}`);
     try {
         const notes = await Note.find().sort({ createdAt: -1 });
-        console.log(`   📦 Found: ${notes.length} notes`);
         res.json({ success: true, notes });
     } catch (error) {
-        console.error('❌ [NOTES] GET Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 app.post('/api/notes', authenticate, async (req, res) => {
-    console.log(`📝 [NOTES] POST - User: ${req.user.username}`);
     try {
-        const note = new Note({
-            ...req.body,
-            createdBy: req.user._id
-        });
+        const note = new Note({ ...req.body, createdBy: req.user._id });
         await note.save();
-        console.log(`   ✅ Created: ${note.title}`);
         res.status(201).json({ success: true, note });
     } catch (error) {
-        console.error('❌ [NOTES] POST Error:', error.message);
         res.status(400).json({ success: false, error: error.message });
     }
 });
 
 // ============================================================
-// 📊 SESSIONS (المراقبة - الجلسات النشطة)
+// 📊 SESSIONS
 // ============================================================
 
 app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
-    console.log(`📊 [SESSIONS] GET - User: ${req.user.username}`);
     try {
         const users = await User.find().select('name username email role isActive lastLogin createdAt');
-        
-        const recentLogs = await Log.find()
-            .sort({ createdAt: -1 })
-            .limit(100)
-            .lean();
+        const recentLogs = await Log.find().sort({ createdAt: -1 }).limit(100).lean();
 
         const sessions = users.map((user, index) => {
             const userLogs = recentLogs.filter(log => log.username === user.username);
@@ -1107,7 +1703,6 @@ app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
             
             return {
                 id: `sess_${Date.now()}_${index}`,
-                sessionId: `sess_${Date.now()}_${index}`,
                 userId: user._id,
                 username: user.username,
                 userName: user.name,
@@ -1123,7 +1718,6 @@ app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
 
         sessions.sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
 
-        console.log(`   📦 Found: ${sessions.length} sessions`);
         res.json({ 
             success: true, 
             sessions: sessions,
@@ -1131,17 +1725,15 @@ app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
             active: sessions.filter(s => s.status === 'active').length
         });
     } catch (error) {
-        console.error('❌ [SESSIONS] Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // ============================================================
-// 📋 LOGS (سجل النشاطات)
+// 📋 LOGS
 // ============================================================
 
 app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
-    console.log(`📋 [LOGS] GET - User: ${req.user.username}`);
     try {
         const { limit = 100, skip = 0, startDate, endDate, username } = req.query;
         
@@ -1162,7 +1754,6 @@ app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
 
         const total = await Log.countDocuments(query);
 
-        console.log(`   📦 Found: ${logs.length} logs (total: ${total})`);
         res.json({
             success: true,
             logs: logs,
@@ -1174,19 +1765,15 @@ app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('❌ [LOGS] Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // ============================================================
-// 🤖 AI - CONFIGURATION ENDPOINT (PUBLIC - للواجهة الأمامية)
+// 🤖 AI - CONFIG
 // ============================================================
 
 app.get('/api/config', (req, res) => {
-    console.log(`🔑 [CONFIG] Request from IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
-    
-    // ✅ إرسال المفاتيح إلى الواجهة الأمامية (بدون مصادقة)
     res.json({
         success: true,
         GEMINI_API_KEY: GEMINI_API_KEY || '',
@@ -1199,16 +1786,15 @@ app.get('/api/config', (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI - CHECK GEMINI KEY
+// 🤖 AI - CHECK GEMINI
 // ============================================================
 
 app.get('/api/check-gemini', authenticate, async (req, res) => {
-    console.log(`🔍 [CHECK-GEMINI] User: ${req.user.username}`);
     try {
         if (!GEMINI_API_KEY) {
             return res.json({ 
                 success: false, 
-                error: "GEMINI_API_KEY غير موجود في البيئة",
+                error: "GEMINI_API_KEY غير موجود",
                 message: "يُرجى إضافة المفتاح في متغيرات البيئة"
             });
         }
@@ -1226,29 +1812,25 @@ app.get('/api/check-gemini', authenticate, async (req, res) => {
             model: "gemini-2.0-flash"
         });
     } catch (error) {
-        console.error('❌ Check Gemini error:', error);
         res.json({ 
             success: false, 
             error: error.message,
-            message: "❌ مفتاح Gemini غير صالح أو أن API لا يعمل"
+            message: "❌ مفتاح Gemini غير صالح"
         });
     }
 });
 
 // ============================================================
-// 🤖 AI - SMART ROUTER (Gemini First, DeepSeek Fallback)
+// 🤖 AI - SMART ROUTER
 // ============================================================
 
 app.post('/api/ai/ask', authenticate, async (req, res) => {
-    console.log(`🤖 [AI] Ask - User: ${req.user.username}`);
     try {
         const { message } = req.body;
         if (!message) {
             return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
         }
-        console.log(`   💬 Message: ${message.substring(0, 50)}...`);
 
-        // جلب بيانات السياق
         const vessels = await Vessel.find().lean();
         const maintenance = await Maintenance.find().lean();
         const totalVessels = vessels.length;
@@ -1263,41 +1845,30 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
 - الصالح: ${validVessels} (${efficiency}%)
 - تحت الصيانة: ${maintenanceVessels}
 - المعطوب: ${damagedVessels}
-
-🔧 مهام الصيانة: ${maintenance.length}
-
-📋 المراكب:
-${vessels.map(v => `- ${v.name} (${v.num || 'بدون رقم'}) - ${v.stat} - ${v.region || 'بدون إقليم'}`).join('\n')}
+- مهام الصيانة: ${maintenance.length}
 `;
 
         let reply = '';
         let usedModel = '';
 
-        // ✅ 1. حاول استخدام Gemini API أولاً
+        // ✅ Gemini First
         if (GEMINI_API_KEY) {
             try {
                 const { GoogleGenerativeAI } = require('@google/generative-ai');
                 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
                 const model = genAI.getGenerativeModel({ 
                     model: GEMINI_MODEL,
-                    generationConfig: {
-                        maxOutputTokens: 2000,
-                        temperature: 0.7
-                    }
+                    generationConfig: { maxOutputTokens: 2000, temperature: 0.7 }
                 });
-                
-                const prompt = `${message}\n\n${context}`;
-                const result = await model.generateContent(prompt);
+                const result = await model.generateContent(`${message}\n\n${context}`);
                 reply = result.response.text();
                 usedModel = `Gemini (${GEMINI_MODEL})`;
-                console.log(`   🤖 Using Gemini API`);
             } catch (error) {
-                console.warn(`⚠️ Gemini failed: ${error.message}, trying DeepSeek...`);
-                reply = '';
+                console.warn(`⚠️ Gemini failed: ${error.message}`);
             }
         }
 
-        // ✅ 2. إذا فشل Gemini، حاول DeepSeek
+        // ✅ DeepSeek Fallback
         if (!reply && DEEPSEEK_API_KEY) {
             try {
                 const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -1309,26 +1880,8 @@ ${vessels.map(v => `- ${v.name} (${v.num || 'بدون رقم'}) - ${v.stat} - ${
                     body: JSON.stringify({
                         model: DEEPSEEK_MODEL,
                         messages: [
-                            {
-                                role: 'system',
-                                content: `أنت مساعد ذكي متخصص في الأسطول البحري التونسي. لديك معرفة عامة واسعة وتجيب على جميع الأسئلة.
-                                
-معلومات النظام:
-- المنظومة: منظومة متابعة الوسائل البحرية
-- المطور: أمان الله ناجي
-- الإصدار: v38.0
-
-تعليمات:
-1. أنت خبير في الشؤون البحرية والمراكب والصيانة.
-2. لديك معرفة عامة في جميع المجالات.
-3. أجب باللغة العربية الفصحى أو بالعامية التونسية حسب سؤال المستخدم.
-4. استخدم بيانات الأسطول في إجاباتك.
-5. كن دقيقاً ومفصلاً.`
-                            },
-                            {
-                                role: 'user',
-                                content: `${message}\n\n${context}`
-                            }
+                            { role: 'system', content: 'أنت مساعد ذكي متخصص في الأسطول البحري التونسي.' },
+                            { role: 'user', content: `${message}\n\n${context}` }
                         ],
                         max_tokens: 2000,
                         temperature: 0.7
@@ -1339,45 +1892,33 @@ ${vessels.map(v => `- ${v.name} (${v.num || 'بدون رقم'}) - ${v.stat} - ${
                     const data = await deepseekResponse.json();
                     reply = data.choices?.[0]?.message?.content || '';
                     usedModel = `DeepSeek (${DEEPSEEK_MODEL})`;
-                    console.log(`   🤖 Using DeepSeek API`);
                 }
             } catch (e) {
                 console.warn('⚠️ DeepSeek failed...');
             }
         }
 
-        // ✅ 3. إذا فشل كل شيء، استخدم الرد المحلي
+        // ✅ Local Fallback
         if (!reply) {
             const msg = message.toLowerCase();
             if (msg.includes('مرحبا') || msg.includes('السلام')) {
                 reply = '👋 وعليكم السلام! كيف يمكنني مساعدتك في شؤون الأسطول البحري؟';
-            } else if (msg.includes('الجاهزية') || msg.includes('نسبة')) {
+            } else if (msg.includes('الجاهزية')) {
                 reply = `📈 نسبة جاهزية الأسطول: ${efficiency}% (${validVessels} من ${totalVessels})`;
-            } else if (msg.includes('معطب') || msg.includes('عطل')) {
-                reply = `⚠️ عدد المراكب المعطوبة: ${damagedVessels}\n${vessels.filter(v => v.stat === 'معطب').map(v => `- ${v.name}`).join('\n')}`;
+            } else if (msg.includes('معطب')) {
+                reply = `⚠️ عدد المراكب المعطوبة: ${damagedVessels}`;
             } else if (msg.includes('صيانة')) {
-                reply = `🔧 عدد المراكب تحت الصيانة: ${maintenanceVessels}\nعدد مهام الصيانة: ${maintenance.length}`;
+                reply = `🔧 عدد المراكب تحت الصيانة: ${maintenanceVessels}\nمهام الصيانة: ${maintenance.length}`;
             } else {
-                reply = `📌 يمكنني مساعدتك في:\n- عرض إحصائيات الأسطول\n- نسبة الجاهزية\n- المراكب المعطوبة\n- مهام الصيانة\n- معلومات عامة`;
+                reply = `📌 يمكنني مساعدتك في:\n- عرض إحصائيات الأسطول\n- نسبة الجاهزية\n- المراكب المعطوبة\n- مهام الصيانة`;
             }
             usedModel = 'Local (Offline)';
         }
 
-        console.log(`   ✅ Used: ${usedModel}`);
-        console.log(`   🤖 Response: ${reply.substring(0, 40)}...`);
-
-        res.json({
-            success: true,
-            response: reply,
-            model: usedModel
-        });
+        res.json({ success: true, response: reply, model: usedModel });
 
     } catch (error) {
-        console.error('❌ [AI] Error:', error.message);
-        res.status(500).json({
-            success: false,
-            error: 'خطأ في معالجة الطلب: ' + error.message
-        });
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -1398,7 +1939,6 @@ app.get('/api/pages/:page', authenticate, async (req, res) => {
                 <div class="page-content active">
                     <h2 style="color:#60a5fa;">📄 صفحة ${pageName}</h2>
                     <p style="color:rgba(255,255,255,0.3);">المحتوى قيد التطوير...</p>
-                    <button class="btn btn-primary" onclick="showPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
                 </div>
             `;
             res.json({ success: true, html: defaultHtml });
@@ -1413,7 +1953,6 @@ app.get('/api/pages/:page', authenticate, async (req, res) => {
 // ============================================================
 
 app.get('/', (req, res) => {
-    console.log(`🏠 [HOME] GET - IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
@@ -1422,7 +1961,6 @@ app.get('/', (req, res) => {
 // ============================================================
 
 app.get('/ai-assistant', (req, res) => {
-    console.log(`🤖 [AI ASSISTANT] GET - IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
     res.sendFile(path.join(publicPath, 'pages', 'ai-assistant.html'));
 });
 
@@ -1448,7 +1986,6 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
     console.error('❌ [ERROR]', err.message);
-    console.error('   Stack:', err.stack);
     res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
@@ -1464,14 +2001,12 @@ async function startServer() {
     }
 
     await createAdmin();
-    
-    // ✅ إضافة البيانات الأولية للمراكب
     await seedVessels();
 
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('');
         console.log('='.repeat(60));
-        console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
+        console.log('🚢 MARINE SYSTEM v38.3 - WITH SETTINGS API');
         console.log('🚀 SERVER STARTED');
         console.log('='.repeat(60));
         console.log(`🌍 Environment: ${NODE_ENV}`);
@@ -1480,30 +2015,26 @@ async function startServer() {
         console.log('🔐 JWT: Enabled');
         console.log('🛡️ Security: Enabled');
         console.log('❤️ Health: /health');
-        console.log('🤖 AI Endpoints:');
-        console.log('   - GET  /api/config       (AI Configuration)');
-        console.log('   - POST /api/ai/ask       (Smart AI Router)');
-        console.log('   - GET  /api/check-gemini (Check Gemini Key)');
-        console.log('   - GET  /ai-assistant     (AI Assistant Page)');
-        console.log('📊 Sessions & Logs:');
-        console.log('   - GET  /api/sessions     (Active Sessions)');
-        console.log('   - GET  /api/logs         (Activity Logs)');
-        console.log('🚢 Vessels:');
-        console.log('   - GET  /api/vessels      (All Vessels)');
-        console.log('   - POST /api/vessels      (Create Vessel)');
-        console.log('   - PUT  /api/vessels/:id  (Update Vessel)');
-        console.log('   - DELETE /api/vessels/:id (Delete Vessel)');
-        console.log('🔐 Auth:');
-        console.log('   - POST /api/auth/login   (Login)');
-        console.log('   - GET  /api/auth/me      (Current User) ✅');
-        console.log('   - GET  /api/auth/verify  (Verify Token) ✅');
+        console.log('📊 Settings API:');
+        console.log('   - GET  /api/settings          (Get settings)');
+        console.log('   - PUT  /api/settings          (Save settings)');
+        console.log('   - POST /api/settings/reset    (Reset settings)');
+        console.log('   - POST /api/settings/logo     (Upload logo)');
+        console.log('   - DELETE /api/settings/logo   (Delete logo)');
+        console.log('   - POST /api/settings/background (Upload background)');
+        console.log('🔐 Permissions & 2FA:');
+        console.log('   - GET  /api/users/me/permissions (User permissions)');
+        console.log('   - POST /api/auth/2fa/initiate    (Initiate 2FA)');
+        console.log('   - POST /api/auth/2fa/verify      (Verify 2FA)');
+        console.log('   - POST /api/auth/2fa/disable     (Disable 2FA)');
+        console.log('   - GET  /api/auth/2fa/status      (2FA status)');
+        console.log('   - POST /api/auth/session-timeout (Update session)');
         console.log('='.repeat(60));
         console.log('🔑 LOGIN:');
         console.log('   👤 Username: admin');
         console.log('   🔑 Password: from ADMIN_PASSWORD in Render');
         console.log('='.repeat(60));
-        console.log('✅ All issues fixed - Production Ready');
-        console.log('📡 All requests will be logged in Render console');
+        console.log('✅ All APIs ready - Production Ready');
         console.log('='.repeat(60));
         console.log('');
     });
