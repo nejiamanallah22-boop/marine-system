@@ -1512,14 +1512,14 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - الكامل مع CSRF Protection
+    JAVASCRIPT - الكامل مع حل مشكلة تسجيل الدخول
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v8.0 (FULL WITH CSRF PROTECTION)
+        // 🚢 MARINE SYSTEM - v8.0 (FULL WITH LOGIN FIX)
         // ============================================================
 
-        console.log('🚢 Marine System v8.0 - Loading with CSRF Protection...');
+        console.log('🚢 Marine System v8.0 - Loading with Login Fix...');
 
         // ============================================================
         // 📦 CONFIGURATION
@@ -1570,7 +1570,7 @@
             constructor() {
                 this.token = null;
                 this.expiry = null;
-                this.validDuration = 30 * 60 * 1000; // 30 minutes
+                this.validDuration = 24 * 60 * 60 * 1000; // 24 ساعة
                 this.loadFromStorage();
             }
 
@@ -1692,11 +1692,11 @@
         }
 
         // ============================================================
-        // 🔐 LOGIN WITH CSRF
+        // 🔐 LOGIN WITH FIX
         // ============================================================
 
         function doLogin() {
-            console.log('🔐 محاولة تسجيل الدخول مع CSRF Protection');
+            console.log('🔐 محاولة تسجيل الدخول');
 
             const username = document.getElementById('username');
             const password = document.getElementById('password');
@@ -1718,42 +1718,63 @@
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
 
+            // ✅ الحصول على CSRF token
             const csrfToken = csrfManager.getToken();
 
-            fetch(CONFIG.API + '/auth/login', {
+            console.log(`📤 Sending login request for user: ${user}`);
+
+            fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-CSRF-Token': csrfToken
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     username: user,
                     password: pass,
                     csrf_token: csrfToken
                 })
             })
-            .then(response => {
+            .then(async response => {
+                console.log(`📥 Login response status: ${response.status}`);
+                
+                // ✅ حفظ CSRF token من الـ Response Headers
                 const newCsrfToken = response.headers.get('X-CSRF-Token');
                 if (newCsrfToken) {
-                    csrfManager.token = newCsrfToken;
                     localStorage.setItem(CONFIG.KEYS.CSRF, newCsrfToken);
+                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
                 }
-                return response.json();
+                
+                const data = await response.json();
+                console.log('📦 Login response data:', data);
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'فشل تسجيل الدخول');
+                }
+                
+                return data;
             })
             .then(data => {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
 
                 if (data.success && data.user) {
-                    const token = data.token || data.accessToken;
+                    const token = data.token;
                     if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
 
                     currentUser = data.user;
                     window.currentUser = data.user;
                     localStorage.setItem(CONFIG.KEYS.TOKEN, token);
+                    
+                    // ✅ حفظ معلومات الجلسة
+                    if (data.session) {
+                        localStorage.setItem(CONFIG.KEYS.CSRF, data.session.csrfToken);
+                        localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', data.session.csrfExpiry);
+                    }
 
-                    csrfManager.refreshToken();
+                    console.log(`✅ Login successful for user: ${currentUser.username}`);
 
                     document.getElementById('loginOverlay').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
@@ -1763,31 +1784,41 @@
                     showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
                     loadAllData();
                 } else {
-                    if (data.error && data.error.includes('CSRF')) {
-                        errorEl.textContent = '⚠️ انتهت صلاحية الجلسة، يرجى تحديث الصفحة';
-                        csrfManager.refreshToken();
-                    } else {
-                        errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
-                    }
+                    errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
                     errorEl.classList.add('show');
+                    console.error('❌ Login failed:', data.error);
                 }
             })
             .catch(error => {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
+                console.error('❌ Login error:', error);
                 errorEl.textContent = '❌ ' + error.message;
                 errorEl.classList.add('show');
-                csrfManager.refreshToken();
+                
+                // ✅ تجديد CSRF token في حالة الخطأ
+                fetch('/api/csrf-refresh', {
+                    method: 'POST',
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.token) {
+                        localStorage.setItem(CONFIG.KEYS.CSRF, data.token);
+                        localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + data.expiresIn);
+                    }
+                })
+                .catch(() => {});
             });
         }
 
         // ============================================================
-        // 🛡️ VERIFY TOKEN WITH CSRF
+        // 🛡️ VERIFY TOKEN
         // ============================================================
 
         async function verifyToken(token) {
             try {
-                console.log('🛡️ التحقق من التوكن مع CSRF...');
+                console.log('🛡️ التحقق من التوكن...');
 
                 const csrfToken = csrfManager.getToken();
 
@@ -1796,13 +1827,14 @@
                         'Authorization': 'Bearer ' + token,
                         'Accept': 'application/json',
                         'X-CSRF-Token': csrfToken
-                    }
+                    },
+                    credentials: 'include'
                 });
 
                 const newCsrfToken = response.headers.get('X-CSRF-Token');
                 if (newCsrfToken) {
-                    csrfManager.token = newCsrfToken;
                     localStorage.setItem(CONFIG.KEYS.CSRF, newCsrfToken);
+                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
                 }
 
                 if (response.ok) {
@@ -1828,7 +1860,7 @@
         }
 
         // ============================================================
-        // 📊 LOAD DATA WITH CSRF
+        // 📊 LOAD DATA
         // ============================================================
 
         async function loadAllData() {
@@ -1843,14 +1875,14 @@
 
             try {
                 const [vesselsRes, usersRes] = await Promise.all([
-                    fetch(CONFIG.API + '/vessels', { headers }),
-                    fetch(CONFIG.API + '/users', { headers })
+                    fetch(CONFIG.API + '/vessels', { headers, credentials: 'include' }),
+                    fetch(CONFIG.API + '/users', { headers, credentials: 'include' })
                 ]);
 
                 const newCsrfToken = vesselsRes.headers.get('X-CSRF-Token') || usersRes.headers.get('X-CSRF-Token');
                 if (newCsrfToken) {
-                    csrfManager.token = newCsrfToken;
                     localStorage.setItem(CONFIG.KEYS.CSRF, newCsrfToken);
+                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
                 }
 
                 if (vesselsRes.ok) {
@@ -1865,9 +1897,21 @@
                     window.allUsers = allUsers;
                     updateBadge('usersBadge', allUsers.length);
                 }
+                
+                // ✅ تحديث إحصائيات الصيانة
+                try {
+                    const logsRes = await fetch(CONFIG.API + '/logs', { headers, credentials: 'include' });
+                    if (logsRes.ok) {
+                        const data = await logsRes.json();
+                        allLogs = Array.isArray(data) ? data : [];
+                        window.allLogs = allLogs;
+                        updateBadge('logsBadge', allLogs.length);
+                        updateBadge('maintenanceBadge', allLogs.filter(l => l.status === 'قيد التنفيذ').length);
+                    }
+                } catch (e) {}
+                
             } catch (error) {
                 console.error('❌ خطأ أثناء تحميل البيانات:', error);
-                csrfManager.refreshToken();
             }
         }
 
@@ -2006,7 +2050,8 @@
                     headers: {
                         'Authorization': 'Bearer ' + token,
                         'X-CSRF-Token': csrfToken
-                    }
+                    },
+                    credentials: 'include'
                 }).catch(() => {});
             }
 
@@ -2035,6 +2080,29 @@
         function closeSidebar() {
             document.getElementById('sidebar').classList.remove('open');
             document.getElementById('menuToggle').classList.remove('active');
+        }
+
+        // ============================================================
+        // ✅ التحقق من حالة الخادم
+        // ============================================================
+
+        function checkServerStatus() {
+            fetch('/api/session-status', {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('🖥️ Server status:', data);
+                if (data.success && data.hasCsrf) {
+                    const csrfInput = document.querySelector('input[name="csrf_token"]');
+                    if (csrfInput) {
+                        csrfInput.value = localStorage.getItem(CONFIG.KEYS.CSRF) || '';
+                    }
+                }
+            })
+            .catch(error => {
+                console.warn('⚠️ Server status check failed:', error);
+            });
         }
 
         // ============================================================
@@ -2068,6 +2136,7 @@
                 if (newToken) {
                     csrfManager.token = newToken;
                     localStorage.setItem(CONFIG.KEYS.CSRF, newToken);
+                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
                 }
                 return response;
             });
@@ -2136,7 +2205,19 @@
             updateDateTime();
             setInterval(updateDateTime, 1000);
 
-            // Verify token
+            // ✅ التحقق من حالة الخادم
+            setTimeout(checkServerStatus, 1000);
+
+            // ✅ تحديث CSRF token في النموذج
+            const csrfInput = document.querySelector('input[name="csrf_token"]');
+            if (csrfInput) {
+                const token = csrfManager.getToken();
+                if (token) {
+                    csrfInput.value = token;
+                }
+            }
+
+            // ✅ Verify token
             const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
             if (token) {
                 const isValid = await verifyToken(token);
@@ -2154,7 +2235,7 @@
                 }
             }
 
-            console.log('✅ Marine System v8.0 ready with CSRF Protection');
+            console.log('✅ Marine System v8.0 ready with Login Fix');
         });
 
         // ============================================================
