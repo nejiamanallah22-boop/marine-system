@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v8.0 (FULL WITH ADVANCED SESSION MANAGEMENT)
+// 🚢 MARINE SYSTEM - SERVER v8.0 (FULL FIXED LOGIN)
 // ============================================================
 
 const express = require('express');
@@ -18,8 +18,15 @@ const PORT = process.env.PORT || 5000;
 // 📦 CONFIGURATION
 // ============================================================
 
+// ✅ استخدام المتغيرات البيئية من Render
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-production';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'session-secret-change-in-production';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
+
+console.log('🔐 Using credentials from environment variables');
+console.log(`👤 Admin username: ${ADMIN_USERNAME}`);
 
 // ============================================================
 // 🔧 MIDDLEWARE
@@ -42,73 +49,52 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// ============================================================
-// 🕐 SESSION MANAGEMENT - متقدم مع وقت طويل
-// ============================================================
-
+// ✅ Session Management
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    name: 'marine.sid', // اسم مختلف للـ cookie
+    name: 'marine.sid',
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 يوم
+        maxAge: 30 * 24 * 60 * 60 * 1000,
         sameSite: 'lax'
     },
-    rolling: true, // تجديد الجلسة مع كل طلب
+    rolling: true,
     unset: 'destroy'
 }));
 
 // ============================================================
-// 🔒 CSRF PROTECTION - متقدم مع إدارة انتهاء الصلاحية
+// 🔒 CSRF PROTECTION
 // ============================================================
 
-// ✅ إعدادات CSRF
-const CSRF_CONFIG = {
-    TOKEN_LENGTH: 32,
-    EXPIRY_HOURS: 24, // 24 ساعة بدلاً من ساعتين
-    MAX_RETRY: 3
-};
-
-// ✅ توليد توكن CSRF
 function generateCSRFToken() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let token = '';
-    for (let i = 0; i < CSRF_CONFIG.TOKEN_LENGTH; i++) {
+    for (let i = 0; i < 32; i++) {
         token += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return token;
 }
 
-// ✅ Middleware CSRF
 app.use((req, res, next) => {
-    // ✅ إنشاء توكن جديد إذا لم يكن موجوداً
     if (!req.session.csrfToken) {
         req.session.csrfToken = generateCSRFToken();
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
-        req.session.csrfCreated = Date.now();
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
     }
 
-    // ✅ التحقق من انتهاء صلاحية التوكن
     if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
-        console.log('🔄 CSRF token expired, generating new one...');
         req.session.csrfToken = generateCSRFToken();
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
-        req.session.csrfCreated = Date.now();
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
     }
 
-    // ✅ إرسال التوكن في الـ Response Headers
     res.setHeader('X-CSRF-Token', req.session.csrfToken);
     res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
-
     next();
 });
 
-// ✅ التحقق من CSRF للطلبات الآمنة
 const csrfProtection = (req, res, next) => {
-    // ✅ تخطي التحقق للطلبات GET, HEAD, OPTIONS
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
         return next();
     }
@@ -116,7 +102,6 @@ const csrfProtection = (req, res, next) => {
     const token = req.headers['x-csrf-token'] || req.body.csrf_token;
     const sessionToken = req.session.csrfToken;
 
-    // ✅ التحقق من وجود التوكن
     if (!token) {
         return res.status(403).json({
             success: false,
@@ -125,7 +110,6 @@ const csrfProtection = (req, res, next) => {
         });
     }
 
-    // ✅ التحقق من تطابق التوكن
     if (token !== sessionToken) {
         return res.status(403).json({
             success: false,
@@ -134,7 +118,6 @@ const csrfProtection = (req, res, next) => {
         });
     }
 
-    // ✅ التحقق من انتهاء الصلاحية
     if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
         return res.status(403).json({
             success: false,
@@ -150,11 +133,9 @@ const csrfProtection = (req, res, next) => {
 // 🖥️ STATIC FILES & ROUTING
 // ============================================================
 
-// ✅ تحديد المسار الأساسي
 const basePath = __dirname;
 console.log(`📁 Base directory: ${basePath}`);
 
-// ✅ تقديم الملفات الثابتة
 app.use(express.static(basePath, {
     maxAge: '1d',
     setHeaders: (res, path) => {
@@ -164,15 +145,9 @@ app.use(express.static(basePath, {
     }
 }));
 
-// ✅ تقديم مجلد الصفحات
-app.use('/pages', express.static(path.join(basePath, 'pages'), {
-    maxAge: '1d'
-}));
-
-// ✅ تقديم مجلد public إذا وجد
+app.use('/pages', express.static(path.join(basePath, 'pages'), { maxAge: '1d' }));
 app.use('/public', express.static(path.join(basePath, 'public')));
 
-// ✅ الصفحة الرئيسية - مع البحث في عدة مسارات
 app.get('/', (req, res) => {
     const possiblePaths = [
         path.join(basePath, 'index.html'),
@@ -204,17 +179,12 @@ app.get('/', (req, res) => {
             <h1>❌ ملف index.html غير موجود</h1>
             <div class="info">
                 <p>المجلد الحالي: <code>${basePath}</code></p>
-                <p>تم البحث في المسارات التالية:</p>
-                <ul style="text-align:right;direction:rtl;list-style:none;padding:0;">
-                    ${possiblePaths.map(p => `<li>📁 <code>${p}</code></li>`).join('')}
-                </ul>
             </div>
         </body>
         </html>
     `);
 });
 
-// ✅ صفحة تسجيل الدخول
 app.get('/login', (req, res) => {
     const indexPath = path.join(basePath, 'index.html');
     if (fs.existsSync(indexPath)) {
@@ -224,7 +194,6 @@ app.get('/login', (req, res) => {
     }
 });
 
-// ✅ تحميل الصفحات من مجلد pages
 app.get('/pages/:page', (req, res) => {
     const page = req.params.page;
     const possiblePaths = [
@@ -235,22 +204,13 @@ app.get('/pages/:page', (req, res) => {
     
     for (const filePath of possiblePaths) {
         if (fs.existsSync(filePath)) {
-            console.log(`✅ Serving page: ${page}`);
             return res.sendFile(filePath);
         }
     }
     
-    res.status(404).send(`
-        <h1 style="color:#ef4444;text-align:center;margin-top:50px;font-family:sans-serif;">
-            ❌ الصفحة "${page}" غير موجودة
-        </h1>
-        <p style="text-align:center;color:#94a3b8;">
-            تم البحث في: ${possiblePaths.join(', ')}
-        </p>
-    `);
+    res.status(404).send(`<h1>❌ الصفحة "${page}" غير موجودة</h1>`);
 });
 
-// ✅ معالجة جميع المسارات الأخرى (SPA mode)
 app.get('*', (req, res) => {
     if (req.path.includes('.')) {
         return res.status(404).send('❌ الملف غير موجود');
@@ -264,19 +224,24 @@ app.get('*', (req, res) => {
 });
 
 // ============================================================
-// 📊 DATA STORE
+// 📊 DATA STORE - استخدام المتغيرات البيئية
 // ============================================================
 
+// ✅ المستخدمون - مع دعم المتغيرات البيئية
 const users = [
     {
         id: '1',
-        username: 'admin',
-        password: bcrypt.hashSync('admin123', 10),
-        name: 'أمان الله ناجي',
+        username: ADMIN_USERNAME,
+        password: bcrypt.hashSync(ADMIN_PASSWORD, 10),
+        name: ADMIN_NAME,
         role: 'admin',
         active: true,
         createdAt: new Date().toISOString()
-    },
+    }
+];
+
+// ✅ إضافة مستخدمين إضافيين للاختبار
+const additionalUsers = [
     {
         id: '2',
         username: 'manager',
@@ -297,6 +262,16 @@ const users = [
     }
 ];
 
+// ✅ دمج المستخدمين (تجنب التكرار)
+additionalUsers.forEach(u => {
+    if (!users.find(existing => existing.username === u.username)) {
+        users.push(u);
+    }
+});
+
+console.log(`👥 Total users: ${users.length}`);
+
+// ✅ البيانات الأخرى
 const vessels = [
     {
         id: '1',
@@ -364,10 +339,10 @@ const logs = [
 ];
 
 // ============================================================
-// 🔐 AUTH ENDPOINTS
+// 🔐 AUTH ENDPOINTS - مع تحسينات لتسجيل الدخول
 // ============================================================
 
-// ✅ Get CSRF token مع معلومات الجلسة
+// ✅ جلب CSRF token
 app.get('/api/csrf-token', (req, res) => {
     const token = req.session.csrfToken;
     const expiry = req.session.csrfExpiry;
@@ -383,20 +358,19 @@ app.get('/api/csrf-token', (req, res) => {
     });
 });
 
-// ✅ Refresh CSRF token
+// ✅ تجديد CSRF token
 app.post('/api/csrf-refresh', (req, res) => {
     try {
         const newToken = generateCSRFToken();
         req.session.csrfToken = newToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
-        req.session.csrfCreated = Date.now();
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         
         res.setHeader('X-CSRF-Token', newToken);
         res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
         res.json({
             success: true,
             token: newToken,
-            expiresIn: CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000,
+            expiresIn: 24 * 60 * 60 * 1000,
             expiryDate: req.session.csrfExpiry
         });
     } catch (error) {
@@ -408,7 +382,7 @@ app.post('/api/csrf-refresh', (req, res) => {
     }
 });
 
-// ✅ Check session status
+// ✅ التحقق من حالة الجلسة
 app.get('/api/session-status', (req, res) => {
     res.json({
         success: true,
@@ -419,28 +393,62 @@ app.get('/api/session-status', (req, res) => {
     });
 });
 
-// ✅ Login
+// ✅ تسجيل الدخول - مع تحسينات كبيرة
 app.post('/api/auth/login', csrfProtection, (req, res) => {
+    console.log('🔐 Login attempt received');
+    console.log('📝 Request body:', req.body);
+    
     try {
         const { username, password } = req.body;
 
+        // ✅ التحقق من وجود البيانات
+        if (!username || !password) {
+            console.log('❌ Missing username or password');
+            return res.status(400).json({
+                success: false,
+                error: 'اسم المستخدم وكلمة المرور مطلوبان'
+            });
+        }
+
+        // ✅ البحث عن المستخدم
         const user = users.find(u => u.username === username);
+        
+        console.log(`🔍 Looking for user: ${username}`);
+        console.log(`👤 User found: ${!!user}`);
+        
         if (!user) {
+            console.log('❌ User not found');
             return res.status(401).json({
                 success: false,
                 error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
             });
         }
 
+        // ✅ التحقق من كلمة المرور
+        console.log(`🔑 Checking password for user: ${username}`);
         const validPassword = bcrypt.compareSync(password, user.password);
+        console.log(`✅ Password valid: ${validPassword}`);
+        
         if (!validPassword) {
+            console.log('❌ Invalid password');
             return res.status(401).json({
                 success: false,
                 error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
             });
         }
 
-        // ✅ Generate JWT
+        // ✅ التحقق من حالة المستخدم
+        if (!user.active) {
+            console.log('❌ User inactive');
+            return res.status(403).json({
+                success: false,
+                error: 'الحساب غير نشط، يرجى التواصل مع المسؤول'
+            });
+        }
+
+        console.log(`✅ Login successful for user: ${username}`);
+
+        // ✅ توليد JWT
         const token = jwt.sign(
             { 
                 id: user.id, 
@@ -449,20 +457,21 @@ app.post('/api/auth/login', csrfProtection, (req, res) => {
                 sessionId: req.sessionID
             },
             JWT_SECRET,
-            { expiresIn: '30d' } // 30 يوم
+            { expiresIn: '30d' }
         );
 
-        // ✅ تجديد CSRF token بعد تسجيل الدخول
+        // ✅ تجديد CSRF token
         const newCsrfToken = generateCSRFToken();
         req.session.csrfToken = newCsrfToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
-        req.session.csrfCreated = Date.now();
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         req.session.userId = user.id;
+        req.session.username = user.username;
         
         res.setHeader('X-CSRF-Token', newCsrfToken);
         res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
 
-        res.json({
+        // ✅ إرسال الاستجابة
+        const response = {
             success: true,
             token: token,
             user: {
@@ -477,17 +486,22 @@ app.post('/api/auth/login', csrfProtection, (req, res) => {
                 csrfExpiry: req.session.csrfExpiry,
                 sessionId: req.sessionID
             }
-        });
+        };
+
+        console.log('✅ Login response sent');
+        res.json(response);
+        
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('❌ Login error:', error);
         res.status(500).json({
             success: false,
-            error: 'خطأ في الخادم'
+            error: 'خطأ في الخادم أثناء تسجيل الدخول',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
 
-// ✅ Verify token
+// ✅ التحقق من التوكن
 app.get('/api/auth/me', csrfProtection, (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -509,11 +523,9 @@ app.get('/api/auth/me', csrfProtection, (req, res) => {
             });
         }
 
-        // ✅ تجديد CSRF token
         const newCsrfToken = generateCSRFToken();
         req.session.csrfToken = newCsrfToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
-        req.session.csrfCreated = Date.now();
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         
         res.setHeader('X-CSRF-Token', newCsrfToken);
         res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
@@ -541,7 +553,7 @@ app.get('/api/auth/me', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Logout
+// ✅ تسجيل الخروج
 app.post('/api/auth/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
@@ -553,17 +565,15 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // ============================================================
-// 📊 DATA ENDPOINTS (مع CSRF Protection)
+// 📊 DATA ENDPOINTS
 // ============================================================
 
-// ✅ Get all vessels
 app.get('/api/vessels', csrfProtection, (req, res) => {
     try {
         const newCsrfToken = generateCSRFToken();
         req.session.csrfToken = newCsrfToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         res.setHeader('X-CSRF-Token', newCsrfToken);
-        res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
         res.json(vessels);
     } catch (error) {
         console.error('Error fetching vessels:', error);
@@ -571,7 +581,6 @@ app.get('/api/vessels', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Add vessel
 app.post('/api/vessels', csrfProtection, (req, res) => {
     try {
         const { name, type, status, location } = req.body;
@@ -584,7 +593,7 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
 
         const newVessel = {
             id: Date.now().toString(),
-            name: name,
+            name,
             type: type || 'غير محدد',
             status: status || 'جاهز',
             location: location || '—',
@@ -596,9 +605,8 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
 
         const newCsrfToken = generateCSRFToken();
         req.session.csrfToken = newCsrfToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         res.setHeader('X-CSRF-Token', newCsrfToken);
-        res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
         res.json({ success: true, vessel: newVessel });
     } catch (error) {
         console.error('Error adding vessel:', error);
@@ -606,7 +614,6 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Delete vessel
 app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
     try {
         const { id } = req.params;
@@ -619,9 +626,8 @@ app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
 
         const newCsrfToken = generateCSRFToken();
         req.session.csrfToken = newCsrfToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         res.setHeader('X-CSRF-Token', newCsrfToken);
-        res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
         res.json({ success: true, message: 'تم حذف الوحدة' });
     } catch (error) {
         console.error('Error deleting vessel:', error);
@@ -629,14 +635,12 @@ app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Get all users
 app.get('/api/users', csrfProtection, (req, res) => {
     try {
         const newCsrfToken = generateCSRFToken();
         req.session.csrfToken = newCsrfToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         res.setHeader('X-CSRF-Token', newCsrfToken);
-        res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
         const safeUsers = users.map(u => ({
             id: u.id,
             username: u.username,
@@ -652,7 +656,6 @@ app.get('/api/users', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Add user
 app.post('/api/users', csrfProtection, (req, res) => {
     try {
         const { username, password, name, role } = req.body;
@@ -684,9 +687,8 @@ app.post('/api/users', csrfProtection, (req, res) => {
 
         const newCsrfToken = generateCSRFToken();
         req.session.csrfToken = newCsrfToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         res.setHeader('X-CSRF-Token', newCsrfToken);
-        res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
         res.json({
             success: true,
             user: {
@@ -703,14 +705,12 @@ app.post('/api/users', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Get all logs
 app.get('/api/logs', csrfProtection, (req, res) => {
     try {
         const newCsrfToken = generateCSRFToken();
         req.session.csrfToken = newCsrfToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         res.setHeader('X-CSRF-Token', newCsrfToken);
-        res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
         res.json(logs);
     } catch (error) {
         console.error('Error fetching logs:', error);
@@ -718,7 +718,6 @@ app.get('/api/logs', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Add log
 app.post('/api/logs', csrfProtection, (req, res) => {
     try {
         const { vessel, type, date, cost, status } = req.body;
@@ -742,9 +741,8 @@ app.post('/api/logs', csrfProtection, (req, res) => {
 
         const newCsrfToken = generateCSRFToken();
         req.session.csrfToken = newCsrfToken;
-        req.session.csrfExpiry = Date.now() + (CSRF_CONFIG.EXPIRY_HOURS * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         res.setHeader('X-CSRF-Token', newCsrfToken);
-        res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
         res.json({ success: true, log: newLog });
     } catch (error) {
         console.error('Error adding log:', error);
@@ -756,7 +754,6 @@ app.post('/api/logs', csrfProtection, (req, res) => {
 // 🛡️ ERROR HANDLING
 // ============================================================
 
-// ✅ 404 Not Found
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -764,11 +761,9 @@ app.use((req, res) => {
     });
 });
 
-// ✅ Error Handler
 app.use((err, req, res, next) => {
     console.error('Server Error:', err);
     
-    // ✅ معالجة أخطاء CSRF
     if (err.code === 'EBADCSRFTOKEN') {
         return res.status(403).json({
             success: false,
@@ -790,15 +785,13 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`🚢 Marine System Server running on port ${PORT}`);
-    console.log(`🔒 CSRF Protection enabled (${CSRF_CONFIG.EXPIRY_HOURS} hours expiry)`);
+    console.log(`🔒 CSRF Protection enabled (24 hours expiry)`);
     console.log(`🕐 Session maxAge: 30 days`);
     console.log(`📍 http://localhost:${PORT}`);
     console.log(`📁 Static files from: ${basePath}`);
     console.log(`🌐 https://marine-system-71eo.onrender.com`);
+    console.log(`👤 Admin user: ${ADMIN_USERNAME}`);
+    console.log(`🔑 Admin password: ${ADMIN_PASSWORD}`);
 });
-
-// ============================================================
-// 📦 EXPORT FOR TESTING
-// ============================================================
 
 module.exports = app;
