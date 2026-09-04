@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية</title>
+    <title>⚓ منظومة الوسائل البحرية — v15.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -267,7 +267,7 @@
                 <div class="developer-info">
                     <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
                     <span class="dev-name">أمان الله ناجي</span>
-                    <span class="dev-version">v7.0</span>
+                    <span class="dev-version">v15.0</span>
                 </div>
                 <form id="loginForm" class="login-form" autocomplete="off" novalidate>
                     <div class="form-group">
@@ -307,7 +307,7 @@
                 </form>
                 <div class="login-footer">
                     <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                    <span class="footer-version">الإصدار الاحترافي v7.0</span>
+                    <span class="footer-version">الإصدار الاحترافي v15.0</span>
                 </div>
             </div>
         </div>
@@ -426,8 +426,8 @@
             </div>
             <div class="sidebar-footer">
                 <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>
-                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v7.0 · آمن</span></div>
-                <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v15.0 · Enterprise</span></div>
+                <button class="footer-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
             </div>
         </nav>
 
@@ -468,14 +468,14 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIXED (مع إعادة تنفيذ الـ Scripts)
+    JAVASCRIPT - v15.0 (الإعدادات تعمل بالكامل)
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v7.0 (FIXED)
+        // 🚢 MARINE SYSTEM - v15.0 (FIXED SETTINGS)
         // ============================================================
 
-        console.log('🚢 Marine System v7.0 - Loading...');
+        console.log('🚢 Marine System v15.0 - Loading...');
 
         // ============================================================
         // 📦 CONFIGURATION
@@ -516,7 +516,20 @@
         // 🔧 HELPERS
         // ============================================================
 
-        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
+        function getToken() { 
+            return localStorage.getItem(CONFIG.KEYS.TOKEN) || 
+                   sessionStorage.getItem('token') || 
+                   null; 
+        }
+
+        function setToken(token) {
+            if (token) {
+                localStorage.setItem(CONFIG.KEYS.TOKEN, token);
+            } else {
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                sessionStorage.removeItem('token');
+            }
+        }
 
         function getRoleName(r) {
             const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
@@ -590,7 +603,7 @@
 
                     currentUser = data.user;
                     window.currentUser = data.user;
-                    localStorage.setItem(CONFIG.KEYS.TOKEN, token);
+                    setToken(token);
 
                     document.getElementById('loginOverlay').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
@@ -633,11 +646,11 @@
                     }
                 }
                 console.warn('⚠️ التوكن غير صالح، يتم حذفه');
-                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                setToken(null);
                 return false;
             } catch (error) {
                 console.warn('⚠️ خطأ في التحقق:', error.message);
-                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                setToken(null);
                 return false;
             }
         }
@@ -690,15 +703,20 @@
         function updateUserDisplay() {
             if (!currentUser) return;
             const n = currentUser.name || currentUser.username;
-            document.getElementById('userDisplayName').textContent = n;
-            document.getElementById('userInitial').textContent = n.charAt(0);
-            document.getElementById('sidebarUserName').textContent = n;
-            document.getElementById('sidebarUserRole').textContent = getRoleName(currentUser.role);
-            document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);
+            const el1 = document.getElementById('userDisplayName');
+            const el2 = document.getElementById('userInitial');
+            const el3 = document.getElementById('sidebarUserName');
+            const el4 = document.getElementById('sidebarUserRole');
+            const el5 = document.getElementById('sidebarUserAvatar');
+            if (el1) el1.textContent = n;
+            if (el2) el2.textContent = n.charAt(0);
+            if (el3) el3.textContent = n;
+            if (el4) el4.textContent = getRoleName(currentUser.role);
+            if (el5) el5.textContent = n.charAt(0);
         }
 
         // ============================================================
-        // ⏰ UPDATE DATE TIME
+        // ⏰ UPDATE DATE TIME - SAFE
         // ============================================================
 
         function updateDateTime() {
@@ -723,11 +741,11 @@
                         second: '2-digit'
                     });
                 }
-            } catch(e) {}
+            } catch(e) { /* Silent fail */ }
         }
 
         // ============================================================
-        // 📄 LOAD PAGE - FIXED (مع إعادة تنفيذ الـ Scripts)
+        // 📄 LOAD PAGE - مع دعم كامل للإعدادات
         // ============================================================
 
         function loadPage(page) {
@@ -752,11 +770,9 @@
                     return response.text();
                 })
                 .then(html => {
-                    // 🔥 استخراج الـ Scripts وتنفيذها
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
                     
-                    // استخراج كل الـ script tags
                     const scripts = tempDiv.querySelectorAll('script');
                     const scriptContents = [];
                     scripts.forEach(script => {
@@ -764,10 +780,8 @@
                         script.remove();
                     });
                     
-                    // عرض الـ HTML النظيف
                     container.innerHTML = tempDiv.innerHTML;
                     
-                    // 🔥 تنفيذ الـ scripts المستخرجة
                     scriptContents.forEach(content => {
                         if (content && content.trim()) {
                             try {
@@ -806,7 +820,7 @@
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
             currentUser = null;
             window.currentUser = null;
-            localStorage.removeItem(CONFIG.KEYS.TOKEN);
+            setToken(null);
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('username').value = '';
@@ -868,6 +882,11 @@
                 if (confirm('هل تريد تسجيل الخروج؟')) doLogout();
             };
 
+            // ✅ زر logout من الـ Sidebar
+            document.getElementById('logoutBtn').onclick = function() {
+                doLogout();
+            };
+
             document.getElementById('backToTop').onclick = function() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
@@ -880,7 +899,7 @@
             setInterval(updateDateTime, 1000);
 
             // ✅ التحقق من التوكن
-            const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
+            const token = getToken();
             if (token) {
                 const isValid = await verifyToken(token);
                 if (isValid) {
@@ -892,11 +911,11 @@
                     showToast('👋 مرحباً بعودتك', 'success');
                     setTimeout(loadAllData, 500);
                 } else {
-                    localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                    setToken(null);
                 }
             }
 
-            console.log('✅ Marine System v7.0 ready');
+            console.log('✅ Marine System v15.0 ready');
         });
 
         // ============================================================
@@ -913,8 +932,11 @@
         window.loadAllData = loadAllData;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
+        window.getToken = getToken;
+        window.setToken = setToken;
 
-        console.log('✅ Marine System v7.0 loaded successfully');
+        console.log('✅ Marine System v15.0 loaded successfully');
+        console.log('🔧 جميع الوظائف تعمل بما فيها الإعدادات');
     </script>
 
 </body>
