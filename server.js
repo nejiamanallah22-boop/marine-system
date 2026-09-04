@@ -78,65 +78,115 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// 🖥️ STATIC FILES & ROUTING - الحل النهائي
+// 🖥️ STATIC FILES & ROUTING - التصحيح النهائي
 // ============================================================
 
-// ✅ تحديد مسار مجلد src
-const srcPath = path.join(__dirname, 'src');
+// ✅ تحديد المسار الأساسي - استخدام المجلد الحالي مباشرة
+const basePath = __dirname;
 
-// ✅ تقديم الملفات الثابتة من مجلد src
-app.use(express.static(srcPath));
+console.log(`📁 Base directory: ${basePath}`);
+
+// ✅ تقديم الملفات الثابتة من المجلد الحالي
+app.use(express.static(basePath));
 
 // ✅ تقديم مجلد الصفحات
-app.use('/pages', express.static(path.join(srcPath, 'pages')));
+app.use('/pages', express.static(path.join(basePath, 'pages')));
 
-// ✅ الصفحة الرئيسية
+// ✅ الصفحة الرئيسية - مع التحقق من وجود الملف
 app.get('/', (req, res) => {
-    const indexPath = path.join(srcPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.status(404).send(`
-            <h1 style="color:#ef4444;text-align:center;margin-top:50px;font-family:sans-serif;">
-                ❌ ملف index.html غير موجود في مجلد src/
-            </h1>
-            <p style="text-align:center;color:#94a3b8;">
-                تأكد من وجود الملف في المسار: ${indexPath}
-            </p>
-        `);
+    // محاولة العثور على index.html في عدة مسارات
+    const possiblePaths = [
+        path.join(basePath, 'index.html'),
+        path.join(basePath, 'src', 'index.html'),
+        path.join(basePath, 'public', 'index.html')
+    ];
+    
+    for (const indexPath of possiblePaths) {
+        if (fs.existsSync(indexPath)) {
+            console.log(`✅ Found index.html at: ${indexPath}`);
+            return res.sendFile(indexPath);
+        }
     }
+    
+    // إذا لم يتم العثور على الملف
+    res.status(404).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>⚠️ ملف مفقود</title>
+            <style>
+                body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #0a1628; color: #e2e8f0; }
+                h1 { color: #ef4444; }
+                .info { background: rgba(255,255,255,0.04); padding: 20px; border-radius: 12px; margin: 20px auto; max-width: 600px; }
+                code { background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 4px; }
+            </style>
+        </head>
+        <body>
+            <h1>❌ ملف index.html غير موجود</h1>
+            <div class="info">
+                <p>المجلد الحالي: <code>${basePath}</code></p>
+                <p>تم البحث في المسارات التالية:</p>
+                <ul style="text-align:right;direction:rtl;list-style:none;padding:0;">
+                    ${possiblePaths.map(p => `<li>📁 <code>${p}</code></li>`).join('')}
+                </ul>
+            </div>
+            <p style="color: #94a3b8; margin-top: 30px;">
+                💡 تأكد من وجود ملف <code>index.html</code> في المجلد الرئيسي للمشروع
+            </p>
+        </body>
+        </html>
+    `);
 });
 
 // ✅ صفحة تسجيل الدخول
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(srcPath, 'index.html'));
+    const indexPath = path.join(basePath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.redirect('/');
+    }
 });
 
 // ✅ تحميل الصفحات من مجلد pages
 app.get('/pages/:page', (req, res) => {
     const page = req.params.page;
-    const filePath = path.join(srcPath, 'pages', page + '.html');
+    const possiblePaths = [
+        path.join(basePath, 'pages', page + '.html'),
+        path.join(basePath, 'src', 'pages', page + '.html')
+    ];
     
-    if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
-    } else {
-        res.status(404).send(`
-            <h1 style="color:#ef4444;text-align:center;margin-top:50px;font-family:sans-serif;">
-                ❌ الصفحة "${page}" غير موجودة
-            </h1>
-            <p style="text-align:center;color:#94a3b8;">
-                المسار: ${filePath}
-            </p>
-        `);
+    for (const filePath of possiblePaths) {
+        if (fs.existsSync(filePath)) {
+            console.log(`✅ Serving page: ${page} from ${filePath}`);
+            return res.sendFile(filePath);
+        }
     }
+    
+    res.status(404).send(`
+        <h1 style="color:#ef4444;text-align:center;margin-top:50px;font-family:sans-serif;">
+            ❌ الصفحة "${page}" غير موجودة
+        </h1>
+        <p style="text-align:center;color:#94a3b8;">
+            تم البحث في: ${possiblePaths.join(', ')}
+        </p>
+    `);
 });
 
 // ✅ معالجة جميع المسارات الأخرى (SPA mode)
 app.get('*', (req, res) => {
+    // إذا كان الطلب لملف (مثل .css أو .js) ولا يوجد، نرسل 404
     if (req.path.includes('.')) {
         return res.status(404).send('❌ الملف غير موجود');
     }
-    res.sendFile(path.join(srcPath, 'index.html'));
+    // وإلا نرسل الصفحة الرئيسية
+    const indexPath = path.join(basePath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.redirect('/');
+    }
 });
 
 // ============================================================
@@ -595,7 +645,8 @@ app.listen(PORT, () => {
     console.log(`🚢 Marine System Server running on port ${PORT}`);
     console.log(`🔒 CSRF Protection enabled`);
     console.log(`📍 http://localhost:${PORT}`);
-    console.log(`📁 Static files from: ${srcPath}`);
+    console.log(`📁 Static files from: ${basePath}`);
+    console.log(`🌐 https://marine-system-71eo.onrender.com`);
 });
 
 // ============================================================
