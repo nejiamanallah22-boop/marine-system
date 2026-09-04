@@ -1,17 +1,18 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER WITH CSRF PROTECTION
+// 🚢 MARINE SYSTEM - SERVER v8.0 (FULL WITH CSRF)
 // ============================================================
 
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const csurf = require('csurf');
 const session = require('express-session');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // ============================================================
 // 📦 CONFIGURATION
@@ -24,17 +25,19 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'session-secret-change-in-p
 // 🔧 MIDDLEWARE
 // ============================================================
 
+// ✅ CORS
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5500', 'http://127.0.0.1:5500'],
+    origin: ['http://localhost:5000', 'http://localhost:3000', 'https://marine-system-71eo.onrender.com'],
     credentials: true,
     exposedHeaders: ['X-CSRF-Token']
 }));
 
+// ✅ JSON & URL Encoding
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ Session management
+// ✅ Session Management (for production, use Redis or PostgreSQL)
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
@@ -46,13 +49,82 @@ app.use(session({
     }
 }));
 
-// ✅ CSRF Protection
-const csrfProtection = csurf({
-    cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+// ✅ CSRF Protection (comment out if issues persist)
+let csrfProtection = (req, res, next) => {
+    // Simple CSRF token generation for demo
+    const token = req.headers['x-csrf-token'] || req.body.csrf_token;
+    const sessionToken = req.session.csrfToken;
+    
+    // Skip CSRF check for GET requests
+    if (req.method === 'GET') {
+        return next();
     }
+    
+    // For POST/PUT/DELETE, check token
+    if (!token || token !== sessionToken) {
+        return res.status(403).json({
+            success: false,
+            error: 'CSRF token غير صالح'
+        });
+    }
+    next();
+};
+
+// Generate CSRF token for each session
+app.use((req, res, next) => {
+    if (!req.session.csrfToken) {
+        req.session.csrfToken = Math.random().toString(36).substring(2, 15) + 
+                                Math.random().toString(36).substring(2, 15);
+    }
+    // Set CSRF token in response headers
+    res.setHeader('X-CSRF-Token', req.session.csrfToken);
+    next();
+});
+
+// ============================================================
+// 🖥️ STATIC FILES & ROUTING
+// ============================================================
+
+// ✅ Serve static files from root directory
+app.use(express.static(path.join(__dirname)));
+
+// ✅ Serve pages directory
+app.use('/pages', express.static(path.join(__dirname, 'pages')));
+
+// ✅ Serve index.html for root
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// ✅ Serve login page
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// ✅ Serve specific pages
+app.get('/pages/:page', (req, res) => {
+    const page = req.params.page;
+    const filePath = path.join(__dirname, 'pages', page + '.html');
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send(`
+            <h1 style="color:#ef4444;text-align:center;margin-top:50px;font-family:sans-serif;">
+                ❌ الصفحة "${page}" غير موجودة
+            </h1>
+        `);
+    }
+});
+
+// ✅ Handle all other routes (SPA mode)
+app.get('*', (req, res) => {
+    // If request is for a file with extension, return 404
+    if (req.path.includes('.')) {
+        return res.status(404).send('❌ الملف غير موجود');
+    }
+    // Otherwise, serve index.html
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // ============================================================
@@ -75,6 +147,15 @@ const users = [
         password: bcrypt.hashSync('manager123', 10),
         name: 'مدير النظام',
         role: 'manager',
+        active: true,
+        createdAt: new Date().toISOString()
+    },
+    {
+        id: '3',
+        username: 'user',
+        password: bcrypt.hashSync('user123', 10),
+        name: 'مستخدم عادي',
+        role: 'viewer',
         active: true,
         createdAt: new Date().toISOString()
     }
@@ -107,6 +188,15 @@ const vessels = [
         location: 'الميناء الغربي',
         lastMaintenance: '2026-07-20T11:00:00Z',
         createdAt: '2026-03-15T10:00:00Z'
+    },
+    {
+        id: '4',
+        name: 'الوحدة 408',
+        type: 'زورق إنقاذ',
+        status: 'جاهز',
+        location: 'الميناء الشرقي',
+        lastMaintenance: '2026-08-28T09:00:00Z',
+        createdAt: '2026-04-01T14:00:00Z'
     }
 ];
 
@@ -126,33 +216,38 @@ const logs = [
         date: '2026-08-15T10:00:00Z',
         cost: 500,
         status: 'مكتملة'
+    },
+    {
+        id: '3',
+        vessel: 'الوحدة 312',
+        type: 'إصلاح هيكل',
+        date: '2026-07-20T11:00:00Z',
+        cost: 3500,
+        status: 'قيد التنفيذ'
     }
 ];
-
-// ============================================================
-// 🛡️ CSRF TOKEN ENDPOINT
-// ============================================================
-
-app.get('/api/csrf-token', csrfProtection, (req, res) => {
-    const csrfToken = req.csrfToken();
-    res.setHeader('X-CSRF-Token', csrfToken);
-    res.json({
-        success: true,
-        token: csrfToken
-    });
-});
 
 // ============================================================
 // 🔐 AUTH ENDPOINTS
 // ============================================================
 
-// ✅ Login with CSRF protection
-app.post('/api/auth/login', csrfProtection, async (req, res) => {
+// ✅ Get CSRF token
+app.get('/api/csrf-token', (req, res) => {
+    const token = req.session.csrfToken;
+    res.setHeader('X-CSRF-Token', token);
+    res.json({
+        success: true,
+        token: token
+    });
+});
+
+// ✅ Login
+app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password, csrf_token } = req.body;
 
         // ✅ Validate CSRF token
-        if (!csrf_token || csrf_token !== req.csrfToken()) {
+        if (!csrf_token || csrf_token !== req.session.csrfToken) {
             return res.status(403).json({
                 success: false,
                 error: 'CSRF token غير صالح'
@@ -183,7 +278,9 @@ app.post('/api/auth/login', csrfProtection, async (req, res) => {
         );
 
         // ✅ Send new CSRF token
-        const newCsrfToken = req.csrfToken();
+        const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
+                            Math.random().toString(36).substring(2, 15);
+        req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
 
         res.json({
@@ -207,7 +304,7 @@ app.post('/api/auth/login', csrfProtection, async (req, res) => {
 });
 
 // ✅ Verify token
-app.get('/api/auth/me', csrfProtection, async (req, res) => {
+app.get('/api/auth/me', (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -229,7 +326,9 @@ app.get('/api/auth/me', csrfProtection, async (req, res) => {
         }
 
         // ✅ Send new CSRF token
-        const newCsrfToken = req.csrfToken();
+        const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
+                            Math.random().toString(36).substring(2, 15);
+        req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
 
         res.json({
@@ -252,7 +351,7 @@ app.get('/api/auth/me', csrfProtection, async (req, res) => {
 });
 
 // ✅ Logout
-app.post('/api/auth/logout', csrfProtection, (req, res) => {
+app.post('/api/auth/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error('Logout error:', err);
@@ -263,13 +362,15 @@ app.post('/api/auth/logout', csrfProtection, (req, res) => {
 });
 
 // ============================================================
-// 📊 DATA ENDPOINTS (with CSRF protection)
+// 📊 DATA ENDPOINTS
 // ============================================================
 
 // ✅ Get all vessels
-app.get('/api/vessels', csrfProtection, (req, res) => {
+app.get('/api/vessels', (req, res) => {
     try {
-        const newCsrfToken = req.csrfToken();
+        const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
+                            Math.random().toString(36).substring(2, 15);
+        req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
         res.json(vessels);
     } catch (error) {
@@ -278,11 +379,11 @@ app.get('/api/vessels', csrfProtection, (req, res) => {
 });
 
 // ✅ Add vessel (requires CSRF)
-app.post('/api/vessels', csrfProtection, (req, res) => {
+app.post('/api/vessels', (req, res) => {
     try {
         // Validate CSRF
         const csrfToken = req.headers['x-csrf-token'] || req.body.csrf_token;
-        if (!csrfToken || csrfToken !== req.csrfToken()) {
+        if (!csrfToken || csrfToken !== req.session.csrfToken) {
             return res.status(403).json({
                 success: false,
                 error: 'CSRF token غير صالح'
@@ -299,7 +400,7 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
 
         const newVessel = {
             id: Date.now().toString(),
-            name,
+            name: name,
             type: type || 'غير محدد',
             status: status || 'جاهز',
             location: location || '—',
@@ -309,7 +410,9 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
 
         vessels.push(newVessel);
 
-        const newCsrfToken = req.csrfToken();
+        const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
+                            Math.random().toString(36).substring(2, 15);
+        req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
         res.json({ success: true, vessel: newVessel });
     } catch (error) {
@@ -318,10 +421,10 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
 });
 
 // ✅ Delete vessel
-app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
+app.delete('/api/vessels/:id', (req, res) => {
     try {
         const csrfToken = req.headers['x-csrf-token'];
-        if (!csrfToken || csrfToken !== req.csrfToken()) {
+        if (!csrfToken || csrfToken !== req.session.csrfToken) {
             return res.status(403).json({
                 success: false,
                 error: 'CSRF token غير صالح'
@@ -336,7 +439,9 @@ app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
 
         vessels.splice(index, 1);
 
-        const newCsrfToken = req.csrfToken();
+        const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
+                            Math.random().toString(36).substring(2, 15);
+        req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
         res.json({ success: true, message: 'تم حذف الوحدة' });
     } catch (error) {
@@ -345,9 +450,11 @@ app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
 });
 
 // ✅ Get all users
-app.get('/api/users', csrfProtection, (req, res) => {
+app.get('/api/users', (req, res) => {
     try {
-        const newCsrfToken = req.csrfToken();
+        const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
+                            Math.random().toString(36).substring(2, 15);
+        req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
         // Don't send passwords
         const safeUsers = users.map(u => ({
@@ -365,10 +472,10 @@ app.get('/api/users', csrfProtection, (req, res) => {
 });
 
 // ✅ Add user (requires CSRF)
-app.post('/api/users', csrfProtection, (req, res) => {
+app.post('/api/users', (req, res) => {
     try {
         const csrfToken = req.headers['x-csrf-token'] || req.body.csrf_token;
-        if (!csrfToken || csrfToken !== req.csrfToken()) {
+        if (!csrfToken || csrfToken !== req.session.csrfToken) {
             return res.status(403).json({
                 success: false,
                 error: 'CSRF token غير صالح'
@@ -402,7 +509,9 @@ app.post('/api/users', csrfProtection, (req, res) => {
 
         users.push(newUser);
 
-        const newCsrfToken = req.csrfToken();
+        const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
+                            Math.random().toString(36).substring(2, 15);
+        req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
         res.json({
             success: true,
@@ -420,9 +529,11 @@ app.post('/api/users', csrfProtection, (req, res) => {
 });
 
 // ✅ Get all logs
-app.get('/api/logs', csrfProtection, (req, res) => {
+app.get('/api/logs', (req, res) => {
     try {
-        const newCsrfToken = req.csrfToken();
+        const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
+                            Math.random().toString(36).substring(2, 15);
+        req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
         res.json(logs);
     } catch (error) {
@@ -431,10 +542,10 @@ app.get('/api/logs', csrfProtection, (req, res) => {
 });
 
 // ✅ Add log (requires CSRF)
-app.post('/api/logs', csrfProtection, (req, res) => {
+app.post('/api/logs', (req, res) => {
     try {
         const csrfToken = req.headers['x-csrf-token'] || req.body.csrf_token;
-        if (!csrfToken || csrfToken !== req.csrfToken()) {
+        if (!csrfToken || csrfToken !== req.session.csrfToken) {
             return res.status(403).json({
                 success: false,
                 error: 'CSRF token غير صالح'
@@ -460,7 +571,9 @@ app.post('/api/logs', csrfProtection, (req, res) => {
 
         logs.push(newLog);
 
-        const newCsrfToken = req.csrfToken();
+        const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
+                            Math.random().toString(36).substring(2, 15);
+        req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
         res.json({ success: true, log: newLog });
     } catch (error) {
@@ -476,6 +589,7 @@ app.listen(PORT, () => {
     console.log(`🚢 Marine System Server running on port ${PORT}`);
     console.log(`🔒 CSRF Protection enabled`);
     console.log(`📍 http://localhost:${PORT}`);
+    console.log(`🌐 https://marine-system-71eo.onrender.com`);
 });
 
 // ============================================================
