@@ -1,43 +1,37 @@
-```javascript
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM v22.0 — ULTIMATE HARDENED
+ * 🚢 MARINE SYSTEM v22.0
+ * ULTIMATE HARDENED FRONTEND
  * ============================================================
  *
- * CLIENT SECURITY:
- * - HttpOnly session cookie
- * - No JWT in localStorage/sessionStorage
- * - No localStorage
- * - sessionStorage only for non-sensitive UI state
- * - CSRF header
- * - RBAC UI filtering
- * - Server remains authoritative
- * - No innerHTML
- * - No eval()
- * - No Function()
- * - No inline JavaScript
- * - Strict page allowlist
- * - Session idle timeout
- * - Session absolute timeout
- * - Automatic UI cleanup
- * - 401/403 session handling
- * - Secure password handling
- * - Secure forgot-password flow
- *
- * IMPORTANT:
- * Client-side security is NOT a replacement for server-side
- * authentication, authorization, CSRF validation and session
- * invalidation.
+ * SECURITY MODEL
+ * ------------------------------------------------------------
+ * • HttpOnly Session Cookie
+ * • Secure Cookie (SERVER SIDE)
+ * • SameSite=Strict (SERVER SIDE)
+ * • CSRF Protection
+ * • Server-side RBAC
+ * • Client-side RBAC for UX
+ * • No JWT in localStorage/sessionStorage
+ * • No innerHTML
+ * • No eval()
+ * • No unsafe-inline
+ * • No unsafe-eval
+ * • Same-origin API
+ * • Idle timeout: 15 minutes
+ * • Absolute timeout: 8 hours
+ * • Page allowlist
+ * • DOMParser + script removal
+ * • No global state exposure
  * ============================================================
  */
 
 (function () {
-
     'use strict';
 
-    // ============================================================
-    // ⚙️ CONFIG
-    // ============================================================
+    /* =========================================================
+       CONFIG
+       ========================================================= */
 
     var API = '/api';
 
@@ -46,7 +40,7 @@
     var IDLE_TIMEOUT = 15 * 60 * 1000;       // 15 minutes
     var ABSOLUTE_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours
 
-    var ACTIVITY_DEBOUNCE = 500;
+    var REQUEST_TIMEOUT = 15000;
 
     var ALLOWED_PAGES = new Set([
         'dashboard',
@@ -73,384 +67,241 @@
         monitoring: 'المراقبة الشاملة',
         'ai-assistant': 'المساعد الذكي',
         settings: 'الإعدادات',
-        logs: 'سجلات النظام'
+        logs: 'سجلات الصيانة'
     };
 
     /*
-     * Pages requiring explicit permissions.
+     * Client-side permission mapping.
      *
      * IMPORTANT:
-     * This is ONLY UI filtering.
-     * The server MUST independently enforce these permissions.
+     * This is ONLY UI protection.
+     * Real authorization MUST remain on the backend.
      */
-
     var PAGE_PERMISSIONS = {
-
-        users: [
-            'users.read'
-        ],
-
-        logs: [
-            'logs.read'
-        ],
-
-        settings: [
-            'settings.manage'
-        ],
-
-        monitoring: [
-            'monitoring.view'
-        ],
-
-        'ai-assistant': [
-            'ai.use'
-        ]
+        users: ['users.read'],
+        logs: ['logs.read'],
+        settings: ['settings.manage'],
+        monitoring: ['monitoring.view'],
+        'ai-assistant': ['ai.use']
     };
 
-    // ============================================================
-    // 🔐 STATE — PRIVATE
-    // ============================================================
+
+    /* =========================================================
+       PRIVATE STATE
+       ========================================================= */
 
     var state = {
-
         user: null,
-
         authenticated: false,
 
         page: 'dashboard',
 
         vessels: [],
-
         users: [],
 
         idleTimer: null,
-
         absoluteTimer: null,
 
         absoluteStart: 0,
 
-        loggingOut: false,
+        loadingPages: Object.create(null),
 
-        initialized: false
+        activityDebounce: null,
 
+        logoutInProgress: false,
+
+        initialized: false,
+
+        connectionOnline: navigator.onLine
     };
 
-    // ============================================================
-    // 🛡️ PRIVATE CONSTANTS
-    // ============================================================
 
-    var PUBLIC_ENDPOINTS = new Set([
-        '/api/auth/login',
-        '/api/auth/forgot-password',
-        '/api/auth/reset-password'
-    ]);
-
-    // ============================================================
-    // 🔧 DOM HELPERS
-    // ============================================================
+    /* =========================================================
+       DOM HELPERS
+       ========================================================= */
 
     function getElement(id) {
-
         return document.getElementById(id);
-
     }
 
-    function createElement(tag, attrs, children) {
 
+    function addClass(el, className) {
+        if (el) {
+            el.classList.add(className);
+        }
+    }
+
+
+    function removeClass(el, className) {
+        if (el) {
+            el.classList.remove(className);
+        }
+    }
+
+
+    function safeText(id, value) {
+        var el = getElement(id);
+
+        if (el) {
+            el.textContent = value == null ? '' : String(value);
+        }
+    }
+
+
+    function createElement(tag, attrs, children) {
         var el = document.createElement(tag);
 
         if (attrs) {
-
             Object.keys(attrs).forEach(function (key) {
-
                 var value = attrs[key];
 
                 if (key === 'className') {
-
-                    el.className = String(value);
-
+                    el.className = value;
                 } else if (key === 'textContent') {
-
-                    el.textContent = String(value);
-
-                } else if (key === 'dataset' && value && typeof value === 'object') {
-
+                    el.textContent = value;
+                } else if (key === 'dataset' && value) {
                     Object.keys(value).forEach(function (dataKey) {
-
-                        el.dataset[dataKey] = String(value[dataKey]);
-
+                        el.dataset[dataKey] = value[dataKey];
                     });
-
-                } else if (value !== null && value !== undefined) {
-
-                    el.setAttribute(key, String(value));
-
+                } else if (key === 'disabled') {
+                    el.disabled = Boolean(value);
+                } else {
+                    el.setAttribute(key, value);
                 }
-
             });
-
         }
 
         if (children) {
-
-            if (Array.isArray(children)) {
-
-                children.forEach(function (child) {
-
-                    if (typeof child === 'string') {
-
-                        el.appendChild(
-                            document.createTextNode(child)
-                        );
-
-                    } else if (child instanceof Node) {
-
-                        el.appendChild(child);
-
-                    }
-
-                });
-
-            } else if (typeof children === 'string') {
-
-                el.appendChild(
-                    document.createTextNode(children)
-                );
-
-            } else if (children instanceof Node) {
-
-                el.appendChild(children);
-
+            if (!Array.isArray(children)) {
+                children = [children];
             }
 
+            children.forEach(function (child) {
+                if (typeof child === 'string') {
+                    el.appendChild(
+                        document.createTextNode(child)
+                    );
+                } else if (
+                    child &&
+                    child.nodeType === Node.ELEMENT_NODE
+                ) {
+                    el.appendChild(child);
+                }
+            });
         }
 
         return el;
-
     }
 
-    function addClass(el, className) {
 
-        if (el) {
+    /* =========================================================
+       NETWORK HELPERS
+       ========================================================= */
 
-            el.classList.add(className);
+    function fetchWithTimeout(url, options, timeout) {
+        timeout = timeout || REQUEST_TIMEOUT;
 
+        options = options || {};
+
+        var controller = null;
+        var timer = null;
+
+        if (typeof AbortController !== 'undefined') {
+            controller = new AbortController();
+            options.signal = controller.signal;
         }
 
-    }
+        var request = fetch(url, options);
 
-    function removeClass(el, className) {
-
-        if (el) {
-
-            el.classList.remove(className);
-
+        if (!controller) {
+            return request;
         }
 
-    }
+        var timeoutPromise = new Promise(function (_, reject) {
+            timer = setTimeout(function () {
+                controller.abort();
 
-    function toggleClass(el, className, force) {
-
-        if (!el) return;
-
-        el.classList.toggle(className, force);
-
-    }
-
-    function safeText(id, text) {
-
-        var el = getElement(id);
-
-        if (!el) return;
-
-        el.textContent = text == null ? '' : String(text);
-
-    }
-
-    // ============================================================
-    // 🧹 CLEAR CHILDREN
-    // ============================================================
-
-    function clearElement(el) {
-
-        if (!el) return;
-
-        while (el.firstChild) {
-
-            el.removeChild(el.firstChild);
-
-        }
-
-    }
-
-    // ============================================================
-    // 🍞 TOAST
-    // ============================================================
-
-    function showToast(message, type, duration) {
-
-        type = type || 'info';
-        duration = Number(duration) || 3000;
-
-        var container = getElement('toastContainer');
-
-        if (!container) return;
-
-        var icons = {
-
-            success: '✅',
-            error: '❌',
-            warning: '⚠️',
-            info: 'ℹ️'
-
-        };
-
-        var toast = createElement('div', {
-
-            className: 'toast toast-' + type,
-
-            role: 'alert',
-
-            'aria-live': 'polite'
-
+                reject(
+                    new Error('انتهت مهلة الاتصال بالخادم')
+                );
+            }, timeout);
         });
 
-        var iconSpan = createElement('span', {
-
-            className: 'toast-icon',
-
-            textContent: icons[type] || icons.info
-
+        return Promise.race([
+            request,
+            timeoutPromise
+        ]).finally(function () {
+            if (timer) {
+                clearTimeout(timer);
+            }
         });
-
-        var textSpan = createElement('span', {
-
-            className: 'toast-text',
-
-            textContent: String(message || '')
-
-        });
-
-        toast.appendChild(iconSpan);
-
-        toast.appendChild(textSpan);
-
-        container.appendChild(toast);
-
-        window.setTimeout(function () {
-
-            if (!toast.isConnected) return;
-
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(30px)';
-            toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-
-            window.setTimeout(function () {
-
-                if (toast.parentNode) {
-
-                    toast.parentNode.removeChild(toast);
-
-                }
-
-            }, 300);
-
-        }, duration);
-
     }
 
-    // ============================================================
-    // ⏰ DATE / TIME
-    // ============================================================
 
-    function updateDateTime() {
-
-        try {
-
-            var dateEl = getElement('currentDate');
-            var timeEl = getElement('currentTime');
-
-            if (!dateEl && !timeEl) {
-
-                return;
-
+    function parseJSONResponse(response) {
+        return response.text().then(function (text) {
+            if (!text) {
+                return {};
             }
 
-            var now = new Date();
-
-            if (dateEl) {
-
-                dateEl.textContent =
-                    now.toLocaleDateString('ar-TN', {
-
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-
-                    });
-
+            try {
+                return JSON.parse(text);
+            } catch (error) {
+                throw new Error(
+                    'استجابة غير صالحة من الخادم'
+                );
             }
+        });
+    }
 
-            if (timeEl) {
 
-                timeEl.textContent =
-                    now.toLocaleTimeString('ar-TN', {
-
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-
-                    });
-
-            }
-
-        } catch (error) {
-
-            /*
-             * UI clock failure must never affect authentication.
-             */
-
+    function getResponseError(data, fallback) {
+        if (!data) {
+            return fallback;
         }
 
+        return (
+            data.error ||
+            data.message ||
+            fallback
+        );
     }
 
-    // ============================================================
-    // 🔐 CSRF
-    // ============================================================
+
+    /* =========================================================
+       CSRF
+       ========================================================= */
 
     function getCSRFToken() {
 
         /*
          * Preferred:
-         * server-provided meta tag.
+         * server-generated meta tag.
          */
-
         var meta = document.querySelector(
             'meta[name="csrf-token"]'
         );
 
         if (meta) {
-
             var metaToken = meta.getAttribute('content');
 
             if (metaToken) {
-
                 return metaToken;
-
             }
-
         }
+
 
         /*
          * Fallback:
-         * non-HttpOnly CSRF cookie.
+         * readable CSRF cookie.
          *
-         * DO NOT use this mechanism for the session cookie.
+         * IMPORTANT:
+         * csrf_token MUST NOT be HttpOnly.
+         * The session cookie MUST remain HttpOnly.
          */
-
         var cookies = document.cookie
-            .split(';');
+            ? document.cookie.split(';')
+            : [];
 
         for (var i = 0; i < cookies.length; i++) {
 
@@ -459,260 +310,329 @@
             if (
                 cookie.indexOf('csrf_token=') === 0
             ) {
-
                 return decodeURIComponent(
                     cookie.substring('csrf_token='.length)
                 );
-
             }
-
         }
 
         return '';
-
     }
 
-    // ============================================================
-    // 🌐 HTTP HELPERS
-    // ============================================================
-
-    function isMutationMethod(method) {
-
-        var normalized = String(method || 'GET')
-            .toUpperCase();
-
-        return (
-            normalized === 'POST' ||
-            normalized === 'PUT' ||
-            normalized === 'PATCH' ||
-            normalized === 'DELETE'
-        );
-
-    }
 
     function buildHeaders(options) {
 
         options = options || {};
 
-        var method =
-            String(options.method || 'GET')
-                .toUpperCase();
-
         var headers = {
-
             'Accept': 'application/json'
-
         };
 
         if (options.json) {
-
             headers['Content-Type'] =
                 'application/json';
-
         }
 
         /*
-         * CSRF token is required for state-changing
-         * same-origin requests.
+         * Send CSRF only when available.
          */
+        var csrf = getCSRFToken();
 
-        if (isMutationMethod(method)) {
-
-            var csrf = getCSRFToken();
-
-            if (csrf) {
-
-                headers['X-CSRF-Token'] = csrf;
-
-            }
-
-        }
-
-        if (options.headers) {
-
-            Object.keys(options.headers).forEach(function (key) {
-
-                headers[key] = options.headers[key];
-
-            });
-
+        if (csrf) {
+            headers['X-CSRF-Token'] = csrf;
         }
 
         return headers;
-
     }
 
-    function fetchJSON(url, options) {
 
-        options = options || {};
+    /* =========================================================
+       TOAST
+       ========================================================= */
 
-        var requestOptions = {
+    function showToast(message, type, duration) {
 
-            method: options.method || 'GET',
+        type = type || 'info';
+        duration = duration || 3000;
 
-            credentials: 'include',
+        var container =
+            getElement('toastContainer');
 
-            headers: buildHeaders(options),
+        if (!container) {
+            return;
+        }
 
-            cache: options.cache || 'no-store'
-
+        var icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
         };
 
-        if (options.body !== undefined) {
+        var toast = createElement('div', {
+            className: 'toast toast-' + type,
+            role: 'alert',
+            'aria-live': 'polite'
+        });
 
-            requestOptions.body = options.body;
+        var icon = createElement('span', {
+            className: 'toast-icon',
+            textContent:
+                icons[type] || icons.info
+        });
 
-        }
+        var text = createElement('span', {
+            className: 'toast-message',
+            textContent: String(message || '')
+        });
 
-        if (options.keepalive === true) {
+        toast.appendChild(icon);
+        toast.appendChild(text);
 
-            requestOptions.keepalive = true;
+        container.appendChild(toast);
 
-        }
+        setTimeout(function () {
 
-        return fetch(url, requestOptions)
-            .then(function (response) {
+            if (!toast.parentNode) {
+                return;
+            }
 
-                if (
-                    response.status === 401 ||
-                    response.status === 403
-                ) {
+            toast.style.opacity = '0';
+            toast.style.transform =
+                'translateX(30px)';
+            toast.style.transition =
+                'opacity .3s ease, transform .3s ease';
 
-                    /*
-                     * Do not automatically redirect during login
-                     * or password-recovery requests.
-                     */
-
-                    if (
-                        !PUBLIC_ENDPOINTS.has(url)
-                    ) {
-
-                        handleSessionFailure(
-                            response.status
-                        );
-
-                    }
-
+            setTimeout(function () {
+                if (toast.parentNode) {
+                    toast.remove();
                 }
+            }, 300);
 
-                return response
-                    .json()
-                    .catch(function () {
-
-                        return {};
-
-                    })
-                    .then(function (data) {
-
-                        return {
-
-                            response: response,
-
-                            data: data
-
-                        };
-
-                    });
-
-            });
-
+        }, duration);
     }
 
-    // ============================================================
-    // 🔐 SESSION FAILURE
-    // ============================================================
 
-    var sessionFailureHandled = false;
+    /* =========================================================
+       DATE / TIME
+       ========================================================= */
 
-    function handleSessionFailure(status) {
+    function updateDateTime() {
 
-        if (sessionFailureHandled) {
+        try {
 
-            return;
+            var dateEl =
+                getElement('currentDate');
 
+            var timeEl =
+                getElement('currentTime');
+
+            if (!dateEl && !timeEl) {
+                return;
+            }
+
+            var now = new Date();
+
+            if (dateEl) {
+                dateEl.textContent =
+                    now.toLocaleDateString(
+                        'ar-TN',
+                        {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        }
+                    );
+            }
+
+            if (timeEl) {
+                timeEl.textContent =
+                    now.toLocaleTimeString(
+                        'ar-TN',
+                        {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        }
+                    );
+            }
+
+        } catch (error) {
+            /*
+             * Never allow clock failure to break application.
+             */
+        }
+    }
+
+
+    /* =========================================================
+       SESSION TIMER
+       ========================================================= */
+
+    function stopSessionTimers() {
+
+        if (state.idleTimer !== null) {
+            clearTimeout(state.idleTimer);
+            state.idleTimer = null;
         }
 
-        if (!state.authenticated) {
-
-            return;
-
+        if (state.absoluteTimer !== null) {
+            clearTimeout(state.absoluteTimer);
+            state.absoluteTimer = null;
         }
+    }
 
-        sessionFailureHandled = true;
+
+    function performLocalLogoutUI() {
+
+        state.user = null;
+        state.authenticated = false;
+
+        state.vessels = [];
+        state.users = [];
 
         stopSessionTimers();
 
-        state.authenticated = false;
-        state.user = null;
+        var loginOverlay =
+            getElement('loginOverlay');
 
-        clearSensitiveState();
+        var mainApp =
+            getElement('mainApp');
 
-        showToast(
-            status === 401
-                ? '🔒 انتهت صلاحية الجلسة'
-                : '🔒 تم رفض الوصول',
-            'warning',
-            4000
+        if (loginOverlay) {
+            removeClass(
+                loginOverlay,
+                'hidden'
+            );
+        }
+
+        if (mainApp) {
+            addClass(
+                mainApp,
+                'hidden'
+            );
+        }
+
+        safeText(
+            'userDisplayName',
+            'المستخدم'
         );
 
-        resetApplicationUI();
+        safeText(
+            'userInitial',
+            'م'
+        );
 
-        window.setTimeout(function () {
+        safeText(
+            'sidebarUserName',
+            'المستخدم'
+        );
 
-            sessionFailureHandled = false;
+        safeText(
+            'sidebarUserRole',
+            'مستخدم'
+        );
 
-        }, 1000);
+        safeText(
+            'sidebarUserAvatar',
+            'م'
+        );
 
-    }
+        var username =
+            getElement('username');
 
-    // ============================================================
-    // 🧹 CLEAR SENSITIVE STATE
-    // ============================================================
+        var password =
+            getElement('password');
 
-    function clearSensitiveState() {
+        if (username) {
+            username.value = '';
+        }
+
+        if (password) {
+            password.value = '';
+        }
+
+        var error =
+            getElement('loginError');
+
+        if (error) {
+            error.textContent = '';
+            error.className =
+                'error-msg';
+        }
 
         /*
-         * Remove references to sensitive application data.
+         * Page preference is not security-sensitive,
+         * but remove it during logout.
          */
+        try {
+            sessionStorage.removeItem(
+                PAGE_KEY
+            );
+        } catch (e) {}
 
-        state.user = null;
-
-        state.vessels = [];
-
-        state.users = [];
-
+        state.page = 'dashboard';
     }
 
-    // ============================================================
-    // ⏱️ SESSION TIMERS
-    // ============================================================
+
+    function expireSession(reason) {
+
+        if (!state.authenticated) {
+            return;
+        }
+
+        if (state.logoutInProgress) {
+            return;
+        }
+
+        showToast(
+            reason ||
+            '⏰ انتهت صلاحية الجلسة',
+            'warning'
+        );
+
+        /*
+         * Automatic expiration must not require
+         * another confirmation modal.
+         */
+        performServerLogout(true);
+    }
+
 
     function startSessionTimers() {
 
         stopSessionTimers();
 
         if (!state.authenticated) {
-
             return;
-
         }
 
         /*
-         * absoluteStart is established ONCE at login/session restore.
-         * Activity NEVER modifies it.
+         * Idle timer.
          */
+        state.idleTimer = setTimeout(
+            function () {
 
-        if (
-            !state.absoluteStart ||
-            !Number.isFinite(state.absoluteStart)
-        ) {
+                expireSession(
+                    '⏰ انتهت صلاحية الجلسة بسبب الخمول'
+                );
 
-            state.absoluteStart = Date.now();
+            },
+            IDLE_TIMEOUT
+        );
 
-        }
 
+        /*
+         * Absolute timer.
+         *
+         * IMPORTANT:
+         * This timer is based on absoluteStart
+         * and MUST NOT be reset by activity.
+         */
         var elapsed =
-            Date.now() - state.absoluteStart;
+            Date.now() -
+            state.absoluteStart;
 
         var remaining =
             Math.max(
@@ -720,243 +640,156 @@
                 ABSOLUTE_TIMEOUT - elapsed
             );
 
-        /*
-         * Absolute timeout already expired.
-         */
-
-        if (remaining <= 0) {
-
-            expireSession('absolute');
-
-            return;
-
-        }
-
-        state.idleTimer = window.setTimeout(
+        state.absoluteTimer = setTimeout(
             function () {
 
-                if (!state.authenticated) {
-
-                    return;
-
-                }
-
-                expireSession('idle');
-
-            },
-            IDLE_TIMEOUT
-        );
-
-        state.absoluteTimer = window.setTimeout(
-            function () {
-
-                if (!state.authenticated) {
-
-                    return;
-
-                }
-
-                expireSession('absolute');
+                expireSession(
+                    '⏰ انتهت المدة القصوى للجلسة'
+                );
 
             },
             remaining
         );
-
     }
+
 
     function resetIdleTimer() {
 
         if (!state.authenticated) {
-
             return;
-
         }
 
-        if (state.idleTimer) {
-
-            window.clearTimeout(
+        if (state.idleTimer !== null) {
+            clearTimeout(
                 state.idleTimer
             );
-
-            state.idleTimer = null;
-
         }
 
-        state.idleTimer = window.setTimeout(
+        state.idleTimer = setTimeout(
             function () {
 
-                if (!state.authenticated) {
-
-                    return;
-
-                }
-
-                expireSession('idle');
+                expireSession(
+                    '⏰ انتهت صلاحية الجلسة بسبب الخمول'
+                );
 
             },
             IDLE_TIMEOUT
         );
-
     }
 
-    function stopSessionTimers() {
 
-        if (state.idleTimer) {
+    function setupActivityMonitoring() {
 
-            window.clearTimeout(
-                state.idleTimer
+        var events = [
+            'click',
+            'keydown',
+            'mousemove',
+            'scroll',
+            'touchstart'
+        ];
+
+        events.forEach(function (eventName) {
+
+            document.addEventListener(
+                eventName,
+                function () {
+
+                    if (!state.authenticated) {
+                        return;
+                    }
+
+                    if (state.activityDebounce) {
+                        clearTimeout(
+                            state.activityDebounce
+                        );
+                    }
+
+                    state.activityDebounce =
+                        setTimeout(
+                            function () {
+
+                                state.activityDebounce =
+                                    null;
+
+                                resetIdleTimer();
+
+                            },
+                            500
+                        );
+                },
+                {
+                    passive:
+                        eventName === 'scroll' ||
+                        eventName === 'touchstart'
+                }
             );
-
-            state.idleTimer = null;
-
-        }
-
-        if (state.absoluteTimer) {
-
-            window.clearTimeout(
-                state.absoluteTimer
-            );
-
-            state.absoluteTimer = null;
-
-        }
-
+        });
     }
 
-    function expireSession(reason) {
 
-        if (!state.authenticated) {
+    /* =========================================================
+       AUTHENTICATION
+       ========================================================= */
 
+    function setLoginLoading(loading) {
+
+        var button =
+            getElement('loginButton');
+
+        if (!button) {
             return;
-
         }
 
-        stopSessionTimers();
+        button.disabled = loading;
 
-        var message =
-            reason === 'idle'
-                ? '⏰ انتهت صلاحية الجلسة بسبب الخمول'
-                : '⏰ انتهت المدة القصوى للجلسة';
-
-        showToast(
-            message,
-            'warning',
-            4000
-        );
-
-        /*
-         * Server-side logout/revocation is authoritative.
-         */
-
-        forceLogout();
-
+        if (loading) {
+            addClass(button, 'loading');
+        } else {
+            removeClass(button, 'loading');
+        }
     }
 
-    // ============================================================
-    // 🖱️ ACTIVITY MONITOR
-    // ============================================================
 
-    var activityDebounce = null;
+    function doLogin(event) {
 
-    function registerActivity() {
-
-        if (!state.authenticated) {
-
-            return;
-
+        if (event) {
+            event.preventDefault();
         }
 
-        if (activityDebounce) {
-
-            window.clearTimeout(
-                activityDebounce
-            );
-
-        }
-
-        activityDebounce = window.setTimeout(
-            function () {
-
-                resetIdleTimer();
-
-                activityDebounce = null;
-
-            },
-            ACTIVITY_DEBOUNCE
-        );
-
-    }
-
-    [
-        'click',
-        'keydown',
-        'mousemove',
-        'scroll',
-        'touchstart'
-    ].forEach(function (eventName) {
-
-        document.addEventListener(
-            eventName,
-            registerActivity,
-            {
-                passive:
-                    eventName === 'scroll' ||
-                    eventName === 'touchstart'
-            }
-        );
-
-    });
-
-    // ============================================================
-    // 🔐 AUTHENTICATION — LOGIN
-    // ============================================================
-
-    function doLogin() {
-
-        var usernameEl =
+        var username =
             getElement('username');
 
-        var passwordEl =
+        var password =
             getElement('password');
 
         var errorEl =
             getElement('loginError');
 
-        var loginBtn =
-            getElement('loginButton');
-
         var rememberMe =
             getElement('rememberMe');
 
         if (
-            !usernameEl ||
-            !passwordEl ||
-            !errorEl ||
-            !loginBtn
+            !username ||
+            !password ||
+            !errorEl
         ) {
-
             return;
-
         }
 
-        var username =
-            String(usernameEl.value || '')
-                .trim();
+        var user =
+            username.value.trim();
 
         /*
-         * NEVER trim passwords.
+         * NEVER trim password.
          */
+        var pass =
+            password.value;
 
-        var password =
-            String(passwordEl.value || '');
-
+        errorEl.textContent = '';
         errorEl.className =
             'error-msg';
 
-        errorEl.textContent =
-            '';
-
-        if (!username || !password) {
+        if (!user || !pass) {
 
             errorEl.textContent =
                 '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
@@ -964,68 +797,67 @@
             errorEl.classList.add('show');
 
             return;
-
         }
 
-        if (state.loggingOut) {
+        setLoginLoading(true);
 
-            return;
-
-        }
-
-        loginBtn.disabled = true;
-
-        loginBtn.classList.add('loading');
-
-        fetchJSON(
+        fetchWithTimeout(
             API + '/auth/login',
             {
-
                 method: 'POST',
 
-                json: true,
+                headers:
+                    buildHeaders({
+                        json: true
+                    }),
+
+                credentials: 'include',
 
                 body: JSON.stringify({
-
-                    username: username,
-
-                    password: password,
-
+                    username: user,
+                    password: pass,
                     rememberMe:
                         rememberMe
-                            ? rememberMe.checked
+                            ? Boolean(
+                                rememberMe.checked
+                            )
                             : false
-
                 })
-
             }
         )
-        .then(function (result) {
+        .then(function (response) {
 
-            var response =
-                result.response;
+            return parseJSONResponse(
+                response
+            ).then(function (data) {
 
-            var data =
-                result.data || {};
+                if (!response.ok) {
 
-            if (!response.ok) {
+                    throw new Error(
+                        getResponseError(
+                            data,
+                            'فشل تسجيل الدخول'
+                        )
+                    );
+                }
 
-                throw new Error(
-                    data.error ||
-                    'فشل تسجيل الدخول'
-                );
-
-            }
+                return data;
+            });
+        })
+        .then(function (data) {
 
             if (
+                !data ||
                 !data.success ||
                 !data.user
             ) {
 
                 throw new Error(
-                    'بيانات الدخول غير صحيحة'
+                    getResponseError(
+                        data,
+                        'بيانات الدخول غير صحيحة'
+                    )
                 );
-
             }
 
             state.user =
@@ -1034,64 +866,51 @@
             state.authenticated =
                 true;
 
+            /*
+             * Absolute lifetime starts here.
+             */
             state.absoluteStart =
                 Date.now();
-
-            state.loggingOut =
-                false;
-
-            sessionFailureHandled =
-                false;
-
-            /*
-             * Clear password immediately after successful
-             * authentication.
-             */
-
-            passwordEl.value = '';
-
-            var loginOverlay =
-                getElement('loginOverlay');
-
-            var mainApp =
-                getElement('mainApp');
-
-            if (loginOverlay) {
-
-                addClass(
-                    loginOverlay,
-                    'hidden'
-                );
-
-            }
-
-            if (mainApp) {
-
-                removeClass(
-                    mainApp,
-                    'hidden'
-                );
-
-            }
 
             updateUserDisplay();
 
             buildSidebar();
 
-            startSessionTimers();
+            var loginOverlay =
+                getElement(
+                    'loginOverlay'
+                );
 
-            /*
-             * Restore only UI page state.
-             */
+            var mainApp =
+                getElement(
+                    'mainApp'
+                );
+
+            if (loginOverlay) {
+                addClass(
+                    loginOverlay,
+                    'hidden'
+                );
+            }
+
+            if (mainApp) {
+                removeClass(
+                    mainApp,
+                    'hidden'
+                );
+            }
+
+            startSessionTimers();
 
             var savedPage =
                 getSavedPage();
 
-            if (!canAccessPage(savedPage)) {
-
+            if (
+                !savedPage ||
+                !canAccessPage(savedPage)
+            ) {
                 savedPage =
                     'dashboard';
-
             }
 
             loadPage(savedPage);
@@ -1103,7 +922,7 @@
                 (
                     state.user.name ||
                     state.user.username ||
-                    'بك'
+                    'مستخدم'
                 ),
                 'success'
             );
@@ -1113,286 +932,269 @@
 
             errorEl.textContent =
                 '❌ ' +
-                String(
+                (
                     error.message ||
                     'تعذر تسجيل الدخول'
                 );
 
-            errorEl.classList.add(
-                'show'
-            );
+            errorEl.classList.add('show');
 
         })
         .finally(function () {
 
-            loginBtn.disabled =
-                false;
-
-            loginBtn.classList.remove(
-                'loading'
-            );
+            setLoginLoading(false);
 
         });
-
     }
 
-    // ============================================================
-    // 🔐 LOGOUT — USER REQUEST
-    // ============================================================
 
-    function doLogout() {
+    /* =========================================================
+       LOGOUT
+       ========================================================= */
 
-        if (state.loggingOut) {
+    function requestLogoutFromUser() {
 
+        if (!state.authenticated) {
             return;
-
         }
 
         showModal({
-
-            title:
-                '⚠️ تسجيل الخروج',
-
+            title: '⚠️ تسجيل الخروج',
             message:
                 'هل أنت متأكد من تسجيل الخروج؟',
-
             confirmText:
                 'تسجيل الخروج',
-
             confirmClass:
                 'btn-danger',
-
             cancelText:
                 'إلغاء'
-
-        })
-        .then(function (confirmed) {
+        }).then(function (confirmed) {
 
             if (!confirmed) {
-
                 return;
-
             }
 
-            performLogout();
-
+            performServerLogout(false);
         });
-
     }
 
-    // ============================================================
-    // 🔐 LOGOUT — SERVER
-    // ============================================================
 
-    function performLogout() {
+    function performServerLogout(silent) {
 
-        if (state.loggingOut) {
-
+        if (state.logoutInProgress) {
             return;
-
         }
 
-        state.loggingOut =
-            true;
-
-        stopSessionTimers();
+        state.logoutInProgress = true;
 
         var logoutBtn =
             getElement('logoutBtn');
 
         if (logoutBtn) {
-
-            logoutBtn.disabled =
-                true;
-
+            logoutBtn.disabled = true;
             logoutBtn.textContent =
                 '⏳ جاري تسجيل الخروج...';
-
         }
 
-        fetchJSON(
+        fetchWithTimeout(
             API + '/auth/logout',
             {
-
                 method: 'POST',
 
-                keepalive: true
+                headers:
+                    buildHeaders(),
 
+                credentials: 'include'
             }
         )
-        .then(function (result) {
+        .then(function (response) {
+
+            return parseJSONResponse(
+                response
+            ).then(function (data) {
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        getResponseError(
+                            data,
+                            'فشل تسجيل الخروج من الخادم'
+                        )
+                    );
+                }
+
+                return data;
+            });
+        })
+        .then(function () {
 
             /*
-             * Even if server returns 401 because the session
-             * already expired, the local UI is still cleaned.
+             * Server confirmed logout.
              */
+            performLocalLogoutUI();
 
-            if (
-                result.response.ok ||
-                result.response.status === 401
-            ) {
+            if (!silent) {
+                showToast(
+                    '👋 تم تسجيل الخروج بنجاح',
+                    'success'
+                );
+            }
+
+        })
+        .catch(function (error) {
+
+            /*
+             * SECURITY IMPORTANT:
+             *
+             * Do NOT claim the server session was
+             * destroyed if the request failed.
+             *
+             * We keep the authenticated state and
+             * tell the user to retry.
+             */
+            if (silent) {
+
+                /*
+                 * Automatic expiration:
+                 * Even if logout request failed,
+                 * local UI must not remain usable.
+                 */
+                performLocalLogoutUI();
 
                 showToast(
-                    '👋 تم تسجيل الخروج بأمان',
-                    'success'
+                    '⚠️ انتهت الجلسة محلياً. يرجى تسجيل الدخول مجدداً.',
+                    'warning',
+                    5000
                 );
 
             } else {
 
                 showToast(
-                    '⚠️ تعذر تأكيد الخروج من الخادم',
-                    'warning'
+                    '❌ تعذر تسجيل الخروج من الخادم: ' +
+                    (
+                        error.message ||
+                        'خطأ غير معروف'
+                    ),
+                    'error',
+                    5000
                 );
-
             }
-
-        })
-        .catch(function () {
-
-            /*
-             * Network failure does NOT prove that the server
-             * session was invalidated.
-             *
-             * Therefore the UI is cleaned, but server-side
-             * expiration/revocation MUST still exist.
-             */
-
-            showToast(
-                '⚠️ تم تنظيف الجلسة محلياً، تعذر الاتصال بالخادم',
-                'warning',
-                5000
-            );
 
         })
         .finally(function () {
 
-            resetApplicationUI();
+            state.logoutInProgress = false;
 
-            state.loggingOut =
-                false;
-
-        });
-
-    }
-
-    // ============================================================
-    // 🔐 FORCE LOGOUT
-    // ============================================================
-
-    function forceLogout() {
-
-        if (state.loggingOut) {
-
-            return;
-
-        }
-
-        state.loggingOut =
-            true;
-
-        stopSessionTimers();
-
-        fetchJSON(
-            API + '/auth/logout',
-            {
-
-                method: 'POST',
-
-                keepalive: true
-
+            if (logoutBtn) {
+                logoutBtn.disabled = false;
+                logoutBtn.textContent =
+                    'تسجيل الخروج';
             }
-        )
-        .catch(function () {
-
-            /*
-             * Ignore network failure.
-             * Server-side session TTL/revocation remains
-             * the authoritative security boundary.
-             */
-
-        })
-        .finally(function () {
-
-            resetApplicationUI();
-
-            state.loggingOut =
-                false;
-
         });
-
     }
 
-    // ============================================================
-    // 🔎 VERIFY SESSION
-    // ============================================================
+
+    /* =========================================================
+       SESSION VERIFICATION
+       ========================================================= */
 
     function verifySession() {
 
-        return fetchJSON(
+        return fetchWithTimeout(
             API + '/auth/me',
             {
+                method: 'GET',
 
-                method: 'GET'
+                credentials: 'include',
 
+                headers: {
+                    'Accept':
+                        'application/json'
+                }
             }
         )
-        .then(function (result) {
+        .then(function (response) {
 
-            var response =
-                result.response;
-
-            var data =
-                result.data || {};
-
-            if (
-                !response.ok ||
-                !data.success ||
-                !data.user
-            ) {
-
+            if (!response.ok) {
                 return false;
-
             }
 
-            state.user =
-                data.user;
+            return parseJSONResponse(
+                response
+            );
 
-            state.authenticated =
-                true;
+        })
+        .then(function (data) {
 
-            /*
-             * This browser-side timer starts when the session
-             * is restored. The SERVER MUST enforce its own
-             * absolute session expiration.
-             */
+            if (
+                data &&
+                data.success &&
+                data.user
+            ) {
 
-            state.absoluteStart =
-                Date.now();
+                state.user =
+                    data.user;
 
-            sessionFailureHandled =
-                false;
+                state.authenticated =
+                    true;
 
-            return true;
+                /*
+                 * Browser reload cannot know the
+                 * original absolute login time unless
+                 * server provides it.
+                 *
+                 * Therefore the server must enforce
+                 * the real absolute session expiration.
+                 *
+                 * Client timer is only UX protection.
+                 */
+                state.absoluteStart =
+                    Date.now();
+
+                updateUserDisplay();
+
+                buildSidebar();
+
+                startSessionTimers();
+
+                return true;
+            }
+
+            return false;
 
         })
         .catch(function () {
 
             return false;
-
         });
-
     }
 
-    // ============================================================
-    // 👤 USER DISPLAY
-    // ============================================================
+
+    /* =========================================================
+       USER DISPLAY
+       ========================================================= */
+
+    function getRoleName(role) {
+
+        var roles = {
+            admin: 'مسؤول النظام',
+            manager: 'مدير',
+            operator: 'مشغل',
+            viewer: 'مشاهد'
+        };
+
+        return (
+            roles[role] ||
+            role ||
+            'مستخدم'
+        );
+    }
+
 
     function updateUserDisplay() {
 
         if (!state.user) {
-
             return;
-
         }
 
         var name =
@@ -1426,201 +1228,146 @@
             'sidebarUserAvatar',
             name.charAt(0)
         );
-
     }
 
-    function getRoleName(role) {
 
-        var roles = {
-
-            admin:
-                'مسؤول النظام',
-
-            manager:
-                'مدير',
-
-            operator:
-                'مشغل',
-
-            viewer:
-                'مشاهد'
-
-        };
-
-        return (
-            roles[role] ||
-            role ||
-            'مستخدم'
-        );
-
-    }
-
-    // ============================================================
-    // 🔐 RBAC
-    // ============================================================
+    /* =========================================================
+       RBAC
+       ========================================================= */
 
     function hasPermission(permission) {
 
         if (!state.user) {
-
             return false;
-
         }
 
+        /*
+         * Admin bypass.
+         * Backend MUST enforce the same rule.
+         */
         if (
             state.user.role === 'admin'
         ) {
-
             return true;
-
         }
 
         var permissions =
             state.user.permissions;
 
         if (!permissions) {
-
             return false;
-
         }
 
         /*
-         * Supports:
-         * { "users.read": true }
+         * Support both:
+         * {
+         *   "users.read": true
+         * }
+         *
+         * and
+         *
+         * ["users.read"]
          */
-
-        if (
-            permissions[permission] === true
-        ) {
-
-            return true;
-
+        if (Array.isArray(permissions)) {
+            return permissions.indexOf(
+                permission
+            ) !== -1;
         }
 
-        /*
-         * Also supports arrays:
-         * ["users.read", "logs.read"]
-         */
-
-        if (
-            Array.isArray(permissions) &&
-            permissions.indexOf(permission) !== -1
-        ) {
-
-            return true;
-
-        }
-
-        return false;
-
+        return permissions[permission] === true;
     }
+
 
     function canAccessPage(page) {
 
-        if (!state.authenticated) {
-
-            return false;
-
-        }
-
         if (!ALLOWED_PAGES.has(page)) {
-
             return false;
-
         }
 
         if (
             state.user &&
             state.user.role === 'admin'
         ) {
-
             return true;
-
         }
 
         var required =
             PAGE_PERMISSIONS[page];
 
         /*
-         * No explicit permission requirement.
+         * No special permission required.
          */
-
-        if (
-            !required ||
-            required.length === 0
-        ) {
-
+        if (!required) {
             return true;
-
         }
 
-        return required.some(
-            function (permission) {
-
-                return hasPermission(
-                    permission
-                );
-
-            }
-        );
-
+        return required.some(function (permission) {
+            return hasPermission(
+                permission
+            );
+        });
     }
 
-    // ============================================================
-    // 📊 LOAD DATA
-    // ============================================================
+
+    /* =========================================================
+       DATA
+       ========================================================= */
 
     function loadAllData() {
 
         if (!state.authenticated) {
-
             return;
-
         }
 
-        loadVessels();
+        var headers =
+            buildHeaders();
 
-        if (
-            canAccessPage('users')
-        ) {
-
-            loadUsers();
-
-        }
-
-    }
-
-    function loadVessels() {
-
-        fetchJSON(
+        fetchWithTimeout(
             API + '/vessels',
             {
-
-                method: 'GET'
-
+                method: 'GET',
+                credentials: 'include',
+                headers: headers
             }
         )
-        .then(function (result) {
+        .then(function (response) {
 
-            if (
-                !result.response.ok
+            return parseJSONResponse(
+                response
+            ).then(function (data) {
+
+                if (!response.ok) {
+                    throw new Error(
+                        getResponseError(
+                            data,
+                            'فشل تحميل المراكب'
+                        )
+                    );
+                }
+
+                return data;
+            });
+        })
+        .then(function (data) {
+
+            /*
+             * Support:
+             * []
+             *
+             * and:
+             * { vessels: [] }
+             */
+            if (Array.isArray(data)) {
+                state.vessels = data;
+            } else if (
+                data &&
+                Array.isArray(data.vessels)
             ) {
-
-                throw new Error(
-                    'فشل تحميل المراكب'
-                );
-
+                state.vessels =
+                    data.vessels;
+            } else {
+                state.vessels = [];
             }
-
-            var data =
-                result.data;
-
-            state.vessels =
-                Array.isArray(data)
-                    ? data
-                    : Array.isArray(data.vessels)
-                        ? data.vessels
-                        : [];
 
             updateBadge(
                 'fleetBadge',
@@ -1630,142 +1377,148 @@
         })
         .catch(function (error) {
 
-            if (
-                state.authenticated
-            ) {
-
-                console.warn(
-                    '⚠️ Error loading vessels:',
-                    error.message
-                );
-
-            }
-
-        });
-
-    }
-
-    function loadUsers() {
-
-        fetchJSON(
-            API + '/users',
-            {
-
-                method: 'GET'
-
-            }
-        )
-        .then(function (result) {
-
-            if (
-                !result.response.ok
-            ) {
-
-                throw new Error(
-                    'فشل تحميل المستخدمين'
-                );
-
-            }
-
-            var data =
-                result.data;
-
-            state.users =
-                Array.isArray(data)
-                    ? data
-                    : Array.isArray(data.users)
-                        ? data.users
-                        : [];
-
-            updateBadge(
-                'usersBadge',
-                state.users.length
+            console.warn(
+                '⚠️ Vessels:',
+                error.message
             );
-
-        })
-        .catch(function (error) {
-
-            if (
-                state.authenticated
-            ) {
-
-                console.warn(
-                    '⚠️ Error loading users:',
-                    error.message
-                );
-
-            }
-
         });
 
+
+        /*
+         * Users are requested ONLY if
+         * current user can access them.
+         */
+        if (canAccessPage('users')) {
+
+            fetchWithTimeout(
+                API + '/users',
+                {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: headers
+                }
+            )
+            .then(function (response) {
+
+                return parseJSONResponse(
+                    response
+                ).then(function (data) {
+
+                    if (!response.ok) {
+                        throw new Error(
+                            getResponseError(
+                                data,
+                                'فشل تحميل المستخدمين'
+                            )
+                        );
+                    }
+
+                    return data;
+                });
+            })
+            .then(function (data) {
+
+                if (Array.isArray(data)) {
+                    state.users = data;
+                } else if (
+                    data &&
+                    Array.isArray(data.users)
+                ) {
+                    state.users =
+                        data.users;
+                } else {
+                    state.users = [];
+                }
+
+                updateBadge(
+                    'usersBadge',
+                    state.users.length
+                );
+
+            })
+            .catch(function (error) {
+
+                console.warn(
+                    '⚠️ Users:',
+                    error.message
+                );
+            });
+        }
     }
+
 
     function updateBadge(id, count) {
 
-        var el =
-            getElement(id);
+        var el = getElement(id);
 
         if (!el) {
-
             return;
-
         }
 
-        var numericCount =
-            Number(count);
-
-        if (
-            !Number.isFinite(
-                numericCount
-            )
-        ) {
-
-            numericCount = 0;
-
-        }
-
-        numericCount =
-            Math.max(
-                0,
-                Math.floor(
-                    numericCount
-                )
-            );
+        var value =
+            Number(count) || 0;
 
         el.textContent =
-            numericCount > 99
-                ? '99+'
-                : String(numericCount);
+            String(value);
 
         el.style.display =
-            numericCount > 0
-                ? 'inline-flex'
+            value > 0
+                ? 'inline'
                 : 'none';
-
     }
 
-    // ============================================================
-    // 📄 PAGE LOADING
-    // ============================================================
 
-    var loadingPages = Object.create(null);
+    /* =========================================================
+       PAGE STORAGE
+       ========================================================= */
+
+    function getSavedPage() {
+
+        try {
+
+            var page =
+                sessionStorage.getItem(
+                    PAGE_KEY
+                );
+
+            if (
+                page &&
+                ALLOWED_PAGES.has(page)
+            ) {
+                return page;
+            }
+
+        } catch (e) {}
+
+        return 'dashboard';
+    }
+
+
+    /* =========================================================
+       PAGE LOADER
+       ========================================================= */
+
+    function clearElement(el) {
+
+        if (!el) {
+            return;
+        }
+
+        while (el.firstChild) {
+            el.removeChild(
+                el.firstChild
+            );
+        }
+    }
+
 
     function loadPage(page) {
 
         if (!state.authenticated) {
-
-            showToast(
-                '🔒 يجب تسجيل الدخول أولاً',
-                'error'
-            );
-
             return;
-
         }
 
-        if (
-            !ALLOWED_PAGES.has(page)
-        ) {
+        if (!ALLOWED_PAGES.has(page)) {
 
             showToast(
                 '⚠️ الصفحة غير مصرح بها',
@@ -1773,12 +1526,9 @@
             );
 
             return;
-
         }
 
-        if (
-            !canAccessPage(page)
-        ) {
+        if (!canAccessPage(page)) {
 
             showToast(
                 '🔒 ليس لديك صلاحية للوصول إلى هذه الصفحة',
@@ -1786,45 +1536,11 @@
             );
 
             return;
-
         }
 
-        if (
-            loadingPages[page]
-        ) {
-
+        if (state.loadingPages[page]) {
             return;
-
         }
-
-        state.page =
-            page;
-
-        try {
-
-            sessionStorage.setItem(
-                PAGE_KEY,
-                page
-            );
-
-        } catch (error) {
-
-            /*
-             * Non-sensitive UI preference only.
-             */
-
-        }
-
-        document
-            .querySelectorAll('.nav-btn')
-            .forEach(function (btn) {
-
-                btn.classList.toggle(
-                    'active',
-                    btn.dataset.page === page
-                );
-
-            });
 
         var container =
             getElement(
@@ -1837,72 +1553,55 @@
             );
 
         if (!container) {
-
             return;
-
         }
 
-        loadingPages[page] =
+        state.page = page;
+
+        try {
+            sessionStorage.setItem(
+                PAGE_KEY,
+                page
+            );
+        } catch (e) {}
+
+        document
+            .querySelectorAll('.nav-btn')
+            .forEach(function (button) {
+
+                button.classList.toggle(
+                    'active',
+                    button.dataset.page === page
+                );
+            });
+
+        state.loadingPages[page] =
             true;
 
         if (loader) {
-
             removeClass(
                 loader,
                 'hidden'
             );
-
         }
 
-        clearElement(
-            container
-        );
+        clearElement(container);
 
-        /*
-         * Page names come ONLY from ALLOWED_PAGES.
-         * No user-controlled URL path is accepted.
-         */
-
-        var pageUrl =
+        fetchWithTimeout(
             '/pages/' +
-            page +
-            '.html';
-
-        fetch(
-            pageUrl,
+            encodeURIComponent(page) +
+            '.html',
             {
-
                 method: 'GET',
-
                 credentials: 'include',
-
                 cache: 'no-store',
-
                 headers: {
-
                     'Accept':
                         'text/html'
-
                 }
-
             }
         )
         .then(function (response) {
-
-            if (
-                response.status === 401 ||
-                response.status === 403
-            ) {
-
-                handleSessionFailure(
-                    response.status
-                );
-
-                throw new Error(
-                    'انتهت صلاحية الجلسة'
-                );
-
-            }
 
             if (!response.ok) {
 
@@ -1911,18 +1610,18 @@
                     response.status +
                     ')'
                 );
-
             }
 
             return response.text();
-
         })
         .then(function (html) {
 
             /*
-             * Parse the page in an isolated document.
+             * The HTML pages are TRUSTED application
+             * resources.
+             *
+             * Remove scripts before inserting them.
              */
-
             var parser =
                 new DOMParser();
 
@@ -1933,63 +1632,59 @@
                 );
 
             /*
-             * Remove executable scripts.
-             *
-             * IMPORTANT:
-             * The loaded pages should contain only trusted
-             * application templates.
+             * Remove executable content.
              */
-
             doc
-                .querySelectorAll('script')
-                .forEach(function (script) {
-
-                    script.remove();
-
+                .querySelectorAll(
+                    'script, iframe, object, embed'
+                )
+                .forEach(function (node) {
+                    node.remove();
                 });
 
             /*
-             * Also remove potentially dangerous document-level
-             * elements if a page file is accidentally malformed.
+             * Remove event-handler attributes.
+             *
+             * This is defense-in-depth against
+             * accidental inline event handlers.
              */
-
             doc
-                .querySelectorAll(
-                    'base, object, embed, iframe'
-                )
-                .forEach(function (element) {
+                .querySelectorAll('*')
+                .forEach(function (node) {
 
-                    element.remove();
+                    Array
+                        .from(node.attributes)
+                        .forEach(function (attr) {
 
+                            if (
+                                attr.name
+                                    .toLowerCase()
+                                    .indexOf('on') === 0
+                            ) {
+                                node.removeAttribute(
+                                    attr.name
+                                );
+                            }
+                        });
                 });
 
             var fragment =
                 document.createDocumentFragment();
 
             Array
-                .from(
-                    doc.body.childNodes
-                )
-                .forEach(function (child) {
+                .from(doc.body.childNodes)
+                .forEach(function (node) {
 
                     fragment.appendChild(
-                        child.cloneNode(true)
+                        node.cloneNode(true)
                     );
-
                 });
+
+            clearElement(container);
 
             container.appendChild(
                 fragment
             );
-
-            if (loader) {
-
-                addClass(
-                    loader,
-                    'hidden'
-                );
-
-            }
 
             document.title =
                 '⚓ ' +
@@ -1998,18 +1693,26 @@
                     page
                 );
 
-            loadingPages[page] =
+            if (loader) {
+                addClass(
+                    loader,
+                    'hidden'
+                );
+            }
+
+            state.loadingPages[page] =
                 false;
 
+            /*
+             * Reset only idle timeout.
+             */
             resetIdleTimer();
 
             /*
-             * Notify page modules that a new page was loaded.
-             *
-             * No executable code is loaded from the HTML.
+             * Allow loaded page to initialize
+             * through a controlled custom event.
              */
-
-            document.dispatchEvent(
+            var event =
                 new CustomEvent(
                     'marine:page-loaded',
                     {
@@ -2017,132 +1720,107 @@
                             page: page
                         }
                     }
-                )
+                );
+
+            document.dispatchEvent(
+                event
             );
 
         })
         .catch(function (error) {
 
-            if (loader) {
+            state.loadingPages[page] =
+                false;
 
+            if (loader) {
                 addClass(
                     loader,
                     'hidden'
                 );
-
             }
 
-            loadingPages[page] =
-                false;
-
-            if (
-                !state.authenticated
-            ) {
-
-                return;
-
-            }
+            clearElement(container);
 
             var errorDiv =
-                createElement(
-                    'div',
-                    {
-                        className:
-                            'error-container'
-                    }
-                );
+                createElement('div', {
+                    className:
+                        'error-container'
+                });
 
             var icon =
-                createElement(
-                    'div',
-                    {
-                        className:
-                            'error-icon',
-                        textContent:
-                            '❌'
-                    }
-                );
+                createElement('div', {
+                    className:
+                        'error-icon',
+                    textContent: '❌'
+                });
 
             var title =
-                createElement(
-                    'h2',
-                    {
-                        className:
-                            'error-title',
-                        textContent:
-                            'فشل تحميل الصفحة'
-                    }
-                );
+                createElement('h2', {
+                    className:
+                        'error-title',
+                    textContent:
+                        'فشل تحميل الصفحة'
+                });
 
-            var msg =
-                createElement(
-                    'p',
-                    {
-                        className:
-                            'error-message',
-                        textContent:
-                            String(
-                                error.message ||
-                                'حدث خطأ غير متوقع'
-                            )
-                    }
-                );
+            var message =
+                createElement('p', {
+                    className:
+                        'error-message',
+                    textContent:
+                        error.message ||
+                        'حدث خطأ غير متوقع'
+                });
 
-            var btn =
-                createElement(
-                    'button',
-                    {
-                        className:
-                            'btn-gold',
-                        type:
-                            'button',
-                        textContent:
-                            '📊 العودة للرئيسية'
-                    }
-                );
+            var retry =
+                createElement('button', {
+                    className:
+                        'btn-gold',
+                    type: 'button',
+                    textContent:
+                        '🔄 إعادة المحاولة'
+                });
 
-            btn.addEventListener(
+            retry.addEventListener(
                 'click',
                 function () {
-
-                    loadPage(
-                        'dashboard'
-                    );
-
+                    loadPage(page);
                 }
             );
 
-            errorDiv.appendChild(
-                icon
+            var home =
+                createElement('button', {
+                    className:
+                        'btn-secondary',
+                    type: 'button',
+                    textContent:
+                        '📊 العودة للرئيسية'
+                });
+
+            home.addEventListener(
+                'click',
+                function () {
+                    loadPage(
+                        'dashboard'
+                    );
+                }
             );
 
-            errorDiv.appendChild(
-                title
-            );
-
-            errorDiv.appendChild(
-                msg
-            );
-
-            errorDiv.appendChild(
-                btn
-            );
-
-            clearElement(
-                container
-            );
+            errorDiv.appendChild(icon);
+            errorDiv.appendChild(title);
+            errorDiv.appendChild(message);
+            errorDiv.appendChild(retry);
+            errorDiv.appendChild(home);
 
             container.appendChild(
                 errorDiv
             );
-
         });
-
     }
 
-    // ============================================================
-    // 🏗️ SIDEBAR
-    // ============================================================
+
+    /* =========================================================
+       SIDEBAR
+       ========================================================= */
 
     function buildSidebar() {
 
@@ -2152,737 +1830,429 @@
             );
 
         if (!nav) {
-
             return;
-
         }
 
-        clearElement(
-            nav
-        );
+        clearElement(nav);
 
         var groups = [
 
             {
-
-                title:
-                    'الرئيسية',
-
+                title: 'الرئيسية',
                 items: [
-
                     {
-                        page:
-                            'dashboard',
-
-                        icon:
-                            'fa-chart-pie',
-
-                        label:
-                            'لوحة التحكم'
+                        page: 'dashboard',
+                        icon: 'fa-chart-pie',
+                        label: 'لوحة التحكم'
                     },
-
                     {
-                        page:
-                            'fleet',
-
-                        icon:
-                            'fa-ship',
-
-                        label:
-                            'السجل العام',
-
-                        badge:
-                            'fleetBadge'
+                        page: 'fleet',
+                        icon: 'fa-ship',
+                        label: 'السجل العام',
+                        badge: 'fleetBadge'
                     }
-
                 ]
-
             },
 
             {
-
-                title:
-                    'إدارة الأسطول',
-
+                title: 'إدارة الأسطول',
                 items: [
-
                     {
-                        page:
-                            'maintenance',
-
-                        icon:
-                            'fa-wrench',
-
-                        label:
-                            'الصيانة',
-
+                        page: 'maintenance',
+                        icon: 'fa-wrench',
+                        label: 'الصيانة',
                         badge:
                             'maintenanceBadge',
-
                         badgeClass:
                             'warning'
                     },
-
                     {
-                        page:
-                            'efficiency',
-
-                        icon:
-                            'fa-chart-line',
-
-                        label:
-                            'الجاهزية'
+                        page: 'efficiency',
+                        icon: 'fa-chart-line',
+                        label: 'الجاهزية'
                     },
-
                     {
-                        page:
-                            'support',
-
-                        icon:
-                            'fa-headset',
-
-                        label:
-                            'الدعم'
+                        page: 'support',
+                        icon: 'fa-headset',
+                        label: 'الدعم'
                     }
-
                 ]
-
             },
 
             {
-
-                title:
-                    'العمليات',
-
+                title: 'العمليات',
                 items: [
-
                     {
-                        page:
-                            'notes',
-
-                        icon:
-                            'fa-sticky-note',
-
-                        label:
-                            'Note Verbale'
+                        page: 'notes',
+                        icon: 'fa-sticky-note',
+                        label: 'Note Verbale'
                     },
-
                     {
-                        page:
-                            'monitoring',
-
-                        icon:
-                            'fa-map-marked-alt',
-
+                        page: 'monitoring',
+                        icon: 'fa-map-marked-alt',
                         label:
                             'المراقبة الشاملة',
-
                         badge:
                             'sessionsBadge',
-
                         badgeClass:
                             'success'
                     }
-
                 ]
-
             },
 
             {
-
-                title:
-                    'الإدارة',
-
+                title: 'الإدارة',
                 items: [
-
                     {
-                        page:
-                            'users',
-
-                        icon:
-                            'fa-users',
-
-                        label:
-                            'المستخدمين',
-
+                        page: 'users',
+                        icon: 'fa-users',
+                        label: 'المستخدمين',
                         badge:
                             'usersBadge'
                     },
-
                     {
-                        page:
-                            'logs',
-
-                        icon:
-                            'fa-history',
-
+                        page: 'logs',
+                        icon: 'fa-history',
                         label:
-                            'سجلات النظام',
-
+                            'سجلات الصيانة',
                         badge:
                             'logsBadge'
                     }
-
                 ]
-
             },
 
             {
-
-                title:
-                    'متقدم',
-
+                title: 'متقدم',
                 items: [
-
                     {
-                        page:
-                            'ai-assistant',
-
-                        icon:
-                            'fa-robot',
-
+                        page: 'ai-assistant',
+                        icon: 'fa-robot',
                         label:
                             'المساعد الذكي',
-
-                        badge:
-                            'AI',
-
+                        badge: 'AI',
                         badgeClass:
                             'success'
                     },
-
                     {
-                        page:
-                            'settings',
-
-                        icon:
-                            'fa-cog',
-
+                        page: 'settings',
+                        icon: 'fa-cog',
                         label:
                             'الإعدادات'
                     }
-
                 ]
-
             }
-
         ];
 
-        groups.forEach(
-            function (group) {
 
-                var visibleItems =
-                    group.items.filter(
-                        function (item) {
+        groups.forEach(function (group) {
 
-                            return canAccessPage(
-                                item.page
-                            );
-
-                        }
-                    );
-
-                /*
-                 * Don't display an empty group.
-                 */
-
-                if (
-                    visibleItems.length === 0
-                ) {
-
-                    return;
-
-                }
-
-                var groupDiv =
-                    createElement(
-                        'div',
-                        {
-                            className:
-                                'nav-group'
-                        }
-                    );
-
-                var titleSpan =
-                    createElement(
-                        'span',
-                        {
-                            className:
-                                'nav-group-title',
-                            textContent:
-                                group.title
-                        }
-                    );
-
-                groupDiv.appendChild(
-                    titleSpan
-                );
-
-                visibleItems.forEach(
+            var visibleItems =
+                group.items.filter(
                     function (item) {
-
-                        var btn =
-                            createElement(
-                                'button',
-                                {
-
-                                    className:
-                                        'nav-btn' +
-                                        (
-                                            state.page === item.page
-                                                ? ' active'
-                                                : ''
-                                        ),
-
-                                    type:
-                                        'button',
-
-                                    dataset:
-                                        {
-                                            page:
-                                                item.page
-                                        }
-
-                                }
-                            );
-
-                        var icon =
-                            createElement(
-                                'i',
-                                {
-                                    className:
-                                        'fas ' +
-                                        item.icon,
-                                    'aria-hidden':
-                                        'true'
-                                }
-                            );
-
-                        btn.appendChild(
-                            icon
+                        return canAccessPage(
+                            item.page
                         );
-
-                        var text =
-                            document.createTextNode(
-                                ' ' +
-                                item.label +
-                                ' '
-                            );
-
-                        btn.appendChild(
-                            text
-                        );
-
-                        if (item.badge) {
-
-                            var badge =
-                                createElement(
-                                    'span',
-                                    {
-
-                                        className:
-                                            'nav-badge' +
-                                            (
-                                                item.badgeClass
-                                                    ? ' ' +
-                                                      item.badgeClass
-                                                    : ''
-                                            ),
-
-                                        id:
-                                            item.badge,
-
-                                        textContent:
-                                            item.badge === 'AI'
-                                                ? 'AI'
-                                                : '0'
-
-                                    }
-                                );
-
-                            btn.appendChild(
-                                badge
-                            );
-
-                        }
-
-                        btn.addEventListener(
-                            'click',
-                            function () {
-
-                                if (
-                                    !state.authenticated
-                                ) {
-
-                                    showToast(
-                                        '🔒 يجب تسجيل الدخول أولاً',
-                                        'error'
-                                    );
-
-                                    return;
-
-                                }
-
-                                if (
-                                    !canAccessPage(
-                                        item.page
-                                    )
-                                ) {
-
-                                    showToast(
-                                        '🔒 ليس لديك صلاحية للوصول إلى هذه الصفحة',
-                                        'error'
-                                    );
-
-                                    return;
-
-                                }
-
-                                loadPage(
-                                    item.page
-                                );
-
-                                var sidebar =
-                                    getElement(
-                                        'sidebar'
-                                    );
-
-                                if (sidebar) {
-
-                                    removeClass(
-                                        sidebar,
-                                        'open'
-                                    );
-
-                                }
-
-                            }
-                        );
-
-                        groupDiv.appendChild(
-                            btn
-                        );
-
                     }
                 );
 
-                nav.appendChild(
-                    groupDiv
-                );
-
-            }
-        );
-
-    }
-
-    // ============================================================
-    // 🔑 PASSWORD TOGGLE
-    // ============================================================
-
-    function initPasswordToggle() {
-
-        var button =
-            getElement(
-                'togglePassword'
-            );
-
-        var password =
-            getElement(
-                'password'
-            );
-
-        if (
-            !button ||
-            !password
-        ) {
-
-            return;
-
-        }
-
-        button.addEventListener(
-            'click',
-            function () {
-
-                var visible =
-                    password.type === 'text';
-
-                password.type =
-                    visible
-                        ? 'password'
-                        : 'text';
-
-                var icon =
-                    button.querySelector(
-                        'i'
-                    );
-
-                if (icon) {
-
-                    icon.classList.toggle(
-                        'fa-eye',
-                        visible
-                    );
-
-                    icon.classList.toggle(
-                        'fa-eye-slash',
-                        !visible
-                    );
-
-                }
-
-                button.setAttribute(
-                    'aria-label',
-                    visible
-                        ? 'إظهار كلمة المرور'
-                        : 'إخفاء كلمة المرور'
-                );
-
-            }
-        );
-
-    }
-
-    // ============================================================
-    // 🔑 FORGOT PASSWORD
-    // ============================================================
-
-    function openForgotPassword() {
-
-        var modal =
-            getElement(
-                'forgotModal'
-            );
-
-        var email =
-            getElement(
-                'resetEmail'
-            );
-
-        var error =
-            getElement(
-                'resetError'
-            );
-
-        if (!modal) {
-
-            return;
-
-        }
-
-        if (email) {
-
-            email.value = '';
-
-        }
-
-        if (error) {
-
-            error.textContent =
-                '';
-
-            error.className =
-                'error-msg';
-
-        }
-
-        removeClass(
-            modal,
-            'hidden'
-        );
-
-        if (email) {
-
-            window.setTimeout(
-                function () {
-
-                    email.focus();
-
-                },
-                50
-            );
-
-        }
-
-    }
-
-    function closeForgotPassword() {
-
-        var modal =
-            getElement(
-                'forgotModal'
-            );
-
-        if (modal) {
-
-            addClass(
-                modal,
-                'hidden'
-            );
-
-        }
-
-    }
-
-    function submitForgotPassword() {
-
-        var emailEl =
-            getElement(
-                'resetEmail'
-            );
-
-        var errorEl =
-            getElement(
-                'resetError'
-            );
-
-        var submitBtn =
-            getElement(
-                'forgotSubmit'
-            );
-
-        if (
-            !emailEl ||
-            !errorEl ||
-            !submitBtn
-        ) {
-
-            return;
-
-        }
-
-        var email =
-            String(
-                emailEl.value || ''
-            ).trim();
-
-        errorEl.textContent =
-            '';
-
-        errorEl.className =
-            'error-msg';
-
-        if (!email) {
-
-            errorEl.textContent =
-                '⚠️ يرجى إدخال البريد الإلكتروني';
-
-            errorEl.classList.add(
-                'show'
-            );
-
-            return;
-
-        }
-
-        /*
-         * Client validation only.
-         * Server MUST validate.
-         */
-
-        if (
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                .test(email)
-        ) {
-
-            errorEl.textContent =
-                '⚠️ البريد الإلكتروني غير صالح';
-
-            errorEl.classList.add(
-                'show'
-            );
-
-            return;
-
-        }
-
-        submitBtn.disabled =
-            true;
-
-        submitBtn.textContent =
-            '⏳ جاري الإرسال...';
-
-        fetchJSON(
-            API + '/auth/forgot-password',
-            {
-
-                method:
-                    'POST',
-
-                json:
-                    true,
-
-                body:
-                    JSON.stringify({
-
-                        email:
-                            email
-
-                    })
-
-            }
-        )
-        .then(function (result) {
-
-            var response =
-                result.response;
-
-            var data =
-                result.data || {};
-
             /*
-             * Generic server response is preferred.
+             * Don't render empty groups.
              */
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.error ||
-                    'تعذر معالجة الطلب'
-                );
-
+            if (
+                visibleItems.length === 0
+            ) {
+                return;
             }
 
-            closeForgotPassword();
+            var groupDiv =
+                createElement('div', {
+                    className:
+                        'nav-group'
+                });
 
-            showToast(
-                '📧 إذا كان البريد مسجلاً، فسيتم إرسال رابط الاستعادة.',
-                'success',
-                5000
+            var title =
+                createElement('span', {
+                    className:
+                        'nav-group-title',
+                    textContent:
+                        group.title
+                });
+
+            groupDiv.appendChild(
+                title
             );
 
-        })
-        .catch(function (error) {
 
-            errorEl.textContent =
-                '❌ ' +
-                String(
-                    error.message ||
-                    'حدث خطأ'
-                );
+            visibleItems.forEach(
+                function (item) {
 
-            errorEl.classList.add(
-                'show'
+                    var button =
+                        createElement(
+                            'button',
+                            {
+                                className:
+                                    'nav-btn' +
+                                    (
+                                        state.page ===
+                                        item.page
+                                            ? ' active'
+                                            : ''
+                                    ),
+                                type: 'button',
+                                dataset: {
+                                    page:
+                                        item.page
+                                }
+                            }
+                        );
+
+                    var icon =
+                        createElement('i', {
+                            className:
+                                'fas ' +
+                                item.icon,
+                            'aria-hidden':
+                                'true'
+                        });
+
+                    var text =
+                        document.createTextNode(
+                            ' ' +
+                            item.label +
+                            ' '
+                        );
+
+                    button.appendChild(
+                        icon
+                    );
+
+                    button.appendChild(
+                        text
+                    );
+
+
+                    if (item.badge) {
+
+                        var badge =
+                            createElement(
+                                'span',
+                                {
+                                    className:
+                                        'nav-badge' +
+                                        (
+                                            item.badgeClass
+                                                ? ' ' +
+                                                  item.badgeClass
+                                                : ''
+                                        ),
+                                    id:
+                                        item.badge,
+                                    textContent:
+                                        item.badge ===
+                                        'AI'
+                                            ? 'AI'
+                                            : '0'
+                                }
+                            );
+
+                        button.appendChild(
+                            badge
+                        );
+                    }
+
+
+                    button.addEventListener(
+                        'click',
+                        function () {
+
+                            if (
+                                !canAccessPage(
+                                    item.page
+                                )
+                            ) {
+
+                                showToast(
+                                    '🔒 ليس لديك صلاحية للوصول إلى هذه الصفحة',
+                                    'error'
+                                );
+
+                                return;
+                            }
+
+                            loadPage(
+                                item.page
+                            );
+
+                            closeSidebarMobile();
+                        }
+                    );
+
+
+                    groupDiv.appendChild(
+                        button
+                    );
+                }
             );
 
-        })
-        .finally(function () {
 
-            submitBtn.disabled =
-                false;
-
-            submitBtn.textContent =
-                'إرسال رابط الاستعادة';
-
+            nav.appendChild(
+                groupDiv
+            );
         });
-
     }
 
-    // ============================================================
-    // 🏗️ MODAL
-    // ============================================================
+
+    /* =========================================================
+       MOBILE SIDEBAR
+       ========================================================= */
+
+    function closeSidebarMobile() {
+
+        var sidebar =
+            getElement('sidebar');
+
+        if (!sidebar) {
+            return;
+        }
+
+        sidebar.classList.remove(
+            'open'
+        );
+
+        document.body.classList.remove(
+            'sidebar-open'
+        );
+    }
+
+
+    function toggleSidebarMobile() {
+
+        var sidebar =
+            getElement('sidebar');
+
+        if (!sidebar) {
+            return;
+        }
+
+        sidebar.classList.toggle(
+            'open'
+        );
+
+        document.body.classList.toggle(
+            'sidebar-open'
+        );
+    }
+
+
+    /* =========================================================
+       MODAL SYSTEM
+       ========================================================= */
 
     var modalResolve = null;
+
+    var modalHandlers = {
+        confirm: null,
+        cancel: null,
+        close: null,
+        overlay: null
+    };
+
+
+    function closeModal(result) {
+
+        var overlay =
+            getElement(
+                'modalOverlay'
+            );
+
+        if (overlay) {
+            addClass(
+                overlay,
+                'hidden'
+            );
+        }
+
+        var resolve =
+            modalResolve;
+
+        modalResolve = null;
+
+        if (resolve) {
+            resolve(
+                Boolean(result)
+            );
+        }
+    }
+
+
+    function removeModalHandlers() {
+
+        var overlay =
+            getElement(
+                'modalOverlay'
+            );
+
+        var confirm =
+            getElement(
+                'modalConfirm'
+            );
+
+        var cancel =
+            getElement(
+                'modalCancel'
+            );
+
+        var close =
+            getElement(
+                'modalClose'
+            );
+
+        if (
+            confirm &&
+            modalHandlers.confirm
+        ) {
+            confirm.removeEventListener(
+                'click',
+                modalHandlers.confirm
+            );
+        }
+
+        if (
+            cancel &&
+            modalHandlers.cancel
+        ) {
+            cancel.removeEventListener(
+                'click',
+                modalHandlers.cancel
+            );
+        }
+
+        if (
+            close &&
+            modalHandlers.close
+        ) {
+            close.removeEventListener(
+                'click',
+                modalHandlers.close
+            );
+        }
+
+        if (
+            overlay &&
+            modalHandlers.overlay
+        ) {
+            overlay.removeEventListener(
+                'click',
+                modalHandlers.overlay
+            );
+        }
+
+        modalHandlers.confirm = null;
+        modalHandlers.cancel = null;
+        modalHandlers.close = null;
+        modalHandlers.overlay = null;
+    }
+
 
     function showModal(options) {
 
@@ -2907,17 +2277,17 @@
                         'modalBody'
                     );
 
-                var confirmBtn =
+                var confirm =
                     getElement(
                         'modalConfirm'
                     );
 
-                var cancelBtn =
+                var cancel =
                     getElement(
                         'modalCancel'
                     );
 
-                var closeBtn =
+                var close =
                     getElement(
                         'modalClose'
                     );
@@ -2926,29 +2296,28 @@
                     !overlay ||
                     !title ||
                     !body ||
-                    !confirmBtn ||
-                    !cancelBtn ||
-                    !closeBtn
+                    !confirm ||
+                    !cancel ||
+                    !close
                 ) {
-
                     resolve(false);
-
                     return;
-
                 }
 
                 /*
-                 * Prevent unresolved modal promises.
+                 * Prevent stale listeners.
                  */
+                removeModalHandlers();
 
+                /*
+                 * Prevent previous unresolved promise.
+                 */
                 if (modalResolve) {
-
                     modalResolve(false);
-
-                    modalResolve =
-                        null;
-
                 }
+
+                modalResolve =
+                    resolve;
 
                 title.textContent =
                     options.title ||
@@ -2958,468 +2327,405 @@
                     options.message ||
                     'هل أنت متأكد؟';
 
-                confirmBtn.textContent =
+                confirm.textContent =
                     options.confirmText ||
                     'تأكيد';
 
-                confirmBtn.className =
-                    'btn ' +
-                    (
-                        options.confirmClass ||
-                        'btn-primary'
-                    );
+                confirm.className =
+                    options.confirmClass ||
+                    'btn-primary';
 
-                cancelBtn.textContent =
+                cancel.textContent =
                     options.cancelText ||
                     'إلغاء';
 
-                cancelBtn.style.display =
+                cancel.style.display =
                     options.showCancel === false
                         ? 'none'
                         : 'inline-flex';
 
-                /*
-                 * Clone buttons so old listeners disappear.
-                 */
 
-                var newConfirm =
-                    confirmBtn.cloneNode(
-                        true
-                    );
-
-                var newCancel =
-                    cancelBtn.cloneNode(
-                        true
-                    );
-
-                var newClose =
-                    closeBtn.cloneNode(
-                        true
-                    );
-
-                confirmBtn.parentNode.replaceChild(
-                    newConfirm,
-                    confirmBtn
-                );
-
-                cancelBtn.parentNode.replaceChild(
-                    newCancel,
-                    cancelBtn
-                );
-
-                closeBtn.parentNode.replaceChild(
-                    newClose,
-                    closeBtn
-                );
-
-                var finished =
-                    false;
-
-                var cleanup =
-                    function (result) {
-
-                        if (finished) {
-
-                            return;
-
-                        }
-
-                        finished =
-                            true;
-
-                        addClass(
-                            overlay,
-                            'hidden'
-                        );
-
-                        if (
-                            modalResolve
-                        ) {
-
-                            var resolver =
-                                modalResolve;
-
-                            modalResolve =
-                                null;
-
-                            resolver(
-                                Boolean(result)
-                            );
-
-                        }
-
+                modalHandlers.confirm =
+                    function () {
+                        closeModal(true);
                     };
 
-                modalResolve =
-                    resolve;
-
-                newConfirm.addEventListener(
-                    'click',
+                modalHandlers.cancel =
                     function () {
+                        closeModal(false);
+                    };
 
-                        cleanup(true);
-
-                    }
-                );
-
-                newCancel.addEventListener(
-                    'click',
+                modalHandlers.close =
                     function () {
+                        closeModal(false);
+                    };
 
-                        cleanup(false);
-
-                    }
-                );
-
-                newClose.addEventListener(
-                    'click',
-                    function () {
-
-                        cleanup(false);
-
-                    }
-                );
-
-                overlay.onclick =
+                modalHandlers.overlay =
                     function (event) {
 
                         if (
                             event.target ===
                             overlay
                         ) {
-
-                            cleanup(false);
-
+                            closeModal(false);
                         }
-
                     };
+
+
+                confirm.addEventListener(
+                    'click',
+                    modalHandlers.confirm
+                );
+
+                cancel.addEventListener(
+                    'click',
+                    modalHandlers.cancel
+                );
+
+                close.addEventListener(
+                    'click',
+                    modalHandlers.close
+                );
+
+                overlay.addEventListener(
+                    'click',
+                    modalHandlers.overlay
+                );
 
                 removeClass(
                     overlay,
                     'hidden'
                 );
-
             }
         );
-
     }
 
-    // ============================================================
-    // 📱 SIDEBAR CONTROLS
-    // ============================================================
 
-    function initSidebarControls() {
+    /* =========================================================
+       FORGOT PASSWORD
+       ========================================================= */
 
-        var menuToggle =
+    function openForgotPassword() {
+
+        var modal =
             getElement(
-                'menuToggle'
+                'forgotModal'
             );
 
-        var sidebar =
+        var email =
             getElement(
-                'sidebar'
+                'resetEmail'
             );
 
-        var sidebarClose =
+        var error =
             getElement(
-                'sidebarClose'
+                'resetError'
             );
 
-        if (
-            menuToggle &&
-            sidebar
-        ) {
-
-            menuToggle.addEventListener(
-                'click',
-                function () {
-
-                    sidebar.classList.toggle(
-                        'open'
-                    );
-
-                }
-            );
-
-        }
-
-        if (
-            sidebarClose &&
-            sidebar
-        ) {
-
-            sidebarClose.addEventListener(
-                'click',
-                function () {
-
-                    removeClass(
-                        sidebar,
-                        'open'
-                    );
-
-                }
-            );
-
-        }
-
-    }
-
-    // ============================================================
-    // 🔔 NOTIFICATIONS
-    // ============================================================
-
-    function updateNotificationBadge(
-        count
-    ) {
-
-        var badge =
-            getElement(
-                'notifBadge'
-            );
-
-        if (!badge) {
-
+        if (!modal) {
             return;
-
         }
 
-        var numeric =
-            Number(count);
-
-        if (
-            !Number.isFinite(
-                numeric
-            )
-        ) {
-
-            numeric = 0;
-
+        if (error) {
+            error.textContent = '';
+            error.className =
+                'error-msg';
         }
 
-        numeric =
-            Math.max(
-                0,
-                Math.floor(
-                    numeric
-                )
+        if (email) {
+            email.value = '';
+        }
+
+        removeClass(
+            modal,
+            'hidden'
+        );
+
+        if (email) {
+            setTimeout(
+                function () {
+                    email.focus();
+                },
+                50
             );
-
-        badge.textContent =
-            numeric > 99
-                ? '99+'
-                : String(numeric);
-
-        badge.style.display =
-            numeric > 0
-                ? 'inline-flex'
-                : 'none';
-
+        }
     }
 
-    function showNotifications() {
 
-        if (!state.authenticated) {
+    function closeForgotPassword() {
 
-            showToast(
-                '🔒 يجب تسجيل الدخول أولاً',
-                'error'
+        var modal =
+            getElement(
+                'forgotModal'
+            );
+
+        if (modal) {
+            addClass(
+                modal,
+                'hidden'
+            );
+        }
+    }
+
+
+    function submitForgotPassword() {
+
+        var email =
+            getElement(
+                'resetEmail'
+            );
+
+        var error =
+            getElement(
+                'resetError'
+            );
+
+        var submit =
+            getElement(
+                'forgotSubmit'
+            );
+
+        if (
+            !email ||
+            !error ||
+            !submit
+        ) {
+            return;
+        }
+
+        var value =
+            email.value.trim();
+
+        error.textContent = '';
+        error.className =
+            'error-msg';
+
+        if (!value) {
+
+            error.textContent =
+                '⚠️ يرجى إدخال البريد الإلكتروني';
+
+            error.classList.add(
+                'show'
             );
 
             return;
-
         }
 
         /*
-         * Replace this with the authenticated notifications
-         * API when implemented.
+         * Basic client-side format check.
+         * Server MUST perform authoritative validation.
          */
-
-        showToast(
-            '🔔 لا توجد إشعارات جديدة',
-            'info'
-        );
-
-        updateNotificationBadge(
-            0
-        );
-
-    }
-
-    // ============================================================
-    // 👤 USER MENU
-    // ============================================================
-
-    function showUserMenu() {
-
         if (
-            !state.authenticated ||
-            !state.user
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+                .test(value)
         ) {
 
-            return;
+            error.textContent =
+                '⚠️ البريد الإلكتروني غير صالح';
 
-        }
-
-        var name =
-            state.user.name ||
-            state.user.username ||
-            'المستخدم';
-
-        var role =
-            getRoleName(
-                state.user.role
+            error.classList.add(
+                'show'
             );
 
-        showModal({
+            return;
+        }
 
-            title:
-                '👤 معلومات المستخدم',
+        submit.disabled = true;
 
-            message:
-                'المستخدم: ' +
-                name +
-                '\nالصلاحية: ' +
-                role,
+        var originalText =
+            submit.textContent;
 
-            confirmText:
-                'إغلاق',
+        submit.textContent =
+            '⏳ جاري الإرسال...';
 
-            showCancel:
-                false
 
+        fetchWithTimeout(
+            API + '/auth/forgot-password',
+            {
+                method: 'POST',
+
+                headers:
+                    buildHeaders({
+                        json: true
+                    }),
+
+                credentials: 'include',
+
+                body: JSON.stringify({
+                    email: value
+                })
+            }
+        )
+        .then(function (response) {
+
+            return parseJSONResponse(
+                response
+            ).then(function (data) {
+
+                /*
+                 * Even errors should be handled
+                 * without revealing whether an
+                 * account exists.
+                 */
+                if (!response.ok) {
+
+                    throw new Error(
+                        getResponseError(
+                            data,
+                            'تعذر تنفيذ الطلب'
+                        )
+                    );
+                }
+
+                return data;
+            });
+        })
+        .then(function () {
+
+            /*
+             * Generic response.
+             */
+            showToast(
+                '📧 إذا كان البريد مسجلاً، فسيتم إرسال تعليمات الاستعادة.',
+                'success',
+                6000
+            );
+
+            closeForgotPassword();
+
+        })
+        .catch(function (err) {
+
+            error.textContent =
+                '❌ ' +
+                (
+                    err.message ||
+                    'تعذر إرسال الطلب'
+                );
+
+            error.classList.add(
+                'show'
+            );
+
+        })
+        .finally(function () {
+
+            submit.disabled = false;
+            submit.textContent =
+                originalText;
         });
-
     }
 
-    // ============================================================
-    // 🔍 QUICK SEARCH
-    // ============================================================
 
-    function handleQuickSearch() {
+    /* =========================================================
+       QUICK SEARCH
+       ========================================================= */
 
-        var search =
+    function performQuickSearch() {
+
+        var input =
             getElement(
                 'quickSearch'
             );
 
-        if (!search) {
-
+        if (!input) {
             return;
-
         }
 
         var query =
-            String(
-                search.value || ''
-            ).trim();
+            input.value
+                .trim()
+                .toLowerCase();
 
         if (!query) {
-
-            showToast(
-                '🔎 أدخل كلمة للبحث',
-                'info'
-            );
-
             return;
-
-        }
-
-        if (!state.authenticated) {
-
-            showToast(
-                '🔒 يجب تسجيل الدخول أولاً',
-                'error'
-            );
-
-            return;
-
         }
 
         /*
-         * Do NOT construct HTML from search results.
-         * Real search should use an authenticated server endpoint.
+         * Current implementation searches
+         * known loaded vessel data.
+         *
+         * For sensitive environments, a backend
+         * search endpoint is preferable for large
+         * datasets.
          */
+        var matches =
+            state.vessels.filter(
+                function (vessel) {
 
-        showToast(
-            '🔎 جاري البحث عن: ' +
-            query,
-            'info'
-        );
+                    var text = [
+                        vessel.name,
+                        vessel.code,
+                        vessel.registrationNumber,
+                        vessel.unit,
+                        vessel.region
+                    ]
+                    .filter(Boolean)
+                    .join(' ')
+                    .toLowerCase();
 
-    }
-
-    // ============================================================
-    // 🔝 BACK TO TOP
-    // ============================================================
-
-    function initBackToTop() {
-
-        var button =
-            getElement(
-                'backToTop'
+                    return text.indexOf(
+                        query
+                    ) !== -1;
+                }
             );
 
-        if (!button) {
+        if (matches.length > 0) {
 
-            return;
+            loadPage('fleet');
 
+            showToast(
+                '🔎 تم العثور على ' +
+                matches.length +
+                ' نتيجة',
+                'success'
+            );
+
+        } else {
+
+            showToast(
+                '🔎 لم يتم العثور على نتائج',
+                'info'
+            );
         }
-
-        window.addEventListener(
-            'scroll',
-            function () {
-
-                if (
-                    window.scrollY > 400
-                ) {
-
-                    removeClass(
-                        button,
-                        'hidden'
-                    );
-
-                } else {
-
-                    addClass(
-                        button,
-                        'hidden'
-                    );
-
-                }
-
-            },
-            {
-                passive:
-                    true
-            }
-        );
-
-        button.addEventListener(
-            'click',
-            function () {
-
-                window.scrollTo({
-
-                    top:
-                        0,
-
-                    behavior:
-                        'smooth'
-
-                });
-
-            }
-        );
-
     }
 
-    // ============================================================
-    // 🌐 CONNECTION STATUS
-    // ============================================================
 
-    function updateConnectionStatus(
-        online
-    ) {
+    /* =========================================================
+       NOTIFICATIONS
+       ========================================================= */
+
+    function updateNotificationBadge(count) {
+
+        updateBadge(
+            'notifBadge',
+            count
+        );
+    }
+
+
+    function showNotifications() {
+
+        /*
+         * Placeholder until backend notification
+         * endpoint is connected.
+         */
+        showToast(
+            '🔔 لا توجد إشعارات جديدة',
+            'info'
+        );
+    }
+
+
+    /* =========================================================
+       CONNECTION STATUS
+       ========================================================= */
+
+    function updateConnectionStatus(isOnline) {
+
+        state.connectionOnline =
+            Boolean(isOnline);
 
         var status =
             getElement(
@@ -3427,57 +2733,19 @@
             );
 
         if (!status) {
-
             return;
-
         }
 
-        var icon =
-            status.querySelector(
-                'i'
-            );
-
-        var text =
+        var span =
             status.querySelector(
                 'span'
             );
 
-        if (online) {
-
-            removeClass(
-                status,
-                'offline'
-            );
+        if (state.connectionOnline) {
 
             addClass(
                 status,
-                'online'
-            );
-
-            if (icon) {
-
-                icon.className =
-                    'fas fa-wifi';
-
-            }
-
-            if (text) {
-
-                text.textContent =
-                    'متصل';
-
-            }
-
-            window.setTimeout(
-                function () {
-
-                    addClass(
-                        status,
-                        'hidden'
-                    );
-
-                },
-                2000
+                'hidden'
             );
 
         } else {
@@ -3487,176 +2755,116 @@
                 'hidden'
             );
 
-            removeClass(
-                status,
-                'online'
-            );
-
-            addClass(
-                status,
-                'offline'
-            );
-
-            if (icon) {
-
-                icon.className =
-                    'fas fa-wifi-slash';
-
-            }
-
-            if (text) {
-
-                text.textContent =
+            if (span) {
+                span.textContent =
                     'غير متصل';
-
             }
-
         }
-
     }
 
-    window.addEventListener(
-        'online',
-        function () {
 
-            updateConnectionStatus(
-                true
-            );
+    function setupConnectionMonitoring() {
 
-        }
-    );
+        window.addEventListener(
+            'online',
+            function () {
 
-    window.addEventListener(
-        'offline',
-        function () {
-
-            updateConnectionStatus(
-                false
-            );
-
-        }
-    );
-
-    // ============================================================
-    // 🧭 RESTORE PAGE
-    // ============================================================
-
-    function getSavedPage() {
-
-        try {
-
-            var saved =
-                sessionStorage.getItem(
-                    PAGE_KEY
+                updateConnectionStatus(
+                    true
                 );
 
-            if (
-                saved &&
-                ALLOWED_PAGES.has(
-                    saved
-                )
-            ) {
-
-                return saved;
-
+                showToast(
+                    '🌐 عاد الاتصال بالشبكة',
+                    'success'
+                );
             }
+        );
 
-        } catch (error) {
 
-            /*
-             * Storage may be disabled.
-             */
+        window.addEventListener(
+            'offline',
+            function () {
 
-        }
+                updateConnectionStatus(
+                    false
+                );
 
-        return 'dashboard';
+                showToast(
+                    '⚠️ انقطع الاتصال بالشبكة',
+                    'warning'
+                );
+            }
+        );
 
+
+        updateConnectionStatus(
+            navigator.onLine
+        );
     }
 
-    // ============================================================
-    // 🧹 APPLICATION UI RESET
-    // ============================================================
 
-    function resetApplicationUI() {
+    /* =========================================================
+       BACK TO TOP
+       ========================================================= */
 
-        stopSessionTimers();
+    function setupBackToTop() {
 
-        if (activityDebounce) {
-
-            window.clearTimeout(
-                activityDebounce
+        var button =
+            getElement(
+                'backToTop'
             );
 
-            activityDebounce =
-                null;
-
+        if (!button) {
+            return;
         }
 
-        state.user =
-            null;
+        window.addEventListener(
+            'scroll',
+            function () {
 
-        state.authenticated =
-            false;
+                if (
+                    window.scrollY >
+                    400
+                ) {
+                    removeClass(
+                        button,
+                        'hidden'
+                    );
+                } else {
+                    addClass(
+                        button,
+                        'hidden'
+                    );
+                }
+            },
+            {
+                passive: true
+            }
+        );
 
-        state.page =
-            'dashboard';
 
-        state.vessels =
-            [];
+        button.addEventListener(
+            'click',
+            function () {
 
-        state.users =
-            [];
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+        );
+    }
 
-        state.absoluteStart =
-            0;
 
-        state.loggingOut =
-            false;
+    /* =========================================================
+       PASSWORD TOGGLE
+       ========================================================= */
 
-        var mainApp =
+    function setupPasswordToggle() {
+
+        var button =
             getElement(
-                'mainApp'
-            );
-
-        var loginOverlay =
-            getElement(
-                'loginOverlay'
-            );
-
-        var pageContainer =
-            getElement(
-                'pageContainer'
-            );
-
-        if (mainApp) {
-
-            addClass(
-                mainApp,
-                'hidden'
-            );
-
-        }
-
-        if (loginOverlay) {
-
-            removeClass(
-                loginOverlay,
-                'hidden'
-            );
-
-        }
-
-        if (pageContainer) {
-
-            clearElement(
-                pageContainer
-            );
-
-        }
-
-        var username =
-            getElement(
-                'username'
+                'togglePassword'
             );
 
         var password =
@@ -3664,230 +2872,159 @@
                 'password'
             );
 
-        if (username) {
-
-            username.value =
-                '';
-
-        }
-
-        if (password) {
-
-            password.value =
-                '';
-
-        }
-
-        var errorEl =
-            getElement(
-                'loginError'
-            );
-
-        if (errorEl) {
-
-            errorEl.textContent =
-                '';
-
-            errorEl.className =
-                'error-msg';
-
-        }
-
-        var sidebar =
-            getElement(
-                'sidebar'
-            );
-
-        if (sidebar) {
-
-            removeClass(
-                sidebar,
-                'open'
-            );
-
-        }
-
-        /*
-         * Page preference is not sensitive.
-         * It may remain in sessionStorage.
-         */
-
-    }
-
-    // ============================================================
-    // ⌨️ LOGIN FORM
-    // ============================================================
-
-    function initLoginForm() {
-
-        var form =
-            getElement(
-                'loginForm'
-            );
-
-        if (!form) {
-
+        if (
+            !button ||
+            !password
+        ) {
             return;
-
         }
 
-        form.addEventListener(
-            'submit',
-            function (event) {
+        button.addEventListener(
+            'click',
+            function () {
 
-                event.preventDefault();
+                var visible =
+                    password.type ===
+                    'text';
 
-                if (
-                    state.authenticated ||
-                    state.loggingOut
-                ) {
+                password.type =
+                    visible
+                        ? 'password'
+                        : 'text';
 
-                    return;
+                var icon =
+                    button.querySelector(
+                        'i'
+                    );
 
+                if (icon) {
+
+                    icon.classList.toggle(
+                        'fa-eye',
+                        visible
+                    );
+
+                    icon.classList.toggle(
+                        'fa-eye-slash',
+                        !visible
+                    );
                 }
 
-                doLogin();
-
+                button.setAttribute(
+                    'aria-label',
+                    visible
+                        ? 'إظهار كلمة المرور'
+                        : 'إخفاء كلمة المرور'
+                );
             }
         );
-
     }
 
-    // ============================================================
-    // 🔑 FORGOT PASSWORD CONTROLS
-    // ============================================================
 
-    function initForgotPassword() {
+    /* =========================================================
+       KEYBOARD SHORTCUTS
+       ========================================================= */
 
-        var openBtn =
-            getElement(
-                'forgotPasswordBtn'
-            );
+    function setupKeyboardShortcuts() {
 
-        var closeBtn =
-            getElement(
-                'forgotModalClose'
-            );
+        document.addEventListener(
+            'keydown',
+            function (event) {
 
-        var cancelBtn =
-            getElement(
-                'forgotCancel'
-            );
+                /*
+                 * Ctrl+K / Cmd+K
+                 */
+                if (
+                    (event.ctrlKey ||
+                     event.metaKey) &&
+                    event.key.toLowerCase() ===
+                    'k'
+                ) {
 
-        var submitBtn =
-            getElement(
-                'forgotSubmit'
-            );
+                    event.preventDefault();
 
-        var email =
-            getElement(
-                'resetEmail'
-            );
+                    var search =
+                        getElement(
+                            'quickSearch'
+                        );
 
-        if (openBtn) {
-
-            openBtn.addEventListener(
-                'click',
-                openForgotPassword
-            );
-
-        }
-
-        if (closeBtn) {
-
-            closeBtn.addEventListener(
-                'click',
-                closeForgotPassword
-            );
-
-        }
-
-        if (cancelBtn) {
-
-            cancelBtn.addEventListener(
-                'click',
-                closeForgotPassword
-            );
-
-        }
-
-        if (submitBtn) {
-
-            submitBtn.addEventListener(
-                'click',
-                submitForgotPassword
-            );
-
-        }
-
-        if (email) {
-
-            email.addEventListener(
-                'keydown',
-                function (event) {
-
-                    if (
-                        event.key ===
-                        'Enter'
-                    ) {
-
-                        event.preventDefault();
-
-                        submitForgotPassword();
-
+                    if (search) {
+                        search.focus();
                     }
 
+                    return;
                 }
-            );
 
-        }
 
-        var modal =
-            getElement(
-                'forgotModal'
-            );
+                /*
+                 * Escape.
+                 */
+                if (
+                    event.key ===
+                    'Escape'
+                ) {
 
-        if (modal) {
+                    closeForgotPassword();
+                    closeSidebarMobile();
 
-            modal.addEventListener(
-                'click',
-                function (event) {
+                    var modal =
+                        getElement(
+                            'modalOverlay'
+                        );
 
-                    if (
-                        event.target ===
-                        modal
-                    ) {
-
-                        closeForgotPassword();
-
+                    if (modal) {
+                        closeModal(false);
                     }
-
                 }
-            );
-
-        }
-
+            }
+        );
     }
 
-    // ============================================================
-    // 🔔 HEADER CONTROLS
-    // ============================================================
 
-    function initHeaderControls() {
+    /* =========================================================
+       GLOBAL CLICK HANDLER
+       ========================================================= */
 
-        var notifBtn =
+    function setupGlobalUI() {
+
+        var menuToggle =
+            getElement(
+                'menuToggle'
+            );
+
+        var sidebarClose =
+            getElement(
+                'sidebarClose'
+            );
+
+        var logout =
+            getElement(
+                'logoutBtn'
+            );
+
+        var notification =
             getElement(
                 'notifBtn'
             );
 
-        var userBtn =
+        var forgot =
             getElement(
-                'userBtn'
+                'forgotPasswordBtn'
             );
 
-        var logoutBtn =
+        var forgotClose =
             getElement(
-                'logoutBtn'
+                'forgotModalClose'
+            );
+
+        var forgotCancel =
+            getElement(
+                'forgotCancel'
+            );
+
+        var forgotSubmit =
+            getElement(
+                'forgotSubmit'
             );
 
         var search =
@@ -3895,32 +3032,70 @@
                 'quickSearch'
             );
 
-        if (notifBtn) {
 
-            notifBtn.addEventListener(
+        if (menuToggle) {
+            menuToggle.addEventListener(
+                'click',
+                toggleSidebarMobile
+            );
+        }
+
+
+        if (sidebarClose) {
+            sidebarClose.addEventListener(
+                'click',
+                closeSidebarMobile
+            );
+        }
+
+
+        if (logout) {
+            logout.addEventListener(
+                'click',
+                requestLogoutFromUser
+            );
+        }
+
+
+        if (notification) {
+            notification.addEventListener(
                 'click',
                 showNotifications
             );
-
         }
 
-        if (userBtn) {
 
-            userBtn.addEventListener(
+        if (forgot) {
+            forgot.addEventListener(
                 'click',
-                showUserMenu
+                openForgotPassword
             );
-
         }
 
-        if (logoutBtn) {
 
-            logoutBtn.addEventListener(
+        if (forgotClose) {
+            forgotClose.addEventListener(
                 'click',
-                doLogout
+                closeForgotPassword
             );
-
         }
+
+
+        if (forgotCancel) {
+            forgotCancel.addEventListener(
+                'click',
+                closeForgotPassword
+            );
+        }
+
+
+        if (forgotSubmit) {
+            forgotSubmit.addEventListener(
+                'click',
+                submitForgotPassword
+            );
+        }
+
 
         if (search) {
 
@@ -3935,292 +3110,313 @@
 
                         event.preventDefault();
 
-                        handleQuickSearch();
-
+                        performQuickSearch();
                     }
-
                 }
             );
-
         }
 
-    }
-
-    // ============================================================
-    // ⌨️ KEYBOARD SHORTCUTS
-    // ============================================================
-
-    function initKeyboardShortcuts() {
-
-        document.addEventListener(
-            'keydown',
-            function (event) {
-
-                /*
-                 * Ctrl+K / Cmd+K
-                 */
-
-                if (
-                    (event.ctrlKey ||
-                        event.metaKey) &&
-                    event.key.toLowerCase() === 'k'
-                ) {
-
-                    event.preventDefault();
-
-                    var search =
-                        getElement(
-                            'quickSearch'
-                        );
-
-                    if (
-                        search &&
-                        state.authenticated
-                    ) {
-
-                        search.focus();
-
-                    }
-
-                    return;
-
-                }
-
-                /*
-                 * Escape closes menus/modals.
-                 */
-
-                if (
-                    event.key ===
-                    'Escape'
-                ) {
-
-                    var forgot =
-                        getElement(
-                            'forgotModal'
-                        );
-
-                    if (
-                        forgot &&
-                        !forgot.classList.contains(
-                            'hidden'
-                        )
-                    ) {
-
-                        closeForgotPassword();
-
-                        return;
-
-                    }
-
-                    var modal =
-                        getElement(
-                            'modalOverlay'
-                        );
-
-                    if (
-                        modal &&
-                        !modal.classList.contains(
-                            'hidden'
-                        )
-                    ) {
-
-                        if (
-                            modalResolve
-                        ) {
-
-                            modalResolve(
-                                false
-                            );
-
-                            modalResolve =
-                                null;
-
-                        }
-
-                        addClass(
-                            modal,
-                            'hidden'
-                        );
-
-                    }
-
-                }
-
-            }
-        );
-
-    }
-
-    // ============================================================
-    // 🕒 CLOCK
-    // ============================================================
-
-    function initClock() {
-
-        updateDateTime();
-
-        window.setInterval(
-            updateDateTime,
-            1000
-        );
-
-    }
-
-    // ============================================================
-    // 🔐 INITIAL SESSION BOOTSTRAP
-    // ============================================================
-
-    function initializeSession() {
 
         /*
-         * Start hidden.
-         * verifySession decides whether the application
-         * should be displayed.
+         * Close forgot modal by clicking
+         * outside its box.
          */
-
-        var mainApp =
+        var forgotModal =
             getElement(
-                'mainApp'
+                'forgotModal'
             );
+
+        if (forgotModal) {
+
+            forgotModal.addEventListener(
+                'click',
+                function (event) {
+
+                    if (
+                        event.target ===
+                        forgotModal
+                    ) {
+                        closeForgotPassword();
+                    }
+                }
+            );
+        }
+    }
+
+
+    /* =========================================================
+       LOGIN FORM
+       ========================================================= */
+
+    function setupLoginForm() {
+
+        var form =
+            getElement(
+                'loginForm'
+            );
+
+        if (!form) {
+            return;
+        }
+
+        form.addEventListener(
+            'submit',
+            doLogin
+        );
+    }
+
+
+    /* =========================================================
+       APPLICATION BOOT
+       ========================================================= */
+
+    function showApplication() {
 
         var loginOverlay =
             getElement(
                 'loginOverlay'
             );
 
-        if (mainApp) {
+        var mainApp =
+            getElement(
+                'mainApp'
+            );
 
+        if (loginOverlay) {
             addClass(
+                loginOverlay,
+                'hidden'
+            );
+        }
+
+        if (mainApp) {
+            removeClass(
                 mainApp,
                 'hidden'
             );
-
         }
+    }
+
+
+    function showLogin() {
+
+        var loginOverlay =
+            getElement(
+                'loginOverlay'
+            );
+
+        var mainApp =
+            getElement(
+                'mainApp'
+            );
 
         if (loginOverlay) {
-
             removeClass(
                 loginOverlay,
                 'hidden'
             );
-
         }
 
-        return verifySession()
-            .then(function (authenticated) {
-
-                if (!authenticated) {
-
-                    resetApplicationUI();
-
-                    return;
-
-                }
-
-                state.absoluteStart =
-                    Date.now();
-
-                var main =
-                    getElement(
-                        'mainApp'
-                    );
-
-                var login =
-                    getElement(
-                        'loginOverlay'
-                    );
-
-                if (login) {
-
-                    addClass(
-                        login,
-                        'hidden'
-                    );
-
-                }
-
-                if (main) {
-
-                    removeClass(
-                        main,
-                        'hidden'
-                    );
-
-                }
-
-                updateUserDisplay();
-
-                buildSidebar();
-
-                startSessionTimers();
-
-                var page =
-                    getSavedPage();
-
-                if (
-                    !canAccessPage(
-                        page
-                    )
-                ) {
-
-                    page =
-                        'dashboard';
-
-                }
-
-                loadPage(
-                    page
-                );
-
-                loadAllData();
-
-            });
-
+        if (mainApp) {
+            addClass(
+                mainApp,
+                'hidden'
+            );
+        }
     }
 
-    // ============================================================
-    // 🚀 APPLICATION INIT
-    // ============================================================
 
     function init() {
 
         if (state.initialized) {
-
             return;
-
         }
 
         state.initialized =
             true;
 
-        initLoginForm();
+        setupLoginForm();
 
-        initPasswordToggle();
+        setupPasswordToggle();
 
-        initForgotPassword();
+        setupGlobalUI();
 
-        initSidebarControls();
+        setupActivityMonitoring();
 
-        initHeaderControls();
+        setupConnectionMonitoring();
 
-        initKeyboardShortcuts();
+        setupBackToTop();
 
-        initBackToTop();
+        setupKeyboardShortcuts();
 
-        initClock();
+        updateDateTime();
 
-        updateConnectionStatus(
-            navigator.onLine
+        setInterval(
+            updateDateTime,
+            1000
         );
 
-        initializeSession();
+        /*
+         * Default state.
+         */
+        showLogin();
 
+
+        /*
+         * Verify server-side session.
+         *
+         * IMPORTANT:
+         * The server remains authoritative.
+         */
+        verifySession()
+            .then(function (authenticated) {
+
+                if (!authenticated) {
+
+                    showLogin();
+
+                    return;
+                }
+
+                showApplication();
+
+                updateUserDisplay();
+
+                buildSidebar();
+
+                var savedPage =
+                    getSavedPage();
+
+                if (
+                    !savedPage ||
+                    !canAccessPage(
+                        savedPage
+                    )
+                ) {
+                    savedPage =
+                        'dashboard';
+                }
+
+                loadPage(
+                    savedPage
+                );
+
+                loadAllData();
+            });
     }
 
-    // ============================================================
-    // 🚀 DOM READY
-    // ============================================================
+
+    /* =========================================================
+       CONTROLLED PUBLIC API
+       =========================================================
+       
+       We intentionally DO NOT expose:
+       
+       window.state
+       window.CONFIG
+       tokens
+       user credentials
+       
+       Only a tiny controlled API is exposed
+       for trusted page modules.
+       ========================================================= */
+
+    window.MarineSystem = Object.freeze({
+
+        getCurrentPage:
+            function () {
+                return state.page;
+            },
+
+        getCurrentUser:
+            function () {
+                /*
+                 * Return a shallow copy,
+                 * not internal object.
+                 */
+                if (!state.user) {
+                    return null;
+                }
+
+                return Object.assign(
+                    {},
+                    state.user
+                );
+            },
+
+        hasPermission:
+            function (permission) {
+                return hasPermission(
+                    permission
+                );
+            },
+
+        canAccessPage:
+            function (page) {
+                return canAccessPage(
+                    page
+                );
+            },
+
+        navigate:
+            function (page) {
+                loadPage(page);
+            },
+
+        toast:
+            function (
+                message,
+                type,
+                duration
+            ) {
+                showToast(
+                    message,
+                    type,
+                    duration
+                );
+            },
+
+        refreshData:
+            function () {
+                loadAllData();
+            }
+    });
+
+
+    /* =========================================================
+       PAGE MODULE EVENT
+       ========================================================= */
+
+    document.addEventListener(
+        'marine:page-loaded',
+        function (event) {
+
+            if (
+                !event ||
+                !event.detail
+            ) {
+                return;
+            }
+
+            /*
+             * Page-specific JS can listen to:
+             *
+             * document.addEventListener(
+             *   'marine:page-loaded',
+             *   function(e) {
+             *      if (e.detail.page === 'fleet') {
+             *          ...
+             *      }
+             *   }
+             * );
+             */
+        }
+    );
+
+
+    /* =========================================================
+       START
+       ========================================================= */
 
     if (
         document.readyState ===
@@ -4231,16 +3427,13 @@
             'DOMContentLoaded',
             init,
             {
-                once:
-                    true
+                once: true
             }
         );
 
     } else {
 
         init();
-
     }
 
 })();
-```
