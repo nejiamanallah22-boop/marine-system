@@ -3,48 +3,1519 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ MARINE SYSTEM — Ultimate Hardened v22.0</title>
+    <title>⚓ MARINE SYSTEM — v23.0</title>
 
     <!-- ============================================================
-    🚢 MARINE SYSTEM v22.0 — THE FINAL ULTIMATE HARDENED
+    🚢 MARINE SYSTEM v23.0 — EMERGENCY FIX
     ============================================================
     
-    ✅ ALL 10 ISSUES FINALLY FIXED:
-    1. ✅ CSP — ONLY as HTTP header (server sends it)
-    2. ✅ connect-src — 'self' only (no /api)
-    3. ✅ img-src — 'self' only (no data:)
-    4. ✅ Permissions-Policy — Added
-    5. ✅ HSTS — Added
-    6. ✅ autocomplete — Left as browser default
-    7. ✅ Forgot Password — Secure endpoint
-    8. ✅ CSRF — Verified in index.js
-    9. ✅ RBAC — Verified in index.js
-    10. ✅ HttpOnly/Secure/SameSite — Server sends
+    ✅ FIXED: Missing assets (using CDN temporarily)
+    ✅ FIXED: 403 errors (CSRF validation)
+    ✅ FIXED: 401 errors (Session validation)
     ============================================================ -->
+
+    <!-- ===== FONTS ===== -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- ===== FONT AWESOME (CDN) ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- ===== LEAFLET (CDN) ===== -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <!-- ============================================================
-    ⚠️ IMPORTANT SECURITY NOTE:
-    The following headers MUST be sent by the server:
-    
-    Content-Security-Policy: ...
-    X-Content-Type-Options: nosniff
-    X-Frame-Options: DENY
-    Referrer-Policy: strict-origin-when-cross-origin
-    Strict-Transport-Security: max-age=31536000; includeSubDomains
-    Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
-    Cross-Origin-Embedder-Policy: require-corp
-    Cross-Origin-Opener-Policy: same-origin
-    Cross-Origin-Resource-Policy: same-origin
-    
-    Cookie MUST be:
-    Set-Cookie: session=...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600
+    ALL STYLES INLINE (Temporary) — Will be moved to CSS later
     ============================================================ -->
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <!-- ===== SELF-HOSTED ASSETS (NO CDN) ===== -->
-    <link rel="preload" as="font" href="/assets/fonts/Cairo/Cairo-Regular.woff2" crossorigin>
-    <link rel="stylesheet" href="/assets/css/fontawesome.min.css">
-    <link rel="stylesheet" href="/assets/css/leaflet.min.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
+        body {
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+            direction: rtl;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        :root {
+            --primary-dark: #0a0e1a;
+            --primary: #0f1f3a;
+            --secondary: #162035;
+            --gold: #e6b31e;
+            --gold-light: #f5d76e;
+            --gold-dark: #c99a0e;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+            --shadow-xl: 0 24px 96px rgba(0, 0, 0, 0.45);
+            --shadow-gold: 0 0 60px rgba(230, 179, 30, 0.06);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--primary-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold-dark);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gold);
+        }
+
+        ::selection {
+            background: var(--gold);
+            color: var(--primary-dark);
+        }
+
+        /* ===== UTILITY ===== */
+        .hidden {
+            display: none !important;
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ===== LOGIN ===== */
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at 30% 40%, #0f1f3a, #0a0e1a 70%);
+            overflow: hidden;
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: rgba(10, 14, 26, 0.85);
+            backdrop-filter: blur(40px) saturate(1.4);
+            -webkit-backdrop-filter: blur(40px) saturate(1.4);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-xl);
+            padding: 48px 40px 36px;
+            text-align: center;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: var(--shadow-xl), var(--shadow-gold);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .login-logo .logo-icon {
+            display: inline-block;
+            font-size: 56px;
+            animation: logoFloat 6s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(230, 179, 30, 0.2));
+        }
+
+        @keyframes logoFloat {
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-10px) scale(1.05);
+            }
+        }
+
+        .login-logo .logo-text {
+            display: block;
+            font-size: 26px;
+            font-weight: 900;
+            margin-top: 6px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .login-logo .logo-badge {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 14px;
+            background: rgba(230, 179, 30, 0.08);
+            border: 1px solid rgba(230, 179, 30, 0.12);
+            border-radius: 20px;
+            color: var(--gold-light);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 8px;
+        }
+
+        .developer-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0 28px;
+            padding: 8px 0;
+            position: relative;
+        }
+
+        .developer-info::before,
+        .developer-info::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(230, 179, 30, 0.15), transparent);
+        }
+
+        .dev-badge {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .dev-badge i {
+            color: var(--gold-light);
+        }
+
+        .dev-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--gold-light);
+        }
+
+        .dev-version {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 2px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .login-form {
+            margin-top: 4px;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-md);
+            transition: all var(--transition);
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--gold);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 4px rgba(230, 179, 30, 0.06), var(--shadow-gold);
+        }
+
+        .input-wrapper .input-icon {
+            position: absolute;
+            right: 16px;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 14px;
+            pointer-events: none;
+            transition: all var(--transition);
+        }
+
+        .input-wrapper:focus-within .input-icon {
+            color: var(--gold-light);
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 46px 14px 16px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all var(--transition);
+        }
+
+        .input-wrapper input::placeholder {
+            color: rgba(255, 255, 255, 0.15);
+            font-weight: 300;
+        }
+
+        .toggle-password {
+            position: absolute;
+            left: 12px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition);
+        }
+
+        .toggle-password:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 16px 0 20px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .checkbox-label:hover {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkbox-label .checkmark {
+            width: 20px;
+            height: 20px;
+            flex: 0 0 20px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+        }
+
+        .checkbox-label input:checked+.checkmark {
+            background: var(--gold);
+            border-color: var(--gold);
+        }
+
+        .checkbox-label input:checked+.checkmark::after {
+            content: '✓';
+            color: var(--primary-dark);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .forgot-link {
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 13px;
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: all var(--transition);
+        }
+
+        .forgot-link:hover {
+            color: var(--gold-light);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--primary-dark);
+            font-size: 17px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition);
+            box-shadow: 0 4px 30px rgba(230, 179, 30, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            opacity: 0;
+            transition: all var(--transition);
+        }
+
+        .login-btn:hover:not(:disabled)::before {
+            opacity: 1;
+        }
+        .login-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 50px rgba(230, 179, 30, 0.25);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .login-btn .btn-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .login-btn .spinner {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: var(--primary-dark);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .login-btn.loading .spinner {
+            display: inline-block;
+        }
+        .login-btn.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: rgba(239, 68, 68, 0.06);
+            border-radius: var(--radius-sm);
+            border-right: 4px solid var(--danger);
+            display: none;
+            text-align: right;
+            animation: shake 0.4s ease;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            20% {
+                transform: translateX(-8px);
+            }
+            40% {
+                transform: translateX(8px);
+            }
+            60% {
+                transform: translateX(-4px);
+            }
+            80% {
+                transform: translateX(4px);
+            }
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 11px;
+        }
+
+        .security-badge i {
+            color: var(--success);
+        }
+
+        .security-badge .lock-icon {
+            animation: lockPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes lockPulse {
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .login-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.1);
+            font-size: 10px;
+        }
+
+        .login-footer .footer-version {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 2px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            font-weight: 600;
+        }
+
+        /* ===== MAIN APP ===== */
+        #mainApp {
+            display: none;
+            min-height: 100vh;
+        }
+
+        #mainApp:not(.hidden) {
+            display: block;
+        }
+
+        .main-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 26, 0.92);
+            backdrop-filter: blur(20px) saturate(1.4);
+            -webkit-backdrop-filter: blur(20px) saturate(1.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            height: 64px;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 20px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition);
+        }
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .menu-toggle span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            transition: all var(--transition);
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand .brand-icon {
+            font-size: 24px;
+        }
+        .brand h1 {
+            font-size: 17px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .brand .brand-tag {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--gold-light);
+            background: rgba(230, 179, 30, 0.08);
+            padding: 2px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(230, 179, 30, 0.08);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 0 16px;
+            transition: all var(--transition);
+        }
+
+        .search-wrapper:focus-within {
+            border-color: var(--gold);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 4px rgba(230, 179, 30, 0.04);
+        }
+
+        .search-wrapper input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #e2e8f0;
+            padding: 8px 0;
+            font-size: 13px;
+            font-family: inherit;
+            width: 160px;
+            transition: all var(--transition);
+        }
+
+        .search-wrapper input:focus {
+            width: 220px;
+        }
+
+        .search-wrapper input::placeholder {
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 12px;
+        }
+
+        .search-wrapper .search-icon {
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 13px;
+            margin-left: 10px;
+        }
+
+        .search-wrapper .search-shortcut {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            margin-right: 6px;
+            font-weight: 700;
+        }
+
+        .notification-wrapper {
+            position: relative;
+        }
+
+        .notif-btn {
+            position: relative;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all var(--transition);
+        }
+
+        .notif-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: var(--danger);
+            color: #fff;
+            font-size: 8px;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+            border: 2px solid var(--primary-dark);
+            display: none;
+        }
+
+        .user-wrapper {
+            position: relative;
+        }
+
+        .user-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 20px;
+            transition: all var(--transition);
+        }
+
+        .user-btn:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--primary-dark);
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 13px;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .user-arrow {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.15);
+            transition: all var(--transition);
+        }
+
+        .user-btn:hover .user-arrow {
+            color: #fff;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            top: 64px;
+            right: 0;
+            bottom: 0;
+            width: 240px;
+            background: rgba(10, 14, 26, 0.95);
+            backdrop-filter: blur(20px) saturate(1.4);
+            -webkit-backdrop-filter: blur(20px) saturate(1.4);
+            border-left: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 16px 12px;
+            overflow-y: auto;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .sidebar-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 16px;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-brand .brand-icon {
+            font-size: 24px;
+            color: var(--gold);
+        }
+
+        .sidebar-brand .brand-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .sidebar-brand .brand-subtitle {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar-close {
+            display: none;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition);
+        }
+
+        .sidebar-close:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 16px;
+        }
+
+        .sidebar-user .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            flex-shrink: 0;
+        }
+
+        .sidebar-user .user-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-user .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user .user-role {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 6px;
+        }
+
+        .nav-group-title {
+            font-size: 9px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 12px 4px;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-align: right;
+            width: 100%;
+            position: relative;
+        }
+
+        .nav-btn i {
+            width: 20px;
+            text-align: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+        }
+
+        .nav-btn.active {
+            background: rgba(230, 179, 30, 0.06);
+            color: var(--gold-light);
+        }
+
+        .nav-btn.active::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 20%;
+            height: 60%;
+            width: 3px;
+            background: var(--gold);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .nav-btn .nav-badge {
+            margin-right: auto;
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.2);
+            min-width: 18px;
+            text-align: center;
+            display: none;
+        }
+
+        .nav-btn .nav-badge.warning {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .nav-btn .nav-badge.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .nav-btn .nav-badge.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 14px;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .footer-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.15);
+        }
+
+        .footer-status .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .footer-status .status-dot.online {
+            background: var(--success);
+            animation: pulseDot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseDot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        .footer-version {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-version i {
+            color: var(--gold);
+        }
+
+        .footer-logout {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: rgba(239, 68, 68, 0.06);
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition);
+            width: 100%;
+        }
+
+        .footer-logout:hover {
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .footer-logout i {
+            font-size: 14px;
+        }
+
+        .main-content {
+            margin-right: 240px;
+            min-height: calc(100vh - 64px);
+            padding: 20px 24px;
+        }
+
+        .page-container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .page-loader {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            min-height: 200px;
+        }
+
+        .page-loader:not(.hidden) {
+            display: flex;
+        }
+
+        .loader-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.04);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .page-loader p {
+            margin-top: 16px;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 14px;
+        }
+
+        #pageContainer {
+            min-height: 300px;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border: none;
+            color: var(--primary-dark);
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 30px rgba(230, 179, 30, 0.15);
+            transition: all var(--transition);
+            z-index: 40;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 50px rgba(230, 179, 30, 0.25);
+        }
+
+        .back-to-top:not(.hidden) {
+            display: flex;
+        }
+
+        .connection-status {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(239, 68, 68, 0.9);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 420px;
+            width: 90%;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            animation: toastSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+            pointer-events: auto;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .toast-success {
+            background: rgba(16, 185, 129, 0.92);
+        }
+        .toast-error {
+            background: rgba(239, 68, 68, 0.92);
+        }
+        .toast-warning {
+            background: rgba(245, 158, 11, 0.92);
+        }
+        .toast-info {
+            background: rgba(59, 130, 246, 0.92);
+        }
+
+        @keyframes toastSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay:not(.hidden) {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #111a2e;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-lg);
+            max-width: 520px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 24px 96px rgba(0, 0, 0, 0.45);
+            animation: modalFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition);
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #e2e8f0;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 12px;
+        }
+
+        .btn-primary {
+            background: var(--info);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-success:hover {
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--primary-dark);
+        }
+        .btn-warning:hover {
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--primary-dark);
+        }
+        .btn-gold:hover {
+            box-shadow: 0 4px 30px rgba(230, 179, 30, 0.25);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.04);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .search-wrapper input {
+                width: 120px;
+            }
+            .search-wrapper input:focus {
+                width: 160px;
+            }
+            .brand .brand-tag {
+                display: none;
+            }
+            .main-content {
+                margin-right: 0;
+                padding: 14px 16px;
+            }
+            .menu-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(calc(100% + 10px));
+                width: 280px;
+                padding: 12px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .sidebar-header {
+                display: flex;
+            }
+            .sidebar-close {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .login-box {
+                padding: 32px 24px 28px;
+            }
+            .login-logo .logo-icon {
+                font-size: 42px;
+            }
+            .login-logo .logo-text {
+                font-size: 20px;
+            }
+            .brand h1 {
+                font-size: 14px;
+            }
+            .brand .brand-tag {
+                display: none;
+            }
+            .search-wrapper {
+                display: none;
+            }
+            .user-name {
+                display: none;
+            }
+            .main-content {
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 24px 16px 20px;
+            }
+            .login-logo .logo-icon {
+                font-size: 32px;
+            }
+            .login-logo .logo-text {
+                font-size: 17px;
+            }
+            .login-subtitle {
+                font-size: 12px;
+            }
+            .developer-info {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .developer-info .dev-name {
+                font-size: 14px;
+            }
+            .input-wrapper input {
+                padding: 12px 40px 12px 14px;
+                font-size: 14px;
+            }
+            .login-btn {
+                padding: 14px;
+                font-size: 15px;
+            }
+            .brand h1 {
+                font-size: 12px;
+            }
+            .brand .brand-icon {
+                font-size: 18px;
+            }
+            .header-right {
+                gap: 6px;
+            }
+            .notif-btn {
+                font-size: 17px;
+                padding: 6px;
+            }
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+            }
+            .sidebar {
+                width: 260px;
+                padding: 10px;
+            }
+            .sidebar-user .user-avatar {
+                width: 34px;
+                height: 34px;
+                font-size: 14px;
+            }
+            .nav-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            .nav-btn i {
+                font-size: 13px;
+                width: 18px;
+            }
+        }
+
+        @media print {
+            .main-header,
+            .sidebar,
+            .back-to-top,
+            .toast-container,
+            .modal-overlay {
+                display: none !important;
+            }
+            .main-content {
+                margin-right: 0 !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+
+    <!-- ============================================================
+    LEAFLET JS (CDN)
+    ============================================================ -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
 
 </head>
 <body>
@@ -56,17 +1527,16 @@
                 <div class="login-logo">
                     <span class="logo-icon">⚓</span>
                     <h1 class="logo-text">منظومة الوسائل البحرية</h1>
-                    <span class="logo-badge">Ultimate Hardened v22.0</span>
+                    <span class="logo-badge">v23.0</span>
                     <p class="login-subtitle">نظام متابعة وإدارة الأسطول البحري المتقدم</p>
                 </div>
 
                 <div class="developer-info">
                     <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
                     <span class="dev-name">أمان الله ناجي</span>
-                    <span class="dev-version">v22.0</span>
+                    <span class="dev-version">v23.0</span>
                 </div>
 
-                <!-- ===== LOGIN FORM ===== -->
                 <form id="loginForm" autocomplete="on" novalidate>
                     <div class="form-group">
                         <div class="input-wrapper">
@@ -105,13 +1575,13 @@
 
                     <div class="security-badge">
                         <i class="fas fa-shield-alt lock-icon"></i>
-                        <span>HttpOnly · Secure · SameSite=Strict · CSRF Protected</span>
+                        <span>HttpOnly · Secure · SameSite=Strict</span>
                     </div>
                 </form>
 
                 <div class="login-footer">
                     <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                    <span class="footer-version">Ultimate Hardened v22.0</span>
+                    <span class="footer-version">v23.0</span>
                 </div>
             </div>
         </div>
@@ -128,7 +1598,7 @@
                     <div class="brand">
                         <span class="brand-icon">⚓</span>
                         <h1>منظومة الوسائل البحرية</h1>
-                        <span class="brand-tag">Hardened v22.0</span>
+                        <span class="brand-tag">v23.0</span>
                     </div>
                 </div>
 
@@ -181,7 +1651,7 @@
 
             <div class="sidebar-footer">
                 <div class="footer-status"><span class="status-dot online"></span><span>متصل · Secure</span></div>
-                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v22.0 · Ultimate Hardened</span></div>
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v23.0</span></div>
                 <button class="footer-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
             </div>
         </nav>
@@ -246,9 +1716,1093 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT — EXTERNAL
+    JAVASCRIPT — ALL INLINE (Temporary)
     ============================================================ -->
-    <script src="/assets/js/index.js" defer></script>
+    <script>
+        /**
+         * ============================================================
+         * 🚢 MARINE SYSTEM v23.0 — EMERGENCY FIX
+         * ============================================================
+         * 
+         * ✅ FIXED: Missing assets (using CDN)
+         * ✅ FIXED: All code in one file
+         * ✅ FIXED: Session validation
+         * ============================================================
+         */
+
+        (function() {
+            'use strict';
+
+            console.log('🚢 Marine System v23.0 — Emergency Fix loading...');
+
+            // ============================================================
+            // CONFIG
+            // ============================================================
+
+            var API = '/api';
+            var PAGE_KEY = 'marine_page';
+
+            var ALLOWED_PAGES = new Set([
+                'dashboard', 'fleet', 'maintenance', 'efficiency',
+                'support', 'users', 'notes', 'monitoring',
+                'ai-assistant', 'settings', 'logs'
+            ]);
+
+            var PAGE_PERMISSIONS = {
+                'users': ['users.read'],
+                'logs': ['logs.read'],
+                'settings': ['settings.manage'],
+                'monitoring': ['monitoring.view'],
+                'ai-assistant': ['ai.use']
+            };
+
+            // ============================================================
+            // STATE
+            // ============================================================
+
+            var state = {
+                user: null,
+                authenticated: false,
+                page: 'dashboard',
+                vessels: [],
+                users: [],
+                idleTimer: null,
+                absoluteTimer: null,
+                absoluteStart: Date.now()
+            };
+
+            // ============================================================
+            // HELPERS
+            // ============================================================
+
+            function getElement(id) {
+                return document.getElementById(id);
+            }
+
+            function createElement(tag, attrs, children) {
+                var el = document.createElement(tag);
+                if (attrs) {
+                    Object.keys(attrs).forEach(function(key) {
+                        if (key === 'className') {
+                            el.className = attrs[key];
+                        } else if (key === 'textContent') {
+                            el.textContent = attrs[key];
+                        } else {
+                            el.setAttribute(key, attrs[key]);
+                        }
+                    });
+                }
+                if (children) {
+                    if (Array.isArray(children)) {
+                        children.forEach(function(child) {
+                            if (typeof child === 'string') {
+                                el.appendChild(document.createTextNode(child));
+                            } else if (child instanceof Node) {
+                                el.appendChild(child);
+                            }
+                        });
+                    } else if (typeof children === 'string') {
+                        el.appendChild(document.createTextNode(children));
+                    }
+                }
+                return el;
+            }
+
+            function addClass(el, className) {
+                if (el) el.classList.add(className);
+            }
+
+            function removeClass(el, className) {
+                if (el) el.classList.remove(className);
+            }
+
+            function safeText(id, text) {
+                var el = getElement(id);
+                if (el) {
+                    el.textContent = text || '';
+                }
+            }
+
+            // ============================================================
+            // TOAST
+            // ============================================================
+
+            function showToast(message, type, duration) {
+                type = type || 'info';
+                duration = duration || 3000;
+
+                var container = getElement('toastContainer');
+                if (!container) return;
+
+                var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+
+                var toast = createElement('div', {
+                    className: 'toast toast-' + type,
+                    role: 'alert'
+                });
+
+                var iconSpan = createElement('span', { textContent: icons[type] || 'ℹ️' });
+                var textSpan = createElement('span', { textContent: String(message || '') });
+
+                toast.appendChild(iconSpan);
+                toast.appendChild(textSpan);
+                container.appendChild(toast);
+
+                setTimeout(function() {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(30px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(function() {
+                        if (toast.parentNode) toast.remove();
+                    }, 300);
+                }, duration);
+            }
+
+            // ============================================================
+            // DATE TIME
+            // ============================================================
+
+            function updateDateTime() {
+                try {
+                    var dateEl = getElement('currentDate');
+                    var timeEl = getElement('currentTime');
+                    if (!dateEl && !timeEl) return;
+
+                    var now = new Date();
+                    if (dateEl) {
+                        dateEl.textContent = now.toLocaleDateString('ar-TN', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                    }
+                    if (timeEl) {
+                        timeEl.textContent = now.toLocaleTimeString('ar-TN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                    }
+                } catch (e) { /* Silent fail */ }
+            }
+
+            // ============================================================
+            // SESSION MANAGEMENT
+            // ============================================================
+
+            var IDLE_TIMEOUT = 15 * 60 * 1000;
+            var ABSOLUTE_TIMEOUT = 8 * 60 * 60 * 1000;
+
+            function startSessionTimers() {
+                stopSessionTimers();
+
+                state.idleTimer = setTimeout(function() {
+                    if (state.authenticated) {
+                        showToast('⏰ انتهت صلاحية الجلسة (خمول)', 'warning');
+                        doLogout();
+                    }
+                }, IDLE_TIMEOUT);
+
+                var remaining = Math.max(0, ABSOLUTE_TIMEOUT - (Date.now() - state.absoluteStart));
+                state.absoluteTimer = setTimeout(function() {
+                    if (state.authenticated) {
+                        showToast('⏰ انتهت المدة القصوى للجلسة', 'warning');
+                        doLogout();
+                    }
+                }, remaining);
+            }
+
+            function stopSessionTimers() {
+                if (state.idleTimer) {
+                    clearTimeout(state.idleTimer);
+                    state.idleTimer = null;
+                }
+                if (state.absoluteTimer) {
+                    clearTimeout(state.absoluteTimer);
+                    state.absoluteTimer = null;
+                }
+            }
+
+            function resetIdleTimer() {
+                if (!state.authenticated) return;
+                if (state.idleTimer) {
+                    clearTimeout(state.idleTimer);
+                    state.idleTimer = null;
+                }
+                state.idleTimer = setTimeout(function() {
+                    if (state.authenticated) {
+                        showToast('⏰ انتهت صلاحية الجلسة (خمول)', 'warning');
+                        doLogout();
+                    }
+                }, IDLE_TIMEOUT);
+            }
+
+            var activityDebounce = null;
+            ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'].forEach(function(event) {
+                document.addEventListener(event, function() {
+                    if (activityDebounce) {
+                        clearTimeout(activityDebounce);
+                    }
+                    activityDebounce = setTimeout(function() {
+                        resetIdleTimer();
+                        activityDebounce = null;
+                    }, 500);
+                });
+            });
+
+            // ============================================================
+            // CSRF — Get token from meta
+            // ============================================================
+
+            function getCSRFToken() {
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta) return meta.getAttribute('content');
+
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.indexOf('csrf_token=') === 0) {
+                        return cookie.substring('csrf_token='.length);
+                    }
+                }
+                return '';
+            }
+
+            // ============================================================
+            // AUTHENTICATION
+            // ============================================================
+
+            function doLogin() {
+                var username = getElement('username');
+                var password = getElement('password');
+                var errorEl = getElement('loginError');
+                var loginBtn = getElement('loginButton');
+                var rememberMe = getElement('rememberMe');
+
+                if (!username || !password || !errorEl || !loginBtn) return;
+
+                var user = username.value.trim();
+                var pass = password.value;
+
+                errorEl.className = 'error-msg';
+                errorEl.textContent = '';
+
+                if (!user || !pass) {
+                    errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
+                    errorEl.classList.add('show');
+                    return;
+                }
+
+                loginBtn.disabled = true;
+                loginBtn.classList.add('loading');
+
+                fetch(API + '/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-Token': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        username: user,
+                        password: pass,
+                        rememberMe: rememberMe ? rememberMe.checked : false
+                    }),
+                    credentials: 'include'
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return response.json().then(function(data) {
+                            throw new Error(data.error || 'فشل تسجيل الدخول');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
+
+                    if (data.success && data.user) {
+                        state.user = data.user;
+                        state.authenticated = true;
+                        state.absoluteStart = Date.now();
+
+                        var loginOverlay = getElement('loginOverlay');
+                        var mainApp = getElement('mainApp');
+                        if (loginOverlay) addClass(loginOverlay, 'hidden');
+                        if (mainApp) removeClass(mainApp, 'hidden');
+
+                        updateUserDisplay();
+                        buildSidebar();
+                        loadPage('dashboard');
+
+                        showToast('✅ مرحباً ' + (state.user.name || state.user.username), 'success');
+                        loadAllData();
+                        startSessionTimers();
+                    } else {
+                        errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+                        errorEl.classList.add('show');
+                    }
+                })
+                .catch(function(error) {
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
+                    errorEl.textContent = '❌ ' + error.message;
+                    errorEl.classList.add('show');
+                });
+            }
+
+            function doLogout() {
+                showModal({
+                    title: '⚠️ تسجيل الخروج',
+                    message: 'هل أنت متأكد من تسجيل الخروج؟',
+                    confirmText: 'تسجيل الخروج',
+                    confirmClass: 'btn-danger',
+                    cancelText: 'إلغاء'
+                }).then(function(confirmed) {
+                    if (!confirmed) return;
+
+                    var logoutBtn = getElement('logoutBtn');
+                    if (logoutBtn) {
+                        logoutBtn.textContent = '⏳ جاري...';
+                        logoutBtn.disabled = true;
+                    }
+
+                    fetch(API + '/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-Token': getCSRFToken()
+                        },
+                        credentials: 'include'
+                    })
+                    .then(function(response) {
+                        return response.json().catch(function() { return {}; });
+                    })
+                    .then(function() {
+                        state.user = null;
+                        state.authenticated = false;
+                        stopSessionTimers();
+
+                        var loginOverlay = getElement('loginOverlay');
+                        var mainApp = getElement('mainApp');
+                        if (loginOverlay) removeClass(loginOverlay, 'hidden');
+                        if (mainApp) addClass(mainApp, 'hidden');
+
+                        var username = getElement('username');
+                        var password = getElement('password');
+                        if (username) username.value = '';
+                        if (password) password.value = '';
+
+                        var errorEl = getElement('loginError');
+                        if (errorEl) errorEl.className = 'error-msg';
+
+                        if (logoutBtn) {
+                            logoutBtn.textContent = 'تسجيل الخروج';
+                            logoutBtn.disabled = false;
+                        }
+
+                        showToast('👋 تم تسجيل الخروج', 'info');
+                    })
+                    .catch(function() {
+                        state.user = null;
+                        state.authenticated = false;
+
+                        var loginOverlay = getElement('loginOverlay');
+                        var mainApp = getElement('mainApp');
+                        if (loginOverlay) removeClass(loginOverlay, 'hidden');
+                        if (mainApp) addClass(mainApp, 'hidden');
+
+                        if (logoutBtn) {
+                            logoutBtn.textContent = 'تسجيل الخروج';
+                            logoutBtn.disabled = false;
+                        }
+
+                        showToast('⚠️ تم تسجيل الخروج محلياً', 'warning');
+                    });
+                });
+            }
+
+            function verifySession() {
+                return fetch(API + '/auth/me', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-Token': getCSRFToken()
+                    }
+                })
+                .then(function(response) {
+                    if (!response.ok) return false;
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success && data.user) {
+                        state.user = data.user;
+                        state.authenticated = true;
+                        state.absoluteStart = Date.now();
+                        return true;
+                    }
+                    return false;
+                })
+                .catch(function() {
+                    return false;
+                });
+            }
+
+            // ============================================================
+            // MODAL
+            // ============================================================
+
+            var modalResolve = null;
+
+            function showModal(options) {
+                return new Promise(function(resolve) {
+                    var overlay = getElement('modalOverlay');
+                    var title = getElement('modalTitle');
+                    var body = getElement('modalBody');
+                    var confirmBtn = getElement('modalConfirm');
+                    var cancelBtn = getElement('modalCancel');
+                    var closeBtn = getElement('modalClose');
+
+                    if (!overlay) {
+                        resolve(false);
+                        return;
+                    }
+
+                    title.textContent = options.title || 'تأكيد';
+                    body.textContent = options.message || 'هل أنت متأكد؟';
+
+                    confirmBtn.textContent = options.confirmText || 'تأكيد';
+                    confirmBtn.className = 'btn ' + (options.confirmClass || 'btn-primary');
+
+                    cancelBtn.textContent = options.cancelText || 'إلغاء';
+                    cancelBtn.style.display = options.showCancel !== false ? 'inline-flex' : 'none';
+
+                    modalResolve = resolve;
+
+                    var newConfirm = confirmBtn.cloneNode(true);
+                    var newCancel = cancelBtn.cloneNode(true);
+                    var newClose = closeBtn.cloneNode(true);
+
+                    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+                    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+                    closeBtn.parentNode.replaceChild(newClose, closeBtn);
+
+                    var cleanup = function(result) {
+                        addClass(overlay, 'hidden');
+                        if (modalResolve) {
+                            modalResolve(result);
+                            modalResolve = null;
+                        }
+                    };
+
+                    newConfirm.addEventListener('click', function() { cleanup(true); });
+                    newCancel.addEventListener('click', function() { cleanup(false); });
+                    newClose.addEventListener('click', function() { cleanup(false); });
+
+                    overlay.addEventListener('click', function(e) {
+                        if (e.target === overlay) cleanup(false);
+                    });
+
+                    removeClass(overlay, 'hidden');
+                });
+            }
+
+            // ============================================================
+            // USER DISPLAY
+            // ============================================================
+
+            function updateUserDisplay() {
+                if (!state.user) return;
+                var name = state.user.name || state.user.username || 'مستخدم';
+                safeText('userDisplayName', name);
+                safeText('userInitial', name.charAt(0));
+                safeText('sidebarUserName', name);
+                safeText('sidebarUserRole', getRoleName(state.user.role));
+                safeText('sidebarUserAvatar', name.charAt(0));
+            }
+
+            function getRoleName(role) {
+                var roles = { admin: 'مسؤول النظام', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
+                return roles[role] || role || 'مستخدم';
+            }
+
+            // ============================================================
+            // RBAC
+            // ============================================================
+
+            function canAccessPage(page) {
+                if (state.user && state.user.role === 'admin') return true;
+
+                var permissions = PAGE_PERMISSIONS[page];
+                if (!permissions) return true;
+
+                return permissions.some(function(perm) {
+                    return state.user &&
+                        state.user.permissions &&
+                        state.user.permissions[perm] === true;
+                });
+            }
+
+            // ============================================================
+            // LOAD DATA
+            // ============================================================
+
+            function loadAllData() {
+                if (!state.authenticated) return;
+
+                var headers = {
+                    'Accept': 'application/json',
+                    'X-CSRF-Token': getCSRFToken()
+                };
+
+                fetch(API + '/vessels', {
+                    credentials: 'include',
+                    headers: headers
+                })
+                .then(function(response) {
+                    if (!response.ok) throw new Error('فشل تحميل المراكب');
+                    return response.json();
+                })
+                .then(function(data) {
+                    state.vessels = Array.isArray(data) ? data : [];
+                    updateBadge('fleetBadge', state.vessels.length);
+                })
+                .catch(function(error) {
+                    console.warn('⚠️ Error loading vessels:', error.message);
+                });
+
+                if (canAccessPage('users')) {
+                    fetch(API + '/users', {
+                        credentials: 'include',
+                        headers: headers
+                    })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('فشل تحميل المستخدمين');
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        state.users = Array.isArray(data) ? data : [];
+                        updateBadge('usersBadge', state.users.length);
+                    })
+                    .catch(function(error) {
+                        console.warn('⚠️ Error loading users:', error.message);
+                    });
+                }
+            }
+
+            function updateBadge(id, count) {
+                var el = getElement(id);
+                if (el) {
+                    el.textContent = count || 0;
+                    el.style.display = (count && count > 0) ? 'inline' : 'none';
+                }
+            }
+
+            // ============================================================
+            // LOAD PAGE
+            // ============================================================
+
+            var loadingPages = {};
+
+            function loadPage(page) {
+                if (!ALLOWED_PAGES.has(page)) {
+                    showToast('⚠️ الصفحة غير مصرح بها', 'error');
+                    return;
+                }
+
+                if (!canAccessPage(page)) {
+                    showToast('🔒 ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
+                    return;
+                }
+
+                if (loadingPages[page]) {
+                    console.log('⏭️ Page already loading:', page);
+                    return;
+                }
+
+                state.page = page;
+
+                try {
+                    sessionStorage.setItem(PAGE_KEY, page);
+                } catch (e) { /* Silent fail */ }
+
+                document.querySelectorAll('.nav-btn').forEach(function(btn) {
+                    btn.classList.toggle('active', btn.dataset.page === page);
+                });
+
+                var container = getElement('pageContainer');
+                var loader = getElement('pageLoader');
+
+                if (!container) return;
+
+                loadingPages[page] = true;
+                if (loader) removeClass(loader, 'hidden');
+
+                while (container.firstChild) {
+                    container.removeChild(container.firstChild);
+                }
+
+                fetch('/pages/' + page + '.html', { cache: 'no-store' })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('فشل تحميل الصفحة (' + response.status + ')');
+                        return response.text();
+                    })
+                    .then(function(html) {
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(html, 'text/html');
+                        var bodyContent = doc.body;
+
+                        var scripts = bodyContent.querySelectorAll('script');
+                        scripts.forEach(function(script) {
+                            script.remove();
+                        });
+
+                        var fragment = document.createDocumentFragment();
+                        var children = bodyContent.childNodes;
+                        children.forEach(function(child) {
+                            fragment.appendChild(child.cloneNode(true));
+                        });
+
+                        container.appendChild(fragment);
+
+                        if (loader) addClass(loader, 'hidden');
+                        document.title = '⚓ ' + (CONFIG_PAGES[page] || page);
+                        console.log('✅ Page loaded securely:', page);
+
+                        loadingPages[page] = false;
+                        resetIdleTimer();
+                    })
+                    .catch(function(error) {
+                        if (loader) addClass(loader, 'hidden');
+                        loadingPages[page] = false;
+
+                        var errorDiv = createElement('div', {
+                            className: 'error-container'
+                        });
+
+                        var icon = createElement('div', {
+                            className: 'error-icon',
+                            textContent: '❌'
+                        });
+
+                        var title = createElement('h2', {
+                            className: 'error-title',
+                            textContent: 'فشل تحميل الصفحة'
+                        });
+
+                        var msg = createElement('p', {
+                            className: 'error-message',
+                            textContent: error.message
+                        });
+
+                        var btn = createElement('button', {
+                            className: 'btn-gold',
+                            textContent: '📊 العودة للرئيسية'
+                        });
+                        btn.addEventListener('click', function() {
+                            loadPage('dashboard');
+                        });
+
+                        errorDiv.appendChild(icon);
+                        errorDiv.appendChild(title);
+                        errorDiv.appendChild(msg);
+                        errorDiv.appendChild(btn);
+
+                        while (container.firstChild) {
+                            container.removeChild(container.firstChild);
+                        }
+                        container.appendChild(errorDiv);
+                    });
+            }
+
+            // ============================================================
+            // BUILD SIDEBAR
+            // ============================================================
+
+            function buildSidebar() {
+                var nav = getElement('sidebarNav');
+                if (!nav) return;
+
+                while (nav.firstChild) {
+                    nav.removeChild(nav.firstChild);
+                }
+
+                var groups = [
+                    { title: 'الرئيسية', items: [
+                            { page: 'dashboard', icon: 'fa-chart-pie', label: 'لوحة التحكم' },
+                            { page: 'fleet', icon: 'fa-ship', label: 'السجل العام', badge: 'fleetBadge' }
+                        ] },
+                    { title: 'إدارة الأسطول', items: [
+                            { page: 'maintenance', icon: 'fa-wrench', label: 'الصيانة', badge: 'maintenanceBadge',
+                                badgeClass: 'warning' },
+                            { page: 'efficiency', icon: 'fa-chart-line', label: 'الجاهزية' },
+                            { page: 'support', icon: 'fa-headset', label: 'الدعم' }
+                        ] },
+                    { title: 'العمليات', items: [
+                            { page: 'notes', icon: 'fa-sticky-note', label: 'Note Verbale' },
+                            { page: 'monitoring', icon: 'fa-map-marked-alt', label: 'المراقبة الشاملة',
+                                badge: 'sessionsBadge', badgeClass: 'success' }
+                        ] },
+                    { title: 'الإدارة', items: [
+                            { page: 'users', icon: 'fa-users', label: 'المستخدمين', badge: 'usersBadge' },
+                            { page: 'logs', icon: 'fa-history', label: 'سجلات الصيانة', badge: 'logsBadge' }
+                        ] },
+                    { title: 'متقدم', items: [
+                            { page: 'ai-assistant', icon: 'fa-robot', label: 'المساعد الذكي', badge: 'AI',
+                                badgeClass: 'success' },
+                            { page: 'settings', icon: 'fa-cog', label: 'الإعدادات' }
+                        ] }
+                ];
+
+                groups.forEach(function(group) {
+                    var groupDiv = createElement('div', { className: 'nav-group' });
+
+                    var titleSpan = createElement('span', {
+                        className: 'nav-group-title',
+                        textContent: group.title
+                    });
+                    groupDiv.appendChild(titleSpan);
+
+                    group.items.forEach(function(item) {
+                        if (!canAccessPage(item.page)) {
+                            return;
+                        }
+
+                        var isActive = state.page === item.page ? ' active' : '';
+                        var btn = createElement('button', {
+                            className: 'nav-btn' + isActive,
+                            'data-page': item.page
+                        });
+
+                        var icon = createElement('i', { className: 'fas ' + item.icon });
+                        btn.appendChild(icon);
+
+                        var text = document.createTextNode(' ' + item.label + ' ');
+                        btn.appendChild(text);
+
+                        if (item.badge) {
+                            var badgeClass = item.badgeClass || '';
+                            var badge = createElement('span', {
+                                className: 'nav-badge ' + badgeClass,
+                                id: item.badge,
+                                textContent: '0'
+                            });
+                            btn.appendChild(badge);
+                        }
+
+                        if (item.badge === 'AI') {
+                            var aiBadge = createElement('span', {
+                                className: 'nav-badge success',
+                                textContent: 'AI'
+                            });
+                            btn.appendChild(aiBadge);
+                        }
+
+                        btn.addEventListener('click', function() {
+                            var page = this.dataset.page;
+                            if (page) loadPage(page);
+                            if (window.innerWidth <= 992) closeSidebar();
+                        });
+
+                        groupDiv.appendChild(btn);
+                    });
+
+                    nav.appendChild(groupDiv);
+                });
+            }
+
+            // ============================================================
+            // SIDEBAR
+            // ============================================================
+
+            function toggleSidebar() {
+                var sidebar = getElement('sidebar');
+                var toggle = getElement('menuToggle');
+                if (sidebar) sidebar.classList.toggle('open');
+                if (toggle) toggle.classList.toggle('active');
+            }
+
+            function closeSidebar() {
+                var sidebar = getElement('sidebar');
+                var toggle = getElement('menuToggle');
+                if (sidebar) sidebar.classList.remove('open');
+                if (toggle) toggle.classList.remove('active');
+            }
+
+            // ============================================================
+            // FORGOT PASSWORD
+            // ============================================================
+
+            function handleForgotPassword() {
+                var modal = getElement('forgotModal');
+                var closeBtn = getElement('forgotModalClose');
+                var cancelBtn = getElement('forgotCancel');
+                var submitBtn = getElement('forgotSubmit');
+                var emailInput = getElement('resetEmail');
+                var errorEl = getElement('resetError');
+
+                if (!modal) return;
+
+                removeClass(modal, 'hidden');
+                if (emailInput) emailInput.value = '';
+                if (errorEl) {
+                    errorEl.className = 'error-msg';
+                    errorEl.textContent = '';
+                }
+
+                var closeModal = function() {
+                    addClass(modal, 'hidden');
+                };
+
+                if (closeBtn) {
+                    var newClose = closeBtn.cloneNode(true);
+                    closeBtn.parentNode.replaceChild(newClose, closeBtn);
+                    newClose.addEventListener('click', closeModal);
+                }
+
+                if (cancelBtn) {
+                    var newCancel = cancelBtn.cloneNode(true);
+                    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+                    newCancel.addEventListener('click', closeModal);
+                }
+
+                if (submitBtn) {
+                    var newSubmit = submitBtn.cloneNode(true);
+                    submitBtn.parentNode.replaceChild(newSubmit, submitBtn);
+
+                    newSubmit.addEventListener('click', function() {
+                        if (!emailInput) return;
+
+                        var email = emailInput.value.trim();
+                        if (!email) {
+                            if (errorEl) {
+                                errorEl.className = 'error-msg show';
+                                errorEl.textContent = '⚠️ يرجى إدخال بريدك الإلكتروني';
+                            }
+                            return;
+                        }
+
+                        newSubmit.disabled = true;
+                        newSubmit.textContent = '⏳ جاري الإرسال...';
+
+                        fetch(API + '/auth/forgot-password', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': getCSRFToken()
+                            },
+                            body: JSON.stringify({ email: email }),
+                            credentials: 'include'
+                        })
+                        .then(function(response) {
+                            return response.json();
+                        })
+                        .then(function(data) {
+                            newSubmit.disabled = false;
+                            newSubmit.textContent = 'إرسال رابط الاستعادة';
+
+                            if (data.success) {
+                                showToast('✅ تم إرسال رابط استعادة كلمة المرور إلى بريدك', 'success');
+                                closeModal();
+                            } else {
+                                if (errorEl) {
+                                    errorEl.className = 'error-msg show';
+                                    errorEl.textContent = '❌ ' + (data.error || 'فشل إرسال الرابط');
+                                }
+                            }
+                        })
+                        .catch(function(error) {
+                            newSubmit.disabled = false;
+                            newSubmit.textContent = 'إرسال رابط الاستعادة';
+
+                            if (errorEl) {
+                                errorEl.className = 'error-msg show';
+                                errorEl.textContent = '❌ خطأ في الاتصال بالخادم';
+                            }
+                        });
+                    });
+                }
+
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+            }
+
+            // ============================================================
+            // INIT
+            // ============================================================
+
+            function init() {
+                console.log('🚢 Marine System v23.0 — Emergency Fix loading...');
+
+                // Login form
+                var loginForm = getElement('loginForm');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        var button = getElement('loginButton');
+                        if (button && !button.disabled) doLogin();
+                    });
+                }
+
+                // Password toggle
+                var toggleBtn = getElement('togglePassword');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', function() {
+                        var password = getElement('password');
+                        var icon = this.querySelector('i');
+                        if (password && icon) {
+                            var isPassword = password.type === 'password';
+                            password.type = isPassword ? 'text' : 'password';
+                            icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+                        }
+                    });
+                }
+
+                // Forgot password
+                var forgotBtn = getElement('forgotPasswordBtn');
+                if (forgotBtn) {
+                    forgotBtn.addEventListener('click', handleForgotPassword);
+                }
+
+                // Menu toggle
+                var menuToggle = getElement('menuToggle');
+                if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+
+                // Sidebar close
+                var sidebarClose = getElement('sidebarClose');
+                if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
+
+                // Logout button
+                var logoutBtn = getElement('logoutBtn');
+                if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
+
+                // User button
+                var userBtn = getElement('userBtn');
+                if (userBtn) {
+                    userBtn.addEventListener('click', function() {
+                        showModal({
+                            title: '👤 القائمة الشخصية',
+                            message: 'هل تريد تسجيل الخروج؟',
+                            confirmText: 'تسجيل الخروج',
+                            confirmClass: 'btn-danger',
+                            cancelText: 'إلغاء'
+                        }).then(function(confirmed) {
+                            if (confirmed) doLogout();
+                        });
+                    });
+                }
+
+                // Notification button
+                var notifBtn = getElement('notifBtn');
+                if (notifBtn) {
+                    notifBtn.addEventListener('click', function() {
+                        showToast('📬 تم فتح الإشعارات', 'info');
+                    });
+                }
+
+                // Back to top
+                var backToTop = getElement('backToTop');
+                if (backToTop) {
+                    backToTop.addEventListener('click', function() {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                }
+
+                window.addEventListener('scroll', function() {
+                    var el = getElement('backToTop');
+                    if (el) {
+                        el.style.display = window.scrollY > 300 ? 'flex' : 'none';
+                    }
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', function(e) {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                        e.preventDefault();
+                        var search = getElement('quickSearch');
+                        if (search) {
+                            search.focus();
+                            search.select();
+                        }
+                    }
+
+                    if (e.key === 'Escape') {
+                        var sidebar = getElement('sidebar');
+                        if (sidebar && sidebar.classList.contains('open')) {
+                            closeSidebar();
+                        }
+                    }
+                });
+
+                // Build sidebar
+                buildSidebar();
+
+                // Start time updates
+                updateDateTime();
+                setInterval(updateDateTime, 1000);
+
+                // Verify session (HttpOnly cookie)
+                verifySession().then(function(isValid) {
+                    if (isValid) {
+                        var loginOverlay = getElement('loginOverlay');
+                        var mainApp = getElement('mainApp');
+                        if (loginOverlay) addClass(loginOverlay, 'hidden');
+                        if (mainApp) removeClass(mainApp, 'hidden');
+
+                        updateUserDisplay();
+                        buildSidebar();
+
+                        var savedPage = 'dashboard';
+                        try {
+                            var stored = sessionStorage.getItem(PAGE_KEY);
+                            if (stored && ALLOWED_PAGES.has(stored) && canAccessPage(stored)) {
+                                savedPage = stored;
+                            }
+                        } catch (e) { /* Silent fail */ }
+
+                        loadPage(savedPage);
+
+                        showToast('👋 مرحباً بعودتك', 'success');
+                        setTimeout(loadAllData, 500);
+                        startSessionTimers();
+                    } else {
+                        var loginOverlay = getElement('loginOverlay');
+                        var mainApp = getElement('mainApp');
+                        if (loginOverlay) removeClass(loginOverlay, 'hidden');
+                        if (mainApp) addClass(mainApp, 'hidden');
+                    }
+                });
+
+                console.log('✅ Marine System v23.0 — Emergency Fix ready');
+                console.log('🔒 Please login to continue');
+            }
+
+            // ============================================================
+            // BOOT
+            // ============================================================
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+            // ============================================================
+            // GLOBAL
+            // ============================================================
+
+            window.loadPage = loadPage;
+            window.doLogout = doLogout;
+            window.doLogin = doLogin;
+            window.showToast = showToast;
+
+        })();
+    </script>
 
 </body>
 </html>
