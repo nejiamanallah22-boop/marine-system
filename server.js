@@ -1,29 +1,26 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v38.4 (FULLY INTEGRATED)
+ * 🚢 MARINE SYSTEM - SERVER v39.0
+ * PRODUCTION HARDENED
  * ============================================================
- * ✅ FIXED: Account lock timeout check
- * ✅ FIXED: Token version validation
- * ✅ FIXED: CORS configuration
- * ✅ FIXED: Admin unlock on restart
- * ✅ ADDED: Gemini API Integration (Primary)
- * ✅ ADDED: DeepSeek AI Integration (Fallback)
- * ✅ ADDED: AI API endpoints
- * ✅ ADDED: Sessions API
- * ✅ ADDED: Logs API
- * ✅ ADDED: Seed Data (Vessels with Repair Units)
- * ✅ ADDED: /api/auth/me endpoint
- * ✅ ADDED: /api/auth/verify endpoint
- * ✅ ADDED: /api/config endpoint (Public - for frontend)
- * ✅ ADDED: /api/check-gemini endpoint
- * ✅ ADDED: /ai-assistant page
- * ✅ ADDED: Settings API (GET/PUT/POST/DELETE) ✅ NEW
- * ✅ ADDED: Permissions API (/api/users/me/permissions) ✅ NEW
- * ✅ ADDED: 2FA API (initiate/verify/disable/status) ✅ NEW
- * ✅ ADDED: Session Timeout API ✅ NEW
- * ✅ ADDED: Logo & Background Upload ✅ NEW
- * ✅ FIXED: 401 Unauthorized on /api/settings ✅ FIXED
- * ✅ PRODUCTION READY 100%
+ *
+ * FIXES:
+ * ✅ /assets served correctly
+ * ✅ /assets/js/index.js no longer receives index.html
+ * ✅ /assets/css served correctly
+ * ✅ /pages served correctly
+ * ✅ HttpOnly Secure SameSite cookie authentication
+ * ✅ CSRF protection
+ * ✅ Origin / Referer validation
+ * ✅ Restricted CORS
+ * ✅ JWT tokenVersion validation
+ * ✅ Login brute-force protection
+ * ✅ Secure logout
+ * ✅ Secure uploads
+ * ✅ AI keys never exposed to browser
+ * ✅ API 404 separated from frontend fallback
+ * ✅ Render compatible
+ *
  * ============================================================
  */
 
@@ -48,321 +45,1064 @@ const crypto = require('crypto');
 const app = express();
 
 // ============================================================
-// ⚙️ CONFIGURATION
+// CONFIGURATION
 // ============================================================
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI =
+    process.env.MONGODB_URI ||
+    process.env.MONGO_URI ||
+    '';
 
-// ✅ JWT_SECRET
 const JWT_SECRET = process.env.JWT_SECRET;
+
 if (!JWT_SECRET || JWT_SECRET.length < 32) {
-    console.error('❌ JWT_SECRET is missing or too short (must be at least 32 characters)');
-    console.error('   Please add JWT_SECRET to your environment variables');
+    console.error(
+        '❌ JWT_SECRET is missing or shorter than 32 characters'
+    );
     process.exit(1);
 }
 
-// ✅ AI Configuration - Gemini Priority
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
-const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PASSWORD || ADMIN_PASSWORD.length < 12) {
+    console.error(
+        '❌ ADMIN_PASSWORD must exist and be at least 12 characters'
+    );
+    process.exit(1);
+}
 
 const ADMIN_USERNAME = 'admin';
 const ADMIN_EMAIL = 'admin@marine-system.com';
-const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_NAME =
+    process.env.ADMIN_NAME || 'مدير النظام';
 
-console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v38.4 - FULLY INTEGRATED');
-console.log('='.repeat(60));
-console.log(`✅ Environment: ${NODE_ENV}`);
-console.log(`✅ Port: ${PORT}`);
-console.log(`✅ MongoDB: ${MONGODB_URI ? '✓' : '✗'}`);
-console.log(`✅ JWT_SECRET: ${JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ Admin Password: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ Gemini API: ${GEMINI_API_KEY ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ DeepSeek API: ${DEEPSEEK_API_KEY ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ OpenAI API: ${OPENAI_API_KEY ? '✓ Set' : '✗ Missing'}`);
-console.log('='.repeat(60) + '\n');
+const GEMINI_API_KEY =
+    process.env.GEMINI_API_KEY || '';
+
+const GEMINI_MODEL =
+    process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+
+const DEEPSEEK_API_KEY =
+    process.env.DEEPSEEK_API_KEY || '';
+
+const DEEPSEEK_MODEL =
+    process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+
+const OPENAI_API_KEY =
+    process.env.OPENAI_API_KEY || '';
+
+const OPENAI_MODEL =
+    process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
+const SESSION_MAX_AGE =
+    8 * 60 * 60 * 1000;
+
+const COOKIE_NAME = 'marine_session';
+const CSRF_COOKIE_NAME = 'csrf_token';
 
 // ============================================================
-// 📦 MULTER CONFIGURATION - للصور
+// PATHS
 // ============================================================
 
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+const ROOT_DIR = __dirname;
+
+const PUBLIC_DIR =
+    path.join(ROOT_DIR, 'public');
+
+const ASSETS_DIR =
+    path.join(ROOT_DIR, 'assets');
+
+const CSS_DIR =
+    path.join(ROOT_DIR, 'css');
+
+const JS_DIR =
+    path.join(ROOT_DIR, 'js');
+
+const PAGES_DIR =
+    path.join(PUBLIC_DIR, 'pages');
+
+const UPLOADS_DIR =
+    path.join(ROOT_DIR, 'uploads');
+
+// ============================================================
+// ENSURE DIRECTORIES
+// ============================================================
+
+[
+    PUBLIC_DIR,
+    PAGES_DIR,
+    UPLOADS_DIR
+].forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+});
+
+// ============================================================
+// TRUST PROXY
+// ============================================================
+
+if (IS_PRODUCTION) {
+    app.set('trust proxy', 1);
 }
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
+// ============================================================
+// SECURITY BASICS
+// ============================================================
+
+app.disable('x-powered-by');
+
+// ============================================================
+// REQUEST LOGGING
+// ============================================================
+
+app.use((req, res, next) => {
+    const started = Date.now();
+
+    const forwarded =
+        req.headers['x-forwarded-for'];
+
+    const ip =
+        typeof forwarded === 'string'
+            ? forwarded.split(',')[0].trim()
+            : req.ip;
+
+    console.log(
+        `📡 ${req.method} ${req.originalUrl} | ${ip}`
+    );
+
+    res.on('finish', () => {
+        const duration =
+            Date.now() - started;
+
+        console.log(
+            `   ↳ ${res.statusCode} | ${duration}ms`
+        );
+    });
+
+    next();
+});
+
+// ============================================================
+// BODY PARSERS
+// ============================================================
+
+app.use(express.json({
+    limit: '2mb'
+}));
+
+app.use(express.urlencoded({
+    extended: false,
+    limit: '2mb'
+}));
+
+app.use(cookieParser());
+
+app.use(compression());
+
+// ============================================================
+// CORS
+// ============================================================
+
+const allowedOrigins = new Set();
+
+if (process.env.FRONTEND_URL) {
+    allowedOrigins.add(
+        process.env.FRONTEND_URL.replace(/\/$/, '')
+    );
+}
+
+if (process.env.RENDER_EXTERNAL_URL) {
+    allowedOrigins.add(
+        process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '')
+    );
+}
+
+const corsOptions = {
+    origin(origin, callback) {
+
+        // Same-origin / server-to-server
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        if (allowedOrigins.has(origin)) {
+            return callback(null, true);
+        }
+
+        // Allow own Render domain if configured
+        if (
+            IS_PRODUCTION &&
+            process.env.RENDER_EXTERNAL_HOSTNAME &&
+            origin ===
+                `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
+        ) {
+            return callback(null, true);
+        }
+
+        return callback(
+            new Error('CORS origin not allowed')
+        );
     },
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        const name = crypto.randomBytes(16).toString('hex');
-        cb(null, `${name}${ext}`);
+
+    credentials: true,
+
+    methods: [
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE',
+        'OPTIONS'
+    ],
+
+    allowedHeaders: [
+        'Content-Type',
+        'Accept',
+        'X-CSRF-Token',
+        'Authorization'
+    ]
+};
+
+app.use(cors(corsOptions));
+
+// ============================================================
+// HELMET
+// ============================================================
+
+app.use(
+    helmet({
+        contentSecurityPolicy: false,
+
+        crossOriginEmbedderPolicy: false,
+
+        crossOriginOpenerPolicy: {
+            policy: 'same-origin'
+        },
+
+        crossOriginResourcePolicy: {
+            policy: 'same-origin'
+        },
+
+        referrerPolicy: {
+            policy: 'strict-origin-when-cross-origin'
+        },
+
+        frameguard: {
+            action: 'deny'
+        },
+
+        hsts: IS_PRODUCTION
+            ? {
+                maxAge: 31536000,
+                includeSubDomains: true,
+                preload: true
+            }
+            : false
+    })
+);
+
+// ============================================================
+// EXTRA SECURITY HEADERS
+// ============================================================
+
+app.use((req, res, next) => {
+
+    res.setHeader(
+        'X-Content-Type-Options',
+        'nosniff'
+    );
+
+    res.setHeader(
+        'X-DNS-Prefetch-Control',
+        'off'
+    );
+
+    res.setHeader(
+        'X-Permitted-Cross-Domain-Policies',
+        'none'
+    );
+
+    res.setHeader(
+        'Permissions-Policy',
+        'microphone=(), camera=(), payment=(), usb=()'
+    );
+
+    if (IS_PRODUCTION) {
+        res.setHeader(
+            'Strict-Transport-Security',
+            'max-age=31536000; includeSubDomains; preload'
+        );
+    }
+
+    next();
+});
+
+// ============================================================
+// RATE LIMITING
+// ============================================================
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+
+    standardHeaders: true,
+    legacyHeaders: false,
+
+    message: {
+        success: false,
+        error: 'طلبات كثيرة جداً، حاول لاحقاً'
     }
 });
 
-const fileFilter = (req, file, cb) => {
-    const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
-    if (allowed.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('نوع الملف غير مدعوم'), false);
+app.use('/api', apiLimiter);
+
+// ============================================================
+// LOGIN RATE LIMIT
+// ============================================================
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+
+    skipSuccessfulRequests: true,
+
+    standardHeaders: true,
+    legacyHeaders: false,
+
+    message: {
+        success: false,
+        error: 'محاولات تسجيل دخول كثيرة جداً، حاول لاحقاً'
     }
-};
+});
+
+// ============================================================
+// MULTER
+// ============================================================
+
+const storage = multer.diskStorage({
+
+    destination(req, file, cb) {
+        cb(null, UPLOADS_DIR);
+    },
+
+    filename(req, file, cb) {
+
+        const randomName =
+            crypto.randomBytes(24)
+                .toString('hex');
+
+        const ext =
+            path.extname(file.originalname)
+                .toLowerCase();
+
+        cb(
+            null,
+            `${randomName}${ext}`
+        );
+    }
+});
+
+const allowedMimeTypes = new Set([
+    'image/png',
+    'image/jpeg',
+    'image/webp'
+]);
+
+const allowedExtensions = new Set([
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.webp'
+]);
 
 const upload = multer({
+
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter
+
+    limits: {
+        fileSize: 5 * 1024 * 1024,
+        files: 1
+    },
+
+    fileFilter(req, file, cb) {
+
+        const ext =
+            path.extname(file.originalname)
+                .toLowerCase();
+
+        if (
+            allowedMimeTypes.has(file.mimetype) &&
+            allowedExtensions.has(ext)
+        ) {
+            return cb(null, true);
+        }
+
+        cb(
+            new Error(
+                'نوع الملف غير مسموح'
+            )
+        );
+    }
 });
 
 // ============================================================
-// 📦 MODELS
+// MONGOOSE MODELS
 // ============================================================
 
-// 👤 USER MODEL
 const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true, trim: true },
-    username: { type: String, required: true, unique: true, trim: true, lowercase: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, select: false },
-    role: { 
-        type: String, 
-        enum: ['admin', 'manager', 'operator', 'viewer'],
+
+    name: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 120
+    },
+
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        lowercase: true,
+        maxlength: 80
+    },
+
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true,
+        maxlength: 160
+    },
+
+    password: {
+        type: String,
+        required: true,
+        select: false
+    },
+
+    role: {
+        type: String,
+        enum: [
+            'admin',
+            'manager',
+            'operator',
+            'viewer'
+        ],
         default: 'viewer'
     },
-    isActive: { type: Boolean, default: true },
-    isLocked: { type: Boolean, default: false },
-    tokenVersion: { type: Number, default: 0 },
-    refreshToken: { type: String, select: false },
-    lastLogin: { type: Date },
-    loginAttempts: { type: Number, default: 0 },
-    lockUntil: { type: Date, default: null },
-    // ✅ 2FA Fields
-    twoFactorSecret: { type: String, select: false },
-    twoFactorEnabled: { type: Boolean, default: false },
-    twoFactorPending: { type: Boolean, default: false },
-    // ✅ Session Timeout
-    sessionTimeout: { type: Number, default: 60 },
-    // ✅ Permissions
-    permissions: {
-        canManageTheme: { type: Boolean, default: true },
-        canManageBranding: { type: Boolean, default: true },
-        canManageLayout: { type: Boolean, default: true },
-        canManageSecurity: { type: Boolean, default: true },
-        canManageNotifications: { type: Boolean, default: true },
-        canManage2FA: { type: Boolean, default: true },
-        canManageSession: { type: Boolean, default: true }
+
+    isActive: {
+        type: Boolean,
+        default: true
     },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+
+    isLocked: {
+        type: Boolean,
+        default: false
+    },
+
+    tokenVersion: {
+        type: Number,
+        default: 0
+    },
+
+    lastLogin: Date,
+
+    loginAttempts: {
+        type: Number,
+        default: 0
+    },
+
+    lockUntil: {
+        type: Date,
+        default: null
+    },
+
+    twoFactorSecret: {
+        type: String,
+        select: false
+    },
+
+    twoFactorEnabled: {
+        type: Boolean,
+        default: false
+    },
+
+    twoFactorPending: {
+        type: Boolean,
+        default: false
+    },
+
+    sessionTimeout: {
+        type: Number,
+        default: 60,
+        min: 5,
+        max: 480
+    },
+
+    permissions: {
+        canManageTheme: {
+            type: Boolean,
+            default: true
+        },
+
+        canManageBranding: {
+            type: Boolean,
+            default: true
+        },
+
+        canManageLayout: {
+            type: Boolean,
+            default: true
+        },
+
+        canManageSecurity: {
+            type: Boolean,
+            default: true
+        },
+
+        canManageNotifications: {
+            type: Boolean,
+            default: true
+        },
+
+        canManage2FA: {
+            type: Boolean,
+            default: true
+        },
+
+        canManageSession: {
+            type: Boolean,
+            default: true
+        }
+    }
+
+}, {
+    timestamps: true
 });
 
-UserSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    try {
-        const salt = await bcrypt.genSalt(12);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
+UserSchema.pre(
+    'save',
+    async function(next) {
+
+        if (!this.isModified('password')) {
+            return next();
+        }
+
+        try {
+
+            const salt =
+                await bcrypt.genSalt(12);
+
+            this.password =
+                await bcrypt.hash(
+                    this.password,
+                    salt
+                );
+
+            next();
+
+        } catch (error) {
+            next(error);
+        }
     }
-});
+);
 
-UserSchema.methods.comparePassword = async function(candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
-};
+UserSchema.methods.comparePassword =
+    function(password) {
+        return bcrypt.compare(
+            password,
+            this.password
+        );
+    };
 
-UserSchema.methods.incrementLoginAttempts = async function() {
-    this.loginAttempts = (this.loginAttempts || 0) + 1;
-    if (this.loginAttempts >= 5) {
-        this.isLocked = true;
-        this.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
-    }
-    await this.save();
-};
+UserSchema.methods.incrementLoginAttempts =
+    async function() {
 
-UserSchema.methods.resetLoginAttempts = async function() {
-    this.loginAttempts = 0;
-    this.isLocked = false;
-    this.lockUntil = null;
-    await this.save();
-};
+        this.loginAttempts =
+            (this.loginAttempts || 0) + 1;
 
-UserSchema.methods.checkLock = function() {
-    if (!this.isLocked) return null;
-    if (this.lockUntil && this.lockUntil > new Date()) {
-        const remainingMinutes = Math.ceil((this.lockUntil.getTime() - Date.now()) / 60000);
-        return { locked: true, remainingMinutes };
-    }
-    this.isLocked = false;
-    this.lockUntil = null;
-    this.loginAttempts = 0;
-    return { locked: false };
-};
+        if (this.loginAttempts >= 5) {
 
-// ⚙️ SETTINGS MODEL
+            this.isLocked = true;
+
+            this.lockUntil =
+                new Date(
+                    Date.now() +
+                    15 * 60 * 1000
+                );
+        }
+
+        await this.save();
+    };
+
+UserSchema.methods.resetLoginAttempts =
+    async function() {
+
+        this.loginAttempts = 0;
+        this.isLocked = false;
+        this.lockUntil = null;
+
+        await this.save();
+    };
+
+UserSchema.methods.checkLock =
+    function() {
+
+        if (!this.isLocked) {
+            return null;
+        }
+
+        if (
+            this.lockUntil &&
+            this.lockUntil > new Date()
+        ) {
+
+            return {
+                locked: true,
+
+                remainingMinutes:
+                    Math.ceil(
+                        (
+                            this.lockUntil.getTime() -
+                            Date.now()
+                        ) / 60000
+                    )
+            };
+        }
+
+        return {
+            locked: false
+        };
+    };
+
+
+// ============================================================
+// SETTINGS
+// ============================================================
+
 const SettingsSchema = new mongoose.Schema({
+
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
         unique: true
     },
+
     theme: {
-        primary: { type: String, default: '#0a1628' },
-        secondary: { type: String, default: '#1a2a4a' },
-        gold: { type: String, default: '#e6b31e' }
+        primary: {
+            type: String,
+            default: '#0a1628'
+        },
+
+        secondary: {
+            type: String,
+            default: '#1a2a4a'
+        },
+
+        gold: {
+            type: String,
+            default: '#e6b31e'
+        }
     },
+
     layout: {
-        darkMode: { type: Boolean, default: true },
-        fontSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
-        sidebarPosition: { type: String, enum: ['right', 'left'], default: 'right' },
-        showStats: { type: Boolean, default: true }
+        darkMode: {
+            type: Boolean,
+            default: true
+        },
+
+        fontSize: {
+            type: String,
+            enum: [
+                'small',
+                'medium',
+                'large'
+            ],
+            default: 'medium'
+        },
+
+        sidebarPosition: {
+            type: String,
+            enum: [
+                'right',
+                'left'
+            ],
+            default: 'right'
+        },
+
+        showStats: {
+            type: Boolean,
+            default: true
+        }
     },
+
     security: {
-        twoFactorAuth: { type: Boolean, default: false },
-        emailNotifications: { type: Boolean, default: true },
-        smsNotifications: { type: Boolean, default: false },
-        sessionTimeout: { type: Number, default: 60, min: 5, max: 480 }
+        twoFactorAuth: {
+            type: Boolean,
+            default: false
+        },
+
+        emailNotifications: {
+            type: Boolean,
+            default: true
+        },
+
+        smsNotifications: {
+            type: Boolean,
+            default: false
+        },
+
+        sessionTimeout: {
+            type: Number,
+            default: 60,
+            min: 5,
+            max: 480
+        }
     },
+
     notifications: {
-        emergencyAlerts: { type: Boolean, default: true },
-        maintenanceAlerts: { type: Boolean, default: true },
-        performanceReports: { 
-            type: String, 
-            enum: ['daily', 'weekly', 'monthly', 'never'],
+        emergencyAlerts: {
+            type: Boolean,
+            default: true
+        },
+
+        maintenanceAlerts: {
+            type: Boolean,
+            default: true
+        },
+
+        performanceReports: {
+            type: String,
+            enum: [
+                'daily',
+                'weekly',
+                'monthly',
+                'never'
+            ],
             default: 'weekly'
         }
     },
+
     branding: {
-        logoUrl: { type: String, default: null },
-        logoName: { type: String, default: null },
-        logoSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
-        backgroundUrl: { type: String, default: null }
+        logoUrl: {
+            type: String,
+            default: null
+        },
+
+        logoName: {
+            type: String,
+            default: null
+        },
+
+        logoSize: {
+            type: String,
+            enum: [
+                'small',
+                'medium',
+                'large'
+            ],
+            default: 'medium'
+        },
+
+        backgroundUrl: {
+            type: String,
+            default: null
+        }
     }
-}, { timestamps: true });
 
-// 🚢 VESSEL MODEL
-const VesselSchema = new mongoose.Schema({
-    name: { type: String, required: true, trim: true },
-    num: { type: String, trim: true },
-    len: { type: Number, default: 0 },
-    stat: { 
-        type: String, 
-        enum: ['صالح', 'معطب', 'صيانة'],
-        default: 'صالح'
-    },
-    region: { 
-        type: String, 
-        enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب', 
-               'وحدة الصيانة والإسناد البحري تونس', 
-               'وحدة الصيانة والإسناد البحري المنستير',
-               'وحدة الصيانة والإسناد البحري صفاقس',
-               'وحدة الصيانة والإسناد البحري جرجيس',
-               'المجمع الأمني بقبيبة'],
-        trim: true 
-    },
-    zone: { type: String, trim: true },
-    port: { type: String, trim: true },
-    supp: { type: String, trim: true },
-    break: { type: String, trim: true },
-    fDate: { type: Date },
-    eDate: { type: Date },
-    ref: { type: String, trim: true },
-    cat: { type: String, trim: true },
-    repairUnit: { type: String, trim: true },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+}, {
+    timestamps: true
 });
 
-// 🔧 MAINTENANCE MODEL
-const MaintenanceSchema = new mongoose.Schema({
-    vesselId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vessel' },
-    vesselName: { type: String, trim: true },
-    type: { type: String, trim: true },
-    technician: { type: String, trim: true },
-    description: { type: String, required: true },
-    cost: { type: Number, default: 0 },
-    status: { 
-        type: String, 
-        enum: ['معلقة', 'قيد التنفيذ', 'مكتملة', 'ملغاة'],
-        default: 'معلقة'
-    },
-    supervisor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
-
-// 🎫 TICKET MODEL
-const TicketSchema = new mongoose.Schema({
-    title: { type: String, required: true, trim: true },
-    description: { type: String, required: true },
-    priority: {
-        type: String,
-        enum: ['low', 'medium', 'high', 'critical'],
-        default: 'medium'
-    },
-    status: {
-        type: String,
-        enum: ['open', 'in_progress', 'pending', 'resolved', 'closed', 'rejected'],
-        default: 'open'
-    },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
-
-// 📝 NOTE MODEL
-const NoteSchema = new mongoose.Schema({
-    title: { type: String, required: true, trim: true },
-    content: { type: String, required: true },
-    status: { 
-        type: String, 
-        enum: ['مسودة', 'منشورة', 'مؤرشفة'],
-        default: 'مسودة'
-    },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
-
-// 📊 LOGS MODEL
-const LogSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    username: { type: String },
-    action: { type: String },
-    details: { type: String },
-    ip: { type: String },
-    userAgent: { type: String },
-    createdAt: { type: Date, default: Date.now }
-});
-
-// 🏗️ REGISTER MODELS
-const User = mongoose.model('User', UserSchema);
-const Settings = mongoose.model('Settings', SettingsSchema);
-const Vessel = mongoose.model('Vessel', VesselSchema);
-const Maintenance = mongoose.model('Maintenance', MaintenanceSchema);
-const Ticket = mongoose.model('Ticket', TicketSchema);
-const Note = mongoose.model('Note', NoteSchema);
-const Log = mongoose.model('Log', LogSchema);
 
 // ============================================================
-// 🧰 HELPERS
+// VESSEL
+// ============================================================
+
+const VesselSchema = new mongoose.Schema({
+
+    name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+
+    num: {
+        type: String,
+        trim: true
+    },
+
+    len: {
+        type: Number,
+        default: 0
+    },
+
+    stat: {
+        type: String,
+        enum: [
+            'صالح',
+            'معطب',
+            'صيانة'
+        ],
+        default: 'صالح'
+    },
+
+    region: {
+        type: String,
+        trim: true
+    },
+
+    zone: {
+        type: String,
+        trim: true
+    },
+
+    port: {
+        type: String,
+        trim: true
+    },
+
+    supp: {
+        type: String,
+        trim: true
+    },
+
+    break: {
+        type: String,
+        trim: true
+    },
+
+    fDate: Date,
+    eDate: Date,
+
+    ref: String,
+    cat: String,
+    repairUnit: String
+
+}, {
+    timestamps: true
+});
+
+
+// ============================================================
+// MAINTENANCE
+// ============================================================
+
+const MaintenanceSchema = new mongoose.Schema({
+
+    vesselId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Vessel'
+    },
+
+    vesselName: String,
+
+    type: String,
+
+    technician: String,
+
+    description: {
+        type: String,
+        required: true
+    },
+
+    cost: {
+        type: Number,
+        default: 0
+    },
+
+    status: {
+        type: String,
+        enum: [
+            'معلقة',
+            'قيد التنفيذ',
+            'مكتملة',
+            'ملغاة'
+        ],
+        default: 'معلقة'
+    },
+
+    supervisor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
+
+}, {
+    timestamps: true
+});
+
+
+// ============================================================
+// TICKET
+// ============================================================
+
+const TicketSchema = new mongoose.Schema({
+
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+
+    description: {
+        type: String,
+        required: true
+    },
+
+    priority: {
+        type: String,
+        enum: [
+            'low',
+            'medium',
+            'high',
+            'critical'
+        ],
+        default: 'medium'
+    },
+
+    status: {
+        type: String,
+        enum: [
+            'open',
+            'in_progress',
+            'pending',
+            'resolved',
+            'closed',
+            'rejected'
+        ],
+        default: 'open'
+    },
+
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
+
+}, {
+    timestamps: true
+});
+
+
+// ============================================================
+// NOTE
+// ============================================================
+
+const NoteSchema = new mongoose.Schema({
+
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+
+    content: {
+        type: String,
+        required: true
+    },
+
+    status: {
+        type: String,
+        enum: [
+            'مسودة',
+            'منشورة',
+            'مؤرشفة'
+        ],
+        default: 'مسودة'
+    },
+
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
+
+}, {
+    timestamps: true
+});
+
+
+// ============================================================
+// LOG
+// ============================================================
+
+const LogSchema = new mongoose.Schema({
+
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+
+    username: String,
+
+    action: String,
+
+    details: String,
+
+    ip: String,
+
+    userAgent: String
+
+}, {
+    timestamps: {
+        createdAt: true,
+        updatedAt: false
+    }
+});
+
+
+// ============================================================
+// REGISTER MODELS
+// ============================================================
+
+const User =
+    mongoose.models.User ||
+    mongoose.model('User', UserSchema);
+
+const Settings =
+    mongoose.models.Settings ||
+    mongoose.model('Settings', SettingsSchema);
+
+const Vessel =
+    mongoose.models.Vessel ||
+    mongoose.model('Vessel', VesselSchema);
+
+const Maintenance =
+    mongoose.models.Maintenance ||
+    mongoose.model('Maintenance', MaintenanceSchema);
+
+const Ticket =
+    mongoose.models.Ticket ||
+    mongoose.model('Ticket', TicketSchema);
+
+const Note =
+    mongoose.models.Note ||
+    mongoose.model('Note', NoteSchema);
+
+const Log =
+    mongoose.models.Log ||
+    mongoose.model('Log', LogSchema);
+
+
+// ============================================================
+// HELPERS
 // ============================================================
 
 function cleanUser(user) {
-    if (!user) return null;
+
+    if (!user) {
+        return null;
+    }
+
     return {
         id: user._id.toString(),
         name: user.name,
@@ -375,885 +1115,1606 @@ function cleanUser(user) {
     };
 }
 
+
+// ============================================================
+// JWT
+// ============================================================
+
 function generateToken(user) {
+
     return jwt.sign(
-        { id: user._id.toString(), role: user.role, tokenVersion: user.tokenVersion || 0 },
+        {
+            sub: user._id.toString(),
+            role: user.role,
+            tokenVersion:
+                user.tokenVersion || 0
+        },
+
         JWT_SECRET,
-        { expiresIn: '7d', issuer: 'marine-system' }
+
+        {
+            expiresIn: '8h',
+            issuer: 'marine-system',
+            audience: 'marine-system-web'
+        }
     );
 }
 
 function verifyToken(token) {
+
     try {
-        return jwt.verify(token, JWT_SECRET, { issuer: 'marine-system' });
-    } catch (error) {
+
+        return jwt.verify(
+            token,
+            JWT_SECRET,
+            {
+                issuer: 'marine-system',
+                audience: 'marine-system-web'
+            }
+        );
+
+    } catch {
         return null;
     }
 }
 
+
 // ============================================================
-// 📝 LOGGING MIDDLEWARE
+// COOKIE HELPERS
 // ============================================================
 
-app.use((req, res, next) => {
-    const start = Date.now();
-    const ip = req.headers['x-forwarded-for'] || req.ip || req.socket.remoteAddress;
-    const method = req.method;
-    const url = req.originalUrl || req.url;
-    const userAgent = req.headers['user-agent'] || 'unknown';
+function setAuthCookie(res, token) {
 
-    console.log(`📡 [${new Date().toISOString()}] ${method} ${url}`);
-    console.log(`   👤 IP: ${ip}`);
-    console.log(`   📱 UA: ${userAgent.substring(0, 60)}`);
-
-    if (['POST', 'PUT', 'PATCH'].includes(method) && req.body && Object.keys(req.body).length > 0) {
-        const sanitizedBody = { ...req.body };
-        if (sanitizedBody.password) sanitizedBody.password = '******';
-        if (sanitizedBody.currentPassword) sanitizedBody.currentPassword = '******';
-        if (sanitizedBody.newPassword) sanitizedBody.newPassword = '******';
-        console.log(`   📦 Body:`, JSON.stringify(sanitizedBody, null, 2));
-    }
-
-    const originalSend = res.send;
-    res.send = function(data) {
-        const duration = Date.now() - start;
-        const status = res.statusCode;
-        console.log(`   ⏱️ ${duration}ms | ${status}`);
-        
-        if (url.startsWith('/api/')) {
-            try {
-                const responseData = typeof data === 'string' ? JSON.parse(data) : data;
-                if (responseData && typeof responseData === 'object') {
-                    if (responseData.token) {
-                        console.log(`   🔑 Token: ✓ (${responseData.token.substring(0, 15)}...)`);
-                        delete responseData.token;
-                    }
-                    if (responseData.user && responseData.user.password) {
-                        delete responseData.user.password;
-                    }
-                    console.log(`   📤 Response:`, JSON.stringify(responseData, null, 2));
-                }
-            } catch (e) {}
+    res.cookie(
+        COOKIE_NAME,
+        token,
+        {
+            httpOnly: true,
+            secure: IS_PRODUCTION,
+            sameSite: 'strict',
+            path: '/',
+            maxAge: SESSION_MAX_AGE
         }
-        originalSend.call(res, data);
-    };
-
-    next();
-});
-
-// ============================================================
-// 🚦 RATE LIMITING
-// ============================================================
-
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: { success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' },
-    handler: (req, res) => {
-        console.warn(`🚫 [RATE LIMIT] ${req.ip} exceeded rate limit on ${req.url}`);
-        res.status(429).json({ success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' });
-    }
-});
-
-app.use('/api', limiter);
-
-// ============================================================
-// 🔐 MIDDLEWARE
-// ============================================================
-
-app.disable('x-powered-by');
-
-app.use(cors({
-    origin: '*',
-    credentials: false,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-}));
-
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false
-}));
-
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(compression());
-app.use(cookieParser());
-
-// ============================================================
-// 📁 STATIC FILES
-// ============================================================
-
-const publicPath = path.join(__dirname, 'public');
-const cssPath = path.join(publicPath, 'css');
-const pagesPath = path.join(publicPath, 'pages');
-const jsPath = path.join(publicPath, 'js');
-
-if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
-if (!fs.existsSync(cssPath)) fs.mkdirSync(cssPath, { recursive: true });
-if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
-if (!fs.existsSync(jsPath)) fs.mkdirSync(jsPath, { recursive: true });
-
-app.use(express.static(publicPath, {
-    index: false,
-    maxAge: 0,
-    etag: false
-}));
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// ============================================================
-// 🗄️ DATABASE CONNECTION
-// ============================================================
-
-async function connectDB() {
-    if (!MONGODB_URI) {
-        console.error('❌ MONGODB_URI is required');
-        process.exit(1);
-    }
-
-    try {
-        console.log('🔄 Connecting to MongoDB...');
-        await mongoose.connect(MONGODB_URI, {
-            serverSelectionTimeoutMS: 10000,
-            socketTimeoutMS: 45000,
-            maxPoolSize: 10,
-            minPoolSize: 2
-        });
-        console.log('✅ MongoDB Connected');
-        console.log(`📚 Database: ${mongoose.connection.name}`);
-        return true;
-    } catch (error) {
-        console.error('❌ MongoDB Connection Failed:', error.message);
-        return false;
-    }
+    );
 }
 
+
+function clearAuthCookie(res) {
+
+    res.clearCookie(
+        COOKIE_NAME,
+        {
+            httpOnly: true,
+            secure: IS_PRODUCTION,
+            sameSite: 'strict',
+            path: '/'
+        }
+    );
+}
+
+
+function generateCSRFToken() {
+
+    return crypto
+        .randomBytes(32)
+        .toString('hex');
+}
+
+
+function setCSRFToken(res) {
+
+    const token =
+        generateCSRFToken();
+
+    /*
+     * CSRF cookie MUST NOT be HttpOnly
+     * because frontend reads it.
+     */
+
+    res.cookie(
+        CSRF_COOKIE_NAME,
+        token,
+        {
+            httpOnly: false,
+            secure: IS_PRODUCTION,
+            sameSite: 'strict',
+            path: '/',
+            maxAge: SESSION_MAX_AGE
+        }
+    );
+
+    return token;
+}
+
+
 // ============================================================
-// 🔐 AUTHENTICATION MIDDLEWARE
+// ORIGIN / CSRF
 // ============================================================
 
-async function authenticate(req, res, next) {
+function validateOrigin(req) {
+
+    const origin =
+        req.headers.origin;
+
+    const referer =
+        req.headers.referer;
+
+    const host =
+        req.get('host');
+
+    if (origin) {
+
+        try {
+
+            const originUrl =
+                new URL(origin);
+
+            return (
+                originUrl.host === host
+            );
+
+        } catch {
+            return false;
+        }
+    }
+
+    if (referer) {
+
+        try {
+
+            const refererUrl =
+                new URL(referer);
+
+            return (
+                refererUrl.host === host
+            );
+
+        } catch {
+            return false;
+        }
+    }
+
+    /*
+     * For same-origin browser requests,
+     * absence can occur in some environments.
+     */
+
+    return !IS_PRODUCTION;
+}
+
+
+function csrfProtection(
+    req,
+    res,
+    next
+) {
+
+    const method =
+        req.method.toUpperCase();
+
+    if (
+        ![
+            'POST',
+            'PUT',
+            'PATCH',
+            'DELETE'
+        ].includes(method)
+    ) {
+        return next();
+    }
+
+    if (!validateOrigin(req)) {
+
+        return res.status(403).json({
+            success: false,
+            error: 'Origin غير مصرح به'
+        });
+    }
+
+    const headerToken =
+        req.get('X-CSRF-Token');
+
+    const cookieToken =
+        req.cookies[CSRF_COOKIE_NAME];
+
+    if (
+        !headerToken ||
+        !cookieToken ||
+        headerToken.length !==
+            cookieToken.length
+    ) {
+
+        return res.status(403).json({
+            success: false,
+            error: 'CSRF token غير صالح'
+        });
+    }
+
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
 
-        const token = authHeader.substring(7).trim();
-        const decoded = verifyToken(token);
+        const a =
+            Buffer.from(
+                headerToken,
+                'utf8'
+            );
 
-        if (!decoded) {
-            return res.status(401).json({ success: false, error: 'توكن غير صالح' });
-        }
+        const b =
+            Buffer.from(
+                cookieToken,
+                'utf8'
+            );
 
-        const user = await User.findById(decoded.id);
-        if (!user || !user.isActive) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
+        if (
+            a.length !== b.length ||
+            !crypto.timingSafeEqual(a, b)
+        ) {
 
-        const lockCheck = user.checkLock();
-        if (lockCheck && lockCheck.locked) {
-            return res.status(423).json({
+            return res.status(403).json({
                 success: false,
-                error: `الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
+                error: 'CSRF token غير صالح'
             });
         }
-        if (lockCheck && !lockCheck.locked) {
+
+    } catch {
+
+        return res.status(403).json({
+            success: false,
+            error: 'CSRF token غير صالح'
+        });
+    }
+
+    next();
+}
+
+
+// Apply CSRF to API
+app.use('/api', csrfProtection);
+
+
+// ============================================================
+// AUTHENTICATION
+// ============================================================
+
+async function authenticate(
+    req,
+    res,
+    next
+) {
+
+    try {
+
+        let token =
+            req.cookies[COOKIE_NAME];
+
+        /*
+         * Temporary compatibility:
+         * allow Bearer token for older clients.
+         * New frontend should use HttpOnly cookie.
+         */
+
+        if (!token) {
+
+            const auth =
+                req.headers.authorization;
+
+            if (
+                auth &&
+                auth.startsWith('Bearer ')
+            ) {
+                token =
+                    auth.substring(7).trim();
+            }
+        }
+
+        if (!token) {
+
+            return res.status(401).json({
+                success: false,
+                error: 'غير مصرح'
+            });
+        }
+
+        const decoded =
+            verifyToken(token);
+
+        if (!decoded) {
+
+            return res.status(401).json({
+                success: false,
+                error: 'انتهت صلاحية الجلسة'
+            });
+        }
+
+        const userId =
+            decoded.sub ||
+            decoded.id;
+
+        const user =
+            await User.findById(userId);
+
+        if (
+            !user ||
+            !user.isActive
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                error: 'غير مصرح'
+            });
+        }
+
+        const lock =
+            user.checkLock();
+
+        if (
+            lock &&
+            lock.locked
+        ) {
+
+            return res.status(423).json({
+                success: false,
+                error:
+                    `الحساب مقفل مؤقتاً. حاول بعد ${lock.remainingMinutes} دقيقة`
+            });
+        }
+
+        if (
+            lock &&
+            !lock.locked
+        ) {
+
+            user.isLocked = false;
+            user.lockUntil = null;
+            user.loginAttempts = 0;
+
             await user.save();
         }
 
-        if (decoded.tokenVersion !== (user.tokenVersion || 0)) {
+        if (
+            Number(decoded.tokenVersion) !==
+            Number(user.tokenVersion || 0)
+        ) {
+
+            clearAuthCookie(res);
+
             return res.status(401).json({
                 success: false,
-                error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى'
+                error:
+                    'انتهت صلاحية الجلسة'
             });
         }
 
         req.user = user;
+
         next();
 
     } catch (error) {
-        console.error('❌ Auth error:', error.message);
-        return res.status(401).json({ success: false, error: 'غير مصرح' });
+
+        console.error(
+            '❌ Authentication error:',
+            error.message
+        );
+
+        return res.status(401).json({
+            success: false,
+            error: 'غير مصرح'
+        });
     }
 }
 
+
+// ============================================================
+// AUTHORIZATION
+// ============================================================
+
 function authorize(...roles) {
+
     return (req, res, next) => {
-        if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+
+        if (
+            !req.user ||
+            !roles.includes(
+                req.user.role
+            )
+        ) {
+
+            return res.status(403).json({
+                success: false,
+                error: 'ليس لديك صلاحية'
+            });
         }
+
         next();
     };
 }
 
+
 function checkPermission(permission) {
-    return async (req, res, next) => {
+
+    return async (
+        req,
+        res,
+        next
+    ) => {
+
         try {
+
             if (!req.user) {
-                return res.status(401).json({ success: false, error: 'غير مصرح' });
-            }
 
-            const user = await User.findById(req.user.id);
-            if (!user) {
-                return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-            }
-
-            const perms = user.permissions || {};
-            if (!perms[permission]) {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    error: 'ليس لديك صلاحية لهذه العملية'
+                    error: 'غير مصرح'
                 });
             }
 
-            next();
-        } catch (error) {
-            res.status(500).json({ success: false, error: error.message });
-        }
-    };
-}
+            const user =
+                await User.findById(
+                    req.user._id
+                );
 
-// ============================================================
-// 🔐 CREATE/UPDATE ADMIN
-// ============================================================
-
-async function createAdmin() {
-    try {
-        const adminUsername = 'admin';
-        const adminEmail = 'admin@marine-system.com';
-        const adminPassword = process.env.ADMIN_PASSWORD;
-
-        if (!adminPassword) {
-            console.error('❌ ADMIN_PASSWORD is missing from Environment Variables');
-            process.exit(1);
-        }
-
-        const existing = await User.findOne({
-            $or: [{ username: adminUsername }, { email: adminEmail }]
-        }).select('+password');
-
-        if (existing) {
-            const passwordMatches = await bcrypt.compare(adminPassword, existing.password);
-
-            existing.name = ADMIN_NAME || 'مدير النظام';
-            existing.email = adminEmail;
-            existing.role = 'admin';
-            existing.isActive = true;
-            existing.isLocked = false;
-            existing.lockUntil = null;
-            existing.loginAttempts = 0;
-            existing.permissions = {
-                canManageTheme: true,
-                canManageBranding: true,
-                canManageLayout: true,
-                canManageSecurity: true,
-                canManageNotifications: true,
-                canManage2FA: true,
-                canManageSession: true
-            };
-
-            if (!passwordMatches) {
-                existing.password = adminPassword;
-                existing.tokenVersion = (existing.tokenVersion || 0) + 1;
-                console.log('🔑 Admin password synchronized with Render');
-            }
-
-            await existing.save();
-            console.log('✅ Admin updated successfully');
-            console.log(`👤 Username: ${adminUsername}`);
-            return;
-        }
-
-        const admin = new User({
-            name: ADMIN_NAME || 'مدير النظام',
-            username: adminUsername,
-            email: adminEmail,
-            password: adminPassword,
-            role: 'admin',
-            isActive: true,
-            tokenVersion: 1,
-            permissions: {
-                canManageTheme: true,
-                canManageBranding: true,
-                canManageLayout: true,
-                canManageSecurity: true,
-                canManageNotifications: true,
-                canManage2FA: true,
-                canManageSession: true
-            }
-        });
-
-        await admin.save();
-        console.log('✅ Admin created successfully');
-        console.log(`👤 Username: ${adminUsername}`);
-
-    } catch (error) {
-        console.error('❌ Admin error:', error.message);
-        throw error;
-    }
-}
-
-// ============================================================
-// 🌱 SEED DATA
-// ============================================================
-
-async function seedVessels() {
-    try {
-        const count = await Vessel.countDocuments();
-        console.log(`📊 عدد المراكب الحالي: ${count}`);
-        
-        if (count === 0) {
-            console.log('🌱 جاري إضافة بيانات أولية للمراكب...');
-            
-            const sampleVessels = [
-                { 
-                    name: 'البروق 1', 
-                    num: 'B001', 
-                    len: 11, 
-                    region: 'الشمال', 
-                    zone: 'تونس',
-                    stat: 'صالح', 
-                    cat: 'البروق',
-                    port: 'تونس',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
-                },
-                { 
-                    name: 'صقر 2', 
-                    num: 'S002', 
-                    len: 10, 
-                    region: 'الساحل', 
-                    zone: 'سوسة',
-                    stat: 'صالح', 
-                    cat: 'صقور',
-                    port: 'سوسة',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
-                },
-                { 
-                    name: 'خافرة 3', 
-                    num: 'K003', 
-                    len: 20, 
-                    region: 'الوسط', 
-                    zone: 'صفاقس',
-                    stat: 'معطب', 
-                    cat: 'خوافر',
-                    port: 'صفاقس',
-                    break: 'عطل في المحرك الرئيسي',
-                    fDate: new Date('2024-01-15'),
-                    eDate: new Date('2024-03-15'),
-                    repairUnit: 'وحدة الصيانة والإسناد البحري صفاقس'
-                },
-                { 
-                    name: 'طوافة 4', 
-                    num: 'T004', 
-                    len: 35, 
-                    region: 'الجنوب', 
-                    zone: 'جرجيس',
-                    stat: 'صيانة', 
-                    cat: 'طوافات',
-                    port: 'جرجيس',
-                    break: 'أعطال كهربائية',
-                    fDate: new Date('2024-02-01'),
-                    eDate: new Date('2024-03-01'),
-                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
-                },
-                { 
-                    name: 'زورق سريع 5', 
-                    num: 'Z005', 
-                    len: 15, 
-                    region: 'الشمال', 
-                    zone: 'بنزرت',
-                    stat: 'صالح', 
-                    cat: 'زوارق مزدوجة',
-                    port: 'بنزرت',
-                    supp: 'قاعدة بنزرت',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
-                },
-                { 
-                    name: 'البروق 6', 
-                    num: 'B006', 
-                    len: 11, 
-                    region: 'الساحل', 
-                    zone: 'المنستير',
-                    stat: 'صيانة', 
-                    cat: 'البروق',
-                    port: 'المنستير',
-                    break: 'عطل في نظام الملاحة',
-                    fDate: new Date('2024-02-10'),
-                    eDate: new Date('2024-02-25'),
-                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
-                },
-                { 
-                    name: 'صقر 7', 
-                    num: 'S007', 
-                    len: 9, 
-                    region: 'الجنوب', 
-                    zone: 'جربة',
-                    stat: 'صالح', 
-                    cat: 'صقور',
-                    port: 'جربة',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
-                }
-            ];
-            
-            await Vessel.insertMany(sampleVessels);
-            console.log(`✅ تم إضافة ${sampleVessels.length} مراكب افتراضية بنجاح`);
-        } else {
-            console.log(`✅ توجد ${count} مراكب بالفعل في قاعدة البيانات`);
-        }
-    } catch (error) {
-        console.error('❌ خطأ في إضافة البيانات الأولية:', error.message);
-    }
-}
-
-// ============================================================
-// ❤️ HEALTH
-// ============================================================
-
-app.get('/health', (req, res) => {
-    const dbState = mongoose.connection.readyState;
-    res.json({
-        status: dbState === 1 ? 'ok' : 'degraded',
-        mongodb: dbState === 1 ? 'connected' : 'disconnected',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        ai: {
-            gemini: !!GEMINI_API_KEY,
-            deepseek: !!DEEPSEEK_API_KEY,
-            openai: !!OPENAI_API_KEY
-        }
-    });
-});
-
-// ============================================================
-// 🔐 LOGIN
-// ============================================================
-
-app.post('/api/auth/login', async (req, res) => {
-    console.log('🔐 [LOGIN] Request received');
-    console.log(`   👤 Username: ${req.body.username || 'not provided'}`);
-
-    try {
-        const { username, password } = req.body;
-
-        if (!username || !password) {
-            return res.status(400).json({
-                success: false,
-                error: '⚠️ اسم المستخدم وكلمة المرور مطلوبان'
-            });
-        }
-
-        const user = await User.findOne({
-            $or: [
-                { username: username.toLowerCase() },
-                { email: username.toLowerCase() }
-            ]
-        }).select('+password');
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
-            });
-        }
-
-        if (!user.isActive) {
-            return res.status(403).json({
-                success: false,
-                error: '❌ الحساب معطل'
-            });
-        }
-
-        const lockCheck = user.checkLock();
-        if (lockCheck && lockCheck.locked) {
-            return res.status(423).json({
-                success: false,
-                error: `❌ الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
-            });
-        }
-        if (lockCheck && !lockCheck.locked) {
-            await user.save();
-        }
-
-        const isValid = await user.comparePassword(password);
-        if (!isValid) {
-            await user.incrementLoginAttempts();
-            return res.status(401).json({
-                success: false,
-                error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
-            });
-        }
-
-        await user.resetLoginAttempts();
-
-        user.lastLogin = new Date();
-        user.tokenVersion = (user.tokenVersion || 0) + 1;
-        await user.save();
-
-        await Log.create({
-            userId: user._id,
-            username: user.username,
-            action: 'تسجيل دخول',
-            details: `قام بتسجيل الدخول`,
-            ip: req.ip || req.socket.remoteAddress,
-            userAgent: req.headers['user-agent']
-        });
-
-        const token = generateToken(user);
-
-        return res.json({
-            success: true,
-            user: cleanUser(user),
-            token: token
-        });
-
-    } catch (error) {
-        console.error('❌ [LOGIN] Error:', error.message);
-        return res.status(500).json({
-            success: false,
-            error: '❌ خطأ في الخادم'
-        });
-    }
-});
-
-// ============================================================
-// 🚪 LOGOUT
-// ============================================================
-
-app.post('/api/auth/logout', authenticate, async (req, res) => {
-    await Log.create({
-        userId: req.user._id,
-        username: req.user.username,
-        action: 'تسجيل خروج',
-        details: `قام بتسجيل الخروج`,
-        ip: req.ip || req.socket.remoteAddress,
-        userAgent: req.headers['user-agent']
-    });
-    res.json({ success: true, message: 'تم تسجيل الخروج' });
-});
-
-// ============================================================
-// 👤 CURRENT USER
-// ============================================================
-
-app.get('/api/auth/me', authenticate, (req, res) => {
-    res.json({ success: true, user: cleanUser(req.user) });
-});
-
-// ============================================================
-// ✅ VERIFY TOKEN
-// ============================================================
-
-app.get('/api/auth/verify', authenticate, (req, res) => {
-    res.json({ success: true, user: cleanUser(req.user), message: 'التوكن صالح' });
-});
-
-// ============================================================
-// 🔑 CHANGE PASSWORD
-// ============================================================
-
-app.put('/api/auth/change-password', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({
-                success: false,
-                error: '⚠️ كلمة المرور الحالية والجديدة مطلوبتان'
-            });
-        }
-
-        if (newPassword.length < 8) {
-            return res.status(400).json({
-                success: false,
-                error: '⚠️ كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل'
-            });
-        }
-
-        const user = await User.findById(req.user._id).select('+password');
-        const isValid = await user.comparePassword(currentPassword);
-
-        if (!isValid) {
-            return res.status(401).json({
-                success: false,
-                error: '❌ كلمة المرور الحالية غير صحيحة'
-            });
-        }
-
-        user.password = newPassword;
-        user.tokenVersion = (user.tokenVersion || 0) + 1;
-        await user.save();
-
-        return res.json({
-            success: true,
-            message: '✅ تم تغيير كلمة المرور بنجاح'
-        });
-
-    } catch (error) {
-        console.error('❌ [CHANGE PASSWORD] Error:', error.message);
-        return res.status(500).json({
-            success: false,
-            error: '❌ خطأ في تغيير كلمة المرور'
-        });
-    }
-});
-
-// ============================================================
-// 📊 PERMISSIONS API
-// ============================================================
-
-app.get('/api/users/me/permissions',
-    authenticate,
-    async (req, res) => {
-        try {
-            const user = await User.findById(req.user.id);
             if (!user) {
-                return res.status(404).json({
+
+                return res.status(401).json({
                     success: false,
                     error: 'المستخدم غير موجود'
                 });
             }
 
-            const permissions = user.permissions || {
-                canManageTheme: true,
-                canManageBranding: true,
-                canManageLayout: true,
-                canManageSecurity: true,
-                canManageNotifications: true,
-                canManage2FA: true,
-                canManageSession: true
-            };
+            if (
+                user.role === 'admin'
+            ) {
+                return next();
+            }
 
-            res.json({
+            const permissions =
+                user.permissions || {};
+
+            if (
+                permissions[permission] !== true
+            ) {
+
+                return res.status(403).json({
+                    success: false,
+                    error:
+                        'ليس لديك صلاحية لهذه العملية'
+                });
+            }
+
+            next();
+
+        } catch (error) {
+
+            console.error(
+                'Permission error:',
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في التحقق من الصلاحيات'
+            });
+        }
+    };
+}
+
+
+// ============================================================
+// DATABASE
+// ============================================================
+
+async function connectDB() {
+
+    if (!MONGODB_URI) {
+
+        console.error(
+            '❌ MONGODB_URI is missing'
+        );
+
+        process.exit(1);
+    }
+
+    try {
+
+        console.log(
+            '🔄 Connecting MongoDB...'
+        );
+
+        await mongoose.connect(
+            MONGODB_URI,
+            {
+                serverSelectionTimeoutMS: 10000,
+                socketTimeoutMS: 45000,
+                maxPoolSize: 10,
+                minPoolSize: 2
+            }
+        );
+
+        console.log(
+            '✅ MongoDB Connected'
+        );
+
+        console.log(
+            `📚 Database: ${mongoose.connection.name}`
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            '❌ MongoDB error:',
+            error.message
+        );
+
+        return false;
+    }
+}
+
+
+// ============================================================
+// ADMIN
+// ============================================================
+
+async function createAdmin() {
+
+    const existing =
+        await User.findOne({
+            $or: [
+                {
+                    username:
+                        ADMIN_USERNAME
+                },
+                {
+                    email:
+                        ADMIN_EMAIL
+                }
+            ]
+        }).select('+password');
+
+    if (existing) {
+
+        existing.name =
+            ADMIN_NAME;
+
+        existing.email =
+            ADMIN_EMAIL;
+
+        existing.role =
+            'admin';
+
+        existing.isActive =
+            true;
+
+        existing.isLocked =
+            false;
+
+        existing.lockUntil =
+            null;
+
+        existing.loginAttempts =
+            0;
+
+        const matches =
+            await bcrypt.compare(
+                ADMIN_PASSWORD,
+                existing.password
+            );
+
+        if (!matches) {
+
+            existing.password =
+                ADMIN_PASSWORD;
+
+            existing.tokenVersion =
+                (existing.tokenVersion || 0) + 1;
+
+            console.log(
+                '🔑 Admin password synchronized'
+            );
+        }
+
+        existing.permissions = {
+            canManageTheme: true,
+            canManageBranding: true,
+            canManageLayout: true,
+            canManageSecurity: true,
+            canManageNotifications: true,
+            canManage2FA: true,
+            canManageSession: true
+        };
+
+        await existing.save();
+
+        console.log(
+            '✅ Admin updated'
+        );
+
+        return;
+    }
+
+    const admin =
+        new User({
+            name: ADMIN_NAME,
+            username: ADMIN_USERNAME,
+            email: ADMIN_EMAIL,
+            password: ADMIN_PASSWORD,
+            role: 'admin',
+            isActive: true,
+            tokenVersion: 1
+        });
+
+    await admin.save();
+
+    console.log(
+        '✅ Admin created'
+    );
+}
+
+
+// ============================================================
+// SEED
+// ============================================================
+
+async function seedVessels() {
+
+    const count =
+        await Vessel.countDocuments();
+
+    console.log(
+        `🚢 Vessels: ${count}`
+    );
+
+    if (count > 0) {
+        return;
+    }
+
+    const vessels = [
+
+        {
+            name: 'البروق 1',
+            num: 'B001',
+            len: 11,
+            region: 'الشمال',
+            zone: 'تونس',
+            stat: 'صالح',
+            cat: 'البروق',
+            port: 'تونس',
+            repairUnit:
+                'وحدة الصيانة والإسناد البحري تونس'
+        },
+
+        {
+            name: 'صقر 2',
+            num: 'S002',
+            len: 10,
+            region: 'الساحل',
+            zone: 'سوسة',
+            stat: 'صالح',
+            cat: 'صقور',
+            port: 'سوسة',
+            repairUnit:
+                'وحدة الصيانة والإسناد البحري المنستير'
+        },
+
+        {
+            name: 'خافرة 3',
+            num: 'K003',
+            len: 20,
+            region: 'الوسط',
+            zone: 'صفاقس',
+            stat: 'معطب',
+            cat: 'خوافر',
+            port: 'صفاقس',
+            break:
+                'عطل في المحرك الرئيسي',
+            repairUnit:
+                'وحدة الصيانة والإسناد البحري صفاقس'
+        },
+
+        {
+            name: 'طوافة 4',
+            num: 'T004',
+            len: 35,
+            region: 'الجنوب',
+            zone: 'جرجيس',
+            stat: 'صيانة',
+            cat: 'طوافات',
+            port: 'جرجيس',
+            break:
+                'أعطال كهربائية',
+            repairUnit:
+                'وحدة الصيانة والإسناد البحري جرجيس'
+        },
+
+        {
+            name: 'زورق سريع 5',
+            num: 'Z005',
+            len: 15,
+            region: 'الشمال',
+            zone: 'بنزرت',
+            stat: 'صالح',
+            cat: 'زوارق مزدوجة',
+            port: 'بنزرت',
+            supp: 'قاعدة بنزرت',
+            repairUnit:
+                'وحدة الصيانة والإسناد البحري تونس'
+        },
+
+        {
+            name: 'البروق 6',
+            num: 'B006',
+            len: 11,
+            region: 'الساحل',
+            zone: 'المنستير',
+            stat: 'صيانة',
+            cat: 'البروق',
+            port: 'المنستير',
+            break:
+                'عطل في نظام الملاحة',
+            repairUnit:
+                'وحدة الصيانة والإسناد البحري المنستير'
+        },
+
+        {
+            name: 'صقر 7',
+            num: 'S007',
+            len: 9,
+            region: 'الجنوب',
+            zone: 'جربة',
+            stat: 'صالح',
+            cat: 'صقور',
+            port: 'جربة',
+            repairUnit:
+                'وحدة الصيانة والإسناد البحري جرجيس'
+        }
+    ];
+
+    await Vessel.insertMany(vessels);
+
+    console.log(
+        `✅ Seeded ${vessels.length} vessels`
+    );
+}
+
+
+// ============================================================
+// HEALTH
+// ============================================================
+
+app.get('/health', (req, res) => {
+
+    const db =
+        mongoose.connection.readyState;
+
+    res.json({
+        status:
+            db === 1
+                ? 'ok'
+                : 'degraded',
+
+        mongodb:
+            db === 1
+                ? 'connected'
+                : 'disconnected',
+
+        timestamp:
+            new Date().toISOString(),
+
+        uptime:
+            process.uptime()
+    });
+});
+
+
+// ============================================================
+// CSRF TOKEN
+// ============================================================
+
+app.get('/api/auth/csrf', (req, res) => {
+
+    const token =
+        setCSRFToken(res);
+
+    res.json({
+        success: true,
+        csrfToken: token
+    });
+});
+
+
+// ============================================================
+// LOGIN
+// ============================================================
+
+app.post(
+    '/api/auth/login',
+    loginLimiter,
+    async (req, res) => {
+
+        try {
+
+            const username =
+                String(
+                    req.body.username || ''
+                )
+                .trim()
+                .toLowerCase();
+
+            const password =
+                String(
+                    req.body.password || ''
+                );
+
+            if (
+                !username ||
+                !password
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'اسم المستخدم وكلمة المرور مطلوبان'
+                });
+            }
+
+            const user =
+                await User.findOne({
+                    $or: [
+                        {
+                            username
+                        },
+                        {
+                            email: username
+                        }
+                    ]
+                })
+                .select('+password');
+
+            if (!user) {
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'اسم المستخدم أو كلمة المرور غير صحيحة'
+                });
+            }
+
+            if (!user.isActive) {
+
+                return res.status(403).json({
+                    success: false,
+                    error:
+                        'الحساب معطل'
+                });
+            }
+
+            const lock =
+                user.checkLock();
+
+            if (
+                lock &&
+                lock.locked
+            ) {
+
+                return res.status(423).json({
+                    success: false,
+                    error:
+                        `الحساب مقفل مؤقتاً. حاول بعد ${lock.remainingMinutes} دقيقة`
+                });
+            }
+
+            if (
+                lock &&
+                !lock.locked
+            ) {
+
+                user.isLocked = false;
+                user.lockUntil = null;
+                user.loginAttempts = 0;
+
+                await user.save();
+            }
+
+            const valid =
+                await user.comparePassword(
+                    password
+                );
+
+            if (!valid) {
+
+                await user.incrementLoginAttempts();
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'اسم المستخدم أو كلمة المرور غير صحيحة'
+                });
+            }
+
+            await user.resetLoginAttempts();
+
+            user.lastLogin =
+                new Date();
+
+            user.tokenVersion =
+                (user.tokenVersion || 0) + 1;
+
+            await user.save();
+
+            const token =
+                generateToken(user);
+
+            setAuthCookie(
+                res,
+                token
+            );
+
+            setCSRFToken(res);
+
+            await Log.create({
+                userId: user._id,
+                username: user.username,
+                action: 'تسجيل دخول',
+                details: 'تسجيل دخول ناجح',
+                ip: req.ip,
+                userAgent:
+                    req.headers['user-agent']
+            });
+
+            /*
+             * IMPORTANT:
+             * Token is NOT returned.
+             * It lives in HttpOnly cookie.
+             */
+
+            return res.json({
                 success: true,
-                permissions
+                user: cleanUser(user)
             });
 
         } catch (error) {
+
+            console.error(
+                'LOGIN ERROR:',
+                error.message
+            );
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    'خطأ داخلي في الخادم'
             });
         }
     }
 );
 
+
 // ============================================================
-// ⚙️ SETTINGS API
+// LOGOUT
 // ============================================================
 
-// GET /api/settings
-app.get('/api/settings',
+app.post(
+    '/api/auth/logout',
     authenticate,
     async (req, res) => {
-        try {
-            console.log(`📡 [SETTINGS] GET - User: ${req.user.username}`);
-            
-            let settings = await Settings.findOne({ userId: req.user.id });
 
-            if (!settings) {
-                settings = new Settings({
-                    userId: req.user.id,
-                    theme: {
-                        primary: '#0a1628',
-                        secondary: '#1a2a4a',
-                        gold: '#e6b31e'
-                    },
-                    layout: {
-                        darkMode: true,
-                        fontSize: 'medium',
-                        sidebarPosition: 'right',
-                        showStats: true
-                    },
-                    security: {
-                        twoFactorAuth: false,
-                        emailNotifications: true,
-                        smsNotifications: false,
-                        sessionTimeout: 60
-                    },
-                    notifications: {
-                        emergencyAlerts: true,
-                        maintenanceAlerts: true,
-                        performanceReports: 'weekly'
-                    },
-                    branding: {
-                        logoSize: 'medium'
-                    }
+        try {
+
+            req.user.tokenVersion =
+                (req.user.tokenVersion || 0) + 1;
+
+            await req.user.save();
+
+            await Log.create({
+                userId: req.user._id,
+                username: req.user.username,
+                action: 'تسجيل خروج',
+                details: 'تسجيل خروج',
+                ip: req.ip,
+                userAgent:
+                    req.headers['user-agent']
+            });
+
+        } catch (error) {
+
+            console.error(
+                'Logout logging error:',
+                error.message
+            );
+        }
+
+        clearAuthCookie(res);
+
+        res.clearCookie(
+            CSRF_COOKIE_NAME,
+            {
+                secure: IS_PRODUCTION,
+                sameSite: 'strict',
+                path: '/'
+            }
+        );
+
+        res.json({
+            success: true,
+            message:
+                'تم تسجيل الخروج'
+        });
+    }
+);
+
+
+// ============================================================
+// CURRENT USER
+// ============================================================
+
+app.get(
+    '/api/auth/me',
+    authenticate,
+    (req, res) => {
+
+        res.json({
+            success: true,
+            user:
+                cleanUser(req.user)
+        });
+    }
+);
+
+
+// ============================================================
+// VERIFY
+// ============================================================
+
+app.get(
+    '/api/auth/verify',
+    authenticate,
+    (req, res) => {
+
+        res.json({
+            success: true,
+            user:
+                cleanUser(req.user),
+            message:
+                'التوكن صالح'
+        });
+    }
+);
+
+
+// ============================================================
+// CHANGE PASSWORD
+// ============================================================
+
+app.put(
+    '/api/auth/change-password',
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const {
+                currentPassword,
+                newPassword
+            } = req.body;
+
+            if (
+                !currentPassword ||
+                !newPassword
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'كلمات المرور مطلوبة'
+                });
+            }
+
+            if (
+                newPassword.length < 12
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'كلمة المرور يجب أن تكون 12 حرفاً على الأقل'
+                });
+            }
+
+            const user =
+                await User.findById(
+                    req.user._id
+                ).select('+password');
+
+            const valid =
+                await user.comparePassword(
+                    currentPassword
+                );
+
+            if (!valid) {
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'كلمة المرور الحالية غير صحيحة'
+                });
+            }
+
+            user.password =
+                newPassword;
+
+            user.tokenVersion =
+                (user.tokenVersion || 0) + 1;
+
+            await user.save();
+
+            clearAuthCookie(res);
+
+            res.json({
+                success: true,
+                message:
+                    'تم تغيير كلمة المرور. يرجى تسجيل الدخول مجدداً.'
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في تغيير كلمة المرور'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// USERS
+// ============================================================
+
+app.get(
+    '/api/users',
+    authenticate,
+    authorize('admin'),
+    async (req, res) => {
+
+        try {
+
+            const users =
+                await User.find()
+                    .select(
+                        '-password -twoFactorSecret'
+                    )
+                    .sort({
+                        createdAt: -1
+                    })
+                    .lean();
+
+            res.json({
+                success: true,
+                users
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في تحميل المستخدمين'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// USER PERMISSIONS
+// ============================================================
+
+app.get(
+    '/api/users/me/permissions',
+    authenticate,
+    async (req, res) => {
+
+        const user =
+            await User.findById(
+                req.user._id
+            );
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                error:
+                    'المستخدم غير موجود'
+            });
+        }
+
+        res.json({
+            success: true,
+            permissions:
+                user.permissions || {}
+        });
+    }
+);
+
+
+// ============================================================
+// SETTINGS GET
+// ============================================================
+
+app.get(
+    '/api/settings',
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            let settings =
+                await Settings.findOne({
+                    userId:
+                        req.user._id
                 });
 
-                await settings.save();
-                console.log(`   ✅ Created default settings for user: ${req.user.username}`);
+            if (!settings) {
+
+                settings =
+                    await Settings.create({
+                        userId:
+                            req.user._id
+                    });
             }
 
             res.json({
                 success: true,
-                settings: settings.toObject()
+                settings:
+                    settings.toObject()
             });
 
         } catch (error) {
-            console.error('❌ [SETTINGS] GET Error:', error.message);
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    'خطأ في تحميل الإعدادات'
             });
         }
     }
 );
 
-// PUT /api/settings
-app.put('/api/settings',
+
+// ============================================================
+// SETTINGS PUT
+// ============================================================
+
+app.put(
+    '/api/settings',
     authenticate,
     async (req, res) => {
-        try {
-            console.log(`📡 [SETTINGS] PUT - User: ${req.user.username}`);
-            const { theme, layout, security, notifications, branding } = req.body;
 
-            let settings = await Settings.findOne({ userId: req.user.id });
+        try {
+
+            let settings =
+                await Settings.findOne({
+                    userId:
+                        req.user._id
+                });
 
             if (!settings) {
-                settings = new Settings({ userId: req.user.id });
+
+                settings =
+                    new Settings({
+                        userId:
+                            req.user._id
+                    });
             }
 
-            const user = await User.findById(req.user.id);
-            const perms = user.permissions || {};
+            const perms =
+                req.user.permissions || {};
 
-            if (theme && perms.canManageTheme !== false) {
-                settings.theme = { ...settings.theme, ...theme };
+            const {
+                theme,
+                layout,
+                security,
+                notifications,
+                branding
+            } = req.body;
+
+            if (
+                theme &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageTheme !== false
+                )
+            ) {
+
+                settings.theme = {
+                    ...settings.theme?.toObject?.(),
+                    ...theme
+                };
             }
 
-            if (layout && perms.canManageLayout !== false) {
-                settings.layout = { ...settings.layout, ...layout };
+            if (
+                layout &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageLayout !== false
+                )
+            ) {
+
+                settings.layout = {
+                    ...settings.layout?.toObject?.(),
+                    ...layout
+                };
             }
 
-            if (security && perms.canManageSecurity !== false) {
-                const { twoFactorAuth, ...safeSecurity } = security;
-                settings.security = { ...settings.security, ...safeSecurity };
+            if (
+                security &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageSecurity !== false
+                )
+            ) {
+
+                const safeSecurity =
+                    { ...security };
+
+                delete safeSecurity.twoFactorAuth;
+
+                settings.security = {
+                    ...settings.security?.toObject?.(),
+                    ...safeSecurity
+                };
             }
 
-            if (notifications && perms.canManageNotifications !== false) {
-                settings.notifications = { ...settings.notifications, ...notifications };
+            if (
+                notifications &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageNotifications !== false
+                )
+            ) {
+
+                settings.notifications = {
+                    ...settings.notifications?.toObject?.(),
+                    ...notifications
+                };
             }
 
-            if (branding && perms.canManageBranding !== false) {
-                settings.branding = { ...settings.branding, ...branding };
+            if (
+                branding &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageBranding !== false
+                )
+            ) {
+
+                settings.branding = {
+                    ...settings.branding?.toObject?.(),
+                    ...branding
+                };
             }
 
-            settings.updatedAt = new Date();
             await settings.save();
 
-            console.log(`   ✅ Settings saved for user: ${req.user.username}`);
-
             res.json({
                 success: true,
-                settings: settings.toObject()
+                settings:
+                    settings.toObject()
             });
 
         } catch (error) {
-            console.error('❌ [SETTINGS] PUT Error:', error.message);
+
+            console.error(
+                'Settings error:',
+                error.message
+            );
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    'خطأ في حفظ الإعدادات'
             });
         }
     }
 );
 
-// POST /api/settings/reset
-app.post('/api/settings/reset',
+
+// ============================================================
+// SETTINGS RESET
+// ============================================================
+
+app.post(
+    '/api/settings/reset',
     authenticate,
     async (req, res) => {
-        try {
-            console.log(`📡 [SETTINGS] RESET - User: ${req.user.username}`);
-            const { sections } = req.body;
 
-            let settings = await Settings.findOne({ userId: req.user.id });
+        try {
+
+            const sections =
+                Array.isArray(
+                    req.body.sections
+                )
+                    ? req.body.sections
+                    : [];
+
+            let settings =
+                await Settings.findOne({
+                    userId:
+                        req.user._id
+                });
 
             if (!settings) {
-                settings = new Settings({ userId: req.user.id });
-            }
 
-            const user = await User.findById(req.user.id);
-            const perms = user.permissions || {};
+                settings =
+                    new Settings({
+                        userId:
+                            req.user._id
+                    });
+            }
 
             const defaults = {
-                theme: { primary: '#0a1628', secondary: '#1a2a4a', gold: '#e6b31e' },
-                layout: { darkMode: true, fontSize: 'medium', sidebarPosition: 'right', showStats: true },
-                security: { twoFactorAuth: false, emailNotifications: true, smsNotifications: false, sessionTimeout: 60 },
-                notifications: { emergencyAlerts: true, maintenanceAlerts: true, performanceReports: 'weekly' },
-                branding: { logoSize: 'medium' }
+
+                theme: {
+                    primary: '#0a1628',
+                    secondary: '#1a2a4a',
+                    gold: '#e6b31e'
+                },
+
+                layout: {
+                    darkMode: true,
+                    fontSize: 'medium',
+                    sidebarPosition: 'right',
+                    showStats: true
+                },
+
+                security: {
+                    twoFactorAuth: false,
+                    emailNotifications: true,
+                    smsNotifications: false,
+                    sessionTimeout: 60
+                },
+
+                notifications: {
+                    emergencyAlerts: true,
+                    maintenanceAlerts: true,
+                    performanceReports: 'weekly'
+                },
+
+                branding: {
+                    logoSize: 'medium'
+                }
             };
 
-            if (sections && sections.includes('theme') && perms.canManageTheme !== false) {
-                settings.theme = defaults.theme;
+            const perms =
+                req.user.permissions || {};
+
+            if (
+                sections.includes('theme') &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageTheme !== false
+                )
+            ) {
+                settings.theme =
+                    defaults.theme;
             }
 
-            if (sections && sections.includes('layout') && perms.canManageLayout !== false) {
-                settings.layout = defaults.layout;
+            if (
+                sections.includes('layout') &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageLayout !== false
+                )
+            ) {
+                settings.layout =
+                    defaults.layout;
             }
 
-            if (sections && sections.includes('security') && perms.canManageSecurity !== false) {
-                settings.security = { ...defaults.security, twoFactorAuth: settings.security?.twoFactorAuth || false };
+            if (
+                sections.includes('security') &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageSecurity !== false
+                )
+            ) {
+
+                settings.security = {
+                    ...defaults.security,
+                    twoFactorAuth:
+                        settings.security
+                            ?.twoFactorAuth ||
+                        false
+                };
             }
 
-            if (sections && sections.includes('notifications') && perms.canManageNotifications !== false) {
-                settings.notifications = defaults.notifications;
+            if (
+                sections.includes('notifications') &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageNotifications !== false
+                )
+            ) {
+                settings.notifications =
+                    defaults.notifications;
             }
 
-            if (sections && sections.includes('branding') && perms.canManageBranding !== false) {
-                settings.branding = defaults.branding;
+            if (
+                sections.includes('branding') &&
+                (
+                    req.user.role === 'admin' ||
+                    perms.canManageBranding !== false
+                )
+            ) {
+                settings.branding =
+                    defaults.branding;
             }
 
-            settings.updatedAt = new Date();
             await settings.save();
-
-            console.log(`   ✅ Settings reset for user: ${req.user.username}`);
 
             res.json({
                 success: true,
-                settings: settings.toObject()
+                settings:
+                    settings.toObject()
             });
 
         } catch (error) {
-            console.error('❌ [SETTINGS] RESET Error:', error.message);
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    'خطأ في إعادة الإعدادات'
             });
         }
     }
 );
 
+
 // ============================================================
-// 🖼️ LOGO API
+// UPLOAD LOGO
 // ============================================================
 
-// POST /api/settings/logo
-app.post('/api/settings/logo',
+app.post(
+    '/api/settings/logo',
     authenticate,
     checkPermission('canManageBranding'),
     upload.single('logo'),
     async (req, res) => {
+
         try {
+
             if (!req.file) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'لم يتم تحميل ملف'
+                    error:
+                        'لم يتم تحميل ملف'
                 });
             }
 
-            const fileUrl = `/uploads/${req.file.filename}`;
+            const fileUrl =
+                `/uploads/${req.file.filename}`;
 
-            let settings = await Settings.findOne({ userId: req.user.id });
+            let settings =
+                await Settings.findOne({
+                    userId:
+                        req.user._id
+                });
+
             if (!settings) {
-                settings = new Settings({ userId: req.user.id });
+
+                settings =
+                    new Settings({
+                        userId:
+                            req.user._id
+                    });
             }
 
             settings.branding = {
-                ...settings.branding,
+                ...settings.branding?.toObject?.(),
                 logoUrl: fileUrl,
-                logoName: req.file.originalname,
-                logoSize: settings.branding?.logoSize || 'medium'
+                logoName:
+                    req.file.originalname
             };
 
             await settings.save();
@@ -1264,818 +2725,1798 @@ app.post('/api/settings/logo',
             });
 
         } catch (error) {
+
+            if (req.file) {
+                try {
+                    fs.unlinkSync(
+                        req.file.path
+                    );
+                } catch {}
+            }
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    'فشل تحميل الشعار'
             });
         }
     }
 );
 
-// DELETE /api/settings/logo
-app.delete('/api/settings/logo',
+
+// ============================================================
+// DELETE LOGO
+// ============================================================
+
+app.delete(
+    '/api/settings/logo',
     authenticate,
     checkPermission('canManageBranding'),
     async (req, res) => {
-        try {
-            let settings = await Settings.findOne({ userId: req.user.id });
 
-            if (settings && settings.branding?.logoUrl) {
-                const filePath = path.join(__dirname, settings.branding.logoUrl);
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
+        try {
+
+            const settings =
+                await Settings.findOne({
+                    userId:
+                        req.user._id
+                });
+
+            if (
+                settings &&
+                settings.branding?.logoUrl
+            ) {
+
+                const filename =
+                    path.basename(
+                        settings.branding.logoUrl
+                    );
+
+                const file =
+                    path.join(
+                        UPLOADS_DIR,
+                        filename
+                    );
+
+                if (
+                    file.startsWith(
+                        UPLOADS_DIR
+                    ) &&
+                    fs.existsSync(file)
+                ) {
+                    fs.unlinkSync(file);
                 }
 
-                delete settings.branding.logoUrl;
-                delete settings.branding.logoName;
+                settings.branding.logoUrl =
+                    null;
+
+                settings.branding.logoName =
+                    null;
+
                 await settings.save();
             }
 
             res.json({
                 success: true,
-                message: 'تم حذف الشعار'
+                message:
+                    'تم حذف الشعار'
             });
 
         } catch (error) {
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    'فشل حذف الشعار'
             });
         }
     }
 );
 
+
 // ============================================================
-// 🖼️ BACKGROUND API
+// UPLOAD BACKGROUND
 // ============================================================
 
-// POST /api/settings/background
-app.post('/api/settings/background',
+app.post(
+    '/api/settings/background',
     authenticate,
     checkPermission('canManageTheme'),
     upload.single('background'),
     async (req, res) => {
+
         try {
+
             if (!req.file) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'لم يتم تحميل ملف'
+                    error:
+                        'لم يتم تحميل الملف'
                 });
             }
 
-            const fileUrl = `/uploads/${req.file.filename}`;
+            const fileUrl =
+                `/uploads/${req.file.filename}`;
 
-            let settings = await Settings.findOne({ userId: req.user.id });
+            let settings =
+                await Settings.findOne({
+                    userId:
+                        req.user._id
+                });
+
             if (!settings) {
-                settings = new Settings({ userId: req.user.id });
+
+                settings =
+                    new Settings({
+                        userId:
+                            req.user._id
+                    });
             }
 
             settings.branding = {
-                ...settings.branding,
-                backgroundUrl: fileUrl
+                ...settings.branding?.toObject?.(),
+                backgroundUrl:
+                    fileUrl
             };
 
             await settings.save();
 
             res.json({
                 success: true,
-                backgroundUrl: fileUrl
+                backgroundUrl:
+                    fileUrl
             });
 
         } catch (error) {
+
+            if (req.file) {
+                try {
+                    fs.unlinkSync(
+                        req.file.path
+                    );
+                } catch {}
+            }
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    'فشل تحميل الخلفية'
             });
         }
     }
 );
+
 
 // ============================================================
-// 🔐 2FA API
+// SESSION TIMEOUT
 // ============================================================
 
-// POST /api/auth/2fa/initiate
-app.post('/api/auth/2fa/initiate',
-    authenticate,
-    checkPermission('canManage2FA'),
-    async (req, res) => {
-        try {
-            const user = await User.findById(req.user.id);
-
-            const secret = crypto.randomBytes(20).toString('hex');
-            const qrCode = `data:image/png;base64,${Buffer.from(`otpauth://totp/MarineSystem:${user.email}?secret=${secret}&issuer=MarineSystem`).toString('base64')}`;
-
-            user.twoFactorSecret = secret;
-            user.twoFactorPending = true;
-            await user.save();
-
-            res.json({
-                success: true,
-                secret,
-                qrCode
-            });
-
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
-        }
-    }
-);
-
-// POST /api/auth/2fa/verify
-app.post('/api/auth/2fa/verify',
-    authenticate,
-    checkPermission('canManage2FA'),
-    async (req, res) => {
-        try {
-            const { code } = req.body;
-
-            if (!code || !/^\d{6}$/.test(code)) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'رمز تحقق غير صحيح'
-                });
-            }
-
-            const user = await User.findById(req.user.id);
-
-            if (!user.twoFactorSecret || !user.twoFactorPending) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'لم يتم بدء عملية التفعيل'
-                });
-            }
-
-            const isValid = code === '123456' || code === user.twoFactorSecret.substring(0, 6);
-
-            if (!isValid) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'رمز التحقق غير صحيح'
-                });
-            }
-
-            user.twoFactorEnabled = true;
-            user.twoFactorPending = false;
-            await user.save();
-
-            let settings = await Settings.findOne({ userId: req.user.id });
-            if (settings) {
-                settings.security.twoFactorAuth = true;
-                await settings.save();
-            }
-
-            res.json({
-                success: true,
-                message: 'تم تفعيل المصادقة بخطوتين'
-            });
-
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
-        }
-    }
-);
-
-// POST /api/auth/2fa/disable
-app.post('/api/auth/2fa/disable',
-    authenticate,
-    checkPermission('canManage2FA'),
-    async (req, res) => {
-        try {
-            const user = await User.findById(req.user.id);
-
-            user.twoFactorEnabled = false;
-            user.twoFactorSecret = null;
-            user.twoFactorPending = false;
-            await user.save();
-
-            let settings = await Settings.findOne({ userId: req.user.id });
-            if (settings) {
-                settings.security.twoFactorAuth = false;
-                await settings.save();
-            }
-
-            res.json({
-                success: true,
-                message: 'تم تعطيل المصادقة بخطوتين'
-            });
-
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
-        }
-    }
-);
-
-// GET /api/auth/2fa/status
-app.get('/api/auth/2fa/status',
-    authenticate,
-    async (req, res) => {
-        try {
-            const user = await User.findById(req.user.id);
-
-            res.json({
-                success: true,
-                enabled: user.twoFactorEnabled || false
-            });
-
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
-        }
-    }
-);
-
-// ============================================================
-// ⏱️ SESSION TIMEOUT API
-// ============================================================
-
-// POST /api/auth/session-timeout
-app.post('/api/auth/session-timeout',
+app.post(
+    '/api/auth/session-timeout',
     authenticate,
     checkPermission('canManageSession'),
     async (req, res) => {
-        try {
-            const { timeout } = req.body;
 
-            if (!timeout || timeout < 5 || timeout > 480) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'مدة الجلسة يجب أن تكون بين 5 و 480 دقيقة'
-                });
-            }
+        const timeout =
+            Number(req.body.timeout);
 
-            const user = await User.findById(req.user.id);
-            user.sessionTimeout = timeout;
-            await user.save();
+        if (
+            !Number.isInteger(timeout) ||
+            timeout < 5 ||
+            timeout > 480
+        ) {
 
-            res.json({
-                success: true,
-                message: 'تم تحديث مدة الجلسة'
+            return res.status(400).json({
+                success: false,
+                error:
+                    'المدة يجب أن تكون بين 5 و480 دقيقة'
             });
+        }
+
+        req.user.sessionTimeout =
+            timeout;
+
+        await req.user.save();
+
+        res.json({
+            success: true,
+            timeout
+        });
+    }
+);
+
+
+// ============================================================
+// VESSELS
+// ============================================================
+
+app.get(
+    '/api/vessels',
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const vessels =
+                await Vessel.find()
+                    .sort({
+                        createdAt: -1
+                    })
+                    .lean();
+
+            res.json(vessels);
 
         } catch (error) {
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    'خطأ في تحميل المراكب'
             });
         }
     }
 );
 
-// ============================================================
-// 📊 DASHBOARD
-// ============================================================
 
-app.get('/api/dashboard', authenticate, async (req, res) => {
-    try {
-        const [totalVessels, validVessels, damagedVessels, maintenanceVessels, totalUsers, totalTickets] = await Promise.all([
-            Vessel.countDocuments(),
-            Vessel.countDocuments({ stat: 'صالح' }),
-            Vessel.countDocuments({ stat: 'معطب' }),
-            Vessel.countDocuments({ stat: 'صيانة' }),
-            User.countDocuments(),
-            Ticket.countDocuments()
-        ]);
+app.post(
+    '/api/vessels',
+    authenticate,
+    authorize(
+        'admin',
+        'manager'
+    ),
+    async (req, res) => {
 
-        res.json({
-            success: true,
-            data: {
-                vessels: {
-                    total: totalVessels,
-                    valid: validVessels,
-                    damaged: damagedVessels,
-                    maintenance: maintenanceVessels
-                },
-                users: totalUsers,
-                tickets: totalTickets
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+        try {
 
-// ============================================================
-// 🚢 VESSELS
-// ============================================================
+            const vessel =
+                new Vessel(req.body);
 
-app.get('/api/vessels', authenticate, async (req, res) => {
-    try {
-        const vessels = await Vessel.find().sort({ createdAt: -1 });
-        res.json(vessels);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+            await vessel.save();
 
-app.post('/api/vessels', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    try {
-        const vessel = new Vessel(req.body);
-        await vessel.save();
-        res.status(201).json(vessel);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
+            res.status(201).json(
+                vessel
+            );
 
-app.put('/api/vessels/:id', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    try {
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!vessel) return res.status(404).json({ error: 'Vessel not found' });
-        res.json(vessel);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
+        } catch (error) {
 
-app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const vessel = await Vessel.findByIdAndDelete(req.params.id);
-        if (!vessel) return res.status(404).json({ error: 'Vessel not found' });
-        res.json({ success: true, message: 'Vessel deleted' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ============================================================
-// 🔧 MAINTENANCE
-// ============================================================
-
-app.get('/api/maintenance', authenticate, async (req, res) => {
-    try {
-        const records = await Maintenance.find().sort({ createdAt: -1 });
-        res.json({ success: true, maintenance: records });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/maintenance', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    try {
-        const record = new Maintenance({ ...req.body, supervisor: req.user._id });
-        await record.save();
-        res.status(201).json({ success: true, maintenance: record });
-    } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 👥 USERS
-// ============================================================
-
-app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const users = await User.find().select('-password').sort({ createdAt: -1 });
-        res.json({ success: true, users });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 🎫 TICKETS
-// ============================================================
-
-app.get('/api/tickets', authenticate, async (req, res) => {
-    try {
-        const tickets = await Ticket.find().sort({ createdAt: -1 });
-        res.json({ success: true, tickets });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/tickets', authenticate, async (req, res) => {
-    try {
-        const ticket = new Ticket({ ...req.body, createdBy: req.user._id });
-        await ticket.save();
-        res.status(201).json({ success: true, ticket });
-    } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 📝 NOTES
-// ============================================================
-
-app.get('/api/notes', authenticate, async (req, res) => {
-    try {
-        const notes = await Note.find().sort({ createdAt: -1 });
-        res.json({ success: true, notes });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/notes', authenticate, async (req, res) => {
-    try {
-        const note = new Note({ ...req.body, createdBy: req.user._id });
-        await note.save();
-        res.status(201).json({ success: true, note });
-    } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 📊 SESSIONS
-// ============================================================
-
-app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const users = await User.find().select('name username email role isActive lastLogin createdAt');
-        const recentLogs = await Log.find().sort({ createdAt: -1 }).limit(100).lean();
-
-        const sessions = users.map((user, index) => {
-            const userLogs = recentLogs.filter(log => log.username === user.username);
-            const lastActivity = userLogs.length > 0 ? userLogs[0].createdAt : user.lastLogin || user.createdAt;
-            
-            return {
-                id: `sess_${Date.now()}_${index}`,
-                userId: user._id,
-                username: user.username,
-                userName: user.name,
-                role: user.role,
-                status: user.isActive ? 'active' : 'inactive',
-                ip: userLogs.length > 0 ? userLogs[0].ip || '192.168.1.' + (index + 1) : '192.168.1.' + (index + 1),
-                device: userLogs.length > 0 ? userLogs[0].userAgent || 'Chrome on Windows' : 'Chrome on Windows',
-                createdAt: user.createdAt,
-                updatedAt: lastActivity || user.lastLogin || user.createdAt,
-                lastActivity: lastActivity || user.lastLogin || user.createdAt
-            };
-        });
-
-        sessions.sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
-
-        res.json({ 
-            success: true, 
-            sessions: sessions,
-            total: sessions.length,
-            active: sessions.filter(s => s.status === 'active').length
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 📋 LOGS
-// ============================================================
-
-app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const { limit = 100, skip = 0, startDate, endDate, username } = req.query;
-        
-        const query = {};
-        if (username) query.username = username;
-        if (startDate) query.createdAt = { $gte: new Date(startDate) };
-        if (endDate) {
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59);
-            query.createdAt = { ...query.createdAt, $lte: end };
-        }
-
-        const logs = await Log.find(query)
-            .sort({ createdAt: -1 })
-            .skip(parseInt(skip))
-            .limit(parseInt(limit))
-            .lean();
-
-        const total = await Log.countDocuments(query);
-
-        res.json({
-            success: true,
-            logs: logs,
-            pagination: {
-                total,
-                limit: parseInt(limit),
-                skip: parseInt(skip),
-                hasMore: skip + logs.length < total
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 🤖 AI - CONFIG
-// ============================================================
-
-app.get('/api/config', (req, res) => {
-    res.json({
-        success: true,
-        GEMINI_API_KEY: GEMINI_API_KEY || '',
-        GEMINI_MODEL: GEMINI_MODEL || 'gemini-2.0-flash',
-        DEEPSEEK_API_KEY: DEEPSEEK_API_KEY || '',
-        DEEPSEEK_MODEL: DEEPSEEK_MODEL || 'deepseek-chat',
-        OPENAI_API_KEY: OPENAI_API_KEY || '',
-        OPENAI_MODEL: OPENAI_MODEL || 'gpt-4o-mini'
-    });
-});
-
-// ============================================================
-// 🤖 AI - CHECK GEMINI
-// ============================================================
-
-app.get('/api/check-gemini', authenticate, async (req, res) => {
-    try {
-        if (!GEMINI_API_KEY) {
-            return res.json({ 
-                success: false, 
-                error: "GEMINI_API_KEY غير موجود",
-                message: "يُرجى إضافة المفتاح في متغيرات البيئة"
+            res.status(400).json({
+                success: false,
+                error:
+                    'بيانات المركب غير صحيحة'
             });
         }
-        
-        const { GoogleGenerativeAI } = require('@google/generative-ai');
-        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const result = await model.generateContent("مرحباً، اختبر الاتصال");
-        const response = await result.response;
-        
+    }
+);
+
+
+app.put(
+    '/api/vessels/:id',
+    authenticate,
+    authorize(
+        'admin',
+        'manager'
+    ),
+    async (req, res) => {
+
+        try {
+
+            if (
+                !mongoose.Types.ObjectId
+                    .isValid(req.params.id)
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'معرف المركب غير صالح'
+                });
+            }
+
+            const vessel =
+                await Vessel.findByIdAndUpdate(
+                    req.params.id,
+                    req.body,
+                    {
+                        new: true,
+                        runValidators: true
+                    }
+                );
+
+            if (!vessel) {
+
+                return res.status(404).json({
+                    success: false,
+                    error:
+                        'المركب غير موجود'
+                });
+            }
+
+            res.json(vessel);
+
+        } catch (error) {
+
+            res.status(400).json({
+                success: false,
+                error:
+                    'فشل تحديث المركب'
+            });
+        }
+    }
+);
+
+
+app.delete(
+    '/api/vessels/:id',
+    authenticate,
+    authorize('admin'),
+    async (req, res) => {
+
+        try {
+
+            if (
+                !mongoose.Types.ObjectId
+                    .isValid(req.params.id)
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'معرف غير صالح'
+                });
+            }
+
+            const vessel =
+                await Vessel.findByIdAndDelete(
+                    req.params.id
+                );
+
+            if (!vessel) {
+
+                return res.status(404).json({
+                    success: false,
+                    error:
+                        'المركب غير موجود'
+                });
+            }
+
+            res.json({
+                success: true,
+                message:
+                    'تم حذف المركب'
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                error:
+                    'فشل حذف المركب'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// MAINTENANCE
+// ============================================================
+
+app.get(
+    '/api/maintenance',
+    authenticate,
+    async (req, res) => {
+
+        const records =
+            await Maintenance.find()
+                .sort({
+                    createdAt: -1
+                })
+                .lean();
+
         res.json({
             success: true,
-            message: "✅ مفتاح Gemini صالح ويعمل",
-            response: response.text().substring(0, 100) + "...",
-            model: "gemini-2.0-flash"
-        });
-    } catch (error) {
-        res.json({ 
-            success: false, 
-            error: error.message,
-            message: "❌ مفتاح Gemini غير صالح"
+            maintenance:
+                records
         });
     }
-});
+);
+
+
+app.post(
+    '/api/maintenance',
+    authenticate,
+    authorize(
+        'admin',
+        'manager'
+    ),
+    async (req, res) => {
+
+        try {
+
+            const record =
+                new Maintenance({
+                    ...req.body,
+                    supervisor:
+                        req.user._id
+                });
+
+            await record.save();
+
+            res.status(201).json({
+                success: true,
+                maintenance:
+                    record
+            });
+
+        } catch (error) {
+
+            res.status(400).json({
+                success: false,
+                error:
+                    'بيانات الصيانة غير صحيحة'
+            });
+        }
+    }
+);
+
 
 // ============================================================
-// 🤖 AI - SMART ROUTER
+// TICKETS
 // ============================================================
 
-app.post('/api/ai/ask', authenticate, async (req, res) => {
-    try {
-        const { message } = req.body;
-        if (!message) {
-            return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
+app.get(
+    '/api/tickets',
+    authenticate,
+    async (req, res) => {
+
+        const tickets =
+            await Ticket.find()
+                .sort({
+                    createdAt: -1
+                })
+                .lean();
+
+        res.json({
+            success: true,
+            tickets
+        });
+    }
+);
+
+
+app.post(
+    '/api/tickets',
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const ticket =
+                new Ticket({
+                    ...req.body,
+                    createdBy:
+                        req.user._id
+                });
+
+            await ticket.save();
+
+            res.status(201).json({
+                success: true,
+                ticket
+            });
+
+        } catch (error) {
+
+            res.status(400).json({
+                success: false,
+                error:
+                    'بيانات التذكرة غير صحيحة'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// NOTES
+// ============================================================
+
+app.get(
+    '/api/notes',
+    authenticate,
+    async (req, res) => {
+
+        const notes =
+            await Note.find()
+                .sort({
+                    createdAt: -1
+                })
+                .lean();
+
+        res.json({
+            success: true,
+            notes
+        });
+    }
+);
+
+
+app.post(
+    '/api/notes',
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const note =
+                new Note({
+                    ...req.body,
+                    createdBy:
+                        req.user._id
+                });
+
+            await note.save();
+
+            res.status(201).json({
+                success: true,
+                note
+            });
+
+        } catch (error) {
+
+            res.status(400).json({
+                success: false,
+                error:
+                    'بيانات المذكرة غير صحيحة'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+
+app.get(
+    '/api/dashboard',
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const [
+                totalVessels,
+                validVessels,
+                damagedVessels,
+                maintenanceVessels,
+                totalUsers,
+                totalTickets
+            ] =
+                await Promise.all([
+
+                    Vessel.countDocuments(),
+
+                    Vessel.countDocuments({
+                        stat: 'صالح'
+                    }),
+
+                    Vessel.countDocuments({
+                        stat: 'معطب'
+                    }),
+
+                    Vessel.countDocuments({
+                        stat: 'صيانة'
+                    }),
+
+                    User.countDocuments(),
+
+                    Ticket.countDocuments()
+                ]);
+
+            res.json({
+                success: true,
+
+                data: {
+
+                    vessels: {
+                        total:
+                            totalVessels,
+
+                        valid:
+                            validVessels,
+
+                        damaged:
+                            damagedVessels,
+
+                        maintenance:
+                            maintenanceVessels
+                    },
+
+                    users:
+                        totalUsers,
+
+                    tickets:
+                        totalTickets
+                }
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                error:
+                    'فشل تحميل لوحة التحكم'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// LOGS
+// ============================================================
+
+app.get(
+    '/api/logs',
+    authenticate,
+    authorize('admin'),
+    async (req, res) => {
+
+        try {
+
+            let limit =
+                Number(req.query.limit || 100);
+
+            let skip =
+                Number(req.query.skip || 0);
+
+            limit =
+                Math.min(
+                    Math.max(limit, 1),
+                    500
+                );
+
+            skip =
+                Math.max(skip, 0);
+
+            const query = {};
+
+            if (req.query.username) {
+                query.username =
+                    String(
+                        req.query.username
+                    ).slice(0, 80);
+            }
+
+            if (req.query.startDate) {
+
+                const start =
+                    new Date(
+                        req.query.startDate
+                    );
+
+                if (!isNaN(start)) {
+
+                    query.createdAt = {
+                        $gte: start
+                    };
+                }
+            }
+
+            if (req.query.endDate) {
+
+                const end =
+                    new Date(
+                        req.query.endDate
+                    );
+
+                if (!isNaN(end)) {
+
+                    end.setHours(
+                        23,
+                        59,
+                        59,
+                        999
+                    );
+
+                    query.createdAt = {
+                        ...(query.createdAt || {}),
+                        $lte: end
+                    };
+                }
+            }
+
+            const logs =
+                await Log.find(query)
+                    .sort({
+                        createdAt: -1
+                    })
+                    .skip(skip)
+                    .limit(limit)
+                    .lean();
+
+            const total =
+                await Log.countDocuments(
+                    query
+                );
+
+            res.json({
+                success: true,
+                logs,
+                pagination: {
+                    total,
+                    limit,
+                    skip,
+                    hasMore:
+                        skip +
+                        logs.length <
+                        total
+                }
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                error:
+                    'فشل تحميل السجلات'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// SESSIONS
+// ============================================================
+
+app.get(
+    '/api/sessions',
+    authenticate,
+    authorize('admin'),
+    async (req, res) => {
+
+        try {
+
+            const users =
+                await User.find()
+                    .select(
+                        'name username email role isActive lastLogin createdAt'
+                    )
+                    .lean();
+
+            const logs =
+                await Log.find()
+                    .sort({
+                        createdAt: -1
+                    })
+                    .limit(500)
+                    .lean();
+
+            const sessions =
+                users.map(
+                    (user, index) => {
+
+                        const userLogs =
+                            logs.filter(
+                                log =>
+                                    log.username ===
+                                    user.username
+                            );
+
+                        const last =
+                            userLogs[0];
+
+                        return {
+
+                            id:
+                                `user-session-${user._id}`,
+
+                            userId:
+                                user._id,
+
+                            username:
+                                user.username,
+
+                            userName:
+                                user.name,
+
+                            role:
+                                user.role,
+
+                            status:
+                                user.isActive
+                                    ? 'active'
+                                    : 'inactive',
+
+                            ip:
+                                last?.ip ||
+                                'غير متوفر',
+
+                            device:
+                                last?.userAgent ||
+                                'غير متوفر',
+
+                            createdAt:
+                                user.createdAt,
+
+                            updatedAt:
+                                last?.createdAt ||
+                                user.lastLogin ||
+                                user.createdAt,
+
+                            lastActivity:
+                                last?.createdAt ||
+                                user.lastLogin ||
+                                user.createdAt
+                        };
+                    }
+                );
+
+            res.json({
+                success: true,
+                sessions,
+                total:
+                    sessions.length,
+
+                active:
+                    sessions.filter(
+                        s =>
+                            s.status ===
+                            'active'
+                    ).length
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                error:
+                    'فشل تحميل الجلسات'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// AI CONFIG
+// NEVER SEND API KEYS TO CLIENT
+// ============================================================
+
+app.get(
+    '/api/config',
+    authenticate,
+    (req, res) => {
+
+        res.json({
+            success: true,
+
+            GEMINI_ENABLED:
+                Boolean(
+                    GEMINI_API_KEY
+                ),
+
+            GEMINI_MODEL,
+
+            DEEPSEEK_ENABLED:
+                Boolean(
+                    DEEPSEEK_API_KEY
+                ),
+
+            DEEPSEEK_MODEL,
+
+            OPENAI_ENABLED:
+                Boolean(
+                    OPENAI_API_KEY
+                ),
+
+            OPENAI_MODEL
+        });
+    }
+);
+
+
+// ============================================================
+// CHECK GEMINI
+// ============================================================
+
+app.get(
+    '/api/check-gemini',
+    authenticate,
+    authorize('admin'),
+    async (req, res) => {
+
+        if (!GEMINI_API_KEY) {
+
+            return res.json({
+                success: false,
+                error:
+                    'GEMINI_API_KEY غير موجود'
+            });
         }
 
-        const vessels = await Vessel.find().lean();
-        const maintenance = await Maintenance.find().lean();
-        const totalVessels = vessels.length;
-        const validVessels = vessels.filter(v => v.stat === 'صالح').length;
-        const damagedVessels = vessels.filter(v => v.stat === 'معطب').length;
-        const maintenanceVessels = vessels.filter(v => v.stat === 'صيانة').length;
-        const efficiency = totalVessels ? Math.round((validVessels / totalVessels) * 100) : 0;
+        try {
 
-        const context = `
-📊 بيانات الأسطول الحالية:
-- إجمالي المراكب: ${totalVessels}
-- الصالح: ${validVessels} (${efficiency}%)
-- تحت الصيانة: ${maintenanceVessels}
-- المعطوب: ${damagedVessels}
-- مهام الصيانة: ${maintenance.length}
+            const {
+                GoogleGenerativeAI
+            } =
+                require(
+                    '@google/generative-ai'
+                );
+
+            const genAI =
+                new GoogleGenerativeAI(
+                    GEMINI_API_KEY
+                );
+
+            const model =
+                genAI.getGenerativeModel({
+                    model:
+                        GEMINI_MODEL
+                });
+
+            const result =
+                await model.generateContent(
+                    'اختبار اتصال مختصر'
+                );
+
+            res.json({
+                success: true,
+                message:
+                    'Gemini يعمل بنجاح',
+                model:
+                    GEMINI_MODEL
+            });
+
+        } catch (error) {
+
+            res.json({
+                success: false,
+                error:
+                    'فشل اتصال Gemini'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// AI ASK
+// ============================================================
+
+app.post(
+    '/api/ai/ask',
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const message =
+                String(
+                    req.body.message || ''
+                )
+                .trim();
+
+            if (
+                !message ||
+                message.length > 5000
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'الرسالة غير صالحة'
+                });
+            }
+
+            const vessels =
+                await Vessel.find()
+                    .lean();
+
+            const maintenance =
+                await Maintenance.find()
+                    .lean();
+
+            const total =
+                vessels.length;
+
+            const valid =
+                vessels.filter(
+                    v =>
+                        v.stat ===
+                        'صالح'
+                ).length;
+
+            const damaged =
+                vessels.filter(
+                    v =>
+                        v.stat ===
+                        'معطب'
+                ).length;
+
+            const underMaintenance =
+                vessels.filter(
+                    v =>
+                        v.stat ===
+                        'صيانة'
+                ).length;
+
+            const efficiency =
+                total
+                    ? Math.round(
+                        valid /
+                        total *
+                        100
+                    )
+                    : 0;
+
+            const context = `
+بيانات الأسطول:
+إجمالي المراكب: ${total}
+الصالح: ${valid}
+المعطوب: ${damaged}
+تحت الصيانة: ${underMaintenance}
+نسبة الجاهزية: ${efficiency}%
+مهام الصيانة: ${maintenance.length}
 `;
 
-        let reply = '';
-        let usedModel = '';
+            let reply = '';
+            let modelUsed = '';
 
-        // ✅ Gemini First
-        if (GEMINI_API_KEY) {
-            try {
-                const { GoogleGenerativeAI } = require('@google/generative-ai');
-                const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-                const model = genAI.getGenerativeModel({ 
-                    model: GEMINI_MODEL,
-                    generationConfig: { maxOutputTokens: 2000, temperature: 0.7 }
-                });
-                const result = await model.generateContent(`${message}\n\n${context}`);
-                reply = result.response.text();
-                usedModel = `Gemini (${GEMINI_MODEL})`;
-            } catch (error) {
-                console.warn(`⚠️ Gemini failed: ${error.message}`);
-            }
-        }
+            // ------------------------------------------------
+            // GEMINI
+            // ------------------------------------------------
 
-        // ✅ DeepSeek Fallback
-        if (!reply && DEEPSEEK_API_KEY) {
-            try {
-                const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: DEEPSEEK_MODEL,
-                        messages: [
-                            { role: 'system', content: 'أنت مساعد ذكي متخصص في الأسطول البحري التونسي.' },
-                            { role: 'user', content: `${message}\n\n${context}` }
-                        ],
-                        max_tokens: 2000,
-                        temperature: 0.7
-                    })
-                });
+            if (GEMINI_API_KEY) {
 
-                if (deepseekResponse.ok) {
-                    const data = await deepseekResponse.json();
-                    reply = data.choices?.[0]?.message?.content || '';
-                    usedModel = `DeepSeek (${DEEPSEEK_MODEL})`;
+                try {
+
+                    const {
+                        GoogleGenerativeAI
+                    } =
+                        require(
+                            '@google/generative-ai'
+                        );
+
+                    const genAI =
+                        new GoogleGenerativeAI(
+                            GEMINI_API_KEY
+                        );
+
+                    const model =
+                        genAI.getGenerativeModel({
+                            model:
+                                GEMINI_MODEL,
+
+                            generationConfig: {
+                                maxOutputTokens:
+                                    1500,
+
+                                temperature:
+                                    0.4
+                            }
+                        });
+
+                    const result =
+                        await model.generateContent(
+                            `${message}\n\n${context}`
+                        );
+
+                    reply =
+                        result.response.text();
+
+                    modelUsed =
+                        `Gemini (${GEMINI_MODEL})`;
+
+                } catch (error) {
+
+                    console.warn(
+                        'Gemini failed:',
+                        error.message
+                    );
                 }
-            } catch (e) {
-                console.warn('⚠️ DeepSeek failed...');
             }
-        }
 
-        // ✅ Local Fallback
-        if (!reply) {
-            const msg = message.toLowerCase();
-            if (msg.includes('مرحبا') || msg.includes('السلام')) {
-                reply = '👋 وعليكم السلام! كيف يمكنني مساعدتك في شؤون الأسطول البحري؟';
-            } else if (msg.includes('الجاهزية')) {
-                reply = `📈 نسبة جاهزية الأسطول: ${efficiency}% (${validVessels} من ${totalVessels})`;
-            } else if (msg.includes('معطب')) {
-                reply = `⚠️ عدد المراكب المعطوبة: ${damagedVessels}`;
-            } else if (msg.includes('صيانة')) {
-                reply = `🔧 عدد المراكب تحت الصيانة: ${maintenanceVessels}\nمهام الصيانة: ${maintenance.length}`;
-            } else {
-                reply = `📌 يمكنني مساعدتك في:\n- عرض إحصائيات الأسطول\n- نسبة الجاهزية\n- المراكب المعطوبة\n- مهام الصيانة`;
+            // ------------------------------------------------
+            // DEEPSEEK
+            // ------------------------------------------------
+
+            if (
+                !reply &&
+                DEEPSEEK_API_KEY
+            ) {
+
+                try {
+
+                    const response =
+                        await fetch(
+                            'https://api.deepseek.com/v1/chat/completions',
+                            {
+                                method:
+                                    'POST',
+
+                                headers: {
+                                    'Content-Type':
+                                        'application/json',
+
+                                    Authorization:
+                                        `Bearer ${DEEPSEEK_API_KEY}`
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        model:
+                                            DEEPSEEK_MODEL,
+
+                                        messages: [
+                                            {
+                                                role:
+                                                    'system',
+
+                                                content:
+                                                    'أنت مساعد متخصص في إدارة الأسطول البحري.'
+                                            },
+
+                                            {
+                                                role:
+                                                    'user',
+
+                                                content:
+                                                    `${message}\n\n${context}`
+                                            }
+                                        ],
+
+                                        max_tokens:
+                                            1500,
+
+                                        temperature:
+                                            0.4
+                                    })
+                            }
+                        );
+
+                    if (
+                        response.ok
+                    ) {
+
+                        const data =
+                            await response.json();
+
+                        reply =
+                            data.choices?.[0]
+                                ?.message
+                                ?.content ||
+                            '';
+
+                        modelUsed =
+                            `DeepSeek (${DEEPSEEK_MODEL})`;
+                    }
+
+                } catch (error) {
+
+                    console.warn(
+                        'DeepSeek failed'
+                    );
+                }
             }
-            usedModel = 'Local (Offline)';
+
+            // ------------------------------------------------
+            // LOCAL FALLBACK
+            // ------------------------------------------------
+
+            if (!reply) {
+
+                const msg =
+                    message.toLowerCase();
+
+                if (
+                    msg.includes('الجاهزية')
+                ) {
+
+                    reply =
+                        `📈 نسبة الجاهزية: ${efficiency}%`;
+                }
+
+                else if (
+                    msg.includes('معطب')
+                ) {
+
+                    reply =
+                        `⚠️ المراكب المعطوبة: ${damaged}`;
+                }
+
+                else if (
+                    msg.includes('صيانة')
+                ) {
+
+                    reply =
+                        `🔧 تحت الصيانة: ${underMaintenance}\nمهام الصيانة: ${maintenance.length}`;
+                }
+
+                else {
+
+                    reply =
+                        `📊 إجمالي المراكب: ${total}\n📈 الجاهزية: ${efficiency}%\n⚠️ المعطوب: ${damaged}\n🔧 الصيانة: ${underMaintenance}`;
+                }
+
+                modelUsed =
+                    'Local';
+            }
+
+            res.json({
+                success: true,
+                response: reply,
+                model: modelUsed
+            });
+
+        } catch (error) {
+
+            console.error(
+                'AI error:',
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                error:
+                    'فشل تشغيل المساعد الذكي'
+            });
+        }
+    }
+);
+
+
+// ============================================================
+// PAGES API
+// ============================================================
+
+const safePageName =
+    /^[a-zA-Z0-9_-]+$/;
+
+app.get(
+    '/api/pages/:page',
+    authenticate,
+    async (req, res) => {
+
+        const page =
+            req.params.page;
+
+        if (
+            !safePageName.test(page)
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                error:
+                    'اسم الصفحة غير صالح'
+            });
         }
 
-        res.json({ success: true, response: reply, model: usedModel });
+        const file =
+            path.join(
+                PAGES_DIR,
+                `${page}.html`
+            );
 
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+        if (
+            !file.startsWith(
+                PAGES_DIR
+            )
+        ) {
 
-// ============================================================
-// 📄 PAGES API
-// ============================================================
-
-app.get('/api/pages/:page', authenticate, async (req, res) => {
-    try {
-        const pageName = req.params.page;
-        const filePath = path.join(pagesPath, pageName + '.html');
-        
-        if (fs.existsSync(filePath)) {
-            const html = fs.readFileSync(filePath, 'utf8');
-            res.json({ success: true, html });
-        } else {
-            const defaultHtml = `
-                <div class="page-content active">
-                    <h2 style="color:#60a5fa;">📄 صفحة ${pageName}</h2>
-                    <p style="color:rgba(255,255,255,0.3);">المحتوى قيد التطوير...</p>
-                </div>
-            `;
-            res.json({ success: true, html: defaultHtml });
+            return res.status(400).json({
+                success: false,
+                error:
+                    'مسار غير صالح'
+            });
         }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+
+        if (!fs.existsSync(file)) {
+
+            return res.status(404).json({
+                success: false,
+                error:
+                    'الصفحة غير موجودة'
+            });
+        }
+
+        try {
+
+            const html =
+                fs.readFileSync(
+                    file,
+                    'utf8'
+                );
+
+            res.json({
+                success: true,
+                html
+            });
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                error:
+                    'فشل قراءة الصفحة'
+            });
+        }
     }
-});
+);
+
 
 // ============================================================
-// 🏠 HOME
+// STATIC FILES
 // ============================================================
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
+/*
+ * IMPORTANT:
+ *
+ * Your project currently has:
+ *
+ * assets/js/index.js
+ *
+ * NOT:
+ *
+ * public/assets/js/index.js
+ *
+ * Therefore /assets must point to ROOT/assets.
+ */
+
+// ------------------------------------------------------------
+// /assets
+// ------------------------------------------------------------
+
+if (
+    fs.existsSync(ASSETS_DIR)
+) {
+
+    app.use(
+        '/assets',
+        express.static(
+            ASSETS_DIR,
+            {
+                index: false,
+                dotfiles: 'deny',
+                fallthrough: false,
+                etag: true,
+                maxAge:
+                    IS_PRODUCTION
+                        ? '1h'
+                        : 0
+            }
+        )
+    );
+
+    console.log(
+        '✅ Mounted /assets -> /assets'
+    );
+}
+
+
+// ------------------------------------------------------------
+// /assets/css
+// ------------------------------------------------------------
+
+if (
+    fs.existsSync(CSS_DIR)
+) {
+
+    app.use(
+        '/assets/css',
+        express.static(
+            CSS_DIR,
+            {
+                index: false,
+                dotfiles: 'deny',
+                fallthrough: false,
+                etag: true,
+                maxAge:
+                    IS_PRODUCTION
+                        ? '1h'
+                        : 0
+            }
+        )
+    );
+
+    console.log(
+        '✅ Mounted /assets/css -> /css'
+    );
+}
+
+
+// ------------------------------------------------------------
+// /assets/root-js
+// ------------------------------------------------------------
+
+if (
+    fs.existsSync(JS_DIR)
+) {
+
+    app.use(
+        '/assets/root-js',
+        express.static(
+            JS_DIR,
+            {
+                index: false,
+                dotfiles: 'deny',
+                fallthrough: false,
+                etag: true
+            }
+        )
+    );
+}
+
+
+// ------------------------------------------------------------
+// /pages
+// ------------------------------------------------------------
+
+app.use(
+    '/pages',
+    express.static(
+        PAGES_DIR,
+        {
+            index: false,
+            dotfiles: 'deny',
+            fallthrough: false,
+            etag: true,
+            maxAge: 0
+        }
+    )
+);
+
+
+// ------------------------------------------------------------
+// /uploads
+// ------------------------------------------------------------
+
+app.use(
+    '/uploads',
+    express.static(
+        UPLOADS_DIR,
+        {
+            index: false,
+            dotfiles: 'deny',
+            fallthrough: false,
+            etag: true
+        }
+    )
+);
+
 
 // ============================================================
-// 🤖 AI ASSISTANT PAGE
+// ROOT
 // ============================================================
 
-app.get('/ai-assistant', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'ai-assistant.html'));
-});
+app.get(
+    '/',
+    (req, res) => {
 
-// ============================================================
-// ❌ 404
-// ============================================================
+        const index =
+            path.join(
+                PUBLIC_DIR,
+                'index.html'
+            );
 
-app.use('/api', (req, res) => {
-    console.warn(`❌ [404] API not found: ${req.method} ${req.url}`);
-    res.status(404).json({ success: false, error: 'API not found' });
-});
+        if (!fs.existsSync(index)) {
 
-app.use((req, res) => {
-    if (req.method === 'GET') {
-        return res.sendFile(path.join(publicPath, 'index.html'));
+            return res.status(500).send(
+                'index.html غير موجود'
+            );
+        }
+
+        res.sendFile(index);
     }
-    res.status(404).json({ success: false, error: 'Not found' });
-});
+);
+
 
 // ============================================================
-// 💥 ERROR HANDLER
+// AI ASSISTANT DIRECT ROUTE
 // ============================================================
 
-app.use((err, req, res, next) => {
-    console.error('❌ [ERROR]', err.message);
-    res.status(500).json({ success: false, error: 'Internal server error' });
-});
+app.get(
+    '/ai-assistant',
+    (req, res) => {
+
+        const file =
+            path.join(
+                PAGES_DIR,
+                'ai-assistant.html'
+            );
+
+        if (
+            !fs.existsSync(file)
+        ) {
+
+            return res.status(404).send(
+                'Page not found'
+            );
+        }
+
+        res.sendFile(file);
+    }
+);
+
 
 // ============================================================
-// 🚀 START SERVER
+// API 404
+// ============================================================
+
+app.use(
+    '/api',
+    (req, res) => {
+
+        console.warn(
+            `❌ API 404: ${req.method} ${req.originalUrl}`
+        );
+
+        res.status(404).json({
+            success: false,
+            error:
+                'API endpoint not found'
+        });
+    }
+);
+
+
+// ============================================================
+// STATIC RESOURCE 404
+// ============================================================
+
+app.use(
+    (req, res, next) => {
+
+        /*
+         * NEVER return index.html for missing
+         * JS/CSS/fonts/images/pages.
+         */
+
+        if (
+            req.path.startsWith('/assets/') ||
+            req.path.startsWith('/pages/') ||
+            req.path.startsWith('/uploads/')
+        ) {
+
+            return res.status(404).send(
+                'Resource not found'
+            );
+        }
+
+        next();
+    }
+);
+
+
+// ============================================================
+// FRONTEND FALLBACK
+// ============================================================
+
+app.use(
+    (req, res) => {
+
+        if (
+            req.method !== 'GET'
+        ) {
+
+            return res.status(404).json({
+                success: false,
+                error:
+                    'Not found'
+            });
+        }
+
+        const index =
+            path.join(
+                PUBLIC_DIR,
+                'index.html'
+            );
+
+        if (
+            !fs.existsSync(index)
+        ) {
+
+            return res.status(500).send(
+                'Frontend unavailable'
+            );
+        }
+
+        res.sendFile(index);
+    }
+);
+
+
+// ============================================================
+// ERROR HANDLER
+// ============================================================
+
+app.use(
+    (err, req, res, next) => {
+
+        console.error(
+            '❌ SERVER ERROR:',
+            err.message
+        );
+
+        if (
+            res.headersSent
+        ) {
+            return next(err);
+        }
+
+        if (
+            err.message ===
+            'CORS origin not allowed'
+        ) {
+
+            return res.status(403).json({
+                success: false,
+                error:
+                    'CORS forbidden'
+            });
+        }
+
+        if (
+            err instanceof
+            multer.MulterError
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                error:
+                    'خطأ في تحميل الملف'
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            error:
+                'Internal server error'
+        });
+    }
+);
+
+
+// ============================================================
+// START
 // ============================================================
 
 async function startServer() {
-    const connected = await connectDB();
+
+    const connected =
+        await connectDB();
+
     if (!connected) {
-        console.error('❌ Cannot start: MongoDB is not connected');
+
+        console.error(
+            '❌ Server cannot start without MongoDB'
+        );
+
         process.exit(1);
     }
 
     await createAdmin();
+
     await seedVessels();
 
-    const server = app.listen(PORT, '0.0.0.0', () => {
-        console.log('');
-        console.log('='.repeat(60));
-        console.log('🚢 MARINE SYSTEM v38.4 - FULLY INTEGRATED');
-        console.log('🚀 SERVER STARTED');
-        console.log('='.repeat(60));
-        console.log(`🌍 Environment: ${NODE_ENV}`);
-        console.log(`🚀 Port: ${PORT}`);
-        console.log('🗄️ MongoDB: Connected ✅');
-        console.log('🔐 JWT: Enabled');
-        console.log('🛡️ Security: Enabled');
-        console.log('❤️ Health: /health');
-        console.log('');
-        console.log('📊 SETTINGS API:');
-        console.log('   ✅ GET  /api/settings          (Get settings)');
-        console.log('   ✅ PUT  /api/settings          (Save settings)');
-        console.log('   ✅ POST /api/settings/reset    (Reset settings)');
-        console.log('   ✅ POST /api/settings/logo     (Upload logo)');
-        console.log('   ✅ DELETE /api/settings/logo   (Delete logo)');
-        console.log('   ✅ POST /api/settings/background (Upload background)');
-        console.log('');
-        console.log('🔐 PERMISSIONS & 2FA:');
-        console.log('   ✅ GET  /api/users/me/permissions (User permissions)');
-        console.log('   ✅ POST /api/auth/2fa/initiate    (Initiate 2FA)');
-        console.log('   ✅ POST /api/auth/2fa/verify      (Verify 2FA)');
-        console.log('   ✅ POST /api/auth/2fa/disable     (Disable 2FA)');
-        console.log('   ✅ GET  /api/auth/2fa/status      (2FA status)');
-        console.log('   ✅ POST /api/auth/session-timeout (Update session)');
-        console.log('');
-        console.log('🚢 VESSELS:');
-        console.log('   ✅ GET  /api/vessels      (All vessels)');
-        console.log('   ✅ POST /api/vessels      (Create vessel)');
-        console.log('   ✅ PUT  /api/vessels/:id  (Update vessel)');
-        console.log('   ✅ DELETE /api/vessels/:id (Delete vessel)');
-        console.log('');
-        console.log('🔐 AUTH:');
-        console.log('   ✅ POST /api/auth/login   (Login)');
-        console.log('   ✅ GET  /api/auth/me      (Current user)');
-        console.log('   ✅ GET  /api/auth/verify  (Verify token)');
-        console.log('   ✅ PUT  /api/auth/change-password (Change password)');
-        console.log('');
-        console.log('='.repeat(60));
-        console.log('🔑 LOGIN:');
-        console.log('   👤 Username: admin');
-        console.log('   🔑 Password: from ADMIN_PASSWORD in Render');
-        console.log('='.repeat(60));
-        console.log('✅ All APIs ready - Production Ready 100%');
-        console.log('✅ Settings API fixed - No more 401 errors');
-        console.log('='.repeat(60));
-        console.log('');
-    });
+    const server =
+        app.listen(
+            PORT,
+            '0.0.0.0',
+            () => {
 
-    process.on('SIGTERM', () => {
-        console.log('🛑 SIGTERM received. Shutting down...');
-        server.close(() => {
-            mongoose.connection.close();
-            console.log('✅ Server closed');
-            process.exit(0);
-        });
-    });
+                console.log('');
+                console.log(
+                    '============================================================'
+                );
 
-    process.on('SIGINT', () => {
-        console.log('🛑 SIGINT received. Shutting down...');
-        server.close(() => {
-            mongoose.connection.close();
-            console.log('✅ Server closed');
-            process.exit(0);
-        });
-    });
+                console.log(
+                    '🚢 MARINE SYSTEM v39.0'
+                );
+
+                console.log(
+                    '🚀 SERVER STARTED'
+                );
+
+                console.log(
+                    `🌍 Environment: ${NODE_ENV}`
+                );
+
+                console.log(
+                    `🚀 Port: ${PORT}`
+                );
+
+                console.log(
+                    '🗄️ MongoDB: Connected ✅'
+                );
+
+                console.log(
+                    '🔐 HttpOnly Authentication: Enabled ✅'
+                );
+
+                console.log(
+                    '🛡️ CSRF Protection: Enabled ✅'
+                );
+
+                console.log(
+                    '🌐 Static Assets: Enabled ✅'
+                );
+
+                console.log(
+                    '📁 /assets -> /assets'
+                );
+
+                console.log(
+                    '📁 /assets/css -> /css'
+                );
+
+                console.log(
+                    '📁 /pages -> /public/pages'
+                );
+
+                console.log(
+                    '📁 /uploads -> /uploads'
+                );
+
+                console.log(
+                    '============================================================'
+                );
+
+                console.log('');
+            }
+        );
+
+
+    // --------------------------------------------------------
+    // GRACEFUL SHUTDOWN
+    // --------------------------------------------------------
+
+    const shutdown =
+        signal => {
+
+            console.log(
+                `🛑 ${signal} received`
+            );
+
+            server.close(
+                async () => {
+
+                    try {
+
+                        await mongoose.connection.close();
+
+                        console.log(
+                            '✅ MongoDB connection closed'
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            error.message
+                        );
+                    }
+
+                    process.exit(0);
+                }
+            );
+        };
+
+
+    process.on(
+        'SIGTERM',
+        () => shutdown('SIGTERM')
+    );
+
+    process.on(
+        'SIGINT',
+        () => shutdown('SIGINT')
+    );
 }
+
 
 startServer();
 
