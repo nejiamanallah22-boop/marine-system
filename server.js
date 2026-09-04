@@ -37,7 +37,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ Session Management (for production, use Redis or PostgreSQL)
+// ✅ Session Management
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
@@ -45,22 +45,19 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000
     }
 }));
 
-// ✅ CSRF Protection (comment out if issues persist)
+// ✅ CSRF Protection
 let csrfProtection = (req, res, next) => {
-    // Simple CSRF token generation for demo
     const token = req.headers['x-csrf-token'] || req.body.csrf_token;
     const sessionToken = req.session.csrfToken;
     
-    // Skip CSRF check for GET requests
     if (req.method === 'GET') {
         return next();
     }
     
-    // For POST/PUT/DELETE, check token
     if (!token || token !== sessionToken) {
         return res.status(403).json({
             success: false,
@@ -70,41 +67,55 @@ let csrfProtection = (req, res, next) => {
     next();
 };
 
-// Generate CSRF token for each session
+// ✅ Generate CSRF token
 app.use((req, res, next) => {
     if (!req.session.csrfToken) {
         req.session.csrfToken = Math.random().toString(36).substring(2, 15) + 
                                 Math.random().toString(36).substring(2, 15);
     }
-    // Set CSRF token in response headers
     res.setHeader('X-CSRF-Token', req.session.csrfToken);
     next();
 });
 
 // ============================================================
-// 🖥️ STATIC FILES & ROUTING
+// 🖥️ STATIC FILES & ROUTING - الحل النهائي
 // ============================================================
 
-// ✅ Serve static files from root directory
-app.use(express.static(path.join(__dirname)));
+// ✅ تحديد مسار مجلد src
+const srcPath = path.join(__dirname, 'src');
 
-// ✅ Serve pages directory
-app.use('/pages', express.static(path.join(__dirname, 'pages')));
+// ✅ تقديم الملفات الثابتة من مجلد src
+app.use(express.static(srcPath));
 
-// ✅ Serve index.html for root
+// ✅ تقديم مجلد الصفحات
+app.use('/pages', express.static(path.join(srcPath, 'pages')));
+
+// ✅ الصفحة الرئيسية
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    const indexPath = path.join(srcPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).send(`
+            <h1 style="color:#ef4444;text-align:center;margin-top:50px;font-family:sans-serif;">
+                ❌ ملف index.html غير موجود في مجلد src/
+            </h1>
+            <p style="text-align:center;color:#94a3b8;">
+                تأكد من وجود الملف في المسار: ${indexPath}
+            </p>
+        `);
+    }
 });
 
-// ✅ Serve login page
+// ✅ صفحة تسجيل الدخول
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(srcPath, 'index.html'));
 });
 
-// ✅ Serve specific pages
+// ✅ تحميل الصفحات من مجلد pages
 app.get('/pages/:page', (req, res) => {
     const page = req.params.page;
-    const filePath = path.join(__dirname, 'pages', page + '.html');
+    const filePath = path.join(srcPath, 'pages', page + '.html');
     
     if (fs.existsSync(filePath)) {
         res.sendFile(filePath);
@@ -113,22 +124,23 @@ app.get('/pages/:page', (req, res) => {
             <h1 style="color:#ef4444;text-align:center;margin-top:50px;font-family:sans-serif;">
                 ❌ الصفحة "${page}" غير موجودة
             </h1>
+            <p style="text-align:center;color:#94a3b8;">
+                المسار: ${filePath}
+            </p>
         `);
     }
 });
 
-// ✅ Handle all other routes (SPA mode)
+// ✅ معالجة جميع المسارات الأخرى (SPA mode)
 app.get('*', (req, res) => {
-    // If request is for a file with extension, return 404
     if (req.path.includes('.')) {
         return res.status(404).send('❌ الملف غير موجود');
     }
-    // Otherwise, serve index.html
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(srcPath, 'index.html'));
 });
 
 // ============================================================
-// 📊 DATA STORE (In-memory for demo)
+// 📊 DATA STORE
 // ============================================================
 
 const users = [
@@ -246,7 +258,6 @@ app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password, csrf_token } = req.body;
 
-        // ✅ Validate CSRF token
         if (!csrf_token || csrf_token !== req.session.csrfToken) {
             return res.status(403).json({
                 success: false,
@@ -270,14 +281,12 @@ app.post('/api/auth/login', (req, res) => {
             });
         }
 
-        // ✅ Generate JWT
         const token = jwt.sign(
             { id: user.id, username: user.username, role: user.role },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        // ✅ Send new CSRF token
         const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
                             Math.random().toString(36).substring(2, 15);
         req.session.csrfToken = newCsrfToken;
@@ -325,7 +334,6 @@ app.get('/api/auth/me', (req, res) => {
             });
         }
 
-        // ✅ Send new CSRF token
         const newCsrfToken = Math.random().toString(36).substring(2, 15) + 
                             Math.random().toString(36).substring(2, 15);
         req.session.csrfToken = newCsrfToken;
@@ -378,10 +386,9 @@ app.get('/api/vessels', (req, res) => {
     }
 });
 
-// ✅ Add vessel (requires CSRF)
+// ✅ Add vessel
 app.post('/api/vessels', (req, res) => {
     try {
-        // Validate CSRF
         const csrfToken = req.headers['x-csrf-token'] || req.body.csrf_token;
         if (!csrfToken || csrfToken !== req.session.csrfToken) {
             return res.status(403).json({
@@ -456,7 +463,6 @@ app.get('/api/users', (req, res) => {
                             Math.random().toString(36).substring(2, 15);
         req.session.csrfToken = newCsrfToken;
         res.setHeader('X-CSRF-Token', newCsrfToken);
-        // Don't send passwords
         const safeUsers = users.map(u => ({
             id: u.id,
             username: u.username,
@@ -471,7 +477,7 @@ app.get('/api/users', (req, res) => {
     }
 });
 
-// ✅ Add user (requires CSRF)
+// ✅ Add user
 app.post('/api/users', (req, res) => {
     try {
         const csrfToken = req.headers['x-csrf-token'] || req.body.csrf_token;
@@ -541,7 +547,7 @@ app.get('/api/logs', (req, res) => {
     }
 });
 
-// ✅ Add log (requires CSRF)
+// ✅ Add log
 app.post('/api/logs', (req, res) => {
     try {
         const csrfToken = req.headers['x-csrf-token'] || req.body.csrf_token;
@@ -589,7 +595,7 @@ app.listen(PORT, () => {
     console.log(`🚢 Marine System Server running on port ${PORT}`);
     console.log(`🔒 CSRF Protection enabled`);
     console.log(`📍 http://localhost:${PORT}`);
-    console.log(`🌐 https://marine-system-71eo.onrender.com`);
+    console.log(`📁 Static files from: ${srcPath}`);
 });
 
 // ============================================================
