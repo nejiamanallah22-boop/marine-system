@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FULL SERVER)
+// 🚢 MARINE SYSTEM - FULL SERVER WITH MAINTENANCE LOGS
 // ============================================================
 
 require('dotenv').config();
@@ -394,24 +394,31 @@ const users = [
 const maintenanceLogs = [];
 
 // ✅ إضافة سجلات صيانة أولية للمراكب المعطوبة
-vessels.forEach(v => {
-    if (v.status === 'معطب' || v.status === 'صيانة') {
-        maintenanceLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            vesselId: v.id,
-            vesselName: v.name,
-            vesselNum: v.num || '',
-            type: v.break || 'صيانة دورية',
-            status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-            date: v.fDate || new Date().toISOString(),
-            repairUnit: v.repairUnit || '—',
-            cost: 0,
-            notes: v.break ? `عطب: ${v.break}` : 'صيانة دورية',
-            createdAt: v.fDate || new Date().toISOString()
-        });
-        console.log(`📝 Added to maintenance log: ${v.name}`);
-    }
-});
+function initMaintenanceLogs() {
+    vessels.forEach(v => {
+        if (v.status === 'معطب' || v.status === 'صيانة') {
+            const exists = maintenanceLogs.some(log => log.vesselId === v.id);
+            if (!exists) {
+                maintenanceLogs.push({
+                    id: crypto.randomBytes(8).toString('hex'),
+                    vesselId: v.id,
+                    vesselName: v.name,
+                    vesselNum: v.num || '',
+                    type: v.break || 'صيانة دورية',
+                    status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+                    date: v.fDate || new Date().toISOString(),
+                    repairUnit: v.repairUnit || '—',
+                    cost: 0,
+                    notes: v.break ? `عطب: ${v.break}` : 'صيانة دورية',
+                    createdAt: v.fDate || new Date().toISOString()
+                });
+            }
+        }
+    });
+    console.log(`📝 Initialized ${maintenanceLogs.length} maintenance logs`);
+}
+
+initMaintenanceLogs();
 
 console.log(`✅ Initialized ${vessels.length} vessels, ${maintenanceLogs.length} maintenance logs`);
 
