@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - FULL SERVER WITH COMPLETE CRUD
+// 🚢 MARINE SYSTEM - FULL SERVER WITH FIXED LOGIN
 // ============================================================
 
 require('dotenv').config();
@@ -20,10 +20,17 @@ const PORT = process.env.PORT || 5000;
 // ⚙️ CONFIG
 // ============================================================
 
+// ✅ تأكد من أن كلمة المرور ليست فارغة
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+console.log('=========================================');
+console.log('🔐 Admin credentials:');
+console.log(`👤 Username: ${ADMIN_USERNAME}`);
+console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
+console.log('=========================================');
 
 // ============================================================
 // 🔧 MIDDLEWARE
@@ -65,14 +72,18 @@ app.use('/public', express.static(publicDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
-// 📊 DATA
+// 📊 DATA - مع كلمة مرور مشفرة
 // ============================================================
+
+// ✅ تأكد من تشفير كلمة المرور بشكل صحيح
+const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 10);
+console.log(`🔐 Hashed password: ${hashedPassword}`);
 
 const users = [
     {
         id: '1',
         username: 'admin',
-        password: bcrypt.hashSync('admin123', 10),
+        password: hashedPassword,
         name: 'Administrator',
         email: 'admin@marine.com',
         role: 'admin',
@@ -94,7 +105,7 @@ const users = [
 ];
 
 // ============================================================
-// 🔐 AUTH
+// 🔐 AUTH - مع تحسينات
 // ============================================================
 
 app.get('/api/csrf-token', (req, res) => {
@@ -103,52 +114,81 @@ app.get('/api/csrf-token', (req, res) => {
     res.json({ success: true, token: token });
 });
 
+// ✅ تسجيل الدخول - مصحح بالكامل
 app.post('/api/auth/login', (req, res) => {
-    const { username, password } = req.body;
-    console.log('🔐 Login attempt:', username);
+    try {
+        const { username, password } = req.body;
+        console.log(`🔐 Login attempt: ${username}`);
+        console.log(`📝 Received password: ${password ? '****' : 'empty'}`);
 
-    const user = users.find(u => u.username === username);
-    if (!user) {
-        return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-    }
-
-    const valid = bcrypt.compareSync(password, user.password);
-    if (!valid) {
-        return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-    }
-
-    const token = jwt.sign(
-        { id: user.id, username: user.username, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-    );
-
-    res.json({
-        success: true,
-        token: token,
-        user: {
-            id: user.id,
-            username: user.username,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            active: user.active
+        // ✅ التحقق من وجود المستخدم
+        const user = users.find(u => u.username === username);
+        if (!user) {
+            console.log('❌ User not found:', username);
+            return res.status(401).json({ 
+                success: false, 
+                error: 'اسم المستخدم أو كلمة المرور غير صحيحة' 
+            });
         }
-    });
+
+        // ✅ مقارنة كلمة المرور
+        const isValidPassword = bcrypt.compareSync(password, user.password);
+        console.log(`🔑 Password valid: ${isValidPassword}`);
+
+        if (!isValidPassword) {
+            console.log('❌ Invalid password for:', username);
+            return res.status(401).json({ 
+                success: false, 
+                error: 'اسم المستخدم أو كلمة المرور غير صحيحة' 
+            });
+        }
+
+        // ✅ إنشاء التوكن
+        const token = jwt.sign(
+            { id: user.id, username: user.username, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        console.log(`✅ Login successful: ${username}`);
+
+        res.json({
+            success: true,
+            token: token,
+            user: {
+                id: user.id,
+                username: user.username,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                active: user.active
+            }
+        });
+    } catch (error) {
+        console.error('❌ Login error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في الخادم' 
+        });
+    }
 });
 
+// ✅ التحقق من التوكن
 app.get('/api/auth/me', (req, res) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, error: 'غير مصرح' });
-    }
     try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = users.find(u => u.id === decoded.id);
+
         if (!user) {
             return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
         }
+
         res.json({
             success: true,
             user: {
@@ -165,6 +205,7 @@ app.get('/api/auth/me', (req, res) => {
     }
 });
 
+// ✅ تسجيل الخروج
 app.post('/api/auth/logout', (req, res) => {
     req.session.destroy(() => {
         res.json({ success: true, message: 'تم تسجيل الخروج' });
@@ -184,7 +225,7 @@ app.get('/api/vessels', (req, res) => {
 });
 
 // ============================================================
-// 👥 USERS CRUD - كامل
+// 👥 USERS CRUD
 // ============================================================
 
 // ✅ جلب جميع المستخدمين
@@ -428,7 +469,7 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM - FULL CRUD');
+    console.log('🚢 MARINE SYSTEM - FIXED LOGIN');
     console.log('=========================================');
     console.log(`📍 http://localhost:${PORT}`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
