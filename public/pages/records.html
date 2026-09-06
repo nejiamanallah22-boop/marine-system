@@ -1,6 +1,7 @@
 <!-- public/pages/records.html -->
 <div id="page-records">
     <style>
+        /* ===== STYLES ===== */
         #page-records {
             width: 100%;
             max-width: 100%;
@@ -314,7 +315,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.78rem;
-            min-width: 800px;
+            min-width: 700px;
         }
 
         thead {
@@ -395,18 +396,6 @@
         @keyframes pulseDanger {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
-        }
-
-        .priority-high {
-            border-right: 3px solid #ef4444;
-        }
-
-        .priority-medium {
-            border-right: 3px solid #fbbf24;
-        }
-
-        .priority-low {
-            border-right: 3px solid #4ade80;
         }
 
         .action-btn {
@@ -584,7 +573,7 @@
             .filter-bar { flex-direction: column; align-items: stretch; }
             .filter-bar select, .filter-bar input { min-width: 100%; }
             .table-wrapper { padding: 12px; }
-            table { font-size: 0.7rem; min-width: 600px; }
+            table { font-size: 0.7rem; min-width: 500px; }
             thead th, tbody td { padding: 6px 8px; }
             .pagination { flex-direction: column; align-items: center; }
         }
@@ -602,7 +591,7 @@
         }
     </style>
 
-    <!-- HEADER -->
+    <!-- ===== HEADER ===== -->
     <div class="rec-header">
         <div class="rec-header-left">
             <div class="icon"><i class="fas fa-history"></i></div>
@@ -624,7 +613,7 @@
         </div>
     </div>
 
-    <!-- STATS -->
+    <!-- ===== STATS ===== -->
     <div class="rec-stats" id="recordsStats">
         <div class="stat-card">
             <div class="number" id="totalRecords">0</div>
@@ -648,7 +637,7 @@
         </div>
     </div>
 
-    <!-- FILTER BAR -->
+    <!-- ===== FILTER BAR ===== -->
     <div class="filter-bar">
         <label><i class="fas fa-search"></i> بحث</label>
         <input type="text" id="searchRecords" placeholder="اسم المركب..." />
@@ -681,7 +670,7 @@
         </button>
     </div>
 
-    <!-- TABLE -->
+    <!-- ===== TABLE ===== -->
     <div class="rec-section">
         <div class="section-header">
             <h3><i class="fas fa-list-ul"></i> سجل عمليات الصيانة والتدخلات</h3>
@@ -724,10 +713,10 @@
         </div>
     </div>
 
-    <!-- TOAST -->
+    <!-- ===== TOAST ===== -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- JAVASCRIPT - يجلب البيانات من السيرفر فقط -->
+    <!-- ===== JAVASCRIPT - يجلب البيانات من السيرفر فقط ===== -->
     <script>
         (function() {
             'use strict';
@@ -749,6 +738,16 @@
                     'Content-Type': 'application/json',
                     'Authorization': token ? 'Bearer ' + token : ''
                 };
+            }
+
+            function getCsrfToken() {
+                return fetch('/api/csrf-token', {
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(d => d.token)
+                .catch(() => null);
             }
 
             // ============================================================
@@ -777,10 +776,10 @@
             }
 
             // ============================================================
-            // 3. STATE
+            // 3. STATE - لا توجد بيانات وهمية!
             // ============================================================
 
-            var allRecords = [];      // ✅ جميع السجلات من السيرفر
+            var allRecords = [];      // ✅ جميع السجلات من السيرفر فقط
             var filteredRecords = [];
             var currentPage = 1;
             var itemsPerPage = 5;
@@ -813,13 +812,7 @@
                         return;
                     }
 
-                    // ✅ جلب CSRF token
-                    var csrfRes = await fetch('/api/csrf-token', {
-                        credentials: 'include',
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    var csrfData = await csrfRes.json();
-                    var csrfToken = csrfData.token;
+                    var csrfToken = await getCsrfToken();
 
                     // ✅ جلب سجلات الصيانة من السيرفر
                     var response = await fetch('/api/maintenance-logs', {
