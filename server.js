@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FINAL FIX)
+// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FULLY FIXED)
 // ============================================================
 
 require('dotenv').config();
@@ -22,7 +22,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ============================================================
-// 🔐 CONFIGURATION
+// 🔐 ULTRA SECURE CONFIGURATION
 // ============================================================
 
 function generateSecureKey(length = 64) {
@@ -80,6 +80,10 @@ const SESSION_SECRET = process.env.SESSION_SECRET || generateSecureKey(64);
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
 
+// ============================================================
+// 🔐 ENCRYPTION FUNCTIONS
+// ============================================================
+
 function encrypt(text) {
     try {
         const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), ENCRYPTION_IV);
@@ -107,23 +111,46 @@ function generateSecureToken() {
 }
 
 // ============================================================
-// 🛡️ SECURITY MIDDLEWARE
+// 🛡️ SECURITY MIDDLEWARE - مع إصلاح CSP
 // ============================================================
 
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com",
+                "https://cdn.jsdelivr.net",
+                "https://fonts.googleapis.com"
+            ],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com",
+                "https://cdn.jsdelivr.net",
+                "https://fonts.googleapis.com"
+            ],
             imgSrc: ["'self'", "data:", "https:", "https://unpkg.com"],
-            connectSrc: ["'self'", "https://*.onrender.com", "https://unpkg.com", "https://*.googleapis.com", "https://*.leafletjs.com"],
+            connectSrc: [
+                "'self'",
+                "https://*.onrender.com",
+                "https://unpkg.com",
+                "https://*.googleapis.com",
+                "https://*.leafletjs.com",
+                "https://cdn.jsdelivr.net"
+            ],
             fontSrc: ["'self'", "https:", "data:", "https://fonts.gstatic.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
             objectSrc: ["'none'"],
             frameSrc: ["'none'"],
             baseUri: ["'self'"],
-            formAction: ["'self'"]
+            formAction: ["'self'"],
+            upgradeInsecureRequests: isProduction ? [] : null
         }
     },
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
@@ -252,26 +279,22 @@ function getClientIP(req) {
 }
 
 // ============================================================
-// 📁 STATIC FILES - مع دعم متعدد المسارات
+// 📁 STATIC FILES
 // ============================================================
 
-// ✅ تعريف المسارات
 const pagesDir = path.join(__dirname, 'pages');
 const publicPagesDir = path.join(__dirname, 'public', 'pages');
 const publicDir = path.join(__dirname, 'public');
 
-// ✅ إنشاء المجلدات
 if (!fs.existsSync(pagesDir)) {
     fs.mkdirSync(pagesDir, { recursive: true });
-    console.log('📁 Created pages directory');
 }
 
 if (!fs.existsSync(publicPagesDir)) {
     fs.mkdirSync(publicPagesDir, { recursive: true });
-    console.log('📁 Created public/pages directory');
 }
 
-// ✅ نسخ الملفات من pages إلى public/pages
+// نسخ الملفات من pages إلى public/pages
 if (fs.existsSync(pagesDir)) {
     const files = fs.readdirSync(pagesDir);
     files.forEach(file => {
@@ -279,26 +302,17 @@ if (fs.existsSync(pagesDir)) {
         const dest = path.join(publicPagesDir, file);
         if (fs.statSync(src).isFile() && !fs.existsSync(dest)) {
             fs.copyFileSync(src, dest);
-            console.log(`📄 Copied ${file} to public/pages/`);
         }
     });
 }
 
-// ✅ خدمة الملفات الثابتة
 app.use(express.static(__dirname));
 app.use('/public', express.static(publicDir));
 app.use('/pages', express.static(pagesDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
-// ✅ خدمة الملفات من public/pages مباشرة تحت /pages
-app.use('/pages', express.static(publicPagesDir));
-
-console.log('📁 Static directories:');
-console.log(`   - ${pagesDir}`);
-console.log(`   - ${publicPagesDir}`);
-
 // ============================================================
-// 🔐 AUTH
+// 🔐 CSRF TOKEN
 // ============================================================
 
 app.get('/api/csrf-token', (req, res) => {
@@ -311,6 +325,10 @@ app.get('/api/csrf-token', (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to generate CSRF token' });
     }
 });
+
+// ============================================================
+// 🔐 AUTH
+// ============================================================
 
 app.post('/api/auth/login', (req, res) => {
     try {
@@ -474,10 +492,9 @@ app.get('/api/session-status', (req, res) => {
 });
 
 // ============================================================
-// 🌐 PAGE ROUTES - مع دعم متعدد المسارات
+// 🌐 PAGE ROUTES
 // ============================================================
 
-// ✅ دالة البحث عن الصفحة
 function findPageFile(pageName) {
     const possiblePaths = [
         path.join(pagesDir, pageName + '.html'),
@@ -490,7 +507,6 @@ function findPageFile(pageName) {
     
     for (const p of possiblePaths) {
         if (fs.existsSync(p)) {
-            console.log(`✅ Found page: ${pageName} at ${p}`);
             return p;
         }
     }
@@ -659,14 +675,10 @@ app.get('/', (req, res) => {
 // ✅ مسار الصفحات
 app.get('/pages/:page', (req, res) => {
     const pageName = req.params.page;
-    console.log(`📄 Looking for page: ${pageName}`);
-    
     const filePath = findPageFile(pageName);
     if (filePath) {
         return res.sendFile(filePath);
     }
-    
-    // إذا لم توجد الصفحة
     res.status(404).send(`
         <!DOCTYPE html>
         <html dir="rtl">
@@ -677,7 +689,6 @@ app.get('/pages/:page', (req, res) => {
             <div>
                 <h1>❌ 404</h1>
                 <p>الصفحة <strong>${pageName}</strong> غير موجودة</p>
-                <p style="color:#667788;font-size:14px;">تم البحث في: pages/, public/pages/, public/</p>
                 <a href="/">⬅️ العودة للرئيسية</a>
             </div>
         </body>
@@ -715,11 +726,13 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM v8.0 - FINAL FIX');
+    console.log('🚢 MARINE SYSTEM v8.0 - FULLY FIXED');
     console.log('=========================================');
     console.log(`📍 Server: http://localhost:${PORT}`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
     console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('🔒 Security Level: ULTRA HIGH');
     console.log('=========================================');
 });
 
