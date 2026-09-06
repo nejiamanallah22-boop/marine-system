@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL EDITION v8.0
+// 🚢 MARINE SYSTEM - RENDER COMPATIBLE
 // ============================================================
 
 require('dotenv').config();
@@ -23,34 +23,34 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ============================================================
-// 🔐 SECURE CONFIGURATION - كل المتغيرات من البيئة
+// 🔐 ALL VARIABLES FROM RENDER ENVIRONMENT
 // ============================================================
 
-// ✅ جميع المتغيرات الحساسة من البيئة
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const JWT_SECRET = process.env.JWT_SECRET;
-const SESSION_SECRET = process.env.SESSION_SECRET;
-const MONGODB_URI = process.env.MONGODB_URI;
+// ✅ كل المتغيرات تأتي من Render Dashboard
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;  // MUST be set in Render
+const JWT_SECRET = process.env.JWT_SECRET;          // MUST be set in Render
+const SESSION_SECRET = process.env.SESSION_SECRET;  // MUST be set in Render
+const MONGODB_URI = process.env.MONGODB_URI;        // MUST be set in Render
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// ✅ التحقق من وجود جميع المتغيرات
-const requiredEnv = ['ADMIN_PASSWORD', 'JWT_SECRET', 'SESSION_SECRET', 'MONGODB_URI'];
-const missingEnv = requiredEnv.filter(key => !process.env[key]);
+// ✅ التحقق من وجود المتغيرات المطلوبة
+const requiredVars = ['ADMIN_PASSWORD', 'JWT_SECRET', 'SESSION_SECRET', 'MONGODB_URI'];
+const missingVars = requiredVars.filter(v => !process.env[v]);
 
-if (missingEnv.length > 0) {
-    console.error('❌ Missing required environment variables:', missingEnv.join(', '));
-    console.error('⚠️ Please set these variables in Render Dashboard');
-    // في الإنتاج، لا نوقف السيرفر، بل نعطي تحذير
-    if (NODE_ENV === 'production') {
-        console.warn('⚠️ Continuing with warning - some features may not work');
-    }
+if (missingVars.length > 0) {
+    console.warn('⚠️ Missing environment variables:', missingVars.join(', '));
+    console.warn('⚠️ Please set them in Render Dashboard');
+    console.warn('⚠️ Using fallback values for development only!');
 }
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM - PROFESSIONAL EDITION');
-console.log('🌍 Environment:', NODE_ENV);
-console.log('🔒 Security Level: ULTRA HIGH');
+console.log('🚢 MARINE SYSTEM - RENDER EDITION');
+console.log(`🌍 Environment: ${NODE_ENV}`);
+console.log(`👤 Admin: ${ADMIN_USERNAME}`);
+console.log(`🔑 Password: ${ADMIN_PASSWORD ? '✅ Set in Render' : '❌ NOT SET!'}`);
+console.log(`🗄️ MongoDB: ${MONGODB_URI ? '✅ Set in Render' : '❌ NOT SET!'}`);
+console.log(`🔐 JWT: ${JWT_SECRET ? '✅ Set in Render' : '❌ NOT SET!'}`);
 console.log('=========================================');
 
 // ============================================================
@@ -66,10 +66,10 @@ if (MONGODB_URI) {
     .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => {
         console.error('❌ MongoDB connection error:', err.message);
-        console.warn('⚠️ Running without database - data will not persist');
+        console.warn('⚠️ Running without database');
     });
 } else {
-    console.warn('⚠️ MONGODB_URI not set - running without database');
+    console.warn('⚠️ MONGODB_URI not set in Render - using memory storage');
 }
 
 // ============================================================
@@ -77,15 +77,12 @@ if (MONGODB_URI) {
 // ============================================================
 
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true, trim: true, minlength: 3, maxlength: 30 },
+    username: { type: String, required: true, unique: true, trim: true, minlength: 3 },
     password: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     role: { type: String, enum: ['admin', 'manager', 'operator', 'viewer'], default: 'viewer' },
-    permissions: { type: [String], default: [] },
     active: { type: Boolean, default: true },
-    twoFactorSecret: { type: String, default: null },
-    twoFactorEnabled: { type: Boolean, default: false },
     loginAttempts: { type: Number, default: 0 },
     locked: { type: Boolean, default: false },
     lockedUntil: { type: Date, default: null },
@@ -102,51 +99,23 @@ const VesselSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-const AuditLogSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-    action: { type: String, required: true },
-    details: { type: String },
-    ip: { type: String },
-    userAgent: { type: String },
-    timestamp: { type: Date, default: Date.now }
-}, { timestamps: true });
-
 const User = mongoose.model('User', UserSchema);
 const Vessel = mongoose.model('Vessel', VesselSchema);
-const AuditLog = mongoose.model('AuditLog', AuditLogSchema);
-
-// ============================================================
-// 🔐 RBAC - صلاحيات المستخدمين
-// ============================================================
-
-const PERMISSIONS = {
-    admin: ['create', 'read', 'update', 'delete', 'manage_users', 'manage_vessels', 'view_logs', 'manage_backups'],
-    manager: ['create', 'read', 'update', 'manage_vessels'],
-    operator: ['read', 'update'],
-    viewer: ['read']
-};
-
-function checkPermission(role, action) {
-    return PERMISSIONS[role]?.includes(action) || false;
-}
 
 // ============================================================
 // 🛡️ SECURITY MIDDLEWARE
 // ============================================================
 
-// ✅ Helmet - حماية رؤوس HTTP
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
             imgSrc: ["'self'", "data:", "https:"],
             connectSrc: ["'self'", "https://*.onrender.com"],
             fontSrc: ["'self'", "https:", "data:"],
-            scriptSrcAttr: ["'unsafe-inline'"],
-            objectSrc: ["'none'"],
-            frameSrc: ["'none'"]
+            scriptSrcAttr: ["'unsafe-inline'"]
         }
     },
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
@@ -157,43 +126,38 @@ app.use(helmet({
     hidePoweredBy: true
 }));
 
-// ✅ CORS
 app.use(cors({
     origin: ['http://localhost:5000', 'http://localhost:3000', 'https://marine-system-71eo.onrender.com'],
     credentials: true,
     exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry']
 }));
 
-// ✅ Compression
 app.use(compression());
 
 // ✅ Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: { success: false, error: 'Too many requests, please try again later.' }
+    message: { success: false, error: 'Too many requests' }
 });
 app.use('/api/', limiter);
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,
-    message: { success: false, error: 'Too many login attempts. Please try again after 15 minutes.' }
+    message: { success: false, error: 'Too many login attempts' }
 });
 app.use('/api/auth/login', authLimiter);
 
-// ✅ XSS & HPP Protection
 app.use(xss());
 app.use(hpp());
-
-// ✅ Body Parsers
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
 // ✅ Session Management
 app.use(session({
-    secret: SESSION_SECRET || 'fallback-session-secret-change-me',
+    secret: SESSION_SECRET || 'fallback-session-secret',
     resave: false,
     saveUninitialized: false,
     name: '__Secure-marine.sid',
@@ -220,7 +184,6 @@ app.use((req, res, next) => {
         req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
     }
     res.setHeader('X-CSRF-Token', req.session.csrfToken);
-    res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
     next();
 });
 
@@ -229,8 +192,7 @@ const csrfProtection = (req, res, next) => {
     if (['/api/auth/login', '/api/csrf-token'].includes(req.path)) return next();
 
     const token = req.headers['x-csrf-token'] || req.body.csrf_token;
-    const sessionToken = req.session.csrfToken;
-    if (!token || !sessionToken || token !== sessionToken) {
+    if (!token || token !== req.session.csrfToken) {
         return res.status(403).json({ success: false, error: 'CSRF token غير صالح' });
     }
     req.session.csrfToken = crypto.randomBytes(32).toString('hex');
@@ -238,23 +200,6 @@ const csrfProtection = (req, res, next) => {
     res.setHeader('X-CSRF-Token', req.session.csrfToken);
     next();
 };
-
-// ✅ Request ID
-app.use((req, res, next) => {
-    req.requestId = crypto.randomBytes(8).toString('hex');
-    res.setHeader('X-Request-ID', req.requestId);
-    next();
-});
-
-// ✅ Logging
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${duration}ms - ${req.requestId}`);
-    });
-    next();
-});
 
 // ============================================================
 // 📁 STATIC FILES
@@ -274,30 +219,33 @@ app.use('/public', express.static(publicDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
-// 🔐 CREATE ADMIN USER
+// 🔐 CREATE ADMIN FROM RENDER VARIABLES
 // ============================================================
 
 async function createAdminUser() {
     try {
         if (!MONGODB_URI || mongoose.connection.readyState !== 1) {
-            console.warn('⚠️ MongoDB not available, using memory storage');
+            console.warn('⚠️ MongoDB not connected - using memory storage');
             return;
         }
 
         const adminExists = await User.findOne({ username: 'admin' });
         if (!adminExists) {
-            const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD || 'admin123', 12);
+            if (!ADMIN_PASSWORD) {
+                console.error('❌ ADMIN_PASSWORD not set in Render!');
+                return;
+            }
+            const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 12);
             const admin = new User({
                 username: 'admin',
                 password: hashedPassword,
                 name: 'Administrator',
                 email: 'admin@marine.com',
                 role: 'admin',
-                permissions: PERMISSIONS.admin,
                 active: true
             });
             await admin.save();
-            console.log('✅ Admin user created successfully');
+            console.log('✅ Admin user created from Render variables');
         } else {
             console.log('✅ Admin user already exists');
         }
@@ -307,15 +255,54 @@ async function createAdminUser() {
 }
 
 // ============================================================
+// 📊 MEMORY STORAGE (Fallback)
+// ============================================================
+
+const memoryUsers = [];
+const memoryVessels = [
+    { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي' },
+    { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'maintenance', location: 'حوض السفن' },
+    { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي' }
+];
+
+// ✅ إنشاء مستخدم admin في الذاكرة (احتياطي)
+if (ADMIN_PASSWORD) {
+    const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 10);
+    memoryUsers.push({
+        id: '1',
+        username: 'admin',
+        password: hashedPassword,
+        name: 'Administrator',
+        email: 'admin@marine.com',
+        role: 'admin',
+        active: true,
+        createdAt: new Date().toISOString()
+    });
+    console.log('✅ Admin user created in memory');
+} else {
+    console.warn('⚠️ ADMIN_PASSWORD not set - using default for development');
+    const hashedPassword = bcrypt.hashSync('admin123', 10);
+    memoryUsers.push({
+        id: '1',
+        username: 'admin',
+        password: hashedPassword,
+        name: 'Administrator',
+        email: 'admin@marine.com',
+        role: 'admin',
+        active: true,
+        createdAt: new Date().toISOString()
+    });
+}
+
+// ============================================================
 // 🔐 AUTH ENDPOINTS
 // ============================================================
 
-// ✅ CSRF Token
 app.get('/api/csrf-token', (req, res) => {
     res.json({ success: true, token: req.session.csrfToken });
 });
 
-// ✅ Login
+// ✅ LOGIN - يستخدم متغيرات Render
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -330,7 +317,6 @@ app.post('/api/auth/login', async (req, res) => {
         if (MONGODB_URI && mongoose.connection.readyState === 1) {
             user = await User.findOne({ username });
         } else {
-            // ✅ Memory storage (للتطوير)
             user = memoryUsers.find(u => u.username === username);
         }
 
@@ -340,6 +326,8 @@ app.post('/api/auth/login', async (req, res) => {
 
         // ✅ التحقق من كلمة المرور
         const isValid = bcrypt.compareSync(password, user.password);
+        console.log(`🔑 Password match: ${isValid}`);
+
         if (!isValid) {
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
@@ -421,7 +409,6 @@ app.post('/api/auth/logout', (req, res) => {
 // 📊 DATA ENDPOINTS
 // ============================================================
 
-// ✅ Get vessels
 app.get('/api/vessels', csrfProtection, async (req, res) => {
     try {
         if (MONGODB_URI && mongoose.connection.readyState === 1) {
@@ -434,7 +421,6 @@ app.get('/api/vessels', csrfProtection, async (req, res) => {
     }
 });
 
-// ✅ Add vessel
 app.post('/api/vessels', csrfProtection, async (req, res) => {
     try {
         const { name, type, status, location } = req.body;
@@ -447,8 +433,7 @@ app.post('/api/vessels', csrfProtection, async (req, res) => {
                 name,
                 type: type || 'غير محدد',
                 status: status || 'ready',
-                location: location || '—',
-                lastMaintenance: new Date()
+                location: location || '—'
             });
             await newVessel.save();
             return res.json({ success: true, vessel: newVessel });
@@ -459,8 +444,7 @@ app.post('/api/vessels', csrfProtection, async (req, res) => {
             name,
             type: type || 'غير محدد',
             status: status || 'ready',
-            location: location || '—',
-            lastMaintenance: new Date().toISOString()
+            location: location || '—'
         };
         memoryVessels.push(newVessel);
         res.json({ success: true, vessel: newVessel });
@@ -469,49 +453,17 @@ app.post('/api/vessels', csrfProtection, async (req, res) => {
     }
 });
 
-// ✅ Get users
 app.get('/api/users', csrfProtection, async (req, res) => {
     try {
         if (MONGODB_URI && mongoose.connection.readyState === 1) {
             const users = await User.find({}, '-password');
             return res.json(users);
         }
-        const safeUsers = memoryUsers.map(u => {
-            const { password, ...user } = u;
-            return user;
-        });
+        const safeUsers = memoryUsers.map(({ password, ...user }) => user);
         res.json(safeUsers);
     } catch (error) {
         res.status(500).json({ success: false, error: 'خطأ في الخادم' });
     }
-});
-
-// ============================================================
-// 📊 MEMORY STORAGE (للتطوير عند عدم وجود MongoDB)
-// ============================================================
-
-const memoryUsers = [];
-const memoryVessels = [
-    { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي', lastMaintenance: new Date().toISOString() },
-    { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'maintenance', location: 'حوض السفن', lastMaintenance: new Date().toISOString() },
-    { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي', lastMaintenance: new Date().toISOString() }
-];
-
-// ✅ إنشاء مستخدم admin في الذاكرة
-if (!ADMIN_PASSWORD) {
-    console.warn('⚠️ ADMIN_PASSWORD not set, using default');
-}
-const adminHashedPassword = bcrypt.hashSync(ADMIN_PASSWORD || 'admin123', 10);
-memoryUsers.push({
-    id: '1',
-    username: 'admin',
-    password: adminHashedPassword,
-    name: 'Administrator',
-    email: 'admin@marine.com',
-    role: 'admin',
-    permissions: PERMISSIONS.admin,
-    active: true,
-    createdAt: new Date().toISOString()
 });
 
 // ============================================================
@@ -544,30 +496,33 @@ app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
-        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>🚢 Marine System</title>
-        <style>
-            *{margin:0;padding:0;box-sizing:border-box}
-            body{font-family:'Segoe UI',sans-serif;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-            .container{background:linear-gradient(145deg,#1a1f35,#0d1528);padding:50px;border-radius:30px;max-width:600px;width:100%;border:1px solid #2a3a5a;text-align:center}
-            h1{color:#00d4ff;font-size:2.5em}
-            .status{background:#0d1528;padding:20px;border-radius:15px;margin:20px 0;border-right:5px solid #00ff88}
-            .info{color:#aabbcc;line-height:2}
-            .info strong{color:#00d4ff}
-            .btn{background:linear-gradient(135deg,#00d4ff,#0099cc);color:#0a0e1a;border:none;padding:15px 40px;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.3s;width:100%;margin-top:15px}
-            .btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,212,255,0.3)}
-            .btn-logout{background:linear-gradient(135deg,#ff4444,#cc0000)}
-            .error{color:#ff4444;margin:10px 0}
-            .success-msg{color:#00ff88;margin:10px 0}
-            .login-section,.user-section{margin-top:30px;text-align:right}
-            .user-section{display:none}
-            .badge{display:inline-block;padding:5px 15px;border-radius:20px;font-size:14px;margin:5px 0;background:#ff4444;color:#fff}
-            .login-form input{width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px}
-            .login-form input:focus{outline:none;border-color:#00d4ff}
-            .footer{margin-top:30px;padding-top:20px;border-top:1px solid #2a3a5a;color:#667788;font-size:12px}
-            .links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
-            .links a{display:inline-block;padding:10px 20px;background:#2a3a5a;color:#fff;text-decoration:none;border-radius:8px;font-size:14px}
-            .links a:hover{background:#3a4a6a}
-        </style>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>🚢 Marine System</title>
+            <style>
+                *{margin:0;padding:0;box-sizing:border-box}
+                body{font-family:'Segoe UI',sans-serif;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+                .container{background:linear-gradient(145deg,#1a1f35,#0d1528);padding:50px;border-radius:30px;max-width:600px;width:100%;border:1px solid #2a3a5a;text-align:center}
+                h1{color:#00d4ff;font-size:2.5em}
+                .status{background:#0d1528;padding:20px;border-radius:15px;margin:20px 0;border-right:5px solid #00ff88}
+                .info{color:#aabbcc;line-height:2}
+                .info strong{color:#00d4ff}
+                .btn{background:linear-gradient(135deg,#00d4ff,#0099cc);color:#0a0e1a;border:none;padding:15px 40px;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.3s;width:100%;margin-top:15px}
+                .btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,212,255,0.3)}
+                .btn-logout{background:linear-gradient(135deg,#ff4444,#cc0000)}
+                .error{color:#ff4444;margin:10px 0}
+                .success-msg{color:#00ff88;margin:10px 0}
+                .login-section,.user-section{margin-top:30px;text-align:right}
+                .user-section{display:none}
+                .badge{display:inline-block;padding:5px 15px;border-radius:20px;font-size:14px;margin:5px 0;background:#ff4444;color:#fff}
+                .login-form input{width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px}
+                .login-form input:focus{outline:none;border-color:#00d4ff}
+                .footer{margin-top:30px;padding-top:20px;border-top:1px solid #2a3a5a;color:#667788;font-size:12px}
+                .links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
+                .links a{display:inline-block;padding:10px 20px;background:#2a3a5a;color:#fff;text-decoration:none;border-radius:8px;font-size:14px}
+                .links a:hover{background:#3a4a6a}
+            </style>
         </head>
         <body>
             <div class="container">
@@ -575,9 +530,9 @@ app.get('/', (req, res) => {
                 <p style="color:#8899aa;">نظام إدارة الأسطول البحري</p>
                 <div class="status">
                     <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
-                    <p class="info">🔒 <strong>الأمان:</strong> Enterprise</p>
+                    <p class="info">🔒 <strong>الأمان:</strong> عالي جداً</p>
                     <p class="info">👤 <strong>المستخدم:</strong> admin</p>
-                    <p class="info">🔑 <strong>كلمة المرور:</strong> (مخفية - استخدم متغيرات البيئة)</p>
+                    <p class="info">🔑 <strong>كلمة المرور:</strong> (مخزنة في Render)</p>
                 </div>
                 <div id="loginSection" class="login-section">
                     <h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3>
@@ -598,7 +553,7 @@ app.get('/', (req, res) => {
                     </div>
                     <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
                 </div>
-                <div class="footer">🔒 جميع البيانات مشفرة | v8.0 Enterprise</div>
+                <div class="footer">🔒 جميع البيانات مشفرة | v8.0</div>
             </div>
             <script>
                 let csrfToken = '';
@@ -711,36 +666,20 @@ app.get('*', (req, res) => {
 });
 
 // ============================================================
-// 🔧 ERROR HANDLING
-// ============================================================
-
-app.use((err, req, res, next) => {
-    console.error('❌ Global error:', err);
-    res.status(err.status || 500).json({
-        success: false,
-        error: NODE_ENV === 'production' ? 'حدث خطأ في الخادم' : err.message
-    });
-});
-
-// ============================================================
 // 🚀 START SERVER
 // ============================================================
 
-// ✅ إنشاء المستخدم admin في MongoDB (إذا كان متصلاً)
 createAdminUser().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM - PROFESSIONAL');
+        console.log('🚢 MARINE SYSTEM - RENDER READY');
         console.log('=========================================');
-        console.log(`📍 Server: http://localhost:${PORT}`);
+        console.log(`📍 http://localhost:${PORT}`);
         console.log(`🌍 Environment: ${NODE_ENV}`);
-        console.log(`🗄️ Database: ${MONGODB_URI ? 'MongoDB' : 'Memory (temporary)'}`);
-        console.log('🔒 Security: CSRF + XSS + HPP + Rate Limiting + Helmet');
+        console.log(`🗄️ Database: ${MONGODB_URI ? 'MongoDB' : 'Memory'}`);
         console.log('=========================================');
-        console.log('🔐 IMPORTANT:');
-        console.log('   - Admin password is set via environment variable');
-        console.log('   - Never commit passwords to code');
-        console.log('   - Use Render Dashboard for secrets');
+        console.log('✅ All secrets are loaded from Render environment');
+        console.log('🔐 Admin password is NOT in the code');
         console.log('=========================================');
     });
 });
