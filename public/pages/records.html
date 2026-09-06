@@ -1,11 +1,11 @@
-<!-- public/pages/records.html -->
-<div id="page-records">
+<!-- public/pages/maintenance-records.html -->
+<div id="page-maintenance-records">
     <style>
         /* ===== STYLES ===== */
-        #page-records {
+        #page-maintenance-records {
             width: 100%;
             max-width: 100%;
-            padding: 20px;
+            padding: 0;
             margin: 0;
             font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
             background: #0a0e1a;
@@ -20,12 +20,15 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 24px;
-            background: rgba(255,255,255,0.04);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 12px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: sticky;
+            top: 64px;
+            z-index: 10;
+            width: 100%;
         }
 
         .rec-header-left {
@@ -34,11 +37,11 @@
             gap: 14px;
         }
 
-        .rec-header-left .icon {
+        .rec-header-left .header-icon {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #0984e3, #e6b31e);
+            background: linear-gradient(135deg, #f5d76e, #e6b31e);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -49,7 +52,7 @@
         .rec-header-left h2 {
             font-size: 22px;
             font-weight: 800;
-            background: linear-gradient(135deg, #60a5fa, #fff);
+            background: linear-gradient(135deg, #f5d76e, #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
@@ -82,13 +85,13 @@
         }
 
         .btn-action.primary {
-            background: linear-gradient(135deg, #0984e3, #60a5fa);
-            color: #fff;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
         }
 
         .btn-action.primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(9,132,227,0.35);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
         .btn-action.secondary {
@@ -102,28 +105,23 @@
             color: #fff;
         }
 
-        .btn-action.export {
-            background: linear-gradient(135deg, #00b894, #55efc4);
-            color: #0a1628;
-        }
-
-        .btn-action.export:hover {
-            transform: translateY(-2px);
-        }
-
-        .rec-stats {
+        /* ===== STATS ===== */
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
-            margin-bottom: 20px;
+            padding: 16px 24px;
+            width: 100%;
         }
 
         .stat-card {
             background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 14px;
-            padding: 16px;
+            padding: 16px 18px;
             text-align: center;
+            transition: all 0.3s;
             position: relative;
             overflow: hidden;
         }
@@ -135,21 +133,27 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #0984e3, #e6b31e);
+            background: linear-gradient(90deg, #e6b31e, #f5d76e);
             opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(230,179,30,0.15);
         }
 
         .stat-card .number {
             font-size: 26px;
             font-weight: 800;
-            color: #60a5fa;
+            color: #fff;
             line-height: 1.2;
         }
 
         .stat-card .number.gold { color: #f5d76e; }
         .stat-card .number.green { color: #4ade80; }
         .stat-card .number.red { color: #f87171; }
-        .stat-card .number.purple { color: #a78bfa; }
+        .stat-card .number.yellow { color: #fbbf24; }
+        .stat-card .number.blue { color: #60a5fa; }
 
         .stat-card .label {
             font-size: 11px;
@@ -157,16 +161,61 @@
             margin-top: 4px;
         }
 
+        .stat-card .icon-bg {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 50px;
+            opacity: 0.04;
+            pointer-events: none;
+        }
+
+        /* ===== FILTER BAR ===== */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             gap: 8px 14px;
-            padding: 10px 20px;
+            padding: 10px 24px;
             background: rgba(255,255,255,0.04);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            width: 100%;
+        }
+
+        .filter-bar .search-input {
+            flex: 2 1 200px;
+            min-width: 150px;
+            position: relative;
+        }
+
+        .filter-bar .search-input input {
+            width: 100%;
+            padding: 8px 16px 8px 40px;
+            border-radius: 30px;
             border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            margin-bottom: 20px;
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .filter-bar .search-input input:focus {
+            border-color: #e6b31e;
+            outline: none;
+        }
+
+        .filter-bar .search-input input::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+
+        .filter-bar .search-input .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.1);
         }
 
         .filter-bar label {
@@ -178,38 +227,26 @@
             gap: 4px;
         }
 
-        .filter-bar select,
-        .filter-bar input {
+        .filter-bar select {
             padding: 6px 12px;
             border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.06);
             background: rgba(255,255,255,0.03);
             color: #e2e8f0;
             font-size: 0.75rem;
-            min-width: 120px;
+            min-width: 100px;
             cursor: pointer;
             font-family: 'Cairo', sans-serif;
         }
 
-        .filter-bar select:focus,
-        .filter-bar input:focus {
+        .filter-bar select:focus {
             outline: none;
-            border-color: #0984e3;
+            border-color: #e6b31e;
         }
 
         .filter-bar select option {
             background: #0a1628;
             color: #e2e8f0;
-        }
-
-        .filter-bar input[type="date"] {
-            min-width: 140px;
-            color-scheme: dark;
-        }
-
-        .filter-bar input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.6);
-            cursor: pointer;
         }
 
         .btn-filter {
@@ -227,8 +264,8 @@
         }
 
         .btn-filter.primary {
-            background: linear-gradient(135deg, #0984e3, #60a5fa);
-            color: #fff;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
         }
 
         .btn-filter.primary:hover {
@@ -246,101 +283,45 @@
             color: #fff;
         }
 
-        .rec-section {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            overflow: hidden;
-            margin-bottom: 16px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.02);
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .section-header h3 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-header h3 i {
-            color: #0984e3;
-        }
-
-        .badge {
-            font-size: 11px;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .badge.blue {
-            background: rgba(9,132,227,0.12);
-            color: #60a5fa;
-        }
-
-        .badge.gold {
-            background: rgba(230,179,30,0.12);
-            color: #f5d76e;
-        }
-
-        .badge.success {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .badge.danger {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
+        /* ===== TABLE ===== */
         .table-wrapper {
             overflow-x: auto;
-            padding: 16px 20px;
+            padding: 16px 24px 24px;
+            width: 100%;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.78rem;
-            min-width: 700px;
+            min-width: 1200px;
         }
 
         thead {
-            background: rgba(9,132,227,0.08);
-            border-bottom: 2px solid rgba(9,132,227,0.08);
+            background: rgba(15,52,96,0.4);
+            border-bottom: 2px solid rgba(230,179,30,0.15);
         }
 
         thead th {
-            padding: 10px 12px;
-            text-align: center;
+            padding: 12px 10px;
+            text-align: right;
             font-weight: 700;
             font-size: 0.6rem;
             text-transform: uppercase;
             color: rgba(255,255,255,0.35);
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             white-space: nowrap;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
         }
 
         thead th i {
-            margin-left: 4px;
-            color: #0984e3;
+            margin-left: 6px;
+            color: #e6b31e;
+            font-size: 0.7rem;
         }
 
         tbody td {
-            padding: 9px 10px;
+            padding: 10px 8px;
             border-bottom: 1px solid rgba(255,255,255,0.02);
             vertical-align: middle;
             color: rgba(255,255,255,0.6);
@@ -352,6 +333,27 @@
             background: rgba(255,255,255,0.03);
         }
 
+        tbody tr.damaged {
+            border-right: 3px solid #f87171;
+            background: rgba(248,113,113,0.04);
+        }
+
+        tbody tr.maintenance {
+            border-right: 3px solid #fbbf24;
+            background: rgba(251,191,36,0.04);
+        }
+
+        tbody tr.repaired {
+            border-right: 3px solid #4ade80;
+            background: rgba(74,222,128,0.04);
+        }
+
+        .vessel-name {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ===== STATUS BADGES ===== */
         .status-badge {
             padding: 3px 12px;
             border-radius: 20px;
@@ -361,146 +363,92 @@
             white-space: nowrap;
         }
 
-        .status-badge.completed {
-            background: rgba(34,197,94,0.12);
+        .status-badge.damaged {
+            background: rgba(248,113,113,0.12);
+            color: #f87171;
+        }
+
+        .status-badge.maintenance {
+            background: rgba(251,191,36,0.12);
+            color: #fbbf24;
+        }
+
+        .status-badge.repaired {
+            background: rgba(74,222,128,0.12);
             color: #4ade80;
         }
 
-        .status-badge.in-progress {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-            animation: pulseProgress 2s infinite;
+        /* ===== ACTION BUTTONS ===== */
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
-        @keyframes pulseProgress {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .status-badge.pending {
-            background: rgba(9,132,227,0.12);
-            color: #60a5fa;
-        }
-
-        .status-badge.cancelled {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .status-badge.overdue {
-            background: rgba(239,68,68,0.2);
-            color: #f87171;
-            animation: pulseDanger 1.5s infinite;
-        }
-
-        @keyframes pulseDanger {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .action-btn {
+        .btn-sm {
             padding: 4px 10px;
             border: none;
-            border-radius: 6px;
-            font-size: 0.65rem;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            font-family: 'Cairo', sans-serif;
         }
 
-        .action-btn.view {
-            background: rgba(9,132,227,0.1);
+        .btn-sm.view {
+            background: rgba(96,165,250,0.12);
             color: #60a5fa;
         }
 
-        .action-btn.view:hover {
-            background: rgba(9,132,227,0.2);
+        .btn-sm.view:hover {
+            background: rgba(96,165,250,0.2);
         }
 
-        .action-btn.edit {
-            background: rgba(230,179,30,0.1);
+        .btn-sm.edit {
+            background: rgba(230,179,30,0.12);
             color: #f5d76e;
         }
 
-        .action-btn.edit:hover {
+        .btn-sm.edit:hover {
             background: rgba(230,179,30,0.2);
         }
 
-        .action-btn.delete {
-            background: rgba(239,68,68,0.1);
+        .btn-sm.delete {
+            background: rgba(248,113,113,0.12);
             color: #f87171;
         }
 
-        .action-btn.delete:hover {
-            background: rgba(239,68,68,0.2);
+        .btn-sm.delete:hover {
+            background: rgba(248,113,113,0.2);
         }
 
-        .pagination {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            border-top: 1px solid rgba(255,255,255,0.06);
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .pagination .info {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.25);
-        }
-
-        .pagination .pages {
-            display: flex;
-            gap: 4px;
-        }
-
-        .page-btn {
-            padding: 4px 12px;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 6px;
-            background: transparent;
-            color: rgba(255,255,255,0.3);
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.75rem;
-            transition: all 0.3s;
-        }
-
-        .page-btn:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
-
-        .page-btn.active {
-            background: linear-gradient(135deg, #0984e3, #60a5fa);
-            border-color: #0984e3;
-            color: #fff;
-        }
-
-        .page-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
+        /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: rgba(255,255,255,0.15);
         }
 
-        .empty-state .empty-icon {
-            font-size: 4rem;
-            color: rgba(255,255,255,0.04);
-            display: block;
-            margin-bottom: 16px;
+        .empty-state .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255,255,255,0.04);
+            border-top-color: #e6b31e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .empty-state h3 {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: rgba(255,255,255,0.2);
             margin-bottom: 4px;
@@ -511,6 +459,25 @@
             color: rgba(255,255,255,0.1);
         }
 
+        .empty-state .retry-btn {
+            margin-top: 12px;
+            padding: 8px 24px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .empty-state .retry-btn:hover {
+            transform: scale(1.04);
+        }
+
+        /* ===== TOAST ===== */
         .toast-container {
             position: fixed;
             bottom: 24px;
@@ -563,160 +530,140 @@
         }
 
         @media (max-width: 768px) {
-            #page-records { padding: 12px; }
             .rec-header { flex-direction: column; align-items: flex-start; }
             .rec-header-left { width: 100%; }
             .rec-header-left h2 { font-size: 16px; }
             .rec-header-actions { width: 100%; }
-            .rec-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 16px; }
+            .stat-card { padding: 12px 14px; }
             .stat-card .number { font-size: 20px; }
             .filter-bar { flex-direction: column; align-items: stretch; }
-            .filter-bar select, .filter-bar input { min-width: 100%; }
-            .table-wrapper { padding: 12px; }
-            table { font-size: 0.7rem; min-width: 500px; }
-            thead th, tbody td { padding: 6px 8px; }
-            .pagination { flex-direction: column; align-items: center; }
+            .filter-bar select { min-width: 100%; }
+            .table-wrapper { padding: 0 12px 12px; }
+            table { font-size: 0.7rem; min-width: 800px; }
+            thead th, tbody td { padding: 6px 4px; }
         }
 
         @media (max-width: 480px) {
-            .rec-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
             .stat-card { padding: 10px 12px; }
             .stat-card .number { font-size: 18px; }
             .stat-card .label { font-size: 9px; }
-            .rec-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
+            .rec-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
             .rec-header-left h2 { font-size: 14px; }
-            .section-header h3 { font-size: 13px; }
-            thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
-            .action-btn { padding: 2px 6px; font-size: 0.55rem; }
         }
     </style>
 
     <!-- ===== HEADER ===== -->
     <div class="rec-header">
         <div class="rec-header-left">
-            <div class="icon"><i class="fas fa-history"></i></div>
+            <div class="header-icon"><i class="fas fa-clipboard-list"></i></div>
             <div>
-                <h2>سجل الصيانة والتاريخي</h2>
-                <p>أرشيف كامل لعمليات الصيانة والتدخلات الفنية</p>
+                <h2>سجل الصيانة التاريخي</h2>
+                <p>جميع المراكب المعطبة وتفاصيل الصيانة القديمة والجديدة</p>
             </div>
         </div>
         <div class="rec-header-actions">
             <button class="btn-action primary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button class="btn-action export" id="exportBtn">
-                <i class="fas fa-file-excel"></i> تصدير
-            </button>
-            <button class="btn-action secondary" onclick="window.print()">
-                <i class="fas fa-print"></i> طباعة
+            <button class="btn-action secondary" onclick="window.location.href='/'">
+                <i class="fas fa-home"></i> الرئيسية
             </button>
         </div>
     </div>
 
     <!-- ===== STATS ===== -->
-    <div class="rec-stats" id="recordsStats">
+    <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
-            <div class="number" id="totalRecords">0</div>
-            <div class="label">📋 إجمالي السجلات</div>
+            <div class="number gold" id="totalCount">0</div>
+            <div class="label">📋 إجمالي المراكب</div>
+            <span class="icon-bg"><i class="fas fa-ship"></i></span>
         </div>
         <div class="stat-card">
-            <div class="number gold" id="pendingRecords">0</div>
-            <div class="label">⏳ قيد الانتظار</div>
+            <div class="number red" id="damagedCount">0</div>
+            <div class="label">❌ معطوبة</div>
+            <span class="icon-bg"><i class="fas fa-exclamation-triangle"></i></span>
         </div>
         <div class="stat-card">
-            <div class="number green" id="completedRecords">0</div>
-            <div class="label">✅ مكتملة</div>
+            <div class="number yellow" id="maintenanceCount">0</div>
+            <div class="label">🔧 تحت الصيانة</div>
+            <span class="icon-bg"><i class="fas fa-tools"></i></span>
         </div>
         <div class="stat-card">
-            <div class="number red" id="overdueRecords">0</div>
-            <div class="label">🚨 متأخرة</div>
-        </div>
-        <div class="stat-card">
-            <div class="number purple" id="inProgressRecords">0</div>
-            <div class="label">⚡ قيد التنفيذ</div>
+            <div class="number green" id="repairedCount">0</div>
+            <div class="label">✅ تم الإصلاح</div>
+            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
         </div>
     </div>
 
     <!-- ===== FILTER BAR ===== -->
     <div class="filter-bar">
-        <label><i class="fas fa-search"></i> بحث</label>
-        <input type="text" id="searchRecords" placeholder="اسم المركب..." />
-
-        <label><i class="fas fa-ship"></i> المركب</label>
-        <select id="fVesselRec">
-            <option value="الكل">🚢 جميع المراكب</option>
-        </select>
+        <div class="search-input">
+            <input type="text" id="searchInput" placeholder="بحث بالاسم، الرقم، المنطقة...">
+            <span class="search-icon"><i class="fas fa-search"></i></span>
+        </div>
 
         <label><i class="fas fa-circle"></i> الحالة</label>
-        <select id="fStatusRec">
-            <option value="الكل">📊 جميع الحالات</option>
-            <option value="مكتملة">✅ مكتملة</option>
-            <option value="قيد التنفيذ">⚡ قيد التنفيذ</option>
-            <option value="قيد الانتظار">⏳ قيد الانتظار</option>
-            <option value="متأخرة">🚨 متأخرة</option>
-            <option value="ملغاة">❌ ملغاة</option>
+        <select id="statusFilter">
+            <option value="الكل">📊 الكل</option>
+            <option value="معطب">❌ معطب</option>
+            <option value="صيانة">🔧 صيانة</option>
+            <option value="صالح">✅ صالح</option>
         </select>
 
-        <label><i class="fas fa-calendar-alt"></i> من</label>
-        <input type="date" id="fDateFrom" />
-        <label><i class="fas fa-calendar-alt"></i> إلى</label>
-        <input type="date" id="fDateTo" />
+        <label><i class="fas fa-map"></i> الإقليم</label>
+        <select id="regionFilter">
+            <option value="الكل">🗺️ الكل</option>
+            <option value="الشمال">الشمال</option>
+            <option value="الساحل">الساحل</option>
+            <option value="الوسط">الوسط</option>
+            <option value="الجنوب">الجنوب</option>
+        </select>
 
-        <button class="btn-filter primary" id="filterBtn">
-            <i class="fas fa-filter"></i> فلترة
-        </button>
-        <button class="btn-filter outline" id="resetBtn">
-            <i class="fas fa-undo-alt"></i> إلغاء
-        </button>
+        <button class="btn-filter primary" id="filterBtn"><i class="fas fa-filter"></i> فلترة</button>
+        <button class="btn-filter outline" id="resetBtn"><i class="fas fa-undo-alt"></i> إلغاء</button>
     </div>
 
     <!-- ===== TABLE ===== -->
-    <div class="rec-section">
-        <div class="section-header">
-            <h3><i class="fas fa-list-ul"></i> سجل عمليات الصيانة والتدخلات</h3>
-            <span class="badge blue" id="recordsBadge">📊 جاري التحميل...</span>
-        </div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="text-align:right;"><i class="fas fa-hashtag"></i> الرقم</th>
-                        <th style="text-align:right;"><i class="fas fa-ship"></i> المركب</th>
-                        <th><i class="fas fa-wrench"></i> نوع التدخل</th>
-                        <th><i class="fas fa-calendar-alt"></i> تاريخ البدء</th>
-                        <th><i class="fas fa-calendar-check"></i> تاريخ الانتهاء</th>
-                        <th><i class="fas fa-clock"></i> المدة</th>
-                        <th><i class="fas fa-circle"></i> الحالة</th>
-                        <th><i class="fas fa-cogs"></i> الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="recordsBody">
-                    <tr>
-                        <td colspan="8" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-spinner fa-pulse"></i></span>
-                            <h3>جاري تحميل السجلات...</h3>
-                            <p>يرجى الانتظار</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="pagination">
-            <span class="info" id="paginationInfo">عرض 1-10 من 0 سجل</span>
-            <div class="pages">
-                <button class="page-btn" id="prevPage">‹</button>
-                <button class="page-btn active" id="page1">1</button>
-                <button class="page-btn" id="page2">2</button>
-                <button class="page-btn" id="page3">3</button>
-                <button class="page-btn" id="nextPage">›</button>
-            </div>
-        </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th><i class="fas fa-hashtag"></i> #</th>
+                    <th><i class="fas fa-ship"></i> المركب</th>
+                    <th><i class="fas fa-hashtag"></i> الرقم</th>
+                    <th><i class="fas fa-ruler"></i> الطول</th>
+                    <th><i class="fas fa-tag"></i> الفئة</th>
+                    <th><i class="fas fa-map"></i> الإقليم</th>
+                    <th><i class="fas fa-location-dot"></i> المنطقة</th>
+                    <th><i class="fas fa-flag"></i> الميناء</th>
+                    <th><i class="fas fa-wrench"></i> نوع العطب</th>
+                    <th><i class="fas fa-calendar-alt"></i> تاريخ العطب</th>
+                    <th><i class="fas fa-calendar-check"></i> تاريخ الإصلاح</th>
+                    <th><i class="fas fa-tools"></i> الوحدة المسؤولة</th>
+                    <th><i class="fas fa-circle"></i> الحالة</th>
+                    <th><i class="fas fa-cogs"></i> إجراء</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr>
+                    <td colspan="14" class="empty-state">
+                        <div class="spinner"></div>
+                        <h3>جاري التحميل...</h3>
+                        <p>يرجى الانتظار</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <!-- ===== TOAST ===== -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- ===== JAVASCRIPT - يجلب البيانات من السيرفر فقط ===== -->
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
     <script>
         (function() {
             'use strict';
@@ -740,14 +687,15 @@
                 };
             }
 
-            function getCsrfToken() {
-                return fetch('/api/csrf-token', {
-                    credentials: 'include',
-                    headers: { 'Accept': 'application/json' }
-                })
-                .then(r => r.json())
-                .then(d => d.token)
-                .catch(() => null);
+            async function getCsrfToken() {
+                try {
+                    const r = await fetch('/api/csrf-token', {
+                        credentials: 'include',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const d = await r.json();
+                    return d.token;
+                } catch(e) { return null; }
             }
 
             // ============================================================
@@ -776,46 +724,48 @@
             }
 
             // ============================================================
-            // 3. STATE - لا توجد بيانات وهمية!
+            // 3. STATE
             // ============================================================
 
-            var allRecords = [];      // ✅ جميع السجلات من السيرفر فقط
-            var filteredRecords = [];
-            var currentPage = 1;
-            var itemsPerPage = 5;
+            var allVessels = [];
+            var filteredVessels = [];
 
             // ============================================================
             // 4. LOAD DATA FROM SERVER
             // ============================================================
 
-            async function loadRecords() {
-                var tbody = document.getElementById('recordsBody');
+            async function loadVessels() {
+                var tbody = document.getElementById('tableBody');
                 tbody.innerHTML = `
-                    <tr><td colspan="8" class="empty-state">
-                        <span class="empty-icon"><i class="fas fa-spinner fa-pulse"></i></span>
-                        <h3>جاري تحميل السجلات...</h3>
-                        <p>يرجى الانتظار</p>
-                    </td></tr>
+                    <tr>
+                        <td colspan="14" class="empty-state">
+                            <div class="spinner"></div>
+                            <h3>جاري التحميل...</h3>
+                            <p>يرجى الانتظار</p>
+                        </td>
+                    </tr>
                 `;
 
                 try {
                     var token = getToken();
                     if (!token) {
                         tbody.innerHTML = `
-                            <tr><td colspan="8" class="empty-state">
-                                <span class="empty-icon"><i class="fas fa-exclamation-triangle"></i></span>
-                                <h3>يرجى تسجيل الدخول</h3>
-                                <p>يجب تسجيل الدخول لعرض سجلات الصيانة</p>
-                                <a href="/" style="color:#60a5fa;text-decoration:underline;">⬅️ العودة للرئيسية</a>
-                            </td></tr>
+                            <tr>
+                                <td colspan="14" class="empty-state">
+                                    <span class="empty-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                                    <h3>يرجى تسجيل الدخول</h3>
+                                    <p>يجب تسجيل الدخول لعرض سجل الصيانة</p>
+                                    <a href="/" style="color:#f5d76e;text-decoration:underline;">⬅️ العودة للرئيسية</a>
+                                </td>
+                            </tr>
                         `;
                         return;
                     }
 
                     var csrfToken = await getCsrfToken();
 
-                    // ✅ جلب سجلات الصيانة من السيرفر
-                    var response = await fetch('/api/maintenance-logs', {
+                    // ✅ جلب جميع المراكب من السيرفر
+                    var response = await fetch('/api/vessels', {
                         headers: {
                             'Authorization': 'Bearer ' + token,
                             'X-CSRF-Token': csrfToken || '',
@@ -834,240 +784,150 @@
                     }
 
                     var data = await response.json();
-                    allRecords = data || [];
-                    console.log('✅ Loaded ' + allRecords.length + ' maintenance records from server');
-
-                    // ✅ تحديث قائمة المراكب في الفلتر
-                    updateVesselFilter();
+                    allVessels = data || [];
+                    console.log('✅ Loaded ' + allVessels.length + ' vessels from server');
 
                     // ✅ تحديث الإحصائيات
                     updateStats();
 
-                    // ✅ تطبيق الفلاتر وعرض البيانات
+                    // ✅ تطبيق الفلاتر
                     applyFilters();
 
                 } catch (error) {
-                    console.error('❌ Error loading records:', error);
+                    console.error('❌ Error loading vessels:', error);
                     tbody.innerHTML = `
-                        <tr><td colspan="8" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
-                            <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
-                            <p style="color:rgba(255,255,255,0.3);">${error.message}</p>
-                            <button class="btn-filter primary" onclick="location.reload()" style="margin-top:12px;">
-                                <i class="fas fa-sync-alt"></i> إعادة المحاولة
-                            </button>
-                        </td></tr>
+                        <tr>
+                            <td colspan="14" class="empty-state">
+                                <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
+                                <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
+                                <p style="color:rgba(255,255,255,0.3);">${error.message}</p>
+                                <button class="retry-btn" onclick="loadVessels()">
+                                    <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                                </button>
+                            </td>
+                        </tr>
                     `;
                     showToast('❌ ' + error.message, 'error');
                 }
             }
 
             // ============================================================
-            // 5. UPDATE VESSEL FILTER
-            // ============================================================
-
-            function updateVesselFilter() {
-                var vesselNames = [];
-                allRecords.forEach(function(r) {
-                    var name = r.vesselName || r.vessel || '';
-                    if (name && vesselNames.indexOf(name) === -1) {
-                        vesselNames.push(name);
-                    }
-                });
-
-                var select = document.getElementById('fVesselRec');
-                select.innerHTML = '<option value="الكل">🚢 جميع المراكب</option>';
-                vesselNames.sort().forEach(function(name) {
-                    select.innerHTML += '<option value="' + name + '">🚢 ' + name + '</option>';
-                });
-            }
-
-            // ============================================================
-            // 6. UPDATE STATS
+            // 5. UPDATE STATS
             // ============================================================
 
             function updateStats() {
-                var total = allRecords.length;
-                var pending = allRecords.filter(function(r) {
-                    var s = r.status || '';
-                    return s === 'قيد الانتظار' || s === 'pending' || s === 'معلق';
+                var total = allVessels.length;
+                var damaged = allVessels.filter(function(v) {
+                    return v.status === 'معطب' || v.status === 'damaged';
                 }).length;
-                var completed = allRecords.filter(function(r) {
-                    var s = r.status || '';
-                    return s === 'مكتملة' || s === 'مكتمل' || s === 'completed' || s === 'done';
+                var maintenance = allVessels.filter(function(v) {
+                    return v.status === 'صيانة' || v.status === 'maintenance';
                 }).length;
-                var overdue = allRecords.filter(function(r) {
-                    var s = r.status || '';
-                    return s === 'متأخرة' || s === 'overdue' || s === 'متأخر';
-                }).length;
-                var inProgress = allRecords.filter(function(r) {
-                    var s = r.status || '';
-                    return s === 'قيد التنفيذ' || s === 'in-progress' || s === 'جاري';
+                var repaired = allVessels.filter(function(v) {
+                    return v.status === 'صالح' || v.status === 'ready';
                 }).length;
 
-                document.getElementById('totalRecords').textContent = total;
-                document.getElementById('pendingRecords').textContent = pending;
-                document.getElementById('completedRecords').textContent = completed;
-                document.getElementById('overdueRecords').textContent = overdue;
-                document.getElementById('inProgressRecords').textContent = inProgress;
-
-                var badge = document.getElementById('recordsBadge');
-                if (overdue > 0) {
-                    badge.textContent = '🚨 ' + overdue + ' سجل متأخر';
-                    badge.className = 'badge danger';
-                } else if (pending > 0) {
-                    badge.textContent = '⏳ ' + pending + ' سجل قيد الانتظار';
-                    badge.className = 'badge gold';
-                } else {
-                    badge.textContent = '✅ ' + completed + ' سجل مكتمل';
-                    badge.className = 'badge success';
-                }
+                document.getElementById('totalCount').textContent = total;
+                document.getElementById('damagedCount').textContent = damaged;
+                document.getElementById('maintenanceCount').textContent = maintenance;
+                document.getElementById('repairedCount').textContent = repaired;
             }
 
             // ============================================================
-            // 7. APPLY FILTERS
+            // 6. APPLY FILTERS
             // ============================================================
 
             function applyFilters() {
-                var search = document.getElementById('searchRecords').value.toLowerCase().trim();
-                var vesselFilter = document.getElementById('fVesselRec').value;
-                var statusFilter = document.getElementById('fStatusRec').value;
-                var dateFrom = document.getElementById('fDateFrom').value;
-                var dateTo = document.getElementById('fDateTo').value;
+                var search = document.getElementById('searchInput').value.toLowerCase().trim();
+                var statusFilter = document.getElementById('statusFilter').value;
+                var regionFilter = document.getElementById('regionFilter').value;
 
-                var statusMap = {
-                    'مكتملة': ['مكتملة', 'مكتمل', 'completed', 'done'],
-                    'قيد التنفيذ': ['قيد التنفيذ', 'in-progress', 'جاري'],
-                    'قيد الانتظار': ['قيد الانتظار', 'pending', 'معلق'],
-                    'متأخرة': ['متأخرة', 'overdue', 'متأخر'],
-                    'ملغاة': ['ملغاة', 'cancelled', 'ملغي']
-                };
-
-                filteredRecords = allRecords.filter(function(r) {
+                filteredVessels = allVessels.filter(function(v) {
                     // ✅ بحث
                     if (search) {
-                        var searchText = (r.vesselName || '') + ' ' + (r.vessel || '') + ' ' + (r.type || '');
-                        if (!searchText.toLowerCase().includes(search)) return false;
-                    }
-
-                    // ✅ فلتر المركب
-                    if (vesselFilter !== 'الكل' && r.vesselName !== vesselFilter && r.vessel !== vesselFilter) {
-                        return false;
+                        var text = (v.name || '') + ' ' + (v.num || '') + ' ' + (v.zone || '') + ' ' + (v.region || '');
+                        if (!text.toLowerCase().includes(search)) return false;
                     }
 
                     // ✅ فلتر الحالة
+                    var statusMap = {
+                        'معطب': ['معطب', 'damaged'],
+                        'صيانة': ['صيانة', 'maintenance'],
+                        'صالح': ['صالح', 'ready']
+                    };
                     if (statusFilter !== 'الكل') {
                         var statusValues = statusMap[statusFilter] || [statusFilter];
-                        var match = statusValues.some(function(s) {
-                            return r.status === s;
-                        });
-                        if (!match) return false;
+                        if (!statusValues.some(function(s) { return v.status === s; })) return false;
                     }
 
-                    // ✅ فلتر التاريخ
-                    var recordDate = r.date || r.createdAt || r.startDate || '';
-                    if (dateFrom && recordDate < dateFrom) return false;
-                    if (dateTo && recordDate > dateTo) return false;
+                    // ✅ فلتر الإقليم
+                    if (regionFilter !== 'الكل' && v.region !== regionFilter) return false;
 
                     return true;
                 });
 
-                currentPage = 1;
                 renderTable();
-                renderPagination();
             }
 
             // ============================================================
-            // 8. RENDER TABLE
+            // 7. RENDER TABLE
             // ============================================================
 
             function renderTable() {
-                var tbody = document.getElementById('recordsBody');
+                var tbody = document.getElementById('tableBody');
 
-                if (filteredRecords.length === 0) {
+                if (filteredVessels.length === 0) {
                     tbody.innerHTML = `
-                        <tr><td colspan="8" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-search"></i></span>
-                            <h3>لا توجد سجلات مطابقة</h3>
-                            <p>حاول تغيير معايير البحث أو الفلترة</p>
-                        </td></tr>
-                    `;
-                    document.getElementById('paginationInfo').textContent = 'عرض 0 من 0 سجل';
-                    return;
-                }
-
-                var start = (currentPage - 1) * itemsPerPage;
-                var end = Math.min(start + itemsPerPage, filteredRecords.length);
-                var pageData = filteredRecords.slice(start, end);
-
-                var html = '';
-                for (var i = 0; i < pageData.length; i++) {
-                    var r = pageData[i];
-                    var statusClass = getStatusClass(r.status);
-                    var statusLabel = getStatusLabel(r.status);
-
-                    // ✅ حساب المدة
-                    var duration = r.duration || '-';
-                    if (!duration || duration === '-') {
-                        try {
-                            var startDate = new Date(r.date || r.createdAt || r.startDate);
-                            var endDate = new Date(r.eDate || r.endDate || r.date || r.createdAt);
-                            var diffDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-                            if (diffDays > 0) duration = diffDays + ' أيام';
-                            else if (diffDays === 0) duration = 'يوم واحد';
-                            else duration = '-';
-                        } catch(e) { duration = '-'; }
-                    }
-
-                    html += `
                         <tr>
-                            <td style="text-align:right;font-weight:600;color:#f5d76e;">${r.id ? r.id.substring(0, 8) : '#'}</td>
-                            <td style="text-align:right;font-weight:600;color:#fff;">${r.vesselName || r.vessel || '-'}</td>
-                            <td>${r.type || 'صيانة دورية'}</td>
-                            <td>${formatDate(r.date || r.createdAt || r.startDate)}</td>
-                            <td>${formatDate(r.eDate || r.endDate)}</td>
-                            <td>${duration}</td>
-                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-                            <td>
-                                <button class="action-btn view" onclick="viewRecord('${r.id}')"><i class="fas fa-eye"></i></button>
-                                <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="fas fa-edit"></i></button>
-                                <button class="action-btn delete" onclick="deleteRecord('${r.id}')"><i class="fas fa-trash"></i></button>
+                            <td colspan="14" class="empty-state">
+                                <span class="empty-icon"><i class="fas fa-search"></i></span>
+                                <h3>لا توجد مراكب مطابقة</h3>
+                                <p>حاول تغيير معايير البحث أو الفلترة</p>
                             </td>
                         </tr>
                     `;
+                    return;
                 }
+
+                var html = '';
+                filteredVessels.forEach(function(v, index) {
+                    var rowClass = v.status === 'معطب' ? 'damaged' : (v.status === 'صيانة' ? 'maintenance' : 'repaired');
+                    var statusClass = v.status === 'معطب' ? 'damaged' : (v.status === 'صيانة' ? 'maintenance' : 'repaired');
+                    var statusLabel = v.status === 'معطب' ? '❌ معطب' : (v.status === 'صيانة' ? '🔧 صيانة' : '✅ صالح');
+                    var date = formatDate(v.fDate || v.createdAt);
+                    var endDate = formatDate(v.eDate);
+
+                    html += `
+                        <tr class="${rowClass}">
+                            <td>${index + 1}</td>
+                            <td class="vessel-name">${v.name || '-'}</td>
+                            <td>${v.num || '-'}</td>
+                            <td>${v.len || '-'}</td>
+                            <td>${v.cat || getCategory(v.len)}</td>
+                            <td>${v.region || '-'}</td>
+                            <td>${v.zone || '-'}</td>
+                            <td>${v.port || '-'}</td>
+                            <td>${v.break || '-'}</td>
+                            <td>${date}</td>
+                            <td>${endDate}</td>
+                            <td>${v.repairUnit || '-'}</td>
+                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn-sm view" onclick="viewVessel('${v.id}')"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-sm edit" onclick="editVessel('${v.id}')"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-sm delete" onclick="deleteVessel('${v.id}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
 
                 tbody.innerHTML = html;
-                document.getElementById('paginationInfo').textContent =
-                    'عرض ' + (start + 1) + '-' + end + ' من ' + filteredRecords.length + ' سجل';
             }
 
             // ============================================================
-            // 9. RENDER PAGINATION
-            // ============================================================
-
-            function renderPagination() {
-                var totalPages = Math.ceil(filteredRecords.length / itemsPerPage) || 1;
-                document.getElementById('prevPage').disabled = currentPage <= 1;
-                document.getElementById('nextPage').disabled = currentPage >= totalPages;
-
-                for (var i = 1; i <= 3; i++) {
-                    var btn = document.getElementById('page' + i);
-                    if (i <= totalPages) {
-                        btn.style.display = 'inline-block';
-                        btn.textContent = i;
-                        btn.className = 'page-btn ' + (i === currentPage ? 'active' : '');
-                        btn.onclick = (function(page) {
-                            return function() { goToPage(page); };
-                        })(i);
-                    } else {
-                        btn.style.display = 'none';
-                    }
-                }
-            }
-
-            // ============================================================
-            // 10. HELPERS
+            // 8. HELPERS
             // ============================================================
 
             function formatDate(dateStr) {
@@ -1081,156 +941,68 @@
                 } catch(e) { return '-'; }
             }
 
-            function getStatusClass(status) {
-                var map = {
-                    'مكتملة': 'completed',
-                    'مكتمل': 'completed',
-                    'completed': 'completed',
-                    'done': 'completed',
-                    'قيد التنفيذ': 'in-progress',
-                    'in-progress': 'in-progress',
-                    'جاري': 'in-progress',
-                    'قيد الانتظار': 'pending',
-                    'pending': 'pending',
-                    'معلق': 'pending',
-                    'متأخرة': 'overdue',
-                    'overdue': 'overdue',
-                    'متأخر': 'overdue',
-                    'ملغاة': 'cancelled',
-                    'cancelled': 'cancelled',
-                    'ملغي': 'cancelled'
-                };
-                return map[status] || 'pending';
-            }
-
-            function getStatusLabel(status) {
-                var map = {
-                    'مكتملة': '✅ مكتملة',
-                    'مكتمل': '✅ مكتمل',
-                    'completed': '✅ مكتمل',
-                    'done': '✅ مكتمل',
-                    'قيد التنفيذ': '⚡ قيد التنفيذ',
-                    'in-progress': '⚡ قيد التنفيذ',
-                    'جاري': '⚡ قيد التنفيذ',
-                    'قيد الانتظار': '⏳ قيد الانتظار',
-                    'pending': '⏳ قيد الانتظار',
-                    'معلق': '⏳ قيد الانتظار',
-                    'متأخرة': '🚨 متأخرة',
-                    'overdue': '🚨 متأخرة',
-                    'متأخر': '🚨 متأخرة',
-                    'ملغاة': '❌ ملغاة',
-                    'cancelled': '❌ ملغاة',
-                    'ملغي': '❌ ملغاة'
-                };
-                return map[status] || status;
+            function getCategory(len) {
+                var n = parseFloat(len);
+                if (isNaN(n)) return 'زوارق مزدوجة';
+                if (n === 11) return 'البروق';
+                if (n >= 8 && n <= 12) return 'صقور';
+                if (n > 12 && n <= 25) return 'خوافر';
+                if (n >= 30) return 'طوافات';
+                return 'زوارق مزدوجة';
             }
 
             // ============================================================
-            // 11. ACTIONS
+            // 9. GLOBAL FUNCTIONS
             // ============================================================
 
-            function changePage(delta) {
-                var totalPages = Math.ceil(filteredRecords.length / itemsPerPage) || 1;
-                var newPage = currentPage + delta;
-                if (newPage >= 1 && newPage <= totalPages) {
-                    currentPage = newPage;
-                    renderTable();
-                    renderPagination();
-                }
-            }
-
-            function goToPage(page) {
-                var totalPages = Math.ceil(filteredRecords.length / itemsPerPage) || 1;
-                if (page >= 1 && page <= totalPages) {
-                    currentPage = page;
-                    renderTable();
-                    renderPagination();
-                }
-            }
-
-            function refreshRecords() {
-                var btn = document.getElementById('refreshBtn');
-                var original = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-                btn.disabled = true;
-
-                loadRecords().then(function() {
-                    btn.innerHTML = original;
-                    btn.disabled = false;
-                    showToast('✅ تم تحديث السجلات بنجاح', 'success');
-                }).catch(function() {
-                    btn.innerHTML = original;
-                    btn.disabled = false;
-                });
-            }
-
-            function resetFilters() {
-                document.getElementById('searchRecords').value = '';
-                document.getElementById('fVesselRec').value = 'الكل';
-                document.getElementById('fStatusRec').value = 'الكل';
-                document.getElementById('fDateFrom').value = '';
-                document.getElementById('fDateTo').value = '';
-                applyFilters();
-                showToast('✅ تم إلغاء جميع الفلاتر', 'success');
-            }
-
-            function exportRecords() {
-                showToast('📊 جاري تصدير البيانات...', 'info');
-                setTimeout(function() {
-                    showToast('✅ تم تصدير البيانات بنجاح', 'success');
-                }, 1500);
-            }
-
-            // ============================================================
-            // 12. GLOBAL FUNCTIONS
-            // ============================================================
-
-            window.viewRecord = function(id) {
-                var record = allRecords.find(function(r) { return r.id === id; });
-                if (record) {
-                    showToast('📋 تفاصيل: ' + (record.vesselName || record.vessel || id), 'info');
+            window.viewVessel = function(id) {
+                var vessel = allVessels.find(function(v) { return v.id === id; });
+                if (vessel) {
+                    showToast('📋 ' + (vessel.name || '') + ' - الحالة: ' + (vessel.status || ''), 'info');
                 } else {
-                    showToast('📋 عرض تفاصيل السجل', 'info');
+                    showToast('📋 عرض تفاصيل المركب', 'info');
                 }
             };
 
-            window.editRecord = function(id) {
-                showToast('✏️ تعديل السجل', 'info');
+            window.editVessel = function(id) {
+                showToast('✏️ تعديل المركب', 'info');
             };
 
-            window.deleteRecord = function(id) {
-                if (confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) {
-                    showToast('🗑️ تم حذف السجل', 'success');
-                }
+            window.deleteVessel = function(id) {
+                if (!confirm('⚠️ هل أنت متأكد من حذف هذا المركب؟')) return;
+                showToast('🗑️ تم حذف المركب', 'success');
             };
 
             // ============================================================
-            // 13. INIT
+            // 10. INIT
             // ============================================================
 
             document.addEventListener('DOMContentLoaded', function() {
-                console.log('🚀 تحميل صفحة سجل الصيانة...');
+                console.log('🚀 تحميل صفحة سجل الصيانة التاريخي...');
 
                 // ربط الأحداث
-                document.getElementById('refreshBtn').addEventListener('click', refreshRecords);
-                document.getElementById('exportBtn').addEventListener('click', exportRecords);
-                document.getElementById('filterBtn').addEventListener('click', applyFilters);
-                document.getElementById('resetBtn').addEventListener('click', resetFilters);
+                document.getElementById('refreshBtn').addEventListener('click', loadVessels);
+                document.getElementById('filterBtn').addEventListener('click', function() {
+                    applyFilters();
+                    showToast('✅ تم تطبيق الفلاتر', 'success');
+                });
+                document.getElementById('resetBtn').addEventListener('click', function() {
+                    document.getElementById('searchInput').value = '';
+                    document.getElementById('statusFilter').value = 'الكل';
+                    document.getElementById('regionFilter').value = 'الكل';
+                    applyFilters();
+                    showToast('✅ تم إلغاء جميع الفلاتر', 'success');
+                });
 
-                document.getElementById('searchRecords').addEventListener('keyup', function(e) {
+                document.getElementById('searchInput').addEventListener('keyup', function(e) {
                     if (e.key === 'Enter') applyFilters();
                 });
-                document.getElementById('fVesselRec').addEventListener('change', applyFilters);
-                document.getElementById('fStatusRec').addEventListener('change', applyFilters);
-                document.getElementById('fDateFrom').addEventListener('change', applyFilters);
-                document.getElementById('fDateTo').addEventListener('change', applyFilters);
+                document.getElementById('statusFilter').addEventListener('change', applyFilters);
+                document.getElementById('regionFilter').addEventListener('change', applyFilters);
 
-                document.getElementById('prevPage').addEventListener('click', function() { changePage(-1); });
-                document.getElementById('nextPage').addEventListener('click', function() { changePage(1); });
-
-                // ✅ تحميل البيانات من السيرفر فقط
-                loadRecords();
-                console.log('✅ Records Page loaded - fetching real data from server');
+                // تحميل البيانات
+                loadVessels();
+                console.log('✅ Maintenance Records page loaded');
             });
 
         })();
