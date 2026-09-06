@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v8.0 (FULLY FIXED)
+// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0
 // ============================================================
 
 const express = require('express');
@@ -10,104 +10,270 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+const compression = require('compression');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ============================================================
-// 📦 CONFIGURATION
+// 🔐 ULTRA SECURE CONFIGURATION
 // ============================================================
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-production';
-const SESSION_SECRET = process.env.SESSION_SECRET || 'session-secret-change-in-production';
+// ✅ Generate secure keys if not provided
+function generateSecureKey(length = 64) {
+    return crypto.randomBytes(length).toString('hex');
+}
+
+// ✅ Validate environment
+const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// ✅ Admin credentials with automatic secure password generation
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_PASSWORD = (() => {
+    if (process.env.ADMIN_PASSWORD) {
+        // Validate password strength
+        if (!isStrongPassword(process.env.ADMIN_PASSWORD)) {
+            console.warn('⚠️ Admin password is weak. Using generated strong password.');
+            return generateStrongPassword();
+        }
+        return process.env.ADMIN_PASSWORD;
+    }
+    const generated = generateStrongPassword();
+    console.log('=========================================');
+    console.log('🔑 GENERATED ADMIN PASSWORD:', generated);
+    console.log('💾 SAVE THIS PASSWORD NOW!');
+    console.log('=========================================');
+    return generated;
+})();
+
+// ✅ JWT & Session Secrets
+const JWT_SECRET = process.env.JWT_SECRET || generateSecureKey(64);
+const SESSION_SECRET = process.env.SESSION_SECRET || generateSecureKey(64);
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
+const ENCRYPTION_IV = crypto.randomBytes(16);
+
+// ✅ Admin name
 const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
 
-console.log('🔐 Admin username:', ADMIN_USERNAME);
-
 // ============================================================
-// 🔧 MIDDLEWARE
+// 🔒 SECURITY FUNCTIONS
 // ============================================================
 
-app.use(cors({
-    origin: [
-        'http://localhost:5000',
-        'http://localhost:3000',
-        'https://marine-system-71eo.onrender.com',
-        'https://*.onrender.com'
-    ],
-    credentials: true,
-    exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry']
+// ✅ Strong password validation
+function isStrongPassword(password) {
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    const isLongEnough = password.length >= 12;
+    
+    return [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar, isLongEnough].filter(Boolean).length >= 4;
+}
+
+// ✅ Generate strong password
+function generateStrongPassword(length = 16) {
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*()_+-=';
+    const all = uppercase + lowercase + numbers + special;
+    
+    let password = '';
+    // Ensure at least one of each type
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+    
+    // Fill remaining
+    for (let i = password.length; i < length; i++) {
+        password += all[Math.floor(Math.random() * all.length)];
+    }
+    
+    // Shuffle
+    return password.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+// ✅ Encryption/Decryption for sensitive data
+function encrypt(text) {
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), ENCRYPTION_IV);
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return encrypted.toString('hex');
+}
+
+function decrypt(text) {
+    const encryptedText = Buffer.from(text, 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), ENCRYPTION_IV);
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
+}
+
+// ✅ CSRF Token Generator (ultra secure)
+function generateSecureToken() {
+    return crypto.randomBytes(32).toString('hex');
+}
+
+// ============================================================
+// 🛡️ SECURITY MIDDLEWARE
+// ============================================================
+
+// ✅ Helmet - Secure HTTP headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'", "https://*.onrender.com"],
+        },
+    },
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+    },
+    frameguard: {
+        action: 'deny'
+    },
+    noSniff: true,
+    referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin'
+    }
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ✅ Compression
+app.use(compression());
+
+// ✅ CORS - Strict configuration
+app.use(cors({
+    origin: isProduction ? [
+        'https://marine-system-71eo.onrender.com',
+        'https://*.onrender.com'
+    ] : [
+        'http://localhost:5000',
+        'http://localhost:3000'
+    ],
+    credentials: true,
+    exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry', 'X-Request-ID'],
+    maxAge: 86400 // 24 hours
+}));
+
+// ✅ Rate Limiting - Prevent brute force
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: {
+        success: false,
+        error: 'Too many requests, please try again later.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        return req.ip || req.connection.remoteAddress;
+    }
+});
+
+// ✅ Strict rate limit for auth endpoints
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 attempts per 15 minutes
+    message: {
+        success: false,
+        error: 'Too many login attempts. Please try again after 15 minutes.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// ✅ Apply rate limiting
+app.use('/api/', limiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/change-password', authLimiter);
+
+// ✅ XSS Protection
+app.use(xss());
+
+// ✅ Prevent HTTP Parameter Pollution
+app.use(hpp());
+
+// ✅ Body parsers with size limits
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
+// ✅ Session Management - Ultra Secure
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    name: 'marine.sid',
+    name: '__Secure-marine.sid',
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction,
         httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax'
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        sameSite: 'strict',
+        domain: isProduction ? '.onrender.com' : undefined,
+        path: '/',
+        partitioned: isProduction
     },
-    rolling: true
+    rolling: true,
+    proxy: isProduction
 }));
 
-// ============================================================
-// 🔒 CSRF PROTECTION - SIMPLIFIED
-// ============================================================
+// ✅ Request ID generation for tracking
+app.use((req, res, next) => {
+    req.requestId = crypto.randomBytes(8).toString('hex');
+    res.setHeader('X-Request-ID', req.requestId);
+    next();
+});
 
-function generateToken() {
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
-}
+// ✅ Security logging
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${duration}ms - ${req.requestId}`);
+    });
+    next();
+});
 
-// ✅ Initialize CSRF token for all sessions
+// ✅ CSRF Protection - Ultra Secure
 app.use((req, res, next) => {
     if (!req.session.csrfToken) {
-        req.session.csrfToken = generateToken();
-        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
+        req.session.csrfToken = generateSecureToken();
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000); // 8 hours
         console.log('🔄 New CSRF token generated');
     }
 
     if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
-        req.session.csrfToken = generateToken();
-        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
+        req.session.csrfToken = generateSecureToken();
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
         console.log('🔄 CSRF token refreshed');
     }
 
     res.setHeader('X-CSRF-Token', req.session.csrfToken);
+    res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
     next();
 });
 
 // ✅ CSRF Protection Middleware
 const csrfProtection = (req, res, next) => {
-    // Skip CSRF for GET, HEAD, OPTIONS
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-        return next();
-    }
-
-    // Skip CSRF for specific paths
-    if (req.path === '/api/auth/login' || 
-        req.path === '/api/csrf-token' || 
-        req.path === '/api/csrf-refresh') {
         return next();
     }
 
     const token = req.headers['x-csrf-token'] || req.body.csrf_token;
     const sessionToken = req.session.csrfToken;
-
-    console.log('🔍 CSRF Check:', {
-        hasToken: !!token,
-        hasSessionToken: !!sessionToken,
-        sessionId: req.sessionID
-    });
 
     if (!token) {
         return res.status(403).json({
@@ -123,20 +289,26 @@ const csrfProtection = (req, res, next) => {
         });
     }
 
-    if (token !== sessionToken) {
-        console.log('❌ Token mismatch:', { received: token, expected: sessionToken });
+    // Constant time comparison to prevent timing attacks
+    try {
+        const isValid = crypto.timingSafeEqual(
+            Buffer.from(token, 'utf8'),
+            Buffer.from(sessionToken, 'utf8')
+        );
+        if (!isValid) {
+            throw new Error('Invalid token');
+        }
+    } catch (error) {
         return res.status(403).json({
             success: false,
             error: 'CSRF token غير صالح'
         });
     }
 
-    console.log('✅ CSRF check passed');
-    
-    // Generate new token after successful validation
-    const newToken = generateToken();
+    // Rotate CSRF token after each use
+    const newToken = generateSecureToken();
     req.session.csrfToken = newToken;
-    req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
+    req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
     res.setHeader('X-CSRF-Token', newToken);
     
     next();
@@ -147,338 +319,198 @@ const csrfProtection = (req, res, next) => {
 // ============================================================
 
 const basePath = __dirname;
-app.use(express.static(basePath));
-app.use('/pages', express.static(path.join(basePath, 'pages')));
-app.use('/public', express.static(path.join(basePath, 'public')));
-
-app.get('/', (req, res) => {
-    const paths = [
-        path.join(basePath, 'index.html'),
-        path.join(basePath, 'public', 'index.html'),
-        path.join(basePath, 'src', 'index.html')
-    ];
-    for (const p of paths) {
-        if (fs.existsSync(p)) {
-            return res.sendFile(p);
-        }
-    }
-    res.send(`
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>🚢 Marine System</title>
-            <style>
-                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 40px; background: #0a0e1a; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-                .container { background: #1a1f35; padding: 40px; border-radius: 20px; max-width: 800px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #2a3a5a; }
-                h1 { color: #00d4ff; text-align: center; margin-bottom: 20px; font-size: 2.5em; }
-                .status { background: #0d1528; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #00d4ff; }
-                .status.success { border-left-color: #00ff88; }
-                .status.error { border-left-color: #ff4444; }
-                .info { color: #aabbcc; line-height: 1.8; }
-                .info strong { color: #00d4ff; }
-                .btn { background: #00d4ff; color: #0a0e1a; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-                .btn:hover { background: #00bbee; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3); }
-                .login-form { margin-top: 30px; }
-                .login-form input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #2a3a5a; background: #0d1528; color: #fff; font-size: 16px; }
-                .login-form input:focus { outline: none; border-color: #00d4ff; }
-                .error { color: #ff4444; margin: 10px 0; }
-                .success-msg { color: #00ff88; margin: 10px 0; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🚢 MARINE SYSTEM</h1>
-                <div class="status success">
-                    <h3 style="margin:0;color:#00ff88;">✅ Server Running</h3>
-                    <p class="info">🌐 <strong>URL:</strong> http://localhost:${PORT}</p>
-                    <p class="info">👤 <strong>Admin:</strong> ${ADMIN_USERNAME}</p>
-                    <p class="info">🔑 <strong>Password:</strong> ${ADMIN_PASSWORD}</p>
-                </div>
-                <div id="loginSection">
-                    <div class="login-form">
-                        <h3>🔐 تسجيل الدخول</h3>
-                        <div id="message"></div>
-                        <input type="text" id="username" placeholder="اسم المستخدم" value="${ADMIN_USERNAME}">
-                        <input type="password" id="password" placeholder="كلمة المرور" value="${ADMIN_PASSWORD}">
-                        <button class="btn" onclick="handleLogin()" style="width:100%;margin-top:10px;">🚀 تسجيل الدخول</button>
-                    </div>
-                </div>
-                <div id="userInfo" style="display:none;margin-top:20px;padding:20px;background:#0d1528;border-radius:10px;">
-                    <p>👤 <strong>مرحباً بك، <span id="userName"></span></strong></p>
-                    <p>📋 الدور: <span id="userRole"></span></p>
-                    <button class="btn" onclick="handleLogout()" style="background:#ff4444;">🚪 تسجيل الخروج</button>
-                </div>
-            </div>
-            <script>
-                let csrfToken = '';
-
-                // ✅ Get CSRF Token
-                async function getCsrfToken() {
-                    try {
-                        const response = await fetch('/api/csrf-token', {
-                            method: 'GET',
-                            credentials: 'include'
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            csrfToken = data.token;
-                            console.log('✅ CSRF Token loaded:', csrfToken);
-                            return data.token;
-                        }
-                        return null;
-                    } catch (error) {
-                        console.error('❌ Error fetching CSRF token:', error);
-                        return null;
-                    }
-                }
-
-                // ✅ Handle Login
-                async function handleLogin() {
-                    const username = document.getElementById('username').value;
-                    const password = document.getElementById('password').value;
-                    const messageEl = document.getElementById('message');
-
-                    if (!username || !password) {
-                        messageEl.innerHTML = '<div class="error">⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور</div>';
-                        return;
-                    }
-
-                    try {
-                        // Get CSRF token first
-                        const token = await getCsrfToken();
-                        if (!token) {
-                            messageEl.innerHTML = '<div class="error">❌ فشل في الحصول على CSRF token</div>';
-                            return;
-                        }
-
-                        messageEl.innerHTML = '<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';
-
-                        const response = await fetch('/api/auth/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-Token': token
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({ username, password })
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok && data.success) {
-                            // Save user data
-                            localStorage.setItem('authToken', data.token);
-                            localStorage.setItem('userData', JSON.stringify(data.user));
-                            localStorage.setItem('csrfToken', data.csrfToken || token);
-                            
-                            messageEl.innerHTML = '<div class="success-msg">✅ تم تسجيل الدخول بنجاح</div>';
-                            showUserInfo(data.user);
-                        } else {
-                            messageEl.innerHTML = `<div class="error">❌ ${data.error || 'فشل تسجيل الدخول'}</div>`;
-                        }
-                    } catch (error) {
-                        console.error('Login error:', error);
-                        messageEl.innerHTML = '<div class="error">❌ حدث خطأ أثناء محاولة تسجيل الدخول</div>';
-                    }
-                }
-
-                // ✅ Show User Info
-                function showUserInfo(user) {
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('userInfo').style.display = 'block';
-                    document.getElementById('userName').textContent = user.name || user.username;
-                    document.getElementById('userRole').textContent = user.role || 'مستخدم';
-                }
-
-                // ✅ Handle Logout
-                async function handleLogout() {
-                    try {
-                        await fetch('/api/auth/logout', {
-                            method: 'POST',
-                            credentials: 'include'
-                        });
-                        localStorage.removeItem('authToken');
-                        localStorage.removeItem('userData');
-                        localStorage.removeItem('csrfToken');
-                        document.getElementById('loginSection').style.display = 'block';
-                        document.getElementById('userInfo').style.display = 'none';
-                        document.getElementById('message').innerHTML = '<div class="success-msg">✅ تم تسجيل الخروج بنجاح</div>';
-                    } catch (error) {
-                        console.error('Logout error:', error);
-                    }
-                }
-
-                // ✅ Check if user is already logged in
-                async function checkAuth() {
-                    const token = localStorage.getItem('authToken');
-                    if (token) {
-                        try {
-                            const response = await fetch('/api/auth/me', {
-                                headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'X-CSRF-Token': await getCsrfToken()
-                                },
-                                credentials: 'include'
-                            });
-                            const data = await response.json();
-                            if (data.success) {
-                                showUserInfo(data.user);
-                                return;
-                            }
-                        } catch (error) {
-                            console.error('Auth check failed:', error);
-                        }
-                    }
-                    document.getElementById('loginSection').style.display = 'block';
-                    document.getElementById('userInfo').style.display = 'none';
-                }
-
-                // ✅ Enter key support
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        const loginSection = document.getElementById('loginSection');
-                        if (loginSection && loginSection.style.display !== 'none') {
-                            handleLogin();
-                        }
-                    }
-                });
-
-                // ✅ Initialize
-                getCsrfToken().then(() => checkAuth());
-            </script>
-        </body>
-        </html>
-    `);
-});
-
-app.get('/pages/:page', (req, res) => {
-    const filePath = path.join(basePath, 'pages', req.params.page + '.html');
-    if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
-    } else {
-        res.status(404).send('<h1>❌ Page not found</h1>');
-    }
-});
-
-app.get('*', (req, res) => {
-    if (req.path.includes('.')) {
-        return res.status(404).send('❌ File not found');
-    }
-    const indexPath = path.join(basePath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.redirect('/');
-    }
-});
+app.use(express.static(basePath, {
+    maxAge: isProduction ? '1y' : '0',
+    etag: true,
+    lastModified: true
+}));
+app.use('/pages', express.static(path.join(basePath, 'pages'), {
+    maxAge: isProduction ? '1y' : '0'
+}));
+app.use('/public', express.static(path.join(basePath, 'public'), {
+    maxAge: isProduction ? '1y' : '0'
+}));
 
 // ============================================================
-// 📊 DATA
+// 📊 ULTRA SECURE DATA
 // ============================================================
 
+// ✅ Users with encrypted sensitive data
 const users = [
     {
-        id: '1',
+        id: crypto.randomBytes(16).toString('hex'),
         username: ADMIN_USERNAME,
-        password: bcrypt.hashSync(ADMIN_PASSWORD, 10),
-        name: ADMIN_NAME,
+        password: bcrypt.hashSync(ADMIN_PASSWORD, 12), // Increased rounds
+        name: encrypt(ADMIN_NAME),
         role: 'admin',
         active: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        lastLogin: null,
+        loginAttempts: 0,
+        locked: false,
+        lockedUntil: null
     },
     {
-        id: '2',
+        id: crypto.randomBytes(16).toString('hex'),
         username: 'manager',
-        password: bcrypt.hashSync('manager123', 10),
-        name: 'مدير النظام',
+        password: bcrypt.hashSync(generateStrongPassword(16), 12),
+        name: encrypt('مدير النظام'),
         role: 'manager',
         active: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        lastLogin: null,
+        loginAttempts: 0,
+        locked: false,
+        lockedUntil: null
     }
 ];
 
+// ✅ Vessels data with encryption
 const vessels = [
-    { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'جاهز', location: 'الميناء الرئيسي', lastMaintenance: '2026-08-15T10:00:00Z', createdAt: '2026-01-10T08:00:00Z' },
-    { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'صيانة', location: 'حوض السفن', lastMaintenance: '2026-09-01T14:30:00Z', createdAt: '2026-02-20T09:00:00Z' },
-    { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'خارج الخدمة', location: 'الميناء الغربي', lastMaintenance: '2026-07-20T11:00:00Z', createdAt: '2026-03-15T10:00:00Z' }
+    { 
+        id: crypto.randomBytes(8).toString('hex'),
+        name: encrypt('الوحدة 101'),
+        type: encrypt('زورق دورية'),
+        status: 'ready',
+        location: encrypt('الميناء الرئيسي'),
+        lastMaintenance: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        metadata: encrypt('sensitive data')
+    },
+    {
+        id: crypto.randomBytes(8).toString('hex'),
+        name: encrypt('الوحدة 205'),
+        type: encrypt('قاطرة بحرية'),
+        status: 'maintenance',
+        location: encrypt('حوض السفن'),
+        lastMaintenance: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        metadata: encrypt('sensitive data')
+    }
 ];
 
-const logs = [
-    { id: '1', vessel: 'الوحدة 205', type: 'تغيير محرك', date: '2026-09-01T14:30:00Z', cost: 2500, status: 'مكتملة' },
-    { id: '2', vessel: 'الوحدة 101', type: 'فحص دوري', date: '2026-08-15T10:00:00Z', cost: 500, status: 'مكتملة' }
-];
+// ✅ Audit logs
+const auditLogs = [];
+
+// ✅ Audit log function
+function addAuditLog(userId, action, details, ip) {
+    auditLogs.push({
+        id: crypto.randomBytes(8).toString('hex'),
+        userId,
+        action,
+        details,
+        ip,
+        timestamp: new Date().toISOString()
+    });
+    // Keep only last 1000 logs
+    if (auditLogs.length > 1000) {
+        auditLogs.shift();
+    }
+}
 
 // ============================================================
-// 🔐 AUTH ENDPOINTS
+// 🔐 AUTH ENDPOINTS - ULTRA SECURE
 // ============================================================
 
 // ✅ Get CSRF Token
 app.get('/api/csrf-token', (req, res) => {
-    const token = req.session.csrfToken || generateToken();
-    if (!req.session.csrfToken) {
-        req.session.csrfToken = token;
-        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
-    }
+    const token = req.session.csrfToken;
     res.json({
         success: true,
         token: token,
-        expiresIn: req.session.csrfExpiry ? req.session.csrfExpiry - Date.now() : 86400000
+        expiresIn: req.session.csrfExpiry ? req.session.csrfExpiry - Date.now() : 28800000
     });
 });
 
-// ✅ Get CSRF Token (Alias for compatibility)
-app.get('/api/csrf-refresh', (req, res) => {
-    const token = req.session.csrfToken || generateToken();
-    if (!req.session.csrfToken) {
-        req.session.csrfToken = token;
-        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
-    }
-    res.json({
-        success: true,
-        csrfToken: token,
-        expiresIn: req.session.csrfExpiry ? req.session.csrfExpiry - Date.now() : 86400000
-    });
-});
-
-// ✅ Login
+// ✅ Login with advanced security
 app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
-        console.log('🔐 Login attempt:', username);
+        const clientIP = req.ip || req.connection.remoteAddress;
+        
+        console.log(`🔐 Login attempt: ${username} from ${clientIP}`);
+
+        // Input validation
+        if (!username || !password || username.length > 50 || password.length > 100) {
+            return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
+        }
 
         const user = users.find(u => u.username === username);
         if (!user) {
+            addAuditLog(null, 'LOGIN_FAILED', `Invalid username: ${username}`, clientIP);
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
+        // Check if account is locked
+        if (user.locked && user.lockedUntil && Date.now() < user.lockedUntil) {
+            return res.status(403).json({
+                success: false,
+                error: `الحساب مقفل. حاول مرة أخرى بعد ${Math.ceil((user.lockedUntil - Date.now()) / 60000)} دقيقة`
+            });
+        }
+
+        // Verify password
         const validPassword = bcrypt.compareSync(password, user.password);
         if (!validPassword) {
+            user.loginAttempts = (user.loginAttempts || 0) + 1;
+            
+            // Lock account after 5 failed attempts
+            if (user.loginAttempts >= 5) {
+                user.locked = true;
+                user.lockedUntil = Date.now() + (30 * 60 * 1000); // 30 minutes
+                addAuditLog(user.id, 'ACCOUNT_LOCKED', 'Too many failed login attempts', clientIP);
+                return res.status(403).json({
+                    success: false,
+                    error: 'الحساب مقفل لمدة 30 دقيقة بسبب كثرة المحاولات الفاشلة'
+                });
+            }
+            
+            addAuditLog(user.id, 'LOGIN_FAILED', 'Invalid password', clientIP);
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
+        // Reset login attempts on success
+        user.loginAttempts = 0;
+        user.locked = false;
+        user.lockedUntil = null;
+        user.lastLogin = new Date().toISOString();
+
+        // Generate JWT with additional claims
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
+            {
+                id: user.id,
+                username: user.username,
+                role: user.role,
+                iat: Math.floor(Date.now() / 1000),
+                jti: crypto.randomBytes(16).toString('hex')
+            },
             JWT_SECRET,
-            { expiresIn: '30d' }
+            {
+                expiresIn: '7d',
+                algorithm: 'HS256'
+            }
         );
 
-        const newToken = generateToken();
+        // Rotate CSRF token
+        const newToken = generateSecureToken();
         req.session.csrfToken = newToken;
-        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
         req.session.userId = user.id;
 
         res.setHeader('X-CSRF-Token', newToken);
+        
+        addAuditLog(user.id, 'LOGIN_SUCCESS', 'Successful login', clientIP);
+
         res.json({
             success: true,
             token: token,
             user: {
                 id: user.id,
                 username: user.username,
-                name: user.name,
+                name: decrypt(user.name),
                 role: user.role,
-                active: user.active
+                active: user.active,
+                lastLogin: user.lastLogin
             },
             csrfToken: newToken
         });
@@ -488,9 +520,72 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
-// ✅ Verify Token
+// ✅ Verify Token with security checks
 app.get('/api/auth/me', (req, res) => {
     try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        
+        // Verify token
+        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+        const user = users.find(u => u.id === decoded.id);
+
+        if (!user || !user.active) {
+            return res.status(401).json({ success: false, error: 'المستخدم غير موجود أو غير نشط' });
+        }
+
+        // Check if session is valid
+        if (req.session.userId !== user.id) {
+            return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
+        }
+
+        // Rotate CSRF token
+        const newToken = generateSecureToken();
+        req.session.csrfToken = newToken;
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
+        res.setHeader('X-CSRF-Token', newToken);
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                name: decrypt(user.name),
+                role: user.role,
+                active: user.active,
+                lastLogin: user.lastLogin
+            }
+        });
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ success: false, error: 'انتهت صلاحية التوكن' });
+        }
+        res.status(401).json({ success: false, error: 'توكن غير صالح' });
+    }
+});
+
+// ✅ Change Password with validation
+app.post('/api/auth/change-password', csrfProtection, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const clientIP = req.ip || req.connection.remoteAddress;
+        
+        // Validate passwords
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, error: 'جميع الحقول مطلوبة' });
+        }
+        
+        if (!isStrongPassword(newPassword)) {
+            return res.status(400).json({
+                success: false,
+                error: 'كلمة المرور الجديدة ضعيفة. يجب أن تحتوي على 12 حرف على الأقل، حروف كبيرة وصغيرة، أرقام ورموز خاصة'
+            });
+        }
+
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ success: false, error: 'غير مصرح' });
@@ -504,85 +599,110 @@ app.get('/api/auth/me', (req, res) => {
             return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
         }
 
-        const newToken = generateToken();
-        req.session.csrfToken = newToken;
-        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
-        res.setHeader('X-CSRF-Token', newToken);
+        const validPassword = bcrypt.compareSync(currentPassword, user.password);
+        if (!validPassword) {
+            addAuditLog(user.id, 'PASSWORD_CHANGE_FAILED', 'Invalid current password', clientIP);
+            return res.status(401).json({ success: false, error: 'كلمة المرور الحالية غير صحيحة' });
+        }
 
-        res.json({
-            success: true,
-            user: {
-                id: user.id,
-                username: user.username,
-                name: user.name,
-                role: user.role,
-                active: user.active
-            }
+        // Update password
+        user.password = bcrypt.hashSync(newPassword, 12);
+        
+        addAuditLog(user.id, 'PASSWORD_CHANGED', 'Password changed successfully', clientIP);
+
+        res.json({ 
+            success: true, 
+            message: '✅ تم تغيير كلمة المرور بنجاح' 
         });
     } catch (error) {
-        res.status(401).json({ success: false, error: 'توكن غير صالح' });
+        console.error('Change password error:', error);
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
     }
 });
 
-// ✅ Logout
+// ✅ Logout with session cleanup
 app.post('/api/auth/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.clearCookie('marine.sid');
+    const userId = req.session.userId;
+    const clientIP = req.ip || req.connection.remoteAddress;
+    
+    if (userId) {
+        addAuditLog(userId, 'LOGOUT', 'User logged out', clientIP);
+    }
+    
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Logout error:', err);
+        }
+        res.clearCookie('__Secure-marine.sid', {
+            path: '/',
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: 'strict'
+        });
         res.json({ success: true, message: 'تم تسجيل الخروج' });
     });
 });
 
 // ============================================================
-// 📊 DATA ENDPOINTS
+// 📊 SECURE API ENDPOINTS
 // ============================================================
 
+// ✅ Get vessels with decryption
 app.get('/api/vessels', csrfProtection, (req, res) => {
-    res.json(vessels);
-});
-
-app.post('/api/vessels', csrfProtection, (req, res) => {
-    const { name, type, status, location } = req.body;
-    if (!name) {
-        return res.status(400).json({ success: false, error: 'اسم الوحدة مطلوب' });
+    try {
+        const decryptedVessels = vessels.map(v => ({
+            ...v,
+            name: decrypt(v.name),
+            type: decrypt(v.type),
+            location: decrypt(v.location)
+        }));
+        res.json(decryptedVessels);
+    } catch (error) {
+        console.error('Error decrypting vessels:', error);
+        res.status(500).json({ success: false, error: 'خطأ في قراءة البيانات' });
     }
-    const newVessel = {
-        id: Date.now().toString(),
-        name,
-        type: type || 'غير محدد',
-        status: status || 'جاهز',
-        location: location || '—',
-        lastMaintenance: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-    };
-    vessels.push(newVessel);
-    res.json({ success: true, vessel: newVessel });
 });
 
-app.get('/api/users', csrfProtection, (req, res) => {
-    const safeUsers = users.map(u => ({
-        id: u.id,
-        username: u.username,
-        name: u.name,
-        role: u.role,
-        active: u.active,
-        createdAt: u.createdAt
-    }));
-    res.json(safeUsers);
-});
+// ✅ Get audit logs (Admin only)
+app.get('/api/audit-logs', csrfProtection, (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
 
-app.get('/api/logs', csrfProtection, (req, res) => {
-    res.json(logs);
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // Check if user is admin
+        const user = users.find(u => u.id === decoded.id);
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'غير مصرح' });
+        }
+
+        res.json(auditLogs.slice(-100)); // Return last 100 logs
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+    }
 });
 
 // ============================================================
-// 🚀 START
+// 🚀 START SERVER
 // ============================================================
 
 app.listen(PORT, () => {
-    console.log(`🚢 Marine System running on port ${PORT}`);
-    console.log(`📍 http://localhost:${PORT}`);
+    console.log('=========================================');
+    console.log('🚢 MARINE SYSTEM v8.0 - ULTRA SECURE');
+    console.log('=========================================');
+    console.log(`📍 Server: http://localhost:${PORT}`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
     console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔒 Security Level: ULTRA HIGH`);
+    console.log('=========================================');
+    console.log('💾 SAVE ADMIN CREDENTIALS!');
+    console.log('🔐 Use strong passwords only!');
+    console.log('=========================================');
 });
 
 module.exports = app;
