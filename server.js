@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - FIXED LOGIN
+// 🚢 MARINE SYSTEM - WITH AUTO PASSWORD RESET
 // ============================================================
 
 require('dotenv').config();
@@ -71,41 +71,66 @@ app.use('/public', express.static(publicDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
-// 📊 DATA - مع كلمة مرور مشفرة بشكل صحيح
+// 📊 DATA - مع إعادة تعيين تلقائي
 // ============================================================
 
-// ✅ تأكد من تشفير كلمة المرور
-const hashedPassword = bcrypt.hashSync('admin123', 10);
-console.log('🔑 Hashed password: ' + hashedPassword);
+const users = [];
 
-// ✅ تحقق من صحة التشفير
-const testValid = bcrypt.compareSync('admin123', hashedPassword);
-console.log('🔑 Password test (should be true): ' + testValid);
+// ✅ دالة إعادة تعيين كلمة المرور
+function resetAdminPassword() {
+    try {
+        // ✅ حذف المستخدم القديم إذا وجد
+        const adminIndex = users.findIndex(u => u.username === 'admin');
+        if (adminIndex !== -1) {
+            users.splice(adminIndex, 1);
+            console.log('🗑️ Old admin user removed');
+        }
 
-const users = [
-    {
-        id: '1',
-        username: 'admin',
-        password: hashedPassword,
-        name: 'Administrator',
-        email: 'admin@marine.com',
-        role: 'admin',
-        active: true,
-        createdAt: new Date().toISOString(),
-        lastLogin: null
-    },
-    {
-        id: '2',
-        username: 'manager',
-        password: bcrypt.hashSync('manager123', 10),
-        name: 'مدير النظام',
-        email: 'manager@marine.com',
-        role: 'manager',
-        active: true,
-        createdAt: new Date().toISOString(),
-        lastLogin: null
+        // ✅ إنشاء مستخدم جديد بكلمة مرور صحيحة
+        const hashedPassword = bcrypt.hashSync('admin123', 10);
+        users.push({
+            id: '1',
+            username: 'admin',
+            password: hashedPassword,
+            name: 'Administrator',
+            email: 'admin@marine.com',
+            role: 'admin',
+            active: true,
+            createdAt: new Date().toISOString(),
+            lastLogin: null
+        });
+
+        console.log('=========================================');
+        console.log('✅ ADMIN USER CREATED/RESET!');
+        console.log('👤 Username: admin');
+        console.log('🔑 Password: admin123');
+        console.log('🔑 Hash: ' + hashedPassword);
+        console.log('=========================================');
+
+        // ✅ التحقق من صحة كلمة المرور
+        const test = bcrypt.compareSync('admin123', hashedPassword);
+        console.log('🔑 Password test (should be true): ' + test);
+        
+    } catch (error) {
+        console.error('❌ Reset error:', error);
     }
-];
+}
+
+// ✅ تشغيل إعادة التعيين
+resetAdminPassword();
+
+// ✅ مستخدم manager
+users.push({
+    id: '2',
+    username: 'manager',
+    password: bcrypt.hashSync('manager123', 10),
+    name: 'مدير النظام',
+    email: 'manager@marine.com',
+    role: 'manager',
+    active: true,
+    createdAt: new Date().toISOString(),
+    lastLogin: null
+});
 
 const vessels = [
     { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي' },
@@ -113,8 +138,10 @@ const vessels = [
     { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي' }
 ];
 
+console.log('👥 Users:', users.map(u => ({ username: u.username, role: u.role })));
+
 // ============================================================
-// 🔐 AUTH - مع سجلات مفصلة
+// 🔐 AUTH
 // ============================================================
 
 app.get('/api/csrf-token', (req, res) => {
@@ -123,7 +150,7 @@ app.get('/api/csrf-token', (req, res) => {
     res.json({ success: true, token: token });
 });
 
-// ✅ تسجيل الدخول - مع سجلات مفصلة للتشخيص
+// ✅ تسجيل الدخول
 app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
@@ -539,7 +566,7 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM - FIXED');
+    console.log('🚢 MARINE SYSTEM - WORKING');
     console.log('=========================================');
     console.log('📍 http://localhost:' + PORT);
     console.log('👤 Username: admin');
