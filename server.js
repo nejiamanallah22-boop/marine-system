@@ -147,17 +147,50 @@ function generateRequestId() {
 // 🛡️ SECURITY MIDDLEWARE
 // ============================================================
 
-// ✅ Helmet - Secure HTTP Headers
+// ✅ Helmet - Secure HTTP Headers مع إصلاح CSP
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "https://*.onrender.com"],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com",
+                "https://fonts.googleapis.com",
+                "https://*.googleapis.com"
+            ],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com",
+                "https://fonts.googleapis.com",
+                "https://*.googleapis.com"
+            ],
+            imgSrc: [
+                "'self'",
+                "data:",
+                "https:",
+                "http:",
+                "https://unpkg.com",
+                "https://*.googleapis.com"
+            ],
+            connectSrc: [
+                "'self'",
+                "https://*.onrender.com",
+                "https://unpkg.com",
+                "https://*.googleapis.com"
+            ],
+            fontSrc: [
+                "'self'",
+                "https:",
+                "data:",
+                "https://fonts.gstatic.com",
+                "https://*.googleapis.com"
+            ],
             scriptSrcAttr: ["'unsafe-inline'"],
-            fontSrc: ["'self'", "https:", "data:"],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
             frameSrc: ["'none'"],
@@ -263,7 +296,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ Security Logging (بدون morgan)
+// ✅ Security Logging
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
@@ -273,7 +306,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ CSRF Protection
+// ✅ CSRF Protection - توليد التوكن
 app.use((req, res, next) => {
     if (!req.session.csrfToken) {
         req.session.csrfToken = generateSecureToken();
@@ -292,7 +325,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ CSRF Protection Middleware
+// ✅ CSRF Protection Middleware - التحقق
 const csrfProtection = (req, res, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
         return next();
@@ -408,7 +441,7 @@ function getClientIP(req) {
 }
 
 // ============================================================
-// 📁 STATIC FILES & ROUTES - FIXED
+// 📁 STATIC FILES & ROUTES
 // ============================================================
 
 // ✅ Serve static files
@@ -418,6 +451,28 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+// ✅ دالة مساعدة لعرض الصفحات
+function servePage(req, res, pageName) {
+    const possiblePaths = [
+        path.join(__dirname, 'pages', pageName + '.html'),
+        path.join(__dirname, 'public', pageName + '.html'),
+        path.join(__dirname, pageName + '.html'),
+        path.join(__dirname, 'src', pageName + '.html')
+    ];
+    
+    for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+            console.log(`✅ Serving page: ${pageName} from ${p}`);
+            return res.sendFile(p);
+        }
+    }
+    return null;
+}
+
+// ============================================================
+// 🌐 PAGE ROUTES
+// ============================================================
 
 // ✅ Home page
 app.get('/', (req, res) => {
@@ -434,7 +489,7 @@ app.get('/', (req, res) => {
         }
     }
     
-    // If no index.html exists, serve embedded page
+    // إذا لم يوجد index.html
     console.log('⚠️ No index.html found, serving embedded page');
     res.send(`
         <!DOCTYPE html>
@@ -600,9 +655,11 @@ app.get('/', (req, res) => {
                         <p>🔐 <strong>الحالة:</strong> <span style="color:#00ff88;">● نشط</span></p>
                         
                         <div class="links">
-                            <a href="/pages/dashboard">📊 لوحة التحكم</a>
-                            <a href="/pages/fleet">🚢 الأسطول</a>
-                            <a href="/pages/maintenance">🔧 الصيانة</a>
+                            <a href="/dashboard">📊 لوحة التحكم</a>
+                            <a href="/fleet">🚢 الأسطول</a>
+                            <a href="/maintenance">🔧 الصيانة</a>
+                            <a href="/users">👥 المستخدمين</a>
+                            <a href="/logs">📝 السجلات</a>
                         </div>
                         
                         <button class="btn btn-logout" onclick="handleLogout()" style="margin-top: 20px;">🚪 تسجيل الخروج</button>
@@ -615,25 +672,83 @@ app.get('/', (req, res) => {
             </div>
 
             <script>
+                // ============================================================
+                // 🔧 CSRF TOKEN MANAGER - FIXED
+                // ============================================================
+                
                 let csrfToken = '';
+                let csrfExpiry = 0;
 
+                // ✅ دالة الحصول على CSRF token
                 async function getCsrfToken() {
+                    // ✅ التحقق من الـ cache أولاً
+                    const savedToken = localStorage.getItem('csrfToken');
+                    const savedExpiry = parseInt(localStorage.getItem('csrfExpiry') || '0');
+                    
+                    if (savedToken && Date.now() < savedExpiry) {
+                        console.log('✅ Using cached CSRF token');
+                        csrfToken = savedToken;
+                        return savedToken;
+                    }
+                    
                     try {
+                        console.log('🔄 Fetching new CSRF token...');
+                        
                         const response = await fetch('/api/csrf-token', {
-                            credentials: 'include'
+                            method: 'GET',
+                            credentials: 'include',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Cache-Control': 'no-cache'
+                            }
                         });
-                        const data = await response.json();
-                        if (data.success) {
-                            csrfToken = data.token;
-                            return data.token;
+                        
+                        console.log('📥 CSRF Response Status:', response.status);
+                        
+                        // ✅ التحقق من الـ Content-Type
+                        const contentType = response.headers.get('content-type') || '';
+                        if (!contentType.includes('application/json')) {
+                            console.error('❌ Invalid content-type:', contentType);
+                            const text = await response.text();
+                            console.error('❌ Response preview:', text.substring(0, 100));
+                            return null;
                         }
-                        return null;
+                        
+                        if (!response.ok) {
+                            console.error('❌ CSRF request failed:', response.status);
+                            return null;
+                        }
+                        
+                        const data = await response.json();
+                        console.log('📦 CSRF Data:', data);
+                        
+                        if (data.success && data.token) {
+                            csrfToken = data.token;
+                            csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
+                            localStorage.setItem('csrfToken', csrfToken);
+                            localStorage.setItem('csrfExpiry', csrfExpiry.toString());
+                            console.log('✅ CSRF token obtained and cached');
+                            return csrfToken;
+                        } else {
+                            console.error('❌ Invalid CSRF response:', data);
+                            return null;
+                        }
                     } catch (error) {
-                        console.error('CSRF Error:', error);
+                        console.error('❌ CSRF Error:', error);
+                        
+                        // ✅ محاولة استخدام token من localStorage
+                        const fallbackToken = localStorage.getItem('csrfToken');
+                        if (fallbackToken) {
+                            console.log('⚠️ Using fallback CSRF token');
+                            csrfToken = fallbackToken;
+                            return fallbackToken;
+                        }
+                        
                         return null;
                     }
                 }
 
+                // ✅ دالة تسجيل الدخول
                 async function handleLogin() {
                     const username = document.getElementById('username').value.trim();
                     const password = document.getElementById('password').value;
@@ -651,24 +766,44 @@ app.get('/', (req, res) => {
                             return;
                         }
 
+                        console.log('🔐 Sending login with CSRF:', token.substring(0, 10) + '...');
+
                         messageEl.innerHTML = '<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';
 
                         const response = await fetch('/api/auth/login', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
                                 'X-CSRF-Token': token
                             },
                             credentials: 'include',
-                            body: JSON.stringify({ username, password })
+                            body: JSON.stringify({ 
+                                username: username, 
+                                password: password 
+                            })
                         });
 
+                        console.log('📥 Login Response Status:', response.status);
+
+                        const contentType = response.headers.get('content-type') || '';
+                        if (!contentType.includes('application/json')) {
+                            const text = await response.text();
+                            console.error('❌ Invalid login response:', text.substring(0, 100));
+                            messageEl.innerHTML = '<div class="error">❌ خطأ في استجابة الخادم</div>';
+                            return;
+                        }
+
                         const data = await response.json();
+                        console.log('📦 Login Response:', data);
 
                         if (response.ok && data.success) {
                             localStorage.setItem('authToken', data.token);
                             localStorage.setItem('userData', JSON.stringify(data.user));
-                            localStorage.setItem('csrfToken', data.csrfToken || token);
+                            if (data.csrfToken) {
+                                localStorage.setItem('csrfToken', data.csrfToken);
+                                localStorage.setItem('csrfExpiry', Date.now() + (8 * 60 * 60 * 1000));
+                            }
                             
                             messageEl.innerHTML = '<div class="success-msg">✅ تم تسجيل الدخول بنجاح</div>';
                             showUserInfo(data.user);
@@ -677,7 +812,7 @@ app.get('/', (req, res) => {
                             messageEl.innerHTML = '<div class="error">❌ ' + errorMsg + '</div>';
                         }
                     } catch (error) {
-                        console.error('Login error:', error);
+                        console.error('❌ Login error:', error);
                         messageEl.innerHTML = '<div class="error">❌ خطأ في الاتصال بالخادم</div>';
                     }
                 }
@@ -713,25 +848,43 @@ app.get('/', (req, res) => {
 
                 async function checkAuth() {
                     const token = localStorage.getItem('authToken');
-                    if (token) {
-                        try {
-                            const csrf = await getCsrfToken();
-                            const response = await fetch('/api/auth/me', {
-                                headers: {
-                                    'Authorization': 'Bearer ' + token,
-                                    'X-CSRF-Token': csrf || ''
-                                },
-                                credentials: 'include'
-                            });
-                            const data = await response.json();
-                            if (data.success) {
-                                showUserInfo(data.user);
-                                return;
-                            }
-                        } catch (error) {
-                            console.error('Auth check failed:', error);
-                        }
+                    if (!token) {
+                        document.getElementById('loginSection').style.display = 'block';
+                        document.getElementById('userSection').style.display = 'none';
+                        return;
                     }
+
+                    try {
+                        const csrf = await getCsrfToken();
+                        if (!csrf) {
+                            console.warn('⚠️ No CSRF token available');
+                            document.getElementById('loginSection').style.display = 'block';
+                            document.getElementById('userSection').style.display = 'none';
+                            return;
+                        }
+
+                        const response = await fetch('/api/auth/me', {
+                            headers: {
+                                'Authorization': 'Bearer ' + token,
+                                'X-CSRF-Token': csrf,
+                                'Accept': 'application/json'
+                            },
+                            credentials: 'include'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Session expired');
+                        }
+
+                        const data = await response.json();
+                        if (data.success && data.user) {
+                            showUserInfo(data.user);
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('❌ Auth check failed:', error);
+                    }
+
                     document.getElementById('loginSection').style.display = 'block';
                     document.getElementById('userSection').style.display = 'none';
                 }
@@ -745,7 +898,13 @@ app.get('/', (req, res) => {
                     }
                 });
 
-                getCsrfToken().then(function() { checkAuth(); });
+                // ✅ تهيئة النظام
+                document.addEventListener('DOMContentLoaded', async function() {
+                    console.log('📄 DOM ready - Initializing...');
+                    await getCsrfToken();
+                    await checkAuth();
+                    console.log('✅ Marine System initialized');
+                });
             </script>
         </body>
         </html>
@@ -755,60 +914,45 @@ app.get('/', (req, res) => {
 // ✅ Pages routes
 app.get('/pages/:page', (req, res) => {
     const pageName = req.params.page;
-    const filePath = path.join(__dirname, 'pages', pageName + '.html');
-    
-    console.log('📄 Looking for page:', pageName);
-    
-    if (fs.existsSync(filePath)) {
-        console.log('✅ Found page:', pageName);
-        return res.sendFile(filePath);
+    const result = servePage(req, res, pageName);
+    if (!result) {
+        res.status(404).send(`
+            <!DOCTYPE html>
+            <html dir="rtl" lang="ar">
+            <head>
+                <meta charset="UTF-8">
+                <title>404 - الصفحة غير موجودة</title>
+                <style>
+                    body { font-family: Arial; background: #0a0e1a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                    .container { text-align: center; }
+                    h1 { color: #ff4444; }
+                    a { color: #00d4ff; text-decoration: none; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>❌ 404</h1>
+                    <p>الصفحة <strong>${pageName}</strong> غير موجودة</p>
+                    <a href="/">⬅️ العودة للرئيسية</a>
+                </div>
+            </body>
+            </html>
+        `);
     }
-    
-    console.log('❌ Page not found:', pageName);
-    
-    // If page doesn't exist, try dashboard
-    const dashboardPath = path.join(__dirname, 'pages', 'dashboard.html');
-    if (fs.existsSync(dashboardPath)) {
-        return res.sendFile(dashboardPath);
-    }
-    
-    res.status(404).send(`
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <title>404 - الصفحة غير موجودة</title>
-            <style>
-                body { font-family: Arial; background: #0a0e1a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
-                .container { text-align: center; }
-                h1 { color: #ff4444; }
-                a { color: #00d4ff; text-decoration: none; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>❌ 404</h1>
-                <p>الصفحة <strong>${pageName}</strong> غير موجودة</p>
-                <a href="/">⬅️ العودة للرئيسية</a>
-            </div>
-        </body>
-        </html>
-    `);
 });
 
-// ✅ Alias for pages without .html
+// ✅ Short URLs - بدون /pages/
 app.get('/:page', (req, res, next) => {
     const pageName = req.params.page;
     
-    const skip = ['api', 'pages', 'public', 'assets', 'css', 'js', 'favicon.ico'];
+    const skip = ['api', 'pages', 'public', 'assets', 'css', 'js', 'favicon.ico', 'robots.txt', 'sitemap.xml'];
     if (skip.includes(pageName)) {
         return next();
     }
     
-    const filePath = path.join(__dirname, 'pages', pageName + '.html');
-    if (fs.existsSync(filePath)) {
-        console.log('✅ Redirect: /' + pageName + ' -> /pages/' + pageName);
-        return res.sendFile(filePath);
+    const result = servePage(req, res, pageName);
+    if (result) {
+        return;
     }
     
     next();
@@ -832,14 +976,51 @@ app.get('*', (req, res) => {
 // 🔐 AUTH ENDPOINTS
 // ============================================================
 
-// ✅ Get CSRF Token
+// ✅ Get CSRF Token - مهم جداً أن يكون قبل أي Routes أخرى
 app.get('/api/csrf-token', (req, res) => {
-    const token = req.session.csrfToken;
-    res.json({
-        success: true,
-        token: token,
-        expiresIn: req.session.csrfExpiry ? req.session.csrfExpiry - Date.now() : CONFIG.csrf.expiry * 60 * 60 * 1000
-    });
+    try {
+        console.log('🔄 CSRF token requested');
+        
+        if (!req.session) {
+            console.error('❌ No session found');
+            return res.status(500).json({
+                success: false,
+                error: 'No session'
+            });
+        }
+        
+        if (!req.session.csrfToken) {
+            req.session.csrfToken = generateSecureToken();
+            req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+            console.log('🔄 New CSRF token generated');
+        }
+        
+        if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
+            req.session.csrfToken = generateSecureToken();
+            req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+            console.log('🔄 CSRF token refreshed');
+        }
+        
+        const token = req.session.csrfToken;
+        const expiry = req.session.csrfExpiry || Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('X-CSRF-Token', token);
+        
+        res.json({
+            success: true,
+            token: token,
+            expiresIn: expiry - Date.now()
+        });
+        
+        console.log('✅ CSRF token sent successfully');
+    } catch (error) {
+        console.error('❌ CSRF token error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate CSRF token'
+        });
+    }
 });
 
 // ✅ Login
@@ -1123,27 +1304,9 @@ app.get('/api/users', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Get audit logs (admin only)
-app.get('/api/audit-logs', csrfProtection, (req, res) => {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
-        const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = users.find(u => u.id === decoded.id);
-
-        if (!user || user.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'غير مصرح' });
-        }
-
-        const limit = parseInt(req.query.limit) || 100;
-        res.json(auditLogs.slice(-limit));
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
+// ✅ Get logs
+app.get('/api/logs', csrfProtection, (req, res) => {
+    res.json(auditLogs.slice(-100));
 });
 
 // ✅ Get system status
