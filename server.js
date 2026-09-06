@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v8.0 (FIXED CSRF)
+// 🚢 MARINE SYSTEM - SERVER v8.0 (FULLY FIXED)
 // ============================================================
 
 const express = require('express');
@@ -30,7 +30,6 @@ console.log('🔐 Admin username:', ADMIN_USERNAME);
 // 🔧 MIDDLEWARE
 // ============================================================
 
-// ✅ CORS - مهم جداً لنجاح CSRF
 app.use(cors({
     origin: [
         'http://localhost:5000',
@@ -46,7 +45,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ Session Management
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
@@ -62,39 +60,43 @@ app.use(session({
 }));
 
 // ============================================================
-// 🔒 CSRF PROTECTION - مبسطة ومعدلة
+// 🔒 CSRF PROTECTION - SIMPLIFIED
 // ============================================================
 
-// ✅ توليد توكن بسيط
 function generateToken() {
     return Math.random().toString(36).substring(2, 15) + 
            Math.random().toString(36).substring(2, 15);
 }
 
-// ✅ Middleware CSRF - مبسط
+// ✅ Initialize CSRF token for all sessions
 app.use((req, res, next) => {
-    // ✅ إنشاء توكن إذا لم يكن موجوداً
     if (!req.session.csrfToken) {
         req.session.csrfToken = generateToken();
         req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         console.log('🔄 New CSRF token generated');
     }
 
-    // ✅ التحقق من انتهاء الصلاحية
     if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
         req.session.csrfToken = generateToken();
         req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
         console.log('🔄 CSRF token refreshed');
     }
 
-    // ✅ إرسال التوكن في الـ Response Headers
     res.setHeader('X-CSRF-Token', req.session.csrfToken);
     next();
 });
 
-// ✅ التحقق من CSRF - مع سجلات
+// ✅ CSRF Protection Middleware
 const csrfProtection = (req, res, next) => {
+    // Skip CSRF for GET, HEAD, OPTIONS
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+        return next();
+    }
+
+    // Skip CSRF for specific paths
+    if (req.path === '/api/auth/login' || 
+        req.path === '/api/csrf-token' || 
+        req.path === '/api/csrf-refresh') {
         return next();
     }
 
@@ -130,6 +132,13 @@ const csrfProtection = (req, res, next) => {
     }
 
     console.log('✅ CSRF check passed');
+    
+    // Generate new token after successful validation
+    const newToken = generateToken();
+    req.session.csrfToken = newToken;
+    req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
+    res.setHeader('X-CSRF-Token', newToken);
+    
     next();
 };
 
@@ -153,7 +162,195 @@ app.get('/', (req, res) => {
             return res.sendFile(p);
         }
     }
-    res.send('<h1>❌ index.html not found</h1>');
+    res.send(`
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>🚢 Marine System</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 40px; background: #0a0e1a; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                .container { background: #1a1f35; padding: 40px; border-radius: 20px; max-width: 800px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #2a3a5a; }
+                h1 { color: #00d4ff; text-align: center; margin-bottom: 20px; font-size: 2.5em; }
+                .status { background: #0d1528; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #00d4ff; }
+                .status.success { border-left-color: #00ff88; }
+                .status.error { border-left-color: #ff4444; }
+                .info { color: #aabbcc; line-height: 1.8; }
+                .info strong { color: #00d4ff; }
+                .btn { background: #00d4ff; color: #0a0e1a; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+                .btn:hover { background: #00bbee; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3); }
+                .login-form { margin-top: 30px; }
+                .login-form input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #2a3a5a; background: #0d1528; color: #fff; font-size: 16px; }
+                .login-form input:focus { outline: none; border-color: #00d4ff; }
+                .error { color: #ff4444; margin: 10px 0; }
+                .success-msg { color: #00ff88; margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🚢 MARINE SYSTEM</h1>
+                <div class="status success">
+                    <h3 style="margin:0;color:#00ff88;">✅ Server Running</h3>
+                    <p class="info">🌐 <strong>URL:</strong> http://localhost:${PORT}</p>
+                    <p class="info">👤 <strong>Admin:</strong> ${ADMIN_USERNAME}</p>
+                    <p class="info">🔑 <strong>Password:</strong> ${ADMIN_PASSWORD}</p>
+                </div>
+                <div id="loginSection">
+                    <div class="login-form">
+                        <h3>🔐 تسجيل الدخول</h3>
+                        <div id="message"></div>
+                        <input type="text" id="username" placeholder="اسم المستخدم" value="${ADMIN_USERNAME}">
+                        <input type="password" id="password" placeholder="كلمة المرور" value="${ADMIN_PASSWORD}">
+                        <button class="btn" onclick="handleLogin()" style="width:100%;margin-top:10px;">🚀 تسجيل الدخول</button>
+                    </div>
+                </div>
+                <div id="userInfo" style="display:none;margin-top:20px;padding:20px;background:#0d1528;border-radius:10px;">
+                    <p>👤 <strong>مرحباً بك، <span id="userName"></span></strong></p>
+                    <p>📋 الدور: <span id="userRole"></span></p>
+                    <button class="btn" onclick="handleLogout()" style="background:#ff4444;">🚪 تسجيل الخروج</button>
+                </div>
+            </div>
+            <script>
+                let csrfToken = '';
+
+                // ✅ Get CSRF Token
+                async function getCsrfToken() {
+                    try {
+                        const response = await fetch('/api/csrf-token', {
+                            method: 'GET',
+                            credentials: 'include'
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            csrfToken = data.token;
+                            console.log('✅ CSRF Token loaded:', csrfToken);
+                            return data.token;
+                        }
+                        return null;
+                    } catch (error) {
+                        console.error('❌ Error fetching CSRF token:', error);
+                        return null;
+                    }
+                }
+
+                // ✅ Handle Login
+                async function handleLogin() {
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+                    const messageEl = document.getElementById('message');
+
+                    if (!username || !password) {
+                        messageEl.innerHTML = '<div class="error">⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور</div>';
+                        return;
+                    }
+
+                    try {
+                        // Get CSRF token first
+                        const token = await getCsrfToken();
+                        if (!token) {
+                            messageEl.innerHTML = '<div class="error">❌ فشل في الحصول على CSRF token</div>';
+                            return;
+                        }
+
+                        messageEl.innerHTML = '<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';
+
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': token
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({ username, password })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            // Save user data
+                            localStorage.setItem('authToken', data.token);
+                            localStorage.setItem('userData', JSON.stringify(data.user));
+                            localStorage.setItem('csrfToken', data.csrfToken || token);
+                            
+                            messageEl.innerHTML = '<div class="success-msg">✅ تم تسجيل الدخول بنجاح</div>';
+                            showUserInfo(data.user);
+                        } else {
+                            messageEl.innerHTML = `<div class="error">❌ ${data.error || 'فشل تسجيل الدخول'}</div>`;
+                        }
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        messageEl.innerHTML = '<div class="error">❌ حدث خطأ أثناء محاولة تسجيل الدخول</div>';
+                    }
+                }
+
+                // ✅ Show User Info
+                function showUserInfo(user) {
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('userName').textContent = user.name || user.username;
+                    document.getElementById('userRole').textContent = user.role || 'مستخدم';
+                }
+
+                // ✅ Handle Logout
+                async function handleLogout() {
+                    try {
+                        await fetch('/api/auth/logout', {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('userData');
+                        localStorage.removeItem('csrfToken');
+                        document.getElementById('loginSection').style.display = 'block';
+                        document.getElementById('userInfo').style.display = 'none';
+                        document.getElementById('message').innerHTML = '<div class="success-msg">✅ تم تسجيل الخروج بنجاح</div>';
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                    }
+                }
+
+                // ✅ Check if user is already logged in
+                async function checkAuth() {
+                    const token = localStorage.getItem('authToken');
+                    if (token) {
+                        try {
+                            const response = await fetch('/api/auth/me', {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'X-CSRF-Token': await getCsrfToken()
+                                },
+                                credentials: 'include'
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                showUserInfo(data.user);
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('Auth check failed:', error);
+                        }
+                    }
+                    document.getElementById('loginSection').style.display = 'block';
+                    document.getElementById('userInfo').style.display = 'none';
+                }
+
+                // ✅ Enter key support
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        const loginSection = document.getElementById('loginSection');
+                        if (loginSection && loginSection.style.display !== 'none') {
+                            handleLogin();
+                        }
+                    }
+                });
+
+                // ✅ Initialize
+                getCsrfToken().then(() => checkAuth());
+            </script>
+        </body>
+        </html>
+    `);
 });
 
 app.get('/pages/:page', (req, res) => {
@@ -217,9 +414,13 @@ const logs = [
 // 🔐 AUTH ENDPOINTS
 // ============================================================
 
-// ✅ جلب CSRF token
+// ✅ Get CSRF Token
 app.get('/api/csrf-token', (req, res) => {
-    const token = req.session.csrfToken;
+    const token = req.session.csrfToken || generateToken();
+    if (!req.session.csrfToken) {
+        req.session.csrfToken = token;
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
+    }
     res.json({
         success: true,
         token: token,
@@ -227,8 +428,22 @@ app.get('/api/csrf-token', (req, res) => {
     });
 });
 
-// ✅ تسجيل الدخول
-app.post('/api/auth/login', csrfProtection, (req, res) => {
+// ✅ Get CSRF Token (Alias for compatibility)
+app.get('/api/csrf-refresh', (req, res) => {
+    const token = req.session.csrfToken || generateToken();
+    if (!req.session.csrfToken) {
+        req.session.csrfToken = token;
+        req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
+    }
+    res.json({
+        success: true,
+        csrfToken: token,
+        expiresIn: req.session.csrfExpiry ? req.session.csrfExpiry - Date.now() : 86400000
+    });
+});
+
+// ✅ Login
+app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
         console.log('🔐 Login attempt:', username);
@@ -243,14 +458,12 @@ app.post('/api/auth/login', csrfProtection, (req, res) => {
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
-        // ✅ توليد JWT
         const token = jwt.sign(
             { id: user.id, username: user.username, role: user.role },
             JWT_SECRET,
             { expiresIn: '30d' }
         );
 
-        // ✅ تجديد CSRF token
         const newToken = generateToken();
         req.session.csrfToken = newToken;
         req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
@@ -275,8 +488,8 @@ app.post('/api/auth/login', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ التحقق من التوكن
-app.get('/api/auth/me', csrfProtection, (req, res) => {
+// ✅ Verify Token
+app.get('/api/auth/me', (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -311,7 +524,7 @@ app.get('/api/auth/me', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ تسجيل الخروج
+// ✅ Logout
 app.post('/api/auth/logout', (req, res) => {
     req.session.destroy(() => {
         res.clearCookie('marine.sid');
@@ -324,10 +537,6 @@ app.post('/api/auth/logout', (req, res) => {
 // ============================================================
 
 app.get('/api/vessels', csrfProtection, (req, res) => {
-    const newToken = generateToken();
-    req.session.csrfToken = newToken;
-    req.session.csrfExpiry = Date.now() + (24 * 60 * 60 * 1000);
-    res.setHeader('X-CSRF-Token', newToken);
     res.json(vessels);
 });
 
@@ -372,8 +581,8 @@ app.get('/api/logs', csrfProtection, (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚢 Marine System running on port ${PORT}`);
     console.log(`📍 http://localhost:${PORT}`);
-    console.log(`🌐 https://marine-system-71eo.onrender.com`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
+    console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
 });
 
 module.exports = app;
