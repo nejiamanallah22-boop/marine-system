@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FULL CODE)
+// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FIXED)
 // ============================================================
 
 const express = require('express');
@@ -25,48 +25,38 @@ const PORT = process.env.PORT || 5000;
 // 🔐 ULTRA SECURE CONFIGURATION
 // ============================================================
 
-// ✅ Generate secure keys if not provided
 function generateSecureKey(length = 64) {
     return crypto.randomBytes(length).toString('hex');
 }
 
-// ✅ Validate environment
 const isProduction = process.env.NODE_ENV === 'production';
-const isDevelopment = process.env.NODE_ENV === 'development';
 
-// ✅ Strong password validation
 function isStrongPassword(password) {
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
     const isLongEnough = password.length >= 12;
-    
     return [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar, isLongEnough].filter(Boolean).length >= 4;
 }
 
-// ✅ Generate strong password
 function generateStrongPassword(length = 16) {
     const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const lowercase = 'abcdefghijklmnopqrstuvwxyz';
     const numbers = '0123456789';
     const special = '!@#$%^&*()_+-=';
     const all = uppercase + lowercase + numbers + special;
-    
     let password = '';
     password += uppercase[Math.floor(Math.random() * uppercase.length)];
     password += lowercase[Math.floor(Math.random() * lowercase.length)];
     password += numbers[Math.floor(Math.random() * numbers.length)];
     password += special[Math.floor(Math.random() * special.length)];
-    
     for (let i = password.length; i < length; i++) {
         password += all[Math.floor(Math.random() * all.length)];
     }
-    
     return password.split('').sort(() => Math.random() - 0.5).join('');
 }
 
-// ✅ Admin credentials
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = (() => {
     if (process.env.ADMIN_PASSWORD) {
@@ -90,7 +80,6 @@ const SESSION_SECRET = process.env.SESSION_SECRET || generateSecureKey(64);
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
 
-// ✅ Encryption/Decryption
 function encrypt(text) {
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), ENCRYPTION_IV);
     let encrypted = cipher.update(text);
@@ -106,7 +95,6 @@ function decrypt(text) {
     return decrypted.toString();
 }
 
-// ✅ CSRF Token Generator
 function generateSecureToken() {
     return crypto.randomBytes(32).toString('hex');
 }
@@ -115,7 +103,6 @@ function generateSecureToken() {
 // 🛡️ SECURITY MIDDLEWARE
 // ============================================================
 
-// ✅ Helmet
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -136,10 +123,8 @@ app.use(helmet({
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
-// ✅ Compression
 app.use(compression());
 
-// ✅ CORS
 app.use(cors({
     origin: isProduction ? [
         'https://marine-system-71eo.onrender.com',
@@ -153,7 +138,6 @@ app.use(cors({
     maxAge: 86400
 }));
 
-// ✅ Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -170,18 +154,13 @@ app.use('/api/', limiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/change-password', authLimiter);
 
-// ✅ XSS Protection
 app.use(xss());
-
-// ✅ HPP
 app.use(hpp());
 
-// ✅ Body parsers
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
-// ✅ Session Management
 app.use(session({
     secret: SESSION_SECRET,
     resave: false,
@@ -199,14 +178,12 @@ app.use(session({
     proxy: isProduction
 }));
 
-// ✅ Request ID
 app.use((req, res, next) => {
     req.requestId = crypto.randomBytes(8).toString('hex');
     res.setHeader('X-Request-ID', req.requestId);
     next();
 });
 
-// ✅ Logging
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
@@ -216,7 +193,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ CSRF Protection
 app.use((req, res, next) => {
     if (!req.session.csrfToken) {
         req.session.csrfToken = generateSecureToken();
@@ -235,7 +211,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ CSRF Protection Middleware
 const csrfProtection = (req, res, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
         return next();
@@ -314,15 +289,6 @@ const vessels = [
         location: encrypt('حوض السفن'),
         lastMaintenance: new Date().toISOString(),
         createdAt: new Date().toISOString()
-    },
-    {
-        id: crypto.randomBytes(8).toString('hex'),
-        name: encrypt('الوحدة 312'),
-        type: encrypt('سفينة إسناد'),
-        status: 'offline',
-        location: encrypt('الميناء الغربي'),
-        lastMaintenance: new Date().toISOString(),
-        createdAt: new Date().toISOString()
     }
 ];
 
@@ -352,18 +318,11 @@ app.use(express.static(basePath, {
     etag: true,
     lastModified: true
 }));
-app.use('/public', express.static(path.join(basePath, 'public'), {
-    maxAge: isProduction ? '1y' : '0'
-}));
-app.use('/pages', express.static(path.join(basePath, 'pages'), {
-    maxAge: isProduction ? '1y' : '0'
-}));
 
 // ============================================================
-// 🌐 MAIN ROUTES
+// 🌐 MAIN ROUTE - FIXED
 // ============================================================
 
-// ✅ Home page
 app.get('/', (req, res) => {
     const possiblePaths = [
         path.join(basePath, 'index.html'),
@@ -377,290 +336,289 @@ app.get('/', (req, res) => {
         }
     }
     
-    // If no index.html exists, serve embedded page
-    res.send(`
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>🚢 Marine System</title>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    background: #0a0e1a;
-                    color: #fff;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    min-height: 100vh;
-                    padding: 20px;
-                }
-                .container {
-                    background: linear-gradient(145deg, #1a1f35, #0d1528);
-                    padding: 50px;
-                    border-radius: 30px;
-                    max-width: 600px;
-                    width: 100%;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-                    border: 1px solid #2a3a5a;
-                    text-align: center;
-                }
-                h1 {
-                    color: #00d4ff;
-                    font-size: 2.5em;
-                    margin-bottom: 10px;
-                }
-                .subtitle { color: #8899aa; margin-bottom: 20px; }
-                .status {
-                    background: #0d1528;
-                    padding: 20px;
-                    border-radius: 15px;
-                    margin: 20px 0;
-                    border-right: 5px solid #00ff88;
-                }
-                .status.success { border-right-color: #00ff88; }
-                .info { color: #aabbcc; line-height: 2; }
-                .info strong { color: #00d4ff; }
-                .login-form input {
-                    width: 100%;
-                    padding: 15px;
-                    margin: 10px 0;
-                    border-radius: 10px;
-                    border: 1px solid #2a3a5a;
-                    background: #0d1528;
-                    color: #fff;
-                    font-size: 16px;
-                    direction: rtl;
-                }
-                .login-form input:focus {
-                    outline: none;
-                    border-color: #00d4ff;
-                    box-shadow: 0 0 20px rgba(0,212,255,0.1);
-                }
-                .btn {
-                    background: linear-gradient(135deg, #00d4ff, #0099cc);
-                    color: #0a0e1a;
-                    border: none;
-                    padding: 15px 40px;
-                    border-radius: 10px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    width: 100%;
-                    margin-top: 15px;
-                }
-                .btn:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 10px 30px rgba(0,212,255,0.3);
-                }
-                .btn-logout {
-                    background: linear-gradient(135deg, #ff4444, #cc0000);
-                }
-                .btn-logout:hover {
-                    box-shadow: 0 10px 30px rgba(255,68,68,0.3);
-                }
-                .error { color: #ff4444; margin: 10px 0; }
-                .success-msg { color: #00ff88; margin: 10px 0; }
-                .login-section, .user-section {
-                    margin-top: 30px;
-                    text-align: right;
-                }
-                .user-section { display: none; }
-                .badge {
-                    display: inline-block;
-                    padding: 5px 15px;
-                    border-radius: 20px;
-                    font-size: 14px;
-                    margin: 5px 0;
-                }
-                .badge.admin { background: #ff4444; color: #fff; }
-                .badge.manager { background: #ffaa00; color: #000; }
-                .status-dot {
-                    display: inline-block;
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                    margin-right: 8px;
-                }
-                .status-dot.online { background: #00ff88; }
-                .footer {
-                    margin-top: 30px;
-                    padding-top: 20px;
-                    border-top: 1px solid #2a3a5a;
-                    color: #667788;
-                    font-size: 12px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🚢 MARINE SYSTEM</h1>
-                <p class="subtitle">نظام إدارة الأسطول البحري</p>
-                
-                <div class="status success">
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                        <span class="status-dot online"></span>
-                        <h3 style="margin:0;color:#00ff88;">✅ النظام يعمل</h3>
-                    </div>
-                    <p class="info">🔒 <strong>الأمان:</strong> مستوى عالي جداً</p>
-                    <p class="info">🌐 <strong>الرابط:</strong> marine-system-71eo.onrender.com</p>
-                    <p class="info">👤 <strong>المستخدم:</strong> ${ADMIN_USERNAME}</p>
-                </div>
-
-                <div id="loginSection" class="login-section">
-                    <h3 style="color: #00d4ff; margin-bottom: 20px;">🔐 تسجيل الدخول</h3>
-                    <div id="message"></div>
-                    <div class="login-form">
-                        <input type="text" id="username" placeholder="👤 اسم المستخدم" value="${ADMIN_USERNAME}">
-                        <input type="password" id="password" placeholder="🔑 كلمة المرور">
-                        <button class="btn" onclick="handleLogin()">🚀 دخول</button>
-                    </div>
-                </div>
-
-                <div id="userSection" class="user-section">
-                    <div style="background: #0d1528; padding: 20px; border-radius: 15px;">
-                        <p style="font-size: 18px;">👋 <strong>مرحباً بك، <span id="userName"></span></strong></p>
-                        <p>📋 <strong>الدور:</strong> <span id="userRole" class="badge admin">admin</span></p>
-                        <p>🔐 <strong>الحالة:</strong> <span style="color:#00ff88;">● نشط</span></p>
-                        <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
-                    </div>
-                </div>
-
-                <div class="footer">
-                    🔒 جميع البيانات مشفرة | v8.0 Ultra Secure
-                </div>
+    // Embedded HTML page (FIXED - no syntax errors)
+    const htmlContent = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚢 Marine System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e1a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: linear-gradient(145deg, #1a1f35, #0d1528);
+            padding: 50px;
+            border-radius: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            border: 1px solid #2a3a5a;
+            text-align: center;
+        }
+        h1 { color: #00d4ff; font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { color: #8899aa; margin-bottom: 20px; }
+        .status {
+            background: #0d1528;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-right: 5px solid #00ff88;
+        }
+        .status.success { border-right-color: #00ff88; }
+        .info { color: #aabbcc; line-height: 2; }
+        .info strong { color: #00d4ff; }
+        .login-form input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid #2a3a5a;
+            background: #0d1528;
+            color: #fff;
+            font-size: 16px;
+            direction: rtl;
+        }
+        .login-form input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0,212,255,0.1);
+        }
+        .btn {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #0a0e1a;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,212,255,0.3);
+        }
+        .btn-logout {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+        }
+        .btn-logout:hover {
+            box-shadow: 0 10px 30px rgba(255,68,68,0.3);
+        }
+        .error { color: #ff4444; margin: 10px 0; }
+        .success-msg { color: #00ff88; margin: 10px 0; }
+        .login-section, .user-section { margin-top: 30px; text-align: right; }
+        .user-section { display: none; }
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .badge.admin { background: #ff4444; color: #fff; }
+        .badge.manager { background: #ffaa00; color: #000; }
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-dot.online { background: #00ff88; }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #2a3a5a;
+            color: #667788;
+            font-size: 12px;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚢 MARINE SYSTEM</h1>
+        <p class="subtitle">نظام إدارة الأسطول البحري</p>
+        
+        <div class="status success">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <span class="status-dot online"></span>
+                <h3 style="margin:0;color:#00ff88;">✅ النظام يعمل</h3>
             </div>
+            <p class="info">🔒 <strong>الأمان:</strong> مستوى عالي جداً</p>
+            <p class="info">👤 <strong>المستخدم:</strong> admin</p>
+        </div>
 
-            <script>
-                let csrfToken = '';
+        <div id="loginSection" class="login-section">
+            <h3 style="color: #00d4ff; margin-bottom: 20px;">🔐 تسجيل الدخول</h3>
+            <div id="message"></div>
+            <div class="login-form">
+                <input type="text" id="username" placeholder="👤 اسم المستخدم" value="admin">
+                <input type="password" id="password" placeholder="🔑 كلمة المرور">
+                <button class="btn" onclick="handleLogin()">🚀 دخول</button>
+            </div>
+        </div>
 
-                async function getCsrfToken() {
-                    try {
-                        const response = await fetch('/api/csrf-token', { credentials: 'include' });
-                        const data = await response.json();
-                        if (data.success) {
-                            csrfToken = data.token;
-                            return data.token;
-                        }
-                        return null;
-                    } catch (error) {
-                        console.error('CSRF Error:', error);
-                        return null;
-                    }
+        <div id="userSection" class="user-section">
+            <div style="background: #0d1528; padding: 20px; border-radius: 15px;">
+                <p style="font-size: 18px;">👋 <strong>مرحباً بك، <span id="userName"></span></strong></p>
+                <p>📋 <strong>الدور:</strong> <span id="userRole" class="badge admin">admin</span></p>
+                <p>🔐 <strong>الحالة:</strong> <span style="color:#00ff88;">● نشط</span></p>
+                <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            🔒 جميع البيانات مشفرة | v8.0 Ultra Secure
+        </div>
+    </div>
+
+    <script>
+        let csrfToken = "";
+
+        async function getCsrfToken() {
+            try {
+                const response = await fetch("/api/csrf-token", { credentials: "include" });
+                const data = await response.json();
+                if (data.success) {
+                    csrfToken = data.token;
+                    return data.token;
+                }
+                return null;
+            } catch (error) {
+                console.error("CSRF Error:", error);
+                return null;
+            }
+        }
+
+        async function handleLogin() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const messageEl = document.getElementById("message");
+
+            if (!username || !password) {
+                messageEl.innerHTML = "<div class=\"error\">⚠️ الرجاء إدخال جميع البيانات</div>";
+                return;
+            }
+
+            try {
+                const token = await getCsrfToken();
+                if (!token) {
+                    messageEl.innerHTML = "<div class=\"error\">❌ فشل الحصول على CSRF token</div>";
+                    return;
                 }
 
-                async function handleLogin() {
-                    const username = document.getElementById('username').value;
-                    const password = document.getElementById('password').value;
-                    const messageEl = document.getElementById('message');
+                messageEl.innerHTML = "<div style=\"color:#00d4ff;\">⏳ جاري تسجيل الدخول...</div>";
 
-                    if (!username || !password) {
-                        messageEl.innerHTML = '<div class="error">⚠️ الرجاء إدخال جميع البيانات</div>';
-                        return;
-                    }
-
-                    try {
-                        const token = await getCsrfToken();
-                        if (!token) {
-                            messageEl.innerHTML = '<div class="error">❌ فشل الحصول على CSRF token</div>';
-                            return;
-                        }
-
-                        messageEl.innerHTML = '<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';
-
-                        const response = await fetch('/api/auth/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-Token': token
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({ username, password })
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok && data.success) {
-                            localStorage.setItem('authToken', data.token);
-                            localStorage.setItem('userData', JSON.stringify(data.user));
-                            localStorage.setItem('csrfToken', data.csrfToken || token);
-                            
-                            messageEl.innerHTML = '<div class="success-msg">✅ تم تسجيل الدخول بنجاح</div>';
-                            showUserInfo(data.user);
-                        } else {
-                            messageEl.innerHTML = `<div class="error">❌ ${data.error || 'فشل تسجيل الدخول'}</div>`;
-                        }
-                    } catch (error) {
-                        console.error('Login error:', error);
-                        messageEl.innerHTML = '<div class="error">❌ خطأ في الاتصال بالخادم</div>';
-                    }
-                }
-
-                function showUserInfo(user) {
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('userSection').style.display = 'block';
-                    document.getElementById('userName').textContent = user.name || user.username;
-                    document.getElementById('userRole').textContent = user.role || 'مستخدم';
-                    
-                    const roleBadge = document.getElementById('userRole');
-                    if (user.role === 'admin') {
-                        roleBadge.className = 'badge admin';
-                    } else if (user.role === 'manager') {
-                        roleBadge.className = 'badge manager';
-                    }
-                }
-
-                async function handleLogout() {
-                    try {
-                        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-                        localStorage.clear();
-                        document.getElementById('loginSection').style.display = 'block';
-                        document.getElementById('userSection').style.display = 'none';
-                        document.getElementById('message').innerHTML = '<div class="success-msg">✅ تم تسجيل الخروج</div>';
-                    } catch (error) {
-                        console.error('Logout error:', error);
-                    }
-                }
-
-                async function checkAuth() {
-                    const token = localStorage.getItem('authToken');
-                    if (token) {
-                        try {
-                            const csrf = await getCsrfToken();
-                            const response = await fetch('/api/auth/me', {
-                                headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'X-CSRF-Token': csrf || ''
-                                },
-                                credentials: 'include'
-                            });
-                            const data = await response.json();
-                            if (data.success) {
-                                showUserInfo(data.user);
-                                return;
-                            }
-                        } catch (error) {
-                            console.error('Auth check failed:', error);
-                        }
-                    }
-                    document.getElementById('loginSection').style.display = 'block';
-                    document.getElementById('userSection').style.display = 'none';
-                }
-
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') {
-                        handleLogin();
-                    }
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-Token": token
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({ username, password })
                 });
 
-                getCsrfToken().then(() => checkAuth());
-            </script>
-        </body>
-        </html>
-    `);
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    localStorage.setItem("authToken", data.token);
+                    localStorage.setItem("userData", JSON.stringify(data.user));
+                    localStorage.setItem("csrfToken", data.csrfToken || token);
+                    
+                    messageEl.innerHTML = "<div class=\"success-msg\">✅ تم تسجيل الدخول بنجاح</div>";
+                    showUserInfo(data.user);
+                } else {
+                    const errorMsg = data.error || "فشل تسجيل الدخول";
+                    messageEl.innerHTML = "<div class=\"error\">❌ " + errorMsg + "</div>";
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                messageEl.innerHTML = "<div class=\"error\">❌ خطأ في الاتصال بالخادم</div>";
+            }
+        }
+
+        function showUserInfo(user) {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("userSection").style.display = "block";
+            document.getElementById("userName").textContent = user.name || user.username;
+            document.getElementById("userRole").textContent = user.role || "مستخدم";
+            
+            const roleBadge = document.getElementById("userRole");
+            if (user.role === "admin") {
+                roleBadge.className = "badge admin";
+            } else if (user.role === "manager") {
+                roleBadge.className = "badge manager";
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                localStorage.clear();
+                document.getElementById("loginSection").style.display = "block";
+                document.getElementById("userSection").style.display = "none";
+                document.getElementById("message").innerHTML = "<div class=\"success-msg\">✅ تم تسجيل الخروج</div>";
+            } catch (error) {
+                console.error("Logout error:", error);
+            }
+        }
+
+        async function checkAuth() {
+            const token = localStorage.getItem("authToken");
+            if (token) {
+                try {
+                    const csrf = await getCsrfToken();
+                    const response = await fetch("/api/auth/me", {
+                        headers: {
+                            "Authorization": "Bearer " + token,
+                            "X-CSRF-Token": csrf || ""
+                        },
+                        credentials: "include"
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showUserInfo(data.user);
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Auth check failed:", error);
+                }
+            }
+            document.getElementById("loginSection").style.display = "block";
+            document.getElementById("userSection").style.display = "none";
+        }
+
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+                const loginSection = document.getElementById("loginSection");
+                if (loginSection.style.display !== "none") {
+                    handleLogin();
+                }
+            }
+        });
+
+        getCsrfToken().then(function() { checkAuth(); });
+    </script>
+</body>
+</html>
+    `;
+    
+    res.send(htmlContent);
 });
 
 // ✅ Catch-all route
@@ -675,7 +633,6 @@ app.get('*', (req, res) => {
 // 🔐 AUTH ENDPOINTS
 // ============================================================
 
-// ✅ Get CSRF Token
 app.get('/api/csrf-token', (req, res) => {
     const token = req.session.csrfToken;
     res.json({
@@ -685,13 +642,12 @@ app.get('/api/csrf-token', (req, res) => {
     });
 });
 
-// ✅ Login
 app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
         const clientIP = req.ip || req.connection.remoteAddress;
         
-        console.log(`🔐 Login attempt: ${username} from ${clientIP}`);
+        console.log('🔐 Login attempt:', username, 'from', clientIP);
 
         if (!username || !password || username.length > 50 || password.length > 100) {
             return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
@@ -699,14 +655,15 @@ app.post('/api/auth/login', (req, res) => {
 
         const user = users.find(u => u.username === username);
         if (!user) {
-            addAuditLog(null, 'LOGIN_FAILED', `Invalid username: ${username}`, clientIP);
+            addAuditLog(null, 'LOGIN_FAILED', 'Invalid username: ' + username, clientIP);
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
         if (user.locked && user.lockedUntil && Date.now() < user.lockedUntil) {
+            const remaining = Math.ceil((user.lockedUntil - Date.now()) / 60000);
             return res.status(403).json({
                 success: false,
-                error: `الحساب مقفل. حاول مرة أخرى بعد ${Math.ceil((user.lockedUntil - Date.now()) / 60000)} دقيقة`
+                error: 'الحساب مقفل. حاول مرة أخرى بعد ' + remaining + ' دقيقة'
             });
         }
 
@@ -772,7 +729,6 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
-// ✅ Verify Token
 app.get('/api/auth/me', (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -816,7 +772,6 @@ app.get('/api/auth/me', (req, res) => {
     }
 });
 
-// ✅ Change Password
 app.post('/api/auth/change-password', csrfProtection, async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
@@ -862,7 +817,6 @@ app.post('/api/auth/change-password', csrfProtection, async (req, res) => {
     }
 });
 
-// ✅ Logout
 app.post('/api/auth/logout', (req, res) => {
     const userId = req.session.userId;
     const clientIP = req.ip || req.connection.remoteAddress;
@@ -889,7 +843,6 @@ app.post('/api/auth/logout', (req, res) => {
 // 📊 DATA ENDPOINTS
 // ============================================================
 
-// ✅ Get vessels
 app.get('/api/vessels', csrfProtection, (req, res) => {
     try {
         const decryptedVessels = vessels.map(v => ({
@@ -905,7 +858,6 @@ app.get('/api/vessels', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Add vessel
 app.post('/api/vessels', csrfProtection, (req, res) => {
     try {
         const { name, type, status, location } = req.body;
@@ -932,7 +884,6 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Get users (admin only)
 app.get('/api/users', csrfProtection, (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -963,7 +914,6 @@ app.get('/api/users', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ Get audit logs (admin only)
 app.get('/api/audit-logs', csrfProtection, (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -993,11 +943,11 @@ app.listen(PORT, () => {
     console.log('=========================================');
     console.log('🚢 MARINE SYSTEM v8.0 - ULTRA SECURE');
     console.log('=========================================');
-    console.log(`📍 Server: http://localhost:${PORT}`);
-    console.log(`👤 Admin: ${ADMIN_USERNAME}`);
-    console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔒 Security Level: ULTRA HIGH`);
+    console.log('📍 Server: http://localhost:' + PORT);
+    console.log('👤 Admin: ' + ADMIN_USERNAME);
+    console.log('🔑 Password: ' + ADMIN_PASSWORD);
+    console.log('🌍 Environment: ' + (process.env.NODE_ENV || 'development'));
+    console.log('🔒 Security Level: ULTRA HIGH');
     console.log('=========================================');
     console.log('💾 SAVE ADMIN CREDENTIALS!');
     console.log('🔐 Use strong passwords only!');
