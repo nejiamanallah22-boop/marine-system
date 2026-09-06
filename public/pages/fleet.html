@@ -2,7 +2,7 @@
 <div id="page-fleet">
     <style>
         /* ============================================================
-           🚢 FLEET PAGE - PROFESSIONAL GOLD EDITION
+           🚢 FLEET PAGE - PROFESSIONAL GOLD EDITION (FIXED)
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -866,7 +866,7 @@
 
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - GOLD EDITION
+    // 🚢 FLEET PAGE - GOLD EDITION (FIXED)
     // ============================================================
 
     // ============================================================
@@ -976,7 +976,7 @@
     }
 
     // ============================================================
-    // 6. RENDER MAIN
+    // 6. RENDER MAIN - FIXED
     // ============================================================
 
     async function renderMain() {
@@ -1015,11 +1015,11 @@
             const vessels = await response.json();
             console.log('✅ تم تحميل', vessels.length, 'مركب');
 
-            // ✅ تحديث الإحصائيات
+            // ✅ تحديث الإحصائيات - FIXED
             const total = vessels.length;
-            const active = vessels.filter(v => v.stat === 'صالح' || v.status === 'صالح').length;
-            const maintenance = vessels.filter(v => v.stat === 'صيانة' || v.status === 'صيانة').length;
-            const damaged = vessels.filter(v => v.stat === 'معطب' || v.status === 'معطب').length;
+            const active = vessels.filter(v => v.status === 'صالح').length;        // ✅ مصحح
+            const maintenance = vessels.filter(v => v.status === 'صيانة').length;  // ✅ مصحح
+            const damaged = vessels.filter(v => v.status === 'معطب').length;       // ✅ مصحح
 
             document.getElementById('totalVessels').textContent = total;
             document.getElementById('activeVessels').textContent = active;
@@ -1045,7 +1045,7 @@
 
             if (search) {
                 filtered = filtered.filter(v => {
-                    const text = [v.name, v.num, v.region || v.reg, v.zone, v.port, v.status || v.stat, v.cat, v.repairUnit]
+                    const text = [v.name, v.num, v.region || v.reg, v.zone, v.port, v.status, v.cat, v.repairUnit]
                         .filter(Boolean).join(' ').toLowerCase();
                     return text.includes(search);
                 });
@@ -1073,7 +1073,7 @@
                 const zone = v.zone || '-';
                 const port = v.port || '-';
                 const supp = v.supp || '-';
-                const status = v.status || v.stat || '-';
+                const status = v.status || '-';
                 const breakType = v.break || '-';
                 const fDate = v.fDate;
                 const eDate = v.eDate;
@@ -1122,7 +1122,7 @@
     }
 
     // ============================================================
-    // 7. ADD ITEM
+    // 7. ADD ITEM - FIXED
     // ============================================================
 
     async function addItem() {
@@ -1149,7 +1149,7 @@
             zone: document.getElementById('iZone').value,
             port: document.getElementById('iPort').value.trim(),
             supp: document.getElementById('iSupp').value.trim(),
-            stat: status,
+            status: status,  // ✅ مصحح: stat → status
             break: document.getElementById('iBreak').value.trim(),
             fDate: faultDate,
             eDate: document.getElementById('iEnd').value,
@@ -1218,7 +1218,7 @@
     };
 
     // ============================================================
-    // 10. EDIT ITEM
+    // 10. EDIT ITEM - FIXED
     // ============================================================
 
     window.editItem = async function(id) {
@@ -1241,7 +1241,7 @@
             setTimeout(() => { document.getElementById('iZone').value = v.zone || ''; }, 50);
             document.getElementById('iPort').value = v.port || '';
             document.getElementById('iSupp').value = v.supp || '';
-            document.getElementById('iStat').value = v.status || v.stat || 'صالح';
+            document.getElementById('iStat').value = v.status || 'صالح';  // ✅ مصحح: v.status بدلاً من v.stat
             document.getElementById('iBreak').value = v.break || '';
             document.getElementById('iDate').value = v.fDate || '';
             document.getElementById('iEnd').value = v.eDate || '';
@@ -1272,7 +1272,7 @@
             zone: document.getElementById('iZone').value,
             port: document.getElementById('iPort').value.trim(),
             supp: document.getElementById('iSupp').value.trim(),
-            stat: document.getElementById('iStat').value,
+            status: document.getElementById('iStat').value,  // ✅ مصحح
             break: document.getElementById('iBreak').value.trim(),
             fDate: document.getElementById('iDate').value,
             eDate: document.getElementById('iEnd').value,
