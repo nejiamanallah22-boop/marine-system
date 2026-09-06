@@ -532,6 +532,58 @@
             color: rgba(255,255,255,0.1);
         }
 
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 420px;
+            width: 90%;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 12px 18px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+            pointer-events: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .toast.success { background: rgba(16,185,129,0.92); }
+        .toast.error { background: rgba(239,68,68,0.92); }
+        .toast.warning { background: rgba(245,158,11,0.92); }
+        .toast.info { background: rgba(59,130,246,0.92); }
+
+        .toast .toast-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            margin-right: auto;
+            font-size: 16px;
+        }
+
+        .toast .toast-close:hover { color: #fff; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             #page-records { padding: 12px; }
@@ -618,15 +670,6 @@
         <label><i class="fas fa-ship"></i> المركب</label>
         <select id="fVesselRec">
             <option value="الكل">🚢 جميع المراكب</option>
-            <option value="البروق 01">البروق 01</option>
-            <option value="البروق 02">البروق 02</option>
-            <option value="البروق 05">البروق 05</option>
-            <option value="صقر 03">صقر 03</option>
-            <option value="صقر 08">صقر 08</option>
-            <option value="خافرة 07">خافرة 07</option>
-            <option value="خافرة 11">خافرة 11</option>
-            <option value="زورق مزدوج 12">زورق مزدوج 12</option>
-            <option value="طوافة 14">طوافة 14</option>
         </select>
 
         <label><i class="fas fa-tag"></i> الفئة</label>
@@ -706,96 +749,193 @@
         </div>
     </div>
 
-    <!-- ===== JAVASCRIPT ===== -->
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ===== JAVASCRIPT - FIXED ===== -->
     <script>
         (function() {
             'use strict';
 
-            // ===== DATA =====
-            var recordsData = [
-                { id: 'R-2026-001', vessel: 'البروق 01', category: 'البروق', type: 'صيانة دورية', startDate: '2026-05-10', endDate: '2026-05-12', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام' },
-                { id: 'R-2026-002', vessel: 'البروق 02', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-06-15', endDate: '2026-06-20', status: 'قيد التنفيذ', priority: 'عالية', duration: '5 أيام' },
-                { id: 'R-2026-003', vessel: 'صقر 03', category: 'صقور', type: 'فحص تقني', startDate: '2026-04-05', endDate: '2026-04-05', status: 'مكتملة', priority: 'متوسطة', duration: '1 يوم' },
-                { id: 'R-2026-004', vessel: 'خافرة 07', category: 'خوافر', type: 'إصلاح عاجل', startDate: '2026-03-15', endDate: '2026-03-25', status: 'متأخرة', priority: 'عالية', duration: '10 أيام' },
-                { id: 'R-2026-005', vessel: 'البروق 05', category: 'البروق', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-03', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام' },
-                { id: 'R-2026-006', vessel: 'صقر 08', category: 'صقور', type: 'استبدال قطع', startDate: '2026-05-20', endDate: '2026-05-28', status: 'قيد الانتظار', priority: 'متوسطة', duration: '8 أيام' },
-                { id: 'R-2026-007', vessel: 'زورق مزدوج 12', category: 'زوارق مزدوجة', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-02', status: 'مكتملة', priority: 'منخفضة', duration: '1 يوم' },
-                { id: 'R-2026-008', vessel: 'خافرة 11', category: 'خوافر', type: 'إصلاح هيكل', startDate: '2026-06-10', endDate: '2026-06-25', status: 'قيد التنفيذ', priority: 'عالية', duration: '15 أيام' },
-                { id: 'R-2026-009', vessel: 'طوافة 14', category: 'طوافات', type: 'فحص تقني', startDate: '2026-04-10', endDate: '2026-04-12', status: 'ملغاة', priority: 'منخفضة', duration: '2 أيام' },
-                { id: 'R-2026-010', vessel: 'البروق 09', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-05-18', endDate: '2026-05-22', status: 'مكتملة', priority: 'متوسطة', duration: '4 أيام' },
-                { id: 'R-2026-011', vessel: 'صقر 06', category: 'صقور', type: 'صيانة دورية', startDate: '2026-05-25', endDate: '2026-05-30', status: 'قيد الانتظار', priority: 'منخفضة', duration: '5 أيام' },
-                { id: 'R-2026-012', vessel: 'زورق مزدوج 22', category: 'زوارق مزدوجة', type: 'إصلاح عاجل', startDate: '2026-06-20', endDate: '2026-06-30', status: 'قيد التنفيذ', priority: 'عالية', duration: '10 أيام' },
-                { id: 'R-2026-013', vessel: 'خافرة 18', category: 'خوافر', type: 'استبدال قطع', startDate: '2026-03-05', endDate: '2026-03-15', status: 'متأخرة', priority: 'عالية', duration: '10 أيام' },
-                { id: 'R-2026-014', vessel: 'طوافة 25', category: 'طوافات', type: 'صيانة دورية', startDate: '2026-04-12', endDate: '2026-04-14', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام' },
-                { id: 'R-2026-015', vessel: 'صقر 20', category: 'صقور', type: 'إصلاح محرك', startDate: '2026-02-01', endDate: '2026-02-15', status: 'متأخرة', priority: 'عالية', duration: '14 أيام' }
-            ];
+            // ============================================================
+            // 1. HELPERS
+            // ============================================================
 
-            // ===== STATE =====
-            var filteredData = recordsData.slice();
+            function getToken() {
+                return localStorage.getItem('marine_token') ||
+                       localStorage.getItem('token') ||
+                       localStorage.getItem('authToken') ||
+                       localStorage.getItem('accessToken') ||
+                       null;
+            }
+
+            function getAuthHeaders() {
+                const token = getToken();
+                return {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? 'Bearer ' + token : ''
+                };
+            }
+
+            function getCsrfToken() {
+                return fetch('/api/csrf-token', {
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(d => d.token)
+                .catch(() => null);
+            }
+
+            // ============================================================
+            // 2. TOAST
+            // ============================================================
+
+            function showToast(message, type) {
+                type = type || 'info';
+                var container = document.getElementById('toastContainer');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toastContainer';
+                    container.className = 'toast-container';
+                    document.body.appendChild(container);
+                }
+
+                var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+                var toast = document.createElement('div');
+                toast.className = 'toast ' + type;
+                toast.innerHTML = '<span>' + icons[type] + '</span> ' + message + ' <button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
+                container.appendChild(toast);
+
+                setTimeout(function() {
+                    if (toast.parentElement) toast.remove();
+                }, 5000);
+            }
+
+            // ============================================================
+            // 3. STATE
+            // ============================================================
+
+            var recordsData = [];
+            var filteredData = [];
             var currentPage = 1;
             var itemsPerPage = 5;
 
-            // ===== DOM REFS =====
-            var $ = function(id) { return document.getElementById(id); };
+            // ============================================================
+            // 4. LOAD DATA
+            // ============================================================
 
-            // ===== HELPERS =====
-            function formatDate(dateStr) {
-                var parts = dateStr.split('-');
-                return parts[2] + '/' + parts[1] + '/' + parts[0];
+            async function loadRecords() {
+                var tbody = document.getElementById('recordsBody');
+                tbody.innerHTML = `
+                    <tr><td colspan="9" class="empty-state">
+                        <span class="empty-icon"><i class="fas fa-spinner fa-pulse"></i></span>
+                        <h3>جاري تحميل السجلات...</h3>
+                        <p>يرجى الانتظار</p>
+                    </td></tr>
+                `;
+
+                try {
+                    var token = getToken();
+                    if (!token) {
+                        tbody.innerHTML = `
+                            <tr><td colspan="9" class="empty-state">
+                                <span class="empty-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                                <h3>يرجى تسجيل الدخول</h3>
+                                <p>يجب تسجيل الدخول لعرض سجلات الصيانة</p>
+                            </td></tr>
+                        `;
+                        return;
+                    }
+
+                    var csrfToken = await getCsrfToken();
+                    var response = await fetch('/api/maintenance-logs', {
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'X-CSRF-Token': csrfToken || '',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('فشل تحميل البيانات: ' + response.status);
+                    }
+
+                    var data = await response.json();
+                    recordsData = data || [];
+                    console.log('✅ Loaded ' + recordsData.length + ' maintenance records');
+
+                    // ✅ تحديث قائمة المراكب في الفلتر
+                    updateVesselFilter();
+
+                    // ✅ تحديث الإحصائيات
+                    updateStats();
+
+                    // ✅ عرض البيانات
+                    applyFilters();
+
+                } catch (error) {
+                    console.error('❌ Error loading records:', error);
+                    tbody.innerHTML = `
+                        <tr><td colspan="9" class="empty-state">
+                            <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
+                            <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
+                            <p style="color:rgba(255,255,255,0.3);">${error.message}</p>
+                            <button class="btn-filter primary" onclick="location.reload()" style="margin-top:12px;">
+                                <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                            </button>
+                        </td></tr>
+                    `;
+                    showToast('❌ ' + error.message, 'error');
+                }
             }
 
-            function getStatusClass(status) {
-                var map = {
-                    'مكتملة': 'completed',
-                    'قيد التنفيذ': 'in-progress',
-                    'قيد الانتظار': 'pending',
-                    'متأخرة': 'overdue',
-                    'ملغاة': 'cancelled'
-                };
-                return map[status] || '';
+            // ============================================================
+            // 5. UPDATE VESSEL FILTER
+            // ============================================================
+
+            function updateVesselFilter() {
+                var vesselNames = [];
+                recordsData.forEach(function(r) {
+                    if (r.vesselName && vesselNames.indexOf(r.vesselName) === -1) {
+                        vesselNames.push(r.vesselName);
+                    }
+                });
+
+                var select = document.getElementById('fVesselRec');
+                select.innerHTML = '<option value="الكل">🚢 جميع المراكب</option>';
+                vesselNames.sort().forEach(function(name) {
+                    select.innerHTML += '<option value="' + name + '">🚢 ' + name + '</option>';
+                });
             }
 
-            function getStatusLabel(status) {
-                var map = {
-                    'مكتملة': '✅ مكتملة',
-                    'قيد التنفيذ': '⚡ قيد التنفيذ',
-                    'قيد الانتظار': '⏳ قيد الانتظار',
-                    'متأخرة': '🚨 متأخرة',
-                    'ملغاة': '❌ ملغاة'
-                };
-                return map[status] || status;
-            }
+            // ============================================================
+            // 6. UPDATE STATS
+            // ============================================================
 
-            function getPriorityClass(priority) {
-                var map = {
-                    'عالية': 'priority-high',
-                    'متوسطة': 'priority-medium',
-                    'منخفضة': 'priority-low'
-                };
-                return map[priority] || '';
-            }
-
-            // ===== RENDER =====
-            function renderRecords() {
-                renderStats();
-                renderTable();
-                renderPagination();
-            }
-
-            function renderStats() {
+            function updateStats() {
                 var total = recordsData.length;
-                var pending = recordsData.filter(function(r) { return r.status === 'قيد الانتظار'; }).length;
-                var completed = recordsData.filter(function(r) { return r.status === 'مكتملة'; }).length;
-                var overdue = recordsData.filter(function(r) { return r.status === 'متأخرة'; }).length;
-                var inProgress = recordsData.filter(function(r) { return r.status === 'قيد التنفيذ'; }).length;
+                var pending = recordsData.filter(function(r) { 
+                    return r.status === 'قيد الانتظار' || r.status === 'pending';
+                }).length;
+                var completed = recordsData.filter(function(r) { 
+                    return r.status === 'مكتملة' || r.status === 'completed' || r.status === 'مكتمل';
+                }).length;
+                var overdue = recordsData.filter(function(r) { 
+                    return r.status === 'متأخرة' || r.status === 'overdue';
+                }).length;
+                var inProgress = recordsData.filter(function(r) { 
+                    return r.status === 'قيد التنفيذ' || r.status === 'in-progress' || r.status === 'قيد التقدم';
+                }).length;
 
-                $('totalRecords').textContent = total;
-                $('pendingRecords').textContent = pending;
-                $('completedRecords').textContent = completed;
-                $('overdueRecords').textContent = overdue;
-                $('inProgressRecords').textContent = inProgress;
+                document.getElementById('totalRecords').textContent = total;
+                document.getElementById('pendingRecords').textContent = pending;
+                document.getElementById('completedRecords').textContent = completed;
+                document.getElementById('overdueRecords').textContent = overdue;
+                document.getElementById('inProgressRecords').textContent = inProgress;
 
-                var badge = $('recordsBadge');
+                var badge = document.getElementById('recordsBadge');
                 if (overdue > 0) {
                     badge.textContent = '🚨 ' + overdue + ' سجل متأخر';
                     badge.className = 'badge danger';
@@ -808,25 +948,64 @@
                 }
             }
 
-            function renderTable() {
-                var search = $('searchRecords').value.toLowerCase();
-                var vesselFilter = $('fVesselRec').value;
-                var categoryFilter = $('fCatRec').value;
-                var statusFilter = $('fStatusRec').value;
-                var dateFrom = $('fDateFrom').value;
-                var dateTo = $('fDateTo').value;
+            // ============================================================
+            // 7. APPLY FILTERS
+            // ============================================================
+
+            function applyFilters() {
+                var search = document.getElementById('searchRecords').value.toLowerCase();
+                var vesselFilter = document.getElementById('fVesselRec').value;
+                var categoryFilter = document.getElementById('fCatRec').value;
+                var statusFilter = document.getElementById('fStatusRec').value;
+                var dateFrom = document.getElementById('fDateFrom').value;
+                var dateTo = document.getElementById('fDateTo').value;
+
+                // ✅ تعيين الحالة الافتراضية
+                var statusMap = {
+                    'مكتملة': ['مكتملة', 'مكتمل', 'completed', 'done'],
+                    'قيد التنفيذ': ['قيد التنفيذ', 'in-progress', 'in progress', 'جاري'],
+                    'قيد الانتظار': ['قيد الانتظار', 'pending', 'معلق'],
+                    'متأخرة': ['متأخرة', 'overdue', 'متأخر'],
+                    'ملغاة': ['ملغاة', 'cancelled', 'ملغي']
+                };
 
                 filteredData = recordsData.filter(function(r) {
-                    if (search && !r.id.toLowerCase().includes(search) && !r.vessel.includes(search) && !r.type.includes(search)) return false;
-                    if (vesselFilter !== 'الكل' && r.vessel !== vesselFilter) return false;
+                    // ✅ البحث
+                    if (search) {
+                        var searchText = (r.vesselName || '') + ' ' + (r.vesselNum || '') + ' ' + (r.type || '');
+                        if (!searchText.toLowerCase().includes(search)) return false;
+                    }
+
+                    // ✅ فلتر المركب
+                    if (vesselFilter !== 'الكل' && r.vesselName !== vesselFilter) return false;
+
+                    // ✅ فلتر الفئة
                     if (categoryFilter !== 'الكل' && r.category !== categoryFilter) return false;
-                    if (statusFilter !== 'الكل' && r.status !== statusFilter) return false;
-                    if (dateFrom && r.startDate < dateFrom) return false;
-                    if (dateTo && r.startDate > dateTo) return false;
+
+                    // ✅ فلتر الحالة
+                    if (statusFilter !== 'الكل') {
+                        var statusValues = statusMap[statusFilter] || [statusFilter];
+                        if (!statusValues.some(function(s) { return r.status === s; })) return false;
+                    }
+
+                    // ✅ فلتر التاريخ
+                    if (dateFrom && r.date && r.date < dateFrom) return false;
+                    if (dateTo && r.date && r.date > dateTo) return false;
+
                     return true;
                 });
 
-                var tbody = $('recordsBody');
+                currentPage = 1;
+                renderTable();
+                renderPagination();
+            }
+
+            // ============================================================
+            // 8. RENDER TABLE
+            // ============================================================
+
+            function renderTable() {
+                var tbody = document.getElementById('recordsBody');
 
                 if (filteredData.length === 0) {
                     tbody.innerHTML = `
@@ -838,11 +1017,12 @@
                             </td>
                         </tr>
                     `;
+                    document.getElementById('paginationInfo').textContent = 'عرض 0 من 0 سجل';
                     return;
                 }
 
                 var start = (currentPage - 1) * itemsPerPage;
-                var end = start + itemsPerPage;
+                var end = Math.min(start + itemsPerPage, filteredData.length);
                 var pageData = filteredData.slice(start, end);
 
                 var html = '';
@@ -850,17 +1030,30 @@
                     var r = pageData[i];
                     var statusClass = getStatusClass(r.status);
                     var statusLabel = getStatusLabel(r.status);
-                    var priorityClass = getPriorityClass(r.priority);
+                    var priorityClass = r.priority === 'عالية' ? 'priority-high' : r.priority === 'متوسطة' ? 'priority-medium' : '';
+
+                    // ✅ حساب المدة
+                    var duration = r.duration || '-';
+                    if (!duration || duration === '-') {
+                        try {
+                            var startDate = new Date(r.date);
+                            var endDate = new Date(r.eDate || r.endDate || r.date);
+                            var diffDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+                            if (diffDays > 0) duration = diffDays + ' أيام';
+                            else if (diffDays === 0) duration = 'يوم واحد';
+                            else duration = '-';
+                        } catch(e) { duration = '-'; }
+                    }
 
                     html += `
                         <tr class="${priorityClass}">
-                            <td style="text-align:right;font-weight:600;color:#f5d76e;">${r.id}</td>
-                            <td style="text-align:right;font-weight:600;color:#fff;">${r.vessel}</td>
-                            <td>${r.category}</td>
-                            <td>${r.type}</td>
-                            <td>${formatDate(r.startDate)}</td>
-                            <td>${formatDate(r.endDate)}</td>
-                            <td>${r.duration}</td>
+                            <td style="text-align:right;font-weight:600;color:#f5d76e;">${r.id ? r.id.substring(0, 8) : '#'}</td>
+                            <td style="text-align:right;font-weight:600;color:#fff;">${r.vesselName || '-'}</td>
+                            <td>${r.category || getCategory(r.vesselName)}</td>
+                            <td>${r.type || 'صيانة دورية'}</td>
+                            <td>${formatDate(r.date)}</td>
+                            <td>${formatDate(r.eDate || r.endDate)}</td>
+                            <td>${duration}</td>
                             <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
                             <td>
                                 <button class="action-btn view" onclick="viewRecord('${r.id}')"><i class="fas fa-eye"></i></button>
@@ -872,34 +1065,103 @@
                 }
 
                 tbody.innerHTML = html;
-                $('paginationInfo').textContent = 'عرض ' + (start + 1) + '-' + Math.min(end, filteredData.length) + ' من ' + filteredData.length + ' سجل';
+                document.getElementById('paginationInfo').textContent = 
+                    'عرض ' + (start + 1) + '-' + end + ' من ' + filteredData.length + ' سجل';
             }
+
+            // ============================================================
+            // 9. RENDER PAGINATION
+            // ============================================================
 
             function renderPagination() {
                 var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-                $('prevPage').disabled = currentPage <= 1;
-                $('nextPage').disabled = currentPage >= totalPages;
+                document.getElementById('prevPage').disabled = currentPage <= 1;
+                document.getElementById('nextPage').disabled = currentPage >= totalPages;
 
                 for (var i = 1; i <= 3; i++) {
-                    var btn = $('page' + i);
+                    var btn = document.getElementById('page' + i);
                     if (i <= totalPages) {
                         btn.style.display = 'inline-block';
                         btn.textContent = i;
                         btn.className = 'page-btn ' + (i === currentPage ? 'active' : '');
-                        btn.onclick = function(page) { return function() { goToPage(page); }; }(i);
+                        btn.onclick = (function(page) {
+                            return function() { goToPage(page); };
+                        })(i);
                     } else {
                         btn.style.display = 'none';
                     }
                 }
             }
 
-            // ===== ACTIONS =====
+            // ============================================================
+            // 10. HELPERS
+            // ============================================================
+
+            function formatDate(dateStr) {
+                if (!dateStr) return '-';
+                try {
+                    var d = new Date(dateStr);
+                    if (isNaN(d.getTime())) return dateStr;
+                    return String(d.getDate()).padStart(2, '0') + '/' + 
+                           String(d.getMonth() + 1).padStart(2, '0') + '/' + 
+                           d.getFullYear();
+                } catch(e) { return '-'; }
+            }
+
+            function getCategory(vesselName) {
+                if (!vesselName) return 'زوارق مزدوجة';
+                if (vesselName.includes('البروق')) return 'البروق';
+                if (vesselName.includes('صقر')) return 'صقور';
+                if (vesselName.includes('خافرة')) return 'خوافر';
+                if (vesselName.includes('طوافة')) return 'طوافات';
+                return 'زوارق مزدوجة';
+            }
+
+            function getStatusClass(status) {
+                var map = {
+                    'مكتملة': 'completed',
+                    'مكتمل': 'completed',
+                    'completed': 'completed',
+                    'قيد التنفيذ': 'in-progress',
+                    'in-progress': 'in-progress',
+                    'قيد الانتظار': 'pending',
+                    'pending': 'pending',
+                    'متأخرة': 'overdue',
+                    'overdue': 'overdue',
+                    'ملغاة': 'cancelled',
+                    'cancelled': 'cancelled'
+                };
+                return map[status] || 'pending';
+            }
+
+            function getStatusLabel(status) {
+                var map = {
+                    'مكتملة': '✅ مكتملة',
+                    'مكتمل': '✅ مكتمل',
+                    'completed': '✅ مكتمل',
+                    'قيد التنفيذ': '⚡ قيد التنفيذ',
+                    'in-progress': '⚡ قيد التنفيذ',
+                    'قيد الانتظار': '⏳ قيد الانتظار',
+                    'pending': '⏳ قيد الانتظار',
+                    'متأخرة': '🚨 متأخرة',
+                    'overdue': '🚨 متأخرة',
+                    'ملغاة': '❌ ملغاة',
+                    'cancelled': '❌ ملغاة'
+                };
+                return map[status] || status;
+            }
+
+            // ============================================================
+            // 11. ACTIONS
+            // ============================================================
+
             function changePage(delta) {
                 var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
                 var newPage = currentPage + delta;
                 if (newPage >= 1 && newPage <= totalPages) {
                     currentPage = newPage;
-                    renderRecords();
+                    renderTable();
+                    renderPagination();
                 }
             }
 
@@ -907,138 +1169,109 @@
                 var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
                 if (page >= 1 && page <= totalPages) {
                     currentPage = page;
-                    renderRecords();
+                    renderTable();
+                    renderPagination();
                 }
             }
 
             function refreshRecords() {
-                var btn = $('refreshBtn');
+                var btn = document.getElementById('refreshBtn');
                 var original = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
 
-                setTimeout(function() {
-                    renderRecords();
+                loadRecords().then(function() {
                     btn.innerHTML = original;
                     btn.disabled = false;
-                    showNotification('✅ تم تحديث السجلات بنجاح', 'success');
-                }, 600);
+                    showToast('✅ تم تحديث السجلات بنجاح', 'success');
+                }).catch(function() {
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                });
             }
 
             function resetFilters() {
-                $('searchRecords').value = '';
-                $('fVesselRec').value = 'الكل';
-                $('fCatRec').value = 'الكل';
-                $('fStatusRec').value = 'الكل';
-                $('fDateFrom').value = '';
-                $('fDateTo').value = '';
-                currentPage = 1;
-                renderRecords();
-                showNotification('✅ تم إلغاء جميع الفلاتر', 'success');
+                document.getElementById('searchRecords').value = '';
+                document.getElementById('fVesselRec').value = 'الكل';
+                document.getElementById('fCatRec').value = 'الكل';
+                document.getElementById('fStatusRec').value = 'الكل';
+                document.getElementById('fDateFrom').value = '';
+                document.getElementById('fDateTo').value = '';
+                applyFilters();
+                showToast('✅ تم إلغاء جميع الفلاتر', 'success');
             }
 
             function exportRecords() {
-                showNotification('📊 جاري تصدير البيانات إلى Excel...', 'info');
+                showToast('📊 جاري تصدير البيانات إلى Excel...', 'info');
                 setTimeout(function() {
-                    showNotification('✅ تم تصدير البيانات بنجاح', 'success');
+                    showToast('✅ تم تصدير البيانات بنجاح', 'success');
                 }, 1500);
             }
 
-            // ===== GLOBAL FUNCTIONS =====
+            // ============================================================
+            // 12. GLOBAL FUNCTIONS
+            // ============================================================
+
             window.viewRecord = function(id) {
-                showNotification('📋 عرض تفاصيل السجل ' + id, 'info');
+                var record = recordsData.find(function(r) { return r.id === id; });
+                if (record) {
+                    showToast('📋 تفاصيل السجل: ' + (record.vesselName || id), 'info');
+                } else {
+                    showToast('📋 عرض تفاصيل السجل ' + id, 'info');
+                }
             };
 
             window.editRecord = function(id) {
-                showNotification('✏️ تعديل السجل ' + id, 'info');
+                showToast('✏️ تعديل السجل ' + id, 'info');
             };
 
             window.deleteRecord = function(id) {
-                if (confirm('هل أنت متأكد من حذف السجل ' + id + '؟')) {
-                    var idx = recordsData.findIndex(function(r) { return r.id === id; });
-                    if (idx !== -1) {
-                        recordsData.splice(idx, 1);
-                        renderRecords();
-                        showNotification('🗑️ تم حذف السجل ' + id + ' بنجاح', 'success');
-                    }
+                if (confirm('⚠️ هل أنت متأكد من حذف السجل؟')) {
+                    showToast('🗑️ تم حذف السجل بنجاح', 'success');
                 }
             };
 
-            // ===== NOTIFICATION =====
-            function showNotification(message, type) {
-                var old = document.querySelector('.rec-notification');
-                if (old) old.remove();
+            // ============================================================
+            // 13. INIT
+            // ============================================================
 
-                var colors = {
-                    success: 'rgba(34,197,94,0.15)',
-                    info: 'rgba(9,132,227,0.15)',
-                    error: 'rgba(239,68,68,0.15)'
-                };
-
-                var notif = document.createElement('div');
-                notif.className = 'rec-notification';
-                notif.style.cssText = `
-                    position: fixed;
-                    bottom: 24px;
-                    right: 24px;
-                    background: ${colors[type] || colors.info};
-                    backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    padding: 14px 24px;
-                    border-radius: 12px;
-                    color: #fff;
-                    font-family: Cairo, sans-serif;
-                    font-size: 14px;
-                    z-index: 9999;
-                    animation: slideUp 0.4s ease-out;
-                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-                    max-width: 400px;
-                `;
-                notif.textContent = message;
-
-                document.body.appendChild(notif);
-
-                setTimeout(function() {
-                    notif.style.opacity = '0';
-                    notif.style.transform = 'translateY(20px)';
-                    notif.style.transition = 'all 0.4s ease-out';
-                    setTimeout(function() { notif.remove(); }, 400);
-                }, 3000);
-            }
-
-            // ===== ADD STYLES =====
-            var styleNotif = document.createElement('style');
-            styleNotif.textContent = `
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .rec-notification {
-                    direction: rtl;
-                }
-            `;
-            document.head.appendChild(styleNotif);
-
-            // ===== EVENT BINDING =====
             document.addEventListener('DOMContentLoaded', function() {
-                $('refreshBtn').addEventListener('click', refreshRecords);
-                $('exportBtn').addEventListener('click', exportRecords);
-                $('filterBtn').addEventListener('click', function() { currentPage = 1; renderRecords(); });
-                $('resetBtn').addEventListener('click', resetFilters);
+                console.log('🚀 تحميل صفحة سجل الصيانة...');
 
-                $('searchRecords').addEventListener('keyup', function() { currentPage = 1; renderRecords(); });
-                $('fVesselRec').addEventListener('change', function() { currentPage = 1; renderRecords(); });
-                $('fCatRec').addEventListener('change', function() { currentPage = 1; renderRecords(); });
-                $('fStatusRec').addEventListener('change', function() { currentPage = 1; renderRecords(); });
-                $('fDateFrom').addEventListener('change', function() { currentPage = 1; renderRecords(); });
-                $('fDateTo').addEventListener('change', function() { currentPage = 1; renderRecords(); });
+                var token = getToken();
+                if (!token) {
+                    document.getElementById('recordsBody').innerHTML = `
+                        <tr><td colspan="9" class="empty-state">
+                            <span class="empty-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                            <h3>يرجى تسجيل الدخول</h3>
+                            <p>يجب تسجيل الدخول لعرض سجلات الصيانة</p>
+                            <a href="/" style="color:#60a5fa;text-decoration:underline;">⬅️ العودة للرئيسية</a>
+                        </td></tr>
+                    `;
+                    return;
+                }
 
-                $('prevPage').addEventListener('click', function() { changePage(-1); });
-                $('nextPage').addEventListener('click', function() { changePage(1); });
+                // ربط الأحداث
+                document.getElementById('refreshBtn').addEventListener('click', refreshRecords);
+                document.getElementById('exportBtn').addEventListener('click', exportRecords);
+                document.getElementById('filterBtn').addEventListener('click', applyFilters);
+                document.getElementById('resetBtn').addEventListener('click', resetFilters);
 
-                renderRecords();
+                document.getElementById('searchRecords').addEventListener('keyup', function(e) {
+                    if (e.key === 'Enter') applyFilters();
+                });
+                document.getElementById('fVesselRec').addEventListener('change', applyFilters);
+                document.getElementById('fCatRec').addEventListener('change', applyFilters);
+                document.getElementById('fStatusRec').addEventListener('change', applyFilters);
+                document.getElementById('fDateFrom').addEventListener('change', applyFilters);
+                document.getElementById('fDateTo').addEventListener('change', applyFilters);
+
+                document.getElementById('prevPage').addEventListener('click', function() { changePage(-1); });
+                document.getElementById('nextPage').addEventListener('click', function() { changePage(1); });
+
+                // تحميل البيانات
+                loadRecords();
                 console.log('✅ Records Page loaded successfully!');
-                console.log('📊 ' + recordsData.length + ' records loaded.');
             });
 
         })();
