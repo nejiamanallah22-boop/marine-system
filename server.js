@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - RENDER COMPATIBLE
+// 🚢 MARINE SYSTEM - PROFESSIONAL EDITION v8.0 (FULLY FIXED)
 // ============================================================
 
 require('dotenv').config();
@@ -23,39 +23,30 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ============================================================
-// 🔐 ALL VARIABLES FROM RENDER ENVIRONMENT
+// 🔐 CONFIGURATION - ALL FROM ENVIRONMENT
 // ============================================================
 
-// ✅ كل المتغيرات تأتي من Render Dashboard
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;  // MUST be set in Render
-const JWT_SECRET = process.env.JWT_SECRET;          // MUST be set in Render
-const SESSION_SECRET = process.env.SESSION_SECRET;  // MUST be set in Render
-const MONGODB_URI = process.env.MONGODB_URI;        // MUST be set in Render
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const MONGODB_URI = process.env.MONGODB_URI;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// ✅ التحقق من وجود المتغيرات المطلوبة
-const requiredVars = ['ADMIN_PASSWORD', 'JWT_SECRET', 'SESSION_SECRET', 'MONGODB_URI'];
-const missingVars = requiredVars.filter(v => !process.env[v]);
-
-if (missingVars.length > 0) {
-    console.warn('⚠️ Missing environment variables:', missingVars.join(', '));
-    console.warn('⚠️ Please set them in Render Dashboard');
-    console.warn('⚠️ Using fallback values for development only!');
-}
-
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM - RENDER EDITION');
+console.log('🚢 MARINE SYSTEM v8.0 - PROFESSIONAL');
+console.log('=========================================');
 console.log(`🌍 Environment: ${NODE_ENV}`);
 console.log(`👤 Admin: ${ADMIN_USERNAME}`);
-console.log(`🔑 Password: ${ADMIN_PASSWORD ? '✅ Set in Render' : '❌ NOT SET!'}`);
-console.log(`🗄️ MongoDB: ${MONGODB_URI ? '✅ Set in Render' : '❌ NOT SET!'}`);
-console.log(`🔐 JWT: ${JWT_SECRET ? '✅ Set in Render' : '❌ NOT SET!'}`);
+console.log(`🔑 Password: ${ADMIN_PASSWORD ? '✅ Set in environment' : '❌ NOT SET!'}`);
+console.log(`🗄️ MongoDB: ${MONGODB_URI ? '✅ Configured' : '❌ Using memory storage'}`);
 console.log('=========================================');
 
 // ============================================================
 // 📊 MONGODB CONNECTION
 // ============================================================
+
+let isMongoConnected = false;
 
 if (MONGODB_URI) {
     mongoose.connect(MONGODB_URI, {
@@ -63,13 +54,17 @@ if (MONGODB_URI) {
         useUnifiedTopology: true,
         serverSelectionTimeoutMS: 5000
     })
-    .then(() => console.log('✅ MongoDB connected successfully'))
+    .then(() => {
+        isMongoConnected = true;
+        console.log('✅ MongoDB connected successfully');
+    })
     .catch(err => {
         console.error('❌ MongoDB connection error:', err.message);
-        console.warn('⚠️ Running without database');
+        console.warn('⚠️ Using memory storage as fallback');
+        isMongoConnected = false;
     });
 } else {
-    console.warn('⚠️ MONGODB_URI not set in Render - using memory storage');
+    console.warn('⚠️ MONGODB_URI not set - using memory storage');
 }
 
 // ============================================================
@@ -77,7 +72,7 @@ if (MONGODB_URI) {
 // ============================================================
 
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true, trim: true, minlength: 3 },
+    username: { type: String, required: true, unique: true, trim: true, minlength: 3, maxlength: 30 },
     password: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
@@ -103,6 +98,53 @@ const User = mongoose.model('User', UserSchema);
 const Vessel = mongoose.model('Vessel', VesselSchema);
 
 // ============================================================
+// 📊 MEMORY STORAGE (Fallback)
+// ============================================================
+
+const memoryUsers = [];
+const memoryVessels = [
+    { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي', lastMaintenance: new Date().toISOString() },
+    { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'maintenance', location: 'حوض السفن', lastMaintenance: new Date().toISOString() },
+    { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي', lastMaintenance: new Date().toISOString() }
+];
+
+// ✅ إنشاء مستخدم admin في الذاكرة (دائماً)
+const adminPassword = ADMIN_PASSWORD || 'admin123';
+const hashedAdminPassword = bcrypt.hashSync(adminPassword, 10);
+memoryUsers.push({
+    id: '1',
+    username: 'admin',
+    password: hashedAdminPassword,
+    name: 'Administrator',
+    email: 'admin@marine.com',
+    role: 'admin',
+    active: true,
+    loginAttempts: 0,
+    locked: false,
+    lockedUntil: null,
+    createdAt: new Date().toISOString(),
+    lastLogin: null
+});
+
+// ✅ إنشاء مستخدم manager
+memoryUsers.push({
+    id: '2',
+    username: 'manager',
+    password: bcrypt.hashSync('manager123', 10),
+    name: 'مدير النظام',
+    email: 'manager@marine.com',
+    role: 'manager',
+    active: true,
+    loginAttempts: 0,
+    locked: false,
+    lockedUntil: null,
+    createdAt: new Date().toISOString(),
+    lastLogin: null
+});
+
+console.log(`✅ Admin user created in memory with password: ${adminPassword}`);
+
+// ============================================================
 // 🛡️ SECURITY MIDDLEWARE
 // ============================================================
 
@@ -110,12 +152,14 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
             imgSrc: ["'self'", "data:", "https:"],
             connectSrc: ["'self'", "https://*.onrender.com"],
             fontSrc: ["'self'", "https:", "data:"],
-            scriptSrcAttr: ["'unsafe-inline'"]
+            scriptSrcAttr: ["'unsafe-inline'"],
+            objectSrc: ["'none'"],
+            frameSrc: ["'none'"]
         }
     },
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
@@ -138,14 +182,14 @@ app.use(compression());
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: { success: false, error: 'Too many requests' }
+    message: { success: false, error: 'Too many requests, please try again later.' }
 });
 app.use('/api/', limiter);
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 5,
-    message: { success: false, error: 'Too many login attempts' }
+    max: 10,
+    message: { success: false, error: 'Too many login attempts. Please try again after 15 minutes.' }
 });
 app.use('/api/auth/login', authLimiter);
 
@@ -157,7 +201,7 @@ app.use(cookieParser());
 
 // ✅ Session Management
 app.use(session({
-    secret: SESSION_SECRET || 'fallback-session-secret',
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     name: '__Secure-marine.sid',
@@ -201,6 +245,23 @@ const csrfProtection = (req, res, next) => {
     next();
 };
 
+// ✅ Request ID
+app.use((req, res, next) => {
+    req.requestId = crypto.randomBytes(8).toString('hex');
+    res.setHeader('X-Request-ID', req.requestId);
+    next();
+});
+
+// ✅ Logging
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${duration}ms - ${req.requestId}`);
+    });
+    next();
+});
+
 // ============================================================
 // 📁 STATIC FILES
 // ============================================================
@@ -219,23 +280,20 @@ app.use('/public', express.static(publicDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
-// 🔐 CREATE ADMIN FROM RENDER VARIABLES
+// 🔐 CREATE ADMIN IN MONGODB (إذا كان متصلاً)
 // ============================================================
 
-async function createAdminUser() {
+async function createAdminInMongoDB() {
     try {
-        if (!MONGODB_URI || mongoose.connection.readyState !== 1) {
-            console.warn('⚠️ MongoDB not connected - using memory storage');
-            return;
-        }
-
+        if (!isMongoConnected) return;
+        
         const adminExists = await User.findOne({ username: 'admin' });
         if (!adminExists) {
             if (!ADMIN_PASSWORD) {
-                console.error('❌ ADMIN_PASSWORD not set in Render!');
-                return;
+                console.warn('⚠️ ADMIN_PASSWORD not set, using default');
             }
-            const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 12);
+            const password = ADMIN_PASSWORD || 'admin123';
+            const hashedPassword = bcrypt.hashSync(password, 12);
             const admin = new User({
                 username: 'admin',
                 password: hashedPassword,
@@ -245,64 +303,23 @@ async function createAdminUser() {
                 active: true
             });
             await admin.save();
-            console.log('✅ Admin user created from Render variables');
-        } else {
-            console.log('✅ Admin user already exists');
+            console.log('✅ Admin user created in MongoDB');
         }
     } catch (error) {
-        console.error('❌ Error creating admin:', error);
+        console.error('❌ Error creating admin in MongoDB:', error);
     }
-}
-
-// ============================================================
-// 📊 MEMORY STORAGE (Fallback)
-// ============================================================
-
-const memoryUsers = [];
-const memoryVessels = [
-    { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي' },
-    { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'maintenance', location: 'حوض السفن' },
-    { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي' }
-];
-
-// ✅ إنشاء مستخدم admin في الذاكرة (احتياطي)
-if (ADMIN_PASSWORD) {
-    const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 10);
-    memoryUsers.push({
-        id: '1',
-        username: 'admin',
-        password: hashedPassword,
-        name: 'Administrator',
-        email: 'admin@marine.com',
-        role: 'admin',
-        active: true,
-        createdAt: new Date().toISOString()
-    });
-    console.log('✅ Admin user created in memory');
-} else {
-    console.warn('⚠️ ADMIN_PASSWORD not set - using default for development');
-    const hashedPassword = bcrypt.hashSync('admin123', 10);
-    memoryUsers.push({
-        id: '1',
-        username: 'admin',
-        password: hashedPassword,
-        name: 'Administrator',
-        email: 'admin@marine.com',
-        role: 'admin',
-        active: true,
-        createdAt: new Date().toISOString()
-    });
 }
 
 // ============================================================
 // 🔐 AUTH ENDPOINTS
 // ============================================================
 
+// ✅ CSRF Token
 app.get('/api/csrf-token', (req, res) => {
     res.json({ success: true, token: req.session.csrfToken });
 });
 
-// ✅ LOGIN - يستخدم متغيرات Render
+// ✅ Login
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -313,10 +330,11 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         // ✅ البحث عن المستخدم
-        let user;
-        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+        let user = null;
+        if (isMongoConnected) {
             user = await User.findOne({ username });
-        } else {
+        }
+        if (!user) {
             user = memoryUsers.find(u => u.username === username);
         }
 
@@ -324,18 +342,61 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
+        // ✅ التحقق من القفل
+        if (user.locked && user.lockedUntil) {
+            if (Date.now() < user.lockedUntil) {
+                const remaining = Math.ceil((user.lockedUntil - Date.now()) / 60000);
+                return res.status(403).json({ 
+                    success: false, 
+                    error: `⚠️ الحساب مقفل. حاول مرة أخرى بعد ${remaining} دقيقة` 
+                });
+            } else {
+                user.locked = false;
+                user.lockedUntil = null;
+                user.loginAttempts = 0;
+                if (isMongoConnected) await user.save();
+            }
+        }
+
         // ✅ التحقق من كلمة المرور
         const isValid = bcrypt.compareSync(password, user.password);
-        console.log(`🔑 Password match: ${isValid}`);
-
+        
         if (!isValid) {
-            return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+            user.loginAttempts = (user.loginAttempts || 0) + 1;
+            
+            if (user.loginAttempts >= 5) {
+                user.locked = true;
+                user.lockedUntil = Date.now() + (30 * 60 * 1000);
+                console.log(`🔒 Account locked for ${username}`);
+                
+                if (isMongoConnected) await user.save();
+                
+                return res.status(403).json({ 
+                    success: false, 
+                    error: '⚠️ الحساب مقفل لمدة 30 دقيقة بسبب كثرة المحاولات الفاشلة' 
+                });
+            }
+            
+            if (isMongoConnected) await user.save();
+            
+            console.log(`❌ Invalid password for ${username} (attempt ${user.loginAttempts}/5)`);
+            return res.status(401).json({ 
+                success: false, 
+                error: `❌ اسم المستخدم أو كلمة المرور غير صحيحة (${user.loginAttempts}/5)` 
+            });
         }
+
+        // ✅ نجاح تسجيل الدخول
+        user.loginAttempts = 0;
+        user.locked = false;
+        user.lockedUntil = null;
+        user.lastLogin = new Date();
+        if (isMongoConnected) await user.save();
 
         // ✅ إنشاء التوكن
         const token = jwt.sign(
             { id: user._id || user.id, username: user.username, role: user.role },
-            JWT_SECRET || 'fallback-jwt-secret',
+            JWT_SECRET,
             { expiresIn: '7d' }
         );
 
@@ -368,12 +429,13 @@ app.get('/api/auth/me', async (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET || 'fallback-jwt-secret');
+        const decoded = jwt.verify(token, JWT_SECRET);
 
-        let user;
-        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+        let user = null;
+        if (isMongoConnected) {
             user = await User.findById(decoded.id);
-        } else {
+        }
+        if (!user) {
             user = memoryUsers.find(u => u.id === decoded.id);
         }
 
@@ -405,13 +467,74 @@ app.post('/api/auth/logout', (req, res) => {
     });
 });
 
+// ✅ Reset login attempts (للتطوير)
+app.post('/api/auth/reset-attempts', async (req, res) => {
+    try {
+        const { username } = req.body;
+        const targetUser = username || 'admin';
+        
+        let user = null;
+        if (isMongoConnected) {
+            user = await User.findOne({ username: targetUser });
+        }
+        if (!user) {
+            user = memoryUsers.find(u => u.username === targetUser);
+        }
+        
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+        
+        user.loginAttempts = 0;
+        user.locked = false;
+        user.lockedUntil = null;
+        if (isMongoConnected) await user.save();
+        
+        res.json({ success: true, message: `✅ تم إعادة تعيين محاولات ${targetUser}` });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+    }
+});
+
+// ✅ User status
+app.get('/api/auth/user-status/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        
+        let user = null;
+        if (isMongoConnected) {
+            user = await User.findOne({ username });
+        }
+        if (!user) {
+            user = memoryUsers.find(u => u.username === username);
+        }
+        
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+        
+        res.json({
+            success: true,
+            user: {
+                username: user.username,
+                loginAttempts: user.loginAttempts || 0,
+                locked: user.locked || false,
+                lockedUntil: user.lockedUntil || null
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+    }
+});
+
 // ============================================================
 // 📊 DATA ENDPOINTS
 // ============================================================
 
+// ✅ Get vessels
 app.get('/api/vessels', csrfProtection, async (req, res) => {
     try {
-        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+        if (isMongoConnected) {
             const vessels = await Vessel.find().sort({ createdAt: -1 });
             return res.json(vessels);
         }
@@ -421,6 +544,7 @@ app.get('/api/vessels', csrfProtection, async (req, res) => {
     }
 });
 
+// ✅ Add vessel
 app.post('/api/vessels', csrfProtection, async (req, res) => {
     try {
         const { name, type, status, location } = req.body;
@@ -428,12 +552,13 @@ app.post('/api/vessels', csrfProtection, async (req, res) => {
             return res.status(400).json({ success: false, error: 'اسم الوحدة مطلوب' });
         }
 
-        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+        if (isMongoConnected) {
             const newVessel = new Vessel({
                 name,
                 type: type || 'غير محدد',
                 status: status || 'ready',
-                location: location || '—'
+                location: location || '—',
+                lastMaintenance: new Date()
             });
             await newVessel.save();
             return res.json({ success: true, vessel: newVessel });
@@ -444,7 +569,8 @@ app.post('/api/vessels', csrfProtection, async (req, res) => {
             name,
             type: type || 'غير محدد',
             status: status || 'ready',
-            location: location || '—'
+            location: location || '—',
+            lastMaintenance: new Date().toISOString()
         };
         memoryVessels.push(newVessel);
         res.json({ success: true, vessel: newVessel });
@@ -453,15 +579,176 @@ app.post('/api/vessels', csrfProtection, async (req, res) => {
     }
 });
 
+// ✅ Delete vessel
+app.delete('/api/vessels/:id', csrfProtection, async (req, res) => {
+    try {
+        const vesselId = req.params.id;
+        
+        if (isMongoConnected) {
+            const result = await Vessel.findByIdAndDelete(vesselId);
+            if (!result) {
+                return res.status(404).json({ success: false, error: 'الوحدة غير موجودة' });
+            }
+            return res.json({ success: true, message: 'تم حذف الوحدة' });
+        }
+        
+        const index = memoryVessels.findIndex(v => v.id === vesselId);
+        if (index === -1) {
+            return res.status(404).json({ success: false, error: 'الوحدة غير موجودة' });
+        }
+        memoryVessels.splice(index, 1);
+        res.json({ success: true, message: 'تم حذف الوحدة' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'خطأ في حذف الوحدة' });
+    }
+});
+
+// ✅ Get users
 app.get('/api/users', csrfProtection, async (req, res) => {
     try {
-        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+        if (isMongoConnected) {
             const users = await User.find({}, '-password');
             return res.json(users);
         }
         const safeUsers = memoryUsers.map(({ password, ...user }) => user);
         res.json(safeUsers);
     } catch (error) {
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+    }
+});
+
+// ✅ Add user
+app.post('/api/users', csrfProtection, async (req, res) => {
+    try {
+        const { username, password, email, role } = req.body;
+        
+        if (!username) {
+            return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
+        }
+        if (!password) {
+            return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
+        }
+
+        // ✅ التحقق من وجود المستخدم
+        let existingUser = null;
+        if (isMongoConnected) {
+            existingUser = await User.findOne({ username });
+        } else {
+            existingUser = memoryUsers.find(u => u.username === username);
+        }
+        
+        if (existingUser) {
+            return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
+        }
+
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        const newUserData = {
+            username,
+            password: hashedPassword,
+            name: username,
+            email: email || `${username}@marine.com`,
+            role: role || 'viewer',
+            active: true
+        };
+
+        if (isMongoConnected) {
+            const newUser = new User(newUserData);
+            await newUser.save();
+            const { password: _, ...userWithoutPassword } = newUser.toObject();
+            return res.status(201).json({ success: true, message: 'تم إضافة المستخدم', user: userWithoutPassword });
+        }
+
+        const newUser = {
+            id: crypto.randomBytes(8).toString('hex'),
+            ...newUserData,
+            loginAttempts: 0,
+            locked: false,
+            lockedUntil: null,
+            createdAt: new Date().toISOString(),
+            lastLogin: null
+        };
+        memoryUsers.push(newUser);
+        const { password: _, ...userWithoutPassword } = newUser;
+        res.status(201).json({ success: true, message: 'تم إضافة المستخدم', user: userWithoutPassword });
+    } catch (error) {
+        console.error('❌ Error creating user:', error);
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+    }
+});
+
+// ✅ Update user
+app.put('/api/users/:id', csrfProtection, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { username, email, role, active, password } = req.body;
+
+        let user = null;
+        if (isMongoConnected) {
+            user = await User.findById(userId);
+        } else {
+            user = memoryUsers.find(u => u.id === userId);
+        }
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+
+        if (user.username === 'admin' && req.body.username && req.body.username !== 'admin') {
+            return res.status(403).json({ success: false, error: 'لا يمكن تغيير اسم المستخدم الرئيسي' });
+        }
+
+        if (username) user.username = username;
+        if (email) user.email = email;
+        if (role) user.role = role;
+        if (active !== undefined) user.active = active;
+        if (password) {
+            user.password = bcrypt.hashSync(password, 10);
+        }
+
+        if (isMongoConnected) {
+            await user.save();
+            const { password: _, ...userWithoutPassword } = user.toObject();
+            return res.json({ success: true, message: 'تم تحديث المستخدم', user: userWithoutPassword });
+        }
+
+        const { password: _, ...userWithoutPassword } = user;
+        res.json({ success: true, message: 'تم تحديث المستخدم', user: userWithoutPassword });
+    } catch (error) {
+        console.error('❌ Error updating user:', error);
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+    }
+});
+
+// ✅ Delete user
+app.delete('/api/users/:id', csrfProtection, async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        let user = null;
+        if (isMongoConnected) {
+            user = await User.findById(userId);
+        } else {
+            user = memoryUsers.find(u => u.id === userId);
+        }
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+
+        if (user.username === 'admin') {
+            return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
+        }
+
+        if (isMongoConnected) {
+            await User.findByIdAndDelete(userId);
+            return res.json({ success: true, message: 'تم حذف المستخدم' });
+        }
+
+        const index = memoryUsers.findIndex(u => u.id === userId);
+        memoryUsers.splice(index, 1);
+        res.json({ success: true, message: 'تم حذف المستخدم' });
+    } catch (error) {
+        console.error('❌ Error deleting user:', error);
         res.status(500).json({ success: false, error: 'خطأ في الخادم' });
     }
 });
@@ -532,7 +819,7 @@ app.get('/', (req, res) => {
                     <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
                     <p class="info">🔒 <strong>الأمان:</strong> عالي جداً</p>
                     <p class="info">👤 <strong>المستخدم:</strong> admin</p>
-                    <p class="info">🔑 <strong>كلمة المرور:</strong> (مخزنة في Render)</p>
+                    <p class="info">🔑 <strong>كلمة المرور:</strong> (مخزنة في البيئة)</p>
                 </div>
                 <div id="loginSection" class="login-section">
                     <h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3>
@@ -553,7 +840,7 @@ app.get('/', (req, res) => {
                     </div>
                     <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
                 </div>
-                <div class="footer">🔒 جميع البيانات مشفرة | v8.0</div>
+                <div class="footer">🔒 جميع البيانات مشفرة | v8.0 Professional</div>
             </div>
             <script>
                 let csrfToken = '';
@@ -669,17 +956,21 @@ app.get('*', (req, res) => {
 // 🚀 START SERVER
 // ============================================================
 
-createAdminUser().then(() => {
+createAdminInMongoDB().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM - RENDER READY');
+        console.log('🚢 MARINE SYSTEM v8.0 - PROFESSIONAL');
         console.log('=========================================');
-        console.log(`📍 http://localhost:${PORT}`);
+        console.log(`📍 Server: http://localhost:${PORT}`);
         console.log(`🌍 Environment: ${NODE_ENV}`);
-        console.log(`🗄️ Database: ${MONGODB_URI ? 'MongoDB' : 'Memory'}`);
+        console.log(`🗄️ Database: ${isMongoConnected ? 'MongoDB' : 'Memory'}`);
+        console.log('🔒 Security: CSRF + XSS + HPP + Rate Limiting + Helmet');
         console.log('=========================================');
-        console.log('✅ All secrets are loaded from Render environment');
-        console.log('🔐 Admin password is NOT in the code');
+        console.log('🔑 Admin credentials:');
+        console.log(`   👤 Username: ${ADMIN_USERNAME}`);
+        console.log(`   🔑 Password: ${ADMIN_PASSWORD ? 'Set in environment' : 'admin123 (default)'}`);
+        console.log('=========================================');
+        console.log('✅ Server is ready!');
         console.log('=========================================');
     });
 });
