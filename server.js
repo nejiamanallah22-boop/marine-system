@@ -147,7 +147,7 @@ function generateRequestId() {
 // 🛡️ SECURITY MIDDLEWARE
 // ============================================================
 
-// ✅ Helmet - Secure HTTP Headers مع إصلاح CSP
+// ✅ Helmet - Secure HTTP Headers
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -471,6 +471,56 @@ function servePage(req, res, pageName) {
 }
 
 // ============================================================
+// 🔐 CSRF TOKEN ENDPOINT - MUST BE BEFORE OTHER ROUTES
+// ============================================================
+
+app.get('/api/csrf-token', (req, res) => {
+    try {
+        console.log('🔄 CSRF token requested');
+        
+        if (!req.session) {
+            console.error('❌ No session found');
+            return res.status(500).json({
+                success: false,
+                error: 'No session'
+            });
+        }
+        
+        if (!req.session.csrfToken) {
+            req.session.csrfToken = generateSecureToken();
+            req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+            console.log('🔄 New CSRF token generated');
+        }
+        
+        if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
+            req.session.csrfToken = generateSecureToken();
+            req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+            console.log('🔄 CSRF token refreshed');
+        }
+        
+        const token = req.session.csrfToken;
+        const expiry = req.session.csrfExpiry || Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('X-CSRF-Token', token);
+        
+        res.json({
+            success: true,
+            token: token,
+            expiresIn: expiry - Date.now()
+        });
+        
+        console.log('✅ CSRF token sent successfully');
+    } catch (error) {
+        console.error('❌ CSRF token error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate CSRF token'
+        });
+    }
+});
+
+// ============================================================
 // 🌐 PAGE ROUTES
 // ============================================================
 
@@ -679,9 +729,7 @@ app.get('/', (req, res) => {
                 let csrfToken = '';
                 let csrfExpiry = 0;
 
-                // ✅ دالة الحصول على CSRF token
                 async function getCsrfToken() {
-                    // ✅ التحقق من الـ cache أولاً
                     const savedToken = localStorage.getItem('csrfToken');
                     const savedExpiry = parseInt(localStorage.getItem('csrfExpiry') || '0');
                     
@@ -705,12 +753,18 @@ app.get('/', (req, res) => {
                         
                         console.log('📥 CSRF Response Status:', response.status);
                         
-                        // ✅ التحقق من الـ Content-Type
                         const contentType = response.headers.get('content-type') || '';
                         if (!contentType.includes('application/json')) {
                             console.error('❌ Invalid content-type:', contentType);
-                            const text = await response.text();
-                            console.error('❌ Response preview:', text.substring(0, 100));
+                            const headerToken = response.headers.get('X-CSRF-Token');
+                            if (headerToken) {
+                                console.log('✅ Found CSRF token in headers');
+                                csrfToken = headerToken;
+                                csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
+                                localStorage.setItem('csrfToken', csrfToken);
+                                localStorage.setItem('csrfExpiry', csrfExpiry.toString());
+                                return csrfToken;
+                            }
                             return null;
                         }
                         
@@ -735,20 +789,16 @@ app.get('/', (req, res) => {
                         }
                     } catch (error) {
                         console.error('❌ CSRF Error:', error);
-                        
-                        // ✅ محاولة استخدام token من localStorage
                         const fallbackToken = localStorage.getItem('csrfToken');
                         if (fallbackToken) {
                             console.log('⚠️ Using fallback CSRF token');
                             csrfToken = fallbackToken;
                             return fallbackToken;
                         }
-                        
                         return null;
                     }
                 }
 
-                // ✅ دالة تسجيل الدخول
                 async function handleLogin() {
                     const username = document.getElementById('username').value.trim();
                     const password = document.getElementById('password').value;
@@ -975,53 +1025,6 @@ app.get('*', (req, res) => {
 // ============================================================
 // 🔐 AUTH ENDPOINTS
 // ============================================================
-
-// ✅ Get CSRF Token - مهم جداً أن يكون قبل أي Routes أخرى
-app.get('/api/csrf-token', (req, res) => {
-    try {
-        console.log('🔄 CSRF token requested');
-        
-        if (!req.session) {
-            console.error('❌ No session found');
-            return res.status(500).json({
-                success: false,
-                error: 'No session'
-            });
-        }
-        
-        if (!req.session.csrfToken) {
-            req.session.csrfToken = generateSecureToken();
-            req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-            console.log('🔄 New CSRF token generated');
-        }
-        
-        if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
-            req.session.csrfToken = generateSecureToken();
-            req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-            console.log('🔄 CSRF token refreshed');
-        }
-        
-        const token = req.session.csrfToken;
-        const expiry = req.session.csrfExpiry || Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-        
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('X-CSRF-Token', token);
-        
-        res.json({
-            success: true,
-            token: token,
-            expiresIn: expiry - Date.now()
-        });
-        
-        console.log('✅ CSRF token sent successfully');
-    } catch (error) {
-        console.error('❌ CSRF token error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to generate CSRF token'
-        });
-    }
-});
 
 // ✅ Login
 app.post('/api/auth/login', (req, res) => {
