@@ -1,8 +1,28 @@
+```js
 // ============================================================
-// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FULLY FIXED)
+// 🚢 MARINE SYSTEM - v8.1 HARDENED / FULLY FIXED
+// ============================================================
+// FIXES:
+// ✅ API routes BEFORE page routes
+// ✅ NO wildcard route before API
+// ✅ API 404 always returns JSON
+// ✅ Page fallback only for non-API requests
+// ✅ Fixed CSRF rotation race condition
+// ✅ Authentication middleware
+// ✅ Admin RBAC
+// ✅ Secure Render proxy configuration
+// ✅ Secure session cookie
+// ✅ Removed dangerous cookie domain
+// ✅ No password logging
+// ✅ Strict JWT algorithm
+// ✅ Request IDs
+// ✅ Security headers
+// ✅ Rate limiting
+// ✅ Body limits
 // ============================================================
 
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -19,120 +39,27 @@ const hpp = require('hpp');
 const compression = require('compression');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// ============================================================
-// 🔐 ULTRA SECURE CONFIGURATION
-// ============================================================
-
-function generateSecureKey(length = 64) {
-    return crypto.randomBytes(length).toString('hex');
-}
-
+const PORT = Number(process.env.PORT) || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-function isStrongPassword(password) {
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-    const isLongEnough = password.length >= 12;
-    return [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar, isLongEnough].filter(Boolean).length >= 4;
-}
-
-function generateStrongPassword(length = 16) {
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const numbers = '0123456789';
-    const special = '!@#$%^&*()_+-=';
-    const all = uppercase + lowercase + numbers + special;
-    let password = '';
-    password += uppercase[Math.floor(Math.random() * uppercase.length)];
-    password += lowercase[Math.floor(Math.random() * lowercase.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-    password += special[Math.floor(Math.random() * special.length)];
-    for (let i = password.length; i < length; i++) {
-        password += all[Math.floor(Math.random() * all.length)];
-    }
-    return password.split('').sort(() => Math.random() - 0.5).join('');
-}
-
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = (() => {
-    if (process.env.ADMIN_PASSWORD) {
-        if (!isStrongPassword(process.env.ADMIN_PASSWORD)) {
-            console.warn('⚠️ Admin password is weak. Using generated strong password.');
-            return generateStrongPassword();
-        }
-        return process.env.ADMIN_PASSWORD;
-    }
-    const generated = generateStrongPassword();
-    console.log('=========================================');
-    console.log('🔑 GENERATED ADMIN PASSWORD:', generated);
-    console.log('💾 SAVE THIS PASSWORD NOW!');
-    console.log('=========================================');
-    return generated;
-})();
-
-const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
-const JWT_SECRET = process.env.JWT_SECRET || generateSecureKey(64);
-const SESSION_SECRET = process.env.SESSION_SECRET || generateSecureKey(64);
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
-const ENCRYPTION_IV = crypto.randomBytes(16);
-
-const CONFIG = {
-    rateLimit: {
-        window: parseInt(process.env.RATE_LIMIT_WINDOW) || 15,
-        max: parseInt(process.env.RATE_LIMIT_MAX) || 100
-    },
-    authRateLimit: {
-        window: parseInt(process.env.RATE_LIMIT_WINDOW) || 15,
-        max: parseInt(process.env.AUTH_RATE_LIMIT_MAX) || 5
-    },
-    csrf: {
-        expiry: parseInt(process.env.CSRF_TOKEN_EXPIRY) || 8
-    },
-    session: {
-        maxAge: parseInt(process.env.SESSION_MAX_AGE) || 30
-    },
-    password: {
-        saltRounds: parseInt(process.env.PASSWORD_SALT_ROUNDS) || 12
-    },
-    security: {
-        maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 5,
-        accountLockTime: parseInt(process.env.ACCOUNT_LOCK_TIME) || 30
-    },
-    token: {
-        expiry: process.env.TOKEN_EXPIRY || '7d'
-    }
-};
-
 // ============================================================
-// 🔐 ENCRYPTION FUNCTIONS
+// 🔧 EXPRESS / RENDER
 // ============================================================
 
-function encrypt(text) {
-    try {
-        const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), ENCRYPTION_IV);
-        let encrypted = cipher.update(text, 'utf8', 'hex');
-        encrypted += cipher.final('hex');
-        return encrypted;
-    } catch (error) {
-        console.error('Encryption error:', error);
-        return text;
-    }
+if (isProduction) {
+    // Render sits behind a proxy.
+    app.set('trust proxy', 1);
 }
 
-function decrypt(text) {
-    try {
-        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), ENCRYPTION_IV);
-        let decrypted = decipher.update(text, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-        return decrypted;
-    } catch (error) {
-        console.error('Decryption error:', error);
-        return text;
-    }
+app.disable('x-powered-by');
+
+// ============================================================
+// 🔐 SECURE CONFIGURATION
+// ============================================================
+
+function generateSecureKey(bytes = 32) {
+    return crypto.randomBytes(bytes).toString('hex');
 }
 
 function generateSecureToken() {
@@ -140,1229 +67,2600 @@ function generateSecureToken() {
 }
 
 function generateRequestId() {
-    return crypto.randomBytes(8).toString('hex');
+    return crypto.randomBytes(16).toString('hex');
+}
+
+function isStrongPassword(password) {
+    if (typeof password !== 'string') return false;
+
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password);
+    const isLongEnough = password.length >= 12;
+
+    return (
+        hasUpperCase &&
+        hasLowerCase &&
+        hasNumbers &&
+        hasSpecialChar &&
+        isLongEnough
+    );
+}
+
+function generateStrongPassword(length = 20) {
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*()_+-=';
+    const all = uppercase + lowercase + numbers + special;
+
+    const randomChar = (set) =>
+        set[crypto.randomInt(0, set.length)];
+
+    let password = '';
+
+    password += randomChar(uppercase);
+    password += randomChar(lowercase);
+    password += randomChar(numbers);
+    password += randomChar(special);
+
+    while (password.length < length) {
+        password += randomChar(all);
+    }
+
+    // Cryptographically safer shuffle
+    const chars = password.split('');
+
+    for (let i = chars.length - 1; i > 0; i--) {
+        const j = crypto.randomInt(0, i + 1);
+        [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+
+    return chars.join('');
 }
 
 // ============================================================
-// 🛡️ SECURITY MIDDLEWARE
+// 🔑 ENVIRONMENT VARIABLES
 // ============================================================
 
-// ✅ Helmet - Secure HTTP Headers
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "'unsafe-eval'",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com",
-                "https://fonts.googleapis.com",
-                "https://*.googleapis.com"
-            ],
-            styleSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com",
-                "https://fonts.googleapis.com",
-                "https://*.googleapis.com"
-            ],
-            imgSrc: [
-                "'self'",
-                "data:",
-                "https:",
-                "http:",
-                "https://unpkg.com",
-                "https://*.googleapis.com"
-            ],
-            connectSrc: [
-                "'self'",
-                "https://*.onrender.com",
-                "https://unpkg.com",
-                "https://*.googleapis.com"
-            ],
-            fontSrc: [
-                "'self'",
-                "https:",
-                "data:",
-                "https://fonts.gstatic.com",
-                "https://*.googleapis.com"
-            ],
-            scriptSrcAttr: ["'unsafe-inline'"],
-            objectSrc: ["'none'"],
-            mediaSrc: ["'self'"],
-            frameSrc: ["'none'"],
-            baseUri: ["'self'"],
-            formAction: ["'self'"],
-            upgradeInsecureRequests: isProduction ? [] : null
+const ADMIN_USERNAME =
+    process.env.ADMIN_USERNAME || 'admin';
+
+let ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PASSWORD) {
+    if (isProduction) {
+        console.error(
+            '❌ FATAL: ADMIN_PASSWORD must be configured in production.'
+        );
+        process.exit(1);
+    }
+
+    ADMIN_PASSWORD = generateStrongPassword();
+
+    console.warn(
+        '⚠️ DEVELOPMENT ONLY: Generated temporary admin password.'
+    );
+    console.warn(
+        '⚠️ Configure ADMIN_PASSWORD in .env before production.'
+    );
+}
+
+if (!isStrongPassword(ADMIN_PASSWORD)) {
+    console.error(
+        '❌ FATAL: ADMIN_PASSWORD is weak.'
+    );
+    console.error(
+        'Password must contain 12+ chars, uppercase, lowercase, number and special character.'
+    );
+
+    if (isProduction) {
+        process.exit(1);
+    }
+}
+
+const ADMIN_NAME =
+    process.env.ADMIN_NAME || 'أمان الله ناجي';
+
+// ------------------------------------------------------------
+// JWT SECRET
+// ------------------------------------------------------------
+
+const JWT_SECRET =
+    process.env.JWT_SECRET || generateSecureKey(64);
+
+if (isProduction && (!process.env.JWT_SECRET || JWT_SECRET.length < 64)) {
+    console.error(
+        '❌ FATAL: JWT_SECRET must be configured in production.'
+    );
+    process.exit(1);
+}
+
+// ------------------------------------------------------------
+// SESSION SECRET
+// ------------------------------------------------------------
+
+const SESSION_SECRET =
+    process.env.SESSION_SECRET || generateSecureKey(64);
+
+if (
+    isProduction &&
+    (!process.env.SESSION_SECRET || SESSION_SECRET.length < 64)
+) {
+    console.error(
+        '❌ FATAL: SESSION_SECRET must be configured in production.'
+    );
+    process.exit(1);
+}
+
+// ------------------------------------------------------------
+// ENCRYPTION KEY
+// ------------------------------------------------------------
+
+let ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+
+if (!ENCRYPTION_KEY) {
+    ENCRYPTION_KEY = generateSecureKey(32);
+
+    if (isProduction) {
+        console.error(
+            '❌ FATAL: ENCRYPTION_KEY must be configured in production.'
+        );
+        process.exit(1);
+    }
+}
+
+if (!/^[0-9a-fA-F]{64}$/.test(ENCRYPTION_KEY)) {
+    console.error(
+        '❌ FATAL: ENCRYPTION_KEY must be exactly 64 hexadecimal characters.'
+    );
+    process.exit(1);
+}
+
+// IMPORTANT:
+// CBC IV must remain stable for decrypting existing encrypted data.
+// For this demo/in-memory version we use an ENV IV.
+// In production DB encryption, use a random IV per record and store it
+// alongside ciphertext.
+
+let ENCRYPTION_IV;
+
+if (process.env.ENCRYPTION_IV) {
+    if (!/^[0-9a-fA-F]{32}$/.test(process.env.ENCRYPTION_IV)) {
+        console.error(
+            '❌ FATAL: ENCRYPTION_IV must be exactly 32 hexadecimal characters.'
+        );
+        process.exit(1);
+    }
+
+    ENCRYPTION_IV = Buffer.from(
+        process.env.ENCRYPTION_IV,
+        'hex'
+    );
+} else {
+    ENCRYPTION_IV = crypto.randomBytes(16);
+
+    if (isProduction) {
+        console.error(
+            '❌ FATAL: ENCRYPTION_IV must be configured in production.'
+        );
+        process.exit(1);
+    }
+}
+
+// ============================================================
+// ⚙️ CONFIG
+// ============================================================
+
+const CONFIG = {
+    rateLimit: {
+        window:
+            parseInt(process.env.RATE_LIMIT_WINDOW, 10) || 15,
+
+        max:
+            parseInt(process.env.RATE_LIMIT_MAX, 10) || 100
+    },
+
+    authRateLimit: {
+        window:
+            parseInt(process.env.AUTH_RATE_LIMIT_WINDOW, 10) || 15,
+
+        max:
+            parseInt(process.env.AUTH_RATE_LIMIT_MAX, 10) || 5
+    },
+
+    csrf: {
+        expiry:
+            parseInt(process.env.CSRF_TOKEN_EXPIRY, 10) || 8
+    },
+
+    session: {
+        maxAge:
+            parseInt(process.env.SESSION_MAX_AGE, 10) || 30
+    },
+
+    password: {
+        saltRounds:
+            parseInt(process.env.PASSWORD_SALT_ROUNDS, 10) || 12
+    },
+
+    security: {
+        maxLoginAttempts:
+            parseInt(process.env.MAX_LOGIN_ATTEMPTS, 10) || 5,
+
+        accountLockTime:
+            parseInt(process.env.ACCOUNT_LOCK_TIME, 10) || 30
+    },
+
+    token: {
+        expiry:
+            process.env.TOKEN_EXPIRY || '7d'
+    }
+};
+
+// ============================================================
+// 🔐 ENCRYPTION
+// ============================================================
+
+function encrypt(text) {
+    try {
+        if (text === null || text === undefined) {
+            return '';
         }
-    },
-    hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true
-    },
-    frameguard: { action: 'deny' },
-    noSniff: true,
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    xssFilter: true,
-    hidePoweredBy: true,
-    ieNoOpen: true,
-    permittedCrossDomainPolicies: { permittedPolicies: 'none' }
-}));
 
-// ✅ CORS
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['http://localhost:5000', 'http://localhost:3000', 'https://marine-system-71eo.onrender.com'];
+        const cipher = crypto.createCipheriv(
+            'aes-256-cbc',
+            Buffer.from(ENCRYPTION_KEY, 'hex'),
+            ENCRYPTION_IV
+        );
 
-app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || !isProduction) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
+        let encrypted = cipher.update(
+            String(text),
+            'utf8',
+            'hex'
+        );
+
+        encrypted += cipher.final('hex');
+
+        return encrypted;
+    } catch (error) {
+        console.error('❌ Encryption error');
+        return String(text);
+    }
+}
+
+function decrypt(text) {
+    try {
+        if (!text) return '';
+
+        const decipher = crypto.createDecipheriv(
+            'aes-256-cbc',
+            Buffer.from(ENCRYPTION_KEY, 'hex'),
+            ENCRYPTION_IV
+        );
+
+        let decrypted = decipher.update(
+            text,
+            'hex',
+            'utf8'
+        );
+
+        decrypted += decipher.final('utf8');
+
+        return decrypted;
+    } catch (error) {
+        console.error('❌ Decryption error');
+        return text;
+    }
+}
+
+// ============================================================
+// 🛡️ SECURITY HEADERS
+// ============================================================
+
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+
+                scriptSrc: [
+                    "'self'",
+                    "'unsafe-inline'",
+                    // Keep unsafe-eval only if an existing frontend
+                    // library genuinely requires it.
+                    "'unsafe-eval'",
+                    'https://unpkg.com',
+                    'https://cdnjs.cloudflare.com',
+                    'https://fonts.googleapis.com',
+                    'https://*.googleapis.com'
+                ],
+
+                styleSrc: [
+                    "'self'",
+                    "'unsafe-inline'",
+                    'https://unpkg.com',
+                    'https://cdnjs.cloudflare.com',
+                    'https://fonts.googleapis.com',
+                    'https://*.googleapis.com'
+                ],
+
+                imgSrc: [
+                    "'self'",
+                    'data:',
+                    'https:',
+                    'http:'
+                ],
+
+                connectSrc: [
+                    "'self'",
+                    'https://*.onrender.com',
+                    'https://unpkg.com',
+                    'https://*.googleapis.com'
+                ],
+
+                fontSrc: [
+                    "'self'",
+                    'https:',
+                    'data:',
+                    'https://fonts.gstatic.com',
+                    'https://*.googleapis.com'
+                ],
+
+                objectSrc: ["'none'"],
+                mediaSrc: ["'self'"],
+                frameSrc: ["'none'"],
+                baseUri: ["'self'"],
+                formAction: ["'self'"],
+
+                scriptSrcAttr: ["'unsafe-inline'"],
+
+                upgradeInsecureRequests:
+                    isProduction ? [] : null
+            }
+        },
+
+        hsts: isProduction
+            ? {
+                  maxAge: 31536000,
+                  includeSubDomains: true,
+                  preload: true
+              }
+            : false,
+
+        frameguard: {
+            action: 'deny'
+        },
+
+        noSniff: true,
+
+        referrerPolicy: {
+            policy: 'strict-origin-when-cross-origin'
+        },
+
+        xssFilter: true,
+
+        hidePoweredBy: true,
+
+        ieNoOpen: true,
+
+        permittedCrossDomainPolicies: {
+            permittedPolicies: 'none'
         }
-    },
-    credentials: true,
-    exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry', 'X-Request-ID', 'X-User-ID'],
-    maxAge: 86400
-}));
+    })
+);
 
-// ✅ Compression
+// ============================================================
+// 🌐 CORS
+// ============================================================
+
+const allowedOrigins = (
+    process.env.ALLOWED_ORIGINS ||
+    (
+        isProduction
+            ? 'https://marine-system-71eo.onrender.com'
+            : 'http://localhost:5000,http://localhost:3000'
+    )
+)
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            // Same-origin / non-browser requests
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            // Development convenience only
+            if (!isProduction) {
+                return callback(null, true);
+            }
+
+            return callback(
+                new Error('Not allowed by CORS')
+            );
+        },
+
+        credentials: true,
+
+        exposedHeaders: [
+            'X-CSRF-Token',
+            'X-Session-Expiry',
+            'X-Request-ID',
+            'X-User-ID'
+        ],
+
+        maxAge: 86400
+    })
+);
+
+// ============================================================
+// 📦 COMPRESSION
+// ============================================================
+
 app.use(compression());
 
-// ✅ Rate Limiting - Global
+// ============================================================
+// 🚦 RATE LIMITING
+// ============================================================
+
 const limiter = rateLimit({
-    windowMs: CONFIG.rateLimit.window * 60 * 1000,
-    max: CONFIG.rateLimit.max,
-    message: { success: false, error: 'Too many requests, please try again later.' },
+    windowMs:
+        CONFIG.rateLimit.window * 60 * 1000,
+
+    max:
+        CONFIG.rateLimit.max,
+
+    message: {
+        success: false,
+        error: 'Too many requests, please try again later.'
+    },
+
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.ip || req.connection.remoteAddress
+
+    keyGenerator: (req) =>
+        req.ip || req.socket.remoteAddress
 });
+
 app.use('/api/', limiter);
 
-// ✅ Rate Limiting - Auth endpoints
+// ------------------------------------------------------------
+// AUTH RATE LIMIT
+// ------------------------------------------------------------
+
 const authLimiter = rateLimit({
-    windowMs: CONFIG.authRateLimit.window * 60 * 1000,
-    max: CONFIG.authRateLimit.max,
-    message: { success: false, error: `Too many login attempts. Please try again after ${CONFIG.authRateLimit.window} minutes.` },
+    windowMs:
+        CONFIG.authRateLimit.window * 60 * 1000,
+
+    max:
+        CONFIG.authRateLimit.max,
+
+    message: {
+        success: false,
+        error:
+            `Too many authentication attempts. ` +
+            `Try again after ${CONFIG.authRateLimit.window} minutes.`
+    },
+
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.ip || req.connection.remoteAddress
+
+    keyGenerator: (req) =>
+        req.ip || req.socket.remoteAddress
 });
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/change-password', authLimiter);
 
-// ✅ XSS Protection
+app.use(
+    '/api/auth/login',
+    authLimiter
+);
+
+app.use(
+    '/api/auth/change-password',
+    authLimiter
+);
+
+// ============================================================
+// 🧹 INPUT MIDDLEWARE
+// ============================================================
+
 app.use(xss());
-
-// ✅ HPP - HTTP Parameter Pollution Protection
 app.use(hpp());
 
-// ✅ Body Parsers
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(
+    express.json({
+        limit: '10kb',
+        strict: true
+    })
+);
+
+app.use(
+    express.urlencoded({
+        extended: false,
+        limit: '10kb'
+    })
+);
+
 app.use(cookieParser());
 
-// ✅ Session Management
+// ============================================================
+// 🍪 SESSION
+// ============================================================
+
 const sessionConfig = {
     secret: SESSION_SECRET,
+
     resave: false,
+
     saveUninitialized: false,
+
     name: '__Secure-marine.sid',
+
     cookie: {
         secure: isProduction,
+
         httpOnly: true,
-        maxAge: CONFIG.session.maxAge * 24 * 60 * 60 * 1000,
+
         sameSite: 'strict',
-        domain: isProduction ? '.onrender.com' : undefined,
+
+        maxAge:
+            CONFIG.session.maxAge *
+            24 *
+            60 *
+            60 *
+            1000,
+
         path: '/'
     },
-    rolling: true,
-    proxy: isProduction
+
+    rolling: true
 };
+
+// IMPORTANT:
+// express-session's default MemoryStore is NOT suitable for
+// production / multi-instance deployment.
+//
+// Replace store with Redis or MongoStore before real production.
 
 app.use(session(sessionConfig));
 
-// ✅ Request ID
+// ============================================================
+// 🆔 REQUEST ID
+// ============================================================
+
 app.use((req, res, next) => {
     req.requestId = generateRequestId();
-    res.setHeader('X-Request-ID', req.requestId);
+
+    res.setHeader(
+        'X-Request-ID',
+        req.requestId
+    );
+
     next();
 });
 
-// ✅ Security Logging
+// ============================================================
+// 📋 SECURITY LOGGING
+// ============================================================
+
 app.use((req, res, next) => {
     const start = Date.now();
+
     res.on('finish', () => {
-        const duration = Date.now() - start;
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${duration}ms - ${req.requestId}`);
+        const duration =
+            Date.now() - start;
+
+        console.log(
+            `[${new Date().toISOString()}] ` +
+            `${req.method} ` +
+            `${req.path} ` +
+            `${res.statusCode} ` +
+            `${duration}ms ` +
+            `${req.requestId}`
+        );
     });
+
     next();
 });
 
-// ✅ CSRF Protection - توليد التوكن
+// ============================================================
+// 🛡️ CSRF TOKEN CREATION
+// ============================================================
+
 app.use((req, res, next) => {
-    if (!req.session.csrfToken) {
-        req.session.csrfToken = generateSecureToken();
-        req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-        console.log('🔄 New CSRF token generated');
-    }
+    try {
+        if (!req.session.csrfToken) {
+            req.session.csrfToken =
+                generateSecureToken();
 
-    if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
-        req.session.csrfToken = generateSecureToken();
-        req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-        console.log('🔄 CSRF token refreshed');
-    }
+            req.session.csrfExpiry =
+                Date.now() +
+                (
+                    CONFIG.csrf.expiry *
+                    60 *
+                    60 *
+                    1000
+                );
+        }
 
-    res.setHeader('X-CSRF-Token', req.session.csrfToken);
-    res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
-    next();
+        if (
+            req.session.csrfExpiry &&
+            Date.now() > req.session.csrfExpiry
+        ) {
+            req.session.csrfToken =
+                generateSecureToken();
+
+            req.session.csrfExpiry =
+                Date.now() +
+                (
+                    CONFIG.csrf.expiry *
+                    60 *
+                    60 *
+                    1000
+                );
+        }
+
+        res.setHeader(
+            'X-CSRF-Token',
+            req.session.csrfToken
+        );
+
+        res.setHeader(
+            'X-Session-Expiry',
+            String(req.session.csrfExpiry)
+        );
+
+        next();
+
+    } catch (error) {
+        console.error(
+            '❌ CSRF initialization error'
+        );
+
+        return res.status(500).json({
+            success: false,
+            error: 'Security initialization failed',
+            requestId: req.requestId
+        });
+    }
 });
 
-// ✅ CSRF Protection Middleware - التحقق
-const csrfProtection = (req, res, next) => {
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+// ============================================================
+// 🛡️ CSRF VALIDATION
+// ============================================================
+
+const csrfProtection = (
+    req,
+    res,
+    next
+) => {
+
+    // Safe methods don't require CSRF
+    if (
+        ['GET', 'HEAD', 'OPTIONS']
+            .includes(req.method)
+    ) {
         return next();
     }
 
-    const skipPaths = ['/api/auth/login', '/api/csrf-token'];
+    // Login is intentionally excluded because
+    // it creates the authenticated session.
+    //
+    // CSRF token is still generated by the GET
+    // /api/csrf-token endpoint before login.
+    const skipPaths = [
+        '/api/auth/login',
+        '/api/csrf-token'
+    ];
+
     if (skipPaths.includes(req.path)) {
         return next();
     }
 
-    const token = req.headers['x-csrf-token'] || req.body.csrf_token;
-    const sessionToken = req.session.csrfToken;
+    const token =
+        req.headers['x-csrf-token'] ||
+        req.body?.csrf_token;
+
+    const sessionToken =
+        req.session?.csrfToken;
 
     if (!token) {
-        return res.status(403).json({ success: false, error: 'CSRF token مفقود' });
+        return res.status(403).json({
+            success: false,
+            error: 'CSRF token مفقود',
+            requestId: req.requestId
+        });
     }
 
     if (!sessionToken) {
-        return res.status(403).json({ success: false, error: 'جلسة غير صالحة' });
+        return res.status(403).json({
+            success: false,
+            error: 'جلسة غير صالحة',
+            requestId: req.requestId
+        });
     }
 
     try {
-        const isValid = crypto.timingSafeEqual(
-            Buffer.from(token, 'utf8'),
-            Buffer.from(sessionToken, 'utf8')
-        );
-        if (!isValid) {
-            throw new Error('Invalid token');
-        }
-    } catch (error) {
-        return res.status(403).json({ success: false, error: 'CSRF token غير صالح' });
-    }
+        const tokenBuffer =
+            Buffer.from(String(token), 'utf8');
 
-    const newToken = generateSecureToken();
-    req.session.csrfToken = newToken;
-    req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-    res.setHeader('X-CSRF-Token', newToken);
-    
-    next();
+        const sessionBuffer =
+            Buffer.from(String(sessionToken), 'utf8');
+
+        // timingSafeEqual requires same length
+        if (
+            tokenBuffer.length !==
+            sessionBuffer.length
+        ) {
+            return res.status(403).json({
+                success: false,
+                error: 'CSRF token غير صالح',
+                requestId: req.requestId
+            });
+        }
+
+        const isValid =
+            crypto.timingSafeEqual(
+                tokenBuffer,
+                sessionBuffer
+            );
+
+        if (!isValid) {
+            return res.status(403).json({
+                success: false,
+                error: 'CSRF token غير صالح',
+                requestId: req.requestId
+            });
+        }
+
+        // IMPORTANT:
+        // DO NOT rotate the token on every request.
+        // This avoids race conditions with parallel requests.
+
+        next();
+
+    } catch (error) {
+        console.error(
+            '❌ CSRF validation error'
+        );
+
+        return res.status(403).json({
+            success: false,
+            error: 'CSRF token غير صالح',
+            requestId: req.requestId
+        });
+    }
 };
 
 // ============================================================
-// 📊 DATA
+// 🔐 JWT HELPERS
 // ============================================================
+
+function createAccessToken(user) {
+    return jwt.sign(
+        {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+
+            jti:
+                crypto.randomBytes(16)
+                    .toString('hex')
+        },
+
+        JWT_SECRET,
+
+        {
+            expiresIn:
+                CONFIG.token.expiry,
+
+            algorithm: 'HS256'
+        }
+    );
+}
+
+function verifyAccessToken(token) {
+    return jwt.verify(
+        token,
+        JWT_SECRET,
+        {
+            algorithms: ['HS256']
+        }
+    );
+}
+
+// ============================================================
+// 👤 AUTHENTICATION MIDDLEWARE
+// ============================================================
+
+function requireAuth(
+    req,
+    res,
+    next
+) {
+    try {
+        const authHeader =
+            req.headers.authorization;
+
+        if (
+            !authHeader ||
+            !authHeader.startsWith('Bearer ')
+        ) {
+            return res.status(401).json({
+                success: false,
+                error: 'غير مصرح',
+                requestId: req.requestId
+            });
+        }
+
+        const token =
+            authHeader.slice(7).trim();
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                error: 'توكن غير صالح',
+                requestId: req.requestId
+            });
+        }
+
+        const decoded =
+            verifyAccessToken(token);
+
+        const user =
+            users.find(
+                u => u.id === decoded.id
+            );
+
+        if (!user || !user.active) {
+            return res.status(401).json({
+                success: false,
+                error:
+                    'المستخدم غير موجود أو غير نشط',
+                requestId: req.requestId
+            });
+        }
+
+        // Session binding
+        if (
+            req.session.userId &&
+            req.session.userId !== user.id
+        ) {
+            return res.status(401).json({
+                success: false,
+                error: 'جلسة غير صالحة',
+                requestId: req.requestId
+            });
+        }
+
+        req.user = user;
+        req.auth = decoded;
+
+        next();
+
+    } catch (error) {
+
+        if (
+            error.name ===
+            'TokenExpiredError'
+        ) {
+            return res.status(401).json({
+                success: false,
+                error: 'انتهت صلاحية التوكن',
+                requestId: req.requestId
+            });
+        }
+
+        return res.status(401).json({
+            success: false,
+            error: 'توكن غير صالح',
+            requestId: req.requestId
+        });
+    }
+}
+
+// ============================================================
+// 👑 ADMIN RBAC
+// ============================================================
+
+function requireAdmin(
+    req,
+    res,
+    next
+) {
+    if (
+        !req.user ||
+        req.user.role !== 'admin'
+    ) {
+        return res.status(403).json({
+            success: false,
+            error: 'غير مصرح - صلاحيات المسؤول مطلوبة',
+            requestId: req.requestId
+        });
+    }
+
+    next();
+}
+
+// ============================================================
+// 📊 IN-MEMORY DATA
+// ============================================================
+// NOTE:
+// This data disappears after server restart.
+// Replace with MongoDB for production.
 
 const users = [
     {
-        id: crypto.randomBytes(16).toString('hex'),
-        username: ADMIN_USERNAME,
-        password: bcrypt.hashSync(ADMIN_PASSWORD, CONFIG.password.saltRounds),
-        name: encrypt(ADMIN_NAME),
+        id:
+            crypto.randomBytes(16)
+                .toString('hex'),
+
+        username:
+            ADMIN_USERNAME,
+
+        password:
+            bcrypt.hashSync(
+                ADMIN_PASSWORD,
+                CONFIG.password.saltRounds
+            ),
+
+        name:
+            encrypt(ADMIN_NAME),
+
         role: 'admin',
+
         active: true,
-        createdAt: new Date().toISOString(),
+
+        createdAt:
+            new Date().toISOString(),
+
         lastLogin: null,
+
         loginAttempts: 0,
+
         locked: false,
+
         lockedUntil: null
     }
 ];
 
 const vessels = [
-    { 
-        id: crypto.randomBytes(8).toString('hex'),
-        name: encrypt('الوحدة 101'),
-        type: encrypt('زورق دورية'),
-        status: 'ready',
-        location: encrypt('الميناء الرئيسي'),
-        lastMaintenance: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-    },
     {
-        id: crypto.randomBytes(8).toString('hex'),
-        name: encrypt('الوحدة 205'),
-        type: encrypt('قاطرة بحرية'),
-        status: 'maintenance',
-        location: encrypt('حوض السفن'),
-        lastMaintenance: new Date().toISOString(),
-        createdAt: new Date().toISOString()
+        id:
+            crypto.randomBytes(8)
+                .toString('hex'),
+
+        name:
+            encrypt('الوحدة 101'),
+
+        type:
+            encrypt('زورق دورية'),
+
+        status:
+            'ready',
+
+        location:
+            encrypt('الميناء الرئيسي'),
+
+        lastMaintenance:
+            new Date().toISOString(),
+
+        createdAt:
+            new Date().toISOString()
     },
+
     {
-        id: crypto.randomBytes(8).toString('hex'),
-        name: encrypt('الوحدة 312'),
-        type: encrypt('سفينة إسناد'),
-        status: 'offline',
-        location: encrypt('الميناء الغربي'),
-        lastMaintenance: new Date().toISOString(),
-        createdAt: new Date().toISOString()
+        id:
+            crypto.randomBytes(8)
+                .toString('hex'),
+
+        name:
+            encrypt('الوحدة 205'),
+
+        type:
+            encrypt('قاطرة بحرية'),
+
+        status:
+            'maintenance',
+
+        location:
+            encrypt('حوض السفن'),
+
+        lastMaintenance:
+            new Date().toISOString(),
+
+        createdAt:
+            new Date().toISOString()
+    },
+
+    {
+        id:
+            crypto.randomBytes(8)
+                .toString('hex'),
+
+        name:
+            encrypt('الوحدة 312'),
+
+        type:
+            encrypt('سفينة إسناد'),
+
+        status:
+            'offline',
+
+        location:
+            encrypt('الميناء الغربي'),
+
+        lastMaintenance:
+            new Date().toISOString(),
+
+        createdAt:
+            new Date().toISOString()
     }
 ];
 
 const auditLogs = [];
 
-function addAuditLog(userId, action, details, ip) {
+// ============================================================
+// 📝 AUDIT LOG
+// ============================================================
+
+function addAuditLog(
+    userId,
+    action,
+    details,
+    ip
+) {
     auditLogs.push({
-        id: crypto.randomBytes(8).toString('hex'),
-        userId,
+        id:
+            crypto.randomBytes(8)
+                .toString('hex'),
+
+        userId:
+            userId || null,
+
         action,
+
         details,
+
         ip,
-        timestamp: new Date().toISOString()
+
+        timestamp:
+            new Date().toISOString()
     });
+
     if (auditLogs.length > 1000) {
         auditLogs.shift();
     }
 }
 
+// ============================================================
+// 🌐 CLIENT IP
+// ============================================================
+
 function getClientIP(req) {
-    return req.headers['x-forwarded-for'] || 
-           req.headers['x-real-ip'] || 
-           req.connection.remoteAddress || 
-           req.ip;
+    return (
+        req.ip ||
+        req.socket?.remoteAddress ||
+        'unknown'
+    );
 }
 
 // ============================================================
-// 📁 STATIC FILES & ROUTES
+// 📁 STATIC FILES
 // ============================================================
 
-// ✅ Serve static files
-app.use(express.static(__dirname));
-app.use('/pages', express.static(path.join(__dirname, 'pages')));
-app.use('/public', express.static(path.join(__dirname, 'public')));
-app.use('/css', express.static(path.join(__dirname, 'css')));
-app.use('/js', express.static(path.join(__dirname, 'js')));
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use(
+    express.static(__dirname, {
+        index: false,
 
-// ✅ دالة مساعدة لعرض الصفحات
-function servePage(req, res, pageName) {
+        dotfiles: 'deny',
+
+        fallthrough: true,
+
+        redirect: false,
+
+        maxAge:
+            isProduction
+                ? '1d'
+                : 0
+    })
+);
+
+app.use(
+    '/pages',
+    express.static(
+        path.join(__dirname, 'pages'),
+        {
+            dotfiles: 'deny',
+            index: false
+        }
+    )
+);
+
+app.use(
+    '/public',
+    express.static(
+        path.join(__dirname, 'public'),
+        {
+            dotfiles: 'deny',
+            index: false
+        }
+    )
+);
+
+app.use(
+    '/css',
+    express.static(
+        path.join(__dirname, 'css'),
+        {
+            dotfiles: 'deny'
+        }
+    )
+);
+
+app.use(
+    '/js',
+    express.static(
+        path.join(__dirname, 'js'),
+        {
+            dotfiles: 'deny'
+        }
+    )
+);
+
+app.use(
+    '/assets',
+    express.static(
+        path.join(__dirname, 'assets'),
+        {
+            dotfiles: 'deny'
+        }
+    )
+);
+
+// ============================================================
+// 📄 PAGE HELPER
+// ============================================================
+
+function findPageFile(pageName) {
+
+    // Prevent path traversal
+    if (
+        typeof pageName !== 'string' ||
+        !/^[a-zA-Z0-9_-]+$/.test(pageName)
+    ) {
+        return null;
+    }
+
     const possiblePaths = [
-        path.join(__dirname, 'pages', pageName + '.html'),
-        path.join(__dirname, 'public', pageName + '.html'),
-        path.join(__dirname, pageName + '.html'),
-        path.join(__dirname, 'src', pageName + '.html')
+        path.join(
+            __dirname,
+            'pages',
+            `${pageName}.html`
+        ),
+
+        path.join(
+            __dirname,
+            'public',
+            `${pageName}.html`
+        ),
+
+        path.join(
+            __dirname,
+            `${pageName}.html`
+        ),
+
+        path.join(
+            __dirname,
+            'src',
+            `${pageName}.html`
+        )
     ];
-    
-    for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-            console.log(`✅ Serving page: ${pageName} from ${p}`);
-            return res.sendFile(p);
+
+    for (const filePath of possiblePaths) {
+        if (fs.existsSync(filePath)) {
+            return filePath;
         }
     }
+
     return null;
 }
 
+function servePage(
+    req,
+    res,
+    pageName
+) {
+    const filePath =
+        findPageFile(pageName);
+
+    if (!filePath) {
+        return false;
+    }
+
+    console.log(
+        `📄 Serving page: ${pageName}`
+    );
+
+    return res.sendFile(
+        filePath,
+        {
+            headers: {
+                'Content-Type':
+                    'text/html; charset=utf-8'
+            }
+        }
+    );
+}
+
 // ============================================================
-// 🔐 CSRF TOKEN ENDPOINT - MUST BE BEFORE OTHER ROUTES
+// ============================================================
+// 🔐 API ROUTES
+// ⚠️ IMPORTANT: ALL API ROUTES ARE BEFORE PAGE FALLBACK
+// ============================================================
 // ============================================================
 
-app.get('/api/csrf-token', (req, res) => {
-    try {
-        console.log('🔄 CSRF token requested');
-        
-        if (!req.session) {
-            console.error('❌ No session found');
+// ============================================================
+// 🔐 CSRF TOKEN
+// ============================================================
+
+app.get(
+    '/api/csrf-token',
+    (req, res) => {
+        try {
+            if (!req.session.csrfToken) {
+                req.session.csrfToken =
+                    generateSecureToken();
+
+                req.session.csrfExpiry =
+                    Date.now() +
+                    (
+                        CONFIG.csrf.expiry *
+                        60 *
+                        60 *
+                        1000
+                    );
+            }
+
+            if (
+                req.session.csrfExpiry &&
+                Date.now() >
+                    req.session.csrfExpiry
+            ) {
+                req.session.csrfToken =
+                    generateSecureToken();
+
+                req.session.csrfExpiry =
+                    Date.now() +
+                    (
+                        CONFIG.csrf.expiry *
+                        60 *
+                        60 *
+                        1000
+                    );
+            }
+
+            const token =
+                req.session.csrfToken;
+
+            const expiry =
+                req.session.csrfExpiry;
+
+            res.setHeader(
+                'Content-Type',
+                'application/json; charset=utf-8'
+            );
+
+            res.setHeader(
+                'Cache-Control',
+                'no-store, no-cache, must-revalidate, private'
+            );
+
+            res.setHeader(
+                'X-CSRF-Token',
+                token
+            );
+
+            return res.status(200).json({
+                success: true,
+                token,
+                expiresIn:
+                    Math.max(
+                        0,
+                        expiry - Date.now()
+                    ),
+                requestId:
+                    req.requestId
+            });
+
+        } catch (error) {
+            console.error(
+                '❌ CSRF token error'
+            );
+
             return res.status(500).json({
                 success: false,
-                error: 'No session'
+                error:
+                    'Failed to generate CSRF token',
+                requestId:
+                    req.requestId
             });
         }
-        
-        if (!req.session.csrfToken) {
-            req.session.csrfToken = generateSecureToken();
-            req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-            console.log('🔄 New CSRF token generated');
+    }
+);
+
+// ============================================================
+// 🔑 LOGIN
+// ============================================================
+
+app.post(
+    '/api/auth/login',
+    (req, res) => {
+        try {
+
+            const {
+                username,
+                password
+            } = req.body || {};
+
+            const clientIP =
+                getClientIP(req);
+
+            if (
+                typeof username !== 'string' ||
+                typeof password !== 'string' ||
+                !username.trim() ||
+                !password
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'بيانات غير صالحة',
+                    requestId:
+                        req.requestId
+                });
+            }
+
+            const cleanUsername =
+                username.trim();
+
+            const user =
+                users.find(
+                    u =>
+                        u.username ===
+                        cleanUsername
+                );
+
+            if (!user) {
+
+                addAuditLog(
+                    null,
+                    'LOGIN_FAILED',
+                    'Invalid username',
+                    clientIP
+                );
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'اسم المستخدم أو كلمة المرور غير صحيحة',
+                    requestId:
+                        req.requestId
+                });
+            }
+
+            // ------------------------------------------------
+            // Account lock
+            // ------------------------------------------------
+
+            if (
+                user.locked &&
+                user.lockedUntil
+            ) {
+                if (
+                    Date.now() <
+                    user.lockedUntil
+                ) {
+                    const remaining =
+                        Math.ceil(
+                            (
+                                user.lockedUntil -
+                                Date.now()
+                            ) / 60000
+                        );
+
+                    return res.status(403).json({
+                        success: false,
+                        error:
+                            `الحساب مقفل. حاول مرة أخرى بعد ${remaining} دقيقة`,
+                        requestId:
+                            req.requestId
+                    });
+                }
+
+                // Lock expired
+                user.locked = false;
+                user.lockedUntil = null;
+                user.loginAttempts = 0;
+            }
+
+            // ------------------------------------------------
+            // Password verification
+            // ------------------------------------------------
+
+            const validPassword =
+                bcrypt.compareSync(
+                    password,
+                    user.password
+                );
+
+            if (!validPassword) {
+
+                user.loginAttempts =
+                    (user.loginAttempts || 0) + 1;
+
+                if (
+                    user.loginAttempts >=
+                    CONFIG.security.maxLoginAttempts
+                ) {
+                    user.locked = true;
+
+                    user.lockedUntil =
+                        Date.now() +
+                        (
+                            CONFIG.security.accountLockTime *
+                            60 *
+                            1000
+                        );
+
+                    addAuditLog(
+                        user.id,
+                        'ACCOUNT_LOCKED',
+                        'Too many failed login attempts',
+                        clientIP
+                    );
+
+                    return res.status(403).json({
+                        success: false,
+                        error:
+                            `الحساب مقفل لمدة ${CONFIG.security.accountLockTime} دقيقة بسبب كثرة المحاولات الفاشلة`,
+                        requestId:
+                            req.requestId
+                    });
+                }
+
+                addAuditLog(
+                    user.id,
+                    'LOGIN_FAILED',
+                    'Invalid password',
+                    clientIP
+                );
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'اسم المستخدم أو كلمة المرور غير صحيحة',
+                    requestId:
+                        req.requestId
+                });
+            }
+
+            // ------------------------------------------------
+            // Successful login
+            // ------------------------------------------------
+
+            user.loginAttempts = 0;
+            user.locked = false;
+            user.lockedUntil = null;
+            user.lastLogin =
+                new Date().toISOString();
+
+            // Regenerate session after authentication
+            req.session.regenerate(
+                (sessionError) => {
+
+                    if (sessionError) {
+                        console.error(
+                            '❌ Session regeneration error'
+                        );
+
+                        return res.status(500).json({
+                            success: false,
+                            error:
+                                'خطأ في إنشاء الجلسة',
+                            requestId:
+                                req.requestId
+                        });
+                    }
+
+                    // New CSRF token after authentication
+                    const newCsrfToken =
+                        generateSecureToken();
+
+                    req.session.csrfToken =
+                        newCsrfToken;
+
+                    req.session.csrfExpiry =
+                        Date.now() +
+                        (
+                            CONFIG.csrf.expiry *
+                            60 *
+                            60 *
+                            1000
+                        );
+
+                    req.session.userId =
+                        user.id;
+
+                    req.session.authenticated =
+                        true;
+
+                    const token =
+                        createAccessToken(user);
+
+                    res.setHeader(
+                        'X-CSRF-Token',
+                        newCsrfToken
+                    );
+
+                    res.setHeader(
+                        'X-User-ID',
+                        user.id
+                    );
+
+                    addAuditLog(
+                        user.id,
+                        'LOGIN_SUCCESS',
+                        'Successful login',
+                        clientIP
+                    );
+
+                    return res.status(200).json({
+                        success: true,
+
+                        token,
+
+                        user: {
+                            id: user.id,
+                            username:
+                                user.username,
+                            name:
+                                decrypt(user.name),
+                            role:
+                                user.role,
+                            active:
+                                user.active,
+                            lastLogin:
+                                user.lastLogin
+                        },
+
+                        csrfToken:
+                            newCsrfToken,
+
+                        requestId:
+                            req.requestId
+                    });
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                '❌ Login error:',
+                error.message
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في الخادم',
+                requestId:
+                    req.requestId
+            });
         }
-        
-        if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
-            req.session.csrfToken = generateSecureToken();
-            req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-            console.log('🔄 CSRF token refreshed');
+    }
+);
+
+// ============================================================
+// 👤 CURRENT USER
+// ============================================================
+
+app.get(
+    '/api/auth/me',
+    requireAuth,
+    (req, res) => {
+
+        try {
+
+            return res.status(200).json({
+                success: true,
+
+                user: {
+                    id:
+                        req.user.id,
+
+                    username:
+                        req.user.username,
+
+                    name:
+                        decrypt(
+                            req.user.name
+                        ),
+
+                    role:
+                        req.user.role,
+
+                    active:
+                        req.user.active,
+
+                    lastLogin:
+                        req.user.lastLogin
+                },
+
+                requestId:
+                    req.requestId
+            });
+
+        } catch (error) {
+
+            console.error(
+                '❌ Auth/me error'
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في الخادم',
+                requestId:
+                    req.requestId
+            });
         }
-        
-        const token = req.session.csrfToken;
-        const expiry = req.session.csrfExpiry || Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-        
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('X-CSRF-Token', token);
-        
-        res.json({
+    }
+);
+
+// ============================================================
+// 🔐 CHANGE PASSWORD
+// ============================================================
+
+app.post(
+    '/api/auth/change-password',
+    requireAuth,
+    csrfProtection,
+    async (req, res) => {
+
+        try {
+
+            const {
+                currentPassword,
+                newPassword
+            } = req.body || {};
+
+            if (
+                !currentPassword ||
+                !newPassword
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'جميع الحقول مطلوبة',
+                    requestId:
+                        req.requestId
+                });
+            }
+
+            if (
+                !isStrongPassword(
+                    newPassword
+                )
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'كلمة المرور الجديدة ضعيفة. يجب أن تحتوي على 12 حرف على الأقل، حروف كبيرة وصغيرة، أرقام ورموز خاصة',
+                    requestId:
+                        req.requestId
+                });
+            }
+
+            const validPassword =
+                bcrypt.compareSync(
+                    currentPassword,
+                    req.user.password
+                );
+
+            if (!validPassword) {
+
+                addAuditLog(
+                    req.user.id,
+                    'PASSWORD_CHANGE_FAILED',
+                    'Invalid current password',
+                    getClientIP(req)
+                );
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'كلمة المرور الحالية غير صحيحة',
+                    requestId:
+                        req.requestId
+                });
+            }
+
+            req.user.password =
+                await bcrypt.hash(
+                    newPassword,
+                    CONFIG.password.saltRounds
+                );
+
+            addAuditLog(
+                req.user.id,
+                'PASSWORD_CHANGED',
+                'Password changed successfully',
+                getClientIP(req)
+            );
+
+            return res.status(200).json({
+                success: true,
+                message:
+                    '✅ تم تغيير كلمة المرور بنجاح',
+                requestId:
+                    req.requestId
+            });
+
+        } catch (error) {
+
+            console.error(
+                '❌ Change password error:',
+                error.message
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في الخادم',
+                requestId:
+                    req.requestId
+            });
+        }
+    }
+);
+
+// ============================================================
+// 🚪 LOGOUT
+// ============================================================
+// CSRF intentionally not required here to remain compatible
+// with the existing frontend logout implementation.
+
+app.post(
+    '/api/auth/logout',
+    (req, res) => {
+
+        const userId =
+            req.session?.userId;
+
+        if (userId) {
+            addAuditLog(
+                userId,
+                'LOGOUT',
+                'User logged out',
+                getClientIP(req)
+            );
+        }
+
+        req.session.destroy(
+            (error) => {
+
+                if (error) {
+                    console.error(
+                        '❌ Logout error'
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        error:
+                            'خطأ في تسجيل الخروج',
+                        requestId:
+                            req.requestId
+                    });
+                }
+
+                res.clearCookie(
+                    '__Secure-marine.sid',
+                    {
+                        path: '/',
+                        httpOnly: true,
+                        secure:
+                            isProduction,
+                        sameSite:
+                            'strict'
+                    }
+                );
+
+                return res.status(200).json({
+                    success: true,
+                    message:
+                        'تم تسجيل الخروج',
+                    requestId:
+                        req.requestId
+                });
+            }
+        );
+    }
+);
+
+// ============================================================
+// 🚢 GET VESSELS
+// ============================================================
+
+app.get(
+    '/api/vessels',
+    requireAuth,
+    (req, res) => {
+
+        try {
+
+            const decryptedVessels =
+                vessels.map(
+                    vessel => ({
+                        id:
+                            vessel.id,
+
+                        name:
+                            decrypt(
+                                vessel.name
+                            ),
+
+                        type:
+                            decrypt(
+                                vessel.type
+                            ),
+
+                        status:
+                            vessel.status,
+
+                        location:
+                            decrypt(
+                                vessel.location
+                            ),
+
+                        lastMaintenance:
+                            vessel.lastMaintenance,
+
+                        createdAt:
+                            vessel.createdAt
+                    })
+                );
+
+            return res.status(200).json(
+                decryptedVessels
+            );
+
+        } catch (error) {
+
+            console.error(
+                '❌ Error reading vessels'
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في قراءة البيانات',
+                requestId:
+                    req.requestId
+            });
+        }
+    }
+);
+
+// ============================================================
+// ➕ ADD VESSEL
+// ============================================================
+
+app.post(
+    '/api/vessels',
+    requireAuth,
+    requireAdmin,
+    csrfProtection,
+    (req, res) => {
+
+        try {
+
+            const {
+                name,
+                type,
+                status,
+                location
+            } = req.body || {};
+
+            if (
+                typeof name !== 'string' ||
+                !name.trim()
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'اسم الوحدة مطلوب',
+                    requestId:
+                        req.requestId
+                });
+            }
+
+            const allowedStatuses = [
+                'ready',
+                'maintenance',
+                'offline'
+            ];
+
+            const safeStatus =
+                allowedStatuses.includes(
+                    status
+                )
+                    ? status
+                    : 'ready';
+
+            const newVessel = {
+                id:
+                    crypto.randomBytes(8)
+                        .toString('hex'),
+
+                name:
+                    encrypt(
+                        name.trim()
+                    ),
+
+                type:
+                    encrypt(
+                        typeof type === 'string'
+                            ? type.trim()
+                            : 'غير محدد'
+                    ),
+
+                status:
+                    safeStatus,
+
+                location:
+                    encrypt(
+                        typeof location === 'string'
+                            ? location.trim()
+                            : '—'
+                    ),
+
+                lastMaintenance:
+                    new Date().toISOString(),
+
+                createdAt:
+                    new Date().toISOString()
+            };
+
+            vessels.push(
+                newVessel
+            );
+
+            addAuditLog(
+                req.user.id,
+                'VESSEL_CREATED',
+                'New vessel created',
+                getClientIP(req)
+            );
+
+            return res.status(201).json({
+                success: true,
+
+                vessel: {
+                    id:
+                        newVessel.id,
+
+                    name:
+                        decrypt(
+                            newVessel.name
+                        ),
+
+                    type:
+                        decrypt(
+                            newVessel.type
+                        ),
+
+                    status:
+                        newVessel.status,
+
+                    location:
+                        decrypt(
+                            newVessel.location
+                        ),
+
+                    lastMaintenance:
+                        newVessel.lastMaintenance,
+
+                    createdAt:
+                        newVessel.createdAt
+                },
+
+                requestId:
+                    req.requestId
+            });
+
+        } catch (error) {
+
+            console.error(
+                '❌ Add vessel error:',
+                error.message
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في إضافة الوحدة',
+                requestId:
+                    req.requestId
+            });
+        }
+    }
+);
+
+// ============================================================
+// 👥 GET USERS - ADMIN
+// ============================================================
+
+app.get(
+    '/api/users',
+    requireAuth,
+    requireAdmin,
+    (req, res) => {
+
+        try {
+
+            const safeUsers =
+                users.map(
+                    user => ({
+                        id:
+                            user.id,
+
+                        username:
+                            user.username,
+
+                        name:
+                            decrypt(
+                                user.name
+                            ),
+
+                        role:
+                            user.role,
+
+                        active:
+                            user.active,
+
+                        createdAt:
+                            user.createdAt,
+
+                        lastLogin:
+                            user.lastLogin
+                    })
+                );
+
+            return res.status(200).json(
+                safeUsers
+            );
+
+        } catch (error) {
+
+            console.error(
+                '❌ Users error'
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في الخادم',
+                requestId:
+                    req.requestId
+            });
+        }
+    }
+);
+
+// ============================================================
+// 📝 AUDIT LOGS - ADMIN
+// ============================================================
+
+app.get(
+    '/api/logs',
+    requireAuth,
+    requireAdmin,
+    (req, res) => {
+
+        return res.status(200).json(
+            auditLogs.slice(-100)
+        );
+    }
+);
+
+// ============================================================
+// ❤️ SYSTEM STATUS
+// ============================================================
+
+app.get(
+    '/api/status',
+    (req, res) => {
+
+        return res.status(200).json({
             success: true,
-            token: token,
-            expiresIn: expiry - Date.now()
-        });
-        
-        console.log('✅ CSRF token sent successfully');
-    } catch (error) {
-        console.error('❌ CSRF token error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to generate CSRF token'
+            status: 'online',
+            version: '8.1.0',
+            environment:
+                isProduction
+                    ? 'production'
+                    : 'development',
+            timestamp:
+                new Date().toISOString(),
+            requestId:
+                req.requestId
         });
     }
-});
+);
+
+// ============================================================
+// 🚫 API 404
+// ============================================================
+// VERY IMPORTANT:
+// Unknown /api/... NEVER receives index.html.
+// It ALWAYS returns JSON.
+// ============================================================
+
+app.use(
+    '/api',
+    (req, res) => {
+
+        return res.status(404).json({
+            success: false,
+            error:
+                'API endpoint not found',
+            path:
+                req.path,
+            requestId:
+                req.requestId
+        });
+    }
+);
 
 // ============================================================
 // 🌐 PAGE ROUTES
 // ============================================================
 
-// ✅ Home page
-app.get('/', (req, res) => {
-    const possiblePaths = [
-        path.join(__dirname, 'index.html'),
-        path.join(__dirname, 'public', 'index.html'),
-        path.join(__dirname, 'src', 'index.html')
-    ];
-    
-    for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-            console.log(`✅ Found index.html at: ${p}`);
-            return res.sendFile(p);
+// ------------------------------------------------------------
+// HOME
+// ------------------------------------------------------------
+
+app.get(
+    '/',
+    (req, res) => {
+
+        const indexCandidates = [
+            path.join(
+                __dirname,
+                'index.html'
+            ),
+
+            path.join(
+                __dirname,
+                'public',
+                'index.html'
+            ),
+
+            path.join(
+                __dirname,
+                'src',
+                'index.html'
+            )
+        ];
+
+        for (
+            const indexPath
+            of indexCandidates
+        ) {
+
+            if (
+                fs.existsSync(
+                    indexPath
+                )
+            ) {
+
+                return res.sendFile(
+                    indexPath,
+                    {
+                        headers: {
+                            'Content-Type':
+                                'text/html; charset=utf-8'
+                        }
+                    }
+                );
+            }
         }
+
+        return res.status(404).send(
+            '<!DOCTYPE html>' +
+            '<html lang="ar" dir="rtl">' +
+            '<head>' +
+            '<meta charset="UTF-8">' +
+            '<title>Marine System</title>' +
+            '</head>' +
+            '<body>' +
+            '<h1>❌ index.html غير موجود</h1>' +
+            '</body>' +
+            '</html>'
+        );
     }
-    
-    // إذا لم يوجد index.html
-    console.log('⚠️ No index.html found, serving embedded page');
-    res.send(`
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>🚢 Marine System</title>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    background: #0a0e1a;
-                    color: #fff;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    min-height: 100vh;
-                    padding: 20px;
-                }
-                .container {
-                    background: linear-gradient(145deg, #1a1f35, #0d1528);
-                    padding: 50px;
-                    border-radius: 30px;
-                    max-width: 600px;
-                    width: 100%;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-                    border: 1px solid #2a3a5a;
-                    text-align: center;
-                }
-                h1 { color: #00d4ff; font-size: 2.5em; margin-bottom: 10px; }
-                .subtitle { color: #8899aa; margin-bottom: 20px; }
-                .status {
-                    background: #0d1528;
-                    padding: 20px;
-                    border-radius: 15px;
-                    margin: 20px 0;
-                    border-right: 5px solid #00ff88;
-                }
-                .status.success { border-right-color: #00ff88; }
-                .info { color: #aabbcc; line-height: 2; }
-                .info strong { color: #00d4ff; }
-                .login-form input {
-                    width: 100%;
-                    padding: 15px;
-                    margin: 10px 0;
-                    border-radius: 10px;
-                    border: 1px solid #2a3a5a;
-                    background: #0d1528;
-                    color: #fff;
-                    font-size: 16px;
-                    direction: rtl;
-                }
-                .login-form input:focus {
-                    outline: none;
-                    border-color: #00d4ff;
-                    box-shadow: 0 0 20px rgba(0,212,255,0.1);
-                }
-                .btn {
-                    background: linear-gradient(135deg, #00d4ff, #0099cc);
-                    color: #0a0e1a;
-                    border: none;
-                    padding: 15px 40px;
-                    border-radius: 10px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    width: 100%;
-                    margin-top: 15px;
-                }
-                .btn:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 10px 30px rgba(0,212,255,0.3);
-                }
-                .btn-logout {
-                    background: linear-gradient(135deg, #ff4444, #cc0000);
-                }
-                .btn-logout:hover {
-                    box-shadow: 0 10px 30px rgba(255,68,68,0.3);
-                }
-                .error { color: #ff4444; margin: 10px 0; }
-                .success-msg { color: #00ff88; margin: 10px 0; }
-                .login-section, .user-section { margin-top: 30px; text-align: right; }
-                .user-section { display: none; }
-                .badge {
-                    display: inline-block;
-                    padding: 5px 15px;
-                    border-radius: 20px;
-                    font-size: 14px;
-                    margin: 5px 0;
-                }
-                .badge.admin { background: #ff4444; color: #fff; }
-                .badge.manager { background: #ffaa00; color: #000; }
-                .status-dot {
-                    display: inline-block;
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                    margin-right: 8px;
-                }
-                .status-dot.online { background: #00ff88; }
-                .footer {
-                    margin-top: 30px;
-                    padding-top: 20px;
-                    border-top: 1px solid #2a3a5a;
-                    color: #667788;
-                    font-size: 12px;
-                }
-                .links {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 10px;
-                    justify-content: center;
-                    margin-top: 20px;
-                }
-                .links a {
-                    display: inline-block;
-                    padding: 10px 20px;
-                    background: #2a3a5a;
-                    color: #fff;
-                    text-decoration: none;
-                    border-radius: 8px;
-                    transition: all 0.3s;
-                    font-size: 14px;
-                }
-                .links a:hover {
-                    background: #3a4a6a;
-                    transform: translateY(-2px);
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🚢 MARINE SYSTEM</h1>
-                <p class="subtitle">نظام إدارة الأسطول البحري</p>
-                
-                <div class="status success">
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                        <span class="status-dot online"></span>
-                        <h3 style="margin:0;color:#00ff88;">✅ النظام يعمل</h3>
-                    </div>
-                    <p class="info">🔒 <strong>الأمان:</strong> مستوى عالي جداً</p>
-                    <p class="info">🛡️ <strong>CSRF:</strong> مفعل</p>
-                    <p class="info">🔐 <strong>JWT:</strong> مفعل</p>
-                    <p class="info">👤 <strong>المستخدم:</strong> ${ADMIN_USERNAME}</p>
-                </div>
+);
 
-                <div id="loginSection" class="login-section">
-                    <h3 style="color: #00d4ff; margin-bottom: 20px;">🔐 تسجيل الدخول</h3>
-                    <div id="message"></div>
-                    <div class="login-form">
-                        <input type="text" id="username" placeholder="👤 اسم المستخدم" value="${ADMIN_USERNAME}">
-                        <input type="password" id="password" placeholder="🔑 كلمة المرور">
-                        <button class="btn" onclick="handleLogin()">🚀 دخول</button>
-                    </div>
-                </div>
+// ------------------------------------------------------------
+// /pages/:page
+// ------------------------------------------------------------
 
-                <div id="userSection" class="user-section">
-                    <div style="background: #0d1528; padding: 20px; border-radius: 15px;">
-                        <p style="font-size: 18px;">👋 <strong>مرحباً بك، <span id="userName"></span></strong></p>
-                        <p>📋 <strong>الدور:</strong> <span id="userRole" class="badge admin">admin</span></p>
-                        <p>🔐 <strong>الحالة:</strong> <span style="color:#00ff88;">● نشط</span></p>
-                        
-                        <div class="links">
-                            <a href="/dashboard">📊 لوحة التحكم</a>
-                            <a href="/fleet">🚢 الأسطول</a>
-                            <a href="/maintenance">🔧 الصيانة</a>
-                            <a href="/users">👥 المستخدمين</a>
-                            <a href="/logs">📝 السجلات</a>
-                        </div>
-                        
-                        <button class="btn btn-logout" onclick="handleLogout()" style="margin-top: 20px;">🚪 تسجيل الخروج</button>
-                    </div>
-                </div>
+app.get(
+    '/pages/:page',
+    (req, res) => {
 
-                <div class="footer">
-                    🔒 جميع البيانات مشفرة | v8.0 Ultra Secure
-                </div>
-            </div>
+        const pageName =
+            req.params.page;
 
-            <script>
-                // ============================================================
-                // 🔧 CSRF TOKEN MANAGER - FIXED
-                // ============================================================
-                
-                let csrfToken = '';
-                let csrfExpiry = 0;
+        if (
+            servePage(
+                req,
+                res,
+                pageName
+            )
+        ) {
+            return;
+        }
 
-                async function getCsrfToken() {
-                    const savedToken = localStorage.getItem('csrfToken');
-                    const savedExpiry = parseInt(localStorage.getItem('csrfExpiry') || '0');
-                    
-                    if (savedToken && Date.now() < savedExpiry) {
-                        console.log('✅ Using cached CSRF token');
-                        csrfToken = savedToken;
-                        return savedToken;
-                    }
-                    
-                    try {
-                        console.log('🔄 Fetching new CSRF token...');
-                        
-                        const response = await fetch('/api/csrf-token', {
-                            method: 'GET',
-                            credentials: 'include',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Cache-Control': 'no-cache'
-                            }
-                        });
-                        
-                        console.log('📥 CSRF Response Status:', response.status);
-                        
-                        const contentType = response.headers.get('content-type') || '';
-                        if (!contentType.includes('application/json')) {
-                            console.error('❌ Invalid content-type:', contentType);
-                            const headerToken = response.headers.get('X-CSRF-Token');
-                            if (headerToken) {
-                                console.log('✅ Found CSRF token in headers');
-                                csrfToken = headerToken;
-                                csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
-                                localStorage.setItem('csrfToken', csrfToken);
-                                localStorage.setItem('csrfExpiry', csrfExpiry.toString());
-                                return csrfToken;
-                            }
-                            return null;
-                        }
-                        
-                        if (!response.ok) {
-                            console.error('❌ CSRF request failed:', response.status);
-                            return null;
-                        }
-                        
-                        const data = await response.json();
-                        console.log('📦 CSRF Data:', data);
-                        
-                        if (data.success && data.token) {
-                            csrfToken = data.token;
-                            csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
-                            localStorage.setItem('csrfToken', csrfToken);
-                            localStorage.setItem('csrfExpiry', csrfExpiry.toString());
-                            console.log('✅ CSRF token obtained and cached');
-                            return csrfToken;
-                        } else {
-                            console.error('❌ Invalid CSRF response:', data);
-                            return null;
-                        }
-                    } catch (error) {
-                        console.error('❌ CSRF Error:', error);
-                        const fallbackToken = localStorage.getItem('csrfToken');
-                        if (fallbackToken) {
-                            console.log('⚠️ Using fallback CSRF token');
-                            csrfToken = fallbackToken;
-                            return fallbackToken;
-                        }
-                        return null;
-                    }
-                }
-
-                async function handleLogin() {
-                    const username = document.getElementById('username').value.trim();
-                    const password = document.getElementById('password').value;
-                    const messageEl = document.getElementById('message');
-
-                    if (!username || !password) {
-                        messageEl.innerHTML = '<div class="error">⚠️ الرجاء إدخال جميع البيانات</div>';
-                        return;
-                    }
-
-                    try {
-                        const token = await getCsrfToken();
-                        if (!token) {
-                            messageEl.innerHTML = '<div class="error">❌ فشل الحصول على CSRF token</div>';
-                            return;
-                        }
-
-                        console.log('🔐 Sending login with CSRF:', token.substring(0, 10) + '...');
-
-                        messageEl.innerHTML = '<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';
-
-                        const response = await fetch('/api/auth/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-Token': token
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({ 
-                                username: username, 
-                                password: password 
-                            })
-                        });
-
-                        console.log('📥 Login Response Status:', response.status);
-
-                        const contentType = response.headers.get('content-type') || '';
-                        if (!contentType.includes('application/json')) {
-                            const text = await response.text();
-                            console.error('❌ Invalid login response:', text.substring(0, 100));
-                            messageEl.innerHTML = '<div class="error">❌ خطأ في استجابة الخادم</div>';
-                            return;
-                        }
-
-                        const data = await response.json();
-                        console.log('📦 Login Response:', data);
-
-                        if (response.ok && data.success) {
-                            localStorage.setItem('authToken', data.token);
-                            localStorage.setItem('userData', JSON.stringify(data.user));
-                            if (data.csrfToken) {
-                                localStorage.setItem('csrfToken', data.csrfToken);
-                                localStorage.setItem('csrfExpiry', Date.now() + (8 * 60 * 60 * 1000));
-                            }
-                            
-                            messageEl.innerHTML = '<div class="success-msg">✅ تم تسجيل الدخول بنجاح</div>';
-                            showUserInfo(data.user);
-                        } else {
-                            const errorMsg = data.error || 'فشل تسجيل الدخول';
-                            messageEl.innerHTML = '<div class="error">❌ ' + errorMsg + '</div>';
-                        }
-                    } catch (error) {
-                        console.error('❌ Login error:', error);
-                        messageEl.innerHTML = '<div class="error">❌ خطأ في الاتصال بالخادم</div>';
-                    }
-                }
-
-                function showUserInfo(user) {
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('userSection').style.display = 'block';
-                    document.getElementById('userName').textContent = user.name || user.username;
-                    document.getElementById('userRole').textContent = user.role || 'مستخدم';
-                    
-                    const roleBadge = document.getElementById('userRole');
-                    if (user.role === 'admin') {
-                        roleBadge.className = 'badge admin';
-                    } else if (user.role === 'manager') {
-                        roleBadge.className = 'badge manager';
-                    }
-                }
-
-                async function handleLogout() {
-                    try {
-                        await fetch('/api/auth/logout', {
-                            method: 'POST',
-                            credentials: 'include'
-                        });
-                        localStorage.clear();
-                        document.getElementById('loginSection').style.display = 'block';
-                        document.getElementById('userSection').style.display = 'none';
-                        document.getElementById('message').innerHTML = '<div class="success-msg">✅ تم تسجيل الخروج</div>';
-                    } catch (error) {
-                        console.error('Logout error:', error);
-                    }
-                }
-
-                async function checkAuth() {
-                    const token = localStorage.getItem('authToken');
-                    if (!token) {
-                        document.getElementById('loginSection').style.display = 'block';
-                        document.getElementById('userSection').style.display = 'none';
-                        return;
-                    }
-
-                    try {
-                        const csrf = await getCsrfToken();
-                        if (!csrf) {
-                            console.warn('⚠️ No CSRF token available');
-                            document.getElementById('loginSection').style.display = 'block';
-                            document.getElementById('userSection').style.display = 'none';
-                            return;
-                        }
-
-                        const response = await fetch('/api/auth/me', {
-                            headers: {
-                                'Authorization': 'Bearer ' + token,
-                                'X-CSRF-Token': csrf,
-                                'Accept': 'application/json'
-                            },
-                            credentials: 'include'
-                        });
-
-                        if (!response.ok) {
-                            throw new Error('Session expired');
-                        }
-
-                        const data = await response.json();
-                        if (data.success && data.user) {
-                            showUserInfo(data.user);
-                            return;
-                        }
-                    } catch (error) {
-                        console.error('❌ Auth check failed:', error);
-                    }
-
-                    document.getElementById('loginSection').style.display = 'block';
-                    document.getElementById('userSection').style.display = 'none';
-                }
-
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        const loginSection = document.getElementById('loginSection');
-                        if (loginSection.style.display !== 'none') {
-                            handleLogin();
-                        }
-                    }
-                });
-
-                // ✅ تهيئة النظام
-                document.addEventListener('DOMContentLoaded', async function() {
-                    console.log('📄 DOM ready - Initializing...');
-                    await getCsrfToken();
-                    await checkAuth();
-                    console.log('✅ Marine System initialized');
-                });
-            </script>
-        </body>
-        </html>
-    `);
-});
-
-// ✅ Pages routes
-app.get('/pages/:page', (req, res) => {
-    const pageName = req.params.page;
-    const result = servePage(req, res, pageName);
-    if (!result) {
-        res.status(404).send(`
-            <!DOCTYPE html>
-            <html dir="rtl" lang="ar">
-            <head>
-                <meta charset="UTF-8">
-                <title>404 - الصفحة غير موجودة</title>
-                <style>
-                    body { font-family: Arial; background: #0a0e1a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
-                    .container { text-align: center; }
-                    h1 { color: #ff4444; }
-                    a { color: #00d4ff; text-decoration: none; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>❌ 404</h1>
-                    <p>الصفحة <strong>${pageName}</strong> غير موجودة</p>
-                    <a href="/">⬅️ العودة للرئيسية</a>
-                </div>
-            </body>
-            </html>
-        `);
+        return res.status(404).send(
+            '<!DOCTYPE html>' +
+            '<html lang="ar" dir="rtl">' +
+            '<head>' +
+            '<meta charset="UTF-8">' +
+            '<title>404</title>' +
+            '</head>' +
+            '<body>' +
+            '<h1>❌ 404</h1>' +
+            '<p>الصفحة غير موجودة</p>' +
+            '<a href="/">العودة للرئيسية</a>' +
+            '</body>' +
+            '</html>'
+        );
     }
-});
+);
 
-// ✅ Short URLs - بدون /pages/
-app.get('/:page', (req, res, next) => {
-    const pageName = req.params.page;
-    
-    const skip = ['api', 'pages', 'public', 'assets', 'css', 'js', 'favicon.ico', 'robots.txt', 'sitemap.xml'];
-    if (skip.includes(pageName)) {
+// ------------------------------------------------------------
+// SHORT PAGE URLS
+// ------------------------------------------------------------
+
+app.get(
+    '/:page',
+    (req, res, next) => {
+
+        const pageName =
+            req.params.page;
+
+        const reserved = [
+            'api',
+            'pages',
+            'public',
+            'assets',
+            'css',
+            'js',
+            'favicon.ico',
+            'robots.txt',
+            'sitemap.xml'
+        ];
+
+        if (
+            reserved.includes(
+                pageName
+            )
+        ) {
+            return next();
+        }
+
+        if (
+            pageName.includes('.')
+        ) {
+            return next();
+        }
+
+        if (
+            servePage(
+                req,
+                res,
+                pageName
+            )
+        ) {
+            return;
+        }
+
         return next();
     }
-    
-    const result = servePage(req, res, pageName);
-    if (result) {
-        return;
-    }
-    
-    next();
-});
-
-// ✅ Catch-all route
-app.get('*', (req, res) => {
-    if (req.path.includes('.') && !req.path.startsWith('/api')) {
-        return res.status(404).send('❌ ملف غير موجود');
-    }
-    
-    const indexPath = path.join(__dirname, 'index.html');
-    if (fs.existsSync(indexPath)) {
-        return res.sendFile(indexPath);
-    }
-    
-    res.redirect('/');
-});
+);
 
 // ============================================================
-// 🔐 AUTH ENDPOINTS
+// 🌐 FINAL NON-API FALLBACK
+// ============================================================
+// IMPORTANT:
+// This is app.use(), not an early app.get('*').
+// API has already been handled above.
 // ============================================================
 
-// ✅ Login
-app.post('/api/auth/login', (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const clientIP = getClientIP(req);
-        
-        console.log('🔐 Login attempt:', username, 'from', clientIP);
+app.use(
+    (req, res) => {
 
-        if (!username || !password) {
-            return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
-        }
-
-        const user = users.find(u => u.username === username);
-        if (!user) {
-            addAuditLog(null, 'LOGIN_FAILED', 'Invalid username: ' + username, clientIP);
-            return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-        }
-
-        if (user.locked && user.lockedUntil && Date.now() < user.lockedUntil) {
-            const remaining = Math.ceil((user.lockedUntil - Date.now()) / 60000);
-            return res.status(403).json({
+        // Never return HTML for an API request.
+        if (
+            req.path.startsWith('/api/')
+        ) {
+            return res.status(404).json({
                 success: false,
-                error: 'الحساب مقفل. حاول مرة أخرى بعد ' + remaining + ' دقيقة'
+                error:
+                    'API endpoint not found',
+                requestId:
+                    req.requestId
             });
         }
 
-        const validPassword = bcrypt.compareSync(password, user.password);
-        if (!validPassword) {
-            user.loginAttempts = (user.loginAttempts || 0) + 1;
-            
-            if (user.loginAttempts >= CONFIG.security.maxLoginAttempts) {
-                user.locked = true;
-                user.lockedUntil = Date.now() + (CONFIG.security.accountLockTime * 60 * 1000);
-                addAuditLog(user.id, 'ACCOUNT_LOCKED', 'Too many failed login attempts', clientIP);
-                return res.status(403).json({
-                    success: false,
-                    error: 'الحساب مقفل لمدة ' + CONFIG.security.accountLockTime + ' دقيقة بسبب كثرة المحاولات الفاشلة'
-                });
-            }
-            
-            addAuditLog(user.id, 'LOGIN_FAILED', 'Invalid password', clientIP);
-            return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+        // Missing files
+        if (
+            req.path.includes('.')
+        ) {
+            return res.status(404).send(
+                '❌ ملف غير موجود'
+            );
         }
 
-        user.loginAttempts = 0;
-        user.locked = false;
-        user.lockedUntil = null;
-        user.lastLogin = new Date().toISOString();
+        // SPA fallback
+        const indexPath =
+            path.join(
+                __dirname,
+                'index.html'
+            );
 
-        const token = jwt.sign(
-            {
-                id: user.id,
-                username: user.username,
-                role: user.role,
-                iat: Math.floor(Date.now() / 1000),
-                jti: crypto.randomBytes(16).toString('hex')
-            },
-            JWT_SECRET,
-            { expiresIn: CONFIG.token.expiry, algorithm: 'HS256' }
+        if (
+            fs.existsSync(indexPath)
+        ) {
+
+            return res.sendFile(
+                indexPath,
+                {
+                    headers: {
+                        'Content-Type':
+                            'text/html; charset=utf-8'
+                    }
+                }
+            );
+        }
+
+        return res.status(404).send(
+            '<!DOCTYPE html>' +
+            '<html lang="ar" dir="rtl">' +
+            '<head>' +
+            '<meta charset="UTF-8">' +
+            '<title>404</title>' +
+            '</head>' +
+            '<body>' +
+            '<h1>❌ الصفحة غير موجودة</h1>' +
+            '</body>' +
+            '</html>'
+        );
+    }
+);
+
+// ============================================================
+// 🔧 GLOBAL ERROR HANDLER
+// ============================================================
+
+app.use(
+    (err, req, res, next) => {
+
+        console.error(
+            '❌ Global error:',
+            err.message
         );
 
-        const newToken = generateSecureToken();
-        req.session.csrfToken = newToken;
-        req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-        req.session.userId = user.id;
+        if (
+            res.headersSent
+        ) {
+            return next(err);
+        }
 
-        res.setHeader('X-CSRF-Token', newToken);
-        res.setHeader('X-User-ID', user.id);
-        
-        addAuditLog(user.id, 'LOGIN_SUCCESS', 'Successful login', clientIP);
+        const status =
+            Number(err.status) >= 400 &&
+            Number(err.status) < 600
+                ? Number(err.status)
+                : 500;
 
-        res.json({
-            success: true,
-            token: token,
-            user: {
-                id: user.id,
-                username: user.username,
-                name: decrypt(user.name),
-                role: user.role,
-                active: user.active,
-                lastLogin: user.lastLogin
-            },
-            csrfToken: newToken
+        return res.status(status).json({
+            success: false,
+
+            error:
+                isProduction
+                    ? 'حدث خطأ في الخادم'
+                    : err.message,
+
+            requestId:
+                req.requestId
         });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
     }
-});
-
-// ✅ Verify Token
-app.get('/api/auth/me', (req, res) => {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
-        const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
-        const user = users.find(u => u.id === decoded.id);
-
-        if (!user || !user.active) {
-            return res.status(401).json({ success: false, error: 'المستخدم غير موجود أو غير نشط' });
-        }
-
-        if (req.session.userId !== user.id) {
-            return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
-        }
-
-        const newToken = generateSecureToken();
-        req.session.csrfToken = newToken;
-        req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-        res.setHeader('X-CSRF-Token', newToken);
-
-        res.json({
-            success: true,
-            user: {
-                id: user.id,
-                username: user.username,
-                name: decrypt(user.name),
-                role: user.role,
-                active: user.active,
-                lastLogin: user.lastLogin
-            }
-        });
-    } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ success: false, error: 'انتهت صلاحية التوكن' });
-        }
-        res.status(401).json({ success: false, error: 'توكن غير صالح' });
-    }
-});
-
-// ✅ Change Password
-app.post('/api/auth/change-password', csrfProtection, async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        const clientIP = getClientIP(req);
-        
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ success: false, error: 'جميع الحقول مطلوبة' });
-        }
-        
-        if (!isStrongPassword(newPassword)) {
-            return res.status(400).json({
-                success: false,
-                error: 'كلمة المرور الجديدة ضعيفة. يجب أن تحتوي على 12 حرف على الأقل، حروف كبيرة وصغيرة، أرقام ورموز خاصة'
-            });
-        }
-
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
-        const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = users.find(u => u.id === decoded.id);
-
-        if (!user) {
-            return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-
-        const validPassword = bcrypt.compareSync(currentPassword, user.password);
-        if (!validPassword) {
-            addAuditLog(user.id, 'PASSWORD_CHANGE_FAILED', 'Invalid current password', clientIP);
-            return res.status(401).json({ success: false, error: 'كلمة المرور الحالية غير صحيحة' });
-        }
-
-        user.password = bcrypt.hashSync(newPassword, CONFIG.password.saltRounds);
-        addAuditLog(user.id, 'PASSWORD_CHANGED', 'Password changed successfully', clientIP);
-
-        res.json({ success: true, message: '✅ تم تغيير كلمة المرور بنجاح' });
-    } catch (error) {
-        console.error('Change password error:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-// ✅ Logout
-app.post('/api/auth/logout', (req, res) => {
-    const userId = req.session.userId;
-    const clientIP = getClientIP(req);
-    
-    if (userId) {
-        addAuditLog(userId, 'LOGOUT', 'User logged out', clientIP);
-    }
-    
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Logout error:', err);
-        }
-        res.clearCookie('__Secure-marine.sid', {
-            path: '/',
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: 'strict'
-        });
-        res.json({ success: true, message: 'تم تسجيل الخروج' });
-    });
-});
-
-// ============================================================
-// 📊 DATA ENDPOINTS
-// ============================================================
-
-// ✅ Get vessels
-app.get('/api/vessels', csrfProtection, (req, res) => {
-    try {
-        const decryptedVessels = vessels.map(v => ({
-            ...v,
-            name: decrypt(v.name),
-            type: decrypt(v.type),
-            location: decrypt(v.location)
-        }));
-        res.json(decryptedVessels);
-    } catch (error) {
-        console.error('Error decrypting vessels:', error);
-        res.status(500).json({ success: false, error: 'خطأ في قراءة البيانات' });
-    }
-});
-
-// ✅ Add vessel
-app.post('/api/vessels', csrfProtection, (req, res) => {
-    try {
-        const { name, type, status, location } = req.body;
-        
-        if (!name) {
-            return res.status(400).json({ success: false, error: 'اسم الوحدة مطلوب' });
-        }
-
-        const newVessel = {
-            id: crypto.randomBytes(8).toString('hex'),
-            name: encrypt(name),
-            type: encrypt(type || 'غير محدد'),
-            status: status || 'ready',
-            location: encrypt(location || '—'),
-            lastMaintenance: new Date().toISOString(),
-            createdAt: new Date().toISOString()
-        };
-        
-        vessels.push(newVessel);
-        res.json({ success: true, vessel: newVessel });
-    } catch (error) {
-        console.error('Add vessel error:', error);
-        res.status(500).json({ success: false, error: 'خطأ في إضافة الوحدة' });
-    }
-});
-
-// ✅ Get users (admin only)
-app.get('/api/users', csrfProtection, (req, res) => {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
-        const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = users.find(u => u.id === decoded.id);
-
-        if (!user || user.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'غير مصرح' });
-        }
-
-        const safeUsers = users.map(u => ({
-            id: u.id,
-            username: u.username,
-            name: decrypt(u.name),
-            role: u.role,
-            active: u.active,
-            createdAt: u.createdAt,
-            lastLogin: u.lastLogin
-        }));
-        res.json(safeUsers);
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-// ✅ Get logs
-app.get('/api/logs', csrfProtection, (req, res) => {
-    res.json(auditLogs.slice(-100));
-});
-
-// ✅ Get system status
-app.get('/api/status', (req, res) => {
-    res.json({
-        status: 'online',
-        version: '8.0.0',
-        environment: process.env.NODE_ENV || 'development',
-        timestamp: new Date().toISOString()
-    });
-});
-
-// ============================================================
-// 🔧 ERROR HANDLING
-// ============================================================
-
-// ✅ 404 handler
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        error: 'المسار غير موجود'
-    });
-});
-
-// ✅ Global error handler
-app.use((err, req, res, next) => {
-    console.error('Global error:', err);
-    res.status(err.status || 500).json({
-        success: false,
-        error: isProduction ? 'حدث خطأ في الخادم' : err.message
-    });
-});
+);
 
 // ============================================================
 // 🚀 START SERVER
 // ============================================================
 
-app.listen(PORT, () => {
-    console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM v8.0 - ULTRA SECURE');
-    console.log('=========================================');
-    console.log('📍 Server: http://localhost:' + PORT);
-    console.log('👤 Admin: ' + ADMIN_USERNAME);
-    console.log('🔑 Password: ' + ADMIN_PASSWORD);
-    console.log('🌍 Environment: ' + (process.env.NODE_ENV || 'development'));
-    console.log('🔒 Security Level: ULTRA HIGH');
-    console.log('🛡️ CSRF Protection: ENABLED');
-    console.log('🔐 JWT Authentication: ENABLED');
-    console.log('📊 Rate Limiting: ENABLED');
-    console.log('=========================================');
-    console.log('💾 SAVE ADMIN CREDENTIALS!');
-    console.log('🔐 Use strong passwords only!');
-    console.log('=========================================');
-});
+const server =
+    app.listen(
+        PORT,
+        () => {
+
+            console.log(
+                '========================================='
+            );
+
+            console.log(
+                '🚢 MARINE SYSTEM v8.1 HARDENED'
+            );
+
+            console.log(
+                '========================================='
+            );
+
+            console.log(
+                `📍 Port: ${PORT}`
+            );
+
+            console.log(
+                `🌍 Environment: ${
+                    isProduction
+                        ? 'production'
+                        : 'development'
+                }`
+            );
+
+            console.log(
+                `👤 Admin username: ${ADMIN_USERNAME}`
+            );
+
+            // NEVER log password.
+            console.log(
+                '🔑 Admin password: [PROTECTED]'
+            );
+
+            console.log(
+                '🛡️ Helmet: ENABLED'
+            );
+
+            console.log(
+                '🛡️ CSRF: ENABLED'
+            );
+
+            console.log(
+                '🔐 JWT: ENABLED'
+            );
+
+            console.log(
+                '🚦 Rate limiting: ENABLED'
+            );
+
+            console.log(
+                '👑 RBAC: ENABLED'
+            );
+
+            console.log(
+                '🆔 Request IDs: ENABLED'
+            );
+
+            console.log(
+                '🌐 API routes: BEFORE PAGE FALLBACK'
+            );
+
+            console.log(
+                '========================================='
+            );
+
+            if (isProduction) {
+                console.warn(
+                    '⚠️ IMPORTANT: Use MongoDB/Redis session store in production.'
+                );
+
+                console.warn(
+                    '⚠️ IMPORTANT: In-memory users/vessels/logs are temporary.'
+                );
+            }
+        }
+    );
+
+// ============================================================
+// 🛑 GRACEFUL SHUTDOWN
+// ============================================================
+
+function shutdown(signal) {
+
+    console.log(
+        `\n🛑 ${signal} received. Shutting down...`
+    );
+
+    server.close(
+        () => {
+
+            console.log(
+                '✅ HTTP server closed.'
+            );
+
+            process.exit(0);
+        }
+    );
+
+    setTimeout(
+        () => {
+            console.error(
+                '❌ Forced shutdown.'
+            );
+
+            process.exit(1);
+        },
+        10000
+    ).unref();
+}
+
+process.on(
+    'SIGTERM',
+    () => shutdown('SIGTERM')
+);
+
+process.on(
+    'SIGINT',
+    () => shutdown('SIGINT')
+);
+
+// ============================================================
+// 🚨 PROCESS SAFETY
+// ============================================================
+
+process.on(
+    'unhandledRejection',
+    (reason) => {
+
+        console.error(
+            '❌ Unhandled Promise Rejection:',
+            reason
+        );
+    }
+);
+
+process.on(
+    'uncaughtException',
+    (error) => {
+
+        console.error(
+            '❌ Uncaught Exception:',
+            error
+        );
+
+        // Do not continue in an unknown state.
+        if (isProduction) {
+            shutdown(
+                'uncaughtException'
+            );
+        }
+    }
+);
+
+// ============================================================
+// 📦 EXPORT
+// ============================================================
 
 module.exports = app;
+```
