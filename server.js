@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - FULL SERVER WITH MAINTENANCE LOGS
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0
 // ============================================================
 
 require('dotenv').config();
@@ -22,7 +22,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ============================================================
-// 🔐 ULTRA SECURE CONFIGURATION
+// 🔐 CONFIGURATION
 // ============================================================
 
 function generateSecureKey(length = 64) {
@@ -118,73 +118,30 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "'unsafe-eval'",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com",
-                "https://cdn.jsdelivr.net",
-                "https://fonts.googleapis.com"
-            ],
-            styleSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com",
-                "https://cdn.jsdelivr.net",
-                "https://fonts.googleapis.com"
-            ],
-            imgSrc: [
-                "'self'",
-                "data:",
-                "https:",
-                "http:",
-                "https://unpkg.com",
-                "https://*.googleapis.com"
-            ],
-            connectSrc: [
-                "'self'",
-                "https://*.onrender.com",
-                "https://unpkg.com",
-                "https://*.googleapis.com",
-                "https://*.leafletjs.com",
-                "https://cdn.jsdelivr.net"
-            ],
-            fontSrc: [
-                "'self'",
-                "https:",
-                "data:",
-                "https://fonts.gstatic.com",
-                "https://*.googleapis.com"
-            ],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+            imgSrc: ["'self'", "data:", "https:", "https://unpkg.com"],
+            connectSrc: ["'self'", "https://*.onrender.com", "https://unpkg.com", "https://*.googleapis.com", "https://*.leafletjs.com", "https://cdn.jsdelivr.net"],
+            fontSrc: ["'self'", "https:", "data:", "https://fonts.gstatic.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
             objectSrc: ["'none'"],
-            mediaSrc: ["'self'"],
             frameSrc: ["'none'"],
             baseUri: ["'self'"],
-            formAction: ["'self'"],
-            upgradeInsecureRequests: isProduction ? [] : null
+            formAction: ["'self'"]
         }
     },
-    hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true
-    },
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
     frameguard: { action: 'deny' },
     noSniff: true,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     xssFilter: true,
-    hidePoweredBy: true,
-    ieNoOpen: true,
-    permittedCrossDomainPolicies: { permittedPolicies: 'none' }
+    hidePoweredBy: true
 }));
 
 app.use(cors({
     origin: ['http://localhost:5000', 'http://localhost:3000', 'https://marine-system-71eo.onrender.com'],
     credentials: true,
-    exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry', 'X-Request-ID', 'X-User-ID']
+    exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry', 'X-Request-ID']
 }));
 
 app.use(compression());
@@ -246,60 +203,54 @@ app.use((req, res, next) => {
     if (!req.session.csrfToken) {
         req.session.csrfToken = generateSecureToken();
         req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
-        console.log('🔄 New CSRF token generated');
     }
-
     if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
         req.session.csrfToken = generateSecureToken();
         req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
-        console.log('🔄 CSRF token refreshed');
     }
-
     res.setHeader('X-CSRF-Token', req.session.csrfToken);
     res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
     next();
 });
 
 const csrfProtection = (req, res, next) => {
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-        return next();
-    }
-
-    const skipPaths = ['/api/auth/login', '/api/csrf-token'];
-    if (skipPaths.includes(req.path)) {
-        return next();
-    }
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+    if (['/api/auth/login', '/api/csrf-token'].includes(req.path)) return next();
 
     const token = req.headers['x-csrf-token'] || req.body.csrf_token;
     const sessionToken = req.session.csrfToken;
-
-    if (!token) {
-        return res.status(403).json({ success: false, error: 'CSRF token مفقود' });
+    if (!token || !sessionToken) {
+        return res.status(403).json({ success: false, error: 'CSRF token غير صالح' });
     }
-
-    if (!sessionToken) {
-        return res.status(403).json({ success: false, error: 'جلسة غير صالحة' });
-    }
-
     try {
-        const isValid = crypto.timingSafeEqual(
-            Buffer.from(token, 'utf8'),
-            Buffer.from(sessionToken, 'utf8')
-        );
-        if (!isValid) {
-            throw new Error('Invalid token');
-        }
+        const isValid = crypto.timingSafeEqual(Buffer.from(token, 'utf8'), Buffer.from(sessionToken, 'utf8'));
+        if (!isValid) throw new Error('Invalid token');
     } catch (error) {
         return res.status(403).json({ success: false, error: 'CSRF token غير صالح' });
     }
-
     const newToken = generateSecureToken();
     req.session.csrfToken = newToken;
     req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
     res.setHeader('X-CSRF-Token', newToken);
-    
     next();
 };
+
+// ============================================================
+// 📁 STATIC FILES
+// ============================================================
+
+const pagesDir = path.join(__dirname, 'pages');
+const publicPagesDir = path.join(__dirname, 'public', 'pages');
+const publicDir = path.join(__dirname, 'public');
+
+if (!fs.existsSync(pagesDir)) fs.mkdirSync(pagesDir, { recursive: true });
+if (!fs.existsSync(publicPagesDir)) fs.mkdirSync(publicPagesDir, { recursive: true });
+
+app.use(express.static(__dirname));
+app.use('/pages', express.static(pagesDir));
+app.use('/pages', express.static(publicPagesDir));
+app.use('/public', express.static(publicDir));
+app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
 // 📊 DATA - VESSELS
@@ -394,50 +345,25 @@ const users = [
 const maintenanceLogs = [];
 
 // ✅ إضافة سجلات صيانة أولية للمراكب المعطوبة
-function initMaintenanceLogs() {
-    vessels.forEach(v => {
-        if (v.status === 'معطب' || v.status === 'صيانة') {
-            const exists = maintenanceLogs.some(log => log.vesselId === v.id);
-            if (!exists) {
-                maintenanceLogs.push({
-                    id: crypto.randomBytes(8).toString('hex'),
-                    vesselId: v.id,
-                    vesselName: v.name,
-                    vesselNum: v.num || '',
-                    type: v.break || 'صيانة دورية',
-                    status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-                    date: v.fDate || new Date().toISOString(),
-                    repairUnit: v.repairUnit || '—',
-                    cost: 0,
-                    notes: v.break ? `عطب: ${v.break}` : 'صيانة دورية',
-                    createdAt: v.fDate || new Date().toISOString()
-                });
-            }
-        }
-    });
-    console.log(`📝 Initialized ${maintenanceLogs.length} maintenance logs`);
-}
-
-initMaintenanceLogs();
+vessels.forEach(v => {
+    if (v.status === 'معطب' || v.status === 'صيانة') {
+        maintenanceLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            vesselId: v.id,
+            vesselName: v.name,
+            vesselNum: v.num || '',
+            type: v.break || 'صيانة دورية',
+            status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+            date: v.fDate || new Date().toISOString(),
+            repairUnit: v.repairUnit || '—',
+            cost: 0,
+            notes: v.break ? `عطب: ${v.break}` : 'صيانة دورية',
+            createdAt: v.fDate || new Date().toISOString()
+        });
+    }
+});
 
 console.log(`✅ Initialized ${vessels.length} vessels, ${maintenanceLogs.length} maintenance logs`);
-
-// ============================================================
-// 📁 STATIC FILES
-// ============================================================
-
-const pagesDir = path.join(__dirname, 'pages');
-const publicPagesDir = path.join(__dirname, 'public', 'pages');
-const publicDir = path.join(__dirname, 'public');
-
-if (!fs.existsSync(pagesDir)) fs.mkdirSync(pagesDir, { recursive: true });
-if (!fs.existsSync(publicPagesDir)) fs.mkdirSync(publicPagesDir, { recursive: true });
-
-app.use(express.static(__dirname));
-app.use('/pages', express.static(pagesDir));
-app.use('/pages', express.static(publicPagesDir));
-app.use('/public', express.static(publicDir));
-app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
 // 🔐 AUTH ENDPOINTS
@@ -454,7 +380,7 @@ app.get('/api/csrf-token', (req, res) => {
     }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
         const clientIP = req.ip || req.connection.remoteAddress;
@@ -481,7 +407,6 @@ app.post('/api/auth/login', async (req, res) => {
         const validPassword = bcrypt.compareSync(password, user.password);
         if (!validPassword) {
             user.loginAttempts = (user.loginAttempts || 0) + 1;
-            
             if (user.loginAttempts >= 5) {
                 user.locked = true;
                 user.lockedUntil = Date.now() + (30 * 60 * 1000);
@@ -490,7 +415,6 @@ app.post('/api/auth/login', async (req, res) => {
                     error: 'الحساب مقفل لمدة 30 دقيقة بسبب كثرة المحاولات الفاشلة'
                 });
             }
-            
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
@@ -500,15 +424,9 @@ app.post('/api/auth/login', async (req, res) => {
         user.lastLogin = new Date().toISOString();
 
         const token = jwt.sign(
-            {
-                id: user.id,
-                username: user.username,
-                role: user.role,
-                iat: Math.floor(Date.now() / 1000),
-                jti: generateSecureToken().substring(0, 16)
-            },
+            { id: user.id, username: user.username, role: user.role },
             JWT_SECRET,
-            { expiresIn: '7d', algorithm: 'HS256' }
+            { expiresIn: '7d' }
         );
 
         const newToken = generateSecureToken();
@@ -539,7 +457,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-app.get('/api/auth/me', async (req, res) => {
+app.get('/api/auth/me', (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -547,7 +465,7 @@ app.get('/api/auth/me', async (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+        const decoded = jwt.verify(token, JWT_SECRET);
         const user = users.find(u => u.id === decoded.id);
 
         if (!user || !user.active) {
@@ -583,7 +501,7 @@ app.get('/api/auth/me', async (req, res) => {
     }
 });
 
-app.post('/api/auth/logout', async (req, res) => {
+app.post('/api/auth/logout', (req, res) => {
     req.session.destroy(() => {
         res.clearCookie('__Secure-marine.sid');
         res.json({ success: true, message: 'تم تسجيل الخروج' });
@@ -594,32 +512,20 @@ app.post('/api/auth/logout', async (req, res) => {
 // 📊 VESSELS API
 // ============================================================
 
-// ✅ جلب جميع المراكب
 app.get('/api/vessels', csrfProtection, (req, res) => {
     try {
-        console.log('📡 Fetching vessels...');
         res.json(vessels);
     } catch (error) {
-        console.error('❌ Error fetching vessels:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في جلب البيانات' 
-        });
+        res.status(500).json({ success: false, error: 'خطأ في جلب البيانات' });
     }
 });
 
-// ✅ إضافة مركب جديد
 app.post('/api/vessels', csrfProtection, (req, res) => {
     try {
-        console.log('📦 Received vessel data:', req.body);
-        
         const { name, num, len, region, zone, port, supp, status, break: breakType, fDate, eDate, ref, repairUnit, cat } = req.body;
         
         if (!name) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'اسم المركب مطلوب' 
-            });
+            return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
         }
 
         const newVessel = {
@@ -646,7 +552,7 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
 
         // ✅ إضافة إلى سجل الصيانة إذا كان معطباً أو تحت الصيانة
         if (status === 'معطب' || status === 'صيانة') {
-            const logEntry = {
+            maintenanceLogs.push({
                 id: crypto.randomBytes(8).toString('hex'),
                 vesselId: newVessel.id,
                 vesselName: newVessel.name,
@@ -658,8 +564,7 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
                 cost: 0,
                 notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
                 createdAt: new Date().toISOString()
-            };
-            maintenanceLogs.push(logEntry);
+            });
             console.log(`📝 Added to maintenance log: ${newVessel.name}`);
         }
         
@@ -670,14 +575,10 @@ app.post('/api/vessels', csrfProtection, (req, res) => {
         });
     } catch (error) {
         console.error('❌ Error adding vessel:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في إضافة المركب: ' + error.message 
-        });
+        res.status(500).json({ success: false, error: 'خطأ في إضافة المركب: ' + error.message });
     }
 });
 
-// ✅ تحديث مركب
 app.put('/api/vessels/:id', csrfProtection, (req, res) => {
     try {
         const vesselId = req.params.id;
@@ -685,10 +586,7 @@ app.put('/api/vessels/:id', csrfProtection, (req, res) => {
         
         const vessel = vessels.find(v => v.id === vesselId);
         if (!vessel) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'المركب غير موجود' 
-            });
+            return res.status(404).json({ success: false, error: 'المركب غير موجود' });
         }
         
         const oldStatus = vessel.status;
@@ -713,7 +611,7 @@ app.put('/api/vessels/:id', csrfProtection, (req, res) => {
 
         // ✅ إذا تغيرت الحالة إلى معطب أو صيانة، أضف إلى سجل الصيانة
         if (status && (status === 'معطب' || status === 'صيانة') && oldStatus !== status) {
-            const logEntry = {
+            maintenanceLogs.push({
                 id: crypto.randomBytes(8).toString('hex'),
                 vesselId: vessel.id,
                 vesselName: vessel.name,
@@ -725,8 +623,7 @@ app.put('/api/vessels/:id', csrfProtection, (req, res) => {
                 cost: 0,
                 notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
                 createdAt: new Date().toISOString()
-            };
-            maintenanceLogs.push(logEntry);
+            });
             console.log(`📝 Added to maintenance log: ${vessel.name}`);
         }
         
@@ -737,39 +634,107 @@ app.put('/api/vessels/:id', csrfProtection, (req, res) => {
         });
     } catch (error) {
         console.error('❌ Error updating vessel:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في تحديث المركب' 
-        });
+        res.status(500).json({ success: false, error: 'خطأ في تحديث المركب' });
     }
 });
 
-// ✅ حذف مركب
 app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
     try {
         const vesselId = req.params.id;
         const index = vessels.findIndex(v => v.id === vesselId);
-        
         if (index === -1) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'المركب غير موجود' 
-            });
+            return res.status(404).json({ success: false, error: 'المركب غير موجود' });
         }
-        
-        const deleted = vessels.splice(index, 1)[0];
-        console.log('✅ Vessel deleted:', deleted.name);
-        
-        res.json({
-            success: true,
-            message: 'تم حذف المركب بنجاح'
-        });
+        vessels.splice(index, 1);
+        console.log('✅ Vessel deleted');
+        res.json({ success: true, message: 'تم حذف المركب بنجاح' });
     } catch (error) {
         console.error('❌ Error deleting vessel:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في حذف المركب' 
+        res.status(500).json({ success: false, error: 'خطأ في حذف المركب' });
+    }
+});
+
+// ============================================================
+// 📊 MAINTENANCE LOGS API
+// ============================================================
+
+app.get('/api/maintenance-logs', csrfProtection, (req, res) => {
+    try {
+        console.log('📡 Fetching maintenance logs...');
+        console.log('📊 Total logs:', maintenanceLogs.length);
+        res.json(maintenanceLogs);
+    } catch (error) {
+        console.error('❌ Error fetching maintenance logs:', error);
+        res.status(500).json({ success: false, error: 'خطأ في جلب سجلات الصيانة' });
+    }
+});
+
+app.post('/api/maintenance-logs', csrfProtection, (req, res) => {
+    try {
+        const { vesselId, vesselName, vesselNum, type, status, date, repairUnit, cost, notes } = req.body;
+        
+        if (!vesselName) {
+            return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
+        }
+
+        maintenanceLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            vesselId: vesselId || '',
+            vesselName: vesselName,
+            vesselNum: vesselNum || '',
+            type: type || 'صيانة دورية',
+            status: status || 'قيد التنفيذ',
+            date: date || new Date().toISOString(),
+            repairUnit: repairUnit || '—',
+            cost: cost || 0,
+            notes: notes || '',
+            createdAt: new Date().toISOString()
         });
+        
+        console.log('✅ Maintenance log added');
+        res.status(201).json({ success: true, message: 'تم إضافة سجل الصيانة' });
+    } catch (error) {
+        console.error('❌ Error adding maintenance log:', error);
+        res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
+    }
+});
+
+app.put('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
+    try {
+        const logId = req.params.id;
+        const { status, cost, notes } = req.body;
+        
+        const log = maintenanceLogs.find(l => l.id === logId);
+        if (!log) {
+            return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
+        }
+        
+        if (status) log.status = status;
+        if (cost !== undefined) log.cost = cost;
+        if (notes) log.notes = notes;
+        log.updatedAt = new Date().toISOString();
+        
+        console.log('✅ Maintenance log updated');
+        res.json({ success: true, message: 'تم تحديث سجل الصيانة', log: log });
+    } catch (error) {
+        console.error('❌ Error updating maintenance log:', error);
+        res.status(500).json({ success: false, error: 'خطأ في تحديث سجل الصيانة' });
+    }
+});
+
+app.delete('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
+    try {
+        const logId = req.params.id;
+        const index = maintenanceLogs.findIndex(l => l.id === logId);
+        if (index === -1) {
+            return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
+        }
+        maintenanceLogs.splice(index, 1);
+        console.log('✅ Maintenance log deleted');
+        res.json({ success: true, message: 'تم حذف سجل الصيانة' });
+    } catch (error) {
+        console.error('❌ Error deleting maintenance log:', error);
+        res.status(500).json({ success: false, error: 'خطأ في حذف سجل الصيانة' });
     }
 });
 
@@ -791,14 +756,10 @@ app.get('/api/users', csrfProtection, (req, res) => {
         }));
         res.json(safeUsers);
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في الخادم' 
-        });
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
     }
 });
 
-// ✅ إضافة مستخدم جديد
 app.post('/api/users', csrfProtection, (req, res) => {
     try {
         const { username, password, email, role, active } = req.body;
@@ -845,7 +806,6 @@ app.post('/api/users', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ تحديث مستخدم
 app.put('/api/users/:id', csrfProtection, (req, res) => {
     try {
         const userId = req.params.id;
@@ -882,7 +842,6 @@ app.put('/api/users/:id', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ حذف مستخدم
 app.delete('/api/users/:id', csrfProtection, (req, res) => {
     try {
         const userId = req.params.id;
@@ -907,132 +866,6 @@ app.delete('/api/users/:id', csrfProtection, (req, res) => {
     } catch (error) {
         console.error('❌ Error deleting user:', error);
         res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-// ============================================================
-// 📊 MAINTENANCE LOGS API
-// ============================================================
-
-// ✅ جلب سجلات الصيانة
-app.get('/api/maintenance-logs', csrfProtection, (req, res) => {
-    try {
-        console.log('📡 Fetching maintenance logs...');
-        console.log('📊 Total logs:', maintenanceLogs.length);
-        res.json(maintenanceLogs);
-    } catch (error) {
-        console.error('❌ Error fetching maintenance logs:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في جلب سجلات الصيانة' 
-        });
-    }
-});
-
-// ✅ إضافة سجل صيانة جديد
-app.post('/api/maintenance-logs', csrfProtection, (req, res) => {
-    try {
-        const { vesselId, vesselName, vesselNum, type, status, date, repairUnit, cost, notes } = req.body;
-        
-        if (!vesselName) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'اسم المركب مطلوب' 
-            });
-        }
-
-        const logEntry = {
-            id: crypto.randomBytes(8).toString('hex'),
-            vesselId: vesselId || '',
-            vesselName: vesselName,
-            vesselNum: vesselNum || '',
-            type: type || 'صيانة دورية',
-            status: status || 'قيد التنفيذ',
-            date: date || new Date().toISOString(),
-            repairUnit: repairUnit || '—',
-            cost: cost || 0,
-            notes: notes || '',
-            createdAt: new Date().toISOString()
-        };
-        
-        maintenanceLogs.push(logEntry);
-        console.log('✅ Maintenance log added:', logEntry.vesselName);
-        
-        res.status(201).json({
-            success: true,
-            message: 'تم إضافة سجل الصيانة',
-            log: logEntry
-        });
-    } catch (error) {
-        console.error('❌ Error adding maintenance log:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في إضافة سجل الصيانة' 
-        });
-    }
-});
-
-// ✅ تحديث سجل صيانة
-app.put('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
-    try {
-        const logId = req.params.id;
-        const { status, cost, notes } = req.body;
-        
-        const log = maintenanceLogs.find(l => l.id === logId);
-        if (!log) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'سجل الصيانة غير موجود' 
-            });
-        }
-        
-        if (status) log.status = status;
-        if (cost !== undefined) log.cost = cost;
-        if (notes) log.notes = notes;
-        log.updatedAt = new Date().toISOString();
-        
-        console.log('✅ Maintenance log updated:', log.vesselName);
-        
-        res.json({
-            success: true,
-            message: 'تم تحديث سجل الصيانة',
-            log: log
-        });
-    } catch (error) {
-        console.error('❌ Error updating maintenance log:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في تحديث سجل الصيانة' 
-        });
-    }
-});
-
-// ✅ حذف سجل صيانة
-app.delete('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
-    try {
-        const logId = req.params.id;
-        const index = maintenanceLogs.findIndex(l => l.id === logId);
-        
-        if (index === -1) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'سجل الصيانة غير موجود' 
-            });
-        }
-        
-        maintenanceLogs.splice(index, 1);
-        console.log('✅ Maintenance log deleted:', logId);
-        
-        res.json({
-            success: true,
-            message: 'تم حذف سجل الصيانة'
-        });
-    } catch (error) {
-        console.error('❌ Error deleting maintenance log:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في حذف سجل الصيانة' 
-        });
     }
 });
 
@@ -1071,30 +904,33 @@ app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
-        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>🚢 Marine System</title>
-        <style>
-            *{margin:0;padding:0;box-sizing:border-box}
-            body{font-family:'Segoe UI',sans-serif;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-            .container{background:linear-gradient(145deg,#1a1f35,#0d1528);padding:50px;border-radius:30px;max-width:600px;width:100%;border:1px solid #2a3a5a;text-align:center}
-            h1{color:#00d4ff;font-size:2.5em}
-            .status{background:#0d1528;padding:20px;border-radius:15px;margin:20px 0;border-right:5px solid #00ff88}
-            .info{color:#aabbcc;line-height:2}
-            .info strong{color:#00d4ff}
-            .btn{background:linear-gradient(135deg,#00d4ff,#0099cc);color:#0a0e1a;border:none;padding:15px 40px;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.3s;width:100%;margin-top:15px}
-            .btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,212,255,0.3)}
-            .btn-logout{background:linear-gradient(135deg,#ff4444,#cc0000)}
-            .error{color:#ff4444;margin:10px 0}
-            .success-msg{color:#00ff88;margin:10px 0}
-            .login-section,.user-section{margin-top:30px;text-align:right}
-            .user-section{display:none}
-            .badge{display:inline-block;padding:5px 15px;border-radius:20px;font-size:14px;margin:5px 0;background:#ff4444;color:#fff}
-            .login-form input{width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px}
-            .login-form input:focus{outline:none;border-color:#00d4ff}
-            .footer{margin-top:30px;padding-top:20px;border-top:1px solid #2a3a5a;color:#667788;font-size:12px}
-            .links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
-            .links a{display:inline-block;padding:10px 20px;background:#2a3a5a;color:#fff;text-decoration:none;border-radius:8px;font-size:14px}
-            .links a:hover{background:#3a4a6a}
-        </style>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>🚢 Marine System</title>
+            <style>
+                *{margin:0;padding:0;box-sizing:border-box}
+                body{font-family:'Segoe UI',sans-serif;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+                .container{background:linear-gradient(145deg,#1a1f35,#0d1528);padding:50px;border-radius:30px;max-width:600px;width:100%;border:1px solid #2a3a5a;text-align:center}
+                h1{color:#00d4ff;font-size:2.5em}
+                .status{background:#0d1528;padding:20px;border-radius:15px;margin:20px 0;border-right:5px solid #00ff88}
+                .info{color:#aabbcc;line-height:2}
+                .info strong{color:#00d4ff}
+                .btn{background:linear-gradient(135deg,#00d4ff,#0099cc);color:#0a0e1a;border:none;padding:15px 40px;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.3s;width:100%;margin-top:15px}
+                .btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,212,255,0.3)}
+                .btn-logout{background:linear-gradient(135deg,#ff4444,#cc0000)}
+                .error{color:#ff4444;margin:10px 0}
+                .success-msg{color:#00ff88;margin:10px 0}
+                .login-section,.user-section{margin-top:30px;text-align:right}
+                .user-section{display:none}
+                .badge{display:inline-block;padding:5px 15px;border-radius:20px;font-size:14px;margin:5px 0;background:#ff4444;color:#fff}
+                .login-form input{width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px}
+                .login-form input:focus{outline:none;border-color:#00d4ff}
+                .footer{margin-top:30px;padding-top:20px;border-top:1px solid #2a3a5a;color:#667788;font-size:12px}
+                .links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
+                .links a{display:inline-block;padding:10px 20px;background:#2a3a5a;color:#fff;text-decoration:none;border-radius:8px;font-size:14px}
+                .links a:hover{background:#3a4a6a}
+            </style>
         </head>
         <body>
             <div class="container">
@@ -1102,7 +938,7 @@ app.get('/', (req, res) => {
                 <p style="color:#8899aa;">نظام إدارة الأسطول البحري</p>
                 <div class="status">
                     <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
-                    <p class="info">🔒 <strong>الأمان:</strong> عالي جداً</p>
+                    <p class="info">🔒 <strong>الأمان:</strong> Enterprise</p>
                     <p class="info">👤 <strong>المستخدم:</strong> admin</p>
                     <p class="info">🔑 <strong>كلمة المرور:</strong> ${ADMIN_PASSWORD}</p>
                     <p class="info">📊 <strong>المراكب:</strong> ${vessels.length}</p>
@@ -1129,7 +965,7 @@ app.get('/', (req, res) => {
                     </div>
                     <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
                 </div>
-                <div class="footer">🔒 جميع البيانات مشفرة | v8.0</div>
+                <div class="footer">🔒 جميع البيانات مشفرة | v8.0 Enterprise</div>
             </div>
             <script>
                 let csrfToken = '';
@@ -1262,7 +1098,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM v8.0 - FULL SERVER');
+    console.log('🚢 MARINE SYSTEM v8.0 - PROFESSIONAL');
     console.log('=========================================');
     console.log(`📍 Server: http://localhost:${PORT}`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
