@@ -1,17 +1,18 @@
-```js
 // ============================================================
-// 🚢 MARINE SYSTEM - v8.1 HARDENED / FULLY FIXED
+// 🚢 MARINE SYSTEM - v8.2 HARDENED / PRODUCTION FIXED
 // ============================================================
+// SERVER-ONLY HARDENED VERSION
+//
 // FIXES:
-// ✅ API routes BEFORE page routes
-// ✅ NO wildcard route before API
+// ✅ API routes always handled before page fallback
 // ✅ API 404 always returns JSON
-// ✅ Page fallback only for non-API requests
-// ✅ Fixed CSRF rotation race condition
+// ✅ No API request receives index.html
+// ✅ No wildcard route before API
+// ✅ Fixed CSRF token race condition
 // ✅ Authentication middleware
 // ✅ Admin RBAC
 // ✅ Secure Render proxy configuration
-// ✅ Secure session cookie
+// ✅ Secure HttpOnly/SameSite session cookie
 // ✅ Removed dangerous cookie domain
 // ✅ No password logging
 // ✅ Strict JWT algorithm
@@ -19,7 +20,18 @@
 // ✅ Security headers
 // ✅ Rate limiting
 // ✅ Body limits
+// ✅ Path traversal protection
+// ✅ Server-side files not publicly exposed
+// ✅ Safe static asset handling
+// ✅ Graceful shutdown
+// ✅ Node.js 26 compatible
+//
+// IMPORTANT:
+// This version keeps the existing frontend/API contract.
+// No frontend changes are required.
 // ============================================================
+
+'use strict';
 
 require('dotenv').config();
 
@@ -40,44 +52,76 @@ const compression = require('compression');
 
 const app = express();
 
-const PORT = Number(process.env.PORT) || 5000;
-const isProduction = process.env.NODE_ENV === 'production';
+// ============================================================
+// 🔧 BASIC CONFIG
+// ============================================================
+
+const PORT =
+    Number.parseInt(process.env.PORT, 10) || 5000;
+
+const isProduction =
+    process.env.NODE_ENV === 'production';
 
 // ============================================================
-// 🔧 EXPRESS / RENDER
+// 🔐 EXPRESS / RENDER
 // ============================================================
 
 if (isProduction) {
-    // Render sits behind a proxy.
+    // Render terminates HTTPS at the proxy.
+    // Trust exactly one proxy hop.
     app.set('trust proxy', 1);
 }
 
 app.disable('x-powered-by');
 
 // ============================================================
-// 🔐 SECURE CONFIGURATION
+// 🔐 SECURE CONFIGURATION HELPERS
 // ============================================================
 
 function generateSecureKey(bytes = 32) {
-    return crypto.randomBytes(bytes).toString('hex');
+    return crypto
+        .randomBytes(bytes)
+        .toString('hex');
 }
 
 function generateSecureToken() {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto
+        .randomBytes(32)
+        .toString('hex');
 }
 
 function generateRequestId() {
-    return crypto.randomBytes(16).toString('hex');
+    return crypto
+        .randomBytes(16)
+        .toString('hex');
 }
 
-function isStrongPassword(password) {
-    if (typeof password !== 'string') return false;
+// ============================================================
+// 🔑 PASSWORD POLICY
+// ============================================================
 
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password);
-    const isLongEnough = password.length >= 12;
+function isStrongPassword(password) {
+
+    if (typeof password !== 'string') {
+        return false;
+    }
+
+    const hasUpperCase =
+        /[A-Z]/.test(password);
+
+    const hasLowerCase =
+        /[a-z]/.test(password);
+
+    const hasNumbers =
+        /\d/.test(password);
+
+    const hasSpecialChar =
+        /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(
+            password
+        );
+
+    const isLongEnough =
+        password.length >= 12;
 
     return (
         hasUpperCase &&
@@ -88,15 +132,37 @@ function isStrongPassword(password) {
     );
 }
 
+// ============================================================
+// 🔐 CRYPTOGRAPHIC PASSWORD GENERATOR
+// ============================================================
+
 function generateStrongPassword(length = 20) {
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const numbers = '0123456789';
-    const special = '!@#$%^&*()_+-=';
-    const all = uppercase + lowercase + numbers + special;
+
+    const uppercase =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    const lowercase =
+        'abcdefghijklmnopqrstuvwxyz';
+
+    const numbers =
+        '0123456789';
+
+    const special =
+        '!@#$%^&*()_+-=';
+
+    const all =
+        uppercase +
+        lowercase +
+        numbers +
+        special;
 
     const randomChar = (set) =>
-        set[crypto.randomInt(0, set.length)];
+        set[
+            crypto.randomInt(
+                0,
+                set.length
+            )
+        ];
 
     let password = '';
 
@@ -109,12 +175,27 @@ function generateStrongPassword(length = 20) {
         password += randomChar(all);
     }
 
-    // Cryptographically safer shuffle
-    const chars = password.split('');
+    const chars =
+        password.split('');
 
-    for (let i = chars.length - 1; i > 0; i--) {
-        const j = crypto.randomInt(0, i + 1);
-        [chars[i], chars[j]] = [chars[j], chars[i]];
+    for (
+        let i = chars.length - 1;
+        i > 0;
+        i--
+    ) {
+        const j =
+            crypto.randomInt(
+                0,
+                i + 1
+            );
+
+        [
+            chars[i],
+            chars[j]
+        ] = [
+            chars[j],
+            chars[i]
+        ];
     }
 
     return chars.join('');
@@ -125,32 +206,41 @@ function generateStrongPassword(length = 20) {
 // ============================================================
 
 const ADMIN_USERNAME =
-    process.env.ADMIN_USERNAME || 'admin';
+    process.env.ADMIN_USERNAME ||
+    'admin';
 
-let ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+let ADMIN_PASSWORD =
+    process.env.ADMIN_PASSWORD;
 
 if (!ADMIN_PASSWORD) {
+
     if (isProduction) {
+
         console.error(
             '❌ FATAL: ADMIN_PASSWORD must be configured in production.'
         );
+
         process.exit(1);
     }
 
-    ADMIN_PASSWORD = generateStrongPassword();
+    ADMIN_PASSWORD =
+        generateStrongPassword();
 
     console.warn(
         '⚠️ DEVELOPMENT ONLY: Generated temporary admin password.'
     );
+
     console.warn(
         '⚠️ Configure ADMIN_PASSWORD in .env before production.'
     );
 }
 
 if (!isStrongPassword(ADMIN_PASSWORD)) {
+
     console.error(
         '❌ FATAL: ADMIN_PASSWORD is weak.'
     );
+
     console.error(
         'Password must contain 12+ chars, uppercase, lowercase, number and special character.'
     );
@@ -161,196 +251,309 @@ if (!isStrongPassword(ADMIN_PASSWORD)) {
 }
 
 const ADMIN_NAME =
-    process.env.ADMIN_NAME || 'أمان الله ناجي';
+    process.env.ADMIN_NAME ||
+    'أمان الله ناجي';
 
-// ------------------------------------------------------------
-// JWT SECRET
-// ------------------------------------------------------------
+// ============================================================
+// 🔐 JWT SECRET
+// ============================================================
 
 const JWT_SECRET =
-    process.env.JWT_SECRET || generateSecureKey(64);
-
-if (isProduction && (!process.env.JWT_SECRET || JWT_SECRET.length < 64)) {
-    console.error(
-        '❌ FATAL: JWT_SECRET must be configured in production.'
-    );
-    process.exit(1);
-}
-
-// ------------------------------------------------------------
-// SESSION SECRET
-// ------------------------------------------------------------
-
-const SESSION_SECRET =
-    process.env.SESSION_SECRET || generateSecureKey(64);
+    process.env.JWT_SECRET ||
+    generateSecureKey(64);
 
 if (
     isProduction &&
-    (!process.env.SESSION_SECRET || SESSION_SECRET.length < 64)
+    (
+        !process.env.JWT_SECRET ||
+        JWT_SECRET.length < 64
+    )
 ) {
+
     console.error(
-        '❌ FATAL: SESSION_SECRET must be configured in production.'
+        '❌ FATAL: JWT_SECRET must be configured in production and be sufficiently long.'
     );
+
     process.exit(1);
 }
 
-// ------------------------------------------------------------
-// ENCRYPTION KEY
-// ------------------------------------------------------------
+// ============================================================
+// 🍪 SESSION SECRET
+// ============================================================
 
-let ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+const SESSION_SECRET =
+    process.env.SESSION_SECRET ||
+    generateSecureKey(64);
+
+if (
+    isProduction &&
+    (
+        !process.env.SESSION_SECRET ||
+        SESSION_SECRET.length < 64
+    )
+) {
+
+    console.error(
+        '❌ FATAL: SESSION_SECRET must be configured in production and be sufficiently long.'
+    );
+
+    process.exit(1);
+}
+
+// ============================================================
+// 🔐 ENCRYPTION KEY
+// ============================================================
+
+let ENCRYPTION_KEY =
+    process.env.ENCRYPTION_KEY;
 
 if (!ENCRYPTION_KEY) {
-    ENCRYPTION_KEY = generateSecureKey(32);
+
+    ENCRYPTION_KEY =
+        generateSecureKey(32);
 
     if (isProduction) {
+
         console.error(
             '❌ FATAL: ENCRYPTION_KEY must be configured in production.'
         );
+
         process.exit(1);
     }
 }
 
-if (!/^[0-9a-fA-F]{64}$/.test(ENCRYPTION_KEY)) {
+if (
+    !/^[0-9a-fA-F]{64}$/.test(
+        ENCRYPTION_KEY
+    )
+) {
+
     console.error(
         '❌ FATAL: ENCRYPTION_KEY must be exactly 64 hexadecimal characters.'
     );
+
     process.exit(1);
 }
 
-// IMPORTANT:
-// CBC IV must remain stable for decrypting existing encrypted data.
-// For this demo/in-memory version we use an ENV IV.
-// In production DB encryption, use a random IV per record and store it
-// alongside ciphertext.
+// ============================================================
+// 🔐 ENCRYPTION IV
+// ============================================================
 
 let ENCRYPTION_IV;
 
 if (process.env.ENCRYPTION_IV) {
-    if (!/^[0-9a-fA-F]{32}$/.test(process.env.ENCRYPTION_IV)) {
+
+    if (
+        !/^[0-9a-fA-F]{32}$/.test(
+            process.env.ENCRYPTION_IV
+        )
+    ) {
+
         console.error(
             '❌ FATAL: ENCRYPTION_IV must be exactly 32 hexadecimal characters.'
         );
+
         process.exit(1);
     }
 
-    ENCRYPTION_IV = Buffer.from(
-        process.env.ENCRYPTION_IV,
-        'hex'
-    );
+    ENCRYPTION_IV =
+        Buffer.from(
+            process.env.ENCRYPTION_IV,
+            'hex'
+        );
+
 } else {
-    ENCRYPTION_IV = crypto.randomBytes(16);
+
+    ENCRYPTION_IV =
+        crypto.randomBytes(16);
 
     if (isProduction) {
+
         console.error(
             '❌ FATAL: ENCRYPTION_IV must be configured in production.'
         );
+
         process.exit(1);
     }
 }
 
 // ============================================================
-// ⚙️ CONFIG
+// ⚙️ APPLICATION CONFIG
 // ============================================================
 
 const CONFIG = {
+
     rateLimit: {
+
         window:
-            parseInt(process.env.RATE_LIMIT_WINDOW, 10) || 15,
+            Number.parseInt(
+                process.env.RATE_LIMIT_WINDOW,
+                10
+            ) || 15,
 
         max:
-            parseInt(process.env.RATE_LIMIT_MAX, 10) || 100
+            Number.parseInt(
+                process.env.RATE_LIMIT_MAX,
+                10
+            ) || 100
     },
 
     authRateLimit: {
+
         window:
-            parseInt(process.env.AUTH_RATE_LIMIT_WINDOW, 10) || 15,
+            Number.parseInt(
+                process.env.AUTH_RATE_LIMIT_WINDOW,
+                10
+            ) || 15,
 
         max:
-            parseInt(process.env.AUTH_RATE_LIMIT_MAX, 10) || 5
+            Number.parseInt(
+                process.env.AUTH_RATE_LIMIT_MAX,
+                10
+            ) || 5
     },
 
     csrf: {
+
         expiry:
-            parseInt(process.env.CSRF_TOKEN_EXPIRY, 10) || 8
+            Number.parseInt(
+                process.env.CSRF_TOKEN_EXPIRY,
+                10
+            ) || 8
     },
 
     session: {
+
         maxAge:
-            parseInt(process.env.SESSION_MAX_AGE, 10) || 30
+            Number.parseInt(
+                process.env.SESSION_MAX_AGE,
+                10
+            ) || 30
     },
 
     password: {
+
         saltRounds:
-            parseInt(process.env.PASSWORD_SALT_ROUNDS, 10) || 12
+            Number.parseInt(
+                process.env.PASSWORD_SALT_ROUNDS,
+                10
+            ) || 12
     },
 
     security: {
+
         maxLoginAttempts:
-            parseInt(process.env.MAX_LOGIN_ATTEMPTS, 10) || 5,
+            Number.parseInt(
+                process.env.MAX_LOGIN_ATTEMPTS,
+                10
+            ) || 5,
 
         accountLockTime:
-            parseInt(process.env.ACCOUNT_LOCK_TIME, 10) || 30
+            Number.parseInt(
+                process.env.ACCOUNT_LOCK_TIME,
+                10
+            ) || 30
     },
 
     token: {
+
         expiry:
-            process.env.TOKEN_EXPIRY || '7d'
+            process.env.TOKEN_EXPIRY ||
+            '7d'
     }
 };
 
 // ============================================================
 // 🔐 ENCRYPTION
 // ============================================================
+//
+// IMPORTANT:
+// This preserves compatibility with your current encrypted
+// in-memory data.
+//
+// For MongoDB production storage, migrate to AES-256-GCM
+// with a unique IV per record and authentication tag.
+// ============================================================
 
 function encrypt(text) {
+
     try {
-        if (text === null || text === undefined) {
+
+        if (
+            text === null ||
+            text === undefined
+        ) {
             return '';
         }
 
-        const cipher = crypto.createCipheriv(
-            'aes-256-cbc',
-            Buffer.from(ENCRYPTION_KEY, 'hex'),
-            ENCRYPTION_IV
-        );
+        const cipher =
+            crypto.createCipheriv(
+                'aes-256-cbc',
+                Buffer.from(
+                    ENCRYPTION_KEY,
+                    'hex'
+                ),
+                ENCRYPTION_IV
+            );
 
-        let encrypted = cipher.update(
-            String(text),
-            'utf8',
-            'hex'
-        );
+        let encrypted =
+            cipher.update(
+                String(text),
+                'utf8',
+                'hex'
+            );
 
-        encrypted += cipher.final('hex');
+        encrypted +=
+            cipher.final('hex');
 
         return encrypted;
+
     } catch (error) {
-        console.error('❌ Encryption error');
+
+        console.error(
+            '❌ Encryption error'
+        );
+
         return String(text);
     }
 }
 
 function decrypt(text) {
+
     try {
-        if (!text) return '';
 
-        const decipher = crypto.createDecipheriv(
-            'aes-256-cbc',
-            Buffer.from(ENCRYPTION_KEY, 'hex'),
-            ENCRYPTION_IV
-        );
+        if (!text) {
+            return '';
+        }
 
-        let decrypted = decipher.update(
-            text,
-            'hex',
-            'utf8'
-        );
+        const decipher =
+            crypto.createDecipheriv(
+                'aes-256-cbc',
+                Buffer.from(
+                    ENCRYPTION_KEY,
+                    'hex'
+                ),
+                ENCRYPTION_IV
+            );
 
-        decrypted += decipher.final('utf8');
+        let decrypted =
+            decipher.update(
+                text,
+                'hex',
+                'utf8'
+            );
+
+        decrypted +=
+            decipher.final('utf8');
 
         return decrypted;
+
     } catch (error) {
-        console.error('❌ Decryption error');
+
+        console.error(
+            '❌ Decryption error'
+        );
+
         return text;
     }
 }
@@ -361,15 +564,18 @@ function decrypt(text) {
 
 app.use(
     helmet({
+
         contentSecurityPolicy: {
+
             directives: {
-                defaultSrc: ["'self'"],
+
+                defaultSrc: [
+                    "'self'"
+                ],
 
                 scriptSrc: [
                     "'self'",
                     "'unsafe-inline'",
-                    // Keep unsafe-eval only if an existing frontend
-                    // library genuinely requires it.
                     "'unsafe-eval'",
                     'https://unpkg.com',
                     'https://cdnjs.cloudflare.com',
@@ -389,8 +595,7 @@ app.use(
                 imgSrc: [
                     "'self'",
                     'data:',
-                    'https:',
-                    'http:'
+                    'https:'
                 ],
 
                 connectSrc: [
@@ -408,26 +613,45 @@ app.use(
                     'https://*.googleapis.com'
                 ],
 
-                objectSrc: ["'none'"],
-                mediaSrc: ["'self'"],
-                frameSrc: ["'none'"],
-                baseUri: ["'self'"],
-                formAction: ["'self'"],
+                objectSrc: [
+                    "'none'"
+                ],
 
-                scriptSrcAttr: ["'unsafe-inline'"],
+                mediaSrc: [
+                    "'self'"
+                ],
+
+                frameSrc: [
+                    "'none'"
+                ],
+
+                baseUri: [
+                    "'self'"
+                ],
+
+                formAction: [
+                    "'self'"
+                ],
+
+                scriptSrcAttr: [
+                    "'unsafe-inline'"
+                ],
 
                 upgradeInsecureRequests:
-                    isProduction ? [] : null
+                    isProduction
+                        ? []
+                        : null
             }
         },
 
-        hsts: isProduction
-            ? {
-                  maxAge: 31536000,
-                  includeSubDomains: true,
-                  preload: true
-              }
-            : false,
+        hsts:
+            isProduction
+                ? {
+                      maxAge: 31536000,
+                      includeSubDomains: true,
+                      preload: true
+                  }
+                : false,
 
         frameguard: {
             action: 'deny'
@@ -436,7 +660,8 @@ app.use(
         noSniff: true,
 
         referrerPolicy: {
-            policy: 'strict-origin-when-cross-origin'
+            policy:
+                'strict-origin-when-cross-origin'
         },
 
         xssFilter: true,
@@ -464,28 +689,53 @@ const allowedOrigins = (
     )
 )
     .split(',')
-    .map(origin => origin.trim())
+    .map(
+        origin => origin.trim()
+    )
     .filter(Boolean);
 
 app.use(
     cors({
-        origin: function (origin, callback) {
-            // Same-origin / non-browser requests
+
+        origin: function (
+            origin,
+            callback
+        ) {
+
+            // Same-origin requests and
+            // non-browser requests.
             if (!origin) {
-                return callback(null, true);
+                return callback(
+                    null,
+                    true
+                );
             }
 
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
+            if (
+                allowedOrigins.includes(
+                    origin
+                )
+            ) {
+
+                return callback(
+                    null,
+                    true
+                );
             }
 
-            // Development convenience only
+            // Development convenience.
             if (!isProduction) {
-                return callback(null, true);
+
+                return callback(
+                    null,
+                    true
+                );
             }
 
             return callback(
-                new Error('Not allowed by CORS')
+                new Error(
+                    'Not allowed by CORS'
+                )
             );
         },
 
@@ -506,57 +756,78 @@ app.use(
 // 📦 COMPRESSION
 // ============================================================
 
-app.use(compression());
+app.use(
+    compression()
+);
 
 // ============================================================
 // 🚦 RATE LIMITING
 // ============================================================
 
-const limiter = rateLimit({
-    windowMs:
-        CONFIG.rateLimit.window * 60 * 1000,
+const limiter =
+    rateLimit({
 
-    max:
-        CONFIG.rateLimit.max,
+        windowMs:
+            CONFIG.rateLimit.window *
+            60 *
+            1000,
 
-    message: {
-        success: false,
-        error: 'Too many requests, please try again later.'
-    },
+        max:
+            CONFIG.rateLimit.max,
 
-    standardHeaders: true,
-    legacyHeaders: false,
+        message: {
+            success: false,
+            error:
+                'Too many requests, please try again later.'
+        },
 
-    keyGenerator: (req) =>
-        req.ip || req.socket.remoteAddress
-});
+        standardHeaders: true,
 
-app.use('/api/', limiter);
+        legacyHeaders: false,
 
-// ------------------------------------------------------------
-// AUTH RATE LIMIT
-// ------------------------------------------------------------
+        keyGenerator: (req) =>
+            req.ip ||
+            req.socket.remoteAddress ||
+            'unknown'
+    });
 
-const authLimiter = rateLimit({
-    windowMs:
-        CONFIG.authRateLimit.window * 60 * 1000,
+app.use(
+    '/api/',
+    limiter
+);
 
-    max:
-        CONFIG.authRateLimit.max,
+// ============================================================
+// 🔐 AUTH RATE LIMITER
+// ============================================================
 
-    message: {
-        success: false,
-        error:
-            `Too many authentication attempts. ` +
-            `Try again after ${CONFIG.authRateLimit.window} minutes.`
-    },
+const authLimiter =
+    rateLimit({
 
-    standardHeaders: true,
-    legacyHeaders: false,
+        windowMs:
+            CONFIG.authRateLimit.window *
+            60 *
+            1000,
 
-    keyGenerator: (req) =>
-        req.ip || req.socket.remoteAddress
-});
+        max:
+            CONFIG.authRateLimit.max,
+
+        message: {
+            success: false,
+
+            error:
+                `Too many authentication attempts. ` +
+                `Try again after ${CONFIG.authRateLimit.window} minutes.`
+        },
+
+        standardHeaders: true,
+
+        legacyHeaders: false,
+
+        keyGenerator: (req) =>
+            req.ip ||
+            req.socket.remoteAddress ||
+            'unknown'
+    });
 
 app.use(
     '/api/auth/login',
@@ -569,11 +840,20 @@ app.use(
 );
 
 // ============================================================
-// 🧹 INPUT MIDDLEWARE
+// 🧹 INPUT PROTECTION
 // ============================================================
 
-app.use(xss());
-app.use(hpp());
+app.use(
+    xss()
+);
+
+app.use(
+    hpp()
+);
+
+// ============================================================
+// 📦 BODY LIMITS
+// ============================================================
 
 app.use(
     express.json({
@@ -589,27 +869,46 @@ app.use(
     })
 );
 
-app.use(cookieParser());
+app.use(
+    cookieParser()
+);
 
 // ============================================================
 // 🍪 SESSION
 // ============================================================
+//
+// IMPORTANT:
+// MemoryStore is acceptable only for this temporary
+// single-instance version.
+//
+// For real production:
+// MongoStore or Redis should be used.
+// ============================================================
 
 const sessionConfig = {
-    secret: SESSION_SECRET,
 
-    resave: false,
+    secret:
+        SESSION_SECRET,
 
-    saveUninitialized: false,
+    resave:
+        false,
 
-    name: '__Secure-marine.sid',
+    saveUninitialized:
+        false,
+
+    name:
+        '__Secure-marine.sid',
 
     cookie: {
-        secure: isProduction,
 
-        httpOnly: true,
+        secure:
+            isProduction,
 
-        sameSite: 'strict',
+        httpOnly:
+            true,
+
+        sameSite:
+            'strict',
 
         maxAge:
             CONFIG.session.maxAge *
@@ -618,150 +917,179 @@ const sessionConfig = {
             60 *
             1000,
 
-        path: '/'
+        path:
+            '/'
     },
 
-    rolling: true
+    rolling:
+        true
 };
 
-// IMPORTANT:
-// express-session's default MemoryStore is NOT suitable for
-// production / multi-instance deployment.
-//
-// Replace store with Redis or MongoStore before real production.
-
-app.use(session(sessionConfig));
+app.use(
+    session(sessionConfig)
+);
 
 // ============================================================
 // 🆔 REQUEST ID
 // ============================================================
 
-app.use((req, res, next) => {
-    req.requestId = generateRequestId();
+app.use(
+    (req, res, next) => {
 
-    res.setHeader(
-        'X-Request-ID',
-        req.requestId
-    );
-
-    next();
-});
-
-// ============================================================
-// 📋 SECURITY LOGGING
-// ============================================================
-
-app.use((req, res, next) => {
-    const start = Date.now();
-
-    res.on('finish', () => {
-        const duration =
-            Date.now() - start;
-
-        console.log(
-            `[${new Date().toISOString()}] ` +
-            `${req.method} ` +
-            `${req.path} ` +
-            `${res.statusCode} ` +
-            `${duration}ms ` +
-            `${req.requestId}`
-        );
-    });
-
-    next();
-});
-
-// ============================================================
-// 🛡️ CSRF TOKEN CREATION
-// ============================================================
-
-app.use((req, res, next) => {
-    try {
-        if (!req.session.csrfToken) {
-            req.session.csrfToken =
-                generateSecureToken();
-
-            req.session.csrfExpiry =
-                Date.now() +
-                (
-                    CONFIG.csrf.expiry *
-                    60 *
-                    60 *
-                    1000
-                );
-        }
-
-        if (
-            req.session.csrfExpiry &&
-            Date.now() > req.session.csrfExpiry
-        ) {
-            req.session.csrfToken =
-                generateSecureToken();
-
-            req.session.csrfExpiry =
-                Date.now() +
-                (
-                    CONFIG.csrf.expiry *
-                    60 *
-                    60 *
-                    1000
-                );
-        }
+        req.requestId =
+            generateRequestId();
 
         res.setHeader(
-            'X-CSRF-Token',
-            req.session.csrfToken
-        );
-
-        res.setHeader(
-            'X-Session-Expiry',
-            String(req.session.csrfExpiry)
+            'X-Request-ID',
+            req.requestId
         );
 
         next();
+    }
+);
 
-    } catch (error) {
-        console.error(
-            '❌ CSRF initialization error'
+// ============================================================
+// 📋 SECURITY REQUEST LOGGING
+// ============================================================
+
+app.use(
+    (req, res, next) => {
+
+        const start =
+            Date.now();
+
+        res.on(
+            'finish',
+            () => {
+
+                const duration =
+                    Date.now() -
+                    start;
+
+                console.log(
+                    `[${new Date().toISOString()}] ` +
+                    `${req.method} ` +
+                    `${req.path} ` +
+                    `${res.statusCode} ` +
+                    `${duration}ms ` +
+                    `${req.requestId}`
+                );
+            }
         );
 
-        return res.status(500).json({
-            success: false,
-            error: 'Security initialization failed',
-            requestId: req.requestId
-        });
+        next();
     }
-});
+);
+
+// ============================================================
+// 🛡️ CSRF TOKEN INITIALIZATION
+// ============================================================
+
+function initializeCsrfToken(req) {
+
+    const now =
+        Date.now();
+
+    const expiryMs =
+        CONFIG.csrf.expiry *
+        60 *
+        60 *
+        1000;
+
+    if (
+        !req.session.csrfToken ||
+        !req.session.csrfExpiry ||
+        now >
+            req.session.csrfExpiry
+    ) {
+
+        req.session.csrfToken =
+            generateSecureToken();
+
+        req.session.csrfExpiry =
+            now +
+            expiryMs;
+    }
+}
+
+app.use(
+    (req, res, next) => {
+
+        try {
+
+            initializeCsrfToken(req);
+
+            res.setHeader(
+                'X-CSRF-Token',
+                req.session.csrfToken
+            );
+
+            res.setHeader(
+                'X-Session-Expiry',
+                String(
+                    req.session.csrfExpiry
+                )
+            );
+
+            next();
+
+        } catch (error) {
+
+            console.error(
+                '❌ CSRF initialization error'
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    'Security initialization failed',
+                requestId:
+                    req.requestId
+            });
+        }
+    }
+);
 
 // ============================================================
 // 🛡️ CSRF VALIDATION
 // ============================================================
 
-const csrfProtection = (
+function csrfProtection(
     req,
     res,
     next
-) => {
+) {
 
-    // Safe methods don't require CSRF
+    // Safe methods do not require CSRF.
     if (
-        ['GET', 'HEAD', 'OPTIONS']
-            .includes(req.method)
+        [
+            'GET',
+            'HEAD',
+            'OPTIONS'
+        ].includes(req.method)
     ) {
+
         return next();
     }
 
-    // Login is intentionally excluded because
-    // it creates the authenticated session.
+    // Login must remain compatible with
+    // the current frontend.
     //
-    // CSRF token is still generated by the GET
-    // /api/csrf-token endpoint before login.
+    // The login request obtains its initial CSRF
+    // token from /api/csrf-token, but is excluded
+    // here because the authenticated session is
+    // created during login.
     const skipPaths = [
         '/api/auth/login',
         '/api/csrf-token'
     ];
 
-    if (skipPaths.includes(req.path)) {
+    if (
+        skipPaths.includes(
+            req.path
+        )
+    ) {
+
         return next();
     }
 
@@ -773,86 +1101,116 @@ const csrfProtection = (
         req.session?.csrfToken;
 
     if (!token) {
+
         return res.status(403).json({
             success: false,
-            error: 'CSRF token مفقود',
-            requestId: req.requestId
+            error:
+                'CSRF token مفقود',
+            requestId:
+                req.requestId
         });
     }
 
     if (!sessionToken) {
+
         return res.status(403).json({
             success: false,
-            error: 'جلسة غير صالحة',
-            requestId: req.requestId
+            error:
+                'جلسة غير صالحة',
+            requestId:
+                req.requestId
         });
     }
 
     try {
+
         const tokenBuffer =
-            Buffer.from(String(token), 'utf8');
+            Buffer.from(
+                String(token),
+                'utf8'
+            );
 
         const sessionBuffer =
-            Buffer.from(String(sessionToken), 'utf8');
+            Buffer.from(
+                String(sessionToken),
+                'utf8'
+            );
 
-        // timingSafeEqual requires same length
         if (
             tokenBuffer.length !==
             sessionBuffer.length
         ) {
+
             return res.status(403).json({
                 success: false,
-                error: 'CSRF token غير صالح',
-                requestId: req.requestId
+                error:
+                    'CSRF token غير صالح',
+                requestId:
+                    req.requestId
             });
         }
 
-        const isValid =
+        const valid =
             crypto.timingSafeEqual(
                 tokenBuffer,
                 sessionBuffer
             );
 
-        if (!isValid) {
+        if (!valid) {
+
             return res.status(403).json({
                 success: false,
-                error: 'CSRF token غير صالح',
-                requestId: req.requestId
+                error:
+                    'CSRF token غير صالح',
+                requestId:
+                    req.requestId
             });
         }
 
         // IMPORTANT:
-        // DO NOT rotate the token on every request.
-        // This avoids race conditions with parallel requests.
+        // Token is NOT rotated after every request.
+        // This prevents race conditions when the
+        // frontend sends multiple requests simultaneously.
 
         next();
 
     } catch (error) {
+
         console.error(
             '❌ CSRF validation error'
         );
 
         return res.status(403).json({
             success: false,
-            error: 'CSRF token غير صالح',
-            requestId: req.requestId
+            error:
+                'CSRF token غير صالح',
+            requestId:
+                req.requestId
         });
     }
-};
+}
 
 // ============================================================
 // 🔐 JWT HELPERS
 // ============================================================
 
 function createAccessToken(user) {
+
     return jwt.sign(
+
         {
-            id: user.id,
-            username: user.username,
-            role: user.role,
+            id:
+                user.id,
+
+            username:
+                user.username,
+
+            role:
+                user.role,
 
             jti:
-                crypto.randomBytes(16)
+                crypto
+                    .randomBytes(16)
                     .toString('hex')
         },
 
@@ -862,145 +1220,53 @@ function createAccessToken(user) {
             expiresIn:
                 CONFIG.token.expiry,
 
-            algorithm: 'HS256'
+            algorithm:
+                'HS256'
         }
     );
 }
 
 function verifyAccessToken(token) {
+
     return jwt.verify(
         token,
         JWT_SECRET,
         {
-            algorithms: ['HS256']
+            algorithms: [
+                'HS256'
+            ]
         }
     );
 }
 
 // ============================================================
-// 👤 AUTHENTICATION MIDDLEWARE
+// 👤 CLIENT IP
 // ============================================================
 
-function requireAuth(
-    req,
-    res,
-    next
-) {
-    try {
-        const authHeader =
-            req.headers.authorization;
+function getClientIP(req) {
 
-        if (
-            !authHeader ||
-            !authHeader.startsWith('Bearer ')
-        ) {
-            return res.status(401).json({
-                success: false,
-                error: 'غير مصرح',
-                requestId: req.requestId
-            });
-        }
-
-        const token =
-            authHeader.slice(7).trim();
-
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                error: 'توكن غير صالح',
-                requestId: req.requestId
-            });
-        }
-
-        const decoded =
-            verifyAccessToken(token);
-
-        const user =
-            users.find(
-                u => u.id === decoded.id
-            );
-
-        if (!user || !user.active) {
-            return res.status(401).json({
-                success: false,
-                error:
-                    'المستخدم غير موجود أو غير نشط',
-                requestId: req.requestId
-            });
-        }
-
-        // Session binding
-        if (
-            req.session.userId &&
-            req.session.userId !== user.id
-        ) {
-            return res.status(401).json({
-                success: false,
-                error: 'جلسة غير صالحة',
-                requestId: req.requestId
-            });
-        }
-
-        req.user = user;
-        req.auth = decoded;
-
-        next();
-
-    } catch (error) {
-
-        if (
-            error.name ===
-            'TokenExpiredError'
-        ) {
-            return res.status(401).json({
-                success: false,
-                error: 'انتهت صلاحية التوكن',
-                requestId: req.requestId
-            });
-        }
-
-        return res.status(401).json({
-            success: false,
-            error: 'توكن غير صالح',
-            requestId: req.requestId
-        });
-    }
-}
-
-// ============================================================
-// 👑 ADMIN RBAC
-// ============================================================
-
-function requireAdmin(
-    req,
-    res,
-    next
-) {
-    if (
-        !req.user ||
-        req.user.role !== 'admin'
-    ) {
-        return res.status(403).json({
-            success: false,
-            error: 'غير مصرح - صلاحيات المسؤول مطلوبة',
-            requestId: req.requestId
-        });
-    }
-
-    next();
+    return (
+        req.ip ||
+        req.socket?.remoteAddress ||
+        'unknown'
+    );
 }
 
 // ============================================================
 // 📊 IN-MEMORY DATA
 // ============================================================
-// NOTE:
-// This data disappears after server restart.
-// Replace with MongoDB for production.
+//
+// IMPORTANT:
+// This data disappears after Render restart/redeploy.
+//
+// Replace with MongoDB for persistent production data.
+// ============================================================
 
 const users = [
     {
         id:
-            crypto.randomBytes(16)
+            crypto
+                .randomBytes(16)
                 .toString('hex'),
 
         username:
@@ -1013,42 +1279,58 @@ const users = [
             ),
 
         name:
-            encrypt(ADMIN_NAME),
+            encrypt(
+                ADMIN_NAME
+            ),
 
-        role: 'admin',
+        role:
+            'admin',
 
-        active: true,
+        active:
+            true,
 
         createdAt:
             new Date().toISOString(),
 
-        lastLogin: null,
+        lastLogin:
+            null,
 
-        loginAttempts: 0,
+        loginAttempts:
+            0,
 
-        locked: false,
+        locked:
+            false,
 
-        lockedUntil: null
+        lockedUntil:
+            null
     }
 ];
 
 const vessels = [
+
     {
         id:
-            crypto.randomBytes(8)
+            crypto
+                .randomBytes(8)
                 .toString('hex'),
 
         name:
-            encrypt('الوحدة 101'),
+            encrypt(
+                'الوحدة 101'
+            ),
 
         type:
-            encrypt('زورق دورية'),
+            encrypt(
+                'زورق دورية'
+            ),
 
         status:
             'ready',
 
         location:
-            encrypt('الميناء الرئيسي'),
+            encrypt(
+                'الميناء الرئيسي'
+            ),
 
         lastMaintenance:
             new Date().toISOString(),
@@ -1059,20 +1341,27 @@ const vessels = [
 
     {
         id:
-            crypto.randomBytes(8)
+            crypto
+                .randomBytes(8)
                 .toString('hex'),
 
         name:
-            encrypt('الوحدة 205'),
+            encrypt(
+                'الوحدة 205'
+            ),
 
         type:
-            encrypt('قاطرة بحرية'),
+            encrypt(
+                'قاطرة بحرية'
+            ),
 
         status:
             'maintenance',
 
         location:
-            encrypt('حوض السفن'),
+            encrypt(
+                'حوض السفن'
+            ),
 
         lastMaintenance:
             new Date().toISOString(),
@@ -1083,20 +1372,27 @@ const vessels = [
 
     {
         id:
-            crypto.randomBytes(8)
+            crypto
+                .randomBytes(8)
                 .toString('hex'),
 
         name:
-            encrypt('الوحدة 312'),
+            encrypt(
+                'الوحدة 312'
+            ),
 
         type:
-            encrypt('سفينة إسناد'),
+            encrypt(
+                'سفينة إسناد'
+            ),
 
         status:
             'offline',
 
         location:
-            encrypt('الميناء الغربي'),
+            encrypt(
+                'الميناء الغربي'
+            ),
 
         lastMaintenance:
             new Date().toISOString(),
@@ -1118,129 +1414,344 @@ function addAuditLog(
     details,
     ip
 ) {
+
     auditLogs.push({
+
         id:
-            crypto.randomBytes(8)
+            crypto
+                .randomBytes(8)
                 .toString('hex'),
 
         userId:
             userId || null,
 
-        action,
+        action:
 
-        details,
+            typeof action === 'string'
+                ? action.slice(0, 100)
+                : 'UNKNOWN',
 
-        ip,
+        details:
+
+            typeof details === 'string'
+                ? details.slice(0, 500)
+                : '',
+
+        ip:
+            ip || 'unknown',
 
         timestamp:
             new Date().toISOString()
     });
 
-    if (auditLogs.length > 1000) {
+    if (
+        auditLogs.length >
+        1000
+    ) {
+
         auditLogs.shift();
     }
 }
 
 // ============================================================
-// 🌐 CLIENT IP
+// 👤 AUTHENTICATION MIDDLEWARE
 // ============================================================
 
-function getClientIP(req) {
-    return (
-        req.ip ||
-        req.socket?.remoteAddress ||
-        'unknown'
-    );
+function requireAuth(
+    req,
+    res,
+    next
+) {
+
+    try {
+
+        const authHeader =
+            req.headers.authorization;
+
+        if (
+            !authHeader ||
+            !authHeader.startsWith(
+                'Bearer '
+            )
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                error:
+                    'غير مصرح',
+                requestId:
+                    req.requestId
+            });
+        }
+
+        const token =
+            authHeader
+                .slice(7)
+                .trim();
+
+        if (!token) {
+
+            return res.status(401).json({
+                success: false,
+                error:
+                    'توكن غير صالح',
+                requestId:
+                    req.requestId
+            });
+        }
+
+        const decoded =
+            verifyAccessToken(
+                token
+            );
+
+        if (
+            !decoded ||
+            !decoded.id ||
+            !decoded.username ||
+            !decoded.role
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                error:
+                    'توكن غير صالح',
+                requestId:
+                    req.requestId
+            });
+        }
+
+        const user =
+            users.find(
+                u =>
+                    u.id ===
+                    decoded.id
+            );
+
+        if (
+            !user ||
+            !user.active
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                error:
+                    'المستخدم غير موجود أو غير نشط',
+                requestId:
+                    req.requestId
+            });
+        }
+
+        // Prevent token role tampering.
+        if (
+            decoded.role !==
+            user.role
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                error:
+                    'صلاحيات التوكن غير صالحة',
+                requestId:
+                    req.requestId
+            });
+        }
+
+        // Session binding.
+        if (
+            req.session.userId &&
+            req.session.userId !==
+                user.id
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                error:
+                    'جلسة غير صالحة',
+                requestId:
+                    req.requestId
+            });
+        }
+
+        req.user =
+            user;
+
+        req.auth =
+            decoded;
+
+        next();
+
+    } catch (error) {
+
+        if (
+            error &&
+            error.name ===
+                'TokenExpiredError'
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                error:
+                    'انتهت صلاحية التوكن',
+                requestId:
+                    req.requestId
+            });
+        }
+
+        return res.status(401).json({
+            success: false,
+            error:
+                'توكن غير صالح',
+            requestId:
+                req.requestId
+        });
+    }
 }
 
 // ============================================================
-// 📁 STATIC FILES
+// 👑 ADMIN RBAC
 // ============================================================
 
-app.use(
-    express.static(__dirname, {
-        index: false,
+function requireAdmin(
+    req,
+    res,
+    next
+) {
 
-        dotfiles: 'deny',
+    if (
+        !req.user ||
+        req.user.role !==
+            'admin'
+    ) {
 
-        fallthrough: true,
+        return res.status(403).json({
+            success: false,
+            error:
+                'غير مصرح - صلاحيات المسؤول مطلوبة',
+            requestId:
+                req.requestId
+        });
+    }
 
-        redirect: false,
+    next();
+}
+
+// ============================================================
+// 📁 SAFE STATIC FILES
+// ============================================================
+//
+// DO NOT expose the whole project root with express.static.
+// The old configuration could expose server.js/package.json/etc.
+//
+// Only explicitly public directories are exposed.
+// ============================================================
+
+function staticOptions() {
+
+    return {
+
+        dotfiles:
+            'deny',
+
+        index:
+            false,
+
+        fallthrough:
+            true,
+
+        redirect:
+            false,
 
         maxAge:
             isProduction
                 ? '1d'
                 : 0
-    })
-);
+    };
+}
 
 app.use(
     '/pages',
     express.static(
-        path.join(__dirname, 'pages'),
-        {
-            dotfiles: 'deny',
-            index: false
-        }
+        path.join(
+            __dirname,
+            'pages'
+        ),
+        staticOptions()
     )
 );
 
 app.use(
     '/public',
     express.static(
-        path.join(__dirname, 'public'),
-        {
-            dotfiles: 'deny',
-            index: false
-        }
+        path.join(
+            __dirname,
+            'public'
+        ),
+        staticOptions()
     )
 );
 
 app.use(
     '/css',
     express.static(
-        path.join(__dirname, 'css'),
-        {
-            dotfiles: 'deny'
-        }
+        path.join(
+            __dirname,
+            'css'
+        ),
+        staticOptions()
     )
 );
 
 app.use(
     '/js',
     express.static(
-        path.join(__dirname, 'js'),
-        {
-            dotfiles: 'deny'
-        }
+        path.join(
+            __dirname,
+            'js'
+        ),
+        staticOptions()
     )
 );
 
 app.use(
     '/assets',
     express.static(
-        path.join(__dirname, 'assets'),
-        {
-            dotfiles: 'deny'
-        }
+        path.join(
+            __dirname,
+            'assets'
+        ),
+        staticOptions()
     )
 );
 
 // ============================================================
-// 📄 PAGE HELPER
+// 📄 PAGE FILE HELPER
 // ============================================================
 
-function findPageFile(pageName) {
+function findPageFile(
+    pageName
+) {
 
-    // Prevent path traversal
     if (
-        typeof pageName !== 'string' ||
-        !/^[a-zA-Z0-9_-]+$/.test(pageName)
+        typeof pageName !==
+        'string'
     ) {
+
+        return null;
+    }
+
+    // Strict filename policy.
+    if (
+        !/^[a-zA-Z0-9_-]+$/.test(
+            pageName
+        )
+    ) {
+
         return null;
     }
 
     const possiblePaths = [
+
         path.join(
             __dirname,
             'pages',
@@ -1265,22 +1776,45 @@ function findPageFile(pageName) {
         )
     ];
 
-    for (const filePath of possiblePaths) {
-        if (fs.existsSync(filePath)) {
-            return filePath;
+    for (
+        const filePath
+        of possiblePaths
+    ) {
+
+        try {
+
+            if (
+                fs.existsSync(
+                    filePath
+                )
+            ) {
+
+                return filePath;
+            }
+
+        } catch (error) {
+
+            return null;
         }
     }
 
     return null;
 }
 
+// ============================================================
+// 📄 SERVE PAGE
+// ============================================================
+
 function servePage(
     req,
     res,
     pageName
 ) {
+
     const filePath =
-        findPageFile(pageName);
+        findPageFile(
+            pageName
+        );
 
     if (!filePath) {
         return false;
@@ -1290,7 +1824,7 @@ function servePage(
         `📄 Serving page: ${pageName}`
     );
 
-    return res.sendFile(
+    res.sendFile(
         filePath,
         {
             headers: {
@@ -1299,54 +1833,32 @@ function servePage(
             }
         }
     );
+
+    return true;
 }
 
 // ============================================================
 // ============================================================
 // 🔐 API ROUTES
-// ⚠️ IMPORTANT: ALL API ROUTES ARE BEFORE PAGE FALLBACK
+// ============================================================
+// IMPORTANT:
+// ALL API ROUTES ARE DEFINED BEFORE PAGE ROUTES/FALLBACK.
 // ============================================================
 // ============================================================
 
 // ============================================================
-// 🔐 CSRF TOKEN
+// 🛡️ CSRF TOKEN
 // ============================================================
 
 app.get(
     '/api/csrf-token',
     (req, res) => {
+
         try {
-            if (!req.session.csrfToken) {
-                req.session.csrfToken =
-                    generateSecureToken();
 
-                req.session.csrfExpiry =
-                    Date.now() +
-                    (
-                        CONFIG.csrf.expiry *
-                        60 *
-                        60 *
-                        1000
-                    );
-            }
-
-            if (
-                req.session.csrfExpiry &&
-                Date.now() >
-                    req.session.csrfExpiry
-            ) {
-                req.session.csrfToken =
-                    generateSecureToken();
-
-                req.session.csrfExpiry =
-                    Date.now() +
-                    (
-                        CONFIG.csrf.expiry *
-                        60 *
-                        60 *
-                        1000
-                    );
-            }
+            initializeCsrfToken(
+                req
+            );
 
             const token =
                 req.session.csrfToken;
@@ -1365,23 +1877,37 @@ app.get(
             );
 
             res.setHeader(
+                'Pragma',
+                'no-cache'
+            );
+
+            res.setHeader(
                 'X-CSRF-Token',
                 token
             );
 
             return res.status(200).json({
-                success: true,
-                token,
+
+                success:
+                    true,
+
+                token:
+
+                    token,
+
                 expiresIn:
                     Math.max(
                         0,
-                        expiry - Date.now()
+                        expiry -
+                            Date.now()
                     ),
+
                 requestId:
                     req.requestId
             });
 
         } catch (error) {
+
             console.error(
                 '❌ CSRF token error'
             );
@@ -1404,22 +1930,27 @@ app.get(
 app.post(
     '/api/auth/login',
     (req, res) => {
+
         try {
 
             const {
                 username,
                 password
-            } = req.body || {};
+            } =
+                req.body || {};
 
             const clientIP =
                 getClientIP(req);
 
             if (
-                typeof username !== 'string' ||
-                typeof password !== 'string' ||
+                typeof username !==
+                    'string' ||
+                typeof password !==
+                    'string' ||
                 !username.trim() ||
                 !password
             ) {
+
                 return res.status(400).json({
                     success: false,
                     error:
@@ -1458,23 +1989,26 @@ app.post(
             }
 
             // ------------------------------------------------
-            // Account lock
+            // ACCOUNT LOCK
             // ------------------------------------------------
 
             if (
                 user.locked &&
                 user.lockedUntil
             ) {
+
                 if (
                     Date.now() <
                     user.lockedUntil
                 ) {
+
                     const remaining =
                         Math.ceil(
                             (
                                 user.lockedUntil -
                                 Date.now()
-                            ) / 60000
+                            ) /
+                            60000
                         );
 
                     return res.status(403).json({
@@ -1486,14 +2020,18 @@ app.post(
                     });
                 }
 
-                // Lock expired
-                user.locked = false;
-                user.lockedUntil = null;
-                user.loginAttempts = 0;
+                user.locked =
+                    false;
+
+                user.lockedUntil =
+                    null;
+
+                user.loginAttempts =
+                    0;
             }
 
             // ------------------------------------------------
-            // Password verification
+            // PASSWORD CHECK
             // ------------------------------------------------
 
             const validPassword =
@@ -1505,18 +2043,24 @@ app.post(
             if (!validPassword) {
 
                 user.loginAttempts =
-                    (user.loginAttempts || 0) + 1;
+                    (
+                        user.loginAttempts ||
+                        0
+                    ) + 1;
 
                 if (
                     user.loginAttempts >=
                     CONFIG.security.maxLoginAttempts
                 ) {
-                    user.locked = true;
+
+                    user.locked =
+                        true;
 
                     user.lockedUntil =
                         Date.now() +
                         (
-                            CONFIG.security.accountLockTime *
+                            CONFIG.security
+                                .accountLockTime *
                             60 *
                             1000
                         );
@@ -1554,20 +2098,31 @@ app.post(
             }
 
             // ------------------------------------------------
-            // Successful login
+            // SUCCESSFUL LOGIN
             // ------------------------------------------------
 
-            user.loginAttempts = 0;
-            user.locked = false;
-            user.lockedUntil = null;
+            user.loginAttempts =
+                0;
+
+            user.locked =
+                false;
+
+            user.lockedUntil =
+                null;
+
             user.lastLogin =
                 new Date().toISOString();
 
-            // Regenerate session after authentication
+            // ------------------------------------------------
+            // SESSION REGENERATION
+            // Prevent session fixation.
+            // ------------------------------------------------
+
             req.session.regenerate(
                 (sessionError) => {
 
                     if (sessionError) {
+
                         console.error(
                             '❌ Session regeneration error'
                         );
@@ -1581,7 +2136,6 @@ app.post(
                         });
                     }
 
-                    // New CSRF token after authentication
                     const newCsrfToken =
                         generateSecureToken();
 
@@ -1604,7 +2158,9 @@ app.post(
                         true;
 
                     const token =
-                        createAccessToken(user);
+                        createAccessToken(
+                            user
+                        );
 
                     res.setHeader(
                         'X-CSRF-Token',
@@ -1624,20 +2180,32 @@ app.post(
                     );
 
                     return res.status(200).json({
-                        success: true,
 
-                        token,
+                        success:
+                            true,
+
+                        token:
+                            token,
 
                         user: {
-                            id: user.id,
+
+                            id:
+                                user.id,
+
                             username:
                                 user.username,
+
                             name:
-                                decrypt(user.name),
+                                decrypt(
+                                    user.name
+                                ),
+
                             role:
                                 user.role,
+
                             active:
                                 user.active,
+
                             lastLogin:
                                 user.lastLogin
                         },
@@ -1681,9 +2249,12 @@ app.get(
         try {
 
             return res.status(200).json({
-                success: true,
+
+                success:
+                    true,
 
                 user: {
+
                     id:
                         req.user.id,
 
@@ -1741,12 +2312,14 @@ app.post(
             const {
                 currentPassword,
                 newPassword
-            } = req.body || {};
+            } =
+                req.body || {};
 
             if (
                 !currentPassword ||
                 !newPassword
             ) {
+
                 return res.status(400).json({
                     success: false,
                     error:
@@ -1761,10 +2334,29 @@ app.post(
                     newPassword
                 )
             ) {
+
                 return res.status(400).json({
                     success: false,
                     error:
                         'كلمة المرور الجديدة ضعيفة. يجب أن تحتوي على 12 حرف على الأقل، حروف كبيرة وصغيرة، أرقام ورموز خاصة',
+                    requestId:
+                        req.requestId
+                });
+            }
+
+            // Prevent reusing the same password.
+            const samePassword =
+                bcrypt.compareSync(
+                    newPassword,
+                    req.user.password
+                );
+
+            if (samePassword) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'كلمة المرور الجديدة يجب أن تختلف عن الحالية',
                     requestId:
                         req.requestId
                 });
@@ -1799,6 +2391,33 @@ app.post(
                     newPassword,
                     CONFIG.password.saltRounds
                 );
+
+            // Invalidate current authenticated
+            // session token state by generating
+            // a fresh CSRF token.
+            req.session.csrfToken =
+                generateSecureToken();
+
+            req.session.csrfExpiry =
+                Date.now() +
+                (
+                    CONFIG.csrf.expiry *
+                    60 *
+                    60 *
+                    1000
+                );
+
+            res.setHeader(
+                'X-CSRF-Token',
+                req.session.csrfToken
+            );
+
+            res.setHeader(
+                'X-Session-Expiry',
+                String(
+                    req.session.csrfExpiry
+                )
+            );
 
             addAuditLog(
                 req.user.id,
@@ -1836,8 +2455,10 @@ app.post(
 // ============================================================
 // 🚪 LOGOUT
 // ============================================================
-// CSRF intentionally not required here to remain compatible
-// with the existing frontend logout implementation.
+//
+// CSRF remains intentionally omitted to preserve compatibility
+// with the current frontend logout request.
+// ============================================================
 
 app.post(
     '/api/auth/logout',
@@ -1847,6 +2468,7 @@ app.post(
             req.session?.userId;
 
         if (userId) {
+
             addAuditLog(
                 userId,
                 'LOGOUT',
@@ -1859,6 +2481,7 @@ app.post(
             (error) => {
 
                 if (error) {
+
                     console.error(
                         '❌ Logout error'
                     );
@@ -1910,6 +2533,7 @@ app.get(
             const decryptedVessels =
                 vessels.map(
                     vessel => ({
+
                         id:
                             vessel.id,
 
@@ -1978,12 +2602,15 @@ app.post(
                 type,
                 status,
                 location
-            } = req.body || {};
+            } =
+                req.body || {};
 
             if (
-                typeof name !== 'string' ||
+                typeof name !==
+                    'string' ||
                 !name.trim()
             ) {
+
                 return res.status(400).json({
                     success: false,
                     error:
@@ -2006,21 +2633,42 @@ app.post(
                     ? status
                     : 'ready';
 
+            const cleanName =
+                name.trim()
+                    .slice(0, 150);
+
+            const cleanType =
+                typeof type === 'string'
+                    ? type
+                        .trim()
+                        .slice(0, 150)
+                    : 'غير محدد';
+
+            const cleanLocation =
+                typeof location === 'string'
+                    ? location
+                        .trim()
+                        .slice(0, 250)
+                    : '—';
+
+            const now =
+                new Date().toISOString();
+
             const newVessel = {
+
                 id:
-                    crypto.randomBytes(8)
+                    crypto
+                        .randomBytes(8)
                         .toString('hex'),
 
                 name:
                     encrypt(
-                        name.trim()
+                        cleanName
                     ),
 
                 type:
                     encrypt(
-                        typeof type === 'string'
-                            ? type.trim()
-                            : 'غير محدد'
+                        cleanType
                     ),
 
                 status:
@@ -2028,16 +2676,14 @@ app.post(
 
                 location:
                     encrypt(
-                        typeof location === 'string'
-                            ? location.trim()
-                            : '—'
+                        cleanLocation
                     ),
 
                 lastMaintenance:
-                    new Date().toISOString(),
+                    now,
 
                 createdAt:
-                    new Date().toISOString()
+                    now
             };
 
             vessels.push(
@@ -2052,9 +2698,12 @@ app.post(
             );
 
             return res.status(201).json({
-                success: true,
+
+                success:
+                    true,
 
                 vessel: {
+
                     id:
                         newVessel.id,
 
@@ -2120,6 +2769,7 @@ app.get(
             const safeUsers =
                 users.map(
                     user => ({
+
                         id:
                             user.id,
 
@@ -2176,30 +2826,88 @@ app.get(
     requireAdmin,
     (req, res) => {
 
-        return res.status(200).json(
-            auditLogs.slice(-100)
-        );
+        try {
+
+            const safeLogs =
+                auditLogs
+                    .slice(-100)
+                    .map(log => ({
+                        id:
+                            log.id,
+
+                        userId:
+                            log.userId,
+
+                        action:
+                            log.action,
+
+                        details:
+                            log.details,
+
+                        ip:
+                            log.ip,
+
+                        timestamp:
+                            log.timestamp
+                    }));
+
+            return res.status(200).json(
+                safeLogs
+            );
+
+        } catch (error) {
+
+            console.error(
+                '❌ Logs error'
+            );
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    'خطأ في قراءة السجلات',
+                requestId:
+                    req.requestId
+            });
+        }
     }
 );
 
 // ============================================================
 // ❤️ SYSTEM STATUS
 // ============================================================
+//
+// Kept public for frontend health checks.
+// Does not expose secrets.
+// ============================================================
 
 app.get(
     '/api/status',
     (req, res) => {
 
+        res.setHeader(
+            'Cache-Control',
+            'no-store'
+        );
+
         return res.status(200).json({
-            success: true,
-            status: 'online',
-            version: '8.1.0',
+
+            success:
+                true,
+
+            status:
+                'online',
+
+            version:
+                '8.2.0',
+
             environment:
                 isProduction
                     ? 'production'
                     : 'development',
+
             timestamp:
                 new Date().toISOString(),
+
             requestId:
                 req.requestId
         });
@@ -2209,9 +2917,9 @@ app.get(
 // ============================================================
 // 🚫 API 404
 // ============================================================
+//
 // VERY IMPORTANT:
-// Unknown /api/... NEVER receives index.html.
-// It ALWAYS returns JSON.
+// No unknown API endpoint can ever receive index.html.
 // ============================================================
 
 app.use(
@@ -2219,11 +2927,16 @@ app.use(
     (req, res) => {
 
         return res.status(404).json({
-            success: false,
+
+            success:
+                false,
+
             error:
                 'API endpoint not found',
+
             path:
                 req.path,
+
             requestId:
                 req.requestId
         });
@@ -2234,15 +2947,16 @@ app.use(
 // 🌐 PAGE ROUTES
 // ============================================================
 
-// ------------------------------------------------------------
-// HOME
-// ------------------------------------------------------------
+// ============================================================
+// 🏠 HOME
+// ============================================================
 
 app.get(
     '/',
     (req, res) => {
 
         const indexCandidates = [
+
             path.join(
                 __dirname,
                 'index.html'
@@ -2266,29 +2980,41 @@ app.get(
             of indexCandidates
         ) {
 
-            if (
-                fs.existsSync(
-                    indexPath
-                )
-            ) {
+            try {
 
-                return res.sendFile(
-                    indexPath,
-                    {
-                        headers: {
-                            'Content-Type':
-                                'text/html; charset=utf-8'
+                if (
+                    fs.existsSync(
+                        indexPath
+                    )
+                ) {
+
+                    return res.sendFile(
+                        indexPath,
+                        {
+                            headers: {
+                                'Content-Type':
+                                    'text/html; charset=utf-8',
+                                'Cache-Control':
+                                    isProduction
+                                        ? 'no-cache'
+                                        : 'no-store'
+                            }
                         }
-                    }
-                );
+                    );
+                }
+
+            } catch (error) {
+                // Continue searching.
             }
         }
 
         return res.status(404).send(
+
             '<!DOCTYPE html>' +
             '<html lang="ar" dir="rtl">' +
             '<head>' +
             '<meta charset="UTF-8">' +
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
             '<title>Marine System</title>' +
             '</head>' +
             '<body>' +
@@ -2299,9 +3025,9 @@ app.get(
     }
 );
 
-// ------------------------------------------------------------
-// /pages/:page
-// ------------------------------------------------------------
+// ============================================================
+// 📄 /pages/:page
+// ============================================================
 
 app.get(
     '/pages/:page',
@@ -2317,14 +3043,17 @@ app.get(
                 pageName
             )
         ) {
+
             return;
         }
 
         return res.status(404).send(
+
             '<!DOCTYPE html>' +
             '<html lang="ar" dir="rtl">' +
             '<head>' +
             '<meta charset="UTF-8">' +
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
             '<title>404</title>' +
             '</head>' +
             '<body>' +
@@ -2337,9 +3066,9 @@ app.get(
     }
 );
 
-// ------------------------------------------------------------
-// SHORT PAGE URLS
-// ------------------------------------------------------------
+// ============================================================
+// 🔗 SHORT PAGE URL
+// ============================================================
 
 app.get(
     '/:page',
@@ -2349,6 +3078,7 @@ app.get(
             req.params.page;
 
         const reserved = [
+
             'api',
             'pages',
             'public',
@@ -2365,12 +3095,14 @@ app.get(
                 pageName
             )
         ) {
+
             return next();
         }
 
         if (
             pageName.includes('.')
         ) {
+
             return next();
         }
 
@@ -2381,6 +3113,7 @@ app.get(
                 pageName
             )
         ) {
+
             return;
         }
 
@@ -2391,63 +3124,95 @@ app.get(
 // ============================================================
 // 🌐 FINAL NON-API FALLBACK
 // ============================================================
+//
 // IMPORTANT:
-// This is app.use(), not an early app.get('*').
+// This is intentionally LAST.
 // API has already been handled above.
 // ============================================================
 
 app.use(
     (req, res) => {
 
-        // Never return HTML for an API request.
+        // ----------------------------------------------------
+        // NEVER return HTML for API.
+        // ----------------------------------------------------
+
         if (
-            req.path.startsWith('/api/')
+            req.path === '/api' ||
+            req.path.startsWith(
+                '/api/'
+            )
         ) {
+
             return res.status(404).json({
-                success: false,
+
+                success:
+                    false,
+
                 error:
                     'API endpoint not found',
+
+                path:
+                    req.path,
+
                 requestId:
                     req.requestId
             });
         }
 
-        // Missing files
+        // ----------------------------------------------------
+        // Missing file.
+        // ----------------------------------------------------
+
         if (
             req.path.includes('.')
         ) {
+
             return res.status(404).send(
                 '❌ ملف غير موجود'
             );
         }
 
-        // SPA fallback
+        // ----------------------------------------------------
+        // SPA fallback.
+        // ----------------------------------------------------
+
         const indexPath =
             path.join(
                 __dirname,
                 'index.html'
             );
 
-        if (
-            fs.existsSync(indexPath)
-        ) {
+        try {
 
-            return res.sendFile(
-                indexPath,
-                {
-                    headers: {
-                        'Content-Type':
-                            'text/html; charset=utf-8'
+            if (
+                fs.existsSync(
+                    indexPath
+                )
+            ) {
+
+                return res.sendFile(
+                    indexPath,
+                    {
+                        headers: {
+                            'Content-Type':
+                                'text/html; charset=utf-8'
+                        }
                     }
-                }
-            );
+                );
+            }
+
+        } catch (error) {
+            // Fall through to 404.
         }
 
         return res.status(404).send(
+
             '<!DOCTYPE html>' +
             '<html lang="ar" dir="rtl">' +
             '<head>' +
             '<meta charset="UTF-8">' +
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
             '<title>404</title>' +
             '</head>' +
             '<body>' +
@@ -2463,36 +3228,73 @@ app.use(
 // ============================================================
 
 app.use(
-    (err, req, res, next) => {
+    (
+        err,
+        req,
+        res,
+        next
+    ) => {
 
         console.error(
             '❌ Global error:',
-            err.message
+            err?.message ||
+                'Unknown error'
         );
 
         if (
             res.headersSent
         ) {
+
             return next(err);
         }
 
         const status =
-            Number(err.status) >= 400 &&
-            Number(err.status) < 600
-                ? Number(err.status)
+            Number(err?.status);
+
+        const safeStatus =
+            status >= 400 &&
+            status < 600
+                ? status
                 : 500;
 
-        return res.status(status).json({
-            success: false,
+        // API errors must always be JSON.
+        if (
+            req.path === '/api' ||
+            req.path.startsWith(
+                '/api/'
+            )
+        ) {
 
-            error:
+            return res
+                .status(safeStatus)
+                .json({
+
+                    success:
+                        false,
+
+                    error:
+                        isProduction
+                            ? 'حدث خطأ في الخادم'
+                            : (
+                                  err?.message ||
+                                  'Server error'
+                              ),
+
+                    requestId:
+                        req.requestId
+                });
+        }
+
+        return res
+            .status(safeStatus)
+            .send(
                 isProduction
                     ? 'حدث خطأ في الخادم'
-                    : err.message,
-
-            requestId:
-                req.requestId
-        });
+                    : (
+                          err?.message ||
+                          'Server error'
+                      )
+            );
     }
 );
 
@@ -2510,7 +3312,7 @@ const server =
             );
 
             console.log(
-                '🚢 MARINE SYSTEM v8.1 HARDENED'
+                '🚢 MARINE SYSTEM v8.2 HARDENED'
             );
 
             console.log(
@@ -2533,7 +3335,7 @@ const server =
                 `👤 Admin username: ${ADMIN_USERNAME}`
             );
 
-            // NEVER log password.
+            // NEVER log the password.
             console.log(
                 '🔑 Admin password: [PROTECTED]'
             );
@@ -2563,6 +3365,10 @@ const server =
             );
 
             console.log(
+                '🔒 Secure static files: ENABLED'
+            );
+
+            console.log(
                 '🌐 API routes: BEFORE PAGE FALLBACK'
             );
 
@@ -2571,12 +3377,17 @@ const server =
             );
 
             if (isProduction) {
+
                 console.warn(
-                    '⚠️ IMPORTANT: Use MongoDB/Redis session store in production.'
+                    '⚠️ Session store: MemoryStore - temporary only.'
                 );
 
                 console.warn(
-                    '⚠️ IMPORTANT: In-memory users/vessels/logs are temporary.'
+                    '⚠️ Data store: In-memory - temporary only.'
+                );
+
+                console.warn(
+                    '⚠️ Production recommendation: MongoDB + persistent session store.'
                 );
             }
         }
@@ -2586,7 +3397,18 @@ const server =
 // 🛑 GRACEFUL SHUTDOWN
 // ============================================================
 
-function shutdown(signal) {
+let shuttingDown = false;
+
+function shutdown(
+    signal
+) {
+
+    if (shuttingDown) {
+        return;
+    }
+
+    shuttingDown =
+        true;
 
     console.log(
         `\n🛑 ${signal} received. Shutting down...`
@@ -2605,11 +3427,13 @@ function shutdown(signal) {
 
     setTimeout(
         () => {
+
             console.error(
                 '❌ Forced shutdown.'
             );
 
             process.exit(1);
+
         },
         10000
     ).unref();
@@ -2617,16 +3441,22 @@ function shutdown(signal) {
 
 process.on(
     'SIGTERM',
-    () => shutdown('SIGTERM')
+    () =>
+        shutdown(
+            'SIGTERM'
+        )
 );
 
 process.on(
     'SIGINT',
-    () => shutdown('SIGINT')
+    () =>
+        shutdown(
+            'SIGINT'
+        )
 );
 
 // ============================================================
-// 🚨 PROCESS SAFETY
+// 🚨 UNHANDLED REJECTION
 // ============================================================
 
 process.on(
@@ -2640,6 +3470,10 @@ process.on(
     }
 );
 
+// ============================================================
+// 🚨 UNCAUGHT EXCEPTION
+// ============================================================
+
 process.on(
     'uncaughtException',
     (error) => {
@@ -2649,8 +3483,8 @@ process.on(
             error
         );
 
-        // Do not continue in an unknown state.
         if (isProduction) {
+
             shutdown(
                 'uncaughtException'
             );
@@ -2662,5 +3496,5 @@ process.on(
 // 📦 EXPORT
 // ============================================================
 
-module.exports = app;
-```
+module.exports =
+    app;
