@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - FIXED JSON ERRORS
+// 🚢 MARINE SYSTEM - WITH MAINTENANCE LOGS
 // ============================================================
 
 require('dotenv').config();
@@ -26,7 +26,7 @@ const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('he
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM - FIXED JSON ERRORS');
+console.log('🚢 MARINE SYSTEM - WITH MAINTENANCE LOGS');
 console.log('=========================================');
 console.log(`👤 Admin: ${ADMIN_USERNAME}`);
 console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
@@ -41,7 +41,6 @@ app.use(cors({
     credentials: true
 }));
 
-// ✅ تأكد من أن جميع الـ API تعيد JSON
 app.use('/api/*', (req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
     next();
@@ -97,24 +96,17 @@ const users = [
         loginAttempts: 0,
         locked: false,
         lockedUntil: null
-    },
-    {
-        id: '2',
-        username: 'manager',
-        password: bcrypt.hashSync('manager123', 10),
-        name: 'مدير النظام',
-        email: 'manager@marine.com',
-        role: 'manager',
-        active: true,
-        createdAt: new Date().toISOString(),
-        loginAttempts: 0,
-        locked: false,
-        lockedUntil: null
     }
 ];
 
-// ✅ بيانات أولية للمراكب
-const vessels = [
+// ✅ المراكب
+const vessels = [];
+
+// ✅ سجلات الصيانة
+const maintenanceLogs = [];
+
+// ✅ بيانات أولية
+const initialVessels = [
     { 
         id: '1', 
         name: 'الوحدة 101', 
@@ -165,17 +157,30 @@ const vessels = [
     }
 ];
 
-// ============================================================
-// ✅ TEST API - للتأكد من أن JSON يعمل
-// ============================================================
+// ✅ إضافة البيانات الأولية
+initialVessels.forEach(v => vessels.push(v));
 
-app.get('/api/test', (req, res) => {
-    res.json({ 
-        success: true, 
-        message: '✅ API is working!',
-        timestamp: new Date().toISOString()
-    });
+// ✅ إضافة سجلات صيانة أولية للمركبات المعطوبة
+vessels.forEach(v => {
+    if (v.status === 'معطب' || v.status === 'صيانة') {
+        maintenanceLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            vesselId: v.id,
+            vesselName: v.name,
+            vesselNum: v.num || '',
+            type: v.break || 'صيانة دورية',
+            status: v.status === 'معطب' ? 'عاجل' : 'قيد التنفيذ',
+            date: v.fDate || new Date().toISOString(),
+            repairUnit: v.repairUnit || '—',
+            cost: 0,
+            notes: v.break ? `عطب: ${v.break}` : 'صيانة دورية',
+            createdAt: v.fDate || new Date().toISOString()
+        });
+        console.log(`📝 Added to maintenance log: ${v.name}`);
+    }
 });
+
+console.log(`✅ Initialized ${vessels.length} vessels, ${maintenanceLogs.length} maintenance logs`);
 
 // ============================================================
 // 🔐 AUTH
@@ -228,8 +233,6 @@ app.post('/api/auth/login', (req, res) => {
             JWT_SECRET,
             { expiresIn: '7d' }
         );
-
-        console.log(`✅ Login successful: ${username}`);
 
         res.json({
             success: true,
@@ -286,48 +289,13 @@ app.post('/api/auth/logout', (req, res) => {
     });
 });
 
-// ✅ إعادة تعيين المحاولات
-app.post('/api/auth/reset', (req, res) => {
-    try {
-        const user = users.find(u => u.username === 'admin');
-        if (user) {
-            user.loginAttempts = 0;
-            user.locked = false;
-            user.lockedUntil = null;
-            res.json({ success: true, message: '✅ تم إعادة تعيين المحاولات' });
-        } else {
-            res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-// ✅ فتح القفل
-app.post('/api/auth/unlock', (req, res) => {
-    try {
-        const user = users.find(u => u.username === 'admin');
-        if (user) {
-            user.loginAttempts = 0;
-            user.locked = false;
-            user.lockedUntil = null;
-            res.json({ success: true, message: '✅ تم فتح الحساب' });
-        } else {
-            res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
 // ============================================================
-// 📊 VESSELS API - مع معالجة الأخطاء
+// 📊 VESSELS API
 // ============================================================
 
 // ✅ جلب جميع المراكب
 app.get('/api/vessels', (req, res) => {
     try {
-        console.log('📡 Fetching vessels...');
         res.json(vessels);
     } catch (error) {
         console.error('❌ Error fetching vessels:', error);
@@ -338,7 +306,7 @@ app.get('/api/vessels', (req, res) => {
     }
 });
 
-// ✅ إضافة مركب جديد
+// ✅ إضافة مركب جديد + إضافة إلى سجل الصيانة تلقائياً
 app.post('/api/vessels', (req, res) => {
     try {
         console.log('📦 Received vessel data:', req.body);
@@ -372,6 +340,25 @@ app.post('/api/vessels', (req, res) => {
         
         vessels.push(newVessel);
         console.log('✅ Vessel added:', newVessel.name);
+
+        // ✅ إضافة إلى سجل الصيانة إذا كان معطباً أو تحت الصيانة
+        if (status === 'معطب' || status === 'صيانة') {
+            const logEntry = {
+                id: crypto.randomBytes(8).toString('hex'),
+                vesselId: newVessel.id,
+                vesselName: newVessel.name,
+                vesselNum: newVessel.num,
+                type: breakType || 'صيانة دورية',
+                status: status === 'معطب' ? 'عاجل' : 'قيد التنفيذ',
+                date: fDate || new Date().toISOString(),
+                repairUnit: repairUnit || '—',
+                cost: 0,
+                notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
+                createdAt: new Date().toISOString()
+            };
+            maintenanceLogs.push(logEntry);
+            console.log(`📝 Added to maintenance log: ${newVessel.name}`);
+        }
         
         res.status(201).json({
             success: true,
@@ -401,6 +388,8 @@ app.put('/api/vessels/:id', (req, res) => {
             });
         }
         
+        const oldStatus = vessel.status;
+        
         if (name) vessel.name = name;
         if (num !== undefined) vessel.num = num;
         if (len !== undefined) vessel.len = len;
@@ -417,6 +406,25 @@ app.put('/api/vessels/:id', (req, res) => {
         vessel.updatedAt = new Date().toISOString();
         
         console.log('✅ Vessel updated:', vessel.name);
+
+        // ✅ إذا تغيرت الحالة إلى معطب أو صيانة، أضف إلى سجل الصيانة
+        if (status && (status === 'معطب' || status === 'صيانة') && oldStatus !== status) {
+            const logEntry = {
+                id: crypto.randomBytes(8).toString('hex'),
+                vesselId: vessel.id,
+                vesselName: vessel.name,
+                vesselNum: vessel.num,
+                type: breakType || 'صيانة دورية',
+                status: status === 'معطب' ? 'عاجل' : 'قيد التنفيذ',
+                date: fDate || new Date().toISOString(),
+                repairUnit: repairUnit || '—',
+                cost: 0,
+                notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
+                createdAt: new Date().toISOString()
+            };
+            maintenanceLogs.push(logEntry);
+            console.log(`📝 Added to maintenance log: ${vessel.name}`);
+        }
         
         res.json({
             success: true,
@@ -461,7 +469,134 @@ app.delete('/api/vessels/:id', (req, res) => {
     }
 });
 
-// ✅ جلب المستخدمين
+// ============================================================
+// 📊 MAINTENANCE LOGS API
+// ============================================================
+
+// ✅ جلب سجلات الصيانة
+app.get('/api/maintenance-logs', (req, res) => {
+    try {
+        res.json(maintenanceLogs.slice(-100));
+    } catch (error) {
+        console.error('❌ Error fetching maintenance logs:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في جلب سجلات الصيانة' 
+        });
+    }
+});
+
+// ✅ إضافة سجل صيانة يدوياً
+app.post('/api/maintenance-logs', (req, res) => {
+    try {
+        const { vesselId, vesselName, vesselNum, type, status, date, repairUnit, cost, notes } = req.body;
+        
+        if (!vesselName) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'اسم المركب مطلوب' 
+            });
+        }
+
+        const logEntry = {
+            id: crypto.randomBytes(8).toString('hex'),
+            vesselId: vesselId || '',
+            vesselName: vesselName,
+            vesselNum: vesselNum || '',
+            type: type || 'صيانة دورية',
+            status: status || 'قيد التنفيذ',
+            date: date || new Date().toISOString(),
+            repairUnit: repairUnit || '—',
+            cost: cost || 0,
+            notes: notes || '',
+            createdAt: new Date().toISOString()
+        };
+        
+        maintenanceLogs.push(logEntry);
+        console.log('✅ Maintenance log added:', logEntry.vesselName);
+        
+        res.status(201).json({
+            success: true,
+            message: 'تم إضافة سجل الصيانة',
+            log: logEntry
+        });
+    } catch (error) {
+        console.error('❌ Error adding maintenance log:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في إضافة سجل الصيانة' 
+        });
+    }
+});
+
+// ✅ تحديث سجل صيانة
+app.put('/api/maintenance-logs/:id', (req, res) => {
+    try {
+        const logId = req.params.id;
+        const { status, cost, notes } = req.body;
+        
+        const log = maintenanceLogs.find(l => l.id === logId);
+        if (!log) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'سجل الصيانة غير موجود' 
+            });
+        }
+        
+        if (status) log.status = status;
+        if (cost !== undefined) log.cost = cost;
+        if (notes) log.notes = notes;
+        log.updatedAt = new Date().toISOString();
+        
+        console.log('✅ Maintenance log updated:', log.vesselName);
+        
+        res.json({
+            success: true,
+            message: 'تم تحديث سجل الصيانة',
+            log: log
+        });
+    } catch (error) {
+        console.error('❌ Error updating maintenance log:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في تحديث سجل الصيانة' 
+        });
+    }
+});
+
+// ✅ حذف سجل صيانة
+app.delete('/api/maintenance-logs/:id', (req, res) => {
+    try {
+        const logId = req.params.id;
+        const index = maintenanceLogs.findIndex(l => l.id === logId);
+        
+        if (index === -1) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'سجل الصيانة غير موجود' 
+            });
+        }
+        
+        maintenanceLogs.splice(index, 1);
+        console.log('✅ Maintenance log deleted:', logId);
+        
+        res.json({
+            success: true,
+            message: 'تم حذف سجل الصيانة'
+        });
+    } catch (error) {
+        console.error('❌ Error deleting maintenance log:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في حذف سجل الصيانة' 
+        });
+    }
+});
+
+// ============================================================
+// 📊 USERS API
+// ============================================================
+
 app.get('/api/users', (req, res) => {
     try {
         const safeUsers = users.map(u => ({
@@ -560,6 +695,7 @@ app.get('/', (req, res) => {
                     <div class="links">
                         <a href="/dashboard">📊 لوحة التحكم</a>
                         <a href="/fleet">🚢 الأسطول</a>
+                        <a href="/maintenance">🔧 سجلات الصيانة</a>
                         <a href="/users">👥 المستخدمين</a>
                     </div>
                     <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
@@ -669,7 +805,7 @@ app.get('/:page', (req, res, next) => {
     next();
 });
 
-// ✅ API 404 - يعيد JSON وليس HTML
+// ✅ API 404
 app.use('/api/*', (req, res) => {
     res.status(404).json({
         success: false,
@@ -677,7 +813,7 @@ app.use('/api/*', (req, res) => {
     });
 });
 
-// ✅ معالج الأخطاء العام
+// ✅ معالج الأخطاء
 app.use((err, req, res, next) => {
     console.error('❌ Global error:', err);
     res.status(err.status || 500).json({
@@ -686,7 +822,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-// ✅ أي مسار آخر
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ success: false, error: 'API not found' });
@@ -700,13 +835,13 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM - FIXED');
+    console.log('🚢 MARINE SYSTEM - WITH MAINTENANCE LOGS');
     console.log('=========================================');
     console.log(`📍 http://localhost:${PORT}`);
     console.log(`👤 Username: admin`);
     console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
-    console.log('=========================================');
-    console.log('✅ API Test: http://localhost:' + PORT + '/api/test');
+    console.log(`📊 Vessels: ${vessels.length}`);
+    console.log(`📝 Maintenance Logs: ${maintenanceLogs.length}`);
     console.log('=========================================');
 });
 
