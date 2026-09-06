@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - WITH AUTO PASSWORD RESET
+// 🚢 MARINE SYSTEM - WITH MONGODB (FIXED)
 // ============================================================
 
 require('dotenv').config();
@@ -12,6 +12,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,12 +25,44 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine-system';
 
 console.log('=========================================');
 console.log('🔐 ADMIN CREDENTIALS:');
 console.log('👤 Username: ' + ADMIN_USERNAME);
 console.log('🔑 Password: ' + ADMIN_PASSWORD);
 console.log('=========================================');
+
+// ============================================================
+// 📊 MONGODB CONNECTION
+// ============================================================
+
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('✅ MongoDB connected'))
+.catch(err => {
+    console.error('❌ MongoDB error:', err.message);
+    console.warn('⚠️ Using memory storage (data will reset on restart)');
+});
+
+// ============================================================
+// 📊 MODELS
+// ============================================================
+
+const UserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    role: { type: String, default: 'viewer' },
+    active: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now },
+    lastLogin: { type: Date }
+});
+
+const User = mongoose.model('User', UserSchema);
 
 // ============================================================
 // 🔧 MIDDLEWARE
@@ -71,74 +104,43 @@ app.use('/public', express.static(publicDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
-// 📊 DATA - مع إعادة تعيين تلقائي
+// 🔐 CREATE ADMIN - مع سجلات مفصلة
 // ============================================================
 
-const users = [];
-
-// ✅ دالة إعادة تعيين كلمة المرور
-function resetAdminPassword() {
+async function createAdminUser() {
     try {
         // ✅ حذف المستخدم القديم إذا وجد
-        const adminIndex = users.findIndex(u => u.username === 'admin');
-        if (adminIndex !== -1) {
-            users.splice(adminIndex, 1);
-            console.log('🗑️ Old admin user removed');
-        }
+        await User.deleteOne({ username: 'admin' });
+        console.log('🗑️ Old admin removed');
 
-        // ✅ إنشاء مستخدم جديد بكلمة مرور صحيحة
+        // ✅ إنشاء مستخدم جديد
         const hashedPassword = bcrypt.hashSync('admin123', 10);
-        users.push({
-            id: '1',
+        const admin = new User({
             username: 'admin',
             password: hashedPassword,
             name: 'Administrator',
             email: 'admin@marine.com',
             role: 'admin',
-            active: true,
-            createdAt: new Date().toISOString(),
-            lastLogin: null
+            active: true
         });
+        await admin.save();
 
         console.log('=========================================');
-        console.log('✅ ADMIN USER CREATED/RESET!');
+        console.log('✅ ADMIN USER CREATED IN MONGODB!');
         console.log('👤 Username: admin');
         console.log('🔑 Password: admin123');
         console.log('🔑 Hash: ' + hashedPassword);
         console.log('=========================================');
 
-        // ✅ التحقق من صحة كلمة المرور
-        const test = bcrypt.compareSync('admin123', hashedPassword);
-        console.log('🔑 Password test (should be true): ' + test);
-        
+        // ✅ التحقق الفوري
+        const testUser = await User.findOne({ username: 'admin' });
+        const testValid = bcrypt.compareSync('admin123', testUser.password);
+        console.log('🔑 Immediate verification (should be true): ' + testValid);
+
     } catch (error) {
-        console.error('❌ Reset error:', error);
+        console.error('❌ Admin creation error:', error);
     }
 }
-
-// ✅ تشغيل إعادة التعيين
-resetAdminPassword();
-
-// ✅ مستخدم manager
-users.push({
-    id: '2',
-    username: 'manager',
-    password: bcrypt.hashSync('manager123', 10),
-    name: 'مدير النظام',
-    email: 'manager@marine.com',
-    role: 'manager',
-    active: true,
-    createdAt: new Date().toISOString(),
-    lastLogin: null
-});
-
-const vessels = [
-    { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي' },
-    { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'maintenance', location: 'حوض السفن' },
-    { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي' }
-];
-
-console.log('👥 Users:', users.map(u => ({ username: u.username, role: u.role })));
 
 // ============================================================
 // 🔐 AUTH
@@ -150,8 +152,8 @@ app.get('/api/csrf-token', (req, res) => {
     res.json({ success: true, token: token });
 });
 
-// ✅ تسجيل الدخول
-app.post('/api/auth/login', (req, res) => {
+// ✅ تسجيل الدخول - مع MongoDB
+app.post('/api/auth/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         console.log('=========================================');
@@ -159,13 +161,13 @@ app.post('/api/auth/login', (req, res) => {
         console.log('👤 Username: ' + username);
         console.log('🔑 Password: ' + (password ? '****' : 'empty'));
 
-        // ✅ البحث عن المستخدم
-        const user = users.find(u => u.username === username);
+        // ✅ البحث في MongoDB
+        const user = await User.findOne({ username });
         if (!user) {
             console.log('❌ User not found: ' + username);
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
-        console.log('✅ User found: ' + user.username);
+        console.log('✅ User found in MongoDB: ' + user.username);
 
         // ✅ التحقق من كلمة المرور
         const isValid = bcrypt.compareSync(password, user.password);
@@ -176,9 +178,13 @@ app.post('/api/auth/login', (req, res) => {
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
+        // ✅ تحديث آخر تسجيل دخول
+        user.lastLogin = new Date();
+        await user.save();
+
         // ✅ إنشاء التوكن
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
+            { id: user._id, username: user.username, role: user.role },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -190,7 +196,7 @@ app.post('/api/auth/login', (req, res) => {
             success: true,
             token: token,
             user: {
-                id: user.id,
+                id: user._id,
                 username: user.username,
                 name: user.name,
                 email: user.email,
@@ -205,7 +211,7 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // ✅ التحقق من التوكن
-app.get('/api/auth/me', (req, res) => {
+app.get('/api/auth/me', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -214,7 +220,7 @@ app.get('/api/auth/me', (req, res) => {
 
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
-        const user = users.find(u => u.id === decoded.id);
+        const user = await User.findById(decoded.id);
 
         if (!user) {
             return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
@@ -223,7 +229,7 @@ app.get('/api/auth/me', (req, res) => {
         res.json({
             success: true,
             user: {
-                id: user.id,
+                id: user._id,
                 username: user.username,
                 name: user.name,
                 email: user.email,
@@ -248,119 +254,18 @@ app.post('/api/auth/logout', (req, res) => {
 // ============================================================
 
 app.get('/api/vessels', (req, res) => {
-    res.json(vessels);
+    res.json([
+        { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي' },
+        { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'maintenance', location: 'حوض السفن' },
+        { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي' }
+    ]);
 });
 
-app.get('/api/users', (req, res) => {
-    const safeUsers = users.map(u => ({
-        id: u.id,
-        username: u.username,
-        name: u.name,
-        email: u.email,
-        role: u.role,
-        active: u.active
-    }));
-    res.json(safeUsers);
-});
-
-app.post('/api/users', (req, res) => {
+app.get('/api/users', async (req, res) => {
     try {
-        const { username, password, email, role } = req.body;
-        
-        if (!username) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
-        }
-        if (!password) {
-            return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
-        }
-        
-        const existing = users.find(u => u.username === username);
-        if (existing) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
-        }
-        
-        const newUser = {
-            id: crypto.randomBytes(8).toString('hex'),
-            username: username,
-            password: bcrypt.hashSync(password, 10),
-            email: email || username + '@marine.com',
-            name: username,
-            role: role || 'viewer',
-            active: true,
-            createdAt: new Date().toISOString(),
-            lastLogin: null
-        };
-        
-        users.push(newUser);
-        console.log('✅ User created:', username);
-        
-        const { password: _, ...userWithoutPassword } = newUser;
-        res.status(201).json({
-            success: true,
-            message: 'تم إضافة المستخدم',
-            user: userWithoutPassword
-        });
+        const users = await User.find({}, '-password');
+        res.json(users);
     } catch (error) {
-        console.error('❌ Error:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-app.put('/api/users/:id', (req, res) => {
-    try {
-        const userId = req.params.id;
-        const { username, email, role, active, password } = req.body;
-        
-        const userIndex = users.findIndex(u => u.id === userId);
-        if (userIndex === -1) {
-            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-        
-        const user = users[userIndex];
-        if (username) user.username = username;
-        if (email) user.email = email;
-        if (role) user.role = role;
-        if (active !== undefined) user.active = active;
-        if (password) {
-            user.password = bcrypt.hashSync(password, 10);
-        }
-        
-        console.log('✅ User updated:', user.username);
-        
-        const { password: _, ...userWithoutPassword } = user;
-        res.json({
-            success: true,
-            message: 'تم تحديث المستخدم',
-            user: userWithoutPassword
-        });
-    } catch (error) {
-        console.error('❌ Error:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-app.delete('/api/users/:id', (req, res) => {
-    try {
-        const userId = req.params.id;
-        
-        const userIndex = users.findIndex(u => u.id === userId);
-        if (userIndex === -1) {
-            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-        
-        if (users[userIndex].username === 'admin') {
-            return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
-        }
-        
-        const deletedUser = users.splice(userIndex, 1)[0];
-        console.log('✅ User deleted:', deletedUser.username);
-        
-        res.json({
-            success: true,
-            message: 'تم حذف المستخدم'
-        });
-    } catch (error) {
-        console.error('❌ Error:', error);
         res.status(500).json({ success: false, error: 'خطأ في الخادم' });
     }
 });
@@ -428,6 +333,7 @@ app.get('/', (req, res) => {
                     <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
                     <p class="info">👤 <strong>المستخدم:</strong> admin</p>
                     <p class="info">🔑 <strong>كلمة المرور:</strong> admin123</p>
+                    <p class="info">🗄️ <strong>قاعدة البيانات:</strong> MongoDB</p>
                 </div>
                 <div id="loginSection" class="login-section">
                     <h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3>
@@ -564,14 +470,17 @@ app.get('*', (req, res) => {
 // 🚀 START
 // ============================================================
 
-app.listen(PORT, () => {
-    console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM - WORKING');
-    console.log('=========================================');
-    console.log('📍 http://localhost:' + PORT);
-    console.log('👤 Username: admin');
-    console.log('🔑 Password: admin123');
-    console.log('=========================================');
+createAdminUser().then(() => {
+    app.listen(PORT, () => {
+        console.log('=========================================');
+        console.log('🚢 MARINE SYSTEM - WITH MONGODB');
+        console.log('=========================================');
+        console.log('📍 http://localhost:' + PORT);
+        console.log('👤 Username: admin');
+        console.log('🔑 Password: admin123');
+        console.log('🗄️ Database: MongoDB');
+        console.log('=========================================');
+    });
 });
 
 module.exports = app;
