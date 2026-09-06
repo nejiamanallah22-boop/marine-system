@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - ENTERPRISE EDITION (ALL FEATURES)
+// 🚢 MARINE SYSTEM - ENTERPRISE EDITION (FULLY FIXED)
 // ============================================================
 
 require('dotenv').config();
@@ -21,8 +21,34 @@ const mongoose = require('mongoose');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const nodemailer = require('nodemailer');
-const RedisStore = require('connect-redis')(session);
-const redis = require('redis');
+
+// ✅ استخدام Redis إذا كان متاحاً
+let RedisStore = null;
+let redisClient = null;
+
+try {
+    const redis = require('redis');
+    RedisStore = require('connect-redis')(session);
+    redisClient = redis.createClient({
+        url: process.env.REDIS_URL || 'redis://localhost:6379'
+    });
+    redisClient.on('error', (err) => {
+        console.warn('⚠️ Redis error:', err.message);
+        console.warn('   Using MemoryStore as fallback');
+        redisClient = null;
+    });
+    redisClient.on('connect', () => {
+        console.log('✅ Redis connected successfully!');
+    });
+    if (redisClient) {
+        redisClient.connect().catch(() => {
+            redisClient = null;
+        });
+    }
+} catch (error) {
+    console.warn('⚠️ Redis not available, using MemoryStore');
+    redisClient = null;
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -37,7 +63,6 @@ function generateSecureKey(length = 64) {
 
 const isProduction = process.env.NODE_ENV === 'production';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine-system';
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
 // ✅ Admin credentials
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
@@ -48,8 +73,8 @@ const SESSION_SECRET = process.env.SESSION_SECRET || generateSecureKey(64);
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
 
-// ✅ Email configuration for password reset
-const EMAIL_USER = process.env.EMAIL_USER;
+// ✅ Email configuration
+const EMAIL_USER = process.env.EMAIL_USER || 'nejiamanallah22@gmail.com';
 const EMAIL_PASS = process.env.EMAIL_PASS;
 
 // ============================================================
@@ -96,32 +121,14 @@ mongoose.connect(MONGODB_URI, {
 })
 .catch(err => {
     console.error('❌ MongoDB connection error:', err);
-    process.exit(1);
+    console.warn('⚠️ Continuing without MongoDB...');
 });
-
-// ============================================================
-// 📊 REDIS CONNECTION
-// ============================================================
-
-const redisClient = redis.createClient({
-    url: REDIS_URL
-});
-
-redisClient.on('error', (err) => {
-    console.error('❌ Redis error:', err);
-});
-
-redisClient.on('connect', () => {
-    console.log('✅ Redis connected successfully!');
-});
-
-redisClient.connect().catch(console.error);
 
 // ============================================================
 // 📊 MONGODB MODELS
 // ============================================================
 
-// ✅ User Model (مع 2FA)
+// ✅ User Model
 const UserSchema = new mongoose.Schema({
     username: { 
         type: String, 
@@ -151,7 +158,6 @@ const UserSchema = new mongoose.Schema({
         enum: ['admin', 'manager', 'operator', 'viewer'], 
         default: 'viewer' 
     },
-    // ✅ RBAC - الصلاحيات
     permissions: {
         type: [String],
         default: []
@@ -160,7 +166,6 @@ const UserSchema = new mongoose.Schema({
         type: Boolean, 
         default: true 
     },
-    // ✅ 2FA
     twoFactorSecret: { 
         type: String, 
         default: null 
@@ -169,7 +174,6 @@ const UserSchema = new mongoose.Schema({
         type: Boolean, 
         default: false 
     },
-    // ✅ Security
     loginAttempts: { 
         type: Number, 
         default: 0 
@@ -182,7 +186,6 @@ const UserSchema = new mongoose.Schema({
         type: Date, 
         default: null 
     },
-    // ✅ Password reset
     resetPasswordToken: { 
         type: String, 
         default: null 
@@ -299,6 +302,61 @@ const AuditLog = mongoose.model('AuditLog', AuditLogSchema);
 const BackupLog = mongoose.model('BackupLog', BackupLogSchema);
 
 // ============================================================
+// 📧 EMAIL CONFIGURATION
+// ============================================================
+
+let transporter = null;
+
+if (EMAIL_USER && EMAIL_PASS) {
+    try {
+        transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: EMAIL_USER,
+                pass: EMAIL_PASS
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        });
+        
+        transporter.verify((error, success) => {
+            if (error) {
+                console.error('❌ Email configuration error:', error);
+            } else {
+                console.log('✅ Email server is ready to send messages');
+                console.log('📧 Sender: ' + EMAIL_USER);
+            }
+        });
+    } catch (error) {
+        console.error('❌ Email setup error:', error);
+    }
+} else {
+    console.warn('⚠️ Email not configured. Password reset will not send emails.');
+}
+
+async function sendEmail(to, subject, html) {
+    if (!transporter) {
+        console.warn('⚠️ Email not configured, skipping send');
+        return false;
+    }
+    
+    try {
+        const info = await transporter.sendMail({
+            from: '"Marine System" <' + EMAIL_USER + '>',
+            to: to,
+            subject: subject,
+            html: html
+        });
+        console.log('📧 Email sent to ' + to + ': ' + info.messageId);
+        return true;
+    } catch (error) {
+        console.error('❌ Email send error:', error);
+        return false;
+    }
+}
+
+// ============================================================
 // 🛡️ SECURITY MIDDLEWARE
 // ============================================================
 
@@ -377,9 +435,8 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
-// ✅ Session Management with Redis
-app.use(session({
-    store: new RedisStore({ client: redisClient }),
+// ✅ Session Management
+const sessionConfig = {
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -394,7 +451,17 @@ app.use(session({
     },
     rolling: true,
     proxy: isProduction
-}));
+};
+
+// ✅ استخدام Redis إذا كان متاحاً
+if (redisClient) {
+    sessionConfig.store = new RedisStore({ client: redisClient });
+    console.log('✅ Using Redis for sessions');
+} else {
+    console.warn('⚠️ Using MemoryStore for sessions (not recommended for production)');
+}
+
+app.use(session(sessionConfig));
 
 // ✅ Request ID
 app.use((req, res, next) => {
@@ -408,7 +475,7 @@ app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${duration}ms - ${req.requestId}`);
+        console.log('[' + new Date().toISOString() + '] ' + req.method + ' ' + req.path + ' ' + res.statusCode + ' - ' + duration + 'ms - ' + req.requestId);
     });
     next();
 });
@@ -483,10 +550,9 @@ app.get('/api/csrf-token', (req, res) => {
 });
 
 // ============================================================
-// 🔐 AUTH ENDPOINTS
+// 🔐 RBAC - صلاحيات المستخدمين
 // ============================================================
 
-// ✅ RBAC - صلاحيات المستخدمين
 const permissions = {
     admin: ['create', 'read', 'update', 'delete', 'manage_users', 'manage_vessels', 'view_logs', 'manage_backups'],
     manager: ['create', 'read', 'update', 'manage_vessels'],
@@ -497,6 +563,38 @@ const permissions = {
 function checkPermission(role, action) {
     return permissions[role]?.includes(action) || false;
 }
+
+function requirePermission(action) {
+    return async (req, res, next) => {
+        try {
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return res.status(401).json({ success: false, error: 'غير مصرح' });
+            }
+
+            const token = authHeader.split(' ')[1];
+            const decoded = jwt.verify(token, JWT_SECRET);
+            const user = await User.findById(decoded.id);
+
+            if (!user || !user.active) {
+                return res.status(401).json({ success: false, error: 'غير مصرح' });
+            }
+
+            if (!checkPermission(user.role, action)) {
+                return res.status(403).json({ success: false, error: 'ليس لديك صلاحية للقيام بهذا الإجراء' });
+            }
+
+            req.user = user;
+            next();
+        } catch (error) {
+            res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+    };
+}
+
+// ============================================================
+// 🔐 AUTH ENDPOINTS
+// ============================================================
 
 // ✅ إنشاء المستخدم admin
 async function createAdminUser() {
@@ -514,8 +612,8 @@ async function createAdminUser() {
             });
             await admin.save();
             console.log('✅ Admin user created successfully!');
-            console.log(`👤 Username: ${ADMIN_USERNAME}`);
-            console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
+            console.log('👤 Username: ' + ADMIN_USERNAME);
+            console.log('🔑 Password: ' + ADMIN_PASSWORD);
         }
     } catch (error) {
         console.error('❌ Error creating admin:', error);
@@ -528,17 +626,17 @@ app.post('/api/auth/login', async (req, res) => {
         const { username, password, twoFactorToken } = req.body;
         const clientIP = req.ip || req.connection.remoteAddress;
         
-        console.log(`🔐 Login attempt: ${username}`);
+        console.log('🔐 Login attempt: ' + username);
 
         const user = await User.findOne({ username });
         if (!user) {
-            await AuditLog.create({ userId: null, action: 'LOGIN_FAILED', details: `Invalid username: ${username}`, ip: clientIP });
+            await AuditLog.create({ userId: null, action: 'LOGIN_FAILED', details: 'Invalid username: ' + username, ip: clientIP });
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
         if (user.locked && user.lockedUntil && Date.now() < user.lockedUntil) {
             const remaining = Math.ceil((user.lockedUntil - Date.now()) / 60000);
-            return res.status(403).json({ success: false, error: `الحساب مقفل. حاول مرة أخرى بعد ${remaining} دقيقة` });
+            return res.status(403).json({ success: false, error: 'الحساب مقفل. حاول مرة أخرى بعد ' + remaining + ' دقيقة' });
         }
 
         const validPassword = bcrypt.compareSync(password, user.password);
@@ -642,7 +740,7 @@ app.post('/api/auth/2fa/setup', csrfProtection, async (req, res) => {
 
         const otpauthUrl = speakeasy.otpauthURL({
             secret: secret.ascii,
-            label: `Marine System (${user.username})`,
+            label: 'Marine System (' + user.username + ')',
             issuer: 'Marine System'
         });
 
@@ -791,27 +889,44 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
         await user.save();
 
-        // Send email (configure nodemailer)
-        if (EMAIL_USER && EMAIL_PASS) {
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: EMAIL_USER,
-                    pass: EMAIL_PASS
-                }
-            });
+        const resetUrl = (process.env.APP_URL || 'http://localhost:5000') + '/reset-password/' + resetToken;
+        const html = `
+            <!DOCTYPE html>
+            <html dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a1628; color: #e2e8f0; padding: 40px; }
+                    .container { max-width: 600px; margin: 0 auto; background: #1a2332; border-radius: 16px; padding: 40px; border: 1px solid #2a3a5a; }
+                    h1 { color: #f5d76e; text-align: center; }
+                    .btn { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; text-decoration: none; border-radius: 8px; font-weight: bold; }
+                    .footer { text-align: center; color: #667788; font-size: 12px; margin-top: 30px; border-top: 1px solid #2a3a5a; padding-top: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>⚓ إعادة تعيين كلمة المرور</h1>
+                    <p>مرحباً <strong>${user.name}</strong>،</p>
+                    <p>لقد تلقينا طلباً لإعادة تعيين كلمة المرور لحسابك في نظام Marine System.</p>
+                    <p>انقر على الزر أدناه لإعادة تعيين كلمة المرور:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${resetUrl}" class="btn">🔑 إعادة تعيين كلمة المرور</a>
+                    </div>
+                    <p style="color: #8899aa; font-size: 14px;">⏳ هذا الرابط صالح لمدة <strong>ساعة واحدة</strong> فقط.</p>
+                    <p style="color: #667788; font-size: 13px;">إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد.</p>
+                    <div class="footer">
+                        <p>© 2024 Marine System - جميع الحقوق محفوظة</p>
+                        <p style="color: #445566;">نظام إدارة الأسطول البحري المتقدم</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
 
-            await transporter.sendMail({
-                to: user.email,
-                subject: 'إعادة تعيين كلمة المرور - Marine System',
-                html: `<h1>إعادة تعيين كلمة المرور</h1>
-                       <p>انقر على الرابط التالي لإعادة تعيين كلمة المرور:</p>
-                       <a href="${process.env.APP_URL}/reset-password/${resetToken}">إعادة تعيين كلمة المرور</a>
-                       <p>هذا الرابط صالح لمدة ساعة واحدة.</p>`
-            });
-        }
+        await sendEmail(user.email, '🔑 إعادة تعيين كلمة المرور - Marine System', html);
+        await AuditLog.create({ userId: user._id, action: 'PASSWORD_RESET_REQUESTED', details: 'Password reset requested for ' + user.email });
 
-        res.json({ success: true, message: 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني' });
+        res.json({ success: true, message: '✅ تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني' });
     } catch (error) {
         console.error('Forgot password error:', error);
         res.status(500).json({ success: false, error: 'خطأ في الخادم' });
@@ -858,37 +973,8 @@ app.post('/api/auth/logout', async (req, res) => {
 });
 
 // ============================================================
-// 📊 DATA ENDPOINTS (مع RBAC)
+// 📊 DATA ENDPOINTS
 // ============================================================
-
-// ✅ Check permission middleware
-function requirePermission(action) {
-    return async (req, res, next) => {
-        try {
-            const authHeader = req.headers.authorization;
-            if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                return res.status(401).json({ success: false, error: 'غير مصرح' });
-            }
-
-            const token = authHeader.split(' ')[1];
-            const decoded = jwt.verify(token, JWT_SECRET);
-            const user = await User.findById(decoded.id);
-
-            if (!user || !user.active) {
-                return res.status(401).json({ success: false, error: 'غير مصرح' });
-            }
-
-            if (!checkPermission(user.role, action)) {
-                return res.status(403).json({ success: false, error: 'ليس لديك صلاحية للقيام بهذا الإجراء' });
-            }
-
-            req.user = user;
-            next();
-        } catch (error) {
-            res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-    };
-}
 
 // ✅ Get vessels
 app.get('/api/vessels', csrfProtection, requirePermission('read'), async (req, res) => {
@@ -917,7 +1003,7 @@ app.post('/api/vessels', csrfProtection, requirePermission('create'), async (req
         });
         
         await newVessel.save();
-        await AuditLog.create({ userId: req.user._id, action: 'VESSEL_CREATED', details: `Created vessel: ${name}` });
+        await AuditLog.create({ userId: req.user._id, action: 'VESSEL_CREATED', details: 'Created vessel: ' + name });
         res.json({ success: true, vessel: newVessel });
     } catch (error) {
         res.status(500).json({ success: false, error: 'خطأ في إضافة الوحدة' });
@@ -954,7 +1040,7 @@ app.post('/api/users', csrfProtection, requirePermission('manage_users'), async 
         const newUser = new User({
             username,
             password: bcrypt.hashSync(password, 12),
-            email: email || `${username}@marine.com`,
+            email: email || username + '@marine.com',
             name: username,
             role: role || 'viewer',
             permissions: permissions[role] || permissions.viewer,
@@ -962,13 +1048,14 @@ app.post('/api/users', csrfProtection, requirePermission('manage_users'), async 
         });
         
         await newUser.save();
-        await AuditLog.create({ userId: req.user._id, action: 'USER_CREATED', details: `Created user: ${username}` });
+        await AuditLog.create({ userId: req.user._id, action: 'USER_CREATED', details: 'Created user: ' + username });
         
-        const { password: _, ...userWithoutPassword } = newUser._doc;
+        const userObj = newUser.toObject();
+        delete userObj.password;
         res.status(201).json({
             success: true,
             message: 'تم إضافة المستخدم بنجاح',
-            user: userWithoutPassword
+            user: userObj
         });
     } catch (error) {
         console.error('❌ Error creating user:', error);
@@ -1003,13 +1090,14 @@ app.put('/api/users/:id', csrfProtection, requirePermission('manage_users'), asy
         }
         
         await user.save();
-        await AuditLog.create({ userId: req.user._id, action: 'USER_UPDATED', details: `Updated user: ${user.username}` });
+        await AuditLog.create({ userId: req.user._id, action: 'USER_UPDATED', details: 'Updated user: ' + user.username });
         
-        const { password: _, ...userWithoutPassword } = user._doc;
+        const userObj = user.toObject();
+        delete userObj.password;
         res.json({
             success: true,
             message: 'تم تحديث المستخدم بنجاح',
-            user: userWithoutPassword
+            user: userObj
         });
     } catch (error) {
         console.error('❌ Error updating user:', error);
@@ -1030,7 +1118,7 @@ app.delete('/api/users/:id', csrfProtection, requirePermission('manage_users'), 
         }
         
         await User.findByIdAndDelete(userId);
-        await AuditLog.create({ userId: req.user._id, action: 'USER_DELETED', details: `Deleted user: ${userToDelete.username}` });
+        await AuditLog.create({ userId: req.user._id, action: 'USER_DELETED', details: 'Deleted user: ' + userToDelete.username });
         res.json({ success: true, message: 'تم حذف المستخدم بنجاح' });
     } catch (error) {
         console.error('❌ Error deleting user:', error);
@@ -1057,10 +1145,9 @@ app.post('/api/backup', csrfProtection, requirePermission('manage_backups'), asy
             fs.mkdirSync(backupDir, { recursive: true });
         }
 
-        const filename = `backup-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+        const filename = 'backup-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
         const filepath = path.join(backupDir, filename);
 
-        // جمع البيانات
         const users = await User.find({}, '-password');
         const vessels = await Vessel.find();
         const logs = await AuditLog.find().limit(100);
@@ -1082,7 +1169,7 @@ app.post('/api/backup', csrfProtection, requirePermission('manage_backups'), asy
             status: 'success'
         });
 
-        await AuditLog.create({ userId: req.user._id, action: 'BACKUP_CREATED', details: `Created backup: ${filename}` });
+        await AuditLog.create({ userId: req.user._id, action: 'BACKUP_CREATED', details: 'Created backup: ' + filename });
 
         res.json({
             success: true,
@@ -1118,7 +1205,6 @@ app.post('/api/backup/restore/:filename', csrfProtection, requirePermission('man
 
         const data = JSON.parse(fs.readFileSync(filepath, 'utf8'));
 
-        // استعادة البيانات (مع الحذر)
         if (data.users) {
             for (const user of data.users) {
                 await User.updateOne({ _id: user._id }, user, { upsert: true });
@@ -1131,7 +1217,7 @@ app.post('/api/backup/restore/:filename', csrfProtection, requirePermission('man
             }
         }
 
-        await AuditLog.create({ userId: req.user._id, action: 'BACKUP_RESTORED', details: `Restored backup: ${filename}` });
+        await AuditLog.create({ userId: req.user._id, action: 'BACKUP_RESTORED', details: 'Restored backup: ' + filename });
 
         res.json({
             success: true,
@@ -1235,43 +1321,41 @@ app.get('/', (req, res) => {
                 <div class="footer">🔒 جميع البيانات مشفرة | v8.0 Enterprise</div>
             </div>
             <script>
-                let csrfToken = '';
-                let userId = '';
-                let requiresTwoFactor = false;
+                var csrfToken = '';
+                var userId = '';
+                var requiresTwoFactor = false;
 
                 async function getCsrfToken() {
                     try {
-                        const r = await fetch('/api/csrf-token', { credentials: 'include', headers: { 'Accept': 'application/json' } });
-                        const d = await r.json();
+                        var r = await fetch('/api/csrf-token', { credentials: 'include', headers: { 'Accept': 'application/json' } });
+                        var d = await r.json();
                         if (d.success) { csrfToken = d.token; return d.token; }
                         return null;
                     } catch(e) { return null; }
                 }
 
                 async function handleLogin() {
-                    const username = document.getElementById('username').value.trim();
-                    const password = document.getElementById('password').value;
-                    const msg = document.getElementById('message');
+                    var username = document.getElementById('username').value.trim();
+                    var password = document.getElementById('password').value;
+                    var msg = document.getElementById('message');
                     if (!username || !password) { msg.innerHTML = '<div class="error">⚠️ الرجاء إدخال جميع البيانات</div>'; return; }
                     try {
-                        const t = await getCsrfToken();
+                        var t = await getCsrfToken();
                         if (!t) { msg.innerHTML = '<div class="error">❌ فشل الحصول على CSRF token</div>'; return; }
                         msg.innerHTML = '<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';
-                        const r = await fetch('/api/auth/login', {
+                        var r = await fetch('/api/auth/login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': t },
                             credentials: 'include',
-                            body: JSON.stringify({ username, password })
+                            body: JSON.stringify({ username: username, password: password })
                         });
-                        const d = await r.json();
+                        var d = await r.json();
                         if (d.requiresTwoFactor) {
                             requiresTwoFactor = true;
                             userId = d.userId;
-                            msg.innerHTML = `
-                                <div style="color:#f5d76e;">🔐 الرجاء إدخال رمز 2FA</div>
-                                <input type="text" id="twoFactorInput" placeholder="رمز 2FA" style="width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px;text-align:center;">
-                                <button class="btn" onclick="verifyTwoFactor()" style="background:linear-gradient(135deg,#f5d76e,#e6b31e);">🔐 تحقق</button>
-                            `;
+                            msg.innerHTML = '<div style="color:#f5d76e;">🔐 الرجاء إدخال رمز 2FA</div>' +
+                                '<input type="text" id="twoFactorInput" placeholder="رمز 2FA" style="width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px;text-align:center;">' +
+                                '<button class="btn" onclick="verifyTwoFactor()" style="background:linear-gradient(135deg,#f5d76e,#e6b31e);">🔐 تحقق</button>';
                             return;
                         }
                         if (r.ok && d.success) {
@@ -1298,18 +1382,18 @@ app.get('/', (req, res) => {
                 }
 
                 async function verifyTwoFactor() {
-                    const token = document.getElementById('twoFactorInput').value;
-                    const msg = document.getElementById('message');
+                    var token = document.getElementById('twoFactorInput').value;
+                    var msg = document.getElementById('message');
                     if (!token) { msg.innerHTML = '<div class="error">⚠️ الرجاء إدخال رمز 2FA</div>'; return; }
                     try {
-                        const t = await getCsrfToken();
-                        const r = await fetch('/api/auth/login', {
+                        var t = await getCsrfToken();
+                        var r = await fetch('/api/auth/login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': t },
                             credentials: 'include',
                             body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value, twoFactorToken: token })
                         });
-                        const d = await r.json();
+                        var d = await r.json();
                         if (r.ok && d.success) {
                             localStorage.setItem('authToken', d.token);
                             localStorage.setItem('userData', JSON.stringify(d.user));
@@ -1338,7 +1422,7 @@ app.get('/', (req, res) => {
 
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') {
-                        const loginSection = document.getElementById('loginSection');
+                        var loginSection = document.getElementById('loginSection');
                         if (loginSection.style.display !== 'none') {
                             if (document.getElementById('twoFactorInput')) {
                                 verifyTwoFactor();
@@ -1350,15 +1434,15 @@ app.get('/', (req, res) => {
                 });
 
                 async function checkAuth() {
-                    const token = localStorage.getItem('authToken');
+                    var token = localStorage.getItem('authToken');
                     if (!token) return;
                     try {
-                        const csrf = await getCsrfToken();
-                        const r = await fetch('/api/auth/me', {
+                        var csrf = await getCsrfToken();
+                        var r = await fetch('/api/auth/me', {
                             headers: { 'Authorization': 'Bearer ' + token, 'X-CSRF-Token': csrf || '', 'Accept': 'application/json' },
                             credentials: 'include'
                         });
-                        const d = await r.json();
+                        var d = await r.json();
                         if (d.success && d.user) {
                             document.getElementById('loginSection').style.display = 'none';
                             document.getElementById('userSection').style.display = 'block';
@@ -1390,7 +1474,7 @@ app.get('/pages/:page', (req, res) => {
     if (filePath) {
         return res.sendFile(filePath);
     }
-    res.status(404).send(`<h1>❌ 404</h1><p>${pageName} not found</p>`);
+    res.status(404).send('<h1>❌ 404</h1><p>' + pageName + ' not found</p>');
 });
 
 app.get('/:page', (req, res, next) => {
@@ -1428,17 +1512,17 @@ app.use((err, req, res, next) => {
 // ============================================================
 
 createAdminUser().then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
         console.log('🚢 MARINE SYSTEM v8.0 - ENTERPRISE');
         console.log('=========================================');
-        console.log(`📍 Server: http://localhost:${PORT}`);
-        console.log(`👤 Admin: ${ADMIN_USERNAME}`);
-        console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
-        console.log(`🗄️ Database: MongoDB + Redis`);
-        console.log(`🔐 Security: 2FA + RBAC + CSRF + XSS + HPP`);
-        console.log(`📦 Backup: Auto Backup Enabled`);
-        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log('📍 Server: http://localhost:' + PORT);
+        console.log('👤 Admin: ' + ADMIN_USERNAME);
+        console.log('🔑 Password: ' + ADMIN_PASSWORD);
+        console.log('🗄️ Database: MongoDB + Redis');
+        console.log('🔐 Security: 2FA + RBAC + CSRF + XSS + HPP');
+        console.log('📦 Backup: Auto Backup Enabled');
+        console.log('🌍 Environment: ' + (process.env.NODE_ENV || 'development'));
         console.log('🔒 Security Level: ULTRA HIGH (ENTERPRISE)');
         console.log('=========================================');
     });
