@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FINAL FIX)
+// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FORCE LOAD)
 // ============================================================
 
 require('dotenv').config();
@@ -111,45 +111,23 @@ function generateSecureToken() {
 }
 
 // ============================================================
-// 🛡️ SECURITY MIDDLEWARE - مع إصلاح CSP
+// 🛡️ SECURITY MIDDLEWARE
 // ============================================================
 
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "'unsafe-eval'",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com",
-                "https://cdn.jsdelivr.net",
-                "https://fonts.googleapis.com"
-            ],
-            styleSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com",
-                "https://cdn.jsdelivr.net",
-                "https://fonts.googleapis.com"
-            ],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
             imgSrc: ["'self'", "data:", "https:", "https://unpkg.com"],
-            connectSrc: [
-                "'self'",
-                "https://*.onrender.com",
-                "https://unpkg.com",
-                "https://*.googleapis.com",
-                "https://*.leafletjs.com"
-            ],
+            connectSrc: ["'self'", "https://*.onrender.com", "https://unpkg.com", "https://*.googleapis.com", "https://*.leafletjs.com"],
             fontSrc: ["'self'", "https:", "data:", "https://fonts.gstatic.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
             objectSrc: ["'none'"],
             frameSrc: ["'none'"],
             baseUri: ["'self'"],
-            formAction: ["'self'"],
-            upgradeInsecureRequests: isProduction ? [] : null
+            formAction: ["'self'"]
         }
     },
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
@@ -281,43 +259,21 @@ function getClientIP(req) {
 // 📁 STATIC FILES
 // ============================================================
 
-// ✅ إنشاء مجلد pages وجميع الصفحات
+// ✅ مجلد الصفحات
 const pagesDir = path.join(__dirname, 'pages');
 if (!fs.existsSync(pagesDir)) {
     fs.mkdirSync(pagesDir, { recursive: true });
     console.log('📁 Created pages directory');
 }
 
-// ✅ إنشاء جميع الصفحات المطلوبة
-const pageNames = ['fleet', 'maintenance', 'efficiency', 'support', 'notes', 'monitoring', 'users', 'logs', 'ai-assistant', 'settings'];
-
-pageNames.forEach(page => {
-    const pagePath = path.join(pagesDir, page + '.html');
-    if (!fs.existsSync(pagePath)) {
-        fs.writeFileSync(pagePath, `<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>📄 ${page}</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',sans-serif;background:#0a0e1a;color:#fff;padding:20px}
-.container{max-width:1400px;margin:0 auto}
-.header{display:flex;justify-content:space-between;align-items:center;padding:20px;background:#1a1f35;border-radius:15px;margin-bottom:30px;border:1px solid #2a3a5a}
-.header h1{color:#00d4ff}
-.btn-back{padding:10px 20px;background:#2a3a5a;color:#fff;border:none;border-radius:8px;cursor:pointer;text-decoration:none}
-.btn-back:hover{background:#3a4a6a}
-.content{background:#1a1f35;padding:30px;border-radius:15px;border:1px solid #2a3a5a;text-align:center;color:#8899aa}
-</style>
-</head>
-<body>
-<div class="container">
-<div class="header"><h1>📄 ${page}</h1><a href="/" class="btn-back">⬅️ العودة</a></div>
-<div class="content"><h2 style="color:#00d4ff;margin-bottom:20px;">⏳ قيد التطوير</h2><p>سيتم إضافة محتوى هذه الصفحة قريباً</p></div>
-</div>
-</body>
-</html>`);
-        console.log(`✅ Created page: ${page}.html`);
-    }
-});
+// ✅ عرض محتويات مجلد pages
+console.log('📁 Pages directory contents:');
+if (fs.existsSync(pagesDir)) {
+    const files = fs.readdirSync(pagesDir);
+    files.forEach(file => {
+        console.log(`   - ${file}`);
+    });
+}
 
 // ✅ خدمة الملفات الثابتة
 app.use(express.static(__dirname));
@@ -325,7 +281,7 @@ app.use('/pages', express.static(pagesDir));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // ============================================================
-// ✅ CSRF TOKEN
+// 🔐 CSRF TOKEN
 // ============================================================
 
 app.get('/api/csrf-token', (req, res) => {
@@ -505,20 +461,55 @@ app.get('/api/session-status', (req, res) => {
 });
 
 // ============================================================
-// 🌐 PAGE ROUTES
+// 🌐 PAGE ROUTES - FORCE LOAD
 // ============================================================
 
+// ✅ دالة البحث عن الصفحة في جميع المجلدات
+function findPageFile(pageName) {
+    // قائمة بجميع المسارات الممكنة
+    const possiblePaths = [
+        // المجلد الرئيسي pages
+        path.join(__dirname, 'pages', pageName + '.html'),
+        path.join(__dirname, 'pages', pageName, 'index.html'),
+        path.join(__dirname, 'pages', pageName + '.htm'),
+        // public/pages
+        path.join(__dirname, 'public', 'pages', pageName + '.html'),
+        path.join(__dirname, 'public', 'pages', pageName, 'index.html'),
+        // public
+        path.join(__dirname, 'public', pageName + '.html'),
+        path.join(__dirname, 'public', pageName, 'index.html'),
+        // src
+        path.join(__dirname, 'src', 'pages', pageName + '.html'),
+        path.join(__dirname, 'src', pageName + '.html'),
+        // root
+        path.join(__dirname, pageName + '.html'),
+        path.join(__dirname, pageName, 'index.html')
+    ];
+    
+    for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+            console.log(`✅ Found page: ${pageName} at ${p}`);
+            return p;
+        }
+    }
+    return null;
+}
+
+// ✅ الصفحة الرئيسية
 app.get('/', (req, res) => {
-    const indexPaths = [
+    const paths = [
         path.join(__dirname, 'index.html'),
         path.join(__dirname, 'public', 'index.html'),
-        path.join(__dirname, 'src', 'index.html')
+        path.join(__dirname, 'src', 'index.html'),
+        path.join(__dirname, 'pages', 'index.html')
     ];
-    for (const p of indexPaths) {
+    for (const p of paths) {
         if (fs.existsSync(p)) {
+            console.log(`✅ Found index.html at: ${p}`);
             return res.sendFile(p);
         }
     }
+    // إذا لم يوجد index.html
     res.send(`
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
@@ -570,11 +561,13 @@ app.get('/', (req, res) => {
                     <p style="font-size:18px;">👋 <strong>مرحباً بك، <span id="userName"></span></strong></p>
                     <p>📋 <strong>الدور:</strong> <span id="userRole" class="badge">admin</span></p>
                     <div class="links">
-                        <a href="/pages/dashboard">📊 لوحة التحكم</a>
-                        <a href="/pages/fleet">🚢 الأسطول</a>
-                        <a href="/pages/maintenance">🔧 الصيانة</a>
-                        <a href="/pages/users">👥 المستخدمين</a>
-                        <a href="/pages/logs">📝 السجلات</a>
+                        <a href="/dashboard">📊 لوحة التحكم</a>
+                        <a href="/fleet">🚢 الأسطول</a>
+                        <a href="/maintenance">🔧 الصيانة</a>
+                        <a href="/users">👥 المستخدمين</a>
+                        <a href="/logs">📝 السجلات</a>
+                        <a href="/ai-assistant">🤖 المساعد الذكي</a>
+                        <a href="/settings">⚙️ الإعدادات</a>
                     </div>
                     <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
                 </div>
@@ -663,32 +656,137 @@ app.get('/', (req, res) => {
     `);
 });
 
-// ✅ Pages routes
+// ✅ مسار الصفحات - مع强制执行
 app.get('/pages/:page', (req, res) => {
     const pageName = req.params.page;
+    console.log(`📄 FORCE LOAD: Looking for page: ${pageName}`);
+    
+    // ✅ البحث القسري في مجلد pages
     const filePath = path.join(pagesDir, pageName + '.html');
+    console.log(`   Checking: ${filePath}`);
+    
     if (fs.existsSync(filePath)) {
+        console.log(`✅ FORCE LOAD: Found ${pageName}.html`);
         return res.sendFile(filePath);
     }
-    res.status(404).send(`<h1>❌ 404</h1><p>الصفحة ${pageName} غير موجودة</p><a href="/">⬅️ العودة</a>`);
+    
+    // ✅ البحث عن الملف بدون .html
+    const filePathNoExt = path.join(pagesDir, pageName);
+    if (fs.existsSync(filePathNoExt)) {
+        console.log(`✅ FORCE LOAD: Found ${pageName} (no extension)`);
+        return res.sendFile(filePathNoExt);
+    }
+    
+    // ✅ البحث في public/pages
+    const publicPath = path.join(__dirname, 'public', 'pages', pageName + '.html');
+    if (fs.existsSync(publicPath)) {
+        console.log(`✅ FORCE LOAD: Found in public/pages/${pageName}.html`);
+        return res.sendFile(publicPath);
+    }
+    
+    // ✅ البحث في public
+    const publicRootPath = path.join(__dirname, 'public', pageName + '.html');
+    if (fs.existsSync(publicRootPath)) {
+        console.log(`✅ FORCE LOAD: Found in public/${pageName}.html`);
+        return res.sendFile(publicRootPath);
+    }
+    
+    // ✅ إذا لم توجد الصفحة، جرب dashboard
+    const dashboardPath = path.join(pagesDir, 'dashboard.html');
+    if (fs.existsSync(dashboardPath)) {
+        console.log(`🔄 FORCE LOAD: Redirecting ${pageName} to dashboard`);
+        return res.sendFile(dashboardPath);
+    }
+    
+    // ✅ عرض محتويات المجلد للمساعدة في التشخيص
+    const files = fs.readdirSync(pagesDir);
+    console.log(`📁 Available pages:`, files);
+    
+    res.status(404).send(`
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head><meta charset="UTF-8"><title>404</title>
+        <style>body{font-family:Arial;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;}h1{color:#ff4444;}a{color:#00d4ff;}.debug{color:#667788;font-size:13px;margin-top:10px;}</style>
+        </head>
+        <body>
+            <div>
+                <h1>❌ 404</h1>
+                <p>الصفحة <strong>${pageName}</strong> غير موجودة</p>
+                <div class="debug">
+                    <p>📁 الملفات الموجودة في pages/:</p>
+                    <ul style="list-style:none;padding:0;">
+                        ${files.map(f => `<li style="padding:2px 0;">📄 ${f}</li>`).join('')}
+                    </ul>
+                </div>
+                <a href="/">⬅️ العودة للرئيسية</a>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
-// ✅ Short URLs
+// ✅ المسار المختصر - /dashboard (بدون pages)
 app.get('/:page', (req, res, next) => {
     const pageName = req.params.page;
-    const skip = ['api', 'pages', 'public', 'assets', 'css', 'js', 'favicon.ico', 'robots.txt', 'sitemap.xml'];
-    if (skip.includes(pageName)) return next();
+    
+    // تخطي المسارات الخاصة
+    const skip = ['api', 'pages', 'public', 'assets', 'css', 'js', 'favicon.ico', 'robots.txt', 'sitemap.xml', 'index'];
+    if (skip.includes(pageName)) {
+        return next();
+    }
+    
+    console.log(`📄 SHORT URL: Looking for: ${pageName}`);
+    
+    // ✅ البحث في مجلد pages
+    const filePath = path.join(pagesDir, pageName + '.html');
+    if (fs.existsSync(filePath)) {
+        console.log(`✅ SHORT URL: Found ${pageName}.html`);
+        return res.sendFile(filePath);
+    }
+    
+    // ✅ البحث عن الملف بدون .html
+    const filePathNoExt = path.join(pagesDir, pageName);
+    if (fs.existsSync(filePathNoExt)) {
+        console.log(`✅ SHORT URL: Found ${pageName} (no extension)`);
+        return res.sendFile(filePathNoExt);
+    }
+    
+    // ✅ إذا لم توجد، جرب /pages/:page
+    const pagesPath = path.join(pagesDir, pageName + '.html');
+    if (fs.existsSync(pagesPath)) {
+        return res.sendFile(pagesPath);
+    }
+    
+    next();
+});
+
+// ✅ مسار مباشر لملفات html
+app.get('/:page.html', (req, res) => {
+    const pageName = req.params.page;
     const filePath = path.join(pagesDir, pageName + '.html');
     if (fs.existsSync(filePath)) {
         return res.sendFile(filePath);
     }
-    next();
+    res.redirect('/');
+});
+
+// ✅ مسار التحميل القسري - /load/:page
+app.get('/load/:page', (req, res) => {
+    const pageName = req.params.page;
+    const filePath = path.join(pagesDir, pageName + '.html');
+    if (fs.existsSync(filePath)) {
+        return res.sendFile(filePath);
+    }
+    res.redirect('/');
 });
 
 // ✅ Catch-all
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ success: false, error: 'API endpoint not found' });
+    }
+    if (req.path.includes('.') && !req.path.startsWith('/api')) {
+        return res.status(404).send('❌ ملف غير موجود');
     }
     const indexPath = path.join(__dirname, 'index.html');
     if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
@@ -701,13 +799,20 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM v8.0 - ULTRA SECURE');
+    console.log('🚢 MARINE SYSTEM v8.0 - FORCE LOAD');
     console.log('=========================================');
     console.log(`📍 Server: http://localhost:${PORT}`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
     console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log('🔒 Security Level: ULTRA HIGH');
+    console.log('=========================================');
+    console.log('📁 Pages directory:', pagesDir);
+    if (fs.existsSync(pagesDir)) {
+        const files = fs.readdirSync(pagesDir);
+        console.log(`📄 Pages found: ${files.length}`);
+        files.forEach(f => console.log(`   - ${f}`));
+    }
     console.log('=========================================');
 });
 
