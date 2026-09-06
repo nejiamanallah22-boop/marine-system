@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FORCE LOAD)
+// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FINAL FIX)
 // ============================================================
 
 require('dotenv').config();
@@ -79,10 +79,6 @@ const JWT_SECRET = process.env.JWT_SECRET || generateSecureKey(64);
 const SESSION_SECRET = process.env.SESSION_SECRET || generateSecureKey(64);
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
-
-// ============================================================
-// 🔐 ENCRYPTION
-// ============================================================
 
 function encrypt(text) {
     try {
@@ -256,32 +252,53 @@ function getClientIP(req) {
 }
 
 // ============================================================
-// 📁 STATIC FILES
+// 📁 STATIC FILES - مع دعم متعدد المسارات
 // ============================================================
 
-// ✅ مجلد الصفحات
+// ✅ تعريف المسارات
 const pagesDir = path.join(__dirname, 'pages');
+const publicPagesDir = path.join(__dirname, 'public', 'pages');
+const publicDir = path.join(__dirname, 'public');
+
+// ✅ إنشاء المجلدات
 if (!fs.existsSync(pagesDir)) {
     fs.mkdirSync(pagesDir, { recursive: true });
     console.log('📁 Created pages directory');
 }
 
-// ✅ عرض محتويات مجلد pages
-console.log('📁 Pages directory contents:');
+if (!fs.existsSync(publicPagesDir)) {
+    fs.mkdirSync(publicPagesDir, { recursive: true });
+    console.log('📁 Created public/pages directory');
+}
+
+// ✅ نسخ الملفات من pages إلى public/pages
 if (fs.existsSync(pagesDir)) {
     const files = fs.readdirSync(pagesDir);
     files.forEach(file => {
-        console.log(`   - ${file}`);
+        const src = path.join(pagesDir, file);
+        const dest = path.join(publicPagesDir, file);
+        if (fs.statSync(src).isFile() && !fs.existsSync(dest)) {
+            fs.copyFileSync(src, dest);
+            console.log(`📄 Copied ${file} to public/pages/`);
+        }
     });
 }
 
 // ✅ خدمة الملفات الثابتة
 app.use(express.static(__dirname));
+app.use('/public', express.static(publicDir));
 app.use('/pages', express.static(pagesDir));
-app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/public/pages', express.static(publicPagesDir));
+
+// ✅ خدمة الملفات من public/pages مباشرة تحت /pages
+app.use('/pages', express.static(publicPagesDir));
+
+console.log('📁 Static directories:');
+console.log(`   - ${pagesDir}`);
+console.log(`   - ${publicPagesDir}`);
 
 // ============================================================
-// 🔐 CSRF TOKEN
+// 🔐 AUTH
 // ============================================================
 
 app.get('/api/csrf-token', (req, res) => {
@@ -294,10 +311,6 @@ app.get('/api/csrf-token', (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to generate CSRF token' });
     }
 });
-
-// ============================================================
-// 🔐 AUTH
-// ============================================================
 
 app.post('/api/auth/login', (req, res) => {
     try {
@@ -461,29 +474,18 @@ app.get('/api/session-status', (req, res) => {
 });
 
 // ============================================================
-// 🌐 PAGE ROUTES - FORCE LOAD
+// 🌐 PAGE ROUTES - مع دعم متعدد المسارات
 // ============================================================
 
-// ✅ دالة البحث عن الصفحة في جميع المجلدات
+// ✅ دالة البحث عن الصفحة
 function findPageFile(pageName) {
-    // قائمة بجميع المسارات الممكنة
     const possiblePaths = [
-        // المجلد الرئيسي pages
-        path.join(__dirname, 'pages', pageName + '.html'),
-        path.join(__dirname, 'pages', pageName, 'index.html'),
-        path.join(__dirname, 'pages', pageName + '.htm'),
-        // public/pages
-        path.join(__dirname, 'public', 'pages', pageName + '.html'),
-        path.join(__dirname, 'public', 'pages', pageName, 'index.html'),
-        // public
-        path.join(__dirname, 'public', pageName + '.html'),
-        path.join(__dirname, 'public', pageName, 'index.html'),
-        // src
-        path.join(__dirname, 'src', 'pages', pageName + '.html'),
-        path.join(__dirname, 'src', pageName + '.html'),
-        // root
+        path.join(pagesDir, pageName + '.html'),
+        path.join(publicPagesDir, pageName + '.html'),
+        path.join(publicDir, pageName + '.html'),
         path.join(__dirname, pageName + '.html'),
-        path.join(__dirname, pageName, 'index.html')
+        path.join(pagesDir, pageName, 'index.html'),
+        path.join(publicPagesDir, pageName, 'index.html'),
     ];
     
     for (const p of possiblePaths) {
@@ -499,17 +501,15 @@ function findPageFile(pageName) {
 app.get('/', (req, res) => {
     const paths = [
         path.join(__dirname, 'index.html'),
-        path.join(__dirname, 'public', 'index.html'),
-        path.join(__dirname, 'src', 'index.html'),
-        path.join(__dirname, 'pages', 'index.html')
+        path.join(publicDir, 'index.html'),
+        path.join(pagesDir, 'index.html'),
+        path.join(publicPagesDir, 'index.html')
     ];
     for (const p of paths) {
         if (fs.existsSync(p)) {
-            console.log(`✅ Found index.html at: ${p}`);
             return res.sendFile(p);
         }
     }
-    // إذا لم يوجد index.html
     res.send(`
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
@@ -656,68 +656,28 @@ app.get('/', (req, res) => {
     `);
 });
 
-// ✅ مسار الصفحات - مع强制执行
+// ✅ مسار الصفحات
 app.get('/pages/:page', (req, res) => {
     const pageName = req.params.page;
-    console.log(`📄 FORCE LOAD: Looking for page: ${pageName}`);
+    console.log(`📄 Looking for page: ${pageName}`);
     
-    // ✅ البحث القسري في مجلد pages
-    const filePath = path.join(pagesDir, pageName + '.html');
-    console.log(`   Checking: ${filePath}`);
-    
-    if (fs.existsSync(filePath)) {
-        console.log(`✅ FORCE LOAD: Found ${pageName}.html`);
+    const filePath = findPageFile(pageName);
+    if (filePath) {
         return res.sendFile(filePath);
     }
     
-    // ✅ البحث عن الملف بدون .html
-    const filePathNoExt = path.join(pagesDir, pageName);
-    if (fs.existsSync(filePathNoExt)) {
-        console.log(`✅ FORCE LOAD: Found ${pageName} (no extension)`);
-        return res.sendFile(filePathNoExt);
-    }
-    
-    // ✅ البحث في public/pages
-    const publicPath = path.join(__dirname, 'public', 'pages', pageName + '.html');
-    if (fs.existsSync(publicPath)) {
-        console.log(`✅ FORCE LOAD: Found in public/pages/${pageName}.html`);
-        return res.sendFile(publicPath);
-    }
-    
-    // ✅ البحث في public
-    const publicRootPath = path.join(__dirname, 'public', pageName + '.html');
-    if (fs.existsSync(publicRootPath)) {
-        console.log(`✅ FORCE LOAD: Found in public/${pageName}.html`);
-        return res.sendFile(publicRootPath);
-    }
-    
-    // ✅ إذا لم توجد الصفحة، جرب dashboard
-    const dashboardPath = path.join(pagesDir, 'dashboard.html');
-    if (fs.existsSync(dashboardPath)) {
-        console.log(`🔄 FORCE LOAD: Redirecting ${pageName} to dashboard`);
-        return res.sendFile(dashboardPath);
-    }
-    
-    // ✅ عرض محتويات المجلد للمساعدة في التشخيص
-    const files = fs.readdirSync(pagesDir);
-    console.log(`📁 Available pages:`, files);
-    
+    // إذا لم توجد الصفحة
     res.status(404).send(`
         <!DOCTYPE html>
         <html dir="rtl">
         <head><meta charset="UTF-8"><title>404</title>
-        <style>body{font-family:Arial;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;}h1{color:#ff4444;}a{color:#00d4ff;}.debug{color:#667788;font-size:13px;margin-top:10px;}</style>
+        <style>body{font-family:Arial;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;}h1{color:#ff4444;}a{color:#00d4ff;}</style>
         </head>
         <body>
             <div>
                 <h1>❌ 404</h1>
                 <p>الصفحة <strong>${pageName}</strong> غير موجودة</p>
-                <div class="debug">
-                    <p>📁 الملفات الموجودة في pages/:</p>
-                    <ul style="list-style:none;padding:0;">
-                        ${files.map(f => `<li style="padding:2px 0;">📄 ${f}</li>`).join('')}
-                    </ul>
-                </div>
+                <p style="color:#667788;font-size:14px;">تم البحث في: pages/, public/pages/, public/</p>
                 <a href="/">⬅️ العودة للرئيسية</a>
             </div>
         </body>
@@ -725,59 +685,17 @@ app.get('/pages/:page', (req, res) => {
     `);
 });
 
-// ✅ المسار المختصر - /dashboard (بدون pages)
+// ✅ المسار المختصر
 app.get('/:page', (req, res, next) => {
     const pageName = req.params.page;
-    
-    // تخطي المسارات الخاصة
     const skip = ['api', 'pages', 'public', 'assets', 'css', 'js', 'favicon.ico', 'robots.txt', 'sitemap.xml', 'index'];
-    if (skip.includes(pageName)) {
-        return next();
-    }
+    if (skip.includes(pageName)) return next();
     
-    console.log(`📄 SHORT URL: Looking for: ${pageName}`);
-    
-    // ✅ البحث في مجلد pages
-    const filePath = path.join(pagesDir, pageName + '.html');
-    if (fs.existsSync(filePath)) {
-        console.log(`✅ SHORT URL: Found ${pageName}.html`);
+    const filePath = findPageFile(pageName);
+    if (filePath) {
         return res.sendFile(filePath);
     }
-    
-    // ✅ البحث عن الملف بدون .html
-    const filePathNoExt = path.join(pagesDir, pageName);
-    if (fs.existsSync(filePathNoExt)) {
-        console.log(`✅ SHORT URL: Found ${pageName} (no extension)`);
-        return res.sendFile(filePathNoExt);
-    }
-    
-    // ✅ إذا لم توجد، جرب /pages/:page
-    const pagesPath = path.join(pagesDir, pageName + '.html');
-    if (fs.existsSync(pagesPath)) {
-        return res.sendFile(pagesPath);
-    }
-    
     next();
-});
-
-// ✅ مسار مباشر لملفات html
-app.get('/:page.html', (req, res) => {
-    const pageName = req.params.page;
-    const filePath = path.join(pagesDir, pageName + '.html');
-    if (fs.existsSync(filePath)) {
-        return res.sendFile(filePath);
-    }
-    res.redirect('/');
-});
-
-// ✅ مسار التحميل القسري - /load/:page
-app.get('/load/:page', (req, res) => {
-    const pageName = req.params.page;
-    const filePath = path.join(pagesDir, pageName + '.html');
-    if (fs.existsSync(filePath)) {
-        return res.sendFile(filePath);
-    }
-    res.redirect('/');
 });
 
 // ✅ Catch-all
@@ -788,8 +706,6 @@ app.get('*', (req, res) => {
     if (req.path.includes('.') && !req.path.startsWith('/api')) {
         return res.status(404).send('❌ ملف غير موجود');
     }
-    const indexPath = path.join(__dirname, 'index.html');
-    if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
     res.redirect('/');
 });
 
@@ -799,20 +715,11 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM v8.0 - FORCE LOAD');
+    console.log('🚢 MARINE SYSTEM v8.0 - FINAL FIX');
     console.log('=========================================');
     console.log(`📍 Server: http://localhost:${PORT}`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
     console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log('🔒 Security Level: ULTRA HIGH');
-    console.log('=========================================');
-    console.log('📁 Pages directory:', pagesDir);
-    if (fs.existsSync(pagesDir)) {
-        const files = fs.readdirSync(pagesDir);
-        console.log(`📄 Pages found: ${files.length}`);
-        files.forEach(f => console.log(`   - ${f}`));
-    }
     console.log('=========================================');
 });
 
