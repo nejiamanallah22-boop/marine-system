@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SIMPLE WORKING SERVER
+// 🚢 MARINE SYSTEM - FIXED LOGIN
 // ============================================================
 
 require('dotenv').config();
@@ -26,7 +26,7 @@ const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('he
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 console.log('=========================================');
-console.log('🔐 Admin credentials:');
+console.log('🔐 ADMIN CREDENTIALS:');
 console.log('👤 Username: ' + ADMIN_USERNAME);
 console.log('🔑 Password: ' + ADMIN_PASSWORD);
 console.log('=========================================');
@@ -71,14 +71,22 @@ app.use('/public', express.static(publicDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
-// 📊 DATA - استخدام Array بدلاً من MongoDB للتشغيل الفوري
+// 📊 DATA - مع كلمة مرور مشفرة بشكل صحيح
 // ============================================================
+
+// ✅ تأكد من تشفير كلمة المرور
+const hashedPassword = bcrypt.hashSync('admin123', 10);
+console.log('🔑 Hashed password: ' + hashedPassword);
+
+// ✅ تحقق من صحة التشفير
+const testValid = bcrypt.compareSync('admin123', hashedPassword);
+console.log('🔑 Password test (should be true): ' + testValid);
 
 const users = [
     {
         id: '1',
         username: 'admin',
-        password: bcrypt.hashSync('admin123', 10),
+        password: hashedPassword,
         name: 'Administrator',
         email: 'admin@marine.com',
         role: 'admin',
@@ -106,7 +114,7 @@ const vessels = [
 ];
 
 // ============================================================
-// 🔐 AUTH
+// 🔐 AUTH - مع سجلات مفصلة
 // ============================================================
 
 app.get('/api/csrf-token', (req, res) => {
@@ -115,23 +123,29 @@ app.get('/api/csrf-token', (req, res) => {
     res.json({ success: true, token: token });
 });
 
-// ✅ تسجيل الدخول - مبسط ومضمون
+// ✅ تسجيل الدخول - مع سجلات مفصلة للتشخيص
 app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
-        console.log('🔐 Login attempt:', username);
+        console.log('=========================================');
+        console.log('🔐 LOGIN ATTEMPT');
+        console.log('👤 Username: ' + username);
+        console.log('🔑 Password: ' + (password ? '****' : 'empty'));
 
         // ✅ البحث عن المستخدم
         const user = users.find(u => u.username === username);
         if (!user) {
+            console.log('❌ User not found: ' + username);
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
+        console.log('✅ User found: ' + user.username);
 
         // ✅ التحقق من كلمة المرور
         const isValid = bcrypt.compareSync(password, user.password);
-        console.log('🔑 Password valid:', isValid);
+        console.log('🔑 Password match: ' + isValid);
 
         if (!isValid) {
+            console.log('❌ Invalid password for: ' + username);
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
@@ -142,7 +156,8 @@ app.post('/api/auth/login', (req, res) => {
             { expiresIn: '7d' }
         );
 
-        console.log('✅ Login successful:', username);
+        console.log('✅ Login successful: ' + username);
+        console.log('=========================================');
 
         res.json({
             success: true,
@@ -205,12 +220,10 @@ app.post('/api/auth/logout', (req, res) => {
 // 📊 DATA ENDPOINTS
 // ============================================================
 
-// ✅ جلب الوحدات
 app.get('/api/vessels', (req, res) => {
     res.json(vessels);
 });
 
-// ✅ جلب المستخدمين
 app.get('/api/users', (req, res) => {
     const safeUsers = users.map(u => ({
         id: u.id,
@@ -223,7 +236,6 @@ app.get('/api/users', (req, res) => {
     res.json(safeUsers);
 });
 
-// ✅ إضافة مستخدم
 app.post('/api/users', (req, res) => {
     try {
         const { username, password, email, role } = req.body;
@@ -267,7 +279,6 @@ app.post('/api/users', (req, res) => {
     }
 });
 
-// ✅ تحديث مستخدم
 app.put('/api/users/:id', (req, res) => {
     try {
         const userId = req.params.id;
@@ -301,7 +312,6 @@ app.put('/api/users/:id', (req, res) => {
     }
 });
 
-// ✅ حذف مستخدم
 app.delete('/api/users/:id', (req, res) => {
     try {
         const userId = req.params.id;
@@ -345,7 +355,6 @@ function findPageFile(pageName) {
     return null;
 }
 
-// ✅ الصفحة الرئيسية
 app.get('/', (req, res) => {
     const paths = [
         path.join(__dirname, 'index.html'),
@@ -530,10 +539,10 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM - WORKING');
+    console.log('🚢 MARINE SYSTEM - FIXED');
     console.log('=========================================');
     console.log('📍 http://localhost:' + PORT);
-    console.log('👤 Admin: admin');
+    console.log('👤 Username: admin');
     console.log('🔑 Password: admin123');
     console.log('=========================================');
 });
