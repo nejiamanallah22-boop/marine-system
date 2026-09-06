@@ -419,6 +419,58 @@
             color: #fff;
         }
         
+        /* ===== Toast Container ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 420px;
+            width: 90%;
+            pointer-events: none;
+        }
+        
+        .toast {
+            padding: 12px 18px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+            pointer-events: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .toast.success { background: rgba(16,185,129,0.92); }
+        .toast.danger { background: rgba(239,68,68,0.92); }
+        .toast.warning { background: rgba(245,158,11,0.92); }
+        .toast.info { background: rgba(59,130,246,0.92); }
+        
+        .toast .toast-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            margin-right: auto;
+            font-size: 16px;
+        }
+        
+        .toast .toast-close:hover { color: #fff; }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         /* ===== Responsive ===== */
         @media (max-width: 768px) {
             .users-header { flex-direction: column; align-items: stretch; padding: 14px 18px; }
@@ -452,6 +504,7 @@
             <div class="header-actions">
                 <button class="btn btn-primary" id="addUserBtn">➕ إضافة مستخدم</button>
                 <button class="btn btn-outline" id="refreshUsersBtn">🔄 تحديث</button>
+                <a href="/" class="btn btn-outline" style="text-decoration:none;">🏠 الرئيسية</a>
             </div>
         </div>
 
@@ -535,9 +588,43 @@
     </div>
 
     <!-- ============================================================
-    📦 JAVASCRIPT - USERS PAGE
+    📦 JAVASCRIPT - USERS PAGE (FULLY FIXED)
     ============================================================ -->
     <script>
+    // ============================================================
+    // 🛠️ FIX: دالة updateDateTime بدون أخطاء
+    // ============================================================
+    
+    function updateDateTime() {
+        try {
+            var now = new Date();
+            var dateEl = document.getElementById('currentDate');
+            var timeEl = document.getElementById('currentTime');
+            
+            if (dateEl) {
+                dateEl.textContent = now.toLocaleDateString('ar-TN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            if (timeEl) {
+                timeEl.textContent = now.toLocaleTimeString('ar-TN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            }
+        } catch (e) {
+            // تجاهل الأخطاء
+        }
+    }
+
+    // ✅ تشغيل التحديث
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
     // ============================================================
     // 👥 USERS PAGE - v1.0
     // ============================================================
@@ -555,7 +642,7 @@
     // ============================================================
 
     function getToken() {
-        var token = localStorage.getItem('token');
+        var token = localStorage.getItem('authToken');
         if (!token) {
             console.warn('⚠️ No token found');
             return null;
@@ -597,8 +684,21 @@
                 return;
             }
 
+            // ✅ الحصول على CSRF token
+            var csrfRes = await fetch('/api/csrf-token', {
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
+            var csrfData = await csrfRes.json();
+            var csrfToken = csrfData.token;
+
             var response = await fetch('/api/users', {
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'X-CSRF-Token': csrfToken,
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
             });
 
             if (response.ok) {
@@ -619,14 +719,22 @@
         }
     }
 
+    function updateBadge(id, count) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.textContent = count;
+            el.style.display = count > 0 ? 'inline' : 'none';
+        }
+    }
+
     // ============================================================
     // 3. RENDER FUNCTIONS
     // ============================================================
 
     function updateStats(users) {
         var total = users.length;
-        var active = users.filter(function(u) { return u.isActive !== false; }).length;
-        var inactive = users.filter(function(u) { return u.isActive === false; }).length;
+        var active = users.filter(function(u) { return u.active !== false; }).length;
+        var inactive = users.filter(function(u) { return u.active === false; }).length;
         var admins = users.filter(function(u) { return u.role === 'admin'; }).length;
 
         document.getElementById('totalUsers').textContent = total;
@@ -665,7 +773,7 @@
                 false: '<span class="status-badge inactive">❌ غير نشط</span>'
             };
 
-            var isActive = u.isActive !== false;
+            var isActive = u.active !== false;
             var lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ar-TN') : '-';
 
             html += '<tr>';
@@ -675,9 +783,9 @@
             html += '<td>' + (statusMap[isActive] || '-') + '</td>';
             html += '<td>' + lastLogin + '</td>';
             html += '<td>';
-            html += '<button class="btn-sm btn-edit edit-btn" data-id="' + (u._id || u.id) + '">✏️</button> ';
-            html += '<button class="btn-sm btn-toggle toggle-btn" data-id="' + (u._id || u.id) + '" data-status="' + isActive + '">' + (isActive ? '🔒' : '🔓') + '</button> ';
-            html += '<button class="btn-sm btn-delete delete-btn" data-id="' + (u._id || u.id) + '">🗑️</button>';
+            html += '<button class="btn-sm btn-edit edit-btn" data-id="' + (u.id) + '">✏️</button> ';
+            html += '<button class="btn-sm btn-toggle toggle-btn" data-id="' + (u.id) + '" data-status="' + isActive + '">' + (isActive ? '🔒' : '🔓') + '</button> ';
+            html += '<button class="btn-sm btn-delete delete-btn" data-id="' + (u.id) + '">🗑️</button>';
             html += '</td>';
             html += '</tr>';
         });
@@ -721,19 +829,19 @@
     }
 
     function editUser(id) {
-        var user = usersData.find(function(u) { return (u._id || u.id) == id; });
+        var user = usersData.find(function(u) { return u.id == id; });
         if (!user) {
             showToast('⚠️ المستخدم غير موجود', 'warning');
             return;
         }
 
         document.getElementById('formTitle').textContent = '✏️ تعديل مستخدم';
-        document.getElementById('userId').value = user._id || user.id;
+        document.getElementById('userId').value = user.id;
         document.getElementById('userUsername').value = user.username || '';
         document.getElementById('userEmail').value = user.email || '';
         document.getElementById('userPassword').value = '';
         document.getElementById('userRole').value = user.role || 'viewer';
-        document.getElementById('userStatus').value = user.isActive !== false ? 'active' : 'inactive';
+        document.getElementById('userStatus').value = user.active !== false ? 'active' : 'inactive';
         document.getElementById('passwordRequired').textContent = '(اتركها فارغة لتعديل)';
 
         var form = document.getElementById('userForm');
@@ -759,7 +867,7 @@
             username: username,
             email: email,
             role: role,
-            isActive: status === 'active'
+            active: status === 'active'
         };
 
         if (password) {
@@ -767,6 +875,14 @@
         }
 
         try {
+            // ✅ الحصول على CSRF token
+            var csrfRes = await fetch('/api/csrf-token', {
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
+            var csrfData = await csrfRes.json();
+            var csrfToken = csrfData.token;
+
             var url = id ? '/api/users/' + id : '/api/users';
             var method = id ? 'PUT' : 'POST';
 
@@ -774,8 +890,11 @@
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + token,
+                    'X-CSRF-Token': csrfToken,
+                    'Accept': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(data)
             });
 
@@ -801,13 +920,24 @@
         if (!token) return;
 
         try {
+            // ✅ الحصول على CSRF token
+            var csrfRes = await fetch('/api/csrf-token', {
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
+            var csrfData = await csrfRes.json();
+            var csrfToken = csrfData.token;
+
             var response = await fetch('/api/users/' + id, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + token,
+                    'X-CSRF-Token': csrfToken,
+                    'Accept': 'application/json'
                 },
-                body: JSON.stringify({ isActive: !currentStatus })
+                credentials: 'include',
+                body: JSON.stringify({ active: !currentStatus })
             });
 
             if (!response.ok) {
@@ -830,9 +960,22 @@
         if (!token) return;
 
         try {
+            // ✅ الحصول على CSRF token
+            var csrfRes = await fetch('/api/csrf-token', {
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
+            var csrfData = await csrfRes.json();
+            var csrfToken = csrfData.token;
+
             var response = await fetch('/api/users/' + id, {
                 method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'X-CSRF-Token': csrfToken,
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
             });
 
             if (!response.ok) {
@@ -862,6 +1005,13 @@
         document.getElementById('cancelUserBtn').onclick = toggleUserForm;
         document.getElementById('saveUserBtn').onclick = saveUser;
 
+        // ✅ التحقق من التوكن
+        var token = getToken();
+        if (!token) {
+            document.getElementById('usersTableContainer').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+            return;
+        }
+
         // تحميل البيانات
         setTimeout(loadUsersData, 200);
         setTimeout(loadUsersData, 800);
@@ -879,6 +1029,7 @@
     window.editUser = editUser;
     window.toggleUserStatus = toggleUserStatus;
     window.deleteUser = deleteUser;
+    window.updateDateTime = updateDateTime;
 
     console.log('✅ Users page script loaded');
     </script>
