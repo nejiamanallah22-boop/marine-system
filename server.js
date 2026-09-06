@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - WORKING SERVER (FINAL)
+// 🚢 MARINE SYSTEM - FIXED JSON ERRORS
 // ============================================================
 
 require('dotenv').config();
@@ -17,24 +17,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ============================================================
-// ⚙️ CONFIG - كل شيء من Render
+// ⚙️ CONFIG
 // ============================================================
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
-// ✅ التأكد من وجود كلمة المرور
-if (!ADMIN_PASSWORD) {
-    console.error('=========================================');
-    console.error('❌ ADMIN_PASSWORD NOT SET IN RENDER!');
-    console.error('=========================================');
-    console.error('Please add ADMIN_PASSWORD to Environment Variables');
-    console.error('=========================================');
-    // ✅ نستمر مع كلمة مرور مؤقتة للتشغيل
-    console.warn('⚠️ Using temporary password: admin123');
-    console.warn('⚠️ PLEASE CHANGE IT IN RENDER!');
-}
+console.log('=========================================');
+console.log('🚢 MARINE SYSTEM - FIXED JSON ERRORS');
+console.log('=========================================');
+console.log(`👤 Admin: ${ADMIN_USERNAME}`);
+console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
+console.log('=========================================');
 
 // ============================================================
 // 🔧 MIDDLEWARE
@@ -44,6 +40,13 @@ app.use(cors({
     origin: ['http://localhost:5000', 'http://localhost:3000', 'https://marine-system-71eo.onrender.com'],
     credentials: true
 }));
+
+// ✅ تأكد من أن جميع الـ API تعيد JSON
+app.use('/api/*', (req, res, next) => {
+    res.setHeader('Content-Type', 'application/json');
+    next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -76,19 +79,10 @@ app.use('/public', express.static(publicDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
-// 📊 DATA - مستخدم واحد فقط (admin)
+// 📊 DATA
 // ============================================================
 
-// ✅ كلمة المرور: من Render أو admin123 للتشغيل
-const finalPassword = ADMIN_PASSWORD || 'admin123';
-const hashedPassword = bcrypt.hashSync(finalPassword, 10);
-
-console.log('=========================================');
-console.log('🔑 ADMIN CREDENTIALS:');
-console.log(`👤 Username: admin`);
-console.log(`🔑 Password: ${finalPassword}`);
-console.log(`🔑 Hash: ${hashedPassword}`);
-console.log('=========================================');
+const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 10);
 
 const users = [
     {
@@ -103,14 +97,85 @@ const users = [
         loginAttempts: 0,
         locked: false,
         lockedUntil: null
+    },
+    {
+        id: '2',
+        username: 'manager',
+        password: bcrypt.hashSync('manager123', 10),
+        name: 'مدير النظام',
+        email: 'manager@marine.com',
+        role: 'manager',
+        active: true,
+        createdAt: new Date().toISOString(),
+        loginAttempts: 0,
+        locked: false,
+        lockedUntil: null
     }
 ];
 
+// ✅ بيانات أولية للمراكب
 const vessels = [
-    { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي' },
-    { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'maintenance', location: 'حوض السفن' },
-    { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي' }
+    { 
+        id: '1', 
+        name: 'الوحدة 101', 
+        num: '101', 
+        len: 11, 
+        region: 'الشمال', 
+        zone: 'تونس', 
+        port: 'الميناء الرئيسي', 
+        supp: '—', 
+        status: 'صالح', 
+        break: '—', 
+        fDate: null, 
+        eDate: null, 
+        ref: '', 
+        repairUnit: '—' 
+    },
+    { 
+        id: '2', 
+        name: 'الوحدة 205', 
+        num: '205', 
+        len: 15, 
+        region: 'الساحل', 
+        zone: 'سوسة', 
+        port: 'ميناء سوسة', 
+        supp: '—', 
+        status: 'صيانة', 
+        break: 'محرك', 
+        fDate: new Date().toISOString(), 
+        eDate: null, 
+        ref: 'M-2024-001', 
+        repairUnit: 'وحدة الصيانة تونس' 
+    },
+    { 
+        id: '3', 
+        name: 'الوحدة 312', 
+        num: '312', 
+        len: 8, 
+        region: 'الجنوب', 
+        zone: 'جرجيس', 
+        port: 'ميناء جرجيس', 
+        supp: '—', 
+        status: 'معطب', 
+        break: 'هيكل', 
+        fDate: new Date().toISOString(), 
+        eDate: null, 
+        ref: 'M-2024-002', 
+        repairUnit: 'وحدة الصيانة جرجيس' 
+    }
 ];
+
+// ============================================================
+// ✅ TEST API - للتأكد من أن JSON يعمل
+// ============================================================
+
+app.get('/api/test', (req, res) => {
+    res.json({ 
+        success: true, 
+        message: '✅ API is working!',
+        timestamp: new Date().toISOString()
+    });
+});
 
 // ============================================================
 // 🔐 AUTH
@@ -122,20 +187,16 @@ app.get('/api/csrf-token', (req, res) => {
     res.json({ success: true, token: token });
 });
 
-// ✅ تسجيل الدخول - يعمل دائماً
 app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
         console.log(`🔐 Login attempt: ${username}`);
 
-        // ✅ البحث عن المستخدم
         const user = users.find(u => u.username === username);
         if (!user) {
-            console.log('❌ User not found');
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
-        // ✅ التحقق من القفل
         if (user.locked && user.lockedUntil && Date.now() < user.lockedUntil) {
             const remaining = Math.ceil((user.lockedUntil - Date.now()) / 60000);
             return res.status(403).json({ 
@@ -144,37 +205,24 @@ app.post('/api/auth/login', (req, res) => {
             });
         }
 
-        // ✅ التحقق من كلمة المرور
         const isValid = bcrypt.compareSync(password, user.password);
-        console.log(`🔑 Password match: ${isValid}`);
-
         if (!isValid) {
             user.loginAttempts = (user.loginAttempts || 0) + 1;
-            
             if (user.loginAttempts >= 5) {
                 user.locked = true;
                 user.lockedUntil = Date.now() + (30 * 60 * 1000);
-                console.log(`🔒 Account locked for ${username}`);
                 return res.status(403).json({ 
                     success: false, 
                     error: '⚠️ الحساب مقفل لمدة 30 دقيقة' 
                 });
             }
-            
-            console.log(`❌ Invalid password (attempt ${user.loginAttempts}/5)`);
-            return res.status(401).json({ 
-                success: false, 
-                error: 'اسم المستخدم أو كلمة المرور غير صحيحة' 
-            });
+            return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
-        // ✅ نجاح تسجيل الدخول
         user.loginAttempts = 0;
         user.locked = false;
         user.lockedUntil = null;
-        user.lastLogin = new Date().toISOString();
 
-        // ✅ إنشاء التوكن
         const token = jwt.sign(
             { id: user.id, username: user.username, role: user.role },
             JWT_SECRET,
@@ -201,25 +249,6 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
-// ✅ إعادة تعيين المحاولات (للتطوير)
-app.post('/api/auth/reset', (req, res) => {
-    try {
-        const user = users.find(u => u.username === 'admin');
-        if (user) {
-            user.loginAttempts = 0;
-            user.locked = false;
-            user.lockedUntil = null;
-            console.log('✅ Login attempts reset');
-            res.json({ success: true, message: '✅ تم إعادة تعيين المحاولات' });
-        } else {
-            res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-// ✅ التحقق من التوكن
 app.get('/api/auth/me', (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -251,31 +280,205 @@ app.get('/api/auth/me', (req, res) => {
     }
 });
 
-// ✅ تسجيل الخروج
 app.post('/api/auth/logout', (req, res) => {
     req.session.destroy(() => {
         res.json({ success: true, message: 'تم تسجيل الخروج' });
     });
 });
 
-// ============================================================
-// 📊 DATA ENDPOINTS
-// ============================================================
-
-app.get('/api/vessels', (req, res) => {
-    res.json(vessels);
+// ✅ إعادة تعيين المحاولات
+app.post('/api/auth/reset', (req, res) => {
+    try {
+        const user = users.find(u => u.username === 'admin');
+        if (user) {
+            user.loginAttempts = 0;
+            user.locked = false;
+            user.lockedUntil = null;
+            res.json({ success: true, message: '✅ تم إعادة تعيين المحاولات' });
+        } else {
+            res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+    }
 });
 
+// ✅ فتح القفل
+app.post('/api/auth/unlock', (req, res) => {
+    try {
+        const user = users.find(u => u.username === 'admin');
+        if (user) {
+            user.loginAttempts = 0;
+            user.locked = false;
+            user.lockedUntil = null;
+            res.json({ success: true, message: '✅ تم فتح الحساب' });
+        } else {
+            res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+    }
+});
+
+// ============================================================
+// 📊 VESSELS API - مع معالجة الأخطاء
+// ============================================================
+
+// ✅ جلب جميع المراكب
+app.get('/api/vessels', (req, res) => {
+    try {
+        console.log('📡 Fetching vessels...');
+        res.json(vessels);
+    } catch (error) {
+        console.error('❌ Error fetching vessels:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في جلب البيانات' 
+        });
+    }
+});
+
+// ✅ إضافة مركب جديد
+app.post('/api/vessels', (req, res) => {
+    try {
+        console.log('📦 Received vessel data:', req.body);
+        
+        const { name, num, len, region, zone, port, supp, status, break: breakType, fDate, eDate, ref, repairUnit } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'اسم المركب مطلوب' 
+            });
+        }
+
+        const newVessel = {
+            id: crypto.randomBytes(8).toString('hex'),
+            name: name,
+            num: num || '',
+            len: len || 0,
+            region: region || '',
+            zone: zone || '',
+            port: port || '',
+            supp: supp || '',
+            status: status || 'صالح',
+            break: breakType || '',
+            fDate: fDate || null,
+            eDate: eDate || null,
+            ref: ref || '',
+            repairUnit: repairUnit || '',
+            createdAt: new Date().toISOString()
+        };
+        
+        vessels.push(newVessel);
+        console.log('✅ Vessel added:', newVessel.name);
+        
+        res.status(201).json({
+            success: true,
+            message: 'تم إضافة المركب بنجاح',
+            vessel: newVessel
+        });
+    } catch (error) {
+        console.error('❌ Error adding vessel:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في إضافة المركب: ' + error.message 
+        });
+    }
+});
+
+// ✅ تحديث مركب
+app.put('/api/vessels/:id', (req, res) => {
+    try {
+        const vesselId = req.params.id;
+        const { name, num, len, region, zone, port, supp, status, break: breakType, fDate, eDate, ref, repairUnit } = req.body;
+        
+        const vessel = vessels.find(v => v.id === vesselId);
+        if (!vessel) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'المركب غير موجود' 
+            });
+        }
+        
+        if (name) vessel.name = name;
+        if (num !== undefined) vessel.num = num;
+        if (len !== undefined) vessel.len = len;
+        if (region !== undefined) vessel.region = region;
+        if (zone !== undefined) vessel.zone = zone;
+        if (port !== undefined) vessel.port = port;
+        if (supp !== undefined) vessel.supp = supp;
+        if (status) vessel.status = status;
+        if (breakType !== undefined) vessel.break = breakType;
+        if (fDate !== undefined) vessel.fDate = fDate;
+        if (eDate !== undefined) vessel.eDate = eDate;
+        if (ref !== undefined) vessel.ref = ref;
+        if (repairUnit !== undefined) vessel.repairUnit = repairUnit;
+        vessel.updatedAt = new Date().toISOString();
+        
+        console.log('✅ Vessel updated:', vessel.name);
+        
+        res.json({
+            success: true,
+            message: 'تم تحديث المركب بنجاح',
+            vessel: vessel
+        });
+    } catch (error) {
+        console.error('❌ Error updating vessel:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في تحديث المركب' 
+        });
+    }
+});
+
+// ✅ حذف مركب
+app.delete('/api/vessels/:id', (req, res) => {
+    try {
+        const vesselId = req.params.id;
+        const index = vessels.findIndex(v => v.id === vesselId);
+        
+        if (index === -1) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'المركب غير موجود' 
+            });
+        }
+        
+        const deleted = vessels.splice(index, 1)[0];
+        console.log('✅ Vessel deleted:', deleted.name);
+        
+        res.json({
+            success: true,
+            message: 'تم حذف المركب بنجاح'
+        });
+    } catch (error) {
+        console.error('❌ Error deleting vessel:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في حذف المركب' 
+        });
+    }
+});
+
+// ✅ جلب المستخدمين
 app.get('/api/users', (req, res) => {
-    const safeUsers = users.map(u => ({
-        id: u.id,
-        username: u.username,
-        name: u.name,
-        email: u.email,
-        role: u.role,
-        active: u.active
-    }));
-    res.json(safeUsers);
+    try {
+        const safeUsers = users.map(u => ({
+            id: u.id,
+            username: u.username,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            active: u.active
+        }));
+        res.json(safeUsers);
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في الخادم' 
+        });
+    }
 });
 
 // ============================================================
@@ -340,7 +543,7 @@ app.get('/', (req, res) => {
                 <div class="status">
                     <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
                     <p class="info">👤 <strong>المستخدم:</strong> admin</p>
-                    <p class="info">🔑 <strong>كلمة المرور:</strong> (المخزنة في Render)</p>
+                    <p class="info">🔑 <strong>كلمة المرور:</strong> ${ADMIN_PASSWORD}</p>
                 </div>
                 <div id="loginSection" class="login-section">
                     <h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3>
@@ -466,6 +669,24 @@ app.get('/:page', (req, res, next) => {
     next();
 });
 
+// ✅ API 404 - يعيد JSON وليس HTML
+app.use('/api/*', (req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'API endpoint not found'
+    });
+});
+
+// ✅ معالج الأخطاء العام
+app.use((err, req, res, next) => {
+    console.error('❌ Global error:', err);
+    res.status(err.status || 500).json({
+        success: false,
+        error: err.message || 'حدث خطأ في الخادم'
+    });
+});
+
+// ✅ أي مسار آخر
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ success: false, error: 'API not found' });
@@ -474,40 +695,18 @@ app.get('*', (req, res) => {
 });
 
 // ============================================================
-// ✅ مسار إعادة تعيين القفل (يعمل دائماً)
-// ============================================================
-
-app.post('/api/auth/unlock', (req, res) => {
-    try {
-        const user = users.find(u => u.username === 'admin');
-        if (user) {
-            user.loginAttempts = 0;
-            user.locked = false;
-            user.lockedUntil = null;
-            console.log('🔓 Account unlocked successfully');
-            res.json({ success: true, message: '✅ تم فتح الحساب بنجاح' });
-        } else {
-            res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-// ============================================================
 // 🚀 START
 // ============================================================
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM - WORKING');
+    console.log('🚢 MARINE SYSTEM - FIXED');
     console.log('=========================================');
     console.log(`📍 http://localhost:${PORT}`);
     console.log(`👤 Username: admin`);
-    console.log(`🔑 Password: ${ADMIN_PASSWORD || 'admin123 (تغييرها في Render)'}`);
+    console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
     console.log('=========================================');
-    console.log('🔓 To unlock account: POST /api/auth/unlock');
-    console.log('🔄 To reset attempts: POST /api/auth/reset');
+    console.log('✅ API Test: http://localhost:' + PORT + '/api/test');
     console.log('=========================================');
 });
 
