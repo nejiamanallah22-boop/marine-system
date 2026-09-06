@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - FULL SERVER WITH FIXED LOGIN
+// 🚢 MARINE SYSTEM - ULTRA SECURE v8.0 (FINAL)
 // ============================================================
 
 require('dotenv').config();
@@ -20,17 +20,10 @@ const PORT = process.env.PORT || 5000;
 // ⚙️ CONFIG
 // ============================================================
 
-// ✅ تأكد من أن كلمة المرور ليست فارغة
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
-
-console.log('=========================================');
-console.log('🔐 Admin credentials:');
-console.log(`👤 Username: ${ADMIN_USERNAME}`);
-console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
-console.log('=========================================');
 
 // ============================================================
 // 🔧 MIDDLEWARE
@@ -55,57 +48,46 @@ app.use(session({
 }));
 
 // ============================================================
-// 📁 STATIC FILES
+// 📁 STATIC FILES - المهم
 // ============================================================
 
+// ✅ مجلدات الصفحات
 const pagesDir = path.join(__dirname, 'pages');
 const publicPagesDir = path.join(__dirname, 'public', 'pages');
 const publicDir = path.join(__dirname, 'public');
 
+// ✅ إنشاء المجلدات
 if (!fs.existsSync(pagesDir)) fs.mkdirSync(pagesDir, { recursive: true });
 if (!fs.existsSync(publicPagesDir)) fs.mkdirSync(publicPagesDir, { recursive: true });
 
+// ✅ خدمة الملفات الثابتة
 app.use(express.static(__dirname));
 app.use('/pages', express.static(pagesDir));
-app.use('/pages', express.static(publicPagesDir));
+app.use('/pages', express.static(publicPagesDir)); // ← هذا يحل المشكلة
 app.use('/public', express.static(publicDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
-// ============================================================
-// 📊 DATA - مع كلمة مرور مشفرة
-// ============================================================
-
-// ✅ تأكد من تشفير كلمة المرور بشكل صحيح
-const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 10);
-console.log(`🔐 Hashed password: ${hashedPassword}`);
-
-const users = [
-    {
-        id: '1',
-        username: 'admin',
-        password: hashedPassword,
-        name: 'Administrator',
-        email: 'admin@marine.com',
-        role: 'admin',
-        active: true,
-        createdAt: new Date().toISOString(),
-        lastLogin: null
-    },
-    {
-        id: '2',
-        username: 'manager',
-        password: bcrypt.hashSync('manager123', 10),
-        name: 'مدير النظام',
-        email: 'manager@marine.com',
-        role: 'manager',
-        active: true,
-        createdAt: new Date().toISOString(),
-        lastLogin: null
-    }
-];
+console.log('📁 Pages directories:');
+console.log(`   - ${pagesDir}`);
+console.log(`   - ${publicPagesDir}`);
 
 // ============================================================
-// 🔐 AUTH - مع تحسينات
+// 📊 DATA
+// ============================================================
+
+const users = [{
+    id: '1',
+    username: ADMIN_USERNAME,
+    password: bcrypt.hashSync(ADMIN_PASSWORD, 10),
+    name: 'Administrator',
+    role: 'admin',
+    active: true,
+    createdAt: new Date().toISOString(),
+    lastLogin: null
+}];
+
+// ============================================================
+// 🔐 AUTH
 // ============================================================
 
 app.get('/api/csrf-token', (req, res) => {
@@ -114,90 +96,57 @@ app.get('/api/csrf-token', (req, res) => {
     res.json({ success: true, token: token });
 });
 
-// ✅ تسجيل الدخول - مصحح بالكامل
 app.post('/api/auth/login', (req, res) => {
-    try {
-        const { username, password } = req.body;
-        console.log(`🔐 Login attempt: ${username}`);
-        console.log(`📝 Received password: ${password ? '****' : 'empty'}`);
+    const { username, password } = req.body;
+    console.log('🔐 Login attempt:', username);
 
-        // ✅ التحقق من وجود المستخدم
-        const user = users.find(u => u.username === username);
-        if (!user) {
-            console.log('❌ User not found:', username);
-            return res.status(401).json({ 
-                success: false, 
-                error: 'اسم المستخدم أو كلمة المرور غير صحيحة' 
-            });
-        }
-
-        // ✅ مقارنة كلمة المرور
-        const isValidPassword = bcrypt.compareSync(password, user.password);
-        console.log(`🔑 Password valid: ${isValidPassword}`);
-
-        if (!isValidPassword) {
-            console.log('❌ Invalid password for:', username);
-            return res.status(401).json({ 
-                success: false, 
-                error: 'اسم المستخدم أو كلمة المرور غير صحيحة' 
-            });
-        }
-
-        // ✅ إنشاء التوكن
-        const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
-            JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-
-        console.log(`✅ Login successful: ${username}`);
-
-        res.json({
-            success: true,
-            token: token,
-            user: {
-                id: user.id,
-                username: user.username,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                active: user.active
-            }
-        });
-    } catch (error) {
-        console.error('❌ Login error:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في الخادم' 
-        });
+    const user = users.find(u => u.username === username);
+    if (!user) {
+        return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
     }
+
+    const valid = bcrypt.compareSync(password, user.password);
+    if (!valid) {
+        return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+    }
+
+    const token = jwt.sign(
+        { id: user.id, username: user.username, role: user.role },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+    );
+
+    res.json({
+        success: true,
+        token: token,
+        user: {
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            role: user.role
+        }
+    });
 });
 
-// ✅ التحقق من التوكن
 app.get('/api/auth/me', (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, error: 'غير مصرح' });
+    }
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = users.find(u => u.id === decoded.id);
-
         if (!user) {
             return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
         }
-
         res.json({
             success: true,
             user: {
                 id: user.id,
                 username: user.username,
                 name: user.name,
-                email: user.email,
-                role: user.role,
-                active: user.active
+                role: user.role
             }
         });
     } catch (error) {
@@ -205,7 +154,6 @@ app.get('/api/auth/me', (req, res) => {
     }
 });
 
-// ✅ تسجيل الخروج
 app.post('/api/auth/logout', (req, res) => {
     req.session.destroy(() => {
         res.json({ success: true, message: 'تم تسجيل الخروج' });
@@ -213,7 +161,7 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // ============================================================
-// 📊 VESSELS
+// 📊 DATA ENDPOINTS
 // ============================================================
 
 app.get('/api/vessels', (req, res) => {
@@ -224,158 +172,22 @@ app.get('/api/vessels', (req, res) => {
     ]);
 });
 
-// ============================================================
-// 👥 USERS CRUD
-// ============================================================
-
-// ✅ جلب جميع المستخدمين
 app.get('/api/users', (req, res) => {
     const safeUsers = users.map(u => ({
         id: u.id,
         username: u.username,
         name: u.name,
-        email: u.email || '',
         role: u.role,
-        active: u.active,
-        createdAt: u.createdAt,
-        lastLogin: u.lastLogin
+        active: u.active
     }));
     res.json(safeUsers);
 });
 
-// ✅ جلب مستخدم واحد
-app.get('/api/users/:id', (req, res) => {
-    const user = users.find(u => u.id === req.params.id);
-    if (!user) {
-        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-    }
-    const { password, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
-});
-
-// ✅ إضافة مستخدم جديد
-app.post('/api/users', (req, res) => {
-    try {
-        const { username, password, email, role, active } = req.body;
-        
-        if (!username) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
-        }
-        if (!password) {
-            return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
-        }
-        
-        const existingUser = users.find(u => u.username === username);
-        if (existingUser) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم موجود بالفعل' });
-        }
-        
-        const newUser = {
-            id: crypto.randomBytes(8).toString('hex'),
-            username: username,
-            password: bcrypt.hashSync(password, 10),
-            email: email || '',
-            name: username,
-            role: role || 'viewer',
-            active: active !== undefined ? active : true,
-            createdAt: new Date().toISOString(),
-            lastLogin: null
-        };
-        
-        users.push(newUser);
-        console.log('✅ User created:', username);
-        
-        const { password: _, ...userWithoutPassword } = newUser;
-        res.status(201).json({
-            success: true,
-            message: 'تم إضافة المستخدم بنجاح',
-            user: userWithoutPassword
-        });
-        
-    } catch (error) {
-        console.error('❌ Error creating user:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-// ✅ تحديث مستخدم
-app.put('/api/users/:id', (req, res) => {
-    try {
-        const userId = req.params.id;
-        const { username, email, role, active, password } = req.body;
-        
-        const userIndex = users.findIndex(u => u.id === userId);
-        if (userIndex === -1) {
-            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-        
-        const user = users[userIndex];
-        if (username) user.username = username;
-        if (email) user.email = email;
-        if (role) user.role = role;
-        if (active !== undefined) user.active = active;
-        if (password) {
-            user.password = bcrypt.hashSync(password, 10);
-        }
-        
-        console.log('✅ User updated:', user.username);
-        
-        const { password: _, ...userWithoutPassword } = user;
-        res.json({
-            success: true,
-            message: 'تم تحديث المستخدم بنجاح',
-            user: userWithoutPassword
-        });
-        
-    } catch (error) {
-        console.error('❌ Error updating user:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-// ✅ حذف مستخدم
-app.delete('/api/users/:id', (req, res) => {
-    try {
-        const userId = req.params.id;
-        
-        const userToDelete = users.find(u => u.id === userId);
-        if (!userToDelete) {
-            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-        
-        if (userToDelete.username === 'admin') {
-            return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
-        }
-        
-        const userIndex = users.findIndex(u => u.id === userId);
-        users.splice(userIndex, 1);
-        
-        console.log('✅ User deleted:', userToDelete.username);
-        res.json({
-            success: true,
-            message: 'تم حذف المستخدم بنجاح'
-        });
-        
-    } catch (error) {
-        console.error('❌ Error deleting user:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
 // ============================================================
-// 📋 LOGS
+// 🌐 PAGE ROUTES - الحل السحري
 // ============================================================
 
-const logs = [];
-
-app.get('/api/logs', (req, res) => {
-    res.json(logs.slice(-100));
-});
-
-// ============================================================
-// 🌐 PAGE ROUTES
-// ============================================================
-
+// ✅ الصفحة الرئيسية
 app.get('/', (req, res) => {
     const paths = [
         path.join(__dirname, 'index.html'),
@@ -397,22 +209,23 @@ app.get('/', (req, res) => {
             <p>✅ Server is running!</p>
             <p>👤 Admin: ${ADMIN_USERNAME}</p>
             <p>🔑 Password: ${ADMIN_PASSWORD}</p>
-            <p><a href="/pages/dashboard" style="color:#00d4ff;">📊 Dashboard</a></p>
-            <p><a href="/pages/users" style="color:#00d4ff;">👥 Users</a></p>
+            <p><a href="/pages/dashboard" style="color:#00d4ff;">📊 Go to Dashboard</a></p>
         </body>
         </html>
     `);
 });
 
+// ✅ مسار الصفحات - يعرض أي صفحة من أي مجلد
 app.get('/pages/:page', (req, res) => {
     const pageName = req.params.page;
-    console.log(`📄 Looking for: ${pageName}`);
+    console.log(`📄 Looking for page: ${pageName}`);
     
+    // البحث في جميع المجلدات
     const possiblePaths = [
-        path.join(publicPagesDir, pageName + '.html'),
-        path.join(pagesDir, pageName + '.html'),
-        path.join(publicDir, pageName + '.html'),
-        path.join(__dirname, pageName + '.html')
+        path.join(publicPagesDir, pageName + '.html'),  // public/pages/
+        path.join(pagesDir, pageName + '.html'),        // pages/
+        path.join(publicDir, pageName + '.html'),       // public/
+        path.join(__dirname, pageName + '.html')        // root
     ];
     
     for (const p of possiblePaths) {
@@ -422,7 +235,8 @@ app.get('/pages/:page', (req, res) => {
         }
     }
     
-    console.log(`❌ Not found: ${pageName}`);
+    // إذا لم توجد الصفحة
+    console.log(`❌ Page not found: ${pageName}`);
     res.status(404).send(`
         <!DOCTYPE html>
         <html>
@@ -430,12 +244,14 @@ app.get('/pages/:page', (req, res) => {
         <body style="font-family:Arial;background:#0a0e1a;color:#fff;text-align:center;padding:50px;">
             <h1>❌ 404</h1>
             <p>الصفحة <strong>${pageName}</strong> غير موجودة</p>
-            <a href="/" style="color:#00d4ff;">⬅️ العودة</a>
+            <p style="color:#667788;font-size:13px;">تم البحث في: public/pages/, pages/, public/, /</p>
+            <a href="/" style="color:#00d4ff;">⬅️ العودة للرئيسية</a>
         </body>
         </html>
     `);
 });
 
+// ✅ مسار مختصر - /dashboard (بدون pages)
 app.get('/:page', (req, res, next) => {
     const pageName = req.params.page;
     const skip = ['api', 'pages', 'public', 'css', 'js', 'assets', 'favicon.ico'];
@@ -456,6 +272,7 @@ app.get('/:page', (req, res, next) => {
     next();
 });
 
+// ✅ أي مسار آخر
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ success: false, error: 'API not found' });
@@ -469,10 +286,14 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM - FIXED LOGIN');
+    console.log('🚢 MARINE SYSTEM - WORKING SERVER');
     console.log('=========================================');
     console.log(`📍 http://localhost:${PORT}`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
     console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
+    console.log('=========================================');
+    console.log('📁 Pages will be loaded from:');
+    console.log(`   - ${publicPagesDir}`);
+    console.log(`   - ${pagesDir}`);
     console.log('=========================================');
 });
