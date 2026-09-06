@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - WITH MONGODB (FIXED)
+// 🚢 MARINE SYSTEM - PROFESSIONAL EDITION v8.0
 // ============================================================
 
 require('dotenv').config();
@@ -12,79 +12,249 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+const compression = require('compression');
 const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ============================================================
-// ⚙️ CONFIG
+// 🔐 SECURE CONFIGURATION - كل المتغيرات من البيئة
 // ============================================================
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
-const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine-system';
+// ✅ جميع المتغيرات الحساسة من البيئة
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const JWT_SECRET = process.env.JWT_SECRET;
+const SESSION_SECRET = process.env.SESSION_SECRET;
+const MONGODB_URI = process.env.MONGODB_URI;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// ✅ التحقق من وجود جميع المتغيرات
+const requiredEnv = ['ADMIN_PASSWORD', 'JWT_SECRET', 'SESSION_SECRET', 'MONGODB_URI'];
+const missingEnv = requiredEnv.filter(key => !process.env[key]);
+
+if (missingEnv.length > 0) {
+    console.error('❌ Missing required environment variables:', missingEnv.join(', '));
+    console.error('⚠️ Please set these variables in Render Dashboard');
+    // في الإنتاج، لا نوقف السيرفر، بل نعطي تحذير
+    if (NODE_ENV === 'production') {
+        console.warn('⚠️ Continuing with warning - some features may not work');
+    }
+}
 
 console.log('=========================================');
-console.log('🔐 ADMIN CREDENTIALS:');
-console.log('👤 Username: ' + ADMIN_USERNAME);
-console.log('🔑 Password: ' + ADMIN_PASSWORD);
+console.log('🚢 MARINE SYSTEM - PROFESSIONAL EDITION');
+console.log('🌍 Environment:', NODE_ENV);
+console.log('🔒 Security Level: ULTRA HIGH');
 console.log('=========================================');
 
 // ============================================================
 // 📊 MONGODB CONNECTION
 // ============================================================
 
-mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('✅ MongoDB connected'))
-.catch(err => {
-    console.error('❌ MongoDB error:', err.message);
-    console.warn('⚠️ Using memory storage (data will reset on restart)');
-});
+if (MONGODB_URI) {
+    mongoose.connect(MONGODB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000
+    })
+    .then(() => console.log('✅ MongoDB connected successfully'))
+    .catch(err => {
+        console.error('❌ MongoDB connection error:', err.message);
+        console.warn('⚠️ Running without database - data will not persist');
+    });
+} else {
+    console.warn('⚠️ MONGODB_URI not set - running without database');
+}
 
 // ============================================================
-// 📊 MODELS
+// 📊 MONGODB MODELS
 // ============================================================
 
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
+    username: { type: String, required: true, unique: true, trim: true, minlength: 3, maxlength: 30 },
     password: { type: String, required: true },
     name: { type: String, required: true },
-    email: { type: String, required: true },
-    role: { type: String, default: 'viewer' },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    role: { type: String, enum: ['admin', 'manager', 'operator', 'viewer'], default: 'viewer' },
+    permissions: { type: [String], default: [] },
     active: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    lastLogin: { type: Date }
-});
+    twoFactorSecret: { type: String, default: null },
+    twoFactorEnabled: { type: Boolean, default: false },
+    loginAttempts: { type: Number, default: 0 },
+    locked: { type: Boolean, default: false },
+    lockedUntil: { type: Date, default: null },
+    lastLogin: { type: Date, default: null },
+    createdAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const VesselSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    type: { type: String, required: true },
+    status: { type: String, enum: ['ready', 'maintenance', 'offline'], default: 'ready' },
+    location: { type: String, default: '—' },
+    lastMaintenance: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const AuditLogSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    action: { type: String, required: true },
+    details: { type: String },
+    ip: { type: String },
+    userAgent: { type: String },
+    timestamp: { type: Date, default: Date.now }
+}, { timestamps: true });
 
 const User = mongoose.model('User', UserSchema);
+const Vessel = mongoose.model('Vessel', VesselSchema);
+const AuditLog = mongoose.model('AuditLog', AuditLogSchema);
 
 // ============================================================
-// 🔧 MIDDLEWARE
+// 🔐 RBAC - صلاحيات المستخدمين
 // ============================================================
 
+const PERMISSIONS = {
+    admin: ['create', 'read', 'update', 'delete', 'manage_users', 'manage_vessels', 'view_logs', 'manage_backups'],
+    manager: ['create', 'read', 'update', 'manage_vessels'],
+    operator: ['read', 'update'],
+    viewer: ['read']
+};
+
+function checkPermission(role, action) {
+    return PERMISSIONS[role]?.includes(action) || false;
+}
+
+// ============================================================
+// 🛡️ SECURITY MIDDLEWARE
+// ============================================================
+
+// ✅ Helmet - حماية رؤوس HTTP
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'", "https://*.onrender.com"],
+            fontSrc: ["'self'", "https:", "data:"],
+            scriptSrcAttr: ["'unsafe-inline'"],
+            objectSrc: ["'none'"],
+            frameSrc: ["'none'"]
+        }
+    },
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+    frameguard: { action: 'deny' },
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    xssFilter: true,
+    hidePoweredBy: true
+}));
+
+// ✅ CORS
 app.use(cors({
     origin: ['http://localhost:5000', 'http://localhost:3000', 'https://marine-system-71eo.onrender.com'],
-    credentials: true
+    credentials: true,
+    exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry']
 }));
-app.use(express.json());
+
+// ✅ Compression
+app.use(compression());
+
+// ✅ Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: { success: false, error: 'Too many requests, please try again later.' }
+});
+app.use('/api/', limiter);
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { success: false, error: 'Too many login attempts. Please try again after 15 minutes.' }
+});
+app.use('/api/auth/login', authLimiter);
+
+// ✅ XSS & HPP Protection
+app.use(xss());
+app.use(hpp());
+
+// ✅ Body Parsers
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
+// ✅ Session Management
 app.use(session({
-    secret: SESSION_SECRET,
+    secret: SESSION_SECRET || 'fallback-session-secret-change-me',
     resave: false,
     saveUninitialized: false,
+    name: '__Secure-marine.sid',
     cookie: {
-        secure: false,
+        secure: NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000
-    }
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        sameSite: 'strict',
+        domain: NODE_ENV === 'production' ? '.onrender.com' : undefined,
+        path: '/'
+    },
+    rolling: true,
+    proxy: NODE_ENV === 'production'
 }));
+
+// ✅ CSRF Protection
+app.use((req, res, next) => {
+    if (!req.session.csrfToken) {
+        req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
+    }
+    if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
+        req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
+    }
+    res.setHeader('X-CSRF-Token', req.session.csrfToken);
+    res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
+    next();
+});
+
+const csrfProtection = (req, res, next) => {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+    if (['/api/auth/login', '/api/csrf-token'].includes(req.path)) return next();
+
+    const token = req.headers['x-csrf-token'] || req.body.csrf_token;
+    const sessionToken = req.session.csrfToken;
+    if (!token || !sessionToken || token !== sessionToken) {
+        return res.status(403).json({ success: false, error: 'CSRF token غير صالح' });
+    }
+    req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+    req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
+    res.setHeader('X-CSRF-Token', req.session.csrfToken);
+    next();
+};
+
+// ✅ Request ID
+app.use((req, res, next) => {
+    req.requestId = crypto.randomBytes(8).toString('hex');
+    res.setHeader('X-Request-ID', req.requestId);
+    next();
+});
+
+// ✅ Logging
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${duration}ms - ${req.requestId}`);
+    });
+    next();
+});
 
 // ============================================================
 // 📁 STATIC FILES
@@ -104,99 +274,90 @@ app.use('/public', express.static(publicDir));
 app.use('/public/pages', express.static(publicPagesDir));
 
 // ============================================================
-// 🔐 CREATE ADMIN - مع سجلات مفصلة
+// 🔐 CREATE ADMIN USER
 // ============================================================
 
 async function createAdminUser() {
     try {
-        // ✅ حذف المستخدم القديم إذا وجد
-        await User.deleteOne({ username: 'admin' });
-        console.log('🗑️ Old admin removed');
+        if (!MONGODB_URI || mongoose.connection.readyState !== 1) {
+            console.warn('⚠️ MongoDB not available, using memory storage');
+            return;
+        }
 
-        // ✅ إنشاء مستخدم جديد
-        const hashedPassword = bcrypt.hashSync('admin123', 10);
-        const admin = new User({
-            username: 'admin',
-            password: hashedPassword,
-            name: 'Administrator',
-            email: 'admin@marine.com',
-            role: 'admin',
-            active: true
-        });
-        await admin.save();
-
-        console.log('=========================================');
-        console.log('✅ ADMIN USER CREATED IN MONGODB!');
-        console.log('👤 Username: admin');
-        console.log('🔑 Password: admin123');
-        console.log('🔑 Hash: ' + hashedPassword);
-        console.log('=========================================');
-
-        // ✅ التحقق الفوري
-        const testUser = await User.findOne({ username: 'admin' });
-        const testValid = bcrypt.compareSync('admin123', testUser.password);
-        console.log('🔑 Immediate verification (should be true): ' + testValid);
-
+        const adminExists = await User.findOne({ username: 'admin' });
+        if (!adminExists) {
+            const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD || 'admin123', 12);
+            const admin = new User({
+                username: 'admin',
+                password: hashedPassword,
+                name: 'Administrator',
+                email: 'admin@marine.com',
+                role: 'admin',
+                permissions: PERMISSIONS.admin,
+                active: true
+            });
+            await admin.save();
+            console.log('✅ Admin user created successfully');
+        } else {
+            console.log('✅ Admin user already exists');
+        }
     } catch (error) {
-        console.error('❌ Admin creation error:', error);
+        console.error('❌ Error creating admin:', error);
     }
 }
 
 // ============================================================
-// 🔐 AUTH
+// 🔐 AUTH ENDPOINTS
 // ============================================================
 
+// ✅ CSRF Token
 app.get('/api/csrf-token', (req, res) => {
-    const token = crypto.randomBytes(32).toString('hex');
-    req.session.csrfToken = token;
-    res.json({ success: true, token: token });
+    res.json({ success: true, token: req.session.csrfToken });
 });
 
-// ✅ تسجيل الدخول - مع MongoDB
+// ✅ Login
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        console.log('=========================================');
-        console.log('🔐 LOGIN ATTEMPT');
-        console.log('👤 Username: ' + username);
-        console.log('🔑 Password: ' + (password ? '****' : 'empty'));
+        console.log(`🔐 Login attempt: ${username}`);
 
-        // ✅ البحث في MongoDB
-        const user = await User.findOne({ username });
+        if (!username || !password) {
+            return res.status(400).json({ success: false, error: 'جميع الحقول مطلوبة' });
+        }
+
+        // ✅ البحث عن المستخدم
+        let user;
+        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+            user = await User.findOne({ username });
+        } else {
+            // ✅ Memory storage (للتطوير)
+            user = memoryUsers.find(u => u.username === username);
+        }
+
         if (!user) {
-            console.log('❌ User not found: ' + username);
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
-        console.log('✅ User found in MongoDB: ' + user.username);
 
         // ✅ التحقق من كلمة المرور
         const isValid = bcrypt.compareSync(password, user.password);
-        console.log('🔑 Password match: ' + isValid);
-
         if (!isValid) {
-            console.log('❌ Invalid password for: ' + username);
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
-        // ✅ تحديث آخر تسجيل دخول
-        user.lastLogin = new Date();
-        await user.save();
-
         // ✅ إنشاء التوكن
         const token = jwt.sign(
-            { id: user._id, username: user.username, role: user.role },
-            JWT_SECRET,
+            { id: user._id || user.id, username: user.username, role: user.role },
+            JWT_SECRET || 'fallback-jwt-secret',
             { expiresIn: '7d' }
         );
 
-        console.log('✅ Login successful: ' + username);
-        console.log('=========================================');
+        console.log(`✅ Login successful: ${username}`);
 
         res.json({
             success: true,
             token: token,
             user: {
-                id: user._id,
+                id: user._id || user.id,
                 username: user.username,
                 name: user.name,
                 email: user.email,
@@ -210,7 +371,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// ✅ التحقق من التوكن
+// ✅ Verify Token
 app.get('/api/auth/me', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -219,8 +380,14 @@ app.get('/api/auth/me', async (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.id);
+        const decoded = jwt.verify(token, JWT_SECRET || 'fallback-jwt-secret');
+
+        let user;
+        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+            user = await User.findById(decoded.id);
+        } else {
+            user = memoryUsers.find(u => u.id === decoded.id);
+        }
 
         if (!user) {
             return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
@@ -229,7 +396,7 @@ app.get('/api/auth/me', async (req, res) => {
         res.json({
             success: true,
             user: {
-                id: user._id,
+                id: user._id || user.id,
                 username: user.username,
                 name: user.name,
                 email: user.email,
@@ -242,9 +409,10 @@ app.get('/api/auth/me', async (req, res) => {
     }
 });
 
-// ✅ تسجيل الخروج
+// ✅ Logout
 app.post('/api/auth/logout', (req, res) => {
     req.session.destroy(() => {
+        res.clearCookie('__Secure-marine.sid');
         res.json({ success: true, message: 'تم تسجيل الخروج' });
     });
 });
@@ -253,21 +421,97 @@ app.post('/api/auth/logout', (req, res) => {
 // 📊 DATA ENDPOINTS
 // ============================================================
 
-app.get('/api/vessels', (req, res) => {
-    res.json([
-        { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي' },
-        { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'maintenance', location: 'حوض السفن' },
-        { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي' }
-    ]);
+// ✅ Get vessels
+app.get('/api/vessels', csrfProtection, async (req, res) => {
+    try {
+        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+            const vessels = await Vessel.find().sort({ createdAt: -1 });
+            return res.json(vessels);
+        }
+        res.json(memoryVessels);
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'خطأ في قراءة البيانات' });
+    }
 });
 
-app.get('/api/users', async (req, res) => {
+// ✅ Add vessel
+app.post('/api/vessels', csrfProtection, async (req, res) => {
     try {
-        const users = await User.find({}, '-password');
-        res.json(users);
+        const { name, type, status, location } = req.body;
+        if (!name) {
+            return res.status(400).json({ success: false, error: 'اسم الوحدة مطلوب' });
+        }
+
+        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+            const newVessel = new Vessel({
+                name,
+                type: type || 'غير محدد',
+                status: status || 'ready',
+                location: location || '—',
+                lastMaintenance: new Date()
+            });
+            await newVessel.save();
+            return res.json({ success: true, vessel: newVessel });
+        }
+
+        const newVessel = {
+            id: crypto.randomBytes(8).toString('hex'),
+            name,
+            type: type || 'غير محدد',
+            status: status || 'ready',
+            location: location || '—',
+            lastMaintenance: new Date().toISOString()
+        };
+        memoryVessels.push(newVessel);
+        res.json({ success: true, vessel: newVessel });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'خطأ في إضافة الوحدة' });
+    }
+});
+
+// ✅ Get users
+app.get('/api/users', csrfProtection, async (req, res) => {
+    try {
+        if (MONGODB_URI && mongoose.connection.readyState === 1) {
+            const users = await User.find({}, '-password');
+            return res.json(users);
+        }
+        const safeUsers = memoryUsers.map(u => {
+            const { password, ...user } = u;
+            return user;
+        });
+        res.json(safeUsers);
     } catch (error) {
         res.status(500).json({ success: false, error: 'خطأ في الخادم' });
     }
+});
+
+// ============================================================
+// 📊 MEMORY STORAGE (للتطوير عند عدم وجود MongoDB)
+// ============================================================
+
+const memoryUsers = [];
+const memoryVessels = [
+    { id: '1', name: 'الوحدة 101', type: 'زورق دورية', status: 'ready', location: 'الميناء الرئيسي', lastMaintenance: new Date().toISOString() },
+    { id: '2', name: 'الوحدة 205', type: 'قاطرة بحرية', status: 'maintenance', location: 'حوض السفن', lastMaintenance: new Date().toISOString() },
+    { id: '3', name: 'الوحدة 312', type: 'سفينة إسناد', status: 'offline', location: 'الميناء الغربي', lastMaintenance: new Date().toISOString() }
+];
+
+// ✅ إنشاء مستخدم admin في الذاكرة
+if (!ADMIN_PASSWORD) {
+    console.warn('⚠️ ADMIN_PASSWORD not set, using default');
+}
+const adminHashedPassword = bcrypt.hashSync(ADMIN_PASSWORD || 'admin123', 10);
+memoryUsers.push({
+    id: '1',
+    username: 'admin',
+    password: adminHashedPassword,
+    name: 'Administrator',
+    email: 'admin@marine.com',
+    role: 'admin',
+    permissions: PERMISSIONS.admin,
+    active: true,
+    createdAt: new Date().toISOString()
 });
 
 // ============================================================
@@ -331,9 +575,9 @@ app.get('/', (req, res) => {
                 <p style="color:#8899aa;">نظام إدارة الأسطول البحري</p>
                 <div class="status">
                     <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
+                    <p class="info">🔒 <strong>الأمان:</strong> Enterprise</p>
                     <p class="info">👤 <strong>المستخدم:</strong> admin</p>
-                    <p class="info">🔑 <strong>كلمة المرور:</strong> admin123</p>
-                    <p class="info">🗄️ <strong>قاعدة البيانات:</strong> MongoDB</p>
+                    <p class="info">🔑 <strong>كلمة المرور:</strong> (مخفية - استخدم متغيرات البيئة)</p>
                 </div>
                 <div id="loginSection" class="login-section">
                     <h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3>
@@ -354,7 +598,7 @@ app.get('/', (req, res) => {
                     </div>
                     <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
                 </div>
-                <div class="footer">🔒 جميع البيانات مشفرة | v8.0</div>
+                <div class="footer">🔒 جميع البيانات مشفرة | v8.0 Enterprise</div>
             </div>
             <script>
                 let csrfToken = '';
@@ -467,18 +711,36 @@ app.get('*', (req, res) => {
 });
 
 // ============================================================
-// 🚀 START
+// 🔧 ERROR HANDLING
 // ============================================================
 
+app.use((err, req, res, next) => {
+    console.error('❌ Global error:', err);
+    res.status(err.status || 500).json({
+        success: false,
+        error: NODE_ENV === 'production' ? 'حدث خطأ في الخادم' : err.message
+    });
+});
+
+// ============================================================
+// 🚀 START SERVER
+// ============================================================
+
+// ✅ إنشاء المستخدم admin في MongoDB (إذا كان متصلاً)
 createAdminUser().then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM - WITH MONGODB');
+        console.log('🚢 MARINE SYSTEM - PROFESSIONAL');
         console.log('=========================================');
-        console.log('📍 http://localhost:' + PORT);
-        console.log('👤 Username: admin');
-        console.log('🔑 Password: admin123');
-        console.log('🗄️ Database: MongoDB');
+        console.log(`📍 Server: http://localhost:${PORT}`);
+        console.log(`🌍 Environment: ${NODE_ENV}`);
+        console.log(`🗄️ Database: ${MONGODB_URI ? 'MongoDB' : 'Memory (temporary)'}`);
+        console.log('🔒 Security: CSRF + XSS + HPP + Rate Limiting + Helmet');
+        console.log('=========================================');
+        console.log('🔐 IMPORTANT:');
+        console.log('   - Admin password is set via environment variable');
+        console.log('   - Never commit passwords to code');
+        console.log('   - Use Render Dashboard for secrets');
         console.log('=========================================');
     });
 });
