@@ -81,30 +81,13 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
 
 const CONFIG = {
-    rateLimit: {
-        window: parseInt(process.env.RATE_LIMIT_WINDOW) || 15,
-        max: parseInt(process.env.RATE_LIMIT_MAX) || 100
-    },
-    authRateLimit: {
-        window: parseInt(process.env.RATE_LIMIT_WINDOW) || 15,
-        max: parseInt(process.env.AUTH_RATE_LIMIT_MAX) || 5
-    },
-    csrf: {
-        expiry: parseInt(process.env.CSRF_TOKEN_EXPIRY) || 8
-    },
-    session: {
-        maxAge: parseInt(process.env.SESSION_MAX_AGE) || 30
-    },
-    password: {
-        saltRounds: parseInt(process.env.PASSWORD_SALT_ROUNDS) || 12
-    },
-    security: {
-        maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 5,
-        accountLockTime: parseInt(process.env.ACCOUNT_LOCK_TIME) || 30
-    },
-    token: {
-        expiry: process.env.TOKEN_EXPIRY || '7d'
-    }
+    rateLimit: { window: 15, max: 100 },
+    authRateLimit: { window: 15, max: 5 },
+    csrf: { expiry: 8 },
+    session: { maxAge: 30 },
+    password: { saltRounds: 12 },
+    security: { maxLoginAttempts: 5, accountLockTime: 30 },
+    token: { expiry: '7d' }
 };
 
 // ============================================================
@@ -118,7 +101,6 @@ function encrypt(text) {
         encrypted += cipher.final('hex');
         return encrypted;
     } catch (error) {
-        console.error('Encryption error:', error);
         return text;
     }
 }
@@ -130,7 +112,6 @@ function decrypt(text) {
         decrypted += decipher.final('utf8');
         return decrypted;
     } catch (error) {
-        console.error('Decryption error:', error);
         return text;
     }
 }
@@ -151,103 +132,45 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "'unsafe-eval'",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com",
-                "https://cdn.jsdelivr.net",
-                "https://fonts.googleapis.com",
-                "https://*.googleapis.com"
-            ],
-            styleSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com",
-                "https://cdn.jsdelivr.net",
-                "https://fonts.googleapis.com",
-                "https://*.googleapis.com"
-            ],
-            imgSrc: [
-                "'self'",
-                "data:",
-                "https:",
-                "http:",
-                "https://unpkg.com",
-                "https://*.googleapis.com"
-            ],
-            connectSrc: [
-                "'self'",
-                "https://*.onrender.com",
-                "https://unpkg.com",
-                "https://*.googleapis.com"
-            ],
-            fontSrc: [
-                "'self'",
-                "https:",
-                "data:",
-                "https://fonts.gstatic.com",
-                "https://*.googleapis.com"
-            ],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+            imgSrc: ["'self'", "data:", "https:", "https://unpkg.com"],
+            connectSrc: ["'self'", "https://*.onrender.com"],
+            fontSrc: ["'self'", "https:", "data:", "https://fonts.gstatic.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
             objectSrc: ["'none'"],
-            mediaSrc: ["'self'"],
             frameSrc: ["'none'"],
             baseUri: ["'self'"],
-            formAction: ["'self'"],
-            upgradeInsecureRequests: isProduction ? [] : null
+            formAction: ["'self'"]
         }
     },
-    hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true
-    },
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
     frameguard: { action: 'deny' },
     noSniff: true,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     xssFilter: true,
-    hidePoweredBy: true,
-    ieNoOpen: true,
-    permittedCrossDomainPolicies: { permittedPolicies: 'none' }
+    hidePoweredBy: true
 }));
 
 app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin) return callback(null, true);
-        const allowed = ['http://localhost:5000', 'http://localhost:3000', 'https://marine-system-71eo.onrender.com'];
-        if (allowed.indexOf(origin) !== -1 || !isProduction) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: ['http://localhost:5000', 'http://localhost:3000', 'https://marine-system-71eo.onrender.com'],
     credentials: true,
-    exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry', 'X-Request-ID', 'X-User-ID'],
-    maxAge: 86400
+    exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry', 'X-Request-ID', 'X-User-ID']
 }));
 
 app.use(compression());
 
 const limiter = rateLimit({
-    windowMs: CONFIG.rateLimit.window * 60 * 1000,
-    max: CONFIG.rateLimit.max,
-    message: { success: false, error: 'Too many requests, please try again later.' },
-    standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req) => req.ip || req.connection.remoteAddress
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: { success: false, error: 'Too many requests, please try again later.' }
 });
 app.use('/api/', limiter);
 
 const authLimiter = rateLimit({
-    windowMs: CONFIG.authRateLimit.window * 60 * 1000,
-    max: CONFIG.authRateLimit.max,
-    message: { success: false, error: `Too many login attempts. Please try again after ${CONFIG.authRateLimit.window} minutes.` },
-    standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req) => req.ip || req.connection.remoteAddress
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { success: false, error: 'Too many login attempts. Please try again after 15 minutes.' }
 });
 app.use('/api/auth/login', authLimiter);
 
@@ -265,7 +188,7 @@ app.use(session({
     cookie: {
         secure: isProduction,
         httpOnly: true,
-        maxAge: CONFIG.session.maxAge * 24 * 60 * 60 * 1000,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
         sameSite: 'strict',
         domain: isProduction ? '.onrender.com' : undefined,
         path: '/'
@@ -283,8 +206,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
-        const duration = Date.now() - start;
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${duration}ms - ${req.requestId}`);
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${Date.now() - start}ms - ${req.requestId}`);
     });
     next();
 });
@@ -293,11 +215,11 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     if (!req.session.csrfToken) {
         req.session.csrfToken = generateSecureToken();
-        req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
     }
     if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
         req.session.csrfToken = generateSecureToken();
-        req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
     }
     res.setHeader('X-CSRF-Token', req.session.csrfToken);
     res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
@@ -321,7 +243,7 @@ const csrfProtection = (req, res, next) => {
     }
     const newToken = generateSecureToken();
     req.session.csrfToken = newToken;
-    req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+    req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
     res.setHeader('X-CSRF-Token', newToken);
     next();
 };
@@ -333,7 +255,7 @@ const csrfProtection = (req, res, next) => {
 const users = [{
     id: crypto.randomBytes(16).toString('hex'),
     username: ADMIN_USERNAME,
-    password: bcrypt.hashSync(ADMIN_PASSWORD, CONFIG.password.saltRounds),
+    password: bcrypt.hashSync(ADMIN_PASSWORD, 12),
     name: encrypt(ADMIN_NAME),
     role: 'admin',
     active: true,
@@ -362,22 +284,30 @@ function getClientIP(req) {
 }
 
 // ============================================================
-// 📁 STATIC FILES
+// 📁 STATIC FILES - مهم جداً
 // ============================================================
 
+// ✅ تأكد من وجود مجلد pages
+const pagesDir = path.join(__dirname, 'pages');
+if (!fs.existsSync(pagesDir)) {
+    fs.mkdirSync(pagesDir, { recursive: true });
+    console.log('📁 Created pages directory');
+}
+
+// ✅ خدمة الملفات الثابتة
 app.use(express.static(__dirname));
-app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/pages', express.static(path.join(__dirname, 'pages')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/public/pages', express.static(path.join(__dirname, 'public', 'pages')));
 
 // ============================================================
-// ✅ CSRF TOKEN ENDPOINT - MUST BE BEFORE OTHER ROUTES
+// ✅ CSRF TOKEN ENDPOINT
 // ============================================================
 
 app.get('/api/csrf-token', (req, res) => {
     try {
         const token = req.session.csrfToken;
-        const expiry = req.session.csrfExpiry || Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+        const expiry = req.session.csrfExpiry || Date.now() + (8 * 60 * 60 * 1000);
         res.setHeader('Content-Type', 'application/json');
         res.json({ success: true, token: token, expiresIn: expiry - Date.now() });
     } catch (error) {
@@ -408,11 +338,11 @@ app.post('/api/auth/login', (req, res) => {
         const validPassword = bcrypt.compareSync(password, user.password);
         if (!validPassword) {
             user.loginAttempts = (user.loginAttempts || 0) + 1;
-            if (user.loginAttempts >= CONFIG.security.maxLoginAttempts) {
+            if (user.loginAttempts >= 5) {
                 user.locked = true;
-                user.lockedUntil = Date.now() + (CONFIG.security.accountLockTime * 60 * 1000);
+                user.lockedUntil = Date.now() + (30 * 60 * 1000);
                 addAuditLog(user.id, 'ACCOUNT_LOCKED', 'Too many failed login attempts', clientIP);
-                return res.status(403).json({ success: false, error: `الحساب مقفل لمدة ${CONFIG.security.accountLockTime} دقيقة` });
+                return res.status(403).json({ success: false, error: 'الحساب مقفل لمدة 30 دقيقة' });
             }
             return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
@@ -425,12 +355,12 @@ app.post('/api/auth/login', (req, res) => {
         const token = jwt.sign(
             { id: user.id, username: user.username, role: user.role, iat: Math.floor(Date.now() / 1000), jti: crypto.randomBytes(16).toString('hex') },
             JWT_SECRET,
-            { expiresIn: CONFIG.token.expiry, algorithm: 'HS256' }
+            { expiresIn: '7d', algorithm: 'HS256' }
         );
 
         const newToken = generateSecureToken();
         req.session.csrfToken = newToken;
-        req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
         req.session.userId = user.id;
 
         res.setHeader('X-CSRF-Token', newToken);
@@ -457,35 +387,46 @@ app.post('/api/auth/login', (req, res) => {
 
 app.get('/api/auth/me', (req, res) => {
     try {
+        console.log('🛡️ Verifying token...');
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            console.log('❌ No token provided');
             return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = users.find(u => u.id === decoded.id);
-        if (!user || !user.active) {
-            return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-        if (req.session.userId !== user.id) {
-            return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
-        }
-        const newToken = generateSecureToken();
-        req.session.csrfToken = newToken;
-        req.session.csrfExpiry = Date.now() + (CONFIG.csrf.expiry * 60 * 60 * 1000);
-        res.setHeader('X-CSRF-Token', newToken);
-        res.json({
-            success: true,
-            user: {
-                id: user.id,
-                username: user.username,
-                name: decrypt(user.name),
-                role: user.role,
-                active: user.active,
-                lastLogin: user.lastLogin
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+            console.log('✅ Token decoded:', decoded.username);
+            const user = users.find(u => u.id === decoded.id);
+            if (!user || !user.active) {
+                console.log('❌ User not found or inactive');
+                return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
             }
-        });
+            if (req.session.userId !== user.id) {
+                console.log('❌ Session mismatch');
+                return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
+            }
+            const newToken = generateSecureToken();
+            req.session.csrfToken = newToken;
+            req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
+            res.setHeader('X-CSRF-Token', newToken);
+            res.json({
+                success: true,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    name: decrypt(user.name),
+                    role: user.role,
+                    active: user.active,
+                    lastLogin: user.lastLogin
+                }
+            });
+        } catch (jwtError) {
+            console.log('❌ JWT verification failed:', jwtError.message);
+            return res.status(401).json({ success: false, error: 'توكن غير صالح' });
+        }
     } catch (error) {
+        console.error('❌ Auth me error:', error);
         res.status(401).json({ success: false, error: 'توكن غير صالح' });
     }
 });
@@ -572,11 +513,23 @@ app.get('/api/status', (req, res) => {
     });
 });
 
+// ✅ إضافة مسار session-status
+app.get('/api/session-status', (req, res) => {
+    res.json({
+        success: true,
+        hasSession: !!req.session,
+        hasCsrf: !!req.session.csrfToken,
+        sessionId: req.sessionID,
+        userId: req.session.userId || null
+    });
+});
+
 // ============================================================
-// 🌐 PAGE ROUTES - بعد الـ API
+// 📄 PAGE ROUTES - صفحة dashboard
 // ============================================================
 
-function servePage(req, res, pageName) {
+// ✅ دالة مساعدة لخدمة الصفحات
+function servePage(res, pageName) {
     const possiblePaths = [
         path.join(__dirname, 'pages', pageName + '.html'),
         path.join(__dirname, 'public', 'pages', pageName + '.html'),
@@ -586,13 +539,106 @@ function servePage(req, res, pageName) {
     ];
     for (const p of possiblePaths) {
         if (fs.existsSync(p)) {
+            console.log(`✅ Serving page: ${pageName} from ${p}`);
             return res.sendFile(p);
         }
     }
-    return null;
+    return false;
 }
 
-// ✅ Home page
+// ✅ إنشاء صفحة dashboard إذا لم تكن موجودة
+const dashboardPath = path.join(__dirname, 'pages', 'dashboard.html');
+if (!fs.existsSync(dashboardPath)) {
+    console.log('📄 Creating default dashboard.html');
+    const dashboardHTML = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 لوحة التحكم</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',sans-serif; background:#0a0e1a; color:#fff; padding:20px; }
+        .container { max-width:1400px; margin:0 auto; }
+        .header { display:flex; justify-content:space-between; align-items:center; padding:20px; background:#1a1f35; border-radius:15px; margin-bottom:30px; border:1px solid #2a3a5a; }
+        .header h1 { color:#00d4ff; }
+        .btn-back { padding:10px 20px; background:#2a3a5a; color:#fff; border:none; border-radius:8px; cursor:pointer; text-decoration:none; }
+        .btn-back:hover { background:#3a4a6a; }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:30px; }
+        .stat-card { background:#1a1f35; padding:25px; border-radius:15px; border:1px solid #2a3a5a; text-align:center; }
+        .stat-card .number { font-size:2.5em; font-weight:bold; color:#00d4ff; }
+        .stat-card .label { color:#8899aa; margin-top:10px; }
+        .section { background:#1a1f35; padding:25px; border-radius:15px; border:1px solid #2a3a5a; margin-bottom:20px; }
+        .section h2 { color:#00d4ff; margin-bottom:20px; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:12px; text-align:right; border-bottom:1px solid #2a3a5a; }
+        th { color:#00d4ff; }
+        .loading { text-align:center; padding:50px; color:#8899aa; }
+        .status-badge { padding:4px 12px; border-radius:20px; font-size:12px; }
+        .status-badge.ready { background:#00ff88; color:#0a0e1a; }
+        .status-badge.maintenance { background:#ffaa00; color:#0a0e1a; }
+        .status-badge.offline { background:#ff4444; color:#fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 لوحة التحكم</h1>
+            <a href="/" class="btn-back">⬅️ العودة</a>
+        </div>
+        <div class="stats-grid" id="stats">
+            <div class="stat-card"><div class="number" id="totalVessels">0</div><div class="label">🚢 إجمالي الوحدات</div></div>
+            <div class="stat-card"><div class="number" id="activeVessels">0</div><div class="label">✅ النشطة</div></div>
+            <div class="stat-card"><div class="number" id="maintenanceVessels">0</div><div class="label">🔧 تحت الصيانة</div></div>
+        </div>
+        <div class="section">
+            <h2>📋 قائمة الوحدات</h2>
+            <div id="vesselsList"><div class="loading">⏳ جاري التحميل...</div></div>
+        </div>
+    </div>
+    <script>
+        const token = localStorage.getItem('authToken');
+        async function loadData() {
+            try {
+                const csrfRes = await fetch('/api/csrf-token', { credentials: 'include' });
+                const csrfData = await csrfRes.json();
+                const csrfToken = csrfData.token;
+                const response = await fetch('/api/vessels', {
+                    headers: { 'Authorization': 'Bearer ' + token, 'X-CSRF-Token': csrfToken },
+                    credentials: 'include'
+                });
+                if (!response.ok) throw new Error('فشل التحميل');
+                const vessels = await response.json();
+                document.getElementById('totalVessels').textContent = vessels.length;
+                document.getElementById('activeVessels').textContent = vessels.filter(v => v.status === 'ready').length;
+                document.getElementById('maintenanceVessels').textContent = vessels.filter(v => v.status === 'maintenance').length;
+                if (vessels.length === 0) {
+                    document.getElementById('vesselsList').innerHTML = '<div style="text-align:center;padding:30px;color:#8899aa;">📭 لا توجد وحدات</div>';
+                } else {
+                    let html = '<table><tr><th>#</th><th>الاسم</th><th>النوع</th><th>الحالة</th></tr>';
+                    vessels.forEach((v, i) => {
+                        const statusMap = { ready: '✅ جاهز', maintenance: '🔧 صيانة', offline: '❌ خارج الخدمة' };
+                        html += '<tr><td>'+(i+1)+'</td><td>'+v.name+'</td><td>'+v.type+'</td><td>'+statusMap[v.status]+'</td></tr>';
+                    });
+                    html += '</table>';
+                    document.getElementById('vesselsList').innerHTML = html;
+                }
+            } catch(e) {
+                document.getElementById('vesselsList').innerHTML = '<div style="text-align:center;padding:30px;color:#ff4444;">❌ خطأ في التحميل</div>';
+            }
+        }
+        if (!token) { window.location.href = '/'; } else { loadData(); }
+    </script>
+</body>
+</html>`;
+    fs.writeFileSync(dashboardPath, dashboardHTML);
+    console.log('✅ Created dashboard.html');
+}
+
+// ============================================================
+// 🌐 PAGE ROUTES
+// ============================================================
+
 app.get('/', (req, res) => {
     const paths = [
         path.join(__dirname, 'index.html'),
@@ -601,56 +647,55 @@ app.get('/', (req, res) => {
     ];
     for (const p of paths) {
         if (fs.existsSync(p)) {
+            console.log(`✅ Found index.html at: ${p}`);
             return res.sendFile(p);
         }
     }
+    // إذا لم يوجد index.html
     res.send(`
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>🚢 Marine System</title>
-            <style>
-                * { margin:0; padding:0; box-sizing:border-box; }
-                body { font-family:'Segoe UI',sans-serif; background:#0a0e1a; color:#fff; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
-                .container { background:linear-gradient(145deg,#1a1f35,#0d1528); padding:50px; border-radius:30px; max-width:600px; width:100%; border:1px solid #2a3a5a; text-align:center; }
-                h1 { color:#00d4ff; font-size:2.5em; }
-                .status { background:#0d1528; padding:20px; border-radius:15px; margin:20px 0; border-right:5px solid #00ff88; }
-                .info { color:#aabbcc; line-height:2; }
-                .info strong { color:#00d4ff; }
-                .btn { background:linear-gradient(135deg,#00d4ff,#0099cc); color:#0a0e1a; border:none; padding:15px 40px; border-radius:10px; font-size:18px; font-weight:bold; cursor:pointer; transition:all 0.3s; width:100%; margin-top:15px; }
-                .btn:hover { transform:translateY(-3px); box-shadow:0 10px 30px rgba(0,212,255,0.3); }
-                .btn-logout { background:linear-gradient(135deg,#ff4444,#cc0000); }
-                .btn-logout:hover { box-shadow:0 10px 30px rgba(255,68,68,0.3); }
-                .error { color:#ff4444; margin:10px 0; }
-                .success-msg { color:#00ff88; margin:10px 0; }
-                .login-section, .user-section { margin-top:30px; text-align:right; }
-                .user-section { display:none; }
-                .badge { display:inline-block; padding:5px 15px; border-radius:20px; font-size:14px; margin:5px 0; }
-                .badge.admin { background:#ff4444; color:#fff; }
-                .login-form input { width:100%; padding:15px; margin:10px 0; border-radius:10px; border:1px solid #2a3a5a; background:#0d1528; color:#fff; font-size:16px; }
-                .login-form input:focus { outline:none; border-color:#00d4ff; }
-                .footer { margin-top:30px; padding-top:20px; border-top:1px solid #2a3a5a; color:#667788; font-size:12px; }
-                .links { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:20px; }
-                .links a { display:inline-block; padding:10px 20px; background:#2a3a5a; color:#fff; text-decoration:none; border-radius:8px; font-size:14px; }
-                .links a:hover { background:#3a4a6a; }
-            </style>
+        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>🚢 Marine System</title>
+        <style>
+            * { margin:0; padding:0; box-sizing:border-box; }
+            body { font-family:'Segoe UI',sans-serif; background:#0a0e1a; color:#fff; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
+            .container { background:linear-gradient(145deg,#1a1f35,#0d1528); padding:50px; border-radius:30px; max-width:600px; width:100%; border:1px solid #2a3a5a; text-align:center; }
+            h1 { color:#00d4ff; font-size:2.5em; }
+            .status { background:#0d1528; padding:20px; border-radius:15px; margin:20px 0; border-right:5px solid #00ff88; }
+            .info { color:#aabbcc; line-height:2; }
+            .info strong { color:#00d4ff; }
+            .btn { background:linear-gradient(135deg,#00d4ff,#0099cc); color:#0a0e1a; border:none; padding:15px 40px; border-radius:10px; font-size:18px; font-weight:bold; cursor:pointer; transition:all 0.3s; width:100%; margin-top:15px; }
+            .btn:hover { transform:translateY(-3px); box-shadow:0 10px 30px rgba(0,212,255,0.3); }
+            .btn-logout { background:linear-gradient(135deg,#ff4444,#cc0000); }
+            .btn-logout:hover { box-shadow:0 10px 30px rgba(255,68,68,0.3); }
+            .error { color:#ff4444; margin:10px 0; }
+            .success-msg { color:#00ff88; margin:10px 0; }
+            .login-section, .user-section { margin-top:30px; text-align:right; }
+            .user-section { display:none; }
+            .badge { display:inline-block; padding:5px 15px; border-radius:20px; font-size:14px; margin:5px 0; }
+            .badge.admin { background:#ff4444; color:#fff; }
+            .login-form input { width:100%; padding:15px; margin:10px 0; border-radius:10px; border:1px solid #2a3a5a; background:#0d1528; color:#fff; font-size:16px; }
+            .login-form input:focus { outline:none; border-color:#00d4ff; }
+            .footer { margin-top:30px; padding-top:20px; border-top:1px solid #2a3a5a; color:#667788; font-size:12px; }
+            .links { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:20px; }
+            .links a { display:inline-block; padding:10px 20px; background:#2a3a5a; color:#fff; text-decoration:none; border-radius:8px; font-size:14px; }
+            .links a:hover { background:#3a4a6a; }
+        </style>
         </head>
         <body>
             <div class="container">
                 <h1>🚢 MARINE SYSTEM</h1>
                 <p style="color:#8899aa;">نظام إدارة الأسطول البحري</p>
-                <div class="status">
-                    <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
-                    <p class="info">🔒 <strong>الأمان:</strong> مستوى عالي جداً</p>
-                    <p class="info">👤 <strong>المستخدم:</strong> admin</p>
+                <div class="status"><h3 style="color:#00ff88;">✅ النظام يعمل</h3>
+                <p class="info">🔒 <strong>الأمان:</strong> مستوى عالي جداً</p>
+                <p class="info">👤 <strong>المستخدم:</strong> ${ADMIN_USERNAME}</p>
+                <p class="info">🔑 <strong>كلمة المرور:</strong> ${ADMIN_PASSWORD}</p>
                 </div>
                 <div id="loginSection" class="login-section">
                     <h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3>
                     <div id="message"></div>
                     <div class="login-form">
-                        <input type="text" id="username" placeholder="اسم المستخدم" value="admin">
+                        <input type="text" id="username" placeholder="اسم المستخدم" value="${ADMIN_USERNAME}">
                         <input type="password" id="password" placeholder="كلمة المرور">
                         <button class="btn" onclick="handleLogin()">🚀 دخول</button>
                     </div>
@@ -659,9 +704,9 @@ app.get('/', (req, res) => {
                     <p style="font-size:18px;">👋 <strong>مرحباً بك، <span id="userName"></span></strong></p>
                     <p>📋 <strong>الدور:</strong> <span id="userRole" class="badge admin">admin</span></p>
                     <div class="links">
-                        <a href="/dashboard">📊 لوحة التحكم</a>
-                        <a href="/fleet">🚢 الأسطول</a>
-                        <a href="/maintenance">🔧 الصيانة</a>
+                        <a href="/pages/dashboard">📊 لوحة التحكم</a>
+                        <a href="/pages/fleet">🚢 الأسطول</a>
+                        <a href="/pages/maintenance">🔧 الصيانة</a>
                     </div>
                     <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
                 </div>
@@ -738,8 +783,12 @@ app.get('/', (req, res) => {
                             document.getElementById('userSection').style.display = 'block';
                             document.getElementById('userName').textContent = data.user.name || data.user.username;
                             document.getElementById('userRole').textContent = data.user.role || 'مستخدم';
+                        } else {
+                            localStorage.removeItem('authToken');
                         }
-                    } catch(e) {}
+                    } catch(e) {
+                        localStorage.removeItem('authToken');
+                    }
                 }
                 getCsrfToken().then(checkAuth);
             </script>
@@ -751,30 +800,24 @@ app.get('/', (req, res) => {
 // ✅ Pages routes
 app.get('/pages/:page', (req, res) => {
     const pageName = req.params.page;
-    const result = servePage(req, res, pageName);
-    if (!result) {
-        res.status(404).send(`
-            <!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>404</title>
-            <style>body{font-family:Arial;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;}h1{color:#ff4444;}a{color:#00d4ff;}</style>
-            </head><body><div><h1>❌ 404</h1><p>الصفحة <strong>${pageName}</strong> غير موجودة</p><a href="/">⬅️ العودة</a></div></body></html>
-        `);
-    }
+    if (servePage(res, pageName)) return;
+    res.status(404).send(`
+        <!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>404</title>
+        <style>body{font-family:Arial;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;}h1{color:#ff4444;}a{color:#00d4ff;}</style>
+        </head><body><div><h1>❌ 404</h1><p>الصفحة <strong>${pageName}</strong> غير موجودة</p><a href="/">⬅️ العودة</a></div></body></html>
+    `);
 });
 
 // ✅ Short URLs
 app.get('/:page', (req, res, next) => {
     const pageName = req.params.page;
-    const skip = ['api', 'pages', 'public', 'assets', 'css', 'js', 'favicon.ico', 'robots.txt', 'sitemap.xml', 'dashboard', 'fleet', 'maintenance', 'users', 'logs'];
+    const skip = ['api', 'pages', 'public', 'assets', 'css', 'js', 'favicon.ico', 'robots.txt', 'sitemap.xml'];
     if (skip.includes(pageName)) return next();
-    const result = servePage(req, res, pageName);
-    if (result) return;
-    // If not found, try to find the page
-    const filePath = path.join(__dirname, 'pages', pageName + '.html');
-    if (fs.existsSync(filePath)) return res.sendFile(filePath);
+    if (servePage(res, pageName)) return;
     next();
 });
 
-// ✅ Catch-all - send JSON for API, otherwise redirect
+// ✅ Catch-all
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ success: false, error: 'API endpoint not found' });
