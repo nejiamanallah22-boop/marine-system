@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (FULL - FIXED)
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (FULLY FIXED)
 // ============================================================
 
 require('dotenv').config();
@@ -365,7 +365,6 @@ function initMaintenanceLogs() {
         }
     });
     
-    // ✅ إضافة سجلات افتراضية للاختبار
     if (maintenanceLogs.length < 3) {
         maintenanceLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
@@ -475,8 +474,14 @@ app.post('/api/auth/login', (req, res) => {
         user.lockedUntil = null;
         user.lastLogin = new Date().toISOString();
 
+        // ✅ إضافة role في التوكن
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
+            { 
+                id: user.id, 
+                username: user.username, 
+                role: user.role,
+                name: user.name
+            },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -1036,32 +1041,41 @@ app.put('/api/maintenance/:id', csrfProtection, (req, res) => {
 });
 
 // ============================================================
-// 👥 USERS API - ENTERPRISE HARDENED
+// 👥 USERS API - ENTERPRISE HARDENED (FULLY FIXED)
 // ============================================================
 
-// ✅ دالة مساعدة للتحقق من صلاحيات admin
-function isAdminUser(user) {
-    return user && (user.role === 'admin' || user.role === 'مسؤول');
-}
-
-// ✅ دالة مساعدة للتحقق من التوكن
+// ✅ دالة للتحقق من التوكن وإرجاع المستخدم
 function verifyTokenAndGetUser(req) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('⚠️ No Authorization header');
         return null;
     }
 
     const token = authHeader.split(' ')[1];
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
+        console.log('🔍 Decoded token - User:', decoded.username, 'Role:', decoded.role);
         const user = users.find(u => u.id === decoded.id);
-        return user || null;
+        if (user) {
+            console.log('👤 Found user:', user.username, 'Role:', user.role);
+            return user;
+        }
+        console.log('⚠️ User not found in database');
+        return null;
     } catch (err) {
+        console.log('❌ Token verification failed:', err.message);
         return null;
     }
 }
 
-// ✅ جلب جميع المستخدمين - مع التحقق من الصلاحيات
+// ✅ التحقق من صلاحية admin
+function isAdminUser(user) {
+    if (!user) return false;
+    return user.role === 'admin' || user.role === 'مسؤول';
+}
+
+// ✅ جلب جميع المستخدمين
 app.get('/api/users', (req, res) => {
     try {
         console.log('📡 Fetching users...');
@@ -1071,7 +1085,6 @@ app.get('/api/users', (req, res) => {
             return res.status(401).json({ error: 'غير مصرح' });
         }
         
-        // ✅ إرجاع المستخدمين بدون كلمة المرور
         const safeUsers = users.map(u => ({
             id: u.id,
             username: u.username,
@@ -1094,6 +1107,8 @@ app.get('/api/users', (req, res) => {
 // ✅ إضافة مستخدم جديد - مع CSRF و RBAC
 app.post('/api/users', csrfProtection, (req, res) => {
     try {
+        console.log('📝 [POST] /api/users - Creating new user');
+        
         const { username, password, email, role, active } = req.body;
         
         // ✅ التحقق من التوكن والصلاحيات
@@ -1104,9 +1119,13 @@ app.post('/api/users', csrfProtection, (req, res) => {
         
         // ✅ فقط admin يمكنه إضافة مستخدمين
         if (!isAdminUser(user)) {
+            console.log('⚠️ Unauthorized: User', user.username, 'has role', user.role);
             return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لإضافة مستخدمين' });
         }
         
+        console.log('✅ User', user.username, 'is authorized as admin');
+        
+        // ✅ التحقق من البيانات
         if (!username) {
             return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
         }
@@ -1354,7 +1373,7 @@ app.put('/api/users-status/:id', csrfProtection, (req, res) => {
 });
 
 // ============================================================
-// 📊 USERS DATA API - مسار إضافي لصفحة المستخدمين
+// 📊 USERS DATA API
 // ============================================================
 
 app.get('/api/users-data', csrfProtection, (req, res) => {
@@ -1683,7 +1702,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM v8.0 - PROFESSIONAL (FIXED)');
+    console.log('🚢 MARINE SYSTEM v8.0 - PROFESSIONAL (FULLY FIXED)');
     console.log('=========================================');
     console.log(`📍 Server: http://localhost:${PORT}`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
@@ -1695,8 +1714,8 @@ app.listen(PORT, () => {
     console.log(`📋 System Logs: ${systemLogs.length}`);
     console.log(`👥 Users: ${users.length}`);
     console.log('=========================================');
-    console.log('✅ تم إصلاح مشكلة صفحة الصيانة بنجاح!');
-    console.log('📌 استخدم المسار /api/maintenance للتحقق');
+    console.log('✅ تم إصلاح مشكلة إضافة المستخدمين بنجاح!');
+    console.log('📌 استخدم المسار /api/users للتحقق');
     console.log('=========================================');
 });
 
