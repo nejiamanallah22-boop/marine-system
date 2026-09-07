@@ -2,7 +2,7 @@
 <div id="page-users">
     <style>
         /* ============================================================
-           👥 USERS PAGE - CLEAN VERSION
+           👥 USERS PAGE STYLES
            ============================================================ */
         
         .users-container {
@@ -103,7 +103,6 @@
             margin: 0;
             font-size: 28px;
             font-weight: 700;
-            color: #60a5fa;
         }
         
         .stat-card p {
@@ -182,12 +181,6 @@
             background: rgba(248,113,113,0.15);
             color: #f87171;
             border: 1px solid rgba(248,113,113,0.1);
-        }
-        
-        .status-badge.locked {
-            background: rgba(251,191,36,0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(251,191,36,0.1);
         }
         
         .role-badge {
@@ -582,191 +575,177 @@
     </div>
 
     <!-- ============================================================
-    📦 JAVASCRIPT - USERS PAGE (FULLY FIXED)
+    📦 JAVASCRIPT - USERS PAGE (FIXED - RENDER VERSION)
     ============================================================ -->
     <script>
-    // ============================================================
-    // 👥 USERS PAGE - v1.0 (FIXED - LOADS DATA DIRECTLY)
-    // ============================================================
+    (function() {
+        'use strict';
 
-    // ✅ المتغيرات
-    var usersData = [];
-    var currentUser = window.currentUser || null;
-    var isLoading = false;
+        console.log('👥 Users page loaded - Render version');
 
-    console.log('👥 Users page loaded');
-    console.log('👤 Current user:', currentUser?.name || 'Unknown');
+        // ============================================================
+        // 1. DATA
+        // ============================================================
 
-    // ============================================================
-    // 1. HELPERS
-    // ============================================================
+        var usersData = [];
+        var currentUser = null;
+        var isLoading = false;
 
-    function getToken() {
-        var token = localStorage.getItem('authToken') || 
-                     localStorage.getItem('marine_token') || 
-                     localStorage.getItem('token');
-        if (!token) {
-            console.warn('⚠️ No token found');
-            return null;
-        }
-        return token;
-    }
+        // ============================================================
+        // 2. HELPERS
+        // ============================================================
 
-    function showToast(message, type) {
-        type = type || 'info';
-        var container = document.getElementById('toastContainer');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toastContainer';
-            container.className = 'toast-container';
-            document.body.appendChild(container);
+        function getToken() {
+            var token = localStorage.getItem('authToken') || 
+                         localStorage.getItem('marine_token') || 
+                         localStorage.getItem('token');
+            return token || null;
         }
 
-        var toast = document.createElement('div');
-        toast.className = 'toast ' + type;
-        toast.innerHTML = '<span class="toast-icon">' + (type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'danger' ? '❌' : 'ℹ️') + '</span> <span>' + message + '</span> <button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
-        container.appendChild(toast);
-
-        setTimeout(function() {
-            if (toast.parentElement) toast.remove();
-        }, 5000);
-    }
-
-    // ============================================================
-    // 2. LOAD DATA - MAIN FUNCTION (FIXED)
-    // ============================================================
-
-    async function loadUsersData() {
-        // ✅ منع التحميل المتكرر
-        if (isLoading) {
-            console.log('⏳ [USERS] Already loading...');
-            return;
-        }
-        
-        console.log('🔄 [USERS] Loading users data...');
-        isLoading = true;
-        
-        try {
+        function getAuthHeaders() {
             var token = getToken();
-            if (!token) {
-                var container = document.getElementById('usersTableContainer');
-                if (container) {
-                    container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
-                }
-                isLoading = false;
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': token ? 'Bearer ' + token : '',
+                'Accept': 'application/json'
+            };
+        }
+
+        function showToast(message, type) {
+            type = type || 'info';
+            var container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            var icons = { success: '✅', warning: '⚠️', danger: '❌', info: 'ℹ️' };
+            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> <span>' + message + '</span> <button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
+            container.appendChild(toast);
+
+            setTimeout(function() {
+                if (toast.parentElement) toast.remove();
+            }, 4000);
+        }
+
+        // ============================================================
+        // 3. LOAD DATA - MAIN FUNCTION
+        // ============================================================
+
+        async function loadUsersData() {
+            if (isLoading) {
+                console.log('⏳ [USERS] Already loading...');
                 return;
             }
 
-            // ✅ جلب البيانات مباشرة من API
-            var response = await fetch('/api/users', {
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                },
-                credentials: 'include'
-            });
+            console.log('🔄 [USERS] Loading users data...');
+            isLoading = true;
 
-            if (response.ok) {
+            var container = document.getElementById('usersTableContainer');
+            if (container) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>جاري التحميل...</p></div>';
+            }
+
+            try {
+                var token = getToken();
+                if (!token) {
+                    console.warn('⚠️ [USERS] No token found');
+                    if (container) {
+                        container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+                    }
+                    isLoading = false;
+                    return;
+                }
+
+                console.log('📡 [USERS] Fetching from /api/users...');
+
+                var response = await fetch('/api/users', {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+
+                console.log('📥 [USERS] Response status:', response.status);
+
+                if (response.status === 401) {
+                    console.warn('⚠️ [USERS] Unauthorized - token expired');
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('marine_token');
+                    localStorage.removeItem('token');
+                    if (container) {
+                        container.innerHTML = '<div class="empty-state"><div class="icon">🔒</div><p>انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى</p></div>';
+                    }
+                    isLoading = false;
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+
                 var data = await response.json();
-                
-                // ✅ معالجة البيانات بشكل صحيح
-                if (data.users && Array.isArray(data.users)) {
-                    usersData = data.users;
-                } else if (Array.isArray(data)) {
+                console.log('📦 [USERS] Data received:', data);
+
+                // ✅ معالجة البيانات
+                if (Array.isArray(data)) {
                     usersData = data;
+                } else if (data.users && Array.isArray(data.users)) {
+                    usersData = data.users;
                 } else if (data.data && Array.isArray(data.data)) {
                     usersData = data.data;
                 } else {
                     usersData = [];
                 }
-                
-                // ✅ تحديث المتغير العام
+
+                console.log('✅ [USERS] Users loaded:', usersData.length);
+
+                // ✅ تحديث المتغيرات العامة
                 window.allUsers = usersData;
                 window.usersData = usersData;
-                
-                console.log('✅ [USERS] Users loaded successfully:', usersData.length);
-                
+
                 // ✅ عرض البيانات
                 renderUsers(usersData);
                 updateStats(usersData);
-                updateBadge('usersBadge', usersData.length);
-                
-            } else if (response.status === 401) {
-                console.warn('⚠️ [USERS] Unauthorized - token expired');
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('marine_token');
-                localStorage.removeItem('token');
-                var container = document.getElementById('usersTableContainer');
+
+            } catch (error) {
+                console.error('❌ [USERS] Load error:', error);
                 if (container) {
-                    container.innerHTML = '<div class="empty-state"><div class="icon">🔒</div><p>انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى</p></div>';
+                    container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>فشل تحميل البيانات: ' + error.message + '</p></div>';
                 }
-            } else {
-                console.error('❌ [USERS] API error:', response.status);
-                var container = document.getElementById('usersTableContainer');
-                if (container) {
-                    container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>فشل تحميل البيانات (Error: ' + response.status + ')</p></div>';
-                }
+                showToast('❌ فشل تحميل المستخدمين', 'danger');
             }
-        } catch (error) {
-            console.error('❌ [USERS] Load error:', error);
-            showToast('❌ فشل تحميل المستخدمين: ' + error.message, 'danger');
+
+            isLoading = false;
+        }
+
+        // ============================================================
+        // 4. RENDER FUNCTIONS
+        // ============================================================
+
+        function updateStats(users) {
+            var total = users.length;
+            var active = users.filter(function(u) { return u.active !== false; }).length;
+            var inactive = users.filter(function(u) { return u.active === false; }).length;
+            var admins = users.filter(function(u) { return u.role === 'admin'; }).length;
+
+            document.getElementById('totalUsers').textContent = total;
+            document.getElementById('activeUsers').textContent = active;
+            document.getElementById('inactiveUsers').textContent = inactive;
+            document.getElementById('adminUsers').textContent = admins;
+        }
+
+        function renderUsers(users) {
             var container = document.getElementById('usersTableContainer');
-            if (container) {
-                container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>خطأ في الاتصال بالخادم</p></div>';
+            if (!container) return;
+
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>لا توجد مستخدمين</p></div>';
+                return;
             }
-        }
-        
-        isLoading = false;
-    }
 
-    function updateBadge(id, count) {
-        var el = document.getElementById(id);
-        if (el) {
-            el.textContent = count;
-            el.style.display = count > 0 ? 'inline' : 'none';
-        }
-    }
-
-    // ============================================================
-    // 3. RENDER FUNCTIONS
-    // ============================================================
-
-    function updateStats(users) {
-        var total = users.length;
-        var active = users.filter(function(u) { return u.active !== false; }).length;
-        var inactive = users.filter(function(u) { return u.active === false; }).length;
-        var admins = users.filter(function(u) { return u.role === 'admin'; }).length;
-
-        var totalEl = document.getElementById('totalUsers');
-        var activeEl = document.getElementById('activeUsers');
-        var inactiveEl = document.getElementById('inactiveUsers');
-        var adminEl = document.getElementById('adminUsers');
-        
-        if (totalEl) totalEl.textContent = total;
-        if (activeEl) activeEl.textContent = active;
-        if (inactiveEl) inactiveEl.textContent = inactive;
-        if (adminEl) adminEl.textContent = admins;
-    }
-
-    function renderUsers(users) {
-        var container = document.getElementById('usersTableContainer');
-        if (!container) return;
-        
-        if (!users || users.length === 0) {
-            container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>لا توجد مستخدمين</p></div>';
-            return;
-        }
-
-        var html = '<div class="table-container"><table class="users-table"><thead><tr>';
-        html += '<th>👤 المستخدم</th>';
-        html += '<th>📧 البريد الإلكتروني</th>';
-        html += '<th>👔 الدور</th>';
-        html += '<th>📊 الحالة</th>';
-        html += '<th>📅 آخر تسجيل دخول</th>';
-        html += '<th>⚙️ الإجراءات</th>';
-        html += '</tr></thead><tbody>';
-
-        users.forEach(function(u) {
             var roleMap = {
                 'admin': '<span class="role-badge admin">مسؤول</span>',
                 'manager': '<span class="role-badge manager">مدير</span>',
@@ -779,288 +758,267 @@
                 false: '<span class="status-badge inactive">❌ غير نشط</span>'
             };
 
-            var isActive = u.active !== false;
-            var lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ar-TN') : '-';
+            var html = '<div class="table-container"><table class="users-table"><thead><tr>';
+            html += '<th>👤 المستخدم</th>';
+            html += '<th>📧 البريد الإلكتروني</th>';
+            html += '<th>👔 الدور</th>';
+            html += '<th>📊 الحالة</th>';
+            html += '<th>📅 آخر تسجيل دخول</th>';
+            html += '<th>⚙️ الإجراءات</th>';
+            html += '</tr></thead><tbody>';
 
-            html += '<tr>';
-            html += '<td><strong>' + (u.name || u.username || '-') + '</strong></td>';
-            html += '<td>' + (u.email || '-') + '</td>';
-            html += '<td>' + (roleMap[u.role] || u.role || '-') + '</td>';
-            html += '<td>' + (statusMap[isActive] || '-') + '</td>';
-            html += '<td>' + lastLogin + '</td>';
-            html += '<td>';
-            html += '<button class="btn-sm btn-edit edit-btn" data-id="' + (u.id) + '">✏️</button> ';
-            html += '<button class="btn-sm btn-toggle toggle-btn" data-id="' + (u.id) + '" data-status="' + isActive + '">' + (isActive ? '🔒' : '🔓') + '</button> ';
-            html += '<button class="btn-sm btn-delete delete-btn" data-id="' + (u.id) + '">🗑️</button>';
-            html += '</td>';
-            html += '</tr>';
-        });
+            users.forEach(function(u) {
+                var isActive = u.active !== false;
+                var lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ar-TN') : '-';
 
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
+                html += '<tr>';
+                html += '<td><strong>' + (u.name || u.username || '-') + '</strong></td>';
+                html += '<td>' + (u.email || '-') + '</td>';
+                html += '<td>' + (roleMap[u.role] || u.role || '-') + '</td>';
+                html += '<td>' + (statusMap[isActive] || '-') + '</td>';
+                html += '<td>' + lastLogin + '</td>';
+                html += '<td>';
+                html += '<button class="btn-sm btn-edit edit-btn" data-id="' + (u.id) + '">✏️</button> ';
+                html += '<button class="btn-sm btn-toggle toggle-btn" data-id="' + (u.id) + '" data-status="' + isActive + '">' + (isActive ? '🔒' : '🔓') + '</button> ';
+                html += '<button class="btn-sm btn-delete delete-btn" data-id="' + (u.id) + '">🗑️</button>';
+                html += '</td>';
+                html += '</tr>';
+            });
 
-        // ربط الأحداث بأمان
-        container.querySelectorAll('.edit-btn').forEach(function(btn) {
-            btn.onclick = function() { 
-                var id = this.dataset.id;
-                if (id) editUser(id); 
-            };
-        });
-        container.querySelectorAll('.toggle-btn').forEach(function(btn) {
-            btn.onclick = function() { 
-                var id = this.dataset.id;
-                var status = this.dataset.status === 'true';
-                if (id) toggleUserStatus(id, status); 
-            };
-        });
-        container.querySelectorAll('.delete-btn').forEach(function(btn) {
-            btn.onclick = function() { 
-                var id = this.dataset.id;
-                if (id) deleteUser(id); 
-            };
-        });
-    }
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
 
-    // ============================================================
-    // 4. CRUD OPERATIONS
-    // ============================================================
+            // ربط الأحداث
+            container.querySelectorAll('.edit-btn').forEach(function(btn) {
+                btn.onclick = function() { 
+                    var id = this.dataset.id;
+                    if (id) editUser(id); 
+                };
+            });
+            container.querySelectorAll('.toggle-btn').forEach(function(btn) {
+                btn.onclick = function() { 
+                    var id = this.dataset.id;
+                    var status = this.dataset.status === 'true';
+                    if (id) toggleUserStatus(id, status); 
+                };
+            });
+            container.querySelectorAll('.delete-btn').forEach(function(btn) {
+                btn.onclick = function() { 
+                    var id = this.dataset.id;
+                    if (id) deleteUser(id); 
+                };
+            });
+        }
 
-    function toggleUserForm() {
-        var form = document.getElementById('userForm');
-        if (!form) return;
-        
-        var isActive = form.classList.contains('active');
-        
-        if (isActive) {
-            form.classList.remove('active');
-            var titleEl = document.getElementById('formTitle');
-            if (titleEl) titleEl.textContent = '➕ إضافة مستخدم جديد';
-            document.getElementById('userId').value = '';
-            document.getElementById('userUsername').value = '';
-            document.getElementById('userEmail').value = '';
+        // ============================================================
+        // 5. CRUD OPERATIONS
+        // ============================================================
+
+        function toggleUserForm() {
+            var form = document.getElementById('userForm');
+            if (!form) return;
+
+            if (form.classList.contains('active')) {
+                form.classList.remove('active');
+                document.getElementById('formTitle').textContent = '➕ إضافة مستخدم جديد';
+                document.getElementById('userId').value = '';
+                document.getElementById('userUsername').value = '';
+                document.getElementById('userEmail').value = '';
+                document.getElementById('userPassword').value = '';
+                document.getElementById('userRole').value = 'viewer';
+                document.getElementById('userStatus').value = 'active';
+                document.getElementById('passwordRequired').textContent = '*';
+            } else {
+                form.classList.add('active');
+            }
+        }
+
+        function editUser(id) {
+            if (!id) return;
+            var user = usersData.find(function(u) { return u.id == id; });
+            if (!user) {
+                showToast('⚠️ المستخدم غير موجود', 'warning');
+                return;
+            }
+
+            document.getElementById('formTitle').textContent = '✏️ تعديل مستخدم';
+            document.getElementById('userId').value = user.id;
+            document.getElementById('userUsername').value = user.username || '';
+            document.getElementById('userEmail').value = user.email || '';
             document.getElementById('userPassword').value = '';
-            document.getElementById('userRole').value = 'viewer';
-            document.getElementById('userStatus').value = 'active';
-            var passReq = document.getElementById('passwordRequired');
-            if (passReq) passReq.textContent = '*';
-        } else {
-            form.classList.add('active');
-        }
-    }
+            document.getElementById('userRole').value = user.role || 'viewer';
+            document.getElementById('userStatus').value = user.active !== false ? 'active' : 'inactive';
+            document.getElementById('passwordRequired').textContent = '(اتركها فارغة لتعديل)';
 
-    function editUser(id) {
-        if (!id) return;
-        var user = usersData.find(function(u) { return u.id == id; });
-        if (!user) {
-            showToast('⚠️ المستخدم غير موجود', 'warning');
-            return;
+            document.getElementById('userForm').classList.add('active');
         }
 
-        var titleEl = document.getElementById('formTitle');
-        if (titleEl) titleEl.textContent = '✏️ تعديل مستخدم';
-        document.getElementById('userId').value = user.id;
-        document.getElementById('userUsername').value = user.username || '';
-        document.getElementById('userEmail').value = user.email || '';
-        document.getElementById('userPassword').value = '';
-        document.getElementById('userRole').value = user.role || 'viewer';
-        document.getElementById('userStatus').value = user.active !== false ? 'active' : 'inactive';
-        var passReq = document.getElementById('passwordRequired');
-        if (passReq) passReq.textContent = '(اتركها فارغة لتعديل)';
+        async function saveUser() {
+            var id = document.getElementById('userId').value;
+            var username = document.getElementById('userUsername').value.trim();
+            var email = document.getElementById('userEmail').value.trim();
+            var password = document.getElementById('userPassword').value;
+            var role = document.getElementById('userRole').value;
+            var status = document.getElementById('userStatus').value;
 
-        var form = document.getElementById('userForm');
-        if (form) form.classList.add('active');
-    }
+            if (!username) { showToast('⚠️ الرجاء إدخال اسم المستخدم', 'warning'); return; }
+            if (!email) { showToast('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning'); return; }
+            if (!id && !password) { showToast('⚠️ الرجاء إدخال كلمة المرور', 'warning'); return; }
 
-    async function saveUser() {
-        var id = document.getElementById('userId').value;
-        var username = document.getElementById('userUsername').value.trim();
-        var email = document.getElementById('userEmail').value.trim();
-        var password = document.getElementById('userPassword').value;
-        var role = document.getElementById('userRole').value;
-        var status = document.getElementById('userStatus').value;
-
-        if (!username) { showToast('⚠️ الرجاء إدخال اسم المستخدم', 'warning'); return; }
-        if (!email) { showToast('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning'); return; }
-        if (!id && !password) { showToast('⚠️ الرجاء إدخال كلمة المرور', 'warning'); return; }
-
-        var token = getToken();
-        if (!token) {
-            showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
-            return;
-        }
-
-        var data = {
-            username: username,
-            email: email,
-            role: role,
-            active: status === 'active'
-        };
-
-        if (password) {
-            data.password = password;
-        }
-
-        try {
-            var url = id ? '/api/users/' + id : '/api/users';
-            var method = id ? 'PUT' : 'POST';
-
-            var response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) {
-                var error = await response.json();
-                throw new Error(error.error || error.message || 'فشل الحفظ');
+            var token = getToken();
+            if (!token) {
+                showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
+                return;
             }
 
-            showToast('✅ ' + (id ? 'تم تحديث' : 'تم إضافة') + ' المستخدم بنجاح', 'success');
-            toggleUserForm();
-            await loadUsersData();
-        } catch (error) {
-            console.error('❌ Save user error:', error);
-            showToast('❌ ' + error.message, 'danger');
+            var data = {
+                username: username,
+                email: email,
+                role: role,
+                active: status === 'active'
+            };
+            if (password) data.password = password;
+
+            try {
+                var url = id ? '/api/users/' + id : '/api/users';
+                var method = id ? 'PUT' : 'POST';
+
+                var response = await fetch(url, {
+                    method: method,
+                    headers: getAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    var error = await response.json();
+                    throw new Error(error.error || error.message || 'فشل الحفظ');
+                }
+
+                showToast('✅ ' + (id ? 'تم تحديث' : 'تم إضافة') + ' المستخدم بنجاح', 'success');
+                toggleUserForm();
+                await loadUsersData();
+            } catch (error) {
+                console.error('❌ Save user error:', error);
+                showToast('❌ ' + error.message, 'danger');
+            }
         }
-    }
 
-    async function toggleUserStatus(id, currentStatus) {
-        if (!id) return;
-        var action = currentStatus ? 'تعطيل' : 'تفعيل';
-        if (!confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) return;
+        async function toggleUserStatus(id, currentStatus) {
+            if (!id) return;
+            var action = currentStatus ? 'تعطيل' : 'تفعيل';
+            if (!confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) return;
 
-        var token = getToken();
-        if (!token) {
-            showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
-            return;
-        }
-
-        try {
-            var response = await fetch('/api/users/' + id, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({ active: !currentStatus })
-            });
-
-            if (!response.ok) {
-                var error = await response.json();
-                throw new Error(error.error || error.message || 'فشل التغيير');
+            var token = getToken();
+            if (!token) {
+                showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
+                return;
             }
 
-            showToast('✅ تم ' + action + ' المستخدم بنجاح', 'success');
-            await loadUsersData();
-        } catch (error) {
-            console.error('❌ Toggle user error:', error);
-            showToast('❌ ' + error.message, 'danger');
+            try {
+                var response = await fetch('/api/users/' + id, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify({ active: !currentStatus })
+                });
+
+                if (!response.ok) {
+                    var error = await response.json();
+                    throw new Error(error.error || error.message || 'فشل التغيير');
+                }
+
+                showToast('✅ تم ' + action + ' المستخدم بنجاح', 'success');
+                await loadUsersData();
+            } catch (error) {
+                console.error('❌ Toggle user error:', error);
+                showToast('❌ ' + error.message, 'danger');
+            }
         }
-    }
 
-    async function deleteUser(id) {
-        if (!id) return;
-        if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+        async function deleteUser(id) {
+            if (!id) return;
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
 
-        var token = getToken();
-        if (!token) {
-            showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
-            return;
-        }
-
-        try {
-            var response = await fetch('/api/users/' + id, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                var error = await response.json();
-                throw new Error(error.error || error.message || 'فشل الحذف');
+            var token = getToken();
+            if (!token) {
+                showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
+                return;
             }
 
-            showToast('✅ تم حذف المستخدم', 'success');
-            await loadUsersData();
-        } catch (error) {
-            console.error('❌ Delete user error:', error);
-            showToast('❌ ' + error.message, 'danger');
+            try {
+                var response = await fetch('/api/users/' + id, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    var error = await response.json();
+                    throw new Error(error.error || error.message || 'فشل الحذف');
+                }
+
+                showToast('✅ تم حذف المستخدم', 'success');
+                await loadUsersData();
+            } catch (error) {
+                console.error('❌ Delete user error:', error);
+                showToast('❌ ' + error.message, 'danger');
+            }
         }
-    }
 
-    // ============================================================
-    // 5. INIT
-    // ============================================================
+        // ============================================================
+        // 6. INIT
+        // ============================================================
 
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('👥 Users page initializing...');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('👥 Users page initializing...');
 
-        // ربط الأزرار
-        var addBtn = document.getElementById('addUserBtn');
-        var refreshBtn = document.getElementById('refreshUsersBtn');
-        var closeBtn = document.getElementById('formCloseBtn');
-        var cancelBtn = document.getElementById('cancelUserBtn');
-        var saveBtn = document.getElementById('saveUserBtn');
-
-        if (addBtn) addBtn.onclick = toggleUserForm;
-        if (refreshBtn) {
-            refreshBtn.onclick = function() {
+            // ربط الأزرار
+            document.getElementById('addUserBtn').onclick = toggleUserForm;
+            document.getElementById('refreshUsersBtn').onclick = function() {
                 loadUsersData();
                 showToast('🔄 جاري تحديث البيانات...', 'info');
             };
-        }
-        if (closeBtn) closeBtn.onclick = toggleUserForm;
-        if (cancelBtn) cancelBtn.onclick = toggleUserForm;
-        if (saveBtn) saveBtn.onclick = saveUser;
+            document.getElementById('formCloseBtn').onclick = toggleUserForm;
+            document.getElementById('cancelUserBtn').onclick = toggleUserForm;
+            document.getElementById('saveUserBtn').onclick = saveUser;
 
-        // ✅ التحقق من التوكن
-        var token = getToken();
-        if (!token) {
-            var container = document.getElementById('usersTableContainer');
-            if (container) {
-                container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+            // التحقق من التوكن
+            var token = getToken();
+            if (!token) {
+                document.getElementById('usersTableContainer').innerHTML = 
+                    '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+                return;
             }
-            return;
-        }
 
-        // ✅ تحميل البيانات فوراً
-        loadUsersData();
-        
-        // ✅ تحديث كل 30 ثانية (للتأكد من تحديث البيانات)
-        setInterval(function() {
-            if (!isLoading) {
-                loadUsersData();
-            }
-        }, 30000);
-    });
+            // تحميل البيانات
+            loadUsersData();
 
-    // ============================================================
-    // 6. EXPOSE GLOBALS
-    // ============================================================
+            // تحديث كل 30 ثانية
+            setInterval(function() {
+                if (!isLoading) {
+                    loadUsersData();
+                }
+            }, 30000);
+        });
 
-    window.loadUsersData = loadUsersData;
-    window.renderUsers = renderUsers;
-    window.updateStats = updateStats;
-    window.toggleUserForm = toggleUserForm;
-    window.saveUser = saveUser;
-    window.editUser = editUser;
-    window.toggleUserStatus = toggleUserStatus;
-    window.deleteUser = deleteUser;
-    window.showToast = showToast;
-    window.getToken = getToken;
-    window.usersData = usersData;
+        // ============================================================
+        // 7. EXPOSE GLOBALS
+        // ============================================================
 
-    console.log('✅ Users page script loaded');
-    console.log('🔄 Users page will load data automatically');
+        window.loadUsersData = loadUsersData;
+        window.renderUsers = renderUsers;
+        window.updateStats = updateStats;
+        window.toggleUserForm = toggleUserForm;
+        window.saveUser = saveUser;
+        window.editUser = editUser;
+        window.toggleUserStatus = toggleUserStatus;
+        window.deleteUser = deleteUser;
+        window.showToast = showToast;
+        window.getToken = getToken;
+        window.usersData = usersData;
+
+        console.log('✅ Users page script loaded - Render ready');
+    })();
     </script>
 </div>
