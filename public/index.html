@@ -1,1223 +1,2074 @@
-// ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (FULLY FIXED)
-// ============================================================
-
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const path = require('path');
-const fs = require('fs');
-const crypto = require('crypto');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const xss = require('xss-clean');
-const hpp = require('hpp');
-const compression = require('compression');
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-// ============================================================
-// 🔐 CONFIGURATION
-// ============================================================
-
-function generateSecureKey(length = 64) {
-    return crypto.randomBytes(length).toString('hex');
-}
-
-const isProduction = process.env.NODE_ENV === 'production';
-
-function isStrongPassword(password) {
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-    const isLongEnough = password.length >= 12;
-    return [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar, isLongEnough].filter(Boolean).length >= 4;
-}
-
-function generateStrongPassword(length = 16) {
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const numbers = '0123456789';
-    const special = '!@#$%^&*()_+-=';
-    const all = uppercase + lowercase + numbers + special;
-    let password = '';
-    password += uppercase[Math.floor(Math.random() * uppercase.length)];
-    password += lowercase[Math.floor(Math.random() * lowercase.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-    password += special[Math.floor(Math.random() * special.length)];
-    for (let i = password.length; i < length; i++) {
-        password += all[Math.floor(Math.random() * all.length)];
-    }
-    return password.split('').sort(() => Math.random() - 0.5).join('');
-}
-
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = (() => {
-    if (process.env.ADMIN_PASSWORD) {
-        if (!isStrongPassword(process.env.ADMIN_PASSWORD)) {
-            console.warn('⚠️ Admin password is weak. Using generated strong password.');
-            return generateStrongPassword();
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚓ منظومة الوسائل البحرية v8.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        return process.env.ADMIN_PASSWORD;
-    }
-    const generated = generateStrongPassword();
-    console.log('=========================================');
-    console.log('🔑 GENERATED ADMIN PASSWORD:', generated);
-    console.log('💾 SAVE THIS PASSWORD NOW!');
-    console.log('=========================================');
-    return generated;
-})();
-
-const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
-const JWT_SECRET = process.env.JWT_SECRET || generateSecureKey(64);
-const SESSION_SECRET = process.env.SESSION_SECRET || generateSecureKey(64);
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
-const ENCRYPTION_IV = crypto.randomBytes(16);
-
-// ============================================================
-// 🔐 ENCRYPTION FUNCTIONS
-// ============================================================
-
-function encrypt(text) {
-    try {
-        const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), ENCRYPTION_IV);
-        let encrypted = cipher.update(text, 'utf8', 'hex');
-        encrypted += cipher.final('hex');
-        return encrypted;
-    } catch (error) {
-        return text;
-    }
-}
-
-function decrypt(text) {
-    try {
-        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), ENCRYPTION_IV);
-        let decrypted = decipher.update(text, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-        return decrypted;
-    } catch (error) {
-        return text;
-    }
-}
-
-function generateSecureToken() {
-    return crypto.randomBytes(32).toString('hex');
-}
-
-// ============================================================
-// 🛡️ SECURITY MIDDLEWARE
-// ============================================================
-
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
-            imgSrc: ["'self'", "data:", "https:", "https://unpkg.com"],
-            connectSrc: ["'self'", "https://*.onrender.com", "https://unpkg.com", "https://*.googleapis.com", "https://*.leafletjs.com", "https://cdn.jsdelivr.net"],
-            fontSrc: ["'self'", "https:", "data:", "https://fonts.gstatic.com"],
-            scriptSrcAttr: ["'unsafe-inline'"],
-            objectSrc: ["'none'"],
-            frameSrc: ["'none'"],
-            baseUri: ["'self'"],
-            formAction: ["'self'"]
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #0a1628;
+            color: #e2e8f0;
+            min-height: 100vh;
+            direction: rtl;
+            overflow-x: hidden;
         }
-    },
-    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-    frameguard: { action: 'deny' },
-    noSniff: true,
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    xssFilter: true,
-    hidePoweredBy: true
-}));
+        :root {
+            --gold: #e6b31e;
+            --gold-light: #f5d76e;
+            --gold-dark: #c99a0e;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #eab308;
+            --info: #3b82f6;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a1628; }
+        ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
-app.use(cors({
-    origin: ['http://localhost:5000', 'http://localhost:3000', 'https://marine-system-71eo.onrender.com'],
-    credentials: true,
-    exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry', 'X-Request-ID']
-}));
-
-app.use(compression());
-
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: { success: false, error: 'Too many requests, please try again later.' }
-});
-app.use('/api/', limiter);
-
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5,
-    message: { success: false, error: 'Too many login attempts. Please try again after 15 minutes.' }
-});
-app.use('/api/auth/login', authLimiter);
-
-app.use(xss());
-app.use(hpp());
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(cookieParser());
-
-app.use(session({
-    secret: SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    name: '__Secure-marine.sid',
-    cookie: {
-        secure: isProduction,
-        httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        sameSite: 'strict',
-        domain: isProduction ? '.onrender.com' : undefined,
-        path: '/'
-    },
-    rolling: true,
-    proxy: isProduction
-}));
-
-app.use((req, res, next) => {
-    req.requestId = generateSecureToken().substring(0, 16);
-    res.setHeader('X-Request-ID', req.requestId);
-    next();
-});
-
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${duration}ms - ${req.requestId}`);
-    });
-    next();
-});
-
-// ✅ CSRF Protection
-app.use((req, res, next) => {
-    if (!req.session.csrfToken) {
-        req.session.csrfToken = generateSecureToken();
-        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
-    }
-    if (req.session.csrfExpiry && Date.now() > req.session.csrfExpiry) {
-        req.session.csrfToken = generateSecureToken();
-        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
-    }
-    res.setHeader('X-CSRF-Token', req.session.csrfToken);
-    res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
-    next();
-});
-
-const csrfProtection = (req, res, next) => {
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
-    if (['/api/auth/login', '/api/csrf-token'].includes(req.path)) return next();
-
-    const token = req.headers['x-csrf-token'] || req.body.csrf_token;
-    const sessionToken = req.session.csrfToken;
-    if (!token || !sessionToken) {
-        return res.status(403).json({ success: false, error: 'CSRF token غير صالح' });
-    }
-    try {
-        const isValid = crypto.timingSafeEqual(Buffer.from(token, 'utf8'), Buffer.from(sessionToken, 'utf8'));
-        if (!isValid) throw new Error('Invalid token');
-    } catch (error) {
-        return res.status(403).json({ success: false, error: 'CSRF token غير صالح' });
-    }
-    const newToken = generateSecureToken();
-    req.session.csrfToken = newToken;
-    req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
-    res.setHeader('X-CSRF-Token', newToken);
-    next();
-};
-
-// ============================================================
-// 📁 STATIC FILES
-// ============================================================
-
-const pagesDir = path.join(__dirname, 'pages');
-const publicPagesDir = path.join(__dirname, 'public', 'pages');
-const publicDir = path.join(__dirname, 'public');
-
-if (!fs.existsSync(pagesDir)) fs.mkdirSync(pagesDir, { recursive: true });
-if (!fs.existsSync(publicPagesDir)) fs.mkdirSync(publicPagesDir, { recursive: true });
-
-app.use(express.static(__dirname));
-app.use('/pages', express.static(pagesDir));
-app.use('/pages', express.static(publicPagesDir));
-app.use('/public', express.static(publicDir));
-app.use('/public/pages', express.static(publicPagesDir));
-
-// ============================================================
-// 📊 DATA - VESSELS
-// ============================================================
-
-const vessels = [];
-
-const initialVessels = [
-    { 
-        id: '1', 
-        name: 'الوحدة 101', 
-        num: '101', 
-        len: 11, 
-        region: 'الشمال', 
-        zone: 'تونس', 
-        port: 'الميناء الرئيسي', 
-        supp: '—', 
-        status: 'صالح', 
-        break: '—', 
-        fDate: null, 
-        eDate: null, 
-        ref: '', 
-        repairUnit: '—',
-        cat: 'البروق'
-    },
-    { 
-        id: '2', 
-        name: 'الوحدة 205', 
-        num: '205', 
-        len: 15, 
-        region: 'الساحل', 
-        zone: 'سوسة', 
-        port: 'ميناء سوسة', 
-        supp: '—', 
-        status: 'صيانة', 
-        break: 'محرك', 
-        fDate: new Date().toISOString(), 
-        eDate: null, 
-        ref: 'M-2024-001', 
-        repairUnit: 'وحدة الصيانة تونس',
-        cat: 'خوافر'
-    },
-    { 
-        id: '3', 
-        name: 'الوحدة 312', 
-        num: '312', 
-        len: 8, 
-        region: 'الجنوب', 
-        zone: 'جرجيس', 
-        port: 'ميناء جرجيس', 
-        supp: '—', 
-        status: 'معطب', 
-        break: 'هيكل', 
-        fDate: new Date().toISOString(), 
-        eDate: null, 
-        ref: 'M-2024-002', 
-        repairUnit: 'وحدة الصيانة جرجيس',
-        cat: 'صقور'
-    }
-];
-
-initialVessels.forEach(v => vessels.push(v));
-
-// ============================================================
-// 📊 DATA - USERS
-// ============================================================
-
-const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 12);
-
-const users = [
-    {
-        id: '1',
-        username: 'admin',
-        password: hashedPassword,
-        name: ADMIN_NAME,
-        email: 'admin@marine.com',
-        role: 'admin',
-        active: true,
-        createdAt: new Date().toISOString(),
-        lastLogin: null,
-        loginAttempts: 0,
-        locked: false,
-        lockedUntil: null
-    }
-];
-
-// ============================================================
-// 📊 DATA - MAINTENANCE LOGS
-// ============================================================
-
-const maintenanceLogs = [];
-
-vessels.forEach(v => {
-    if (v.status === 'معطب' || v.status === 'صيانة') {
-        maintenanceLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            vesselId: v.id,
-            vesselName: v.name,
-            vesselNum: v.num || '',
-            type: v.break || 'صيانة دورية',
-            status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-            date: v.fDate || new Date().toISOString(),
-            repairUnit: v.repairUnit || '—',
-            cost: 0,
-            notes: v.break ? `عطب: ${v.break}` : 'صيانة دورية',
-            createdAt: v.fDate || new Date().toISOString()
-        });
-    }
-});
-
-// ============================================================
-// 📊 DATA - SYSTEM LOGS
-// ============================================================
-
-const systemLogs = [];
-
-// ✅ إضافة سجلات أولية
-systemLogs.push({
-    id: crypto.randomBytes(8).toString('hex'),
-    userId: null,
-    action: 'SYSTEM_START',
-    details: 'System started successfully',
-    timestamp: new Date().toISOString()
-});
-
-// ============================================================
-// 🔐 AUTH ENDPOINTS
-// ============================================================
-
-app.get('/api/csrf-token', (req, res) => {
-    try {
-        const token = req.session.csrfToken;
-        const expiry = req.session.csrfExpiry || Date.now() + (8 * 60 * 60 * 1000);
-        res.setHeader('Content-Type', 'application/json');
-        res.json({ success: true, token: token, expiresIn: expiry - Date.now() });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to generate CSRF token' });
-    }
-});
-
-app.post('/api/auth/login', (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const clientIP = req.ip || req.connection.remoteAddress;
-        
-        console.log(`🔐 Login attempt: ${username} from ${clientIP}`);
-
-        if (!username || !password) {
-            return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
+        /* ===== LOGIN ===== */
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0a1628, #1a2a4a);
+            overflow: hidden;
+        }
+        #loginOverlay::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(230,179,30,0.04) 0%, transparent 60%);
+            animation: bgPulse 12s ease-in-out infinite;
+        }
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0); }
+            50% { transform: scale(1.08) rotate(3deg); }
         }
 
-        const user = users.find(u => u.username === username);
-        if (!user) {
-            return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+        }
+        .login-box {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 24px;
+            padding: 48px 40px 36px;
+            text-align: center;
+            animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        if (user.locked && user.lockedUntil && Date.now() < user.lockedUntil) {
-            const remaining = Math.ceil((user.lockedUntil - Date.now()) / 60000);
-            return res.status(403).json({
-                success: false,
-                error: `الحساب مقفل. حاول مرة أخرى بعد ${remaining} دقيقة`
-            });
+        .login-logo .logo-icon {
+            display: inline-block;
+            font-size: 56px;
+            animation: logoFloat 4s ease-in-out infinite;
+        }
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.05); }
+        }
+        .login-logo .logo-text {
+            display: block;
+            font-size: 26px;
+            font-weight: 900;
+            margin-top: 6px;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .login-subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
         }
 
-        const validPassword = bcrypt.compareSync(password, user.password);
-        if (!validPassword) {
-            user.loginAttempts = (user.loginAttempts || 0) + 1;
-            if (user.loginAttempts >= 5) {
-                user.locked = true;
-                user.lockedUntil = Date.now() + (30 * 60 * 1000);
-                return res.status(403).json({
-                    success: false,
-                    error: 'الحساب مقفل لمدة 30 دقيقة بسبب كثرة المحاولات الفاشلة'
-                });
+        .developer-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 18px 0 28px;
+            padding: 8px 0;
+            position: relative;
+        }
+        .developer-info::before,
+        .developer-info::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(230,179,30,0.2), transparent);
+        }
+        .dev-badge { font-size: 12px; color: rgba(255,255,255,0.3); }
+        .dev-badge i { color: var(--gold-light); }
+        .dev-name { font-size: 16px; font-weight: 700; color: var(--gold-light); }
+        .dev-version {
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.04);
+            padding: 2px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .login-form { margin-top: 4px; }
+        .form-group { margin-bottom: 14px; }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .input-wrapper:focus-within {
+            border-color: var(--gold);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+        }
+        .input-wrapper .input-icon {
+            position: absolute;
+            right: 16px;
+            color: rgba(255,255,255,0.2);
+            font-size: 14px;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 46px 14px 16px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 15px;
+            font-family: inherit;
+        }
+        .input-wrapper input::placeholder { color: rgba(255,255,255,0.2); }
+        .toggle-password {
+            position: absolute;
+            left: 12px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.2);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .toggle-password:hover { color: #fff; background: rgba(255,255,255,0.04); }
+
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 16px 0 20px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.4);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .checkbox-label input[type="checkbox"] { display: none; }
+        .checkbox-label .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .checkbox-label input:checked+.checkmark {
+            background: var(--gold);
+            border-color: var(--gold);
+        }
+        .checkbox-label input:checked+.checkmark::after {
+            content: '✓';
+            color: #0a1628;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .forgot-link {
+            color: rgba(255,255,255,0.3);
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .forgot-link:hover { color: var(--gold-light); }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+            font-size: 17px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 30px rgba(230,179,30,0.15);
+        }
+        .login-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 50px rgba(230,179,30,0.25);
+        }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .login-btn .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .login-btn .spinner {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(0,0,0,0.15);
+            border-top-color: #0a1628;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .login-btn.loading .spinner { display: inline-block; }
+        .login-btn.loading .btn-text { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: rgba(239,68,68,0.08);
+            border-radius: 8px;
+            border-right: 4px solid var(--danger);
+            display: none;
+            text-align: right;
+        }
+        .error-msg.show {
+            display: block;
+            animation: shake 0.4s ease;
+        }
+        .error-msg.success {
+            color: var(--success);
+            border-right-color: var(--success);
+            background: rgba(34,197,94,0.08);
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            color: rgba(255,255,255,0.2);
+            font-size: 12px;
+        }
+        .security-badge i { color: var(--success); }
+
+        .login-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.15);
+            font-size: 11px;
+        }
+        .login-footer .footer-version {
+            background: rgba(255,255,255,0.03);
+            padding: 2px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        /* ===== AUTHENTIFICATION EN COURS ===== */
+        #authLoadingOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(10,22,40,0.92);
+            backdrop-filter: blur(20px);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        #authLoadingOverlay .spinner {
+            width: 64px;
+            height: 64px;
+            border: 4px solid rgba(255,255,255,0.08);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        #authLoadingOverlay .title {
+            color: #f5d76e;
+            font-size: 22px;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+        }
+        #authLoadingOverlay .subtitle {
+            color: rgba(255,255,255,0.3);
+            font-size: 14px;
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+        }
+        #authLoadingOverlay .dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        #authLoadingOverlay .dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gold);
+            animation: bounce 1.4s ease-in-out infinite;
+        }
+        #authLoadingOverlay .dots span:nth-child(1) { animation-delay: 0s; }
+        #authLoadingOverlay .dots span:nth-child(2) { animation-delay: 0.2s; }
+        #authLoadingOverlay .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ===== MAIN APP ===== */
+        #mainApp { display: none; min-height: 100vh; }
+        .main-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10,22,40,0.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            height: 64px;
+            display: flex;
+            align-items: center;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 20px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .menu-toggle:hover { background: rgba(255,255,255,0.04); }
+        .menu-toggle span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+        .menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(4px,4px); }
+        .menu-toggle.active span:nth-child(2) { opacity: 0; }
+        .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(4px,-4px); }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand .brand-icon { font-size: 24px; }
+        .brand h1 { font-size: 17px; font-weight: 700; color: #fff; }
+        .brand .brand-tag {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--gold-light);
+            background: rgba(230,179,30,0.1);
+            padding: 2px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(230,179,30,0.1);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .search-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 0 16px;
+            transition: all 0.3s;
+        }
+        .search-wrapper:focus-within {
+            border-color: var(--gold);
+            background: rgba(255,255,255,0.06);
+        }
+        .search-wrapper input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #e2e8f0;
+            padding: 8px 0;
+            font-size: 13px;
+            font-family: inherit;
+            width: 160px;
+        }
+        .search-wrapper input:focus { width: 220px; }
+        .search-wrapper input::placeholder {
+            color: rgba(255,255,255,0.2);
+            font-size: 12px;
+        }
+        .search-wrapper .search-icon {
+            color: rgba(255,255,255,0.2);
+            font-size: 13px;
+            margin-left: 10px;
+        }
+        .search-wrapper .search-shortcut {
+            font-size: 10px;
+            color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.04);
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.04);
+            margin-right: 6px;
+        }
+
+        .notification-wrapper { position: relative; }
+        .notif-btn {
+            position: relative;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        .notif-btn:hover { color: #fff; background: rgba(255,255,255,0.04); }
+        .notif-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: var(--danger);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+            border: 2px solid #0a1628;
+            display: none;
+        }
+
+        .user-wrapper { position: relative; }
+        .user-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+        .user-btn:hover { background: rgba(255,255,255,0.04); }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: #0a1628;
+            flex-shrink: 0;
+        }
+        .user-name { font-size: 13px; color: #e2e8f0; font-weight: 500; }
+        .user-arrow {
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+        .user-btn:hover .user-arrow { color: #fff; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            top: 64px;
+            right: 0;
+            bottom: 0;
+            width: 240px;
+            background: rgba(10,22,40,0.95);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255,255,255,0.04);
+            padding: 16px 12px;
+            overflow-y: auto;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 10px; }
+
+        .sidebar-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            margin-bottom: 16px;
+        }
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar-brand .brand-icon { font-size: 24px; color: var(--gold); }
+        .sidebar-brand .brand-title { font-size: 16px; font-weight: 700; color: #fff; }
+        .sidebar-brand .brand-subtitle { font-size: 10px; color: rgba(255,255,255,0.2); }
+        .sidebar-close {
+            display: none;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.2);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .sidebar-close:hover { background: rgba(255,255,255,0.04); color: #fff; }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.04);
+            margin-bottom: 16px;
+        }
+        .sidebar-user .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0a1628;
+            flex-shrink: 0;
+        }
+        .sidebar-user .user-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+        }
+        .sidebar-user .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sidebar-user .user-role { font-size: 11px; color: rgba(255,255,255,0.3); }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .nav-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 6px;
+        }
+        .nav-group-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.15);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 12px 4px;
+        }
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: rgba(255,255,255,0.4);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: right;
+            width: 100%;
+            position: relative;
+        }
+        .nav-btn i {
+            width: 20px;
+            text-align: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .nav-btn.active {
+            background: rgba(230,179,30,0.06);
+            color: var(--gold-light);
+        }
+        .nav-btn.active::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 20%;
+            height: 60%;
+            width: 3px;
+            background: var(--gold);
+            border-radius: 0 3px 3px 0;
+        }
+        .nav-btn .nav-badge {
+            margin-right: auto;
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.2);
+            min-width: 18px;
+            text-align: center;
+            display: none;
+        }
+        .nav-btn .nav-badge.warning {
+            background: rgba(239,68,68,0.12);
+            color: var(--danger);
+        }
+        .nav-btn .nav-badge.success {
+            background: rgba(34,197,94,0.12);
+            color: var(--success);
+        }
+        .nav-btn .nav-badge.info {
+            background: rgba(59,130,246,0.12);
+            color: var(--info);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid rgba(255,255,255,0.04);
+            padding-top: 14px;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .footer-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
+        }
+        .footer-status .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .footer-status .status-dot.online {
+            background: var(--success);
+            animation: pulseDot 2s ease-in-out infinite;
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .footer-version {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.15);
+        }
+        .footer-version i { color: var(--gold); }
+        .footer-logout {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(239,68,68,0.08);
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .footer-logout:hover { background: rgba(239,68,68,0.16); }
+        .footer-logout i { font-size: 14px; }
+
+        .main-content {
+            margin-right: 240px;
+            min-height: calc(100vh - 64px);
+            padding: 20px 24px;
+        }
+        .page-container { max-width: 1440px; margin: 0 auto; }
+        .page-loader {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            min-height: 200px;
+        }
+        .loader-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.04);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .page-loader p { margin-top: 16px; color: rgba(255,255,255,0.2); font-size: 14px; }
+        .page-content { animation: fadePage 0.4s ease-out; }
+        @keyframes fadePage {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #pageContainer { min-height: 300px; }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            border: none;
+            color: #0a1628;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 30px rgba(230,179,30,0.15);
+            transition: all 0.3s;
+            z-index: 40;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .back-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 50px rgba(230,179,30,0.25);
+        }
+
+        .connection-status {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(239,68,68,0.9);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+        }
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 420px;
+            width: 90%;
+            pointer-events: none;
+        }
+        .toast {
+            padding: 12px 18px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            animation: toastSlide 0.4s cubic-bezier(0.16,1,0.3,1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+            pointer-events: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .toast-success { background: rgba(16,185,129,0.92); }
+        .toast-error { background: rgba(239,68,68,0.92); }
+        .toast-warning { background: rgba(245,158,11,0.92); }
+        .toast-info { background: rgba(59,130,246,0.92); }
+        @keyframes toastSlide {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-box {
+            background: #111e3a;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            max-width: 520px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: modalFade 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .modal-header h3 { font-size: 18px; font-weight: 700; color: #fff; }
+        .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.2);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .modal-body {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #e2e8f0;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-sm { padding: 4px 12px; font-size: 12px; }
+        .btn-primary { background: var(--info); color: #fff; }
+        .btn-primary:hover { box-shadow: 0 4px 20px rgba(59,130,246,0.3); }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-success:hover { box-shadow: 0 4px 20px rgba(34,197,94,0.3); }
+        .btn-warning { background: var(--warning); color: #0a1628; }
+        .btn-warning:hover { box-shadow: 0 4px 20px rgba(234,179,8,0.3); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { box-shadow: 0 4px 20px rgba(239,68,68,0.3); }
+        .btn-gold {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+        }
+        .btn-gold:hover { box-shadow: 0 4px 30px rgba(230,179,30,0.25); }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.12);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.04);
+            color: #94a3b8;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.06); }
+
+        @media (max-width: 992px) {
+            .search-wrapper input { width: 120px; }
+            .search-wrapper input:focus { width: 160px; }
+            .brand .brand-tag { display: none; }
+            .main-content { margin-right: 0; padding: 14px 16px; }
+            .menu-toggle { display: flex; }
+            .sidebar {
+                transform: translateX(calc(100% + 10px));
+                width: 280px;
+                padding: 12px;
             }
-            return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-header { display: flex; }
+            .sidebar-close { display: block; }
         }
-
-        user.loginAttempts = 0;
-        user.locked = false;
-        user.lockedUntil = null;
-        user.lastLogin = new Date().toISOString();
-
-        const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
-            JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-
-        const newToken = generateSecureToken();
-        req.session.csrfToken = newToken;
-        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
-        req.session.userId = user.id;
-
-        res.setHeader('X-CSRF-Token', newToken);
-        res.setHeader('X-User-ID', user.id);
-
-        // ✅ إضافة سجل
-        systemLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            userId: user.id,
-            action: 'LOGIN_SUCCESS',
-            details: `User ${username} logged in from ${clientIP}`,
-            timestamp: new Date().toISOString()
-        });
-
-        res.json({
-            success: true,
-            token: token,
-            user: {
-                id: user.id,
-                username: user.username,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                active: user.active,
-                lastLogin: user.lastLogin
-            },
-            csrfToken: newToken
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-app.get('/api/auth/me', (req, res) => {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        @media (max-width: 768px) {
+            .login-box { padding: 32px 24px 28px; }
+            .login-logo .logo-icon { font-size: 42px; }
+            .login-logo .logo-text { font-size: 20px; }
+            .brand h1 { font-size: 14px; }
+            .brand .brand-tag { display: none; }
+            .search-wrapper { display: none; }
+            .user-name { display: none; }
+            .main-content { padding: 10px 12px; }
         }
-
-        const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = users.find(u => u.id === decoded.id);
-
-        if (!user || !user.active) {
-            return res.status(401).json({ success: false, error: 'المستخدم غير موجود أو غير نشط' });
+        @media (max-width: 480px) {
+            .login-box { padding: 24px 16px 20px; }
+            .login-logo .logo-icon { font-size: 32px; }
+            .login-logo .logo-text { font-size: 17px; }
+            .login-subtitle { font-size: 12px; }
+            .developer-info { flex-wrap: wrap; gap: 4px; }
+            .developer-info .dev-name { font-size: 14px; }
+            .input-wrapper input { padding: 12px 40px 12px 14px; font-size: 14px; }
+            .login-btn { padding: 14px; font-size: 15px; }
+            .brand h1 { font-size: 12px; }
+            .brand .brand-icon { font-size: 18px; }
+            .header-right { gap: 6px; }
+            .notif-btn { font-size: 17px; padding: 6px; }
+            .user-avatar { width: 28px; height: 28px; font-size: 12px; }
+            .sidebar { width: 260px; padding: 10px; }
+            .sidebar-user .user-avatar { width: 34px; height: 34px; font-size: 14px; }
+            .nav-btn { padding: 8px 12px; font-size: 12px; }
+            .nav-btn i { font-size: 13px; width: 18px; }
         }
-
-        if (req.session.userId !== user.id) {
-            return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
+        @media print {
+            .main-header, .sidebar, .back-to-top, .toast-container, .modal-overlay, .no-print { display: none !important; }
+            .main-content { margin-right: 0 !important; padding: 0 !important; }
         }
+    </style>
+</head>
+<body>
 
-        const newToken = generateSecureToken();
-        req.session.csrfToken = newToken;
-        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
-        res.setHeader('X-CSRF-Token', newToken);
-
-        res.json({
-            success: true,
-            user: {
-                id: user.id,
-                username: user.username,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                active: user.active,
-                lastLogin: user.lastLogin
-            }
-        });
-    } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ success: false, error: 'انتهت صلاحية التوكن' });
-        }
-        res.status(401).json({ success: false, error: 'توكن غير صالح' });
-    }
-});
-
-app.post('/api/auth/logout', (req, res) => {
-    const userId = req.session.userId;
-    
-    if (userId) {
-        systemLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            userId: userId,
-            action: 'LOGOUT',
-            details: 'User logged out',
-            timestamp: new Date().toISOString()
-        });
-    }
-    
-    req.session.destroy(() => {
-        res.clearCookie('__Secure-marine.sid');
-        res.json({ success: true, message: 'تم تسجيل الخروج' });
-    });
-});
-
-// ============================================================
-// 📊 VESSELS API
-// ============================================================
-
-app.get('/api/vessels', csrfProtection, (req, res) => {
-    try {
-        res.json(vessels);
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'خطأ في جلب البيانات' });
-    }
-});
-
-app.post('/api/vessels', csrfProtection, (req, res) => {
-    try {
-        const { name, num, len, region, zone, port, supp, status, break: breakType, fDate, eDate, ref, repairUnit, cat } = req.body;
-        
-        if (!name) {
-            return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
-        }
-
-        const newVessel = {
-            id: crypto.randomBytes(8).toString('hex'),
-            name: name,
-            num: num || '',
-            len: len || 0,
-            region: region || '',
-            zone: zone || '',
-            port: port || '',
-            supp: supp || '',
-            status: status || 'صالح',
-            break: breakType || '',
-            fDate: fDate || null,
-            eDate: eDate || null,
-            ref: ref || '',
-            repairUnit: repairUnit || '',
-            cat: cat || '',
-            createdAt: new Date().toISOString()
-        };
-        
-        vessels.push(newVessel);
-        console.log('✅ Vessel added:', newVessel.name);
-
-        if (status === 'معطب' || status === 'صيانة') {
-            maintenanceLogs.push({
-                id: crypto.randomBytes(8).toString('hex'),
-                vesselId: newVessel.id,
-                vesselName: newVessel.name,
-                vesselNum: newVessel.num,
-                type: breakType || 'صيانة دورية',
-                status: status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-                date: fDate || new Date().toISOString(),
-                repairUnit: repairUnit || '—',
-                cost: 0,
-                notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
-                createdAt: new Date().toISOString()
-            });
-        }
-        
-        res.status(201).json({
-            success: true,
-            message: 'تم إضافة المركب بنجاح',
-            vessel: newVessel
-        });
-    } catch (error) {
-        console.error('❌ Error adding vessel:', error);
-        res.status(500).json({ success: false, error: 'خطأ في إضافة المركب' });
-    }
-});
-
-app.put('/api/vessels/:id', csrfProtection, (req, res) => {
-    try {
-        const vesselId = req.params.id;
-        const { name, num, len, region, zone, port, supp, status, break: breakType, fDate, eDate, ref, repairUnit, cat } = req.body;
-        
-        const vessel = vessels.find(v => v.id === vesselId);
-        if (!vessel) {
-            return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-        }
-        
-        const oldStatus = vessel.status;
-        
-        if (name) vessel.name = name;
-        if (num !== undefined) vessel.num = num;
-        if (len !== undefined) vessel.len = len;
-        if (region !== undefined) vessel.region = region;
-        if (zone !== undefined) vessel.zone = zone;
-        if (port !== undefined) vessel.port = port;
-        if (supp !== undefined) vessel.supp = supp;
-        if (status) vessel.status = status;
-        if (breakType !== undefined) vessel.break = breakType;
-        if (fDate !== undefined) vessel.fDate = fDate;
-        if (eDate !== undefined) vessel.eDate = eDate;
-        if (ref !== undefined) vessel.ref = ref;
-        if (repairUnit !== undefined) vessel.repairUnit = repairUnit;
-        if (cat) vessel.cat = cat;
-        vessel.updatedAt = new Date().toISOString();
-
-        if (status && (status === 'معطب' || status === 'صيانة') && oldStatus !== status) {
-            maintenanceLogs.push({
-                id: crypto.randomBytes(8).toString('hex'),
-                vesselId: vessel.id,
-                vesselName: vessel.name,
-                vesselNum: vessel.num,
-                type: breakType || 'صيانة دورية',
-                status: status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-                date: fDate || new Date().toISOString(),
-                repairUnit: repairUnit || '—',
-                cost: 0,
-                notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
-                createdAt: new Date().toISOString()
-            });
-        }
-        
-        res.json({
-            success: true,
-            message: 'تم تحديث المركب بنجاح',
-            vessel: vessel
-        });
-    } catch (error) {
-        console.error('❌ Error updating vessel:', error);
-        res.status(500).json({ success: false, error: 'خطأ في تحديث المركب' });
-    }
-});
-
-app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
-    try {
-        const vesselId = req.params.id;
-        const index = vessels.findIndex(v => v.id === vesselId);
-        if (index === -1) {
-            return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-        }
-        vessels.splice(index, 1);
-        res.json({ success: true, message: 'تم حذف المركب بنجاح' });
-    } catch (error) {
-        console.error('❌ Error deleting vessel:', error);
-        res.status(500).json({ success: false, error: 'خطأ في حذف المركب' });
-    }
-});
-
-// ============================================================
-// 📊 MAINTENANCE LOGS API
-// ============================================================
-
-app.get('/api/maintenance-logs', csrfProtection, (req, res) => {
-    try {
-        console.log('📡 Fetching maintenance logs...');
-        console.log('📊 Total logs:', maintenanceLogs.length);
-        res.json(maintenanceLogs);
-    } catch (error) {
-        console.error('❌ Error fetching maintenance logs:', error);
-        res.status(500).json({ success: false, error: 'خطأ في جلب سجلات الصيانة' });
-    }
-});
-
-app.post('/api/maintenance-logs', csrfProtection, (req, res) => {
-    try {
-        const { vesselId, vesselName, vesselNum, type, status, date, repairUnit, cost, notes } = req.body;
-        
-        if (!vesselName) {
-            return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
-        }
-
-        maintenanceLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            vesselId: vesselId || '',
-            vesselName: vesselName,
-            vesselNum: vesselNum || '',
-            type: type || 'صيانة دورية',
-            status: status || 'قيد التنفيذ',
-            date: date || new Date().toISOString(),
-            repairUnit: repairUnit || '—',
-            cost: cost || 0,
-            notes: notes || '',
-            createdAt: new Date().toISOString()
-        });
-        
-        res.status(201).json({ success: true, message: 'تم إضافة سجل الصيانة' });
-    } catch (error) {
-        console.error('❌ Error adding maintenance log:', error);
-        res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
-    }
-});
-
-app.put('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
-    try {
-        const logId = req.params.id;
-        const { status, cost, notes } = req.body;
-        
-        const log = maintenanceLogs.find(l => l.id === logId);
-        if (!log) {
-            return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
-        }
-        
-        if (status) log.status = status;
-        if (cost !== undefined) log.cost = cost;
-        if (notes) log.notes = notes;
-        log.updatedAt = new Date().toISOString();
-        
-        res.json({ success: true, message: 'تم تحديث سجل الصيانة', log: log });
-    } catch (error) {
-        console.error('❌ Error updating maintenance log:', error);
-        res.status(500).json({ success: false, error: 'خطأ في تحديث سجل الصيانة' });
-    }
-});
-
-app.delete('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
-    try {
-        const logId = req.params.id;
-        const index = maintenanceLogs.findIndex(l => l.id === logId);
-        if (index === -1) {
-            return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
-        }
-        maintenanceLogs.splice(index, 1);
-        res.json({ success: true, message: 'تم حذف سجل الصيانة' });
-    } catch (error) {
-        console.error('❌ Error deleting maintenance log:', error);
-        res.status(500).json({ success: false, error: 'خطأ في حذف سجل الصيانة' });
-    }
-});
-
-// ============================================================
-// 📊 SYSTEM LOGS API - FIXED
-// ============================================================
-
-app.get('/api/logs', csrfProtection, (req, res) => {
-    try {
-        console.log('📡 Fetching system logs...');
-        console.log('📊 Total logs:', systemLogs.length);
-        res.json(systemLogs.slice(-100));
-    } catch (error) {
-        console.error('❌ Error fetching logs:', error);
-        res.status(500).json({ success: false, error: 'خطأ في جلب السجلات' });
-    }
-});
-
-app.post('/api/logs', csrfProtection, (req, res) => {
-    try {
-        const { action, details, userId } = req.body;
-        
-        systemLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            userId: userId || null,
-            action: action || 'Unknown',
-            details: details || '',
-            timestamp: new Date().toISOString()
-        });
-        
-        res.status(201).json({ success: true, message: 'تم إضافة السجل' });
-    } catch (error) {
-        console.error('❌ Error adding log:', error);
-        res.status(500).json({ success: false, error: 'خطأ في إضافة السجل' });
-    }
-});
-
-app.delete('/api/logs/:id', csrfProtection, (req, res) => {
-    try {
-        const logId = req.params.id;
-        const index = systemLogs.findIndex(l => l.id === logId);
-        if (index === -1) {
-            return res.status(404).json({ success: false, error: 'السجل غير موجود' });
-        }
-        systemLogs.splice(index, 1);
-        res.json({ success: true, message: 'تم حذف السجل' });
-    } catch (error) {
-        console.error('❌ Error deleting log:', error);
-        res.status(500).json({ success: false, error: 'خطأ في حذف السجل' });
-    }
-});
-
-// ============================================================
-// 📊 SESSION STATUS API
-// ============================================================
-
-app.get('/api/session-status', (req, res) => {
-    res.json({
-        success: true,
-        hasSession: !!req.session,
-        hasCsrf: !!req.session.csrfToken,
-        sessionId: req.sessionID,
-        userId: req.session.userId || null
-    });
-});
-
-// ============================================================
-// 📊 USERS API
-// ============================================================
-
-app.get('/api/users', csrfProtection, (req, res) => {
-    try {
-        const safeUsers = users.map(u => ({
-            id: u.id,
-            username: u.username,
-            name: u.name,
-            email: u.email,
-            role: u.role,
-            active: u.active,
-            createdAt: u.createdAt,
-            lastLogin: u.lastLogin
-        }));
-        res.json(safeUsers);
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-app.post('/api/users', csrfProtection, (req, res) => {
-    try {
-        const { username, password, email, role, active } = req.body;
-        
-        if (!username) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
-        }
-        if (!password) {
-            return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
-        }
-        
-        const existingUser = users.find(u => u.username === username);
-        if (existingUser) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم موجود بالفعل' });
-        }
-        
-        const newUser = {
-            id: crypto.randomBytes(8).toString('hex'),
-            username: username,
-            password: bcrypt.hashSync(password, 12),
-            email: email || `${username}@marine.com`,
-            name: username,
-            role: role || 'viewer',
-            active: active !== undefined ? active : true,
-            createdAt: new Date().toISOString(),
-            lastLogin: null,
-            loginAttempts: 0,
-            locked: false,
-            lockedUntil: null
-        };
-        
-        users.push(newUser);
-        console.log('✅ User created:', username);
-        
-        systemLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            userId: newUser.id,
-            action: 'USER_CREATED',
-            details: `User ${username} created`,
-            timestamp: new Date().toISOString()
-        });
-        
-        const { password: _, ...userWithoutPassword } = newUser;
-        res.status(201).json({
-            success: true,
-            message: 'تم إضافة المستخدم بنجاح',
-            user: userWithoutPassword
-        });
-    } catch (error) {
-        console.error('❌ Error creating user:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-app.put('/api/users/:id', csrfProtection, (req, res) => {
-    try {
-        const userId = req.params.id;
-        const { username, email, role, active, password } = req.body;
-        
-        const user = users.find(u => u.id === userId);
-        if (!user) {
-            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-        
-        if (user.username === 'admin' && req.body.username && req.body.username !== 'admin') {
-            return res.status(403).json({ success: false, error: 'لا يمكن تغيير اسم المستخدم الرئيسي' });
-        }
-        
-        if (username) user.username = username;
-        if (email) user.email = email;
-        if (role) user.role = role;
-        if (active !== undefined) user.active = active;
-        if (password) {
-            user.password = bcrypt.hashSync(password, 12);
-        }
-        
-        console.log('✅ User updated:', user.username);
-        
-        systemLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            userId: user.id,
-            action: 'USER_UPDATED',
-            details: `User ${user.username} updated`,
-            timestamp: new Date().toISOString()
-        });
-        
-        const { password: _, ...userWithoutPassword } = user;
-        res.json({
-            success: true,
-            message: 'تم تحديث المستخدم بنجاح',
-            user: userWithoutPassword
-        });
-    } catch (error) {
-        console.error('❌ Error updating user:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-app.delete('/api/users/:id', csrfProtection, (req, res) => {
-    try {
-        const userId = req.params.id;
-        
-        const userToDelete = users.find(u => u.id === userId);
-        if (!userToDelete) {
-            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-        
-        if (userToDelete.username === 'admin') {
-            return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
-        }
-        
-        const index = users.findIndex(u => u.id === userId);
-        users.splice(index, 1);
-        
-        console.log('✅ User deleted:', userToDelete.username);
-        
-        systemLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            userId: null,
-            action: 'USER_DELETED',
-            details: `User ${userToDelete.username} deleted`,
-            timestamp: new Date().toISOString()
-        });
-        
-        res.json({
-            success: true,
-            message: 'تم حذف المستخدم بنجاح'
-        });
-    } catch (error) {
-        console.error('❌ Error deleting user:', error);
-        res.status(500).json({ success: false, error: 'خطأ في الخادم' });
-    }
-});
-
-// ============================================================
-// 🌐 PAGE ROUTES
-// ============================================================
-
-function findPageFile(pageName) {
-    const possiblePaths = [
-        path.join(publicPagesDir, pageName + '.html'),
-        path.join(pagesDir, pageName + '.html'),
-        path.join(publicDir, pageName + '.html'),
-        path.join(__dirname, pageName + '.html')
-    ];
-    for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-            return p;
-        }
-    }
-    return null;
-}
-
-app.get('/', (req, res) => {
-    const paths = [
-        path.join(__dirname, 'index.html'),
-        path.join(publicDir, 'index.html'),
-        path.join(pagesDir, 'index.html'),
-        path.join(publicPagesDir, 'index.html')
-    ];
-    for (const p of paths) {
-        if (fs.existsSync(p)) {
-            return res.sendFile(p);
-        }
-    }
-    res.send(`
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>🚢 Marine System</title>
-            <style>
-                *{margin:0;padding:0;box-sizing:border-box}
-                body{font-family:'Segoe UI',sans-serif;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-                .container{background:linear-gradient(145deg,#1a1f35,#0d1528);padding:50px;border-radius:30px;max-width:600px;width:100%;border:1px solid #2a3a5a;text-align:center}
-                h1{color:#00d4ff;font-size:2.5em}
-                .status{background:#0d1528;padding:20px;border-radius:15px;margin:20px 0;border-right:5px solid #00ff88}
-                .info{color:#aabbcc;line-height:2}
-                .info strong{color:#00d4ff}
-                .btn{background:linear-gradient(135deg,#00d4ff,#0099cc);color:#0a0e1a;border:none;padding:15px 40px;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.3s;width:100%;margin-top:15px}
-                .btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,212,255,0.3)}
-                .btn-logout{background:linear-gradient(135deg,#ff4444,#cc0000)}
-                .error{color:#ff4444;margin:10px 0}
-                .success-msg{color:#00ff88;margin:10px 0}
-                .login-section,.user-section{margin-top:30px;text-align:right}
-                .user-section{display:none}
-                .badge{display:inline-block;padding:5px 15px;border-radius:20px;font-size:14px;margin:5px 0;background:#ff4444;color:#fff}
-                .login-form input{width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px}
-                .login-form input:focus{outline:none;border-color:#00d4ff}
-                .footer{margin-top:30px;padding-top:20px;border-top:1px solid #2a3a5a;color:#667788;font-size:12px}
-                .links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
-                .links a{display:inline-block;padding:10px 20px;background:#2a3a5a;color:#fff;text-decoration:none;border-radius:8px;font-size:14px}
-                .links a:hover{background:#3a4a6a}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🚢 MARINE SYSTEM</h1>
-                <p style="color:#8899aa;">نظام إدارة الأسطول البحري</p>
-                <div class="status">
-                    <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
-                    <p class="info">🔒 <strong>الأمان:</strong> عالي جداً</p>
-                    <p class="info">👤 <strong>المستخدم:</strong> admin</p>
-                    <p class="info">🔑 <strong>كلمة المرور:</strong> ${ADMIN_PASSWORD}</p>
-                    <p class="info">📊 <strong>المراكب:</strong> ${vessels.length}</p>
-                    <p class="info">📝 <strong>سجلات الصيانة:</strong> ${maintenanceLogs.length}</p>
+    <!-- ===== LOGIN ===== -->
+    <div id="loginOverlay">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="login-logo">
+                    <span class="logo-icon">⚓</span>
+                    <h1 class="logo-text">منظومة الوسائل البحرية</h1>
+                    <p class="login-subtitle">نظام متابعة وإدارة الأسطول البحري المتقدم</p>
                 </div>
-                <div id="loginSection" class="login-section">
-                    <h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3>
-                    <div id="message"></div>
-                    <div class="login-form">
-                        <input type="text" id="username" placeholder="اسم المستخدم" value="admin">
-                        <input type="password" id="password" placeholder="كلمة المرور">
-                        <button class="btn" onclick="handleLogin()">🚀 دخول</button>
+                <div class="developer-info">
+                    <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
+                    <span class="dev-name">أمان الله ناجي</span>
+                    <span class="dev-version">v8.0</span>
+                </div>
+                <form id="loginForm" class="login-form" autocomplete="off" novalidate>
+                    <input type="hidden" name="csrf_token" id="csrfTokenInput">
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" required>
+                        </div>
                     </div>
-                </div>
-                <div id="userSection" class="user-section">
-                    <p style="font-size:18px;">👋 <strong>مرحباً بك، <span id="userName"></span></strong></p>
-                    <p>📋 <strong>الدور:</strong> <span id="userRole" class="badge">admin</span></p>
-                    <div class="links">
-                        <a href="/dashboard">📊 لوحة التحكم</a>
-                        <a href="/fleet">🚢 الأسطول</a>
-                        <a href="/maintenance">🔧 الصيانة</a>
-                        <a href="/logs">📝 سجلات الصيانة</a>
-                        <a href="/users">👥 المستخدمين</a>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" required>
+                            <button type="button" class="toggle-password" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
-                    <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
+                    <div class="login-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe">
+                            <span class="checkmark"></span>
+                            تذكرني
+                        </label>
+                        <a href="#" class="forgot-link">نسيت كلمة المرور؟</a>
+                    </div>
+                    <button type="submit" class="login-btn" id="loginButton">
+                        <span class="btn-content">
+                            <span class="btn-text">🚀 دخول إلى النظام</span>
+                            <span class="spinner"></span>
+                        </span>
+                    </button>
+                    <div id="loginError" class="error-msg"></div>
+                    <div class="security-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>اتصال آمن ومشفر مع CSRF Protection</span>
+                    </div>
+                </form>
+                <div class="login-footer">
+                    <span>نظام إدارة وإسناد الوحدات البحرية</span>
+                    <span class="footer-version">الإصدار الاحترافي v8.0</span>
                 </div>
-                <div class="footer">🔒 جميع البيانات مشفرة | v8.0</div>
             </div>
-            <script>
-                let csrfToken = '';
+        </div>
+    </div>
 
-                async function getCsrfToken() {
-                    try {
-                        const r = await fetch('/api/csrf-token', { credentials: 'include', headers: { 'Accept': 'application/json' } });
-                        const d = await r.json();
-                        if (d.success) { csrfToken = d.token; return d.token; }
-                        return null;
-                    } catch(e) { return null; }
+    <!-- ===== AUTHENTIFICATION EN COURS ===== -->
+    <div id="authLoadingOverlay">
+        <div class="spinner"></div>
+        <p class="title">⏳ جاري التحقق من المصادقة</p>
+        <p class="subtitle">يرجى الانتظار...</p>
+        <div class="dots">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <!-- ===== MAIN APP ===== -->
+    <div id="mainApp" style="display:none;">
+        <header class="main-header">
+            <div class="header-container">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span></span><span></span><span></span>
+                    </button>
+                    <div class="brand">
+                        <span class="brand-icon">⚓</span>
+                        <h1>منظومة الوسائل البحرية</h1>
+                        <span class="brand-tag">الوكيل أمان الله ناجي</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="search-wrapper">
+                        <input type="text" id="quickSearch" placeholder="بحث سريع...">
+                        <i class="fas fa-search search-icon"></i>
+                        <kbd class="search-shortcut">⌘K</kbd>
+                    </div>
+                    <div class="notification-wrapper">
+                        <button class="notif-btn" id="notifBtn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notif-badge" id="notifBadge">0</span>
+                        </button>
+                    </div>
+                    <div class="user-wrapper">
+                        <button class="user-btn" id="userBtn">
+                            <div class="user-avatar" id="userAvatar"><span id="userInitial">م</span></div>
+                            <span class="user-name" id="userDisplayName">المستخدم</span>
+                            <i class="fas fa-chevron-down user-arrow"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <span class="brand-icon">⚓</span>
+                    <div>
+                        <div class="brand-title">الأسطول البحري</div>
+                        <div class="brand-subtitle">نظام إدارة الوسائل البحرية</div>
+                    </div>
+                </div>
+                <button class="sidebar-close" id="sidebarClose">✕</button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar" id="sidebarUserAvatar">م</div>
+                <div class="user-info">
+                    <span class="user-name" id="sidebarUserName">المستخدم</span>
+                    <span class="user-role" id="sidebarUserRole">مسؤول</span>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-group">
+                    <span class="nav-group-title">الرئيسية</span>
+                    <button class="nav-btn active" data-page="dashboard">
+                        <i class="fas fa-chart-pie"></i> لوحة التحكم
+                    </button>
+                    <button class="nav-btn" data-page="fleet">
+                        <i class="fas fa-ship"></i> السجل العام
+                        <span class="nav-badge" id="fleetBadge">0</span>
+                    </button>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-group-title">إدارة الأسطول</span>
+                    <button class="nav-btn" data-page="maintenance">
+                        <i class="fas fa-wrench"></i> الصيانة
+                        <span class="nav-badge warning" id="maintenanceBadge">0</span>
+                    </button>
+                    <button class="nav-btn" data-page="efficiency">
+                        <i class="fas fa-chart-line"></i> الجاهزية
+                    </button>
+                    <button class="nav-btn" data-page="support">
+                        <i class="fas fa-headset"></i> الدعم
+                    </button>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-group-title">العمليات</span>
+                    <button class="nav-btn" data-page="notes">
+                        <i class="fas fa-sticky-note"></i> Note Verbale
+                    </button>
+                    <button class="nav-btn" data-page="monitoring">
+                        <i class="fas fa-map-marked-alt"></i> المراقبة الشاملة
+                        <span class="nav-badge success" id="sessionsBadge">0</span>
+                    </button>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-group-title">الإدارة</span>
+                    <button class="nav-btn" data-page="users">
+                        <i class="fas fa-users"></i> المستخدمين
+                        <span class="nav-badge" id="usersBadge">0</span>
+                    </button>
+                    <button class="nav-btn" data-page="logs">
+                        <i class="fas fa-history"></i> سجلات الصيانة
+                        <span class="nav-badge" id="logsBadge">0</span>
+                    </button>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-group-title">متقدم</span>
+                    <button class="nav-btn" data-page="ai-assistant">
+                        <i class="fas fa-robot"></i> المساعد الذكي
+                        <span class="nav-badge success">AI</span>
+                    </button>
+                    <button class="nav-btn" data-page="settings">
+                        <i class="fas fa-cog"></i> الإعدادات
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v8.0 · آمن مع CSRF</span></div>
+                <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="page-container">
+                <div class="page-loader" id="pageLoader" style="display:none;">
+                    <div class="loader-spinner"></div>
+                    <p>جاري التحميل...</p>
+                </div>
+                <div id="pageContainer"></div>
+            </div>
+        </main>
+
+        <button class="back-to-top" id="backToTop" style="display:none;">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+        <div class="connection-status" id="connectionStatus" style="display:none;">
+            <i class="fas fa-wifi"></i><span>غير متصل</span>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ===== MODAL ===== -->
+    <div class="modal-overlay" id="modalOverlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">عنوان</h3>
+                <button class="modal-close" id="modalClose">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="modalCancel">إلغاء</button>
+                <button class="btn-primary" id="modalConfirm">تأكيد</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT - الكامل مع حل مشكلة updateDateTime
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // 🚢 MARINE SYSTEM - v8.0 (FULL WITH LOGIN FIX)
+        // ============================================================
+
+        console.log('🚢 Marine System v8.0 - Loading with Login Fix...');
+
+        // ============================================================
+        // 📦 CONFIGURATION
+        // ============================================================
+
+        const CONFIG = {
+            API: '/api',
+            KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page', CSRF: 'csrf_token' },
+            PAGES: {
+                dashboard: 'لوحة التحكم',
+                fleet: 'السجل العام',
+                maintenance: 'الصيانة',
+                efficiency: 'الجاهزية',
+                support: 'الدعم',
+                users: 'المستخدمين',
+                notes: 'Note Verbale',
+                monitoring: 'المراقبة الشاملة',
+                'ai-assistant': 'المساعد الذكي',
+                settings: 'الإعدادات',
+                logs: 'سجلات الصيانة',
+                profile: 'الملف الشخصي'
+            }
+        };
+
+        // ============================================================
+        // 📦 STATE
+        // ============================================================
+
+        var currentUser = null;
+        var currentPage = 'dashboard';
+        var notifications = [];
+        var allVessels = [];
+        var allUsers = [];
+        var allLogs = [];
+        var sessionsData = [];
+
+        window.currentUser = currentUser;
+        window.allVessels = allVessels;
+        window.allUsers = allUsers;
+        window.allLogs = allLogs;
+        window.sessionsData = sessionsData;
+
+        // ============================================================
+        // 🔒 CSRF TOKEN MANAGER
+        // ============================================================
+
+        class CSRFTokenManager {
+            constructor() {
+                this.token = null;
+                this.expiry = null;
+                this.validDuration = 24 * 60 * 60 * 1000;
+                this.loadFromStorage();
+            }
+
+            loadFromStorage() {
+                this.token = localStorage.getItem(CONFIG.KEYS.CSRF);
+                this.expiry = parseInt(localStorage.getItem(CONFIG.KEYS.CSRF + '_expiry') || '0');
+                if (!this.token || Date.now() > this.expiry) {
+                    this.generateToken();
                 }
+            }
 
-                async function handleLogin() {
-                    const username = document.getElementById('username').value.trim();
-                    const password = document.getElementById('password').value;
-                    const msg = document.getElementById('message');
-                    if (!username || !password) { msg.innerHTML = '<div class="error">⚠️ الرجاء إدخال جميع البيانات</div>'; return; }
-                    try {
-                        const t = await getCsrfToken();
-                        if (!t) { msg.innerHTML = '<div class="error">❌ فشل الحصول على CSRF token</div>'; return; }
-                        msg.innerHTML = '<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';
-                        const r = await fetch('/api/auth/login', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': t },
-                            credentials: 'include',
-                            body: JSON.stringify({ username, password })
-                        });
-                        const d = await r.json();
-                        if (r.ok && d.success) {
-                            localStorage.setItem('authToken', d.token);
-                            localStorage.setItem('userData', JSON.stringify(d.user));
-                            document.getElementById('loginSection').style.display = 'none';
-                            document.getElementById('userSection').style.display = 'block';
-                            document.getElementById('userName').textContent = d.user.name || d.user.username;
-                            document.getElementById('userRole').textContent = d.user.role || 'مستخدم';
-                            msg.innerHTML = '<div class="success-msg">✅ تم تسجيل الدخول بنجاح</div>';
-                        } else {
-                            msg.innerHTML = '<div class="error">❌ ' + (d.error || 'فشل تسجيل الدخول') + '</div>';
-                        }
-                    } catch(e) {
-                        msg.innerHTML = '<div class="error">❌ خطأ في الاتصال بالخادم</div>';
+            generateToken() {
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(2, 15);
+                const hash = this.simpleHash(timestamp + random);
+                this.token = timestamp + '.' + random + '.' + hash;
+                this.expiry = timestamp + this.validDuration;
+                localStorage.setItem(CONFIG.KEYS.CSRF, this.token);
+                localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', this.expiry.toString());
+                this.injectTokenToForms();
+                return this.token;
+            }
+
+            validateToken(token) {
+                if (!token) return false;
+                if (Date.now() > this.expiry) {
+                    console.warn('⚠️ CSRF token expired');
+                    return false;
+                }
+                const parts = token.split('.');
+                if (parts.length !== 3) return false;
+                const [timestamp, random, hash] = parts;
+                const expectedHash = this.simpleHash(timestamp + random);
+                if (hash !== expectedHash) {
+                    console.warn('⚠️ CSRF token hash mismatch');
+                    return false;
+                }
+                return true;
+            }
+
+            simpleHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return Math.abs(hash).toString(36);
+            }
+
+            injectTokenToForms() {
+                const token = this.getToken();
+                if (!token) return;
+                document.querySelectorAll('form').forEach(form => {
+                    let csrfInput = form.querySelector('input[name="csrf_token"]');
+                    if (!csrfInput) {
+                        csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = 'csrf_token';
+                        form.appendChild(csrfInput);
                     }
+                    csrfInput.value = token;
+                });
+            }
+
+            getToken() {
+                if (!this.token || !this.validateToken(this.token)) {
+                    return this.generateToken();
+                }
+                return this.token;
+            }
+
+            refreshToken() {
+                return this.generateToken();
+            }
+
+            clearToken() {
+                this.token = null;
+                this.expiry = null;
+                localStorage.removeItem(CONFIG.KEYS.CSRF);
+                localStorage.removeItem(CONFIG.KEYS.CSRF + '_expiry');
+            }
+        }
+
+        // ============================================================
+        // 🔧 HELPERS
+        // ============================================================
+
+        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
+
+        function getRoleName(r) {
+            const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
+            return R[r] || r || 'مستخدم';
+        }
+
+        function escapeHTML(s) {
+            if (!s) return '';
+            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+                "'": '&#039;' }[m]));
+        }
+
+        // ============================================================
+        // 🍞 TOAST
+        // ============================================================
+
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            if (!c) return;
+            const I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            const t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.innerHTML = '<span>' + I[type] + '</span> ' + msg;
+            c.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(30px)';
+                setTimeout(() => t.remove(), 300);
+            }, 3000);
+        }
+
+        // ============================================================
+        // 🔐 LOGIN WITH AUTHENTIFICATION EN COURS
+        // ============================================================
+
+        function doLogin() {
+            console.log('🔐 محاولة تسجيل الدخول');
+
+            const username = document.getElementById('username');
+            const password = document.getElementById('password');
+            const errorEl = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginButton');
+            const authOverlay = document.getElementById('authLoadingOverlay');
+
+            const user = username.value.trim();
+            const pass = password.value.trim();
+
+            errorEl.className = 'error-msg';
+            errorEl.textContent = '';
+
+            if (!user || !pass) {
+                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+
+            // ✅ إظهار رسالة "جاري التحقق من المصادقة..."
+            if (authOverlay) {
+                authOverlay.style.display = 'flex';
+            }
+
+            const csrfToken = csrfManager.getToken();
+
+            console.log('📤 Sending login request for user: ' + user);
+
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    username: user,
+                    password: pass,
+                    csrf_token: csrfToken
+                })
+            })
+            .then(async response => {
+                console.log('📥 Login response status: ' + response.status);
+
+                // ✅ إخفاء رسالة "جاري التحقق من المصادقة..."
+                if (authOverlay) {
+                    authOverlay.style.display = 'none';
                 }
 
-                async function handleLogout() {
-                    try {
-                        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-                        localStorage.clear();
-                        document.getElementById('loginSection').style.display = 'block';
-                        document.getElementById('userSection').style.display = 'none';
-                        document.getElementById('message').innerHTML = '<div class="success-msg">✅ تم تسجيل الخروج</div>';
-                    } catch(e) {}
+                const newCsrfToken = response.headers.get('X-CSRF-Token');
+                if (newCsrfToken) {
+                    localStorage.setItem(CONFIG.KEYS.CSRF, newCsrfToken);
+                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
                 }
 
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        const loginSection = document.getElementById('loginSection');
-                        if (loginSection.style.display !== 'none') handleLogin();
+                const data = await response.json();
+                console.log('📦 Login response data:', data);
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'فشل تسجيل الدخول');
+                }
+
+                return data;
+            })
+            .then(data => {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+
+                if (data.success && data.user) {
+                    const token = data.token;
+                    if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
+
+                    currentUser = data.user;
+                    window.currentUser = data.user;
+                    localStorage.setItem(CONFIG.KEYS.TOKEN, token);
+
+                    if (data.session) {
+                        localStorage.setItem(CONFIG.KEYS.CSRF, data.session.csrfToken);
+                        localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', data.session.csrfExpiry);
                     }
+
+                    console.log('✅ Login successful for user: ' + currentUser.username);
+
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+
+                    updateUserDisplay();
+                    loadPage('dashboard');
+                    showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
+                    loadAllData();
+                } else {
+                    errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+                    errorEl.classList.add('show');
+                    console.error('❌ Login failed:', data.error);
+                }
+            })
+            .catch(error => {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+
+                // ✅ إخفاء رسالة "جاري التحقق من المصادقة..." في حالة الخطأ
+                if (authOverlay) {
+                    authOverlay.style.display = 'none';
+                }
+
+                console.error('❌ Login error:', error);
+                errorEl.textContent = '❌ ' + error.message;
+                errorEl.classList.add('show');
+
+                fetch('/api/csrf-refresh', {
+                    method: 'POST',
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.token) {
+                        localStorage.setItem(CONFIG.KEYS.CSRF, data.token);
+                        localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + data.expiresIn);
+                    }
+                })
+                .catch(() => {});
+            });
+        }
+
+        // ============================================================
+        // 🛡️ VERIFY TOKEN WITH AUTHENTIFICATION EN COURS
+        // ============================================================
+
+        async function verifyToken(token) {
+            try {
+                console.log('🛡️ التحقق من التوكن...');
+
+                // ✅ إظهار رسالة "جاري التحقق من المصادقة..."
+                const authOverlay = document.getElementById('authLoadingOverlay');
+                if (authOverlay) {
+                    authOverlay.style.display = 'flex';
+                }
+
+                const csrfToken = csrfManager.getToken();
+
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    credentials: 'include'
                 });
 
-                async function checkAuth() {
-                    const token = localStorage.getItem('authToken');
-                    if (!token) return;
-                    try {
-                        const csrf = await getCsrfToken();
-                        const r = await fetch('/api/auth/me', {
-                            headers: { 'Authorization': 'Bearer ' + token, 'X-CSRF-Token': csrf || '', 'Accept': 'application/json' },
-                            credentials: 'include'
-                        });
-                        const d = await r.json();
-                        if (d.success && d.user) {
-                            document.getElementById('loginSection').style.display = 'none';
-                            document.getElementById('userSection').style.display = 'block';
-                            document.getElementById('userName').textContent = d.user.name || d.user.username;
-                            document.getElementById('userRole').textContent = d.user.role || 'مستخدم';
-                        } else {
-                            localStorage.removeItem('authToken');
-                        }
-                    } catch(e) { localStorage.removeItem('authToken'); }
+                // ✅ إخفاء رسالة "جاري التحقق من المصادقة..."
+                if (authOverlay) {
+                    authOverlay.style.display = 'none';
                 }
 
-                getCsrfToken().then(checkAuth);
-            </script>
-        </body>
-        </html>
-    `);
-});
+                const newCsrfToken = response.headers.get('X-CSRF-Token');
+                if (newCsrfToken) {
+                    localStorage.setItem(CONFIG.KEYS.CSRF, newCsrfToken);
+                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
+                }
 
-app.get('/pages/:page', (req, res) => {
-    const filePath = findPageFile(req.params.page);
-    if (filePath) return res.sendFile(filePath);
-    res.status(404).send('<h1>❌ 404</h1><p>Page not found</p>');
-});
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.user) {
+                        currentUser = data.user;
+                        window.currentUser = data.user;
+                        console.log('✅ التوكن صالح، المستخدم:', currentUser.username);
+                        return true;
+                    }
+                }
 
-app.get('/:page', (req, res, next) => {
-    const skip = ['api', 'pages', 'public', 'css', 'js', 'assets', 'favicon.ico'];
-    if (skip.includes(req.params.page)) return next();
-    const filePath = findPageFile(req.params.page);
-    if (filePath) return res.sendFile(filePath);
-    next();
-});
+                console.warn('⚠️ التوكن غير صالح، يتم حذفه');
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                csrfManager.clearToken();
+                return false;
+            } catch (error) {
+                // ✅ إخفاء رسالة "جاري التحقق من المصادقة..." في حالة الخطأ
+                const authOverlay = document.getElementById('authLoadingOverlay');
+                if (authOverlay) {
+                    authOverlay.style.display = 'none';
+                }
+                console.warn('⚠️ خطأ في التحقق:', error.message);
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                csrfManager.clearToken();
+                return false;
+            }
+        }
 
-app.get('*', (req, res) => {
-    if (req.path.startsWith('/api')) {
-        return res.status(404).json({ success: false, error: 'API not found' });
-    }
-    if (req.path.includes('.') && !req.path.startsWith('/api')) {
-        return res.status(404).send('❌ ملف غير موجود');
-    }
-    res.redirect('/');
-});
+        // ============================================================
+        // 📊 LOAD DATA
+        // ============================================================
 
-// ============================================================
-// 🔧 ERROR HANDLING
-// ============================================================
+        async function loadAllData() {
+            const token = getToken();
+            if (!token) return;
 
-app.use((err, req, res, next) => {
-    console.error('❌ Global error:', err);
-    res.status(err.status || 500).json({
-        success: false,
-        error: isProduction ? 'حدث خطأ في الخادم' : err.message
-    });
-});
+            const csrfToken = csrfManager.getToken();
+            const headers = {
+                'Authorization': 'Bearer ' + token,
+                'X-CSRF-Token': csrfToken
+            };
 
-// ============================================================
-// 🚀 START SERVER
-// ============================================================
+            try {
+                const [vesselsRes, usersRes] = await Promise.all([
+                    fetch(CONFIG.API + '/vessels', { headers, credentials: 'include' }),
+                    fetch(CONFIG.API + '/users', { headers, credentials: 'include' })
+                ]);
 
-app.listen(PORT, () => {
-    console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM v8.0 - PROFESSIONAL');
-    console.log('=========================================');
-    console.log(`📍 Server: http://localhost:${PORT}`);
-    console.log(`👤 Admin: ${ADMIN_USERNAME}`);
-    console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log('🔒 Security Level: ULTRA HIGH');
-    console.log(`📊 Vessels: ${vessels.length}`);
-    console.log(`📝 Maintenance Logs: ${maintenanceLogs.length}`);
-    console.log(`📋 System Logs: ${systemLogs.length}`);
-    console.log('=========================================');
-});
+                const newCsrfToken = vesselsRes.headers.get('X-CSRF-Token') || usersRes.headers.get('X-CSRF-Token');
+                if (newCsrfToken) {
+                    localStorage.setItem(CONFIG.KEYS.CSRF, newCsrfToken);
+                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
+                }
 
-module.exports = app;
+                if (vesselsRes.ok) {
+                    const data = await vesselsRes.json();
+                    allVessels = Array.isArray(data) ? data : [];
+                    window.allVessels = allVessels;
+                    updateBadge('fleetBadge', allVessels.length);
+                }
+                if (usersRes.ok) {
+                    const data = await usersRes.json();
+                    allUsers = Array.isArray(data) ? data : [];
+                    window.allUsers = allUsers;
+                    updateBadge('usersBadge', allUsers.length);
+                }
+
+                try {
+                    const logsRes = await fetch(CONFIG.API + '/logs', { headers, credentials: 'include' });
+                    if (logsRes.ok) {
+                        const data = await logsRes.json();
+                        allLogs = Array.isArray(data) ? data : [];
+                        window.allLogs = allLogs;
+                        updateBadge('logsBadge', allLogs.length);
+                        updateBadge('maintenanceBadge', allLogs.filter(l => l.status === 'قيد التنفيذ').length);
+                    }
+                } catch (e) {}
+
+            } catch (error) {
+                console.error('❌ خطأ أثناء تحميل البيانات:', error);
+            }
+        }
+
+        function updateBadge(id, count) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = count;
+                el.style.display = count > 0 ? 'inline' : 'none';
+            }
+        }
+
+        // ============================================================
+        // 👤 USER DISPLAY
+        // ============================================================
+
+        function updateUserDisplay() {
+            if (!currentUser) return;
+            const n = currentUser.name || currentUser.username;
+            document.getElementById('userDisplayName').textContent = n;
+            document.getElementById('userInitial').textContent = n.charAt(0);
+            document.getElementById('sidebarUserName').textContent = n;
+            document.getElementById('sidebarUserRole').textContent = getRoleName(currentUser.role);
+            document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);
+        }
+
+        // ============================================================
+        // ⏰ UPDATE DATE TIME - FIXED
+        // ============================================================
+
+        function updateDateTime() {
+            try {
+                const now = new Date();
+                const dateEl = document.getElementById('currentDate');
+                const timeEl = document.getElementById('currentTime');
+
+                if (dateEl) {
+                    dateEl.textContent = now.toLocaleDateString('ar-TN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                if (timeEl) {
+                    timeEl.textContent = now.toLocaleTimeString('ar-TN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
+            } catch (e) {
+                console.debug('updateDateTime:', e.message);
+            }
+        }
+
+        // ✅ تشغيل التحديث إذا كانت العناصر موجودة
+        if (document.getElementById('currentDate') || document.getElementById('currentTime')) {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+        }
+
+        // ============================================================
+        // 📄 LOAD PAGE
+        // ============================================================
+
+        function loadPage(page) {
+            currentPage = page;
+            localStorage.setItem(CONFIG.KEYS.PAGE, page);
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.page === page);
+            });
+
+            const container = document.getElementById('pageContainer');
+            const loader = document.getElementById('pageLoader');
+
+            if (!container) return;
+
+            loader.style.display = 'flex';
+            container.innerHTML = '';
+
+            const possiblePaths = [
+                '/pages/' + page + '.html',
+                '/public/pages/' + page + '.html',
+                '/public/' + page + '.html',
+                '/' + page + '.html'
+            ];
+
+            let loaded = false;
+
+            for (const path of possiblePaths) {
+                fetch(path, { cache: 'no-store' })
+                    .then(response => {
+                        if (response.ok) {
+                            loaded = true;
+                            return response.text();
+                        }
+                        throw new Error('Page not found');
+                    })
+                    .then(html => {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+
+                        const scripts = tempDiv.querySelectorAll('script');
+                        const scriptContents = [];
+                        scripts.forEach(script => {
+                            scriptContents.push(script.textContent);
+                            script.remove();
+                        });
+
+                        container.innerHTML = tempDiv.innerHTML;
+
+                        scriptContents.forEach(content => {
+                            if (content && content.trim()) {
+                                try {
+                                    const newScript = document.createElement('script');
+                                    newScript.textContent = content;
+                                    document.body.appendChild(newScript);
+                                    setTimeout(() => {
+                                        if (newScript.parentNode) newScript.remove();
+                                    }, 10);
+                                } catch (e) {
+                                    console.warn('⚠️ خطأ في تنفيذ script:', e.message);
+                                }
+                            }
+                        });
+
+                        csrfManager.injectTokenToForms();
+
+                        loader.style.display = 'none';
+                        document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
+                        console.log('✅ تم تحميل الصفحة:', page);
+                    })
+                    .catch(error => {
+                        if (!loaded) {
+                            loader.style.display = 'none';
+                            container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
+                                '<div style="font-size:48px;">❌</div>' +
+                                '<h2 style="color:#f87171;">فشل تحميل الصفحة</h2>' +
+                                '<p>' + escapeHTML(error.message) + '</p>' +
+                                '<button onclick="loadPage(\'dashboard\')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button>' +
+                                '</div>';
+                        }
+                    });
+                break;
+            }
+
+            if (!loaded) {
+                setTimeout(() => {
+                    if (container.innerHTML === '') {
+                        loader.style.display = 'none';
+                        container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
+                            '<div style="font-size:48px;">❌</div>' +
+                            '<h2 style="color:#f87171;">الصفحة غير موجودة</h2>' +
+                            '<button onclick="loadPage(\'dashboard\')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button>' +
+                            '</div>';
+                    }
+                }, 2000);
+            }
+        }
+
+        // ============================================================
+        // 🚪 LOGOUT
+        // ============================================================
+
+        function doLogout() {
+            if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+
+            const token = getToken();
+            if (token) {
+                const csrfToken = csrfManager.getToken();
+                fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'X-CSRF-Token': csrfToken
+                    },
+                    credentials: 'include'
+                }).catch(() => {});
+            }
+
+            currentUser = null;
+            window.currentUser = null;
+            localStorage.removeItem(CONFIG.KEYS.TOKEN);
+            csrfManager.clearToken();
+
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').className = 'error-msg';
+            showToast('👋 تم تسجيل الخروج', 'info');
+        }
+
+        // ============================================================
+        // 🧭 SIDEBAR
+        // ============================================================
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('menuToggle').classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('menuToggle').classList.remove('active');
+        }
+
+        // ============================================================
+        // ✅ التحقق من حالة الخادم
+        // ============================================================
+
+        function checkServerStatus() {
+            fetch('/api/session-status', {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('🖥️ Server status:', data);
+                if (data.success && data.hasCsrf) {
+                    const csrfInput = document.querySelector('input[name="csrf_token"]');
+                    if (csrfInput) {
+                        csrfInput.value = localStorage.getItem(CONFIG.KEYS.CSRF) || '';
+                    }
+                }
+            })
+            .catch(error => {
+                console.warn('⚠️ Server status check failed:', error);
+            });
+        }
+
+        // ============================================================
+        // 🚀 INIT
+        // ============================================================
+
+        const csrfManager = new CSRFTokenManager();
+        window.csrfManager = csrfManager;
+
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options = {}) {
+            const token = csrfManager.getToken();
+
+            if (options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
+                options.headers = options.headers || {};
+                if (!options.headers['X-CSRF-Token']) {
+                    options.headers['X-CSRF-Token'] = token;
+                }
+            }
+
+            if (options.body && options.body instanceof FormData) {
+                if (!options.body.has('csrf_token')) {
+                    options.body.append('csrf_token', token);
+                }
+            }
+
+            return originalFetch.call(this, url, options).then(response => {
+                const newToken = response.headers.get('X-CSRF-Token');
+                if (newToken) {
+                    csrfManager.token = newToken;
+                    localStorage.setItem(CONFIG.KEYS.CSRF, newToken);
+                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
+                }
+                return response;
+            });
+        };
+
+        // ✅ DOM Ready
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('📄 DOM جاهز');
+
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const button = document.getElementById('loginButton');
+                if (!button.disabled) doLogin();
+            });
+
+            document.getElementById('togglePassword').onclick = function() {
+                const i = document.getElementById('password');
+                const ic = this.querySelector('i');
+                i.type = i.type === 'password' ? 'text' : 'password';
+                ic.className = i.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+            };
+
+            document.getElementById('menuToggle').onclick = toggleSidebar;
+            document.getElementById('sidebarClose').onclick = closeSidebar;
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const page = this.dataset.page;
+                    if (page) loadPage(page);
+                    if (window.innerWidth <= 992) closeSidebar();
+                });
+            });
+
+            document.getElementById('notifBtn').onclick = function() {
+                showToast('📬 تم فتح الإشعارات', 'info');
+            };
+
+            document.getElementById('userBtn').onclick = function() {
+                if (confirm('هل تريد تسجيل الخروج؟')) doLogout();
+            };
+
+            document.getElementById('backToTop').onclick = function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+            window.addEventListener('scroll', function() {
+                document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';
+            });
+
+            const observer = new MutationObserver(() => {
+                csrfManager.injectTokenToForms();
+            });
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+
+            // ✅ تحديث الوقت فقط إذا كانت العناصر موجودة
+            if (document.getElementById('currentDate') || document.getElementById('currentTime')) {
+                updateDateTime();
+                setInterval(updateDateTime, 1000);
+            }
+
+            setTimeout(checkServerStatus, 1000);
+
+            const csrfInput = document.querySelector('input[name="csrf_token"]');
+            if (csrfInput) {
+                const token = csrfManager.getToken();
+                if (token) {
+                    csrfInput.value = token;
+                }
+            }
+
+            const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
+            if (token) {
+                const isValid = await verifyToken(token);
+                if (isValid) {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+                    updateUserDisplay();
+                    const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
+                    loadPage(savedPage);
+                    showToast('👋 مرحباً بعودتك', 'success');
+                    setTimeout(loadAllData, 500);
+                } else {
+                    localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                    csrfManager.clearToken();
+                }
+            }
+
+            console.log('✅ Marine System v8.0 ready with Login Fix');
+        });
+
+        // ============================================================
+        // 🌐 GLOBAL
+        // ============================================================
+
+        window.doLogin = doLogin;
+        window.doLogout = doLogout;
+        window.loadPage = loadPage;
+        window.toggleSidebar = toggleSidebar;
+        window.closeSidebar = closeSidebar;
+        window.showToast = showToast;
+        window.verifyToken = verifyToken;
+        window.loadAllData = loadAllData;
+        window.currentUser = currentUser;
+        window.updateDateTime = updateDateTime;
+        window.csrfManager = csrfManager;
+
+        console.log('✅ Marine System v8.0 loaded successfully');
+    </script>
+
+</body>
+</html>
