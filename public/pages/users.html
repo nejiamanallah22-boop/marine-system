@@ -1,499 +1,84 @@
 <!-- public/pages/users.html -->
 <div id="page-users">
     <style>
-        /* ============================================================
-           👥 USERS PAGE - ENTERPRISE HARDENED v3.0
-           ============================================================ */
-        
-        .users-container {
-            padding: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .users-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 25px;
-            background: rgba(255,255,255,0.02);
-            padding: 16px 24px;
-            border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-        
-        .users-header h2 {
-            color: #fff;
-            margin: 0;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .users-header h2 .badge {
-            font-size: 11px;
-            padding: 4px 14px;
-            border-radius: 20px;
-            background: rgba(66,133,244,0.15);
-            color: #60a5fa;
-            border: 1px solid rgba(66,133,244,0.1);
-            font-weight: 400;
-        }
-        
-        .users-header .header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .users-header .header-actions .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .users-header .header-actions .btn-primary {
-            background: linear-gradient(135deg, #4285f4, #34a853);
-            color: #fff;
-        }
-        
-        .users-header .header-actions .btn-primary:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 30px rgba(66,133,244,0.3);
-        }
-        
-        .users-header .header-actions .btn-outline {
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.6);
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-        
-        .users-header .header-actions .btn-outline:hover {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-        }
-        
-        .users-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .stat-card {
-            background: rgba(255,255,255,0.02);
-            padding: 18px 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.04);
-            text-align: center;
-        }
-        
-        .stat-card h4 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-        }
-        
-        .stat-card p {
-            margin: 5px 0 0;
-            font-size: 13px;
-            color: rgba(255,255,255,0.3);
-        }
-        
-        .stat-card .stat-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        
+        .users-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
+        .users-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: rgba(255,255,255,0.02); padding: 16px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); }
+        .users-header h2 { color: #fff; margin: 0; font-size: 24px; display: flex; align-items: center; gap: 12px; }
+        .users-header h2 .badge { font-size: 11px; padding: 4px 14px; border-radius: 20px; background: rgba(66,133,244,0.15); color: #60a5fa; border: 1px solid rgba(66,133,244,0.1); font-weight: 400; }
+        .users-header .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .users-header .header-actions .btn { padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; font-family: 'Cairo', sans-serif; display: flex; align-items: center; gap: 8px; }
+        .users-header .header-actions .btn-primary { background: linear-gradient(135deg, #4285f4, #34a853); color: #fff; }
+        .users-header .header-actions .btn-primary:hover { transform: scale(1.02); box-shadow: 0 4px 30px rgba(66,133,244,0.3); }
+        .users-header .header-actions .btn-outline { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.06); }
+        .users-header .header-actions .btn-outline:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .users-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: rgba(255,255,255,0.02); padding: 18px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); text-align: center; }
+        .stat-card h4 { margin: 0; font-size: 28px; font-weight: 700; }
+        .stat-card p { margin: 5px 0 0; font-size: 13px; color: rgba(255,255,255,0.3); }
+        .stat-card .stat-icon { font-size: 24px; margin-bottom: 8px; }
         .stat-card.total h4 { color: #60a5fa; }
         .stat-card.active h4 { color: #4ade80; }
         .stat-card.inactive h4 { color: #f87171; }
         .stat-card.admins h4 { color: #f5d76e; }
-        
-        .table-container {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.04);
-            background: rgba(255,255,255,0.01);
-        }
-        
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            font-family: 'Cairo', sans-serif;
-        }
-        
-        .users-table thead th {
-            padding: 12px 14px;
-            text-align: center;
-            color: rgba(255,255,255,0.4);
-            border-bottom: 2px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.02);
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .users-table tbody td {
-            padding: 12px 14px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.7);
-            vertical-align: middle;
-        }
-        
-        .users-table tbody tr:hover td {
-            background: rgba(255,255,255,0.02);
-        }
-        
-        .users-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .status-badge {
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .status-badge.active {
-            background: rgba(74,222,128,0.15);
-            color: #4ade80;
-            border: 1px solid rgba(74,222,128,0.1);
-        }
-        
-        .status-badge.inactive {
-            background: rgba(248,113,113,0.15);
-            color: #f87171;
-            border: 1px solid rgba(248,113,113,0.1);
-        }
-        
-        .status-badge.locked {
-            background: rgba(251,191,36,0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(251,191,36,0.1);
-        }
-        
-        .role-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .role-badge.admin {
-            background: rgba(245,215,110,0.15);
-            color: #f5d76e;
-            border: 1px solid rgba(245,215,110,0.1);
-        }
-        
-        .role-badge.manager {
-            background: rgba(96,165,250,0.15);
-            color: #60a5fa;
-            border: 1px solid rgba(96,165,250,0.1);
-        }
-        
-        .role-badge.operator {
-            background: rgba(74,222,128,0.15);
-            color: #4ade80;
-            border: 1px solid rgba(74,222,128,0.1);
-        }
-        
-        .role-badge.viewer {
-            background: rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.4);
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-        
-        .btn-sm {
-            padding: 4px 10px;
-            font-size: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
+        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.01); }
+        .users-table { width: 100%; border-collapse: collapse; font-size: 13px; font-family: 'Cairo', sans-serif; }
+        .users-table thead th { padding: 12px 14px; text-align: center; color: rgba(255,255,255,0.4); border-bottom: 2px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .users-table tbody td { padding: 12px 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.7); vertical-align: middle; }
+        .users-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+        .users-table tbody tr:last-child td { border-bottom: none; }
+        .status-badge { padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .status-badge.active { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
+        .status-badge.inactive { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
+        .status-badge.locked { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
+        .role-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .role-badge.admin { background: rgba(245,215,110,0.15); color: #f5d76e; border: 1px solid rgba(245,215,110,0.1); }
+        .role-badge.manager { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.1); }
+        .role-badge.operator { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
+        .role-badge.viewer { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.06); }
+        .btn-sm { padding: 4px 10px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all 0.3s; display: inline-flex; align-items: center; gap: 4px; }
         .btn-sm:hover { opacity: 0.8; transform: scale(1.05); }
         .btn-sm:active { transform: scale(0.95); }
-        
-        .btn-sm.btn-edit {
-            background: rgba(96,165,250,0.15);
-            color: #60a5fa;
-            border: 1px solid rgba(96,165,250,0.1);
-        }
-        
-        .btn-sm.btn-delete {
-            background: rgba(248,113,113,0.15);
-            color: #f87171;
-            border: 1px solid rgba(248,113,113,0.1);
-        }
-        
-        .btn-sm.btn-toggle {
-            background: rgba(251,191,36,0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(251,191,36,0.1);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: rgba(255,255,255,0.2);
-        }
-        
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        
-        /* ===== Form ===== */
-        .user-form {
-            display: none;
-            background: rgba(255,255,255,0.02);
-            border-radius: 14px;
-            padding: 24px;
-            margin: 20px 0;
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-        
-        .user-form.active {
-            display: block;
-            animation: slideDown 0.4s ease;
-        }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .user-form .form-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .user-form .form-header h3 {
-            color: #fff;
-            margin: 0;
-            font-size: 18px;
-        }
-        
-        .user-form .form-header .btn-close {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.3);
-            font-size: 24px;
-            cursor: pointer;
-            transition: all 0.3s;
-            padding: 0 8px;
-        }
-        
-        .user-form .form-header .btn-close:hover {
-            color: #f87171;
-            transform: rotate(90deg);
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .form-group label {
-            font-size: 13px;
-            color: rgba(255,255,255,0.4);
-            font-weight: 600;
-        }
-        
-        .form-group label .required {
-            color: #f87171;
-        }
-        
-        .form-group input,
-        .form-group select {
-            padding: 10px 14px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 8px;
-            color: #e2e8f0;
-            font-family: 'Cairo', sans-serif;
-            font-size: 14px;
-            transition: all 0.3s;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #4285f4;
-            background: rgba(255,255,255,0.06);
-            box-shadow: 0 0 0 4px rgba(66,133,244,0.06);
-        }
-        
-        .form-group input::placeholder {
-            color: rgba(255,255,255,0.15);
-        }
-        
-        .form-group select option {
-            background: #1a2332;
-            color: #e2e8f0;
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .form-actions .btn-save {
-            padding: 12px 32px;
-            background: linear-gradient(135deg, #4285f4, #34a853);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .form-actions .btn-save:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 30px rgba(66,133,244,0.3);
-        }
-        
-        .form-actions .btn-cancel {
-            padding: 12px 32px;
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.4);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            font-size: 14px;
-        }
-        
-        .form-actions .btn-cancel:hover {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-        }
-        
-        /* ===== Toast Container ===== */
-        .toast-container {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-width: 420px;
-            width: 90%;
-            pointer-events: none;
-        }
-        
-        .toast {
-            padding: 12px 18px;
-            border-radius: 12px;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 500;
-            animation: slideUp 0.4s ease-out;
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.3);
-            pointer-events: auto;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        
+        .btn-sm.btn-edit { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.1); }
+        .btn-sm.btn-delete { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
+        .btn-sm.btn-toggle { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
+        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.2); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+        .user-form { display: none; background: rgba(255,255,255,0.02); border-radius: 14px; padding: 24px; margin: 20px 0; border: 1px solid rgba(255,255,255,0.06); }
+        .user-form.active { display: block; animation: slideDown 0.4s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .user-form .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .user-form .form-header h3 { color: #fff; margin: 0; font-size: 18px; }
+        .user-form .form-header .btn-close { background: none; border: none; color: rgba(255,255,255,0.3); font-size: 24px; cursor: pointer; transition: all 0.3s; padding: 0 8px; }
+        .user-form .form-header .btn-close:hover { color: #f87171; transform: rotate(90deg); }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 600; }
+        .form-group label .required { color: #f87171; }
+        .form-group input, .form-group select { padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; color: #e2e8f0; font-family: 'Cairo', sans-serif; font-size: 14px; transition: all 0.3s; width: 100%; box-sizing: border-box; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #4285f4; background: rgba(255,255,255,0.06); box-shadow: 0 0 0 4px rgba(66,133,244,0.06); }
+        .form-group input::placeholder { color: rgba(255,255,255,0.15); }
+        .form-group select option { background: #1a2332; color: #e2e8f0; }
+        .form-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+        .form-actions .btn-save { padding: 12px 32px; background: linear-gradient(135deg, #4285f4, #34a853); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: 'Cairo', sans-serif; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .form-actions .btn-save:hover { transform: scale(1.02); box-shadow: 0 4px 30px rgba(66,133,244,0.3); }
+        .form-actions .btn-cancel { padding: 12px 32px; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; transition: all 0.3s; font-family: 'Cairo', sans-serif; font-size: 14px; }
+        .form-actions .btn-cancel:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; max-width: 420px; width: 90%; pointer-events: none; }
+        .toast { padding: 12px 18px; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 500; animation: slideUp 0.4s ease-out; backdrop-filter: blur(10px); display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 40px rgba(0,0,0,0.3); pointer-events: auto; border: 1px solid rgba(255,255,255,0.08); }
         .toast.success { background: rgba(16,185,129,0.92); }
         .toast.danger { background: rgba(239,68,68,0.92); }
         .toast.warning { background: rgba(245,158,11,0.92); }
         .toast.info { background: rgba(59,130,246,0.92); }
-        
-        .toast .toast-close {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.5);
-            cursor: pointer;
-            margin-right: auto;
-            font-size: 16px;
-        }
-        
+        .toast .toast-close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; margin-right: auto; font-size: 16px; }
         .toast .toast-close:hover { color: #fff; }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* ===== Responsive ===== */
-        @media (max-width: 768px) {
-            .users-header { flex-direction: column; align-items: stretch; padding: 14px 18px; }
-            .users-header h2 { font-size: 20px; }
-            .users-stats { grid-template-columns: repeat(2, 1fr); }
-            .stat-card h4 { font-size: 22px; }
-            .form-grid { grid-template-columns: 1fr; }
-            .users-table { font-size: 12px; }
-            .users-table thead th, .users-table tbody td { padding: 8px 10px; }
-        }
-        
-        @media (max-width: 480px) {
-            .users-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .stat-card { padding: 12px 14px; }
-            .stat-card h4 { font-size: 18px; }
-            .users-header h2 { font-size: 18px; }
-            .header-actions .btn { font-size: 12px; padding: 8px 14px; }
-            .form-actions .btn-save, .form-actions .btn-cancel { width: 100%; justify-content: center; }
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) { .users-header { flex-direction: column; align-items: stretch; padding: 14px 18px; } .users-header h2 { font-size: 20px; } .users-stats { grid-template-columns: repeat(2, 1fr); } .stat-card h4 { font-size: 22px; } .form-grid { grid-template-columns: 1fr; } .users-table { font-size: 12px; } .users-table thead th, .users-table tbody td { padding: 8px 10px; } }
+        @media (max-width: 480px) { .users-stats { grid-template-columns: 1fr 1fr; gap: 10px; } .stat-card { padding: 12px 14px; } .stat-card h4 { font-size: 18px; } .users-header h2 { font-size: 18px; } .header-actions .btn { font-size: 12px; padding: 8px 14px; } .form-actions .btn-save, .form-actions .btn-cancel { width: 100%; justify-content: center; } }
     </style>
 
-    <!-- MAIN CONTAINER -->
     <div class="users-container">
-        
-        <!-- HEADER -->
         <div class="users-header">
-            <h2>
-                👥 إدارة المستخدمين
-                <span class="badge">v3.0 🔒</span>
-            </h2>
+            <h2>👥 إدارة المستخدمين <span class="badge">v3.0 🔒</span></h2>
             <div class="header-actions">
                 <button class="btn btn-primary" id="addUserBtn">➕ إضافة مستخدم</button>
                 <button class="btn btn-outline" id="refreshUsersBtn">🔄 تحديث</button>
@@ -501,88 +86,29 @@
             </div>
         </div>
 
-        <!-- STATS -->
         <div class="users-stats" id="usersStats">
-            <div class="stat-card total">
-                <div class="stat-icon">👥</div>
-                <h4 id="totalUsers">0</h4>
-                <p>إجمالي المستخدمين</p>
-            </div>
-            <div class="stat-card active">
-                <div class="stat-icon">✅</div>
-                <h4 id="activeUsers">0</h4>
-                <p>نشط</p>
-            </div>
-            <div class="stat-card inactive">
-                <div class="stat-icon">❌</div>
-                <h4 id="inactiveUsers">0</h4>
-                <p>غير نشط</p>
-            </div>
-            <div class="stat-card admins">
-                <div class="stat-icon">⭐</div>
-                <h4 id="adminUsers">0</h4>
-                <p>مسؤولين</p>
-            </div>
+            <div class="stat-card total"><div class="stat-icon">👥</div><h4 id="totalUsers">0</h4><p>إجمالي المستخدمين</p></div>
+            <div class="stat-card active"><div class="stat-icon">✅</div><h4 id="activeUsers">0</h4><p>نشط</p></div>
+            <div class="stat-card inactive"><div class="stat-icon">❌</div><h4 id="inactiveUsers">0</h4><p>غير نشط</p></div>
+            <div class="stat-card admins"><div class="stat-icon">⭐</div><h4 id="adminUsers">0</h4><p>مسؤولين</p></div>
         </div>
 
-        <!-- USERS TABLE -->
-        <div id="usersTableContainer">
-            <div class="empty-state">
-                <div class="icon">⏳</div>
-                <p>جاري تحميل البيانات...</p>
-            </div>
-        </div>
+        <div id="usersTableContainer"><div class="empty-state"><div class="icon">⏳</div><p>جاري تحميل البيانات...</p></div></div>
 
-        <!-- ADD/EDIT USER FORM -->
         <div class="user-form" id="userForm">
-            <div class="form-header">
-                <h3 id="formTitle">➕ إضافة مستخدم جديد</h3>
-                <button class="btn-close" id="formCloseBtn">✕</button>
-            </div>
-            
+            <div class="form-header"><h3 id="formTitle">➕ إضافة مستخدم جديد</h3><button class="btn-close" id="formCloseBtn">✕</button></div>
             <div class="form-grid">
-                <div class="form-group">
-                    <label>👤 اسم المستخدم <span class="required">*</span></label>
-                    <input type="text" id="userUsername" placeholder="اسم المستخدم">
-                </div>
-                <div class="form-group">
-                    <label>📧 البريد الإلكتروني <span class="required">*</span></label>
-                    <input type="email" id="userEmail" placeholder="البريد الإلكتروني">
-                </div>
-                <div class="form-group">
-                    <label>🔑 كلمة المرور <span class="required" id="passwordRequired">*</span></label>
-                    <input type="password" id="userPassword" placeholder="كلمة المرور">
-                </div>
-                <div class="form-group">
-                    <label>👔 الدور</label>
-                    <select id="userRole">
-                        <option value="admin">مسؤول</option>
-                        <option value="manager">مدير</option>
-                        <option value="operator">مشغل</option>
-                        <option value="viewer">مشاهد</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>📊 الحالة</label>
-                    <select id="userStatus">
-                        <option value="active">نشط</option>
-                        <option value="inactive">غير نشط</option>
-                    </select>
-                </div>
+                <div class="form-group"><label>👤 اسم المستخدم <span class="required">*</span></label><input type="text" id="userUsername" placeholder="اسم المستخدم"></div>
+                <div class="form-group"><label>📧 البريد الإلكتروني <span class="required">*</span></label><input type="email" id="userEmail" placeholder="البريد الإلكتروني"></div>
+                <div class="form-group"><label>🔑 كلمة المرور <span class="required" id="passwordRequired">*</span></label><input type="password" id="userPassword" placeholder="كلمة المرور"></div>
+                <div class="form-group"><label>👔 الدور</label><select id="userRole"><option value="admin">مسؤول</option><option value="manager">مدير</option><option value="operator">مشغل</option><option value="viewer">مشاهد</option></select></div>
+                <div class="form-group"><label>📊 الحالة</label><select id="userStatus"><option value="active">نشط</option><option value="inactive">غير نشط</option></select></div>
                 <input type="hidden" id="userId" value="">
             </div>
-            
-            <div class="form-actions">
-                <button class="btn-save" id="saveUserBtn">💾 حفظ</button>
-                <button class="btn-cancel" id="cancelUserBtn">❌ إلغاء</button>
-            </div>
+            <div class="form-actions"><button class="btn-save" id="saveUserBtn">💾 حفظ</button><button class="btn-cancel" id="cancelUserBtn">❌ إلغاء</button></div>
         </div>
-        
     </div>
 
-    <!-- ============================================================
-    📦 JAVASCRIPT - USERS PAGE v3.0 (ENTERPRISE HARDENED)
-    ============================================================ -->
     <script>
     (function() {
         'use strict';
@@ -590,12 +116,8 @@
         console.log('👥 Users page v3.0 - Enterprise Hardened');
 
         // ============================================================
-        // 1. 🔒 SECURITY HELPERS
+        // 1. HELPER FUNCTIONS
         // ============================================================
-
-        function normalizeId(id) {
-            return id == null ? '' : String(id);
-        }
 
         function escapeHtml(str) {
             if (!str) return '';
@@ -604,97 +126,22 @@
             return div.innerHTML;
         }
 
-        // ============================================================
-        // 2. 🔑 TOKEN & CSRF MANAGEMENT
-        // ============================================================
-
-        function getToken() {
-            var token = localStorage.getItem('authToken') || 
-                         localStorage.getItem('marine_token') || 
-                         localStorage.getItem('token');
-            return token || null;
+        function normalizeId(id) {
+            return id == null ? '' : String(id);
         }
 
-        function getCsrfToken() {
-            return localStorage.getItem('csrf_token') || '';
+        function getToken() {
+            return localStorage.getItem('authToken') || 
+                   localStorage.getItem('marine_token') || 
+                   localStorage.getItem('token') || null;
         }
 
         function getAuthHeaders() {
             var token = getToken();
-            var csrf = getCsrfToken();
-            var headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            };
-            if (token) {
-                headers['Authorization'] = 'Bearer ' + token;
-            }
-            if (csrf) {
-                headers['X-CSRF-Token'] = csrf;
-            }
+            var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
             return headers;
         }
-
-        // ============================================================
-        // 3. 👤 CURRENT USER INFO (من السيرفر فقط)
-        // ============================================================
-
-        var currentUser = null;
-
-        function fetchCurrentUser() {
-            var token = getToken();
-            if (!token) return Promise.resolve(null);
-
-            return fetch('/api/auth/me', {
-                headers: getAuthHeaders(),
-                credentials: 'include'
-            })
-            .then(function(response) {
-                if (!response.ok) return null;
-                return response.json();
-            })
-            .then(function(data) {
-                if (data && data.success && data.user) {
-                    currentUser = data.user;
-                    window.currentUser = currentUser;
-                    return currentUser;
-                }
-                return null;
-            })
-            .catch(function() {
-                return null;
-            });
-        }
-
-        // ============================================================
-        // 4. ✅ PERMISSIONS (السيرفر هو مصدر الحقيقة)
-        // ============================================================
-
-        function isAdmin() {
-            if (!currentUser) return false;
-            var role = currentUser.role || '';
-            return role === 'admin' || role === 'مسؤول';
-        }
-
-        function canEdit() {
-            return isAdmin();
-        }
-
-        function canDelete() {
-            return isAdmin();
-        }
-
-        // ============================================================
-        // 5. 📦 STATE
-        // ============================================================
-
-        var usersData = [];
-        var isLoading = false;
-        var isInitialized = false;
-
-        // ============================================================
-        // 6. 🍞 TOAST
-        // ============================================================
 
         function showToast(message, type) {
             type = type || 'info';
@@ -705,25 +152,23 @@
                 container.className = 'toast-container';
                 document.body.appendChild(container);
             }
-
             var toast = document.createElement('div');
             toast.className = 'toast ' + type;
             var icons = { success: '✅', warning: '⚠️', danger: '❌', info: 'ℹ️' };
             toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> <span>' + escapeHtml(message) + '</span> <button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
             container.appendChild(toast);
-
-            setTimeout(function() {
-                if (toast.parentElement) toast.remove();
-            }, 4000);
+            setTimeout(function() { if (toast.parentElement) toast.remove(); }, 4000);
         }
 
         // ============================================================
-        // 7. 📊 LOAD USERS
+        // 2. LOAD DATA
         // ============================================================
+
+        var usersData = [];
+        var isLoading = false;
 
         async function loadUsersData() {
             if (isLoading) return;
-
             console.log('🔄 [USERS] Loading users data...');
             isLoading = true;
 
@@ -747,51 +192,35 @@
                     credentials: 'include'
                 });
 
-                if (response.status === 401 || response.status === 403) {
+                if (response.status === 401) {
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('marine_token');
                     localStorage.removeItem('token');
                     if (container) {
-                        container.innerHTML = '<div class="empty-state"><div class="icon">🔒</div><p>انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى</p></div>';
+                        container.innerHTML = '<div class="empty-state"><div class="icon">🔒</div><p>انتهت صلاحية الجلسة</p></div>';
                     }
                     isLoading = false;
                     return;
                 }
 
-                if (!response.ok) {
-                    throw new Error('HTTP ' + response.status);
-                }
+                if (!response.ok) throw new Error('HTTP ' + response.status);
 
                 var data = await response.json();
+                console.log('📦 [USERS] Data received:', data);
 
-                // ✅ معالجة البيانات
-                var rawUsers = [];
                 if (Array.isArray(data)) {
-                    rawUsers = data;
+                    usersData = data;
                 } else if (data.users && Array.isArray(data.users)) {
-                    rawUsers = data.users;
+                    usersData = data.users;
                 } else if (data.data && Array.isArray(data.data)) {
-                    rawUsers = data.data;
+                    usersData = data.data;
+                } else {
+                    usersData = [];
                 }
-
-                usersData = rawUsers.map(function(u) {
-                    return {
-                        id: normalizeId(u._id || u.id),
-                        _id: u._id || u.id,
-                        username: u.username || '',
-                        name: u.name || u.username || '',
-                        email: u.email || '',
-                        role: u.role || 'viewer',
-                        active: u.active !== false,
-                        createdAt: u.createdAt,
-                        lastLogin: u.lastLogin
-                    };
-                });
 
                 window.usersData = usersData;
 
                 console.log('✅ [USERS] Loaded:', usersData.length);
-
                 renderUsers(usersData);
                 updateStats(usersData);
 
@@ -800,14 +229,12 @@
                 if (container) {
                     container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>حدث خطأ في تحميل البيانات</p></div>';
                 }
-                showToast('❌ فشل تحميل المستخدمين', 'danger');
             }
-
             isLoading = false;
         }
 
         // ============================================================
-        // 8. 🎨 RENDER FUNCTIONS (DOM-based, sans innerHTML)
+        // 3. RENDER FUNCTIONS
         // ============================================================
 
         function updateStats(users) {
@@ -831,143 +258,62 @@
                 return;
             }
 
-            // ✅ إنشاء الجدول باستخدام DOM API (بدون innerHTML للبيانات)
-            var wrapper = document.createElement('div');
-            wrapper.className = 'table-container';
+            var roleMap = {
+                'admin': '<span class="role-badge admin">مسؤول</span>',
+                'manager': '<span class="role-badge manager">مدير</span>',
+                'operator': '<span class="role-badge operator">مشغل</span>',
+                'viewer': '<span class="role-badge viewer">مشاهد</span>'
+            };
 
-            var table = document.createElement('table');
-            table.className = 'users-table';
+            var statusMap = {
+                true: '<span class="status-badge active">✅ نشط</span>',
+                false: '<span class="status-badge inactive">❌ غير نشط</span>'
+            };
 
-            // Thead
-            var thead = document.createElement('thead');
-            var headerRow = document.createElement('tr');
-            var headers = ['👤 المستخدم', '📧 البريد الإلكتروني', '👔 الدور', '📊 الحالة', '📅 آخر تسجيل دخول', '⚙️ الإجراءات'];
-            headers.forEach(function(text) {
-                var th = document.createElement('th');
-                th.textContent = text;
-                headerRow.appendChild(th);
-            });
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
-
-            // Tbody
-            var tbody = document.createElement('tbody');
-
-            var currentUserId = normalizeId(currentUser ? (currentUser._id || currentUser.id) : '');
+            var html = '<div class="table-container"><table class="users-table"><thead><tr>';
+            html += '<th>👤 المستخدم</th><th>📧 البريد الإلكتروني</th><th>👔 الدور</th><th>📊 الحالة</th><th>📅 آخر تسجيل دخول</th><th>⚙️ الإجراءات</th>';
+            html += '</tr></thead><tbody>';
 
             users.forEach(function(u) {
-                var userId = normalizeId(u.id || u._id);
-                var isSelf = userId === currentUserId;
-
-                var tr = document.createElement('tr');
-
-                // Name
-                var tdName = document.createElement('td');
-                var strong = document.createElement('strong');
-                strong.textContent = u.name || u.username || '-';
-                tdName.appendChild(strong);
-                tr.appendChild(tdName);
-
-                // Email
-                var tdEmail = document.createElement('td');
-                tdEmail.textContent = u.email || '-';
-                tr.appendChild(tdEmail);
-
-                // Role
-                var tdRole = document.createElement('td');
-                var roleSpan = document.createElement('span');
-                roleSpan.className = 'role-badge ' + (u.role || 'viewer');
-                roleSpan.textContent = {
-                    'admin': 'مسؤول',
-                    'manager': 'مدير',
-                    'operator': 'مشغل',
-                    'viewer': 'مشاهد'
-                } [u.role] || u.role || 'مشاهد';
-                tdRole.appendChild(roleSpan);
-                tr.appendChild(tdRole);
-
-                // Status
-                var tdStatus = document.createElement('td');
-                var statusSpan = document.createElement('span');
                 var isActive = u.active !== false;
-                statusSpan.className = 'status-badge ' + (isActive ? 'active' : 'inactive');
-                statusSpan.textContent = isActive ? '✅ نشط' : '❌ غير نشط';
-                tdStatus.appendChild(statusSpan);
-                tr.appendChild(tdStatus);
+                var lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ar-TN') : '-';
 
-                // Last Login
-                var tdLastLogin = document.createElement('td');
-                tdLastLogin.textContent = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ar-TN') : '-';
-                tr.appendChild(tdLastLogin);
-
-                // Actions
-                var tdActions = document.createElement('td');
-                var actionsDiv = document.createElement('div');
-                actionsDiv.className = 'action-btns';
-
-                // Edit button
-                var editBtn = document.createElement('button');
-                editBtn.className = 'btn-sm btn-edit';
-                editBtn.textContent = '✏️';
-                editBtn.title = 'تعديل';
-                editBtn.dataset.id = userId;
-                editBtn.onclick = function() { editUser(userId); };
-                if (!canEdit()) editBtn.disabled = true;
-                actionsDiv.appendChild(editBtn);
-
-                // Toggle button
-                var toggleBtn = document.createElement('button');
-                toggleBtn.className = 'btn-sm btn-toggle';
-                toggleBtn.textContent = isActive ? '🔒' : '🔓';
-                toggleBtn.title = isActive ? 'تعطيل' : 'تفعيل';
-                toggleBtn.dataset.id = userId;
-                toggleBtn.dataset.status = isActive ? 'true' : 'false';
-                if (isSelf && isActive) {
-                    toggleBtn.disabled = true;
-                    toggleBtn.title = 'لا يمكن تعطيل حسابك الحالي';
-                }
-                if (!canEdit()) toggleBtn.disabled = true;
-                toggleBtn.onclick = function() {
-                    var id = this.dataset.id;
-                    var status = this.dataset.status === 'true';
-                    toggleUserStatus(id, status);
-                };
-                actionsDiv.appendChild(toggleBtn);
-
-                // Delete button
-                var deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn-sm btn-delete';
-                deleteBtn.textContent = '🗑️';
-                deleteBtn.title = 'حذف';
-                deleteBtn.dataset.id = userId;
-                if (isSelf) {
-                    deleteBtn.disabled = true;
-                    deleteBtn.title = 'لا يمكن حذف حسابك الحالي';
-                }
-                if (!canDelete()) deleteBtn.disabled = true;
-                deleteBtn.onclick = function() { deleteUser(userId); };
-                actionsDiv.appendChild(deleteBtn);
-
-                tdActions.appendChild(actionsDiv);
-                tr.appendChild(tdActions);
-
-                tbody.appendChild(tr);
+                html += '<tr>';
+                html += '<td><strong>' + escapeHtml(u.name || u.username || '-') + '</strong></td>';
+                html += '<td>' + escapeHtml(u.email || '-') + '</td>';
+                html += '<td>' + (roleMap[u.role] || escapeHtml(u.role || '-')) + '</td>';
+                html += '<td>' + (isActive ? statusMap[true] : statusMap[false]) + '</td>';
+                html += '<td>' + escapeHtml(lastLogin) + '</td>';
+                html += '<td>';
+                html += '<button class="btn-sm btn-edit edit-btn" data-id="' + escapeHtml(u.id || u._id) + '">✏️</button> ';
+                html += '<button class="btn-sm btn-toggle toggle-btn" data-id="' + escapeHtml(u.id || u._id) + '" data-status="' + isActive + '">' + (isActive ? '🔒' : '🔓') + '</button> ';
+                html += '<button class="btn-sm btn-delete delete-btn" data-id="' + escapeHtml(u.id || u._id) + '">🗑️</button>';
+                html += '</td>';
+                html += '</tr>';
             });
 
-            table.appendChild(tbody);
-            wrapper.appendChild(table);
-            container.innerHTML = '';
-            container.appendChild(wrapper);
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+
+            // ربط الأحداث
+            container.querySelectorAll('.edit-btn').forEach(function(btn) {
+                btn.onclick = function() { editUser(this.dataset.id); };
+            });
+            container.querySelectorAll('.toggle-btn').forEach(function(btn) {
+                btn.onclick = function() { toggleUserStatus(this.dataset.id, this.dataset.status === 'true'); };
+            });
+            container.querySelectorAll('.delete-btn').forEach(function(btn) {
+                btn.onclick = function() { deleteUser(this.dataset.id); };
+            });
         }
 
         // ============================================================
-        // 9. ✏️ CRUD OPERATIONS
+        // 4. CRUD OPERATIONS
         // ============================================================
 
         function toggleUserForm() {
             var form = document.getElementById('userForm');
             if (!form) return;
-
             if (form.classList.contains('active')) {
                 form.classList.remove('active');
                 document.getElementById('formTitle').textContent = '➕ إضافة مستخدم جديد';
@@ -979,26 +325,14 @@
                 document.getElementById('userStatus').value = 'active';
                 document.getElementById('passwordRequired').textContent = '*';
             } else {
-                if (!canEdit()) {
-                    showToast('⚠️ ليس لديك صلاحية لإضافة مستخدم', 'warning');
-                    return;
-                }
                 form.classList.add('active');
             }
         }
 
         function editUser(id) {
             if (!id) return;
-            if (!canEdit()) {
-                showToast('⚠️ ليس لديك صلاحية للتعديل', 'warning');
-                return;
-            }
-
             var user = usersData.find(function(u) { return normalizeId(u.id || u._id) === normalizeId(id); });
-            if (!user) {
-                showToast('⚠️ المستخدم غير موجود', 'warning');
-                return;
-            }
+            if (!user) { showToast('⚠️ المستخدم غير موجود', 'warning'); return; }
 
             document.getElementById('formTitle').textContent = '✏️ تعديل مستخدم';
             document.getElementById('userId').value = id;
@@ -1008,7 +342,6 @@
             document.getElementById('userRole').value = user.role || 'viewer';
             document.getElementById('userStatus').value = user.active !== false ? 'active' : 'inactive';
             document.getElementById('passwordRequired').textContent = '(اتركها فارغة لتعديل)';
-
             document.getElementById('userForm').classList.add('active');
         }
 
@@ -1024,23 +357,10 @@
             if (!email) { showToast('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning'); return; }
             if (!id && !password) { showToast('⚠️ الرجاء إدخال كلمة المرور', 'warning'); return; }
 
-            if (!canEdit()) {
-                showToast('⚠️ ليس لديك صلاحية', 'warning');
-                return;
-            }
-
             var token = getToken();
-            if (!token) {
-                showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
-                return;
-            }
+            if (!token) { showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning'); return; }
 
-            var data = {
-                username: username,
-                email: email,
-                role: role,
-                active: status === 'active'
-            };
+            var data = { username: username, email: email, role: role, active: status === 'active' };
             if (password) data.password = password;
 
             try {
@@ -1053,20 +373,6 @@
                     credentials: 'include',
                     body: JSON.stringify(data)
                 });
-
-                if (response.status === 401 || response.status === 403) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('marine_token');
-                    localStorage.removeItem('token');
-                    showToast('⚠️ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى', 'warning');
-                    return;
-                }
-
-                if (response.status === 419) {
-                    // CSRF error - refresh token
-                    await refreshCsrfToken();
-                    return saveUser();
-                }
 
                 if (!response.ok) {
                     var error = await response.json();
@@ -1084,28 +390,11 @@
 
         async function toggleUserStatus(id, currentStatus) {
             if (!id) return;
-            if (!canEdit()) {
-                showToast('⚠️ ليس لديك صلاحية', 'warning');
-                return;
-            }
-
-            var user = usersData.find(function(u) { return normalizeId(u.id || u._id) === normalizeId(id); });
-            if (!user) { showToast('⚠️ المستخدم غير موجود', 'warning'); return; }
-
-            var currentUserId = normalizeId(currentUser ? (currentUser._id || currentUser.id) : '');
-            if (normalizeId(id) === currentUserId && currentStatus) {
-                showToast('⚠️ لا يمكن تعطيل حسابك الحالي', 'warning');
-                return;
-            }
-
             var action = currentStatus ? 'تعطيل' : 'تفعيل';
-            if (!confirm('⚠️ هل أنت متأكد من ' + action + ' المستخدم "' + (user.name || user.username) + '"؟')) return;
+            if (!confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) return;
 
             var token = getToken();
-            if (!token) {
-                showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
-                return;
-            }
+            if (!token) { showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning'); return; }
 
             try {
                 var response = await fetch('/api/users/' + id, {
@@ -1114,19 +403,6 @@
                     credentials: 'include',
                     body: JSON.stringify({ active: !currentStatus })
                 });
-
-                if (response.status === 401 || response.status === 403) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('marine_token');
-                    localStorage.removeItem('token');
-                    showToast('⚠️ انتهت صلاحية الجلسة', 'warning');
-                    return;
-                }
-
-                if (response.status === 419) {
-                    await refreshCsrfToken();
-                    return toggleUserStatus(id, currentStatus);
-                }
 
                 if (!response.ok) {
                     var error = await response.json();
@@ -1143,32 +419,10 @@
 
         async function deleteUser(id) {
             if (!id) return;
-            if (!canDelete()) {
-                showToast('⚠️ ليس لديك صلاحية للحذف', 'warning');
-                return;
-            }
-
-            var user = usersData.find(function(u) { return normalizeId(u.id || u._id) === normalizeId(id); });
-            if (!user) { showToast('⚠️ المستخدم غير موجود', 'warning'); return; }
-
-            var currentUserId = normalizeId(currentUser ? (currentUser._id || currentUser.id) : '');
-            if (normalizeId(id) === currentUserId) {
-                showToast('⚠️ لا يمكن حذف حسابك الحالي', 'warning');
-                return;
-            }
-
-            if (user.username === 'admin') {
-                showToast('⚠️ لا يمكن حذف المستخدم الرئيسي', 'warning');
-                return;
-            }
-
-            if (!confirm('⚠️ هل أنت متأكد من حذف المستخدم "' + (user.name || user.username) + '"؟')) return;
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
 
             var token = getToken();
-            if (!token) {
-                showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
-                return;
-            }
+            if (!token) { showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning'); return; }
 
             try {
                 var response = await fetch('/api/users/' + id, {
@@ -1176,19 +430,6 @@
                     headers: getAuthHeaders(),
                     credentials: 'include'
                 });
-
-                if (response.status === 401 || response.status === 403) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('marine_token');
-                    localStorage.removeItem('token');
-                    showToast('⚠️ انتهت صلاحية الجلسة', 'warning');
-                    return;
-                }
-
-                if (response.status === 419) {
-                    await refreshCsrfToken();
-                    return deleteUser(id);
-                }
 
                 if (!response.ok) {
                     var error = await response.json();
@@ -1204,37 +445,12 @@
         }
 
         // ============================================================
-        // 10. 🔄 CSRF REFRESH
-        // ============================================================
-
-        async function refreshCsrfToken() {
-            try {
-                var response = await fetch('/api/csrf-token', {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    var data = await response.json();
-                    if (data.success && data.token) {
-                        localStorage.setItem('csrf_token', data.token);
-                        showToast('✅ تم تجديد رمز الأمان', 'success');
-                        return true;
-                    }
-                }
-                return false;
-            } catch (error) {
-                console.error('❌ CSRF refresh error:', error);
-                return false;
-            }
-        }
-
-        // ============================================================
-        // 11. 🚀 INIT
+        // 5. INIT
         // ============================================================
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('👥 Users page v3.0 initializing...');
+            console.log('👥 Users page initializing...');
 
-            // ربط الأزرار
             document.getElementById('addUserBtn').onclick = toggleUserForm;
             document.getElementById('refreshUsersBtn').onclick = function() {
                 loadUsersData();
@@ -1244,29 +460,24 @@
             document.getElementById('cancelUserBtn').onclick = toggleUserForm;
             document.getElementById('saveUserBtn').onclick = saveUser;
 
-            // جلب المستخدم الحالي
-            fetchCurrentUser().then(function() {
-                console.log('👤 Current user:', currentUser ? currentUser.username : 'None');
-                if (!currentUser) {
-                    document.getElementById('usersTableContainer').innerHTML = 
-                        '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
-                    return;
-                }
+            var token = getToken();
+            if (!token) {
+                document.getElementById('usersTableContainer').innerHTML = 
+                    '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+                return;
+            }
 
-                // تحميل البيانات
-                loadUsersData();
+            // ✅ تحميل البيانات فوراً
+            loadUsersData();
 
-                // تحديث كل 60 ثانية
-                setInterval(function() {
-                    if (!isLoading) {
-                        loadUsersData();
-                    }
-                }, 60000);
-            });
+            // ✅ تحديث كل 60 ثانية
+            setInterval(function() {
+                if (!isLoading) loadUsersData();
+            }, 60000);
         });
 
         // ============================================================
-        // 12. 🌐 EXPOSE GLOBALS
+        // 6. EXPOSE GLOBALS
         // ============================================================
 
         window.loadUsersData = loadUsersData;
@@ -1279,15 +490,10 @@
         window.deleteUser = deleteUser;
         window.showToast = showToast;
         window.getToken = getToken;
-        window.getCsrfToken = getCsrfToken;
-        window.fetchCurrentUser = fetchCurrentUser;
-        window.isAdmin = isAdmin;
-        window.escapeHtml = escapeHtml;
-        window.normalizeId = normalizeId;
         window.usersData = usersData;
 
-        console.log('✅ Users page v3.0 - Enterprise Hardened ready');
-        console.log('🔒 Security: XSS, CSRF, RBAC, ID normalization, self-protection');
+        console.log('✅ Users page script loaded');
+        console.log('🔄 Auto-loading users data...');
     })();
     </script>
 </div>
