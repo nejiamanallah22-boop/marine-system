@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (FULLY FIXED)
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (FULL)
 // ============================================================
 
 require('dotenv').config();
@@ -367,15 +367,6 @@ vessels.forEach(v => {
 
 const systemLogs = [];
 
-// ✅ إضافة سجلات أولية
-systemLogs.push({
-    id: crypto.randomBytes(8).toString('hex'),
-    userId: null,
-    action: 'SYSTEM_START',
-    details: 'System started successfully',
-    timestamp: new Date().toISOString()
-});
-
 // ============================================================
 // 🔐 AUTH ENDPOINTS
 // ============================================================
@@ -448,7 +439,6 @@ app.post('/api/auth/login', (req, res) => {
         res.setHeader('X-CSRF-Token', newToken);
         res.setHeader('X-User-ID', user.id);
 
-        // ✅ إضافة سجل
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: user.id,
@@ -761,7 +751,190 @@ app.delete('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
 });
 
 // ============================================================
-// 📊 SYSTEM LOGS API - FIXED
+// 📊 MAINTENANCE PAGE API - مسار مخصص لصفحة الصيانة
+// ============================================================
+
+app.get('/api/maintenance', csrfProtection, (req, res) => {
+    try {
+        console.log('📡 Fetching maintenance data...');
+        
+        const total = vessels.length;
+        const damaged = vessels.filter(v => v.status === 'معطب').length;
+        const maintenance = vessels.filter(v => v.status === 'صيانة').length;
+        const ready = vessels.filter(v => v.status === 'صالح').length;
+        
+        res.json({
+            success: true,
+            vessels: vessels,
+            stats: {
+                total: total,
+                damaged: damaged,
+                maintenance: maintenance,
+                ready: ready
+            },
+            logs: maintenanceLogs
+        });
+    } catch (error) {
+        console.error('❌ Error fetching maintenance data:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في جلب بيانات الصيانة' 
+        });
+    }
+});
+
+app.put('/api/maintenance/:id', csrfProtection, (req, res) => {
+    try {
+        const vesselId = req.params.id;
+        const { status, repairUnit, break: breakType, eDate } = req.body;
+        
+        const vessel = vessels.find(v => v.id === vesselId);
+        if (!vessel) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'المركب غير موجود' 
+            });
+        }
+        
+        const oldStatus = vessel.status;
+        
+        if (status) vessel.status = status;
+        if (repairUnit) vessel.repairUnit = repairUnit;
+        if (breakType !== undefined) vessel.break = breakType;
+        if (eDate) vessel.eDate = eDate;
+        vessel.updatedAt = new Date().toISOString();
+        
+        if (status === 'صالح' && oldStatus !== 'صالح') {
+            maintenanceLogs.push({
+                id: crypto.randomBytes(8).toString('hex'),
+                vesselId: vessel.id,
+                vesselName: vessel.name,
+                vesselNum: vessel.num || '',
+                type: 'إصلاح',
+                status: 'مكتملة',
+                date: new Date().toISOString(),
+                repairUnit: repairUnit || vessel.repairUnit || '—',
+                cost: 0,
+                notes: `تم إصلاح المركب ${vessel.name}`,
+                createdAt: new Date().toISOString()
+            });
+        }
+        
+        if (status && (status === 'معطب' || status === 'صيانة') && oldStatus !== status) {
+            maintenanceLogs.push({
+                id: crypto.randomBytes(8).toString('hex'),
+                vesselId: vessel.id,
+                vesselName: vessel.name,
+                vesselNum: vessel.num || '',
+                type: breakType || 'صيانة دورية',
+                status: status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+                date: new Date().toISOString(),
+                repairUnit: repairUnit || vessel.repairUnit || '—',
+                cost: 0,
+                notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
+                createdAt: new Date().toISOString()
+            });
+        }
+        
+        console.log('✅ Vessel updated:', vessel.name);
+        
+        res.json({
+            success: true,
+            message: 'تم تحديث المركب بنجاح',
+            vessel: vessel
+        });
+    } catch (error) {
+        console.error('❌ Error updating maintenance:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في تحديث المركب' 
+        });
+    }
+});
+
+// ============================================================
+// 📊 USERS PAGE API - مسار مخصص لصفحة المستخدمين
+// ============================================================
+
+app.get('/api/users-data', csrfProtection, (req, res) => {
+    try {
+        console.log('📡 Fetching users data...');
+        
+        const safeUsers = users.map(u => ({
+            id: u.id,
+            username: u.username,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            active: u.active,
+            createdAt: u.createdAt,
+            lastLogin: u.lastLogin
+        }));
+        
+        res.json({
+            success: true,
+            users: safeUsers,
+            stats: {
+                total: users.length,
+                active: users.filter(u => u.active).length,
+                inactive: users.filter(u => !u.active).length,
+                admins: users.filter(u => u.role === 'admin').length
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error fetching users data:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في جلب بيانات المستخدمين' 
+        });
+    }
+});
+
+app.put('/api/users-status/:id', csrfProtection, (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { active } = req.body;
+        
+        const user = users.find(u => u.id === userId);
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'المستخدم غير موجود' 
+            });
+        }
+        
+        if (user.username === 'admin') {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'لا يمكن تغيير حالة المستخدم الرئيسي' 
+            });
+        }
+        
+        user.active = active;
+        user.updatedAt = new Date().toISOString();
+        
+        console.log(`✅ User ${user.username} ${active ? 'activated' : 'deactivated'}`);
+        
+        res.json({
+            success: true,
+            message: `تم ${active ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`,
+            user: {
+                id: user.id,
+                username: user.username,
+                active: user.active
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error updating user status:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في تحديث حالة المستخدم' 
+        });
+    }
+});
+
+// ============================================================
+// 📊 SYSTEM LOGS API
 // ============================================================
 
 app.get('/api/logs', csrfProtection, (req, res) => {
