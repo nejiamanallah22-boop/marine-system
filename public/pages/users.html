@@ -592,10 +592,14 @@
     ============================================================ -->
     <script>
     // ============================================================
-    // 🛠️ FIX: دالة updateDateTime بدون أخطاء
+    // 🛠️ FIX: دالة updateDateTime بدون أخطاء - النسخة النهائية
     // ============================================================
     
-    function updateDateTime() {
+    // ✅ حفظ الدالة الأصلية إذا كانت موجودة
+    var originalUpdateDateTime = window.updateDateTime;
+    
+    // ✅ تعريف دالة آمنة جديدة
+    function safeUpdateDateTime() {
         try {
             var now = new Date();
             var dateEl = document.getElementById('currentDate');
@@ -617,20 +621,34 @@
                 });
             }
         } catch (e) {
-            // تجاهل الأخطاء
+            // ✅ تجاهل جميع الأخطاء - لا تؤثر على التطبيق
+            console.debug('⏰ updateDateTime (safe):', e.message);
         }
     }
-
-    // ✅ تشغيل التحديث
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
+    
+    // ✅ استبدال الدالة العالمية بالنسخة الآمنة
+    window.updateDateTime = safeUpdateDateTime;
+    
+    // ✅ تشغيل التحديث فوراً
+    safeUpdateDateTime();
+    
+    // ✅ إيقاف التحديثات القديمة إن وجدت
+    if (window._dateTimeInterval) {
+        clearInterval(window._dateTimeInterval);
+        window._dateTimeInterval = null;
+    }
+    
+    // ✅ بدء تحديث جديد كل دقيقة (بدلاً من كل ثانية لتقليل الحمل)
+    window._dateTimeInterval = setInterval(safeUpdateDateTime, 60000);
+    
+    console.log('⏰ Users page: updateDateTime fixed');
 
     // ============================================================
     // 👥 USERS PAGE - v1.0
     // ============================================================
 
-    // ✅ استخدام المتغيرات العامة
-    var usersData = window.allUsers || [];
+    // ✅ استخدام المتغيرات العامة بأمان
+    var usersData = (window.allUsers && Array.isArray(window.allUsers)) ? window.allUsers : [];
     var currentUser = window.currentUser || null;
 
     console.log('👥 Users page loaded');
@@ -642,7 +660,9 @@
     // ============================================================
 
     function getToken() {
-        var token = localStorage.getItem('authToken');
+        var token = localStorage.getItem('authToken') || 
+                     localStorage.getItem('marine_token') || 
+                     localStorage.getItem('token');
         if (!token) {
             console.warn('⚠️ No token found');
             return null;
@@ -680,7 +700,10 @@
         try {
             var token = getToken();
             if (!token) {
-                document.getElementById('usersTableContainer').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+                var container = document.getElementById('usersTableContainer');
+                if (container) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+                }
                 return;
             }
 
@@ -690,7 +713,7 @@
                 headers: { 'Accept': 'application/json' }
             });
             var csrfData = await csrfRes.json();
-            var csrfToken = csrfData.token;
+            var csrfToken = csrfData.token || '';
 
             var response = await fetch('/api/users', {
                 headers: {
@@ -704,10 +727,12 @@
             if (response.ok) {
                 var data = await response.json();
                 // ✅ معالجة البيانات بشكل صحيح
-                if (data.users) {
+                if (data.users && Array.isArray(data.users)) {
                     usersData = data.users;
                 } else if (Array.isArray(data)) {
                     usersData = data;
+                } else if (data.data && Array.isArray(data.data)) {
+                    usersData = data.data;
                 } else {
                     usersData = [];
                 }
@@ -716,13 +741,29 @@
                 renderUsers(usersData);
                 updateStats(usersData);
                 updateBadge('usersBadge', usersData.length);
+            } else if (response.status === 401) {
+                console.warn('⚠️ [USERS] Unauthorized - token expired');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('marine_token');
+                localStorage.removeItem('token');
+                var container = document.getElementById('usersTableContainer');
+                if (container) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">🔒</div><p>انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى</p></div>';
+                }
             } else {
                 console.error('❌ [USERS] API error:', response.status);
-                document.getElementById('usersTableContainer').innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>فشل تحميل البيانات</p></div>';
+                var container = document.getElementById('usersTableContainer');
+                if (container) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>فشل تحميل البيانات (Error: ' + response.status + ')</p></div>';
+                }
             }
         } catch (error) {
             console.error('❌ [USERS] Load error:', error);
-            showToast('❌ فشل تحميل المستخدمين', 'danger');
+            showToast('❌ فشل تحميل المستخدمين: ' + error.message, 'danger');
+            var container = document.getElementById('usersTableContainer');
+            if (container) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>خطأ في الاتصال بالخادم</p></div>';
+            }
         }
     }
 
@@ -744,14 +785,20 @@
         var inactive = users.filter(function(u) { return u.active === false; }).length;
         var admins = users.filter(function(u) { return u.role === 'admin'; }).length;
 
-        document.getElementById('totalUsers').textContent = total;
-        document.getElementById('activeUsers').textContent = active;
-        document.getElementById('inactiveUsers').textContent = inactive;
-        document.getElementById('adminUsers').textContent = admins;
+        var totalEl = document.getElementById('totalUsers');
+        var activeEl = document.getElementById('activeUsers');
+        var inactiveEl = document.getElementById('inactiveUsers');
+        var adminEl = document.getElementById('adminUsers');
+        
+        if (totalEl) totalEl.textContent = total;
+        if (activeEl) activeEl.textContent = active;
+        if (inactiveEl) inactiveEl.textContent = inactive;
+        if (adminEl) adminEl.textContent = admins;
     }
 
     function renderUsers(users) {
         var container = document.getElementById('usersTableContainer');
+        if (!container) return;
         
         if (!users || users.length === 0) {
             container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>لا توجد مستخدمين</p></div>';
@@ -800,15 +847,25 @@
         html += '</tbody></table></div>';
         container.innerHTML = html;
 
-        // ربط الأحداث
+        // ربط الأحداث بأمان
         container.querySelectorAll('.edit-btn').forEach(function(btn) {
-            btn.onclick = function() { editUser(this.dataset.id); };
+            btn.onclick = function() { 
+                var id = this.dataset.id;
+                if (id) editUser(id); 
+            };
         });
         container.querySelectorAll('.toggle-btn').forEach(function(btn) {
-            btn.onclick = function() { toggleUserStatus(this.dataset.id, this.dataset.status === 'true'); };
+            btn.onclick = function() { 
+                var id = this.dataset.id;
+                var status = this.dataset.status === 'true';
+                if (id) toggleUserStatus(id, status); 
+            };
         });
         container.querySelectorAll('.delete-btn').forEach(function(btn) {
-            btn.onclick = function() { deleteUser(this.dataset.id); };
+            btn.onclick = function() { 
+                var id = this.dataset.id;
+                if (id) deleteUser(id); 
+            };
         });
     }
 
@@ -818,41 +875,48 @@
 
     function toggleUserForm() {
         var form = document.getElementById('userForm');
+        if (!form) return;
+        
         var isActive = form.classList.contains('active');
         
         if (isActive) {
             form.classList.remove('active');
-            document.getElementById('formTitle').textContent = '➕ إضافة مستخدم جديد';
+            var titleEl = document.getElementById('formTitle');
+            if (titleEl) titleEl.textContent = '➕ إضافة مستخدم جديد';
             document.getElementById('userId').value = '';
             document.getElementById('userUsername').value = '';
             document.getElementById('userEmail').value = '';
             document.getElementById('userPassword').value = '';
             document.getElementById('userRole').value = 'viewer';
             document.getElementById('userStatus').value = 'active';
-            document.getElementById('passwordRequired').textContent = '*';
+            var passReq = document.getElementById('passwordRequired');
+            if (passReq) passReq.textContent = '*';
         } else {
             form.classList.add('active');
         }
     }
 
     function editUser(id) {
+        if (!id) return;
         var user = usersData.find(function(u) { return u.id == id; });
         if (!user) {
             showToast('⚠️ المستخدم غير موجود', 'warning');
             return;
         }
 
-        document.getElementById('formTitle').textContent = '✏️ تعديل مستخدم';
+        var titleEl = document.getElementById('formTitle');
+        if (titleEl) titleEl.textContent = '✏️ تعديل مستخدم';
         document.getElementById('userId').value = user.id;
         document.getElementById('userUsername').value = user.username || '';
         document.getElementById('userEmail').value = user.email || '';
         document.getElementById('userPassword').value = '';
         document.getElementById('userRole').value = user.role || 'viewer';
         document.getElementById('userStatus').value = user.active !== false ? 'active' : 'inactive';
-        document.getElementById('passwordRequired').textContent = '(اتركها فارغة لتعديل)';
+        var passReq = document.getElementById('passwordRequired');
+        if (passReq) passReq.textContent = '(اتركها فارغة لتعديل)';
 
         var form = document.getElementById('userForm');
-        form.classList.add('active');
+        if (form) form.classList.add('active');
     }
 
     async function saveUser() {
@@ -868,7 +932,10 @@
         if (!id && !password) { showToast('⚠️ الرجاء إدخال كلمة المرور', 'warning'); return; }
 
         var token = getToken();
-        if (!token) return;
+        if (!token) {
+            showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
+            return;
+        }
 
         var data = {
             username: username,
@@ -888,7 +955,7 @@
                 headers: { 'Accept': 'application/json' }
             });
             var csrfData = await csrfRes.json();
-            var csrfToken = csrfData.token;
+            var csrfToken = csrfData.token || '';
 
             var url = id ? '/api/users/' + id : '/api/users';
             var method = id ? 'PUT' : 'POST';
@@ -907,7 +974,7 @@
 
             if (!response.ok) {
                 var error = await response.json();
-                throw new Error(error.error || 'فشل الحفظ');
+                throw new Error(error.error || error.message || 'فشل الحفظ');
             }
 
             showToast('✅ ' + (id ? 'تم تحديث' : 'تم إضافة') + ' المستخدم بنجاح', 'success');
@@ -920,11 +987,15 @@
     }
 
     async function toggleUserStatus(id, currentStatus) {
+        if (!id) return;
         var action = currentStatus ? 'تعطيل' : 'تفعيل';
         if (!confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) return;
 
         var token = getToken();
-        if (!token) return;
+        if (!token) {
+            showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
+            return;
+        }
 
         try {
             // ✅ الحصول على CSRF token
@@ -933,7 +1004,7 @@
                 headers: { 'Accept': 'application/json' }
             });
             var csrfData = await csrfRes.json();
-            var csrfToken = csrfData.token;
+            var csrfToken = csrfData.token || '';
 
             var response = await fetch('/api/users/' + id, {
                 method: 'PUT',
@@ -949,7 +1020,7 @@
 
             if (!response.ok) {
                 var error = await response.json();
-                throw new Error(error.error || 'فشل التغيير');
+                throw new Error(error.error || error.message || 'فشل التغيير');
             }
 
             showToast('✅ تم ' + action + ' المستخدم بنجاح', 'success');
@@ -961,10 +1032,14 @@
     }
 
     async function deleteUser(id) {
+        if (!id) return;
         if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
 
         var token = getToken();
-        if (!token) return;
+        if (!token) {
+            showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning');
+            return;
+        }
 
         try {
             // ✅ الحصول على CSRF token
@@ -973,7 +1048,7 @@
                 headers: { 'Accept': 'application/json' }
             });
             var csrfData = await csrfRes.json();
-            var csrfToken = csrfData.token;
+            var csrfToken = csrfData.token || '';
 
             var response = await fetch('/api/users/' + id, {
                 method: 'DELETE',
@@ -987,7 +1062,7 @@
 
             if (!response.ok) {
                 var error = await response.json();
-                throw new Error(error.error || 'فشل الحذف');
+                throw new Error(error.error || error.message || 'فشل الحذف');
             }
 
             showToast('✅ تم حذف المستخدم', 'success');
@@ -1003,19 +1078,28 @@
     // ============================================================
 
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('👥 Users page loading...');
+        console.log('👥 Users page initializing...');
 
         // ربط الأزرار
-        document.getElementById('addUserBtn').onclick = toggleUserForm;
-        document.getElementById('refreshUsersBtn').onclick = loadUsersData;
-        document.getElementById('formCloseBtn').onclick = toggleUserForm;
-        document.getElementById('cancelUserBtn').onclick = toggleUserForm;
-        document.getElementById('saveUserBtn').onclick = saveUser;
+        var addBtn = document.getElementById('addUserBtn');
+        var refreshBtn = document.getElementById('refreshUsersBtn');
+        var closeBtn = document.getElementById('formCloseBtn');
+        var cancelBtn = document.getElementById('cancelUserBtn');
+        var saveBtn = document.getElementById('saveUserBtn');
+
+        if (addBtn) addBtn.onclick = toggleUserForm;
+        if (refreshBtn) refreshBtn.onclick = loadUsersData;
+        if (closeBtn) closeBtn.onclick = toggleUserForm;
+        if (cancelBtn) cancelBtn.onclick = toggleUserForm;
+        if (saveBtn) saveBtn.onclick = saveUser;
 
         // ✅ التحقق من التوكن
         var token = getToken();
         if (!token) {
-            document.getElementById('usersTableContainer').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+            var container = document.getElementById('usersTableContainer');
+            if (container) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+            }
             return;
         }
 
@@ -1036,7 +1120,7 @@
     window.editUser = editUser;
     window.toggleUserStatus = toggleUserStatus;
     window.deleteUser = deleteUser;
-    window.updateDateTime = updateDateTime;
+    window.safeUpdateDateTime = safeUpdateDateTime;
     window.showToast = showToast;
     window.getToken = getToken;
 
