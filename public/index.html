@@ -1770,6 +1770,52 @@
         }
 
         // ============================================================
+        // 🔄 REFRESH BUTTON - تحديث الصفحة الحالية
+        // ============================================================
+
+        // ✅ زر التحديث العام
+        function refreshCurrentPage() {
+            const currentPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
+            console.log('🔄 Refreshing page:', currentPage);
+            
+            const loader = document.getElementById('pageLoader');
+            if (loader) {
+                loader.style.display = 'flex';
+            }
+            
+            loadPage(currentPage);
+            loadAllData();
+            
+            showToast('🔄 تم تحديث الصفحة', 'info');
+        }
+
+        // ✅ زر التحديث الخاص بكل صفحة
+        function refreshPageWithData(pageName) {
+            console.log('🔄 Refreshing page with data:', pageName);
+            
+            loadPage(pageName);
+            loadAllData();
+            
+            if (pageName === 'dashboard' && typeof window.loadDashboardData === 'function') {
+                window.loadDashboardData();
+            }
+            if (pageName === 'fleet' && typeof window.loadFleetData === 'function') {
+                window.loadFleetData();
+            }
+            if (pageName === 'maintenance' && typeof window.loadMaintenanceData === 'function') {
+                window.loadMaintenanceData();
+            }
+            if (pageName === 'users' && typeof window.loadUsersData === 'function') {
+                window.loadUsersData();
+            }
+            if (pageName === 'logs' && typeof window.loadLogsData === 'function') {
+                window.loadLogsData();
+            }
+            
+            showToast('🔄 تم تحديث البيانات', 'success');
+        }
+
+        // ============================================================
         // 📄 LOAD PAGE
         // ============================================================
 
@@ -1974,6 +2020,28 @@
             });
         };
 
+        // ✅ ربط زر التحديث
+        document.addEventListener('DOMContentLoaded', function() {
+            // ✅ زر التحديث في الـ Header
+            const refreshBtn = document.querySelector('.btn-action.primary .fa-sync-alt')?.closest('.btn-action');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    refreshCurrentPage();
+                });
+            }
+            
+            // ✅ زر التحديث في كل صفحة (إذا وجد)
+            const refreshButtons = document.querySelectorAll('[id*="refresh"], [class*="refresh"]');
+            refreshButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pageName = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
+                    refreshPageWithData(pageName);
+                });
+            });
+        });
+
         // ✅ DOM Ready
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 DOM جاهز');
@@ -2076,6 +2144,8 @@
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
         window.stopDateTimeUpdate = stopDateTimeUpdate;
+        window.refreshCurrentPage = refreshCurrentPage;
+        window.refreshPageWithData = refreshPageWithData;
         window.csrfManager = csrfManager;
 
         console.log('✅ Marine System v8.0 loaded successfully');
