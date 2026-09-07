@@ -2,7 +2,7 @@
 <div id="page-users">
     <style>
         /* ============================================================
-           👥 USERS PAGE STYLES
+           👥 USERS PAGE - ENTERPRISE HARDENED v3.0
            ============================================================ */
         
         .users-container {
@@ -181,6 +181,12 @@
             background: rgba(248,113,113,0.15);
             color: #f87171;
             border: 1px solid rgba(248,113,113,0.1);
+        }
+        
+        .status-badge.locked {
+            background: rgba(251,191,36,0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251,191,36,0.1);
         }
         
         .role-badge {
@@ -486,7 +492,7 @@
         <div class="users-header">
             <h2>
                 👥 إدارة المستخدمين
-                <span class="badge">v1.0</span>
+                <span class="badge">v3.0 🔒</span>
             </h2>
             <div class="header-actions">
                 <button class="btn btn-primary" id="addUserBtn">➕ إضافة مستخدم</button>
@@ -575,24 +581,31 @@
     </div>
 
     <!-- ============================================================
-    📦 JAVASCRIPT - USERS PAGE (FIXED - RENDER VERSION)
+    📦 JAVASCRIPT - USERS PAGE v3.0 (ENTERPRISE HARDENED)
     ============================================================ -->
     <script>
     (function() {
         'use strict';
 
-        console.log('👥 Users page loaded - Render version');
+        console.log('👥 Users page v3.0 - Enterprise Hardened');
 
         // ============================================================
-        // 1. DATA
+        // 1. 🔒 SECURITY HELPERS
         // ============================================================
 
-        var usersData = [];
-        var currentUser = null;
-        var isLoading = false;
+        function normalizeId(id) {
+            return id == null ? '' : String(id);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
 
         // ============================================================
-        // 2. HELPERS
+        // 2. 🔑 TOKEN & CSRF MANAGEMENT
         // ============================================================
 
         function getToken() {
@@ -602,14 +615,86 @@
             return token || null;
         }
 
+        function getCsrfToken() {
+            return localStorage.getItem('csrf_token') || '';
+        }
+
         function getAuthHeaders() {
             var token = getToken();
-            return {
+            var csrf = getCsrfToken();
+            var headers = {
                 'Content-Type': 'application/json',
-                'Authorization': token ? 'Bearer ' + token : '',
                 'Accept': 'application/json'
             };
+            if (token) {
+                headers['Authorization'] = 'Bearer ' + token;
+            }
+            if (csrf) {
+                headers['X-CSRF-Token'] = csrf;
+            }
+            return headers;
         }
+
+        // ============================================================
+        // 3. 👤 CURRENT USER INFO (من السيرفر فقط)
+        // ============================================================
+
+        var currentUser = null;
+
+        function fetchCurrentUser() {
+            var token = getToken();
+            if (!token) return Promise.resolve(null);
+
+            return fetch('/api/auth/me', {
+                headers: getAuthHeaders(),
+                credentials: 'include'
+            })
+            .then(function(response) {
+                if (!response.ok) return null;
+                return response.json();
+            })
+            .then(function(data) {
+                if (data && data.success && data.user) {
+                    currentUser = data.user;
+                    window.currentUser = currentUser;
+                    return currentUser;
+                }
+                return null;
+            })
+            .catch(function() {
+                return null;
+            });
+        }
+
+        // ============================================================
+        // 4. ✅ PERMISSIONS (السيرفر هو مصدر الحقيقة)
+        // ============================================================
+
+        function isAdmin() {
+            if (!currentUser) return false;
+            var role = currentUser.role || '';
+            return role === 'admin' || role === 'مسؤول';
+        }
+
+        function canEdit() {
+            return isAdmin();
+        }
+
+        function canDelete() {
+            return isAdmin();
+        }
+
+        // ============================================================
+        // 5. 📦 STATE
+        // ============================================================
+
+        var usersData = [];
+        var isLoading = false;
+        var isInitialized = false;
+
+        // ============================================================
+        // 6. 🍞 TOAST
+        // ============================================================
 
         function showToast(message, type) {
             type = type || 'info';
@@ -624,7 +709,7 @@
             var toast = document.createElement('div');
             toast.className = 'toast ' + type;
             var icons = { success: '✅', warning: '⚠️', danger: '❌', info: 'ℹ️' };
-            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> <span>' + message + '</span> <button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
+            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> <span>' + escapeHtml(message) + '</span> <button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
             container.appendChild(toast);
 
             setTimeout(function() {
@@ -633,14 +718,11 @@
         }
 
         // ============================================================
-        // 3. LOAD DATA - MAIN FUNCTION
+        // 7. 📊 LOAD USERS
         // ============================================================
 
         async function loadUsersData() {
-            if (isLoading) {
-                console.log('⏳ [USERS] Already loading...');
-                return;
-            }
+            if (isLoading) return;
 
             console.log('🔄 [USERS] Loading users data...');
             isLoading = true;
@@ -653,7 +735,6 @@
             try {
                 var token = getToken();
                 if (!token) {
-                    console.warn('⚠️ [USERS] No token found');
                     if (container) {
                         container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
                     }
@@ -661,17 +742,12 @@
                     return;
                 }
 
-                console.log('📡 [USERS] Fetching from /api/users...');
-
                 var response = await fetch('/api/users', {
                     headers: getAuthHeaders(),
                     credentials: 'include'
                 });
 
-                console.log('📥 [USERS] Response status:', response.status);
-
-                if (response.status === 401) {
-                    console.warn('⚠️ [USERS] Unauthorized - token expired');
+                if (response.status === 401 || response.status === 403) {
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('marine_token');
                     localStorage.removeItem('token');
@@ -687,33 +763,42 @@
                 }
 
                 var data = await response.json();
-                console.log('📦 [USERS] Data received:', data);
 
                 // ✅ معالجة البيانات
+                var rawUsers = [];
                 if (Array.isArray(data)) {
-                    usersData = data;
+                    rawUsers = data;
                 } else if (data.users && Array.isArray(data.users)) {
-                    usersData = data.users;
+                    rawUsers = data.users;
                 } else if (data.data && Array.isArray(data.data)) {
-                    usersData = data.data;
-                } else {
-                    usersData = [];
+                    rawUsers = data.data;
                 }
 
-                console.log('✅ [USERS] Users loaded:', usersData.length);
+                usersData = rawUsers.map(function(u) {
+                    return {
+                        id: normalizeId(u._id || u.id),
+                        _id: u._id || u.id,
+                        username: u.username || '',
+                        name: u.name || u.username || '',
+                        email: u.email || '',
+                        role: u.role || 'viewer',
+                        active: u.active !== false,
+                        createdAt: u.createdAt,
+                        lastLogin: u.lastLogin
+                    };
+                });
 
-                // ✅ تحديث المتغيرات العامة
-                window.allUsers = usersData;
                 window.usersData = usersData;
 
-                // ✅ عرض البيانات
+                console.log('✅ [USERS] Loaded:', usersData.length);
+
                 renderUsers(usersData);
                 updateStats(usersData);
 
             } catch (error) {
                 console.error('❌ [USERS] Load error:', error);
                 if (container) {
-                    container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>فشل تحميل البيانات: ' + error.message + '</p></div>';
+                    container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>حدث خطأ في تحميل البيانات</p></div>';
                 }
                 showToast('❌ فشل تحميل المستخدمين', 'danger');
             }
@@ -722,7 +807,7 @@
         }
 
         // ============================================================
-        // 4. RENDER FUNCTIONS
+        // 8. 🎨 RENDER FUNCTIONS (DOM-based, sans innerHTML)
         // ============================================================
 
         function updateStats(users) {
@@ -746,72 +831,137 @@
                 return;
             }
 
-            var roleMap = {
-                'admin': '<span class="role-badge admin">مسؤول</span>',
-                'manager': '<span class="role-badge manager">مدير</span>',
-                'operator': '<span class="role-badge operator">مشغل</span>',
-                'viewer': '<span class="role-badge viewer">مشاهد</span>'
-            };
+            // ✅ إنشاء الجدول باستخدام DOM API (بدون innerHTML للبيانات)
+            var wrapper = document.createElement('div');
+            wrapper.className = 'table-container';
 
-            var statusMap = {
-                true: '<span class="status-badge active">✅ نشط</span>',
-                false: '<span class="status-badge inactive">❌ غير نشط</span>'
-            };
+            var table = document.createElement('table');
+            table.className = 'users-table';
 
-            var html = '<div class="table-container"><table class="users-table"><thead><tr>';
-            html += '<th>👤 المستخدم</th>';
-            html += '<th>📧 البريد الإلكتروني</th>';
-            html += '<th>👔 الدور</th>';
-            html += '<th>📊 الحالة</th>';
-            html += '<th>📅 آخر تسجيل دخول</th>';
-            html += '<th>⚙️ الإجراءات</th>';
-            html += '</tr></thead><tbody>';
+            // Thead
+            var thead = document.createElement('thead');
+            var headerRow = document.createElement('tr');
+            var headers = ['👤 المستخدم', '📧 البريد الإلكتروني', '👔 الدور', '📊 الحالة', '📅 آخر تسجيل دخول', '⚙️ الإجراءات'];
+            headers.forEach(function(text) {
+                var th = document.createElement('th');
+                th.textContent = text;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Tbody
+            var tbody = document.createElement('tbody');
+
+            var currentUserId = normalizeId(currentUser ? (currentUser._id || currentUser.id) : '');
 
             users.forEach(function(u) {
+                var userId = normalizeId(u.id || u._id);
+                var isSelf = userId === currentUserId;
+
+                var tr = document.createElement('tr');
+
+                // Name
+                var tdName = document.createElement('td');
+                var strong = document.createElement('strong');
+                strong.textContent = u.name || u.username || '-';
+                tdName.appendChild(strong);
+                tr.appendChild(tdName);
+
+                // Email
+                var tdEmail = document.createElement('td');
+                tdEmail.textContent = u.email || '-';
+                tr.appendChild(tdEmail);
+
+                // Role
+                var tdRole = document.createElement('td');
+                var roleSpan = document.createElement('span');
+                roleSpan.className = 'role-badge ' + (u.role || 'viewer');
+                roleSpan.textContent = {
+                    'admin': 'مسؤول',
+                    'manager': 'مدير',
+                    'operator': 'مشغل',
+                    'viewer': 'مشاهد'
+                } [u.role] || u.role || 'مشاهد';
+                tdRole.appendChild(roleSpan);
+                tr.appendChild(tdRole);
+
+                // Status
+                var tdStatus = document.createElement('td');
+                var statusSpan = document.createElement('span');
                 var isActive = u.active !== false;
-                var lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ar-TN') : '-';
+                statusSpan.className = 'status-badge ' + (isActive ? 'active' : 'inactive');
+                statusSpan.textContent = isActive ? '✅ نشط' : '❌ غير نشط';
+                tdStatus.appendChild(statusSpan);
+                tr.appendChild(tdStatus);
 
-                html += '<tr>';
-                html += '<td><strong>' + (u.name || u.username || '-') + '</strong></td>';
-                html += '<td>' + (u.email || '-') + '</td>';
-                html += '<td>' + (roleMap[u.role] || u.role || '-') + '</td>';
-                html += '<td>' + (statusMap[isActive] || '-') + '</td>';
-                html += '<td>' + lastLogin + '</td>';
-                html += '<td>';
-                html += '<button class="btn-sm btn-edit edit-btn" data-id="' + (u.id) + '">✏️</button> ';
-                html += '<button class="btn-sm btn-toggle toggle-btn" data-id="' + (u.id) + '" data-status="' + isActive + '">' + (isActive ? '🔒' : '🔓') + '</button> ';
-                html += '<button class="btn-sm btn-delete delete-btn" data-id="' + (u.id) + '">🗑️</button>';
-                html += '</td>';
-                html += '</tr>';
-            });
+                // Last Login
+                var tdLastLogin = document.createElement('td');
+                tdLastLogin.textContent = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ar-TN') : '-';
+                tr.appendChild(tdLastLogin);
 
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
+                // Actions
+                var tdActions = document.createElement('td');
+                var actionsDiv = document.createElement('div');
+                actionsDiv.className = 'action-btns';
 
-            // ربط الأحداث
-            container.querySelectorAll('.edit-btn').forEach(function(btn) {
-                btn.onclick = function() { 
-                    var id = this.dataset.id;
-                    if (id) editUser(id); 
-                };
-            });
-            container.querySelectorAll('.toggle-btn').forEach(function(btn) {
-                btn.onclick = function() { 
+                // Edit button
+                var editBtn = document.createElement('button');
+                editBtn.className = 'btn-sm btn-edit';
+                editBtn.textContent = '✏️';
+                editBtn.title = 'تعديل';
+                editBtn.dataset.id = userId;
+                editBtn.onclick = function() { editUser(userId); };
+                if (!canEdit()) editBtn.disabled = true;
+                actionsDiv.appendChild(editBtn);
+
+                // Toggle button
+                var toggleBtn = document.createElement('button');
+                toggleBtn.className = 'btn-sm btn-toggle';
+                toggleBtn.textContent = isActive ? '🔒' : '🔓';
+                toggleBtn.title = isActive ? 'تعطيل' : 'تفعيل';
+                toggleBtn.dataset.id = userId;
+                toggleBtn.dataset.status = isActive ? 'true' : 'false';
+                if (isSelf && isActive) {
+                    toggleBtn.disabled = true;
+                    toggleBtn.title = 'لا يمكن تعطيل حسابك الحالي';
+                }
+                if (!canEdit()) toggleBtn.disabled = true;
+                toggleBtn.onclick = function() {
                     var id = this.dataset.id;
                     var status = this.dataset.status === 'true';
-                    if (id) toggleUserStatus(id, status); 
+                    toggleUserStatus(id, status);
                 };
+                actionsDiv.appendChild(toggleBtn);
+
+                // Delete button
+                var deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-sm btn-delete';
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.title = 'حذف';
+                deleteBtn.dataset.id = userId;
+                if (isSelf) {
+                    deleteBtn.disabled = true;
+                    deleteBtn.title = 'لا يمكن حذف حسابك الحالي';
+                }
+                if (!canDelete()) deleteBtn.disabled = true;
+                deleteBtn.onclick = function() { deleteUser(userId); };
+                actionsDiv.appendChild(deleteBtn);
+
+                tdActions.appendChild(actionsDiv);
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
             });
-            container.querySelectorAll('.delete-btn').forEach(function(btn) {
-                btn.onclick = function() { 
-                    var id = this.dataset.id;
-                    if (id) deleteUser(id); 
-                };
-            });
+
+            table.appendChild(tbody);
+            wrapper.appendChild(table);
+            container.innerHTML = '';
+            container.appendChild(wrapper);
         }
 
         // ============================================================
-        // 5. CRUD OPERATIONS
+        // 9. ✏️ CRUD OPERATIONS
         // ============================================================
 
         function toggleUserForm() {
@@ -829,20 +979,29 @@
                 document.getElementById('userStatus').value = 'active';
                 document.getElementById('passwordRequired').textContent = '*';
             } else {
+                if (!canEdit()) {
+                    showToast('⚠️ ليس لديك صلاحية لإضافة مستخدم', 'warning');
+                    return;
+                }
                 form.classList.add('active');
             }
         }
 
         function editUser(id) {
             if (!id) return;
-            var user = usersData.find(function(u) { return u.id == id; });
+            if (!canEdit()) {
+                showToast('⚠️ ليس لديك صلاحية للتعديل', 'warning');
+                return;
+            }
+
+            var user = usersData.find(function(u) { return normalizeId(u.id || u._id) === normalizeId(id); });
             if (!user) {
                 showToast('⚠️ المستخدم غير موجود', 'warning');
                 return;
             }
 
             document.getElementById('formTitle').textContent = '✏️ تعديل مستخدم';
-            document.getElementById('userId').value = user.id;
+            document.getElementById('userId').value = id;
             document.getElementById('userUsername').value = user.username || '';
             document.getElementById('userEmail').value = user.email || '';
             document.getElementById('userPassword').value = '';
@@ -864,6 +1023,11 @@
             if (!username) { showToast('⚠️ الرجاء إدخال اسم المستخدم', 'warning'); return; }
             if (!email) { showToast('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning'); return; }
             if (!id && !password) { showToast('⚠️ الرجاء إدخال كلمة المرور', 'warning'); return; }
+
+            if (!canEdit()) {
+                showToast('⚠️ ليس لديك صلاحية', 'warning');
+                return;
+            }
 
             var token = getToken();
             if (!token) {
@@ -890,6 +1054,20 @@
                     body: JSON.stringify(data)
                 });
 
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('marine_token');
+                    localStorage.removeItem('token');
+                    showToast('⚠️ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى', 'warning');
+                    return;
+                }
+
+                if (response.status === 419) {
+                    // CSRF error - refresh token
+                    await refreshCsrfToken();
+                    return saveUser();
+                }
+
                 if (!response.ok) {
                     var error = await response.json();
                     throw new Error(error.error || error.message || 'فشل الحفظ');
@@ -900,14 +1078,28 @@
                 await loadUsersData();
             } catch (error) {
                 console.error('❌ Save user error:', error);
-                showToast('❌ ' + error.message, 'danger');
+                showToast('❌ ' + (error.message || 'فشل الحفظ'), 'danger');
             }
         }
 
         async function toggleUserStatus(id, currentStatus) {
             if (!id) return;
+            if (!canEdit()) {
+                showToast('⚠️ ليس لديك صلاحية', 'warning');
+                return;
+            }
+
+            var user = usersData.find(function(u) { return normalizeId(u.id || u._id) === normalizeId(id); });
+            if (!user) { showToast('⚠️ المستخدم غير موجود', 'warning'); return; }
+
+            var currentUserId = normalizeId(currentUser ? (currentUser._id || currentUser.id) : '');
+            if (normalizeId(id) === currentUserId && currentStatus) {
+                showToast('⚠️ لا يمكن تعطيل حسابك الحالي', 'warning');
+                return;
+            }
+
             var action = currentStatus ? 'تعطيل' : 'تفعيل';
-            if (!confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) return;
+            if (!confirm('⚠️ هل أنت متأكد من ' + action + ' المستخدم "' + (user.name || user.username) + '"؟')) return;
 
             var token = getToken();
             if (!token) {
@@ -923,6 +1115,19 @@
                     body: JSON.stringify({ active: !currentStatus })
                 });
 
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('marine_token');
+                    localStorage.removeItem('token');
+                    showToast('⚠️ انتهت صلاحية الجلسة', 'warning');
+                    return;
+                }
+
+                if (response.status === 419) {
+                    await refreshCsrfToken();
+                    return toggleUserStatus(id, currentStatus);
+                }
+
                 if (!response.ok) {
                     var error = await response.json();
                     throw new Error(error.error || error.message || 'فشل التغيير');
@@ -932,13 +1137,32 @@
                 await loadUsersData();
             } catch (error) {
                 console.error('❌ Toggle user error:', error);
-                showToast('❌ ' + error.message, 'danger');
+                showToast('❌ ' + (error.message || 'فشل التغيير'), 'danger');
             }
         }
 
         async function deleteUser(id) {
             if (!id) return;
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+            if (!canDelete()) {
+                showToast('⚠️ ليس لديك صلاحية للحذف', 'warning');
+                return;
+            }
+
+            var user = usersData.find(function(u) { return normalizeId(u.id || u._id) === normalizeId(id); });
+            if (!user) { showToast('⚠️ المستخدم غير موجود', 'warning'); return; }
+
+            var currentUserId = normalizeId(currentUser ? (currentUser._id || currentUser.id) : '');
+            if (normalizeId(id) === currentUserId) {
+                showToast('⚠️ لا يمكن حذف حسابك الحالي', 'warning');
+                return;
+            }
+
+            if (user.username === 'admin') {
+                showToast('⚠️ لا يمكن حذف المستخدم الرئيسي', 'warning');
+                return;
+            }
+
+            if (!confirm('⚠️ هل أنت متأكد من حذف المستخدم "' + (user.name || user.username) + '"؟')) return;
 
             var token = getToken();
             if (!token) {
@@ -953,6 +1177,19 @@
                     credentials: 'include'
                 });
 
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('marine_token');
+                    localStorage.removeItem('token');
+                    showToast('⚠️ انتهت صلاحية الجلسة', 'warning');
+                    return;
+                }
+
+                if (response.status === 419) {
+                    await refreshCsrfToken();
+                    return deleteUser(id);
+                }
+
                 if (!response.ok) {
                     var error = await response.json();
                     throw new Error(error.error || error.message || 'فشل الحذف');
@@ -962,16 +1199,40 @@
                 await loadUsersData();
             } catch (error) {
                 console.error('❌ Delete user error:', error);
-                showToast('❌ ' + error.message, 'danger');
+                showToast('❌ ' + (error.message || 'فشل الحذف'), 'danger');
             }
         }
 
         // ============================================================
-        // 6. INIT
+        // 10. 🔄 CSRF REFRESH
+        // ============================================================
+
+        async function refreshCsrfToken() {
+            try {
+                var response = await fetch('/api/csrf-token', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    var data = await response.json();
+                    if (data.success && data.token) {
+                        localStorage.setItem('csrf_token', data.token);
+                        showToast('✅ تم تجديد رمز الأمان', 'success');
+                        return true;
+                    }
+                }
+                return false;
+            } catch (error) {
+                console.error('❌ CSRF refresh error:', error);
+                return false;
+            }
+        }
+
+        // ============================================================
+        // 11. 🚀 INIT
         // ============================================================
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('👥 Users page initializing...');
+            console.log('👥 Users page v3.0 initializing...');
 
             // ربط الأزرار
             document.getElementById('addUserBtn').onclick = toggleUserForm;
@@ -983,27 +1244,29 @@
             document.getElementById('cancelUserBtn').onclick = toggleUserForm;
             document.getElementById('saveUserBtn').onclick = saveUser;
 
-            // التحقق من التوكن
-            var token = getToken();
-            if (!token) {
-                document.getElementById('usersTableContainer').innerHTML = 
-                    '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
-                return;
-            }
-
-            // تحميل البيانات
-            loadUsersData();
-
-            // تحديث كل 30 ثانية
-            setInterval(function() {
-                if (!isLoading) {
-                    loadUsersData();
+            // جلب المستخدم الحالي
+            fetchCurrentUser().then(function() {
+                console.log('👤 Current user:', currentUser ? currentUser.username : 'None');
+                if (!currentUser) {
+                    document.getElementById('usersTableContainer').innerHTML = 
+                        '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
+                    return;
                 }
-            }, 30000);
+
+                // تحميل البيانات
+                loadUsersData();
+
+                // تحديث كل 60 ثانية
+                setInterval(function() {
+                    if (!isLoading) {
+                        loadUsersData();
+                    }
+                }, 60000);
+            });
         });
 
         // ============================================================
-        // 7. EXPOSE GLOBALS
+        // 12. 🌐 EXPOSE GLOBALS
         // ============================================================
 
         window.loadUsersData = loadUsersData;
@@ -1016,9 +1279,15 @@
         window.deleteUser = deleteUser;
         window.showToast = showToast;
         window.getToken = getToken;
+        window.getCsrfToken = getCsrfToken;
+        window.fetchCurrentUser = fetchCurrentUser;
+        window.isAdmin = isAdmin;
+        window.escapeHtml = escapeHtml;
+        window.normalizeId = normalizeId;
         window.usersData = usersData;
 
-        console.log('✅ Users page script loaded - Render ready');
+        console.log('✅ Users page v3.0 - Enterprise Hardened ready');
+        console.log('🔒 Security: XSS, CSRF, RBAC, ID normalization, self-protection');
     })();
     </script>
 </div>
