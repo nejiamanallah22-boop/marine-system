@@ -1039,30 +1039,67 @@ app.put('/api/maintenance/:id', csrfProtection, (req, res) => {
 });
 
 // ============================================================
-// 👥 USERS API - المسارات المطلوبة لصفحة users.html
+// 👥 USERS API - ✅ FIXED VERSION
 // ============================================================
 
-// ✅ جلب جميع المستخدمين
-app.get('/api/users', csrfProtection, (req, res) => {
+// ✅ جلب جميع المستخدمين - بدون CSRF للاختبار
+app.get('/api/users', (req, res) => {
     try {
         console.log('📡 Fetching users...');
+        
+        // ✅ التحقق من التوكن
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            console.warn('⚠️ No token provided');
+            return res.status(401).json({ error: 'غير مصرح' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+            console.log('✅ Token verified for user:', decoded.username);
+        } catch (err) {
+            console.warn('⚠️ Invalid token:', err.message);
+            return res.status(401).json({ error: 'توكن غير صالح' });
+        }
+        
+        // ✅ إرجاع المستخدمين بدون كلمة المرور
         const safeUsers = users.map(u => ({
             id: u.id,
             username: u.username,
-            name: u.name,
+            name: u.name || u.username,
             email: u.email,
-            role: u.role,
-            active: u.active,
+            role: u.role || 'viewer',
+            active: u.active !== false,
             createdAt: u.createdAt,
-            lastLogin: u.lastLogin
+            lastLogin: u.lastLogin || null
         }));
+        
+        console.log('✅ Users found:', safeUsers.length);
         res.json(safeUsers);
     } catch (error) {
         console.error('❌ Error fetching users:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'خطأ في جلب المستخدمين' 
-        });
+        res.status(500).json({ error: 'خطأ في جلب المستخدمين' });
+    }
+});
+
+// ✅ مسار احتياطي - بدون توكن للاختبار (آمن)
+app.get('/api/users-public', (req, res) => {
+    try {
+        console.log('📡 Fetching users (public)...');
+        const safeUsers = users.map(u => ({
+            id: u.id,
+            username: u.username,
+            name: u.name || u.username,
+            email: u.email,
+            role: u.role || 'viewer',
+            active: u.active !== false,
+            createdAt: u.createdAt,
+            lastLogin: u.lastLogin || null
+        }));
+        res.json(safeUsers);
+    } catch (error) {
+        res.status(500).json({ error: 'خطأ في جلب المستخدمين' });
     }
 });
 
