@@ -31,6 +31,9 @@ function generateSecureKey(length = 64) {
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+// ✅ إصلاح trust proxy لـ Render
+app.set('trust proxy', isProduction ? 1 : 0);
+
 function isStrongPassword(password) {
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
@@ -725,7 +728,6 @@ app.get('/api/maintenance-logs', csrfProtection, (req, res) => {
         console.log('📡 Fetching maintenance logs...');
         console.log('📊 Total logs:', maintenanceLogs.length);
         
-        // ✅ تنسيق السجلات لتناسب الواجهة الأمامية
         const formattedLogs = maintenanceLogs.map(log => ({
             id: log.id,
             vessel: log.vesselName,
@@ -737,11 +739,10 @@ app.get('/api/maintenance-logs', csrfProtection, (req, res) => {
             notes: log.notes || ''
         }));
         
-        // ✅ التأكد من إرجاع مصفوفة دائماً
         res.json(Array.isArray(formattedLogs) ? formattedLogs : []);
     } catch (error) {
         console.error('❌ Error fetching maintenance logs:', error);
-        res.status(500).json([]);  // ✅ إرجاع مصفوفة فارغة في حالة الخطأ
+        res.status(500).json([]);
     }
 });
 
@@ -830,7 +831,7 @@ app.delete('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
 });
 
 // ============================================================
-// 📊 MAINTENANCE PAGE API - مسار مخصص لصفحة الصيانة
+// 📊 MAINTENANCE PAGE API
 // ============================================================
 
 app.get('/api/maintenance', csrfProtection, (req, res) => {
@@ -842,7 +843,6 @@ app.get('/api/maintenance', csrfProtection, (req, res) => {
         const maintenance = vessels.filter(v => v.status === 'صيانة').length;
         const ready = vessels.filter(v => v.status === 'صالح').length;
         
-        // ✅ تحويل maintenanceLogs إلى مصفوفة مع بيانات إضافية للواجهة
         const formattedLogs = maintenanceLogs.map(log => ({
             id: log.id,
             vessel: log.vesselName,
@@ -854,7 +854,6 @@ app.get('/api/maintenance', csrfProtection, (req, res) => {
             notes: log.notes || ''
         }));
         
-        // ✅ إضافة سجلات افتراضية إذا كانت فارغة
         if (formattedLogs.length === 0) {
             formattedLogs.push({
                 id: 'demo-1',
@@ -890,7 +889,7 @@ app.get('/api/maintenance', csrfProtection, (req, res) => {
         
         res.json({
             success: true,
-            records: formattedLogs,  // ✅ هذا هو المفتاح المطلوب في الواجهة الأمامية
+            records: formattedLogs,
             stats: {
                 total: formattedLogs.length,
                 completed: formattedLogs.filter(l => l.status === 'مكتملة').length,
@@ -906,12 +905,11 @@ app.get('/api/maintenance', csrfProtection, (req, res) => {
         res.status(500).json({ 
             success: false, 
             error: 'خطأ في جلب بيانات الصيانة',
-            records: []  // ✅ إرجاع مصفوفة فارغة بدلاً من undefined
+            records: []
         });
     }
 });
 
-// ✅ مسار إضافي للواجهة الأمامية (تنسيق خاص)
 app.get('/api/maintenance-records', csrfProtection, (req, res) => {
     try {
         const records = maintenanceLogs.map(log => ({
@@ -925,7 +923,6 @@ app.get('/api/maintenance-records', csrfProtection, (req, res) => {
             notes: log.notes || ''
         }));
         
-        // ✅ إضافة بيانات افتراضية إذا كانت فارغة
         if (records.length === 0) {
             records.push({
                 id: 'demo-1',
@@ -1039,28 +1036,39 @@ app.put('/api/maintenance/:id', csrfProtection, (req, res) => {
 });
 
 // ============================================================
-// 👥 USERS API - ✅ FIXED VERSION
+// 👥 USERS API - ENTERPRISE HARDENED
 // ============================================================
 
-// ✅ جلب جميع المستخدمين - بدون CSRF للاختبار
+// ✅ دالة مساعدة للتحقق من صلاحيات admin
+function isAdminUser(user) {
+    return user && (user.role === 'admin' || user.role === 'مسؤول');
+}
+
+// ✅ دالة مساعدة للتحقق من التوكن
+function verifyTokenAndGetUser(req) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = users.find(u => u.id === decoded.id);
+        return user || null;
+    } catch (err) {
+        return null;
+    }
+}
+
+// ✅ جلب جميع المستخدمين - مع التحقق من الصلاحيات
 app.get('/api/users', (req, res) => {
     try {
         console.log('📡 Fetching users...');
         
-        // ✅ التحقق من التوكن
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            console.warn('⚠️ No token provided');
+        const user = verifyTokenAndGetUser(req);
+        if (!user) {
             return res.status(401).json({ error: 'غير مصرح' });
-        }
-
-        const token = authHeader.split(' ')[1];
-        try {
-            const decoded = jwt.verify(token, JWT_SECRET);
-            console.log('✅ Token verified for user:', decoded.username);
-        } catch (err) {
-            console.warn('⚠️ Invalid token:', err.message);
-            return res.status(401).json({ error: 'توكن غير صالح' });
         }
         
         // ✅ إرجاع المستخدمين بدون كلمة المرور
@@ -1083,30 +1091,21 @@ app.get('/api/users', (req, res) => {
     }
 });
 
-// ✅ مسار احتياطي - بدون توكن للاختبار (آمن)
-app.get('/api/users-public', (req, res) => {
-    try {
-        console.log('📡 Fetching users (public)...');
-        const safeUsers = users.map(u => ({
-            id: u.id,
-            username: u.username,
-            name: u.name || u.username,
-            email: u.email,
-            role: u.role || 'viewer',
-            active: u.active !== false,
-            createdAt: u.createdAt,
-            lastLogin: u.lastLogin || null
-        }));
-        res.json(safeUsers);
-    } catch (error) {
-        res.status(500).json({ error: 'خطأ في جلب المستخدمين' });
-    }
-});
-
-// ✅ إضافة مستخدم جديد
+// ✅ إضافة مستخدم جديد - مع CSRF و RBAC
 app.post('/api/users', csrfProtection, (req, res) => {
     try {
         const { username, password, email, role, active } = req.body;
+        
+        // ✅ التحقق من التوكن والصلاحيات
+        const user = verifyTokenAndGetUser(req);
+        if (!user) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+        
+        // ✅ فقط admin يمكنه إضافة مستخدمين
+        if (!isAdminUser(user)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لإضافة مستخدمين' });
+        }
         
         if (!username) {
             return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
@@ -1114,12 +1113,17 @@ app.post('/api/users', csrfProtection, (req, res) => {
         if (!password) {
             return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
         }
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' });
+        }
         
+        // ✅ التحقق من عدم وجود المستخدم
         const existingUser = users.find(u => u.username === username);
         if (existingUser) {
             return res.status(400).json({ success: false, error: 'اسم المستخدم موجود بالفعل' });
         }
         
+        // ✅ إنشاء المستخدم الجديد
         const newUser = {
             id: crypto.randomBytes(8).toString('hex'),
             username: username,
@@ -1138,11 +1142,12 @@ app.post('/api/users', csrfProtection, (req, res) => {
         users.push(newUser);
         console.log('✅ User created:', username);
         
+        // ✅ تسجيل العملية
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
-            userId: newUser.id,
+            userId: user.id,
             action: 'USER_CREATED',
-            details: `User ${username} created`,
+            details: `User ${username} created by ${user.username}`,
             timestamp: new Date().toISOString()
         });
         
@@ -1158,40 +1163,65 @@ app.post('/api/users', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ تحديث مستخدم
+// ✅ تحديث مستخدم - مع CSRF و RBAC
 app.put('/api/users/:id', csrfProtection, (req, res) => {
     try {
         const userId = req.params.id;
         const { username, email, role, active, password } = req.body;
         
-        const user = users.find(u => u.id === userId);
+        // ✅ التحقق من التوكن والصلاحيات
+        const user = verifyTokenAndGetUser(req);
         if (!user) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+        
+        // ✅ فقط admin يمكنه تعديل المستخدمين
+        if (!isAdminUser(user)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لتعديل المستخدمين' });
+        }
+        
+        const targetUser = users.find(u => u.id === userId);
+        if (!targetUser) {
             return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
         }
         
-        if (user.username === 'admin' && req.body.username && req.body.username !== 'admin') {
+        // ✅ منع تغيير اسم المستخدم الرئيسي
+        if (targetUser.username === 'admin' && username && username !== 'admin') {
             return res.status(403).json({ success: false, error: 'لا يمكن تغيير اسم المستخدم الرئيسي' });
         }
         
-        if (username) user.username = username;
-        if (email) user.email = email;
-        if (role) user.role = role;
-        if (active !== undefined) user.active = active;
-        if (password) {
-            user.password = bcrypt.hashSync(password, 12);
+        // ✅ منع تعطيل آخر admin
+        if (targetUser.role === 'admin' && active === false) {
+            const adminCount = users.filter(u => u.role === 'admin' && u.active !== false).length;
+            if (adminCount <= 1) {
+                return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
+            }
         }
         
-        console.log('✅ User updated:', user.username);
+        // ✅ تحديث البيانات
+        if (username) targetUser.username = username;
+        if (email) targetUser.email = email;
+        if (role) targetUser.role = role;
+        if (active !== undefined) targetUser.active = active;
+        if (password) {
+            if (password.length < 8) {
+                return res.status(400).json({ success: false, error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' });
+            }
+            targetUser.password = bcrypt.hashSync(password, 12);
+        }
         
+        console.log('✅ User updated:', targetUser.username);
+        
+        // ✅ تسجيل العملية
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: user.id,
             action: 'USER_UPDATED',
-            details: `User ${user.username} updated`,
+            details: `User ${targetUser.username} updated by ${user.username}`,
             timestamp: new Date().toISOString()
         });
         
-        const { password: _, ...userWithoutPassword } = user;
+        const { password: _, ...userWithoutPassword } = targetUser;
         res.json({
             success: true,
             message: 'تم تحديث المستخدم بنجاح',
@@ -1203,18 +1233,38 @@ app.put('/api/users/:id', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ حذف مستخدم
+// ✅ حذف مستخدم - مع CSRF و RBAC
 app.delete('/api/users/:id', csrfProtection, (req, res) => {
     try {
         const userId = req.params.id;
+        
+        // ✅ التحقق من التوكن والصلاحيات
+        const user = verifyTokenAndGetUser(req);
+        if (!user) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+        
+        // ✅ فقط admin يمكنه حذف المستخدمين
+        if (!isAdminUser(user)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لحذف المستخدمين' });
+        }
         
         const userToDelete = users.find(u => u.id === userId);
         if (!userToDelete) {
             return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
         }
         
+        // ✅ منع حذف المستخدم الرئيسي
         if (userToDelete.username === 'admin') {
             return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
+        }
+        
+        // ✅ منع حذف آخر admin
+        if (userToDelete.role === 'admin') {
+            const adminCount = users.filter(u => u.role === 'admin').length;
+            if (adminCount <= 1) {
+                return res.status(403).json({ success: false, error: 'لا يمكن حذف آخر مسؤول في النظام' });
+            }
         }
         
         const index = users.findIndex(u => u.id === userId);
@@ -1222,11 +1272,12 @@ app.delete('/api/users/:id', csrfProtection, (req, res) => {
         
         console.log('✅ User deleted:', userToDelete.username);
         
+        // ✅ تسجيل العملية
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
-            userId: null,
+            userId: user.id,
             action: 'USER_DELETED',
-            details: `User ${userToDelete.username} deleted`,
+            details: `User ${userToDelete.username} deleted by ${user.username}`,
             timestamp: new Date().toISOString()
         });
         
@@ -1240,39 +1291,57 @@ app.delete('/api/users/:id', csrfProtection, (req, res) => {
     }
 });
 
-// ✅ تغيير حالة مستخدم (تفعيل/تعطيل) - مسار إضافي
+// ✅ تغيير حالة مستخدم - مع CSRF و RBAC
 app.put('/api/users-status/:id', csrfProtection, (req, res) => {
     try {
         const userId = req.params.id;
         const { active } = req.body;
         
-        const user = users.find(u => u.id === userId);
+        // ✅ التحقق من التوكن والصلاحيات
+        const user = verifyTokenAndGetUser(req);
         if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'المستخدم غير موجود' 
-            });
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
         
-        if (user.username === 'admin') {
-            return res.status(403).json({ 
-                success: false, 
-                error: 'لا يمكن تغيير حالة المستخدم الرئيسي' 
-            });
+        // ✅ فقط admin يمكنه تغيير حالة المستخدمين
+        if (!isAdminUser(user)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لتغيير حالة المستخدمين' });
         }
         
-        user.active = active;
-        user.updatedAt = new Date().toISOString();
+        const targetUser = users.find(u => u.id === userId);
+        if (!targetUser) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
         
-        console.log(`✅ User ${user.username} ${active ? 'activated' : 'deactivated'}`);
+        // ✅ منع تعطيل آخر admin
+        if (targetUser.role === 'admin' && active === false) {
+            const adminCount = users.filter(u => u.role === 'admin' && u.active !== false).length;
+            if (adminCount <= 1) {
+                return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
+            }
+        }
+        
+        targetUser.active = active;
+        targetUser.updatedAt = new Date().toISOString();
+        
+        console.log(`✅ User ${targetUser.username} ${active ? 'activated' : 'deactivated'}`);
+        
+        // ✅ تسجيل العملية
+        systemLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            userId: user.id,
+            action: 'USER_STATUS_CHANGED',
+            details: `User ${targetUser.username} ${active ? 'activated' : 'deactivated'} by ${user.username}`,
+            timestamp: new Date().toISOString()
+        });
         
         res.json({
             success: true,
             message: `تم ${active ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`,
             user: {
-                id: user.id,
-                username: user.username,
-                active: user.active
+                id: targetUser.id,
+                username: targetUser.username,
+                active: targetUser.active
             }
         });
     } catch (error) {
