@@ -644,16 +644,16 @@
     console.log('⏰ Users page: updateDateTime fixed');
 
     // ============================================================
-    // 👥 USERS PAGE - v1.0
+    // 👥 USERS PAGE - v1.0 (FIXED - LOADS DATA DIRECTLY)
     // ============================================================
 
-    // ✅ استخدام المتغيرات العامة بأمان
-    var usersData = (window.allUsers && Array.isArray(window.allUsers)) ? window.allUsers : [];
+    // ✅ المتغيرات
+    var usersData = [];
     var currentUser = window.currentUser || null;
+    var isLoading = false;
 
     console.log('👥 Users page loaded');
     console.log('👤 Current user:', currentUser?.name || 'Unknown');
-    console.log('👥 Users data:', usersData.length);
 
     // ============================================================
     // 1. HELPERS
@@ -691,11 +691,18 @@
     }
 
     // ============================================================
-    // 2. LOAD DATA
+    // 2. LOAD DATA - MAIN FUNCTION (FIXED)
     // ============================================================
 
     async function loadUsersData() {
+        // ✅ منع التحميل المتكرر
+        if (isLoading) {
+            console.log('⏳ [USERS] Already loading...');
+            return;
+        }
+        
         console.log('🔄 [USERS] Loading users data...');
+        isLoading = true;
         
         try {
             var token = getToken();
@@ -704,6 +711,7 @@
                 if (container) {
                     container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
                 }
+                isLoading = false;
                 return;
             }
 
@@ -715,6 +723,7 @@
             var csrfData = await csrfRes.json();
             var csrfToken = csrfData.token || '';
 
+            // ✅ جلب البيانات مباشرة من API
             var response = await fetch('/api/users', {
                 headers: {
                     'Authorization': 'Bearer ' + token,
@@ -724,8 +733,15 @@
                 credentials: 'include'
             });
 
+            // ✅ تحديث CSRF token
+            var newCsrfToken = response.headers.get('X-CSRF-Token');
+            if (newCsrfToken) {
+                localStorage.setItem('csrf_token', newCsrfToken);
+            }
+
             if (response.ok) {
                 var data = await response.json();
+                
                 // ✅ معالجة البيانات بشكل صحيح
                 if (data.users && Array.isArray(data.users)) {
                     usersData = data.users;
@@ -736,11 +752,17 @@
                 } else {
                     usersData = [];
                 }
+                
+                // ✅ تحديث المتغير العام
                 window.allUsers = usersData;
-                console.log('✅ [USERS] Users loaded:', usersData.length);
+                
+                console.log('✅ [USERS] Users loaded successfully:', usersData.length);
+                
+                // ✅ عرض البيانات
                 renderUsers(usersData);
                 updateStats(usersData);
                 updateBadge('usersBadge', usersData.length);
+                
             } else if (response.status === 401) {
                 console.warn('⚠️ [USERS] Unauthorized - token expired');
                 localStorage.removeItem('authToken');
@@ -765,6 +787,8 @@
                 container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>خطأ في الاتصال بالخادم</p></div>';
             }
         }
+        
+        isLoading = false;
     }
 
     function updateBadge(id, count) {
@@ -1088,7 +1112,12 @@
         var saveBtn = document.getElementById('saveUserBtn');
 
         if (addBtn) addBtn.onclick = toggleUserForm;
-        if (refreshBtn) refreshBtn.onclick = loadUsersData;
+        if (refreshBtn) {
+            refreshBtn.onclick = function() {
+                loadUsersData();
+                showToast('🔄 جاري تحديث البيانات...', 'info');
+            };
+        }
         if (closeBtn) closeBtn.onclick = toggleUserForm;
         if (cancelBtn) cancelBtn.onclick = toggleUserForm;
         if (saveBtn) saveBtn.onclick = saveUser;
@@ -1103,9 +1132,15 @@
             return;
         }
 
-        // تحميل البيانات
-        setTimeout(loadUsersData, 200);
-        setTimeout(loadUsersData, 800);
+        // ✅ تحميل البيانات فوراً
+        loadUsersData();
+        
+        // ✅ تحديث كل 30 ثانية (للتأكد من تحديث البيانات)
+        setInterval(function() {
+            if (!isLoading) {
+                loadUsersData();
+            }
+        }, 30000);
     });
 
     // ============================================================
@@ -1123,7 +1158,9 @@
     window.safeUpdateDateTime = safeUpdateDateTime;
     window.showToast = showToast;
     window.getToken = getToken;
+    window.usersData = usersData;
 
     console.log('✅ Users page script loaded');
+    console.log('🔄 Users page will load data automatically');
     </script>
 </div>
