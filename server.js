@@ -343,23 +343,71 @@ const users = [
 
 const maintenanceLogs = [];
 
-vessels.forEach(v => {
-    if (v.status === 'معطب' || v.status === 'صيانة') {
+// ✅ إضافة بيانات أولية لسجلات الصيانة
+function initMaintenanceLogs() {
+    vessels.forEach(v => {
+        if (v.status === 'معطب' || v.status === 'صيانة') {
+            maintenanceLogs.push({
+                id: crypto.randomBytes(8).toString('hex'),
+                vesselId: v.id,
+                vesselName: v.name,
+                vesselNum: v.num || '',
+                type: v.break || 'صيانة دورية',
+                status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+                date: v.fDate || new Date().toISOString(),
+                repairUnit: v.repairUnit || '—',
+                cost: 0,
+                notes: v.break ? `عطب: ${v.break}` : 'صيانة دورية',
+                createdAt: v.fDate || new Date().toISOString()
+            });
+        }
+    });
+    
+    // ✅ إضافة سجلات إضافية للاختبار
+    if (maintenanceLogs.length < 3) {
         maintenanceLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
-            vesselId: v.id,
-            vesselName: v.name,
-            vesselNum: v.num || '',
-            type: v.break || 'صيانة دورية',
-            status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-            date: v.fDate || new Date().toISOString(),
-            repairUnit: v.repairUnit || '—',
-            cost: 0,
-            notes: v.break ? `عطب: ${v.break}` : 'صيانة دورية',
-            createdAt: v.fDate || new Date().toISOString()
+            vesselId: '1',
+            vesselName: 'الوحدة 101',
+            vesselNum: '101',
+            type: 'صيانة دورية',
+            status: 'مكتملة',
+            date: new Date().toISOString(),
+            repairUnit: 'وحدة الصيانة تونس',
+            cost: 500,
+            notes: 'تم إجراء الصيانة الدورية',
+            createdAt: new Date().toISOString()
+        });
+        maintenanceLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            vesselId: '2',
+            vesselName: 'الوحدة 205',
+            vesselNum: '205',
+            type: 'إصلاح محرك',
+            status: 'قيد التنفيذ',
+            date: new Date().toISOString(),
+            repairUnit: 'وحدة الصيانة صفاقس',
+            cost: 1200,
+            notes: 'استبدال المحرك التالف',
+            createdAt: new Date().toISOString()
+        });
+        maintenanceLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            vesselId: '3',
+            vesselName: 'الوحدة 312',
+            vesselNum: '312',
+            type: 'إصلاح هيكل',
+            status: 'متأخرة',
+            date: new Date().toISOString(),
+            repairUnit: 'وحدة الصيانة جرجيس',
+            cost: 2500,
+            notes: 'إصلاح الهيكل المتضرر',
+            createdAt: new Date().toISOString()
         });
     }
-});
+}
+
+initMaintenanceLogs();
 
 // ============================================================
 // 📊 DATA - SYSTEM LOGS
@@ -692,7 +740,7 @@ app.post('/api/maintenance-logs', csrfProtection, (req, res) => {
             return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
         }
 
-        maintenanceLogs.push({
+        const logEntry = {
             id: crypto.randomBytes(8).toString('hex'),
             vesselId: vesselId || '',
             vesselName: vesselName,
@@ -704,9 +752,16 @@ app.post('/api/maintenance-logs', csrfProtection, (req, res) => {
             cost: cost || 0,
             notes: notes || '',
             createdAt: new Date().toISOString()
-        });
+        };
         
-        res.status(201).json({ success: true, message: 'تم إضافة سجل الصيانة' });
+        maintenanceLogs.push(logEntry);
+        console.log('✅ Maintenance log added:', logEntry.vesselName);
+        
+        res.status(201).json({
+            success: true,
+            message: 'تم إضافة سجل الصيانة',
+            log: logEntry
+        });
     } catch (error) {
         console.error('❌ Error adding maintenance log:', error);
         res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
@@ -728,7 +783,13 @@ app.put('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
         if (notes) log.notes = notes;
         log.updatedAt = new Date().toISOString();
         
-        res.json({ success: true, message: 'تم تحديث سجل الصيانة', log: log });
+        console.log('✅ Maintenance log updated:', log.vesselName);
+        
+        res.json({
+            success: true,
+            message: 'تم تحديث سجل الصيانة',
+            log: log
+        });
     } catch (error) {
         console.error('❌ Error updating maintenance log:', error);
         res.status(500).json({ success: false, error: 'خطأ في تحديث سجل الصيانة' });
@@ -743,7 +804,12 @@ app.delete('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
             return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
         }
         maintenanceLogs.splice(index, 1);
-        res.json({ success: true, message: 'تم حذف سجل الصيانة' });
+        console.log('✅ Maintenance log deleted:', logId);
+        
+        res.json({
+            success: true,
+            message: 'تم حذف سجل الصيانة'
+        });
     } catch (error) {
         console.error('❌ Error deleting maintenance log:', error);
         res.status(500).json({ success: false, error: 'خطأ في حذف سجل الصيانة' });
