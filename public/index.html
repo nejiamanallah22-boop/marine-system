@@ -8,11 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ===== RESET & BASE ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Cairo', sans-serif;
             background: #0a1628;
@@ -1270,7 +1266,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - الكامل مع حل مشكلة updateDateTime
+    JAVASCRIPT - الكامل مع حل مشكلة updateDateTime نهائياً
     ============================================================ -->
     <script>
         // ============================================================
@@ -1477,7 +1473,6 @@
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
 
-            // ✅ إظهار رسالة "جاري التحقق من المصادقة..."
             if (authOverlay) {
                 authOverlay.style.display = 'flex';
             }
@@ -1503,7 +1498,6 @@
             .then(async response => {
                 console.log('📥 Login response status: ' + response.status);
 
-                // ✅ إخفاء رسالة "جاري التحقق من المصادقة..."
                 if (authOverlay) {
                     authOverlay.style.display = 'none';
                 }
@@ -1559,7 +1553,6 @@
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
 
-                // ✅ إخفاء رسالة "جاري التحقق من المصادقة..." في حالة الخطأ
                 if (authOverlay) {
                     authOverlay.style.display = 'none';
                 }
@@ -1584,14 +1577,13 @@
         }
 
         // ============================================================
-        // 🛡️ VERIFY TOKEN WITH AUTHENTIFICATION EN COURS
+        // 🛡️ VERIFY TOKEN
         // ============================================================
 
         async function verifyToken(token) {
             try {
                 console.log('🛡️ التحقق من التوكن...');
 
-                // ✅ إظهار رسالة "جاري التحقق من المصادقة..."
                 const authOverlay = document.getElementById('authLoadingOverlay');
                 if (authOverlay) {
                     authOverlay.style.display = 'flex';
@@ -1608,7 +1600,6 @@
                     credentials: 'include'
                 });
 
-                // ✅ إخفاء رسالة "جاري التحقق من المصادقة..."
                 if (authOverlay) {
                     authOverlay.style.display = 'none';
                 }
@@ -1634,7 +1625,6 @@
                 csrfManager.clearToken();
                 return false;
             } catch (error) {
-                // ✅ إخفاء رسالة "جاري التحقق من المصادقة..." في حالة الخطأ
                 const authOverlay = document.getElementById('authLoadingOverlay');
                 if (authOverlay) {
                     authOverlay.style.display = 'none';
@@ -1724,9 +1714,10 @@
         }
 
         // ============================================================
-        // ⏰ UPDATE DATE TIME - FIXED
+        // ⏰ UPDATE DATE TIME - SAFE VERSION (FIXED)
         // ============================================================
 
+        // ✅ نسخة آمنة تماماً - لا تسبب أي أخطاء
         function updateDateTime() {
             try {
                 const now = new Date();
@@ -1741,6 +1732,7 @@
                         day: 'numeric'
                     });
                 }
+
                 if (timeEl) {
                     timeEl.textContent = now.toLocaleTimeString('ar-TN', {
                         hour: '2-digit',
@@ -1749,14 +1741,32 @@
                     });
                 }
             } catch (e) {
-                console.debug('updateDateTime:', e.message);
+                // ✅ تجاهل جميع الأخطاء - لا تؤثر على التطبيق
+                console.debug('⏰ updateDateTime:', e.message);
             }
         }
 
-        // ✅ تشغيل التحديث إذا كانت العناصر موجودة
-        if (document.getElementById('currentDate') || document.getElementById('currentTime')) {
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
+        // ✅ بدء التحديث فقط إذا كانت العناصر موجودة
+        (function initDateTime() {
+            const hasDate = !!document.getElementById('currentDate');
+            const hasTime = !!document.getElementById('currentTime');
+            
+            if (hasDate || hasTime) {
+                updateDateTime();
+                window._dateTimeInterval = setInterval(updateDateTime, 1000);
+                console.log('⏰ Date/Time updater started');
+            } else {
+                console.log('⏰ No date/time elements found, skipping');
+            }
+        })();
+
+        // ✅ دالة لإيقاف التحديث
+        function stopDateTimeUpdate() {
+            if (window._dateTimeInterval) {
+                clearInterval(window._dateTimeInterval);
+                window._dateTimeInterval = null;
+                console.log('⏰ Date/Time updater stopped');
+            }
         }
 
         // ============================================================
@@ -2065,6 +2075,7 @@
         window.loadAllData = loadAllData;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
+        window.stopDateTimeUpdate = stopDateTimeUpdate;
         window.csrfManager = csrfManager;
 
         console.log('✅ Marine System v8.0 loaded successfully');
