@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (FULLY FIXED)
 // ============================================================
 
 require('dotenv').config();
@@ -367,6 +367,15 @@ vessels.forEach(v => {
 
 const systemLogs = [];
 
+// ✅ إضافة سجلات أولية
+systemLogs.push({
+    id: crypto.randomBytes(8).toString('hex'),
+    userId: null,
+    action: 'SYSTEM_START',
+    details: 'System started successfully',
+    timestamp: new Date().toISOString()
+});
+
 // ============================================================
 // 🔐 AUTH ENDPOINTS
 // ============================================================
@@ -439,6 +448,7 @@ app.post('/api/auth/login', (req, res) => {
         res.setHeader('X-CSRF-Token', newToken);
         res.setHeader('X-User-ID', user.id);
 
+        // ✅ إضافة سجل
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: user.id,
@@ -513,17 +523,19 @@ app.get('/api/auth/me', (req, res) => {
 
 app.post('/api/auth/logout', (req, res) => {
     const userId = req.session.userId;
+    
+    if (userId) {
+        systemLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            userId: userId,
+            action: 'LOGOUT',
+            details: 'User logged out',
+            timestamp: new Date().toISOString()
+        });
+    }
+    
     req.session.destroy(() => {
         res.clearCookie('__Secure-marine.sid');
-        if (userId) {
-            systemLogs.push({
-                id: crypto.randomBytes(8).toString('hex'),
-                userId: userId,
-                action: 'LOGOUT',
-                details: 'User logged out',
-                timestamp: new Date().toISOString()
-            });
-        }
         res.json({ success: true, message: 'تم تسجيل الخروج' });
     });
 });
@@ -673,8 +685,11 @@ app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
 
 app.get('/api/maintenance-logs', csrfProtection, (req, res) => {
     try {
+        console.log('📡 Fetching maintenance logs...');
+        console.log('📊 Total logs:', maintenanceLogs.length);
         res.json(maintenanceLogs);
     } catch (error) {
+        console.error('❌ Error fetching maintenance logs:', error);
         res.status(500).json({ success: false, error: 'خطأ في جلب سجلات الصيانة' });
     }
 });
@@ -746,13 +761,16 @@ app.delete('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
 });
 
 // ============================================================
-// 📊 SYSTEM LOGS API
+// 📊 SYSTEM LOGS API - FIXED
 // ============================================================
 
 app.get('/api/logs', csrfProtection, (req, res) => {
     try {
+        console.log('📡 Fetching system logs...');
+        console.log('📊 Total logs:', systemLogs.length);
         res.json(systemLogs.slice(-100));
     } catch (error) {
+        console.error('❌ Error fetching logs:', error);
         res.status(500).json({ success: false, error: 'خطأ في جلب السجلات' });
     }
 });
@@ -861,6 +879,14 @@ app.post('/api/users', csrfProtection, (req, res) => {
         users.push(newUser);
         console.log('✅ User created:', username);
         
+        systemLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            userId: newUser.id,
+            action: 'USER_CREATED',
+            details: `User ${username} created`,
+            timestamp: new Date().toISOString()
+        });
+        
         const { password: _, ...userWithoutPassword } = newUser;
         res.status(201).json({
             success: true,
@@ -897,6 +923,14 @@ app.put('/api/users/:id', csrfProtection, (req, res) => {
         
         console.log('✅ User updated:', user.username);
         
+        systemLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            userId: user.id,
+            action: 'USER_UPDATED',
+            details: `User ${user.username} updated`,
+            timestamp: new Date().toISOString()
+        });
+        
         const { password: _, ...userWithoutPassword } = user;
         res.json({
             success: true,
@@ -926,6 +960,15 @@ app.delete('/api/users/:id', csrfProtection, (req, res) => {
         users.splice(index, 1);
         
         console.log('✅ User deleted:', userToDelete.username);
+        
+        systemLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            userId: null,
+            action: 'USER_DELETED',
+            details: `User ${userToDelete.username} deleted`,
+            timestamp: new Date().toISOString()
+        });
+        
         res.json({
             success: true,
             message: 'تم حذف المستخدم بنجاح'
@@ -1173,6 +1216,7 @@ app.listen(PORT, () => {
     console.log('🔒 Security Level: ULTRA HIGH');
     console.log(`📊 Vessels: ${vessels.length}`);
     console.log(`📝 Maintenance Logs: ${maintenanceLogs.length}`);
+    console.log(`📋 System Logs: ${systemLogs.length}`);
     console.log('=========================================');
 });
 
