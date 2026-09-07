@@ -2,7 +2,7 @@
 <div id="page-users">
     <style>
         /* ============================================================
-           👥 USERS PAGE STYLES
+           👥 USERS PAGE - CLEAN VERSION
            ============================================================ */
         
         .users-container {
@@ -254,12 +254,6 @@
             background: rgba(251,191,36,0.15);
             color: #fbbf24;
             border: 1px solid rgba(251,191,36,0.1);
-        }
-        
-        .btn-sm.btn-reset {
-            background: rgba(139,92,246,0.15);
-            color: #a78bfa;
-            border: 1px solid rgba(139,92,246,0.1);
         }
         
         .empty-state {
@@ -592,58 +586,6 @@
     ============================================================ -->
     <script>
     // ============================================================
-    // 🛠️ FIX: دالة updateDateTime بدون أخطاء - النسخة النهائية
-    // ============================================================
-    
-    // ✅ حفظ الدالة الأصلية إذا كانت موجودة
-    var originalUpdateDateTime = window.updateDateTime;
-    
-    // ✅ تعريف دالة آمنة جديدة
-    function safeUpdateDateTime() {
-        try {
-            var now = new Date();
-            var dateEl = document.getElementById('currentDate');
-            var timeEl = document.getElementById('currentTime');
-            
-            if (dateEl) {
-                dateEl.textContent = now.toLocaleDateString('ar-TN', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            }
-            if (timeEl) {
-                timeEl.textContent = now.toLocaleTimeString('ar-TN', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-            }
-        } catch (e) {
-            // ✅ تجاهل جميع الأخطاء - لا تؤثر على التطبيق
-            console.debug('⏰ updateDateTime (safe):', e.message);
-        }
-    }
-    
-    // ✅ استبدال الدالة العالمية بالنسخة الآمنة
-    window.updateDateTime = safeUpdateDateTime;
-    
-    // ✅ تشغيل التحديث فوراً
-    safeUpdateDateTime();
-    
-    // ✅ إيقاف التحديثات القديمة إن وجدت
-    if (window._dateTimeInterval) {
-        clearInterval(window._dateTimeInterval);
-        window._dateTimeInterval = null;
-    }
-    
-    // ✅ بدء تحديث جديد كل دقيقة (بدلاً من كل ثانية لتقليل الحمل)
-    window._dateTimeInterval = setInterval(safeUpdateDateTime, 60000);
-    
-    console.log('⏰ Users page: updateDateTime fixed');
-
-    // ============================================================
     // 👥 USERS PAGE - v1.0 (FIXED - LOADS DATA DIRECTLY)
     // ============================================================
 
@@ -715,29 +657,14 @@
                 return;
             }
 
-            // ✅ الحصول على CSRF token
-            var csrfRes = await fetch('/api/csrf-token', {
-                credentials: 'include',
-                headers: { 'Accept': 'application/json' }
-            });
-            var csrfData = await csrfRes.json();
-            var csrfToken = csrfData.token || '';
-
             // ✅ جلب البيانات مباشرة من API
             var response = await fetch('/api/users', {
                 headers: {
                     'Authorization': 'Bearer ' + token,
-                    'X-CSRF-Token': csrfToken,
                     'Accept': 'application/json'
                 },
                 credentials: 'include'
             });
-
-            // ✅ تحديث CSRF token
-            var newCsrfToken = response.headers.get('X-CSRF-Token');
-            if (newCsrfToken) {
-                localStorage.setItem('csrf_token', newCsrfToken);
-            }
 
             if (response.ok) {
                 var data = await response.json();
@@ -755,6 +682,7 @@
                 
                 // ✅ تحديث المتغير العام
                 window.allUsers = usersData;
+                window.usersData = usersData;
                 
                 console.log('✅ [USERS] Users loaded successfully:', usersData.length);
                 
@@ -973,14 +901,6 @@
         }
 
         try {
-            // ✅ الحصول على CSRF token
-            var csrfRes = await fetch('/api/csrf-token', {
-                credentials: 'include',
-                headers: { 'Accept': 'application/json' }
-            });
-            var csrfData = await csrfRes.json();
-            var csrfToken = csrfData.token || '';
-
             var url = id ? '/api/users/' + id : '/api/users';
             var method = id ? 'PUT' : 'POST';
 
@@ -989,7 +909,6 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token,
-                    'X-CSRF-Token': csrfToken,
                     'Accept': 'application/json'
                 },
                 credentials: 'include',
@@ -1022,20 +941,11 @@
         }
 
         try {
-            // ✅ الحصول على CSRF token
-            var csrfRes = await fetch('/api/csrf-token', {
-                credentials: 'include',
-                headers: { 'Accept': 'application/json' }
-            });
-            var csrfData = await csrfRes.json();
-            var csrfToken = csrfData.token || '';
-
             var response = await fetch('/api/users/' + id, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token,
-                    'X-CSRF-Token': csrfToken,
                     'Accept': 'application/json'
                 },
                 credentials: 'include',
@@ -1066,19 +976,10 @@
         }
 
         try {
-            // ✅ الحصول على CSRF token
-            var csrfRes = await fetch('/api/csrf-token', {
-                credentials: 'include',
-                headers: { 'Accept': 'application/json' }
-            });
-            var csrfData = await csrfRes.json();
-            var csrfToken = csrfData.token || '';
-
             var response = await fetch('/api/users/' + id, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': 'Bearer ' + token,
-                    'X-CSRF-Token': csrfToken,
                     'Accept': 'application/json'
                 },
                 credentials: 'include'
@@ -1155,7 +1056,6 @@
     window.editUser = editUser;
     window.toggleUserStatus = toggleUserStatus;
     window.deleteUser = deleteUser;
-    window.safeUpdateDateTime = safeUpdateDateTime;
     window.showToast = showToast;
     window.getToken = getToken;
     window.usersData = usersData;
