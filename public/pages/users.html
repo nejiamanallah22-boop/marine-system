@@ -1,499 +1,2154 @@
-<!-- public/pages/users.html -->
-<div id="page-users">
+<!-- public/pages/users.html --><div id="page-users">
     <style>
-        .users-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
-        .users-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: rgba(255,255,255,0.02); padding: 16px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); }
-        .users-header h2 { color: #fff; margin: 0; font-size: 24px; display: flex; align-items: center; gap: 12px; }
-        .users-header h2 .badge { font-size: 11px; padding: 4px 14px; border-radius: 20px; background: rgba(66,133,244,0.15); color: #60a5fa; border: 1px solid rgba(66,133,244,0.1); font-weight: 400; }
-        .users-header .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-        .users-header .header-actions .btn { padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; font-family: 'Cairo', sans-serif; display: flex; align-items: center; gap: 8px; }
-        .users-header .header-actions .btn-primary { background: linear-gradient(135deg, #4285f4, #34a853); color: #fff; }
-        .users-header .header-actions .btn-primary:hover { transform: scale(1.02); box-shadow: 0 4px 30px rgba(66,133,244,0.3); }
-        .users-header .header-actions .btn-outline { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.06); }
-        .users-header .header-actions .btn-outline:hover { background: rgba(255,255,255,0.08); color: #fff; }
-        .users-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: rgba(255,255,255,0.02); padding: 18px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); text-align: center; }
-        .stat-card h4 { margin: 0; font-size: 28px; font-weight: 700; }
-        .stat-card p { margin: 5px 0 0; font-size: 13px; color: rgba(255,255,255,0.3); }
-        .stat-card .stat-icon { font-size: 24px; margin-bottom: 8px; }
-        .stat-card.total h4 { color: #60a5fa; }
-        .stat-card.active h4 { color: #4ade80; }
-        .stat-card.inactive h4 { color: #f87171; }
-        .stat-card.admins h4 { color: #f5d76e; }
-        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.01); }
-        .users-table { width: 100%; border-collapse: collapse; font-size: 13px; font-family: 'Cairo', sans-serif; }
-        .users-table thead th { padding: 12px 14px; text-align: center; color: rgba(255,255,255,0.4); border-bottom: 2px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .users-table tbody td { padding: 12px 14px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.7); vertical-align: middle; }
-        .users-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
-        .users-table tbody tr:last-child td { border-bottom: none; }
-        .status-badge { padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .status-badge.active { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-        .status-badge.inactive { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
-        .status-badge.locked { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
-        .role-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
-        .role-badge.admin { background: rgba(245,215,110,0.15); color: #f5d76e; border: 1px solid rgba(245,215,110,0.1); }
-        .role-badge.manager { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.1); }
-        .role-badge.operator { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-        .role-badge.viewer { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.06); }
-        .btn-sm { padding: 4px 10px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all 0.3s; display: inline-flex; align-items: center; gap: 4px; }
-        .btn-sm:hover { opacity: 0.8; transform: scale(1.05); }
-        .btn-sm:active { transform: scale(0.95); }
-        .btn-sm.btn-edit { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.1); }
-        .btn-sm.btn-delete { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
-        .btn-sm.btn-toggle { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
-        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.2); }
-        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
-        .user-form { display: none; background: rgba(255,255,255,0.02); border-radius: 14px; padding: 24px; margin: 20px 0; border: 1px solid rgba(255,255,255,0.06); }
-        .user-form.active { display: block; animation: slideDown 0.4s ease; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .user-form .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .user-form .form-header h3 { color: #fff; margin: 0; font-size: 18px; }
-        .user-form .form-header .btn-close { background: none; border: none; color: rgba(255,255,255,0.3); font-size: 24px; cursor: pointer; transition: all 0.3s; padding: 0 8px; }
-        .user-form .form-header .btn-close:hover { color: #f87171; transform: rotate(90deg); }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 600; }
-        .form-group label .required { color: #f87171; }
-        .form-group input, .form-group select { padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; color: #e2e8f0; font-family: 'Cairo', sans-serif; font-size: 14px; transition: all 0.3s; width: 100%; box-sizing: border-box; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: #4285f4; background: rgba(255,255,255,0.06); box-shadow: 0 0 0 4px rgba(66,133,244,0.06); }
-        .form-group input::placeholder { color: rgba(255,255,255,0.15); }
-        .form-group select option { background: #1a2332; color: #e2e8f0; }
-        .form-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
-        .form-actions .btn-save { padding: 12px 32px; background: linear-gradient(135deg, #4285f4, #34a853); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: 'Cairo', sans-serif; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-        .form-actions .btn-save:hover { transform: scale(1.02); box-shadow: 0 4px 30px rgba(66,133,244,0.3); }
-        .form-actions .btn-cancel { padding: 12px 32px; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; transition: all 0.3s; font-family: 'Cairo', sans-serif; font-size: 14px; }
-        .form-actions .btn-cancel:hover { background: rgba(255,255,255,0.08); color: #fff; }
-        .toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; max-width: 420px; width: 90%; pointer-events: none; }
-        .toast { padding: 12px 18px; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 500; animation: slideUp 0.4s ease-out; backdrop-filter: blur(10px); display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 40px rgba(0,0,0,0.3); pointer-events: auto; border: 1px solid rgba(255,255,255,0.08); }
-        .toast.success { background: rgba(16,185,129,0.92); }
-        .toast.danger { background: rgba(239,68,68,0.92); }
-        .toast.warning { background: rgba(245,158,11,0.92); }
-        .toast.info { background: rgba(59,130,246,0.92); }
-        .toast .toast-close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; margin-right: auto; font-size: 16px; }
-        .toast .toast-close:hover { color: #fff; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 768px) { .users-header { flex-direction: column; align-items: stretch; padding: 14px 18px; } .users-header h2 { font-size: 20px; } .users-stats { grid-template-columns: repeat(2, 1fr); } .stat-card h4 { font-size: 22px; } .form-grid { grid-template-columns: 1fr; } .users-table { font-size: 12px; } .users-table thead th, .users-table tbody td { padding: 8px 10px; } }
-        @media (max-width: 480px) { .users-stats { grid-template-columns: 1fr 1fr; gap: 10px; } .stat-card { padding: 12px 14px; } .stat-card h4 { font-size: 18px; } .users-header h2 { font-size: 18px; } .header-actions .btn { font-size: 12px; padding: 8px 14px; } .form-actions .btn-save, .form-actions .btn-cancel { width: 100%; justify-content: center; } }
-    </style>
+        .users-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }    .users-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 25px;
+        background: rgba(255,255,255,.02);
+        padding: 16px 24px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,.04);
+    }
 
-    <div class="users-container">
-        <div class="users-header">
-            <h2>👥 إدارة المستخدمين <span class="badge">v3.0 🔒</span></h2>
-            <div class="header-actions">
-                <button class="btn btn-primary" id="addUserBtn">➕ إضافة مستخدم</button>
-                <button class="btn btn-outline" id="refreshUsersBtn">🔄 تحديث</button>
-                <a href="/" class="btn btn-outline" style="text-decoration:none;">🏠 الرئيسية</a>
-            </div>
-        </div>
+    .users-header h2 {
+        color: #fff;
+        margin: 0;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
 
-        <div class="users-stats" id="usersStats">
-            <div class="stat-card total"><div class="stat-icon">👥</div><h4 id="totalUsers">0</h4><p>إجمالي المستخدمين</p></div>
-            <div class="stat-card active"><div class="stat-icon">✅</div><h4 id="activeUsers">0</h4><p>نشط</p></div>
-            <div class="stat-card inactive"><div class="stat-icon">❌</div><h4 id="inactiveUsers">0</h4><p>غير نشط</p></div>
-            <div class="stat-card admins"><div class="stat-icon">⭐</div><h4 id="adminUsers">0</h4><p>مسؤولين</p></div>
-        </div>
+    .users-header h2 .badge {
+        font-size: 11px;
+        padding: 4px 14px;
+        border-radius: 20px;
+        background: rgba(66,133,244,.15);
+        color: #60a5fa;
+        border: 1px solid rgba(66,133,244,.1);
+        font-weight: 400;
+    }
 
-        <div id="usersTableContainer"><div class="empty-state"><div class="icon">⏳</div><p>جاري تحميل البيانات...</p></div></div>
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
 
-        <div class="user-form" id="userForm">
-            <div class="form-header"><h3 id="formTitle">➕ إضافة مستخدم جديد</h3><button class="btn-close" id="formCloseBtn">✕</button></div>
-            <div class="form-grid">
-                <div class="form-group"><label>👤 اسم المستخدم <span class="required">*</span></label><input type="text" id="userUsername" placeholder="اسم المستخدم"></div>
-                <div class="form-group"><label>📧 البريد الإلكتروني <span class="required">*</span></label><input type="email" id="userEmail" placeholder="البريد الإلكتروني"></div>
-                <div class="form-group"><label>🔑 كلمة المرور <span class="required" id="passwordRequired">*</span></label><input type="password" id="userPassword" placeholder="كلمة المرور"></div>
-                <div class="form-group"><label>👔 الدور</label><select id="userRole"><option value="admin">مسؤول</option><option value="manager">مدير</option><option value="operator">مشغل</option><option value="viewer">مشاهد</option></select></div>
-                <div class="form-group"><label>📊 الحالة</label><select id="userStatus"><option value="active">نشط</option><option value="inactive">غير نشط</option></select></div>
-                <input type="hidden" id="userId" value="">
-            </div>
-            <div class="form-actions"><button class="btn-save" id="saveUserBtn">💾 حفظ</button><button class="btn-cancel" id="cancelUserBtn">❌ إلغاء</button></div>
+    .header-actions .btn {
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all .3s;
+        font-family: 'Cairo',sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg,#4285f4,#34a853);
+        color: #fff;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 30px rgba(66,133,244,.3);
+    }
+
+    .btn-outline {
+        background: rgba(255,255,255,.04);
+        color: rgba(255,255,255,.6);
+        border: 1px solid rgba(255,255,255,.06);
+    }
+
+    .btn-outline:hover {
+        background: rgba(255,255,255,.08);
+        color: #fff;
+    }
+
+    .btn:disabled,
+    .btn-sm:disabled,
+    .btn-save:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .users-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(170px,1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .stat-card {
+        background: rgba(255,255,255,.02);
+        padding: 18px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,.04);
+        text-align: center;
+    }
+
+    .stat-card h4 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .stat-card p {
+        margin: 5px 0 0;
+        font-size: 13px;
+        color: rgba(255,255,255,.3);
+    }
+
+    .stat-card .stat-icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+
+    .stat-card.total h4 { color:#60a5fa; }
+    .stat-card.active h4 { color:#4ade80; }
+    .stat-card.inactive h4 { color:#f87171; }
+    .stat-card.admins h4 { color:#f5d76e; }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,.04);
+        background: rgba(255,255,255,.01);
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        font-family: 'Cairo',sans-serif;
+    }
+
+    .users-table thead th {
+        padding: 12px 14px;
+        text-align: center;
+        color: rgba(255,255,255,.4);
+        border-bottom: 2px solid rgba(255,255,255,.06);
+        background: rgba(255,255,255,.02);
+        font-weight: 600;
+        font-size: 12px;
+    }
+
+    .users-table tbody td {
+        padding: 12px 14px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,.04);
+        color: rgba(255,255,255,.7);
+        vertical-align: middle;
+    }
+
+    .users-table tbody tr:hover td {
+        background: rgba(255,255,255,.02);
+    }
+
+    .users-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .status-badge,
+    .role-badge {
+        display: inline-block;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .status-badge {
+        padding: 4px 14px;
+        font-size: 12px;
+    }
+
+    .status-badge.active {
+        background: rgba(74,222,128,.15);
+        color: #4ade80;
+        border: 1px solid rgba(74,222,128,.1);
+    }
+
+    .status-badge.inactive {
+        background: rgba(248,113,113,.15);
+        color: #f87171;
+        border: 1px solid rgba(248,113,113,.1);
+    }
+
+    .role-badge {
+        padding: 4px 12px;
+        font-size: 11px;
+    }
+
+    .role-badge.admin {
+        background: rgba(245,215,110,.15);
+        color: #f5d76e;
+    }
+
+    .role-badge.manager {
+        background: rgba(96,165,250,.15);
+        color: #60a5fa;
+    }
+
+    .role-badge.operator {
+        background: rgba(74,222,128,.15);
+        color: #4ade80;
+    }
+
+    .role-badge.viewer {
+        background: rgba(255,255,255,.06);
+        color: rgba(255,255,255,.4);
+    }
+
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: 'Cairo',sans-serif;
+        transition: all .2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .btn-sm:hover {
+        opacity: .8;
+        transform: scale(1.05);
+    }
+
+    .btn-edit {
+        background: rgba(96,165,250,.15);
+        color: #60a5fa;
+        border: 1px solid rgba(96,165,250,.1);
+    }
+
+    .btn-delete {
+        background: rgba(248,113,113,.15);
+        color: #f87171;
+        border: 1px solid rgba(248,113,113,.1);
+    }
+
+    .btn-toggle {
+        background: rgba(251,191,36,.15);
+        color: #fbbf24;
+        border: 1px solid rgba(251,191,36,.1);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(255,255,255,.2);
+    }
+
+    .empty-state .icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .user-form {
+        display: none;
+        background: rgba(255,255,255,.02);
+        border-radius: 14px;
+        padding: 24px;
+        margin: 20px 0;
+        border: 1px solid rgba(255,255,255,.06);
+    }
+
+    .user-form.active {
+        display: block;
+        animation: slideDown .3s ease;
+    }
+
+    @keyframes slideDown {
+        from { opacity:0; transform:translateY(-15px); }
+        to { opacity:1; transform:translateY(0); }
+    }
+
+    .form-header {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:20px;
+    }
+
+    .form-header h3 {
+        color:#fff;
+        margin:0;
+        font-size:18px;
+    }
+
+    .btn-close {
+        background:none;
+        border:none;
+        color:rgba(255,255,255,.3);
+        font-size:24px;
+        cursor:pointer;
+    }
+
+    .btn-close:hover {
+        color:#f87171;
+    }
+
+    .form-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+        gap:16px;
+    }
+
+    .form-group {
+        display:flex;
+        flex-direction:column;
+        gap:5px;
+    }
+
+    .form-group label {
+        font-size:13px;
+        color:rgba(255,255,255,.4);
+        font-weight:600;
+    }
+
+    .required {
+        color:#f87171;
+    }
+
+    .form-group input,
+    .form-group select {
+        padding:10px 14px;
+        background:rgba(255,255,255,.04);
+        border:1px solid rgba(255,255,255,.06);
+        border-radius:8px;
+        color:#e2e8f0;
+        font-family:'Cairo',sans-serif;
+        font-size:14px;
+        width:100%;
+        box-sizing:border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline:none;
+        border-color:#4285f4;
+        box-shadow:0 0 0 4px rgba(66,133,244,.06);
+    }
+
+    .form-group input.invalid,
+    .form-group select.invalid {
+        border-color:#f87171;
+    }
+
+    .form-hint {
+        font-size:11px;
+        color:rgba(255,255,255,.25);
+    }
+
+    .form-actions {
+        display:flex;
+        gap:12px;
+        margin-top:20px;
+        flex-wrap:wrap;
+    }
+
+    .btn-save,
+    .btn-cancel {
+        padding:12px 32px;
+        border-radius:10px;
+        cursor:pointer;
+        font-family:'Cairo',sans-serif;
+        font-size:14px;
+    }
+
+    .btn-save {
+        background:linear-gradient(135deg,#4285f4,#34a853);
+        color:#fff;
+        border:none;
+        font-weight:600;
+    }
+
+    .btn-cancel {
+        background:rgba(255,255,255,.04);
+        color:rgba(255,255,255,.4);
+        border:1px solid rgba(255,255,255,.06);
+    }
+
+    .toast-container {
+        position:fixed;
+        bottom:24px;
+        left:50%;
+        transform:translateX(-50%);
+        z-index:99999;
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+        max-width:420px;
+        width:90%;
+        pointer-events:none;
+    }
+
+    .toast {
+        padding:12px 18px;
+        border-radius:12px;
+        color:#fff;
+        font-size:14px;
+        display:flex;
+        align-items:center;
+        gap:10px;
+        box-shadow:0 8px 40px rgba(0,0,0,.3);
+        border:1px solid rgba(255,255,255,.08);
+        animation:slideUp .3s ease-out;
+    }
+
+    .toast.success { background:rgba(16,185,129,.94); }
+    .toast.danger { background:rgba(239,68,68,.94); }
+    .toast.warning { background:rgba(245,158,11,.94); }
+    .toast.info { background:rgba(59,130,246,.94); }
+
+    .toast-close {
+        margin-right:auto;
+        background:none;
+        border:none;
+        color:#fff;
+        cursor:pointer;
+    }
+
+    @keyframes slideUp {
+        from { opacity:0; transform:translateY(15px); }
+        to { opacity:1; transform:translateY(0); }
+    }
+
+    @media(max-width:768px) {
+        .users-header {
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .users-stats {
+            grid-template-columns:repeat(2,1fr);
+        }
+
+        .form-grid {
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media(max-width:480px) {
+        .users-stats {
+            gap:10px;
+        }
+
+        .stat-card {
+            padding:12px;
+        }
+
+        .stat-card h4 {
+            font-size:18px;
+        }
+
+        .form-actions button {
+            width:100%;
+            justify-content:center;
+        }
+    }
+</style>
+
+<div class="users-container">
+
+    <div class="users-header">
+        <h2>
+            👥 إدارة المستخدمين
+            <span class="badge">v4.0 🔐 Enterprise</span>
+        </h2>
+
+        <div class="header-actions">
+            <button type="button" class="btn btn-primary" id="addUserBtn">
+                ➕ إضافة مستخدم
+            </button>
+
+            <button type="button" class="btn btn-outline" id="refreshUsersBtn">
+                🔄 تحديث
+            </button>
+
+            <a href="/" class="btn btn-outline" style="text-decoration:none;">
+                🏠 الرئيسية
+            </a>
         </div>
     </div>
 
-    <script>
-    (function() {
-        'use strict';
+    <div class="users-stats">
+        <div class="stat-card total">
+            <div class="stat-icon">👥</div>
+            <h4 id="totalUsers">0</h4>
+            <p>إجمالي المستخدمين</p>
+        </div>
 
-        console.log('👥 Users page v3.0 - Enterprise Hardened');
+        <div class="stat-card active">
+            <div class="stat-icon">✅</div>
+            <h4 id="activeUsers">0</h4>
+            <p>نشط</p>
+        </div>
 
-        // ============================================================
-        // 1. HELPER FUNCTIONS
-        // ============================================================
+        <div class="stat-card inactive">
+            <div class="stat-icon">❌</div>
+            <h4 id="inactiveUsers">0</h4>
+            <p>غير نشط</p>
+        </div>
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            var div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
+        <div class="stat-card admins">
+            <div class="stat-icon">⭐</div>
+            <h4 id="adminUsers">0</h4>
+            <p>مسؤولين</p>
+        </div>
+    </div>
+
+    <div id="usersTableContainer">
+        <div class="empty-state">
+            <div class="icon">⏳</div>
+            <p>جاري تحميل البيانات...</p>
+        </div>
+    </div>
+
+    <div class="user-form" id="userForm">
+
+        <div class="form-header">
+            <h3 id="formTitle">➕ إضافة مستخدم جديد</h3>
+
+            <button type="button" class="btn-close" id="formCloseBtn">
+                ✕
+            </button>
+        </div>
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>
+                    👤 اسم المستخدم <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="userUsername"
+                    autocomplete="username"
+                    maxlength="64"
+                    placeholder="اسم المستخدم">
+            </div>
+
+            <div class="form-group">
+                <label>
+                    📧 البريد الإلكتروني <span class="required">*</span>
+                </label>
+
+                <input
+                    type="email"
+                    id="userEmail"
+                    autocomplete="email"
+                    maxlength="254"
+                    placeholder="البريد الإلكتروني">
+            </div>
+
+            <div class="form-group">
+                <label>
+                    🔑 كلمة المرور
+                    <span class="required" id="passwordRequired">*</span>
+                </label>
+
+                <input
+                    type="password"
+                    id="userPassword"
+                    autocomplete="new-password"
+                    minlength="12"
+                    maxlength="128"
+                    placeholder="كلمة المرور">
+
+                <span class="form-hint">
+                    الحد الأدنى الموصى به: 12 حرفًا
+                </span>
+            </div>
+
+            <div class="form-group">
+                <label>👔 الدور</label>
+
+                <select id="userRole">
+                    <option value="viewer">مشاهد</option>
+                    <option value="operator">مشغل</option>
+                    <option value="manager">مدير</option>
+                    <option value="admin">مسؤول</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📊 الحالة</label>
+
+                <select id="userStatus">
+                    <option value="active">نشط</option>
+                    <option value="inactive">غير نشط</option>
+                </select>
+            </div>
+
+            <input type="hidden" id="userId" value="">
+
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-save" id="saveUserBtn">
+                💾 حفظ
+            </button>
+
+            <button type="button" class="btn-cancel" id="cancelUserBtn">
+                ❌ إلغاء
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(() => {
+    'use strict';
+
+    /*
+     * ============================================================
+     * MARINE SYSTEM
+     * USERS PAGE v4.0
+     * ENTERPRISE HARDENED CLIENT
+     *
+     * ملاحظة أمنية:
+     * الواجهة لا تمنح صلاحيات.
+     * يجب أن يفرض server.js جميع صلاحيات RBAC وعمليات CRUD.
+     * ============================================================
+     */
+
+    const PAGE_ID = 'page-users';
+    const API_BASE = '/api/users';
+
+    const REQUEST_TIMEOUT = 15000;
+    const AUTO_REFRESH_MS = 60000;
+
+    let usersData = [];
+    let isLoading = false;
+    let isSaving = false;
+    let refreshTimer = null;
+    let currentAbortController = null;
+
+    /* ============================================================
+     * DOM
+     * ============================================================ */
+
+    const $ = id => document.getElementById(id);
+
+    function pageExists() {
+        return !!$(PAGE_ID);
+    }
+
+    /* ============================================================
+     * SECURITY HELPERS
+     * ============================================================ */
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+
+        const div = document.createElement('div');
+        div.textContent = String(value);
+
+        return div.innerHTML;
+    }
+
+    function normalizeId(id) {
+        if (id === null || id === undefined) return '';
+
+        const value = String(id).trim();
+
+        /*
+         * حماية إضافية من إدخال path غير متوقع.
+         * Mongo ObjectId المعتاد = 24 hex.
+         */
+        if (!/^[a-fA-F0-9]{24}$/.test(value)) {
+            return '';
         }
 
-        function normalizeId(id) {
-            return id == null ? '' : String(id);
+        return value;
+    }
+
+    function getToken() {
+        /*
+         * دعم التوافق مع النسخ السابقة.
+         *
+         * الأفضل أمنيًا:
+         * HttpOnly Secure SameSite Cookie
+         *
+         * وليس localStorage.
+         */
+        return (
+            localStorage.getItem('authToken') ||
+            localStorage.getItem('marine_token') ||
+            localStorage.getItem('token') ||
+            null
+        );
+    }
+
+    function clearClientTokens() {
+        try {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('marine_token');
+            localStorage.removeItem('token');
+        } catch (error) {
+            console.warn('[USERS] Unable to clear local tokens');
         }
+    }
 
-        function getToken() {
-            return localStorage.getItem('authToken') || 
-                   localStorage.getItem('marine_token') || 
-                   localStorage.getItem('token') || null;
-        }
+    /*
+     * محاولة الحصول على CSRF token من:
+     *
+     * 1. meta tag
+     * 2. cookie
+     * 3. window.csrfToken
+     *
+     * إذا كان server.js يستخدم /api/csrf-token
+     * يمكن ربطه هنا مباشرة.
+     */
+    function getCsrfToken() {
+        try {
+            const meta = document.querySelector(
+                'meta[name="csrf-token"]'
+            );
 
-        function getAuthHeaders() {
-            var token = getToken();
-            var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            return headers;
-        }
-
-        function showToast(message, type) {
-            type = type || 'info';
-            var container = document.getElementById('toastContainer');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'toastContainer';
-                container.className = 'toast-container';
-                document.body.appendChild(container);
-            }
-            var toast = document.createElement('div');
-            toast.className = 'toast ' + type;
-            var icons = { success: '✅', warning: '⚠️', danger: '❌', info: 'ℹ️' };
-            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> <span>' + escapeHtml(message) + '</span> <button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
-            container.appendChild(toast);
-            setTimeout(function() { if (toast.parentElement) toast.remove(); }, 4000);
-        }
-
-        // ============================================================
-        // 2. LOAD DATA
-        // ============================================================
-
-        var usersData = [];
-        var isLoading = false;
-
-        async function loadUsersData() {
-            if (isLoading) return;
-            console.log('🔄 [USERS] Loading users data...');
-            isLoading = true;
-
-            var container = document.getElementById('usersTableContainer');
-            if (container) {
-                container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>جاري التحميل...</p></div>';
-            }
-
-            try {
-                var token = getToken();
-                if (!token) {
-                    if (container) {
-                        container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
-                    }
-                    isLoading = false;
-                    return;
-                }
-
-                var response = await fetch('/api/users', {
-                    headers: getAuthHeaders(),
-                    credentials: 'include'
-                });
-
-                if (response.status === 401) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('marine_token');
-                    localStorage.removeItem('token');
-                    if (container) {
-                        container.innerHTML = '<div class="empty-state"><div class="icon">🔒</div><p>انتهت صلاحية الجلسة</p></div>';
-                    }
-                    isLoading = false;
-                    return;
-                }
-
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-
-                var data = await response.json();
-                console.log('📦 [USERS] Data received:', data);
-
-                if (Array.isArray(data)) {
-                    usersData = data;
-                } else if (data.users && Array.isArray(data.users)) {
-                    usersData = data.users;
-                } else if (data.data && Array.isArray(data.data)) {
-                    usersData = data.data;
-                } else {
-                    usersData = [];
-                }
-
-                window.usersData = usersData;
-
-                console.log('✅ [USERS] Loaded:', usersData.length);
-                renderUsers(usersData);
-                updateStats(usersData);
-
-            } catch (error) {
-                console.error('❌ [USERS] Load error:', error);
-                if (container) {
-                    container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>حدث خطأ في تحميل البيانات</p></div>';
-                }
-            }
-            isLoading = false;
-        }
-
-        // ============================================================
-        // 3. RENDER FUNCTIONS
-        // ============================================================
-
-        function updateStats(users) {
-            var total = users.length;
-            var active = users.filter(function(u) { return u.active !== false; }).length;
-            var inactive = users.filter(function(u) { return u.active === false; }).length;
-            var admins = users.filter(function(u) { return u.role === 'admin'; }).length;
-
-            document.getElementById('totalUsers').textContent = total;
-            document.getElementById('activeUsers').textContent = active;
-            document.getElementById('inactiveUsers').textContent = inactive;
-            document.getElementById('adminUsers').textContent = admins;
-        }
-
-        function renderUsers(users) {
-            var container = document.getElementById('usersTableContainer');
-            if (!container) return;
-
-            if (!users || users.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>لا توجد مستخدمين</p></div>';
-                return;
-            }
-
-            var roleMap = {
-                'admin': '<span class="role-badge admin">مسؤول</span>',
-                'manager': '<span class="role-badge manager">مدير</span>',
-                'operator': '<span class="role-badge operator">مشغل</span>',
-                'viewer': '<span class="role-badge viewer">مشاهد</span>'
-            };
-
-            var statusMap = {
-                true: '<span class="status-badge active">✅ نشط</span>',
-                false: '<span class="status-badge inactive">❌ غير نشط</span>'
-            };
-
-            var html = '<div class="table-container"><table class="users-table"><thead><tr>';
-            html += '<th>👤 المستخدم</th><th>📧 البريد الإلكتروني</th><th>👔 الدور</th><th>📊 الحالة</th><th>📅 آخر تسجيل دخول</th><th>⚙️ الإجراءات</th>';
-            html += '</tr></thead><tbody>';
-
-            users.forEach(function(u) {
-                var isActive = u.active !== false;
-                var lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('ar-TN') : '-';
-
-                html += '<tr>';
-                html += '<td><strong>' + escapeHtml(u.name || u.username || '-') + '</strong></td>';
-                html += '<td>' + escapeHtml(u.email || '-') + '</td>';
-                html += '<td>' + (roleMap[u.role] || escapeHtml(u.role || '-')) + '</td>';
-                html += '<td>' + (isActive ? statusMap[true] : statusMap[false]) + '</td>';
-                html += '<td>' + escapeHtml(lastLogin) + '</td>';
-                html += '<td>';
-                html += '<button class="btn-sm btn-edit edit-btn" data-id="' + escapeHtml(u.id || u._id) + '">✏️</button> ';
-                html += '<button class="btn-sm btn-toggle toggle-btn" data-id="' + escapeHtml(u.id || u._id) + '" data-status="' + isActive + '">' + (isActive ? '🔒' : '🔓') + '</button> ';
-                html += '<button class="btn-sm btn-delete delete-btn" data-id="' + escapeHtml(u.id || u._id) + '">🗑️</button>';
-                html += '</td>';
-                html += '</tr>';
-            });
-
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-
-            // ربط الأحداث
-            container.querySelectorAll('.edit-btn').forEach(function(btn) {
-                btn.onclick = function() { editUser(this.dataset.id); };
-            });
-            container.querySelectorAll('.toggle-btn').forEach(function(btn) {
-                btn.onclick = function() { toggleUserStatus(this.dataset.id, this.dataset.status === 'true'); };
-            });
-            container.querySelectorAll('.delete-btn').forEach(function(btn) {
-                btn.onclick = function() { deleteUser(this.dataset.id); };
-            });
-        }
-
-        // ============================================================
-        // 4. CRUD OPERATIONS
-        // ============================================================
-
-        function toggleUserForm() {
-            var form = document.getElementById('userForm');
-            if (!form) return;
-            if (form.classList.contains('active')) {
-                form.classList.remove('active');
-                document.getElementById('formTitle').textContent = '➕ إضافة مستخدم جديد';
-                document.getElementById('userId').value = '';
-                document.getElementById('userUsername').value = '';
-                document.getElementById('userEmail').value = '';
-                document.getElementById('userPassword').value = '';
-                document.getElementById('userRole').value = 'viewer';
-                document.getElementById('userStatus').value = 'active';
-                document.getElementById('passwordRequired').textContent = '*';
-            } else {
-                form.classList.add('active');
-            }
-        }
-
-        function editUser(id) {
-            if (!id) return;
-            var user = usersData.find(function(u) { return normalizeId(u.id || u._id) === normalizeId(id); });
-            if (!user) { showToast('⚠️ المستخدم غير موجود', 'warning'); return; }
-
-            document.getElementById('formTitle').textContent = '✏️ تعديل مستخدم';
-            document.getElementById('userId').value = id;
-            document.getElementById('userUsername').value = user.username || '';
-            document.getElementById('userEmail').value = user.email || '';
-            document.getElementById('userPassword').value = '';
-            document.getElementById('userRole').value = user.role || 'viewer';
-            document.getElementById('userStatus').value = user.active !== false ? 'active' : 'inactive';
-            document.getElementById('passwordRequired').textContent = '(اتركها فارغة لتعديل)';
-            document.getElementById('userForm').classList.add('active');
-        }
-
-        async function saveUser() {
-            var id = document.getElementById('userId').value;
-            var username = document.getElementById('userUsername').value.trim();
-            var email = document.getElementById('userEmail').value.trim();
-            var password = document.getElementById('userPassword').value;
-            var role = document.getElementById('userRole').value;
-            var status = document.getElementById('userStatus').value;
-
-            if (!username) { showToast('⚠️ الرجاء إدخال اسم المستخدم', 'warning'); return; }
-            if (!email) { showToast('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning'); return; }
-            if (!id && !password) { showToast('⚠️ الرجاء إدخال كلمة المرور', 'warning'); return; }
-
-            var token = getToken();
-            if (!token) { showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning'); return; }
-
-            var data = { username: username, email: email, role: role, active: status === 'active' };
-            if (password) data.password = password;
-
-            try {
-                var url = id ? '/api/users/' + id : '/api/users';
-                var method = id ? 'PUT' : 'POST';
-
-                var response = await fetch(url, {
-                    method: method,
-                    headers: getAuthHeaders(),
-                    credentials: 'include',
-                    body: JSON.stringify(data)
-                });
-
-                if (!response.ok) {
-                    var error = await response.json();
-                    throw new Error(error.error || error.message || 'فشل الحفظ');
-                }
-
-                showToast('✅ ' + (id ? 'تم تحديث' : 'تم إضافة') + ' المستخدم بنجاح', 'success');
-                toggleUserForm();
-                await loadUsersData();
-            } catch (error) {
-                console.error('❌ Save user error:', error);
-                showToast('❌ ' + (error.message || 'فشل الحفظ'), 'danger');
-            }
-        }
-
-        async function toggleUserStatus(id, currentStatus) {
-            if (!id) return;
-            var action = currentStatus ? 'تعطيل' : 'تفعيل';
-            if (!confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) return;
-
-            var token = getToken();
-            if (!token) { showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning'); return; }
-
-            try {
-                var response = await fetch('/api/users/' + id, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    credentials: 'include',
-                    body: JSON.stringify({ active: !currentStatus })
-                });
-
-                if (!response.ok) {
-                    var error = await response.json();
-                    throw new Error(error.error || error.message || 'فشل التغيير');
-                }
-
-                showToast('✅ تم ' + action + ' المستخدم بنجاح', 'success');
-                await loadUsersData();
-            } catch (error) {
-                console.error('❌ Toggle user error:', error);
-                showToast('❌ ' + (error.message || 'فشل التغيير'), 'danger');
-            }
-        }
-
-        async function deleteUser(id) {
-            if (!id) return;
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
-
-            var token = getToken();
-            if (!token) { showToast('⚠️ الرجاء تسجيل الدخول مرة أخرى', 'warning'); return; }
-
-            try {
-                var response = await fetch('/api/users/' + id, {
-                    method: 'DELETE',
-                    headers: getAuthHeaders(),
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    var error = await response.json();
-                    throw new Error(error.error || error.message || 'فشل الحذف');
-                }
-
-                showToast('✅ تم حذف المستخدم', 'success');
-                await loadUsersData();
-            } catch (error) {
-                console.error('❌ Delete user error:', error);
-                showToast('❌ ' + (error.message || 'فشل الحذف'), 'danger');
-            }
-        }
-
-        // ============================================================
-        // 5. INIT
-        // ============================================================
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('👥 Users page initializing...');
-
-            document.getElementById('addUserBtn').onclick = toggleUserForm;
-            document.getElementById('refreshUsersBtn').onclick = function() {
-                loadUsersData();
-                showToast('🔄 جاري تحديث البيانات...', 'info');
-            };
-            document.getElementById('formCloseBtn').onclick = toggleUserForm;
-            document.getElementById('cancelUserBtn').onclick = toggleUserForm;
-            document.getElementById('saveUserBtn').onclick = saveUser;
-
-            var token = getToken();
-            if (!token) {
-                document.getElementById('usersTableContainer').innerHTML = 
-                    '<div class="empty-state"><div class="icon">⚠️</div><p>يرجى تسجيل الدخول أولاً</p></div>';
-                return;
+            if (meta && meta.content) {
+                return meta.content;
             }
 
-            // ✅ تحميل البيانات فوراً
-            loadUsersData();
+            if (
+                window.csrfToken &&
+                typeof window.csrfToken === 'string'
+            ) {
+                return window.csrfToken;
+            }
 
-            // ✅ تحديث كل 60 ثانية
-            setInterval(function() {
-                if (!isLoading) loadUsersData();
-            }, 60000);
+            const cookie = document.cookie
+                .split('; ')
+                .find(row =>
+                    row.startsWith('csrfToken=')
+                );
+
+            if (cookie) {
+                return decodeURIComponent(
+                    cookie.split('=').slice(1).join('=')
+                );
+            }
+        } catch (error) {
+            console.warn('[USERS] CSRF token unavailable');
+        }
+
+        return null;
+    }
+
+    function isValidEmail(email) {
+        if (!email || email.length > 254) return false;
+
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function isStrongEnoughPassword(password) {
+        if (!password) return false;
+
+        return (
+            password.length >= 12 &&
+            password.length <= 128
+        );
+    }
+
+    function isValidUsername(username) {
+        if (!username) return false;
+
+        if (username.length < 3 || username.length > 64) {
+            return false;
+        }
+
+        /*
+         * اسم مستخدم آمن نسبيًا:
+         * حروف عربية/لاتينية + أرقام + _ + -
+         */
+        return /^[\p{L}\p{N}_-]+$/u.test(username);
+    }
+
+    /* ============================================================
+     * TOAST
+     * ============================================================ */
+
+    function showToast(message, type = 'info') {
+        let container = $('toastContainer');
+
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+
+        toast.className = `toast ${type}`;
+
+        const icons = {
+            success: '✅',
+            warning: '⚠️',
+            danger: '❌',
+            info: 'ℹ️'
+        };
+
+        const icon = document.createElement('span');
+        icon.textContent = icons[type] || icons.info;
+
+        const text = document.createElement('span');
+        text.textContent = String(message);
+
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'toast-close';
+        close.textContent = '✕';
+
+        close.addEventListener('click', () => {
+            toast.remove();
         });
 
-        // ============================================================
-        // 6. EXPOSE GLOBALS
-        // ============================================================
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
 
-        window.loadUsersData = loadUsersData;
-        window.renderUsers = renderUsers;
-        window.updateStats = updateStats;
-        window.toggleUserForm = toggleUserForm;
-        window.saveUser = saveUser;
-        window.editUser = editUser;
-        window.toggleUserStatus = toggleUserStatus;
-        window.deleteUser = deleteUser;
-        window.showToast = showToast;
-        window.getToken = getToken;
-        window.usersData = usersData;
+        container.appendChild(toast);
 
-        console.log('✅ Users page script loaded');
-        console.log('🔄 Auto-loading users data...');
-    })();
-    </script>
+        window.setTimeout(() => {
+            if (toast.isConnected) {
+                toast.remove();
+            }
+        }, 4000);
+    }
+
+    /* ============================================================
+     * REQUEST SYSTEM
+     * ============================================================ */
+
+    async function safeJson(response) {
+        const contentType =
+            response.headers.get('content-type') || '';
+
+        if (!contentType.includes('application/json')) {
+            return null;
+        }
+
+        try {
+            return await response.json();
+        } catch {
+            return null;
+        }
+    }
+
+    async function apiRequest(
+        url,
+        options = {},
+        { retryOn401 = false } = {}
+    ) {
+        if (!navigator.onLine) {
+            throw new Error('لا يوجد اتصال بالإنترنت');
+        }
+
+        const controller = new AbortController();
+
+        const timeout = window.setTimeout(() => {
+            controller.abort();
+        }, REQUEST_TIMEOUT);
+
+        currentAbortController = controller;
+
+        const headers = new Headers(
+            options.headers || {}
+        );
+
+        if (!headers.has('Accept')) {
+            headers.set('Accept', 'application/json');
+        }
+
+        if (
+            options.body &&
+            typeof options.body === 'string' &&
+            !headers.has('Content-Type')
+        ) {
+            headers.set(
+                'Content-Type',
+                'application/json'
+            );
+        }
+
+        /*
+         * Bearer token compatibility.
+         *
+         * إذا كان النظام يستخدم HttpOnly cookie،
+         * فلن يوجد token هنا وسيتم الاعتماد على cookie.
+         */
+        const token = getToken();
+
+        if (
+            token &&
+            !headers.has('Authorization')
+        ) {
+            headers.set(
+                'Authorization',
+                `Bearer ${token}`
+            );
+        }
+
+        /*
+         * CSRF للطلبات التي تغير البيانات.
+         */
+        const method =
+            String(options.method || 'GET').toUpperCase();
+
+        if (
+            ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
+        ) {
+            const csrf = getCsrfToken();
+
+            if (csrf) {
+                headers.set('X-CSRF-Token', csrf);
+            }
+        }
+
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers,
+                credentials: 'include',
+                signal: controller.signal,
+                cache: 'no-store'
+            });
+
+            if (
+                response.status === 401 &&
+                !retryOn401
+            ) {
+                clearClientTokens();
+
+                throw new Error(
+                    'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.'
+                );
+            }
+
+            if (response.status === 403) {
+                throw new Error(
+                    'ليس لديك صلاحية لتنفيذ هذه العملية.'
+                );
+            }
+
+            if (response.status === 404) {
+                throw new Error(
+                    'المستخدم أو المورد غير موجود.'
+                );
+            }
+
+            if (response.status === 409) {
+                const data = await safeJson(response);
+
+                throw new Error(
+                    data?.error ||
+                    data?.message ||
+                    'تعارض في البيانات.'
+                );
+            }
+
+            if (response.status === 429) {
+                throw new Error(
+                    'تم تجاوز عدد الطلبات المسموح بها. حاول بعد قليل.'
+                );
+            }
+
+            return response;
+
+        } catch (error) {
+
+            if (error.name === 'AbortError') {
+                throw new Error(
+                    'انتهت مهلة الاتصال بالخادم.'
+                );
+            }
+
+            throw error;
+
+        } finally {
+            window.clearTimeout(timeout);
+
+            if (
+                currentAbortController === controller
+            ) {
+                currentAbortController = null;
+            }
+        }
+    }
+
+    /* ============================================================
+     * LOAD USERS
+     * ============================================================ */
+
+    async function loadUsersData() {
+        if (isLoading || !pageExists()) return;
+
+        isLoading = true;
+
+        const container =
+            $('usersTableContainer');
+
+        if (container) {
+            container.innerHTML =
+                '<div class="empty-state">' +
+                '<div class="icon">⏳</div>' +
+                '<p>جاري تحميل البيانات...</p>' +
+                '</div>';
+        }
+
+        try {
+
+            const response = await apiRequest(
+                API_BASE,
+                {
+                    method: 'GET'
+                }
+            );
+
+            const data =
+                await safeJson(response);
+
+            if (!data) {
+                throw new Error(
+                    'استجابة غير صالحة من الخادم.'
+                );
+            }
+
+            if (Array.isArray(data)) {
+                usersData = data;
+            } else if (
+                Array.isArray(data.users)
+            ) {
+                usersData = data.users;
+            } else if (
+                Array.isArray(data.data)
+            ) {
+                usersData = data.data;
+            } else {
+                usersData = [];
+            }
+
+            /*
+             * إزالة أي عناصر غير صالحة.
+             */
+            usersData = usersData.filter(
+                user =>
+                    user &&
+                    typeof user === 'object'
+            );
+
+            window.usersData = usersData;
+
+            renderUsers(usersData);
+            updateStats(usersData);
+
+        } catch (error) {
+
+            console.error(
+                '❌ [USERS] Load error:',
+                error
+            );
+
+            if (container) {
+
+                const message =
+                    error.message ||
+                    'حدث خطأ في تحميل البيانات';
+
+                container.innerHTML =
+                    '<div class="empty-state">' +
+                    '<div class="icon">❌</div>' +
+                    '<p>' +
+                    escapeHtml(message) +
+                    '</p>' +
+                    '</div>';
+            }
+
+            if (
+                error.message &&
+                (
+                    error.message.includes(
+                        'انتهت صلاحية'
+                    ) ||
+                    error.message.includes(
+                        'صلاحية'
+                    )
+                )
+            ) {
+                showToast(
+                    error.message,
+                    'warning'
+                );
+            }
+
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    /* ============================================================
+     * STATS
+     * ============================================================ */
+
+    function updateStats(users) {
+
+        const total = users.length;
+
+        const active = users.filter(
+            u => u.active !== false
+        ).length;
+
+        const inactive = users.filter(
+            u => u.active === false
+        ).length;
+
+        const admins = users.filter(
+            u => u.role === 'admin'
+        ).length;
+
+        if ($('totalUsers'))
+            $('totalUsers').textContent = total;
+
+        if ($('activeUsers'))
+            $('activeUsers').textContent = active;
+
+        if ($('inactiveUsers'))
+            $('inactiveUsers').textContent = inactive;
+
+        if ($('adminUsers'))
+            $('adminUsers').textContent = admins;
+    }
+
+    /* ============================================================
+     * RENDER
+     * ============================================================ */
+
+    function renderUsers(users) {
+
+        const container =
+            $('usersTableContainer');
+
+        if (!container) return;
+
+        if (
+            !Array.isArray(users) ||
+            users.length === 0
+        ) {
+            container.innerHTML =
+                '<div class="empty-state">' +
+                '<div class="icon">📭</div>' +
+                '<p>لا توجد مستخدمين</p>' +
+                '</div>';
+
+            return;
+        }
+
+        const roleMap = {
+            admin:
+                '<span class="role-badge admin">مسؤول</span>',
+
+            manager:
+                '<span class="role-badge manager">مدير</span>',
+
+            operator:
+                '<span class="role-badge operator">مشغل</span>',
+
+            viewer:
+                '<span class="role-badge viewer">مشاهد</span>'
+        };
+
+        let html =
+            '<div class="table-container">' +
+            '<table class="users-table">' +
+            '<thead><tr>' +
+            '<th>👤 المستخدم</th>' +
+            '<th>📧 البريد الإلكتروني</th>' +
+            '<th>👔 الدور</th>' +
+            '<th>📊 الحالة</th>' +
+            '<th>📅 آخر تسجيل دخول</th>' +
+            '<th>⚙️ الإجراءات</th>' +
+            '</tr></thead><tbody>';
+
+        users.forEach(user => {
+
+            const id =
+                normalizeId(
+                    user.id || user._id
+                );
+
+            if (!id) return;
+
+            const active =
+                user.active !== false;
+
+            let lastLogin = '-';
+
+            if (user.lastLogin) {
+                const date =
+                    new Date(user.lastLogin);
+
+                if (!Number.isNaN(date.getTime())) {
+                    lastLogin =
+                        date.toLocaleDateString(
+                            'ar-TN'
+                        );
+                }
+            }
+
+            const username =
+                user.name ||
+                user.username ||
+                '-';
+
+            const email =
+                user.email ||
+                '-';
+
+            const role =
+                roleMap[user.role] ||
+                escapeHtml(
+                    user.role || '-'
+                );
+
+            html +=
+                '<tr>' +
+
+                '<td><strong>' +
+                escapeHtml(username) +
+                '</strong></td>' +
+
+                '<td>' +
+                escapeHtml(email) +
+                '</td>' +
+
+                '<td>' +
+                role +
+                '</td>' +
+
+                '<td>' +
+                (
+                    active
+                        ? '<span class="status-badge active">✅ نشط</span>'
+                        : '<span class="status-badge inactive">❌ غير نشط</span>'
+                ) +
+                '</td>' +
+
+                '<td>' +
+                escapeHtml(lastLogin) +
+                '</td>' +
+
+                '<td>' +
+
+                '<button ' +
+                'type="button" ' +
+                'class="btn-sm btn-edit edit-btn" ' +
+                'data-id="' +
+                escapeHtml(id) +
+                '">' +
+                '✏️' +
+                '</button> ' +
+
+                '<button ' +
+                'type="button" ' +
+                'class="btn-sm btn-toggle toggle-btn" ' +
+                'data-id="' +
+                escapeHtml(id) +
+                '" ' +
+                'data-status="' +
+                String(active) +
+                '">' +
+                (
+                    active
+                        ? '🔒'
+                        : '🔓'
+                ) +
+                '</button> ' +
+
+                '<button ' +
+                'type="button" ' +
+                'class="btn-sm btn-delete delete-btn" ' +
+                'data-id="' +
+                escapeHtml(id) +
+                '">' +
+                '🗑️' +
+                '</button>' +
+
+                '</td>' +
+
+                '</tr>';
+        });
+
+        html +=
+            '</tbody></table></div>';
+
+        container.innerHTML = html;
+
+        container
+            .querySelectorAll('.edit-btn')
+            .forEach(button => {
+
+                button.addEventListener(
+                    'click',
+                    () =>
+                        editUser(
+                            button.dataset.id
+                        )
+                );
+            });
+
+        container
+            .querySelectorAll('.toggle-btn')
+            .forEach(button => {
+
+                button.addEventListener(
+                    'click',
+                    () =>
+                        toggleUserStatus(
+                            button.dataset.id,
+                            button.dataset.status === 'true'
+                        )
+                );
+            });
+
+        container
+            .querySelectorAll('.delete-btn')
+            .forEach(button => {
+
+                button.addEventListener(
+                    'click',
+                    () =>
+                        deleteUser(
+                            button.dataset.id
+                        )
+                );
+            });
+    }
+
+    /* ============================================================
+     * FORM
+     * ============================================================ */
+
+    function resetForm() {
+
+        if (!$('userForm')) return;
+
+        $('userId').value = '';
+        $('userUsername').value = '';
+        $('userEmail').value = '';
+        $('userPassword').value = '';
+        $('userRole').value = 'viewer';
+        $('userStatus').value = 'active';
+
+        $('formTitle').textContent =
+            '➕ إضافة مستخدم جديد';
+
+        $('passwordRequired').textContent =
+            '*';
+
+        [
+            'userUsername',
+            'userEmail',
+            'userPassword'
+        ].forEach(id => {
+            $(id)?.classList.remove('invalid');
+        });
+    }
+
+    function openUserForm() {
+        $('userForm')?.classList.add('active');
+    }
+
+    function closeUserForm() {
+        $('userForm')?.classList.remove('active');
+        resetForm();
+    }
+
+    function toggleUserForm() {
+
+        const form = $('userForm');
+
+        if (!form) return;
+
+        if (form.classList.contains('active')) {
+            closeUserForm();
+        } else {
+            resetForm();
+            openUserForm();
+        }
+    }
+
+    /* ============================================================
+     * EDIT
+     * ============================================================ */
+
+    function editUser(id) {
+
+        const normalizedId =
+            normalizeId(id);
+
+        if (!normalizedId) {
+            showToast(
+                'معرّف المستخدم غير صالح.',
+                'danger'
+            );
+            return;
+        }
+
+        const user =
+            usersData.find(
+                u =>
+                    normalizeId(
+                        u.id || u._id
+                    ) === normalizedId
+            );
+
+        if (!user) {
+            showToast(
+                'المستخدم غير موجود.',
+                'warning'
+            );
+            return;
+        }
+
+        $('formTitle').textContent =
+            '✏️ تعديل مستخدم';
+
+        $('userId').value =
+            normalizedId;
+
+        $('userUsername').value =
+            user.username || '';
+
+        $('userEmail').value =
+            user.email || '';
+
+        $('userPassword').value = '';
+
+        $('userRole').value =
+            user.role || 'viewer';
+
+        $('userStatus').value =
+            user.active !== false
+                ? 'active'
+                : 'inactive';
+
+        $('passwordRequired').textContent =
+            '(اتركها فارغة إذا لم ترد تغييرها)';
+
+        openUserForm();
+
+        $('userUsername')?.focus();
+    }
+
+    /* ============================================================
+     * FORM VALIDATION
+     * ============================================================ */
+
+    function validateForm({
+        id,
+        username,
+        email,
+        password
+    }) {
+
+        [
+            'userUsername',
+            'userEmail',
+            'userPassword'
+        ].forEach(field => {
+            $(field)?.classList.remove('invalid');
+        });
+
+        if (!isValidUsername(username)) {
+
+            $('userUsername')
+                ?.classList.add('invalid');
+
+            showToast(
+                'اسم المستخدم غير صالح.',
+                'warning'
+            );
+
+            return false;
+        }
+
+        if (!isValidEmail(email)) {
+
+            $('userEmail')
+                ?.classList.add('invalid');
+
+            showToast(
+                'البريد الإلكتروني غير صالح.',
+                'warning'
+            );
+
+            return false;
+        }
+
+        /*
+         * كلمة المرور مطلوبة عند الإنشاء فقط.
+         */
+        if (!id && !isStrongEnoughPassword(password)) {
+
+            $('userPassword')
+                ?.classList.add('invalid');
+
+            showToast(
+                'كلمة المرور يجب أن تكون 12 حرفًا على الأقل.',
+                'warning'
+            );
+
+            return false;
+        }
+
+        /*
+         * إذا تم إدخال password أثناء التعديل،
+         * يجب أن تستوفي نفس السياسة.
+         */
+        if (
+            id &&
+            password &&
+            !isStrongEnoughPassword(password)
+        ) {
+
+            $('userPassword')
+                ?.classList.add('invalid');
+
+            showToast(
+                'كلمة المرور الجديدة يجب أن تكون 12 حرفًا على الأقل.',
+                'warning'
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /* ============================================================
+     * SAVE
+     * ============================================================ */
+
+    async function saveUser() {
+
+        if (isSaving) return;
+
+        const id =
+            normalizeId(
+                $('userId').value
+            );
+
+        const username =
+            $('userUsername')
+                .value
+                .trim();
+
+        const email =
+            $('userEmail')
+                .value
+                .trim();
+
+        const password =
+            $('userPassword')
+                .value;
+
+        const role =
+            $('userRole').value;
+
+        const status =
+            $('userStatus').value;
+
+        if (
+            !validateForm({
+                id,
+                username,
+                email,
+                password
+            })
+        ) {
+            return;
+        }
+
+        /*
+         * حماية إضافية من تغيير قيم غير متوقعة.
+         */
+        const allowedRoles = [
+            'admin',
+            'manager',
+            'operator',
+            'viewer'
+        ];
+
+        if (!allowedRoles.includes(role)) {
+            showToast(
+                'الدور المحدد غير صالح.',
+                'danger'
+            );
+            return;
+        }
+
+        if (
+            !['active','inactive']
+                .includes(status)
+        ) {
+            showToast(
+                'حالة المستخدم غير صالحة.',
+                'danger'
+            );
+            return;
+        }
+
+        /*
+         * منع تعديل صلاحيات admin من الواجهة
+         * لا يعني منعها أمنيًا؛ server.js يجب أن يفرض ذلك.
+         */
+        const payload = {
+            username,
+            email,
+            role,
+            active: status === 'active'
+        };
+
+        if (password) {
+            payload.password = password;
+        }
+
+        isSaving = true;
+
+        const saveButton =
+            $('saveUserBtn');
+
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.textContent =
+                '⏳ جاري الحفظ...';
+        }
+
+        try {
+
+            const url =
+                id
+                    ? `${API_BASE}/${encodeURIComponent(id)}`
+                    : API_BASE;
+
+            const response =
+                await apiRequest(
+                    url,
+                    {
+                        method: id
+                            ? 'PUT'
+                            : 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+
+                        body:
+                            JSON.stringify(payload)
+                    }
+                );
+
+            const data =
+                await safeJson(response);
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data?.error ||
+                    data?.message ||
+                    'فشل حفظ المستخدم.'
+                );
+            }
+
+            showToast(
+                id
+                    ? 'تم تحديث المستخدم بنجاح.'
+                    : 'تم إضافة المستخدم بنجاح.',
+                'success'
+            );
+
+            closeUserForm();
+
+            await loadUsersData();
+
+        } catch (error) {
+
+            console.error(
+                '❌ [USERS] Save error:',
+                error
+            );
+
+            showToast(
+                error.message ||
+                'فشل حفظ المستخدم.',
+                'danger'
+            );
+
+        } finally {
+
+            isSaving = false;
+
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.textContent =
+                    '💾 حفظ';
+            }
+        }
+    }
+
+    /* ============================================================
+     * TOGGLE STATUS
+     * ============================================================ */
+
+    async function toggleUserStatus(
+        id,
+        currentStatus
+    ) {
+
+        const normalizedId =
+            normalizeId(id);
+
+        if (!normalizedId) {
+            showToast(
+                'معرّف المستخدم غير صالح.',
+                'danger'
+            );
+            return;
+        }
+
+        const user =
+            usersData.find(
+                u =>
+                    normalizeId(
+                        u.id || u._id
+                    ) === normalizedId
+            );
+
+        if (!user) {
+            showToast(
+                'المستخدم غير موجود.',
+                'warning'
+            );
+            return;
+        }
+
+        /*
+         * حماية واجهة إضافية:
+         * لا تسمح بتعطيل آخر admin.
+         *
+         * لكن server.js يجب أن يفرض ذلك أيضًا.
+         */
+        if (
+            currentStatus &&
+            user.role === 'admin'
+        ) {
+
+            const activeAdmins =
+                usersData.filter(
+                    u =>
+                        u.role === 'admin' &&
+                        u.active !== false
+                );
+
+            if (activeAdmins.length <= 1) {
+                showToast(
+                    'لا يمكن تعطيل آخر مسؤول نشط.',
+                    'warning'
+                );
+                return;
+            }
+        }
+
+        const action =
+            currentStatus
+                ? 'تعطيل'
+                : 'تفعيل';
+
+        if (
+            !window.confirm(
+                `⚠️ هل أنت متأكد من ${action} هذا المستخدم؟`
+            )
+        ) {
+            return;
+        }
+
+        try {
+
+            const response =
+                await apiRequest(
+                    `${API_BASE}/${encodeURIComponent(normalizedId)}`,
+                    {
+                        method: 'PUT',
+
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+
+                        body:
+                            JSON.stringify({
+                                active:
+                                    !currentStatus
+                            })
+                    }
+                );
+
+            const data =
+                await safeJson(response);
+
+            if (!response.ok) {
+                throw new Error(
+                    data?.error ||
+                    data?.message ||
+                    'فشل تغيير الحالة.'
+                );
+            }
+
+            showToast(
+                `تم ${action} المستخدم بنجاح.`,
+                'success'
+            );
+
+            await loadUsersData();
+
+        } catch (error) {
+
+            console.error(
+                '❌ [USERS] Toggle error:',
+                error
+            );
+
+            showToast(
+                error.message ||
+                'فشل تغيير حالة المستخدم.',
+                'danger'
+            );
+        }
+    }
+
+    /* ============================================================
+     * DELETE
+     * ============================================================ */
+
+    async function deleteUser(id) {
+
+        const normalizedId =
+            normalizeId(id);
+
+        if (!normalizedId) {
+            showToast(
+                'معرّف المستخدم غير صالح.',
+                'danger'
+            );
+            return;
+        }
+
+        const user =
+            usersData.find(
+                u =>
+                    normalizeId(
+                        u.id || u._id
+                    ) === normalizedId
+            );
+
+        if (!user) {
+            showToast(
+                'المستخدم غير موجود.',
+                'warning'
+            );
+            return;
+        }
+
+        /*
+         * منع حذف آخر admin من الواجهة.
+         * يجب أيضًا فرض ذلك في server.js.
+         */
+        if (user.role === 'admin') {
+
+            const adminCount =
+                usersData.filter(
+                    u =>
+                        u.role === 'admin'
+                ).length;
+
+            if (adminCount <= 1) {
+                showToast(
+                    'لا يمكن حذف آخر مسؤول في النظام.',
+                    'warning'
+                );
+                return;
+            }
+        }
+
+        const username =
+            user.username ||
+            user.name ||
+            'هذا المستخدم';
+
+        if (
+            !window.confirm(
+                `⚠️ سيتم حذف "${username}" نهائيًا.\n\nهل أنت متأكد؟`
+            )
+        ) {
+            return;
+        }
+
+        try {
+
+            const response =
+                await apiRequest(
+                    `${API_BASE}/${encodeURIComponent(normalizedId)}`,
+                    {
+                        method: 'DELETE'
+                    }
+                );
+
+            const data =
+                await safeJson(response);
+
+            if (!response.ok) {
+                throw new Error(
+                    data?.error ||
+                    data?.message ||
+                    'فشل حذف المستخدم.'
+                );
+            }
+
+            showToast(
+                'تم حذف المستخدم بنجاح.',
+                'success'
+            );
+
+            await loadUsersData();
+
+        } catch (error) {
+
+            console.error(
+                '❌ [USERS] Delete error:',
+                error
+            );
+
+            showToast(
+                error.message ||
+                'فشل حذف المستخدم.',
+                'danger'
+            );
+        }
+    }
+
+    /* ============================================================
+     * AUTO REFRESH
+     * ============================================================ */
+
+    function startAutoRefresh() {
+
+        stopAutoRefresh();
+
+        refreshTimer =
+            window.setInterval(
+                () => {
+
+                    if (
+                        document.hidden ||
+                        isLoading ||
+                        isSaving ||
+                        !pageExists()
+                    ) {
+                        return;
+                    }
+
+                    loadUsersData();
+
+                },
+                AUTO_REFRESH_MS
+            );
+    }
+
+    function stopAutoRefresh() {
+
+        if (refreshTimer !== null) {
+
+            window.clearInterval(
+                refreshTimer
+            );
+
+            refreshTimer = null;
+        }
+    }
+
+    /* ============================================================
+     * INITIALIZATION
+     * ============================================================ */
+
+    function init() {
+
+        if (!pageExists()) return;
+
+        console.log(
+            '👥 Users v4.0 initializing...'
+        );
+
+        $('addUserBtn')
+            ?.addEventListener(
+                'click',
+                toggleUserForm
+            );
+
+        $('refreshUsersBtn')
+            ?.addEventListener(
+                'click',
+                async () => {
+
+                    if (isLoading) return;
+
+                    showToast(
+                        '🔄 جاري تحديث البيانات...',
+                        'info'
+                    );
+
+                    await loadUsersData();
+                }
+            );
+
+        $('formCloseBtn')
+            ?.addEventListener(
+                'click',
+                closeUserForm
+            );
+
+        $('cancelUserBtn')
+            ?.addEventListener(
+                'click',
+                closeUserForm
+            );
+
+        $('saveUserBtn')
+            ?.addEventListener(
+                'click',
+                saveUser
+            );
+
+        /*
+         * منع إرسال form عند الضغط Enter
+         * إذا كان هناك form خارجي.
+         */
+        $('userForm')
+            ?.addEventListener(
+                'keydown',
+                event => {
+
+                    if (
+                        event.key === 'Enter' &&
+                        event.target.tagName !== 'TEXTAREA'
+                    ) {
+                        event.preventDefault();
+                    }
+                }
+            );
+
+        /*
+         * تحميل أولي.
+         */
+        loadUsersData();
+
+        startAutoRefresh();
+
+        /*
+         * إذا رجع المستخدم للصفحة.
+         */
+        document.addEventListener(
+            'visibilitychange',
+            () => {
+
+                if (
+                    !document.hidden &&
+                    pageExists() &&
+                    !isLoading
+                ) {
+                    loadUsersData();
+                }
+            }
+        );
+
+        console.log(
+            '✅ Users v4.0 initialized'
+        );
+    }
+
+    /* ============================================================
+     * CLEANUP
+     * ============================================================ */
+
+    function cleanup() {
+
+        stopAutoRefresh();
+
+        if (
+            currentAbortController
+        ) {
+            currentAbortController.abort();
+            currentAbortController = null;
+        }
+    }
+
+    /*
+     * SPA compatibility.
+     *
+     * إذا كان التطبيق يستخدم navigation داخلي،
+     * يمكن استدعاء:
+     *
+     * window.cleanupUsersPage()
+     */
+    window.cleanupUsersPage = cleanup;
+
+    /* ============================================================
+     * GLOBAL COMPATIBILITY
+     * ============================================================ */
+
+    window.usersData = usersData;
+    window.loadUsersData = loadUsersData;
+    window.renderUsers = renderUsers;
+    window.updateStats = updateStats;
+    window.toggleUserForm = toggleUserForm;
+    window.saveUser = saveUser;
+    window.editUser = editUser;
+    window.toggleUserStatus = toggleUserStatus;
+    window.deleteUser = deleteUser;
+    window.showToast = showToast;
+    window.getToken = getToken;
+
+    /*
+     * SPA قد يحمّل الصفحة بعد DOMContentLoaded.
+     */
+    if (document.readyState === 'loading') {
+        document.addEventListener(
+            'DOMContentLoaded',
+            init,
+            { once: true }
+        );
+    } else {
+        init();
+    }
+
+})();
+</script>
+
 </div>
