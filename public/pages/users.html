@@ -703,7 +703,14 @@
 
             if (response.ok) {
                 var data = await response.json();
-                usersData = data.users || data || [];
+                // ✅ معالجة البيانات بشكل صحيح
+                if (data.users) {
+                    usersData = data.users;
+                } else if (Array.isArray(data)) {
+                    usersData = data;
+                } else {
+                    usersData = [];
+                }
                 window.allUsers = usersData;
                 console.log('✅ [USERS] Users loaded:', usersData.length);
                 renderUsers(usersData);
@@ -1030,6 +1037,8 @@
     window.toggleUserStatus = toggleUserStatus;
     window.deleteUser = deleteUser;
     window.updateDateTime = updateDateTime;
+    window.showToast = showToast;
+    window.getToken = getToken;
 
     console.log('✅ Users page script loaded');
     </script>
