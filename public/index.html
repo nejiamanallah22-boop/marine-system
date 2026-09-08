@@ -1679,7 +1679,7 @@
         }
 
         // ============================================================
-        // 🔐 FORGOT PASSWORD - MODAL FUNCTIONS (FIXED)
+        // 🔐 FORGOT PASSWORD - MODAL FUNCTIONS
         // ============================================================
 
         var forgotModal = document.getElementById('forgotPasswordModal');
@@ -1751,12 +1751,10 @@
                 });
             }
 
-            // ✅ إصلاح زر إرسال رابط إعادة التعيين
             if (sendResetBtn) {
                 sendResetBtn.addEventListener('click', async function() {
                     var email = forgotEmail ? forgotEmail.value.trim() : '';
 
-                    // ✅ إظهار رسالة التحميل
                     if (forgotMessage) {
                         forgotMessage.className = 'modal-message show';
                         forgotMessage.style.display = 'block';
@@ -1788,7 +1786,6 @@
                     sendResetBtn.innerHTML = '⏳ جاري الإرسال...';
 
                     try {
-                        // ✅ الحصول على CSRF token
                         var csrfRes = await fetch('/api/csrf-token', {
                             credentials: 'include',
                             headers: { 'Accept': 'application/json' }
@@ -1796,7 +1793,6 @@
                         var csrfData = await csrfRes.json();
                         var csrfToken = csrfData.token || '';
 
-                        // ✅ إرسال الطلب
                         var response = await fetch('/api/auth/forgot-password', {
                             method: 'POST',
                             headers: {
@@ -1820,7 +1816,6 @@
                             } else if (response.ok && data.success) {
                                 forgotMessage.className += ' success';
                                 
-                                // ✅ عرض الرابط مباشرة للمستخدم
                                 var resetLink = data.resetLink || '';
                                 if (resetLink) {
                                     forgotMessage.innerHTML = 
