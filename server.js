@@ -85,30 +85,13 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
 
 // ============================================================
-// 📧 EMAIL CONFIGURATION - ETHEREAL (TEST)
+// 📧 EMAIL CONFIGURATION - ETHEREAL ONLY (FIXED)
 // ============================================================
-
-// ✅ إعدادات البريد الإلكتروني (دعم متعدد للمزودين)
-const emailConfig = {
-    host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === 'true' || false,
-    auth: {
-        user: process.env.SMTP_USER || '',
-        pass: process.env.SMTP_PASS || ''
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000
-};
 
 let emailTransporter = null;
 let etherealAccount = null;
 
-// ✅ إنشاء حساب Ethereal تلقائياً إذا لم تكن هناك إعدادات SMTP
+// ✅ إنشاء حساب Ethereal تلقائياً
 async function setupEtherealEmail() {
     try {
         const testAccount = await nodemailer.createTestAccount();
@@ -138,22 +121,9 @@ async function setupEtherealEmail() {
     }
 }
 
-// ✅ إعداد البريد الإلكتروني
+// ✅ إعداد البريد الإلكتروني - استخدام Ethereal فقط
 async function initEmailService() {
-    // إذا كانت هناك إعدادات SMTP مخصصة
-    if (emailConfig.auth.user && emailConfig.auth.pass) {
-        try {
-            const transporter = nodemailer.createTransport(emailConfig);
-            await transporter.verify();
-            console.log('✅ Custom SMTP email service ready!');
-            return transporter;
-        } catch (error) {
-            console.error('❌ Custom SMTP error:', error);
-            console.log('⚠️ Falling back to Ethereal...');
-        }
-    }
-    
-    // استخدام Ethereal كخيار احتياطي
+    console.log('📧 Using Ethereal email service');
     return await setupEtherealEmail();
 }
 
@@ -174,7 +144,7 @@ async function sendEmail(to, subject, html) {
     }
     
     try {
-        const fromEmail = emailConfig.auth.user || etherealAccount?.user || 'no-reply@marine-system.com';
+        const fromEmail = etherealAccount?.user || 'no-reply@marine-system.com';
         const info = await emailTransporter.sendMail({
             from: `"منظومة الوسائل البحرية" <${fromEmail}>`,
             to: to,
@@ -184,7 +154,7 @@ async function sendEmail(to, subject, html) {
         
         console.log('✅ Email sent successfully!');
         
-        // عرض رابط المعاينة لـ Ethereal
+        // ✅ عرض رابط المعاينة لـ Ethereal
         const previewUrl = nodemailer.getTestMessageUrl(info);
         if (previewUrl) {
             console.log('📧 Preview URL:', previewUrl);
@@ -823,7 +793,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
                 timestamp: new Date().toISOString()
             });
 
-            // ✅ إشعار للمسؤول (اختياري)
+            // ✅ إشعار للمسؤول
             try {
                 const adminEmails = users.filter(u => u.role === 'admin').map(u => u.email);
                 if (adminEmails.length > 0) {
@@ -1476,7 +1446,7 @@ app.get('/api/users', (req, res) => {
     }
 });
 
-// ✅ إضافة مستخدم جديد - مع CSRF و RBAC وإشعارات
+// ✅ إضافة مستخدم جديد
 app.post('/api/users', csrfProtection, async (req, res) => {
     try {
         console.log('📝 [POST] /api/users - Creating new user');
@@ -1528,26 +1498,6 @@ app.post('/api/users', csrfProtection, async (req, res) => {
         
         users.push(newUser);
         console.log('✅ User created:', username);
-        
-        // ✅ إشعار للمسؤولين
-        try {
-            const adminEmails = users.filter(u => u.role === 'admin').map(u => u.email);
-            if (adminEmails.length > 0) {
-                await sendEmail(
-                    adminEmails[0],
-                    '👤 تم إضافة مستخدم جديد',
-                    `
-                        <p>👤 المستخدم الجديد: <strong>${username}</strong></p>
-                        <p>📧 البريد: <strong>${newUser.email}</strong></p>
-                        <p>👔 الدور: <strong>${role || 'viewer'}</strong></p>
-                        <p>👤 تمت الإضافة بواسطة: <strong>${user.name || user.username}</strong></p>
-                        <p>🌐 IP: <strong>${clientIP}</strong></p>
-                    `
-                );
-            }
-        } catch (adminError) {
-            console.warn('⚠️ Could not send admin notification:', adminError.message);
-        }
         
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
