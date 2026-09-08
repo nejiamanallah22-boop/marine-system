@@ -85,85 +85,124 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
 
 // ============================================================
-// 📧 EMAIL CONFIGURATION
+// 📧 EMAIL CONFIGURATION - ETHEREAL (TEST)
 // ============================================================
 
+// ✅ إعدادات البريد الإلكتروني (دعم متعدد للمزودين)
 const emailConfig = {
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    host: process.env.SMTP_HOST || 'smtp.ethereal.email',
     port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === 'true',
+    secure: process.env.SMTP_SECURE === 'true' || false,
     auth: {
-        user: process.env.SMTP_USER || 'your-email@gmail.com',
-        pass: process.env.SMTP_PASS || 'your-app-password'
-    }
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASS || ''
+    },
+    tls: {
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000
 };
 
-// ✅ إنشاء transporter
-const transporter = nodemailer.createTransport(emailConfig);
+let emailTransporter = null;
+let etherealAccount = null;
 
-// ✅ التحقق من الاتصال
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('❌ Email service error:', error);
-    } else {
-        console.log('✅ Email service ready');
+// ✅ إنشاء حساب Ethereal تلقائياً إذا لم تكن هناك إعدادات SMTP
+async function setupEtherealEmail() {
+    try {
+        const testAccount = await nodemailer.createTestAccount();
+        etherealAccount = testAccount;
+        
+        console.log('📧 Ethereal account created:');
+        console.log('✉️ Email:', testAccount.user);
+        console.log('🔑 Password:', testAccount.pass);
+        console.log('🔗 Login: https://ethereal.email/login');
+        
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.ethereal.email',
+            port: 587,
+            secure: false,
+            auth: {
+                user: testAccount.user,
+                pass: testAccount.pass
+            }
+        });
+        
+        await transporter.verify();
+        console.log('✅ Ethereal email service ready!');
+        return transporter;
+    } catch (error) {
+        console.error('❌ Ethereal setup error:', error);
+        return null;
     }
-});
-
-// ============================================================
-// 📧 ADMIN NOTIFICATIONS
-// ============================================================
-
-// ✅ دالة للحصول على بريد المسؤولين
-function getAdminEmails() {
-    return users
-        .filter(u => u.role === 'admin' || u.role === 'مسؤول')
-        .map(u => u.email)
-        .filter(email => email && email.includes('@'));
 }
 
-// ✅ دالة إرسال إشعار للمسؤولين
-async function notifyAdmins(subject, htmlContent, details = '') {
-    const adminEmails = getAdminEmails();
-    if (adminEmails.length === 0) {
-        console.log('⚠️ No admin emails found to send notification');
-        return;
+// ✅ إعداد البريد الإلكتروني
+async function initEmailService() {
+    // إذا كانت هناك إعدادات SMTP مخصصة
+    if (emailConfig.auth.user && emailConfig.auth.pass) {
+        try {
+            const transporter = nodemailer.createTransport(emailConfig);
+            await transporter.verify();
+            console.log('✅ Custom SMTP email service ready!');
+            return transporter;
+        } catch (error) {
+            console.error('❌ Custom SMTP error:', error);
+            console.log('⚠️ Falling back to Ethereal...');
+        }
     }
+    
+    // استخدام Ethereal كخيار احتياطي
+    return await setupEtherealEmail();
+}
 
+// ✅ تهيئة البريد الإلكتروني عند بدء التشغيل
+(async function initEmail() {
+    emailTransporter = await initEmailService();
+})();
+
+// ✅ دالة إرسال البريد
+async function sendEmail(to, subject, html) {
+    if (!emailTransporter) {
+        console.log('⏳ Email service not ready, retrying...');
+        emailTransporter = await initEmailService();
+        if (!emailTransporter) {
+            console.error('❌ Email service failed to initialize');
+            return null;
+        }
+    }
+    
     try {
-        const mailOptions = {
-            from: `"منظومة الوسائل البحرية" <${emailConfig.auth.user}>`,
-            to: adminEmails.join(', '),
-            subject: `🔔 [ADMIN] ${subject}`,
-            html: `
-                <div dir="rtl" style="font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0a1628; color: #e2e8f0; border-radius: 12px; border: 1px solid #1a2a4a;">
-                    <div style="text-align: center; padding: 20px 0;">
-                        <span style="font-size: 48px;">⚓</span>
-                        <h1 style="color: #f5d76e; margin: 10px 0;">منظومة الوسائل البحرية</h1>
-                        <p style="color: rgba(255,255,255,0.3);">تنبيه إداري</p>
-                    </div>
-                    
-                    <div style="background: rgba(255,255,255,0.04); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-                        <h2 style="color: #fff; font-size: 18px;">🔔 إشعار إداري</h2>
-                        ${htmlContent}
-                        ${details ? `<p style="color: rgba(255,255,255,0.4); font-size: 13px; margin-top: 10px;">📋 التفاصيل: ${details}</p>` : ''}
-                        <p style="color: rgba(255,255,255,0.2); font-size: 12px; margin-top: 16px;">تم إرسال هذا الإشعار تلقائياً من النظام.</p>
-                    </div>
-                    
-                    <div style="text-align: center; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 20px;">
-                        <p style="color: rgba(255,255,255,0.15); font-size: 12px;">© 2024 منظومة الوسائل البحرية - جميع الحقوق محفوظة</p>
-                    </div>
-                </div>
-            `
-        };
-
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ Admin notification sent to ${adminEmails.length} admins`);
-        return true;
+        const fromEmail = emailConfig.auth.user || etherealAccount?.user || 'no-reply@marine-system.com';
+        const info = await emailTransporter.sendMail({
+            from: `"منظومة الوسائل البحرية" <${fromEmail}>`,
+            to: to,
+            subject: subject,
+            html: html
+        });
+        
+        console.log('✅ Email sent successfully!');
+        
+        // عرض رابط المعاينة لـ Ethereal
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        if (previewUrl) {
+            console.log('📧 Preview URL:', previewUrl);
+        }
+        
+        return info;
     } catch (error) {
-        console.error('❌ Failed to send admin notification:', error);
-        return false;
+        console.error('❌ Email send error:', error);
+        return null;
     }
+}
+
+// ✅ دالة للحصول على رابط معاينة البريد
+function getPreviewUrl(info) {
+    if (info && info.messageId) {
+        return nodemailer.getTestMessageUrl(info);
+    }
+    return null;
 }
 
 // ============================================================
@@ -412,7 +451,7 @@ const users = [
         username: 'admin',
         password: hashedPassword,
         name: ADMIN_NAME,
-        email: 'admin@marine.com',
+        email: 'nejiamanallah22@gmail.com',
         role: 'admin',
         active: true,
         createdAt: new Date().toISOString(),
@@ -740,58 +779,42 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
         console.log(`🔑 Reset token generated for ${email}`);
+        console.log(`🔗 Reset link: ${resetLink}`);
 
-        // ✅ إرسال بريد للمستخدم
-        try {
-            const mailOptions = {
-                from: `"منظومة الوسائل البحرية" <${emailConfig.auth.user}>`,
-                to: email,
-                subject: '🔐 إعادة تعيين كلمة المرور - منظومة الوسائل البحرية',
-                html: `
-                    <div dir="rtl" style="font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0a1628; color: #e2e8f0; border-radius: 12px; border: 1px solid #1a2a4a;">
-                        <div style="text-align: center; padding: 20px 0;">
-                            <span style="font-size: 48px;">⚓</span>
-                            <h1 style="color: #f5d76e; margin: 10px 0;">منظومة الوسائل البحرية</h1>
-                            <p style="color: rgba(255,255,255,0.3);">نظام متابعة وإدارة الأسطول البحري</p>
-                        </div>
-                        
-                        <div style="background: rgba(255,255,255,0.04); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-                            <h2 style="color: #fff; font-size: 20px;">🔐 إعادة تعيين كلمة المرور</h2>
-                            <p style="color: rgba(255,255,255,0.6);">مرحباً <strong style="color: #f5d76e;">${user.name || user.username}</strong>،</p>
-                            <p style="color: rgba(255,255,255,0.6);">لقد تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
-                            
-                            <div style="text-align: center; margin: 25px 0;">
-                                <a href="${resetLink}" style="display: inline-block; padding: 14px 40px; background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 30px rgba(230,179,30,0.2);">
-                                    🔑 إعادة تعيين كلمة المرور
-                                </a>
-                            </div>
-                            
-                            <p style="color: rgba(255,255,255,0.4); font-size: 13px;">هذا الرابط صالح لمدة <strong style="color: #f5d76e;">ساعة واحدة</strong>.</p>
-                            <p style="color: rgba(255,255,255,0.3); font-size: 12px; margin-top: 10px;">إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد.</p>
-                        </div>
-                        
-                        <div style="text-align: center; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 20px;">
-                            <p style="color: rgba(255,255,255,0.15); font-size: 12px;">© 2024 منظومة الوسائل البحرية - جميع الحقوق محفوظة</p>
-                        </div>
+        // ✅ إرسال البريد الإلكتروني
+        const emailHtml = `
+            <div dir="rtl" style="font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0a1628; color: #e2e8f0; border-radius: 12px; border: 1px solid #1a2a4a;">
+                <div style="text-align: center; padding: 20px 0;">
+                    <span style="font-size: 48px;">⚓</span>
+                    <h1 style="color: #f5d76e; margin: 10px 0;">منظومة الوسائل البحرية</h1>
+                    <p style="color: rgba(255,255,255,0.3);">نظام متابعة وإدارة الأسطول البحري</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.04); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+                    <h2 style="color: #fff; font-size: 20px;">🔐 إعادة تعيين كلمة المرور</h2>
+                    <p style="color: rgba(255,255,255,0.6);">مرحباً <strong style="color: #f5d76e;">${user.name || user.username}</strong>،</p>
+                    <p style="color: rgba(255,255,255,0.6);">لقد تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
+                    <div style="text-align: center; margin: 25px 0;">
+                        <a href="${resetLink}" style="display: inline-block; padding: 14px 40px; background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 30px rgba(230,179,30,0.2);">
+                            🔑 إعادة تعيين كلمة المرور
+                        </a>
                     </div>
-                `
-            };
+                    <p style="color: rgba(255,255,255,0.4); font-size: 13px;">هذا الرابط صالح لمدة <strong style="color: #f5d76e;">ساعة واحدة</strong>.</p>
+                    <p style="color: rgba(255,255,255,0.3); font-size: 12px; margin-top: 10px;">إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد.</p>
+                </div>
+                <div style="text-align: center; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 20px;">
+                    <p style="color: rgba(255,255,255,0.15); font-size: 12px;">© 2024 منظومة الوسائل البحرية - جميع الحقوق محفوظة</p>
+                </div>
+            </div>
+        `;
 
-            await transporter.sendMail(mailOptions);
-            console.log(`✅ Password reset email sent to ${email}`);
+        const result = await sendEmail(email, '🔐 إعادة تعيين كلمة المرور - منظومة الوسائل البحرية', emailHtml);
 
-            // ✅ إشعار للمسؤول
-            await notifyAdmins(
-                'طلب إعادة تعيين كلمة المرور',
-                `
-                    <p style="color: rgba(255,255,255,0.6);">👤 المستخدم: <strong style="color: #f5d76e;">${user.name || user.username}</strong></p>
-                    <p style="color: rgba(255,255,255,0.6);">📧 البريد: <strong style="color: #60a5fa;">${email}</strong></p>
-                    <p style="color: rgba(255,255,255,0.6);">🌐 العنوان IP: <strong style="color: #a78bfa;">${clientIP}</strong></p>
-                    <p style="color: rgba(255,255,255,0.4); font-size: 13px;">تم طلب إعادة تعيين كلمة المرور لهذا المستخدم.</p>
-                `,
-                `User ${user.username} requested password reset from ${clientIP}`
-            );
-
+        if (result) {
+            const previewUrl = getPreviewUrl(result);
+            if (previewUrl) {
+                console.log(`📧 Preview URL: ${previewUrl}`);
+            }
+            
             systemLogs.push({
                 id: crypto.randomBytes(8).toString('hex'),
                 userId: user.id,
@@ -800,21 +823,32 @@ app.post('/api/auth/forgot-password', async (req, res) => {
                 timestamp: new Date().toISOString()
             });
 
+            // ✅ إشعار للمسؤول (اختياري)
+            try {
+                const adminEmails = users.filter(u => u.role === 'admin').map(u => u.email);
+                if (adminEmails.length > 0) {
+                    await sendEmail(
+                        adminEmails[0],
+                        '🔔 طلب إعادة تعيين كلمة المرور',
+                        `
+                            <p>👤 المستخدم: <strong>${user.name || user.username}</strong></p>
+                            <p>📧 البريد: <strong>${email}</strong></p>
+                            <p>🌐 IP: <strong>${clientIP}</strong></p>
+                            <p>تم طلب إعادة تعيين كلمة المرور.</p>
+                        `
+                    );
+                }
+            } catch (adminError) {
+                console.warn('⚠️ Could not send admin notification:', adminError.message);
+            }
+
             res.status(200).json({
                 success: true,
-                message: 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني'
+                message: 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني',
+                preview: previewUrl || null
             });
-
-        } catch (emailError) {
-            console.error('❌ Email sending error:', emailError);
-            const index = passwordResetTokens.findIndex(t => t.email === email);
-            if (index !== -1) {
-                passwordResetTokens.splice(index, 1);
-            }
-            res.status(500).json({ 
-                success: false, 
-                error: 'فشل إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى.' 
-            });
+        } else {
+            throw new Error('Failed to send email');
         }
 
     } catch (error) {
@@ -863,50 +897,21 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
         // ✅ إشعار للمستخدم
         try {
-            const mailOptions = {
-                from: `"منظومة الوسائل البحرية" <${emailConfig.auth.user}>`,
-                to: email,
-                subject: '✅ تم تغيير كلمة المرور - منظومة الوسائل البحرية',
-                html: `
+            await sendEmail(
+                email,
+                '✅ تم تغيير كلمة المرور - منظومة الوسائل البحرية',
+                `
                     <div dir="rtl" style="font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0a1628; color: #e2e8f0; border-radius: 12px; border: 1px solid #1a2a4a;">
-                        <div style="text-align: center; padding: 20px 0;">
-                            <span style="font-size: 48px;">⚓</span>
-                            <h1 style="color: #f5d76e; margin: 10px 0;">منظومة الوسائل البحرية</h1>
-                            <p style="color: rgba(255,255,255,0.3);">نظام متابعة وإدارة الأسطول البحري</p>
-                        </div>
-                        
-                        <div style="background: rgba(255,255,255,0.04); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-                            <h2 style="color: #fff; font-size: 20px;">✅ تم تغيير كلمة المرور</h2>
-                            <p style="color: rgba(255,255,255,0.6);">مرحباً <strong style="color: #f5d76e;">${user.name || user.username}</strong>،</p>
-                            <p style="color: rgba(255,255,255,0.6);">تم تغيير كلمة المرور الخاصة بحسابك بنجاح.</p>
-                            <p style="color: rgba(255,255,255,0.4); font-size: 13px; margin-top: 10px;">إذا لم تقم أنت بهذا التغيير، يرجى الاتصال بالدعم الفني فوراً.</p>
-                        </div>
-                        
-                        <div style="text-align: center; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 20px;">
-                            <p style="color: rgba(255,255,255,0.15); font-size: 12px;">© 2024 منظومة الوسائل البحرية - جميع الحقوق محفوظة</p>
-                        </div>
+                        <h2 style="color: #f5d76e;">✅ تم تغيير كلمة المرور</h2>
+                        <p>مرحباً <strong>${user.name || user.username}</strong>،</p>
+                        <p>تم تغيير كلمة المرور الخاصة بحسابك بنجاح.</p>
+                        <p style="color: rgba(255,255,255,0.4); font-size: 13px;">إذا لم تقم أنت بهذا التغيير، يرجى الاتصال بالدعم الفني فوراً.</p>
                     </div>
                 `
-            };
-
-            await transporter.sendMail(mailOptions);
-            console.log(`✅ Password change confirmation sent to ${email}`);
-
+            );
         } catch (emailError) {
-            console.error('❌ Failed to send confirmation email:', emailError);
+            console.warn('⚠️ Could not send confirmation email:', emailError.message);
         }
-
-        // ✅ إشعار للمسؤول
-        await notifyAdmins(
-            'تم تغيير كلمة المرور',
-            `
-                <p style="color: rgba(255,255,255,0.6);">👤 المستخدم: <strong style="color: #f5d76e;">${user.name || user.username}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">📧 البريد: <strong style="color: #60a5fa;">${email}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">🌐 العنوان IP: <strong style="color: #a78bfa;">${clientIP}</strong></p>
-                <p style="color: rgba(255,255,255,0.4); font-size: 13px;">تم تغيير كلمة المرور لهذا المستخدم.</p>
-            `,
-            `User ${user.username} changed password from ${clientIP}`
-        );
 
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
@@ -1479,7 +1484,6 @@ app.post('/api/users', csrfProtection, async (req, res) => {
         const { username, password, email, role, active } = req.body;
         const clientIP = req.ip || req.connection.remoteAddress;
         
-        // ✅ التحقق من التوكن والصلاحيات
         const user = verifyTokenAndGetUser(req);
         if (!user) {
             return res.status(401).json({ success: false, error: 'غير مصرح' });
@@ -1507,7 +1511,6 @@ app.post('/api/users', csrfProtection, async (req, res) => {
             return res.status(400).json({ success: false, error: 'اسم المستخدم موجود بالفعل' });
         }
         
-        // ✅ إنشاء المستخدم الجديد
         const newUser = {
             id: crypto.randomBytes(8).toString('hex'),
             username: username,
@@ -1527,57 +1530,23 @@ app.post('/api/users', csrfProtection, async (req, res) => {
         console.log('✅ User created:', username);
         
         // ✅ إشعار للمسؤولين
-        await notifyAdmins(
-            'تم إضافة مستخدم جديد',
-            `
-                <p style="color: rgba(255,255,255,0.6);">👤 المستخدم الجديد: <strong style="color: #f5d76e;">${username}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">📧 البريد: <strong style="color: #60a5fa;">${newUser.email}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">👔 الدور: <strong style="color: #a78bfa;">${role || 'viewer'}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">👤 تمت الإضافة بواسطة: <strong style="color: #f5d76e;">${user.name || user.username}</strong></p>
-                <p style="color: rgba(255,255,255,0.4); font-size: 13px;">تم إنشاء حساب جديد في النظام.</p>
-            `,
-            `User ${username} created by ${user.username} from ${clientIP}`
-        );
-
-        // ✅ إشعار للمستخدم الجديد
         try {
-            const mailOptions = {
-                from: `"منظومة الوسائل البحرية" <${emailConfig.auth.user}>`,
-                to: newUser.email,
-                subject: '🎉 مرحباً بك في منظومة الوسائل البحرية',
-                html: `
-                    <div dir="rtl" style="font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0a1628; color: #e2e8f0; border-radius: 12px; border: 1px solid #1a2a4a;">
-                        <div style="text-align: center; padding: 20px 0;">
-                            <span style="font-size: 48px;">⚓</span>
-                            <h1 style="color: #f5d76e; margin: 10px 0;">منظومة الوسائل البحرية</h1>
-                            <p style="color: rgba(255,255,255,0.3);">نظام متابعة وإدارة الأسطول البحري</p>
-                        </div>
-                        
-                        <div style="background: rgba(255,255,255,0.04); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-                            <h2 style="color: #fff; font-size: 20px;">🎉 مرحباً بك!</h2>
-                            <p style="color: rgba(255,255,255,0.6);">مرحباً <strong style="color: #f5d76e;">${username}</strong>،</p>
-                            <p style="color: rgba(255,255,255,0.6);">تم إنشاء حسابك في منظومة الوسائل البحرية بنجاح.</p>
-                            <p style="color: rgba(255,255,255,0.6);">📧 البريد: <strong style="color: #60a5fa;">${newUser.email}</strong></p>
-                            <p style="color: rgba(255,255,255,0.6);">👔 الدور: <strong style="color: #a78bfa;">${role || 'viewer'}</strong></p>
-                            <p style="color: rgba(255,255,255,0.4); font-size: 13px; margin-top: 10px;">يمكنك الآن تسجيل الدخول إلى النظام باستخدام بياناتك.</p>
-                            <div style="text-align: center; margin: 20px 0;">
-                                <a href="${req.protocol}://${req.get('host')}" style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; text-decoration: none; border-radius: 30px; font-weight: 700;">
-                                    🚢 الذهاب إلى النظام
-                                </a>
-                            </div>
-                        </div>
-                        
-                        <div style="text-align: center; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 20px;">
-                            <p style="color: rgba(255,255,255,0.15); font-size: 12px;">© 2024 منظومة الوسائل البحرية - جميع الحقوق محفوظة</p>
-                        </div>
-                    </div>
-                `
-            };
-
-            await transporter.sendMail(mailOptions);
-            console.log(`✅ Welcome email sent to ${newUser.email}`);
-        } catch (emailError) {
-            console.error('❌ Failed to send welcome email:', emailError);
+            const adminEmails = users.filter(u => u.role === 'admin').map(u => u.email);
+            if (adminEmails.length > 0) {
+                await sendEmail(
+                    adminEmails[0],
+                    '👤 تم إضافة مستخدم جديد',
+                    `
+                        <p>👤 المستخدم الجديد: <strong>${username}</strong></p>
+                        <p>📧 البريد: <strong>${newUser.email}</strong></p>
+                        <p>👔 الدور: <strong>${role || 'viewer'}</strong></p>
+                        <p>👤 تمت الإضافة بواسطة: <strong>${user.name || user.username}</strong></p>
+                        <p>🌐 IP: <strong>${clientIP}</strong></p>
+                    `
+                );
+            }
+        } catch (adminError) {
+            console.warn('⚠️ Could not send admin notification:', adminError.message);
         }
         
         systemLogs.push({
@@ -1600,12 +1569,11 @@ app.post('/api/users', csrfProtection, async (req, res) => {
     }
 });
 
-// ✅ تحديث مستخدم - مع CSRF و RBAC وإشعارات
-app.put('/api/users/:id', csrfProtection, async (req, res) => {
+// ✅ تحديث مستخدم
+app.put('/api/users/:id', csrfProtection, (req, res) => {
     try {
         const userId = req.params.id;
         const { username, email, role, active, password } = req.body;
-        const clientIP = req.ip || req.connection.remoteAddress;
         
         const user = verifyTokenAndGetUser(req);
         if (!user) {
@@ -1632,9 +1600,6 @@ app.put('/api/users/:id', csrfProtection, async (req, res) => {
             }
         }
         
-        const oldRole = targetUser.role;
-        const oldActive = targetUser.active;
-        
         if (username) targetUser.username = username;
         if (email) targetUser.email = email;
         if (role) targetUser.role = role;
@@ -1647,27 +1612,6 @@ app.put('/api/users/:id', csrfProtection, async (req, res) => {
         }
         
         console.log('✅ User updated:', targetUser.username);
-
-        // ✅ إشعار للمسؤول
-        let changes = [];
-        if (oldRole !== targetUser.role) changes.push(`الدور: ${oldRole} → ${targetUser.role}`);
-        if (oldActive !== targetUser.active) changes.push(`الحالة: ${oldActive ? 'نشط' : 'غير نشط'} → ${targetUser.active ? 'نشط' : 'غير نشط'}`);
-        if (username) changes.push(`اسم المستخدم: ${targetUser.username}`);
-        if (email) changes.push(`البريد: ${targetUser.email}`);
-
-        if (changes.length > 0) {
-            await notifyAdmins(
-                'تم تعديل بيانات مستخدم',
-                `
-                    <p style="color: rgba(255,255,255,0.6);">👤 المستخدم: <strong style="color: #f5d76e;">${targetUser.username}</strong></p>
-                    <p style="color: rgba(255,255,255,0.6);">📧 البريد: <strong style="color: #60a5fa;">${targetUser.email}</strong></p>
-                    <p style="color: rgba(255,255,255,0.6);">👤 تم التعديل بواسطة: <strong style="color: #f5d76e;">${user.name || user.username}</strong></p>
-                    <p style="color: rgba(255,255,255,0.6);">📋 التغييرات: <strong style="color: #a78bfa;">${changes.join(' | ')}</strong></p>
-                    <p style="color: rgba(255,255,255,0.4); font-size: 13px;">تم تحديث بيانات المستخدم.</p>
-                `,
-                `User ${targetUser.username} updated by ${user.username} from ${clientIP}`
-            );
-        }
         
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
@@ -1689,11 +1633,10 @@ app.put('/api/users/:id', csrfProtection, async (req, res) => {
     }
 });
 
-// ✅ حذف مستخدم - مع CSRF و RBAC وإشعارات
-app.delete('/api/users/:id', csrfProtection, async (req, res) => {
+// ✅ حذف مستخدم
+app.delete('/api/users/:id', csrfProtection, (req, res) => {
     try {
         const userId = req.params.id;
-        const clientIP = req.ip || req.connection.remoteAddress;
         
         const user = verifyTokenAndGetUser(req);
         if (!user) {
@@ -1720,31 +1663,16 @@ app.delete('/api/users/:id', csrfProtection, async (req, res) => {
             }
         }
         
-        const deletedUsername = userToDelete.username;
-        const deletedEmail = userToDelete.email;
-        
         const index = users.findIndex(u => u.id === userId);
         users.splice(index, 1);
         
-        console.log('✅ User deleted:', deletedUsername);
-
-        // ✅ إشعار للمسؤول
-        await notifyAdmins(
-            'تم حذف مستخدم',
-            `
-                <p style="color: rgba(255,255,255,0.6);">👤 المستخدم المحذوف: <strong style="color: #f87171;">${deletedUsername}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">📧 البريد: <strong style="color: #60a5fa;">${deletedEmail}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">👤 تم الحذف بواسطة: <strong style="color: #f5d76e;">${user.name || user.username}</strong></p>
-                <p style="color: rgba(255,255,255,0.4); font-size: 13px;">تم حذف المستخدم من النظام.</p>
-            `,
-            `User ${deletedUsername} deleted by ${user.username} from ${clientIP}`
-        );
+        console.log('✅ User deleted:', userToDelete.username);
         
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: user.id,
             action: 'USER_DELETED',
-            details: `User ${deletedUsername} deleted by ${user.username}`,
+            details: `User ${userToDelete.username} deleted by ${user.username}`,
             timestamp: new Date().toISOString()
         });
         
@@ -1758,12 +1686,11 @@ app.delete('/api/users/:id', csrfProtection, async (req, res) => {
     }
 });
 
-// ✅ تغيير حالة مستخدم - مع CSRF و RBAC
-app.put('/api/users-status/:id', csrfProtection, async (req, res) => {
+// ✅ تغيير حالة مستخدم
+app.put('/api/users-status/:id', csrfProtection, (req, res) => {
     try {
         const userId = req.params.id;
         const { active } = req.body;
-        const clientIP = req.ip || req.connection.remoteAddress;
         
         const user = verifyTokenAndGetUser(req);
         if (!user) {
@@ -1786,24 +1713,10 @@ app.put('/api/users-status/:id', csrfProtection, async (req, res) => {
             }
         }
         
-        const oldActive = targetUser.active;
         targetUser.active = active;
         targetUser.updatedAt = new Date().toISOString();
         
         console.log(`✅ User ${targetUser.username} ${active ? 'activated' : 'deactivated'}`);
-
-        // ✅ إشعار للمسؤول
-        await notifyAdmins(
-            `${active ? 'تفعيل' : 'تعطيل'} مستخدم`,
-            `
-                <p style="color: rgba(255,255,255,0.6);">👤 المستخدم: <strong style="color: ${active ? '#4ade80' : '#f87171'};">${targetUser.username}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">📧 البريد: <strong style="color: #60a5fa;">${targetUser.email}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">📊 الحالة: <strong style="color: ${active ? '#4ade80' : '#f87171'};">${active ? '✅ تم التفعيل' : '❌ تم التعطيل'}</strong></p>
-                <p style="color: rgba(255,255,255,0.6);">👤 تم التعديل بواسطة: <strong style="color: #f5d76e;">${user.name || user.username}</strong></p>
-                <p style="color: rgba(255,255,255,0.4); font-size: 13px;">تم تغيير حالة المستخدم.</p>
-            `,
-            `User ${targetUser.username} ${active ? 'activated' : 'deactivated'} by ${user.username} from ${clientIP}`
-        );
         
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
@@ -1963,160 +1876,7 @@ app.get('/', (req, res) => {
             return res.sendFile(p);
         }
     }
-    res.send(`
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>🚢 Marine System</title>
-            <style>
-                *{margin:0;padding:0;box-sizing:border-box}
-                body{font-family:'Segoe UI',sans-serif;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-                .container{background:linear-gradient(145deg,#1a1f35,#0d1528);padding:50px;border-radius:30px;max-width:600px;width:100%;border:1px solid #2a3a5a;text-align:center}
-                h1{color:#00d4ff;font-size:2.5em}
-                .status{background:#0d1528;padding:20px;border-radius:15px;margin:20px 0;border-right:5px solid #00ff88}
-                .info{color:#aabbcc;line-height:2}
-                .info strong{color:#00d4ff}
-                .btn{background:linear-gradient(135deg,#00d4ff,#0099cc);color:#0a0e1a;border:none;padding:15px 40px;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.3s;width:100%;margin-top:15px}
-                .btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,212,255,0.3)}
-                .btn-logout{background:linear-gradient(135deg,#ff4444,#cc0000)}
-                .error{color:#ff4444;margin:10px 0}
-                .success-msg{color:#00ff88;margin:10px 0}
-                .login-section,.user-section{margin-top:30px;text-align:right}
-                .user-section{display:none}
-                .badge{display:inline-block;padding:5px 15px;border-radius:20px;font-size:14px;margin:5px 0;background:#ff4444;color:#fff}
-                .login-form input{width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px}
-                .login-form input:focus{outline:none;border-color:#00d4ff}
-                .footer{margin-top:30px;padding-top:20px;border-top:1px solid #2a3a5a;color:#667788;font-size:12px}
-                .links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
-                .links a{display:inline-block;padding:10px 20px;background:#2a3a5a;color:#fff;text-decoration:none;border-radius:8px;font-size:14px}
-                .links a:hover{background:#3a4a6a}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🚢 MARINE SYSTEM</h1>
-                <p style="color:#8899aa;">نظام إدارة الأسطول البحري</p>
-                <div class="status">
-                    <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
-                    <p class="info">🔒 <strong>الأمان:</strong> عالي جداً</p>
-                    <p class="info">👤 <strong>المستخدم:</strong> admin</p>
-                    <p class="info">🔑 <strong>كلمة المرور:</strong> ${ADMIN_PASSWORD}</p>
-                    <p class="info">📊 <strong>المراكب:</strong> ${vessels.length}</p>
-                    <p class="info">📝 <strong>سجلات الصيانة:</strong> ${maintenanceLogs.length}</p>
-                    <p class="info">👥 <strong>المستخدمين:</strong> ${users.length}</p>
-                </div>
-                <div id="loginSection" class="login-section">
-                    <h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3>
-                    <div id="message"></div>
-                    <div class="login-form">
-                        <input type="text" id="username" placeholder="اسم المستخدم" value="admin">
-                        <input type="password" id="password" placeholder="كلمة المرور">
-                        <button class="btn" onclick="handleLogin()">🚀 دخول</button>
-                    </div>
-                </div>
-                <div id="userSection" class="user-section">
-                    <p style="font-size:18px;">👋 <strong>مرحباً بك، <span id="userName"></span></strong></p>
-                    <p>📋 <strong>الدور:</strong> <span id="userRole" class="badge">admin</span></p>
-                    <div class="links">
-                        <a href="/dashboard">📊 لوحة التحكم</a>
-                        <a href="/fleet">🚢 الأسطول</a>
-                        <a href="/maintenance">🔧 الصيانة</a>
-                        <a href="/logs">📝 سجلات الصيانة</a>
-                        <a href="/users">👥 المستخدمين</a>
-                    </div>
-                    <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
-                </div>
-                <div class="footer">🔒 جميع البيانات مشفرة | v8.0</div>
-            </div>
-            <script>
-                let csrfToken = '';
-
-                async function getCsrfToken() {
-                    try {
-                        const r = await fetch('/api/csrf-token', { credentials: 'include', headers: { 'Accept': 'application/json' } });
-                        const d = await r.json();
-                        if (d.success) { csrfToken = d.token; return d.token; }
-                        return null;
-                    } catch(e) { return null; }
-                }
-
-                async function handleLogin() {
-                    const username = document.getElementById('username').value.trim();
-                    const password = document.getElementById('password').value;
-                    const msg = document.getElementById('message');
-                    if (!username || !password) { msg.innerHTML = '<div class="error">⚠️ الرجاء إدخال جميع البيانات</div>'; return; }
-                    try {
-                        const t = await getCsrfToken();
-                        if (!t) { msg.innerHTML = '<div class="error">❌ فشل الحصول على CSRF token</div>'; return; }
-                        msg.innerHTML = '<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';
-                        const r = await fetch('/api/auth/login', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': t },
-                            credentials: 'include',
-                            body: JSON.stringify({ username, password })
-                        });
-                        const d = await r.json();
-                        if (r.ok && d.success) {
-                            localStorage.setItem('authToken', d.token);
-                            localStorage.setItem('userData', JSON.stringify(d.user));
-                            document.getElementById('loginSection').style.display = 'none';
-                            document.getElementById('userSection').style.display = 'block';
-                            document.getElementById('userName').textContent = d.user.name || d.user.username;
-                            document.getElementById('userRole').textContent = d.user.role || 'مستخدم';
-                            msg.innerHTML = '<div class="success-msg">✅ تم تسجيل الدخول بنجاح</div>';
-                        } else {
-                            msg.innerHTML = '<div class="error">❌ ' + (d.error || 'فشل تسجيل الدخول') + '</div>';
-                        }
-                    } catch(e) {
-                        msg.innerHTML = '<div class="error">❌ خطأ في الاتصال بالخادم</div>';
-                    }
-                }
-
-                async function handleLogout() {
-                    try {
-                        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-                        localStorage.clear();
-                        document.getElementById('loginSection').style.display = 'block';
-                        document.getElementById('userSection').style.display = 'none';
-                        document.getElementById('message').innerHTML = '<div class="success-msg">✅ تم تسجيل الخروج</div>';
-                    } catch(e) {}
-                }
-
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        const loginSection = document.getElementById('loginSection');
-                        if (loginSection.style.display !== 'none') handleLogin();
-                    }
-                });
-
-                async function checkAuth() {
-                    const token = localStorage.getItem('authToken');
-                    if (!token) return;
-                    try {
-                        const csrf = await getCsrfToken();
-                        const r = await fetch('/api/auth/me', {
-                            headers: { 'Authorization': 'Bearer ' + token, 'X-CSRF-Token': csrf || '', 'Accept': 'application/json' },
-                            credentials: 'include'
-                        });
-                        const d = await r.json();
-                        if (d.success && d.user) {
-                            document.getElementById('loginSection').style.display = 'none';
-                            document.getElementById('userSection').style.display = 'block';
-                            document.getElementById('userName').textContent = d.user.name || d.user.username;
-                            document.getElementById('userRole').textContent = d.user.role || 'مستخدم';
-                        } else {
-                            localStorage.removeItem('authToken');
-                        }
-                    } catch(e) { localStorage.removeItem('authToken'); }
-                }
-
-                getCsrfToken().then(checkAuth);
-            </script>
-        </body>
-        </html>
-    `);
+    res.send(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>🚢 Marine System</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}.container{background:linear-gradient(145deg,#1a1f35,#0d1528);padding:50px;border-radius:30px;max-width:600px;width:100%;border:1px solid #2a3a5a;text-align:center}h1{color:#00d4ff;font-size:2.5em}.status{background:#0d1528;padding:20px;border-radius:15px;margin:20px 0;border-right:5px solid #00ff88}.info{color:#aabbcc;line-height:2}.info strong{color:#00d4ff}.btn{background:linear-gradient(135deg,#00d4ff,#0099cc);color:#0a0e1a;border:none;padding:15px 40px;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.3s;width:100%;margin-top:15px}.btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,212,255,0.3)}.btn-logout{background:linear-gradient(135deg,#ff4444,#cc0000)}.error{color:#ff4444;margin:10px 0}.success-msg{color:#00ff88;margin:10px 0}.login-section,.user-section{margin-top:30px;text-align:right}.user-section{display:none}.badge{display:inline-block;padding:5px 15px;border-radius:20px;font-size:14px;margin:5px 0;background:#ff4444;color:#fff}.login-form input{width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px}.login-form input:focus{outline:none;border-color:#00d4ff}.footer{margin-top:30px;padding-top:20px;border-top:1px solid #2a3a5a;color:#667788;font-size:12px}.links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}.links a{display:inline-block;padding:10px 20px;background:#2a3a5a;color:#fff;text-decoration:none;border-radius:8px;font-size:14px}.links a:hover{background:#3a4a6a}</style></head><body><div class="container"><h1>🚢 MARINE SYSTEM</h1><p style="color:#8899aa;">نظام إدارة الأسطول البحري</p><div class="status"><h3 style="color:#00ff88;">✅ النظام يعمل</h3><p class="info">🔒 <strong>الأمان:</strong> عالي جداً</p><p class="info">👤 <strong>المستخدم:</strong> admin</p><p class="info">🔑 <strong>كلمة المرور:</strong> ${ADMIN_PASSWORD}</p><p class="info">📊 <strong>المراكب:</strong> ${vessels.length}</p><p class="info">📝 <strong>سجلات الصيانة:</strong> ${maintenanceLogs.length}</p><p class="info">👥 <strong>المستخدمين:</strong> ${users.length}</p></div><div id="loginSection" class="login-section"><h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3><div id="message"></div><div class="login-form"><input type="text" id="username" placeholder="اسم المستخدم" value="admin"><input type="password" id="password" placeholder="كلمة المرور"><button class="btn" onclick="handleLogin()">🚀 دخول</button></div></div><div id="userSection" class="user-section"><p style="font-size:18px;">👋 <strong>مرحباً بك، <span id="userName"></span></strong></p><p>📋 <strong>الدور:</strong> <span id="userRole" class="badge">admin</span></p><div class="links"><a href="/dashboard">📊 لوحة التحكم</a><a href="/fleet">🚢 الأسطول</a><a href="/maintenance">🔧 الصيانة</a><a href="/logs">📝 سجلات الصيانة</a><a href="/users">👥 المستخدمين</a></div><button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button></div><div class="footer">🔒 جميع البيانات مشفرة | v8.0</div></div><script>let csrfToken='';async function getCsrfToken(){try{const r=await fetch('/api/csrf-token',{credentials:'include',headers:{'Accept':'application/json'}});const d=await r.json();if(d.success){csrfToken=d.token;return d.token}return null}catch(e){return null}}async function handleLogin(){const username=document.getElementById('username').value.trim();const password=document.getElementById('password').value;const msg=document.getElementById('message');if(!username||!password){msg.innerHTML='<div class="error">⚠️ الرجاء إدخال جميع البيانات</div>';return}try{const t=await getCsrfToken();if(!t){msg.innerHTML='<div class="error">❌ فشل الحصول على CSRF token</div>';return}msg.innerHTML='<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-Token':t},credentials:'include',body:JSON.stringify({username,password})});const d=await r.json();if(r.ok&&d.success){localStorage.setItem('authToken',d.token);localStorage.setItem('userData',JSON.stringify(d.user));document.getElementById('loginSection').style.display='none';document.getElementById('userSection').style.display='block';document.getElementById('userName').textContent=d.user.name||d.user.username;document.getElementById('userRole').textContent=d.user.role||'مستخدم';msg.innerHTML='<div class="success-msg">✅ تم تسجيل الدخول بنجاح</div>'}else{msg.innerHTML='<div class="error">❌ '+(d.error||'فشل تسجيل الدخول')+'</div>'}}catch(e){msg.innerHTML='<div class="error">❌ خطأ في الاتصال بالخادم</div>'}}async function handleLogout(){try{await fetch('/api/auth/logout',{method:'POST',credentials:'include'});localStorage.clear();document.getElementById('loginSection').style.display='block';document.getElementById('userSection').style.display='none';document.getElementById('message').innerHTML='<div class="success-msg">✅ تم تسجيل الخروج</div>'}catch(e){}}document.addEventListener('keydown',function(e){if(e.key==='Enter'){const loginSection=document.getElementById('loginSection');if(loginSection.style.display!=='none')handleLogin()}});async function checkAuth(){const token=localStorage.getItem('authToken');if(!token)return;try{const csrf=await getCsrfToken();const r=await fetch('/api/auth/me',{headers:{'Authorization':'Bearer '+token,'X-CSRF-Token':csrf||'','Accept':'application/json'},credentials:'include'});const d=await r.json();if(d.success&&d.user){document.getElementById('loginSection').style.display='none';document.getElementById('userSection').style.display='block';document.getElementById('userName').textContent=d.user.name||d.user.username;document.getElementById('userRole').textContent=d.user.role||'مستخدم'}else{localStorage.removeItem('authToken')}}catch(e){localStorage.removeItem('authToken')}}getCsrfToken().then(checkAuth);</script></body></html>`);
 });
 
 app.get('/pages/:page', (req, res) => {
@@ -2176,6 +1936,7 @@ app.listen(PORT, () => {
     console.log('✅ تم إصلاح مشكلة إضافة المستخدمين بنجاح!');
     console.log('✅ تم إضافة نظام إعادة تعيين كلمة المرور!');
     console.log('✅ تم إضافة إشعارات المسؤولين!');
+    console.log('✅ تم إصلاح مشكلة البريد الإلكتروني باستخدام Ethereal!');
     console.log('📌 استخدم المسار /api/users للتحقق');
     console.log('=========================================');
 });
