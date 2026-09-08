@@ -1679,7 +1679,7 @@
         }
 
         // ============================================================
-        // 🔐 FORGOT PASSWORD - MODAL FUNCTIONS
+        // 🔐 FORGOT PASSWORD - MODAL FUNCTIONS (FIXED)
         // ============================================================
 
         var forgotModal = document.getElementById('forgotPasswordModal');
@@ -1751,6 +1751,7 @@
                 });
             }
 
+            // ✅ إصلاح زر إرسال رابط إعادة التعيين
             if (sendResetBtn) {
                 sendResetBtn.addEventListener('click', async function() {
                     var email = forgotEmail ? forgotEmail.value.trim() : '';
@@ -1787,6 +1788,7 @@
                     sendResetBtn.innerHTML = '⏳ جاري الإرسال...';
 
                     try {
+                        // ✅ الحصول على CSRF token
                         var csrfRes = await fetch('/api/csrf-token', {
                             credentials: 'include',
                             headers: { 'Accept': 'application/json' }
@@ -1794,6 +1796,7 @@
                         var csrfData = await csrfRes.json();
                         var csrfToken = csrfData.token || '';
 
+                        // ✅ إرسال الطلب
                         var response = await fetch('/api/auth/forgot-password', {
                             method: 'POST',
                             headers: {
@@ -1820,7 +1823,8 @@
                                 // ✅ عرض الرابط مباشرة للمستخدم
                                 var resetLink = data.resetLink || '';
                                 if (resetLink) {
-                                    forgotMessage.innerHTML = '✅ تم إنشاء رابط إعادة التعيين:<br><br>' +
+                                    forgotMessage.innerHTML = 
+                                        '✅ تم إنشاء رابط إعادة التعيين:<br><br>' +
                                         '<div class="reset-link-box">' +
                                         '<a href="' + resetLink + '" target="_blank">' + resetLink + '</a>' +
                                         '</div><br>' +
@@ -1828,10 +1832,6 @@
                                 } else {
                                     forgotMessage.textContent = '✅ ' + (data.message || 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني');
                                 }
-                                
-                                if (forgotEmail) forgotEmail.value = '';
-                                
-                                // ✅ إبقاء النافذة مفتوحة لعرض الرابط
                             } else {
                                 forgotMessage.className += ' error';
                                 forgotMessage.textContent = '❌ ' + (data.error || data.message || 'حدث خطأ، يرجى المحاولة مرة أخرى');
