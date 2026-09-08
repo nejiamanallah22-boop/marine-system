@@ -374,8 +374,8 @@
             position: fixed;
             inset: 0;
             z-index: 999999;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
             align-items: center;
             justify-content: center;
             padding: 20px;
@@ -383,12 +383,14 @@
         #forgotPasswordModal .modal-box {
             background: #111e3a;
             border-radius: 16px;
-            max-width: 450px;
+            max-width: 500px;
             width: 100%;
             padding: 30px;
             border: 1px solid rgba(255,255,255,0.06);
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             animation: modalFade 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         @keyframes modalFade {
             from { opacity: 0; transform: scale(0.95) translateY(10px); }
@@ -448,11 +450,11 @@
             color: rgba(255,255,255,0.15);
         }
         #forgotPasswordModal .modal-message {
-            display: none;
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 8px;
             font-size: 14px;
             margin-bottom: 12px;
+            display: none;
         }
         #forgotPasswordModal .modal-message.show {
             display: block;
@@ -466,6 +468,21 @@
             background: rgba(239,68,68,0.12);
             color: #f87171;
             border: 1px solid rgba(239,68,68,0.1);
+        }
+        #forgotPasswordModal .modal-message .reset-link-box {
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-size: 13px;
+            direction: ltr;
+            text-align: left;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        #forgotPasswordModal .modal-message .reset-link-box a {
+            color: #f5d76e;
+            text-decoration: underline;
         }
         #forgotPasswordModal .btn-send {
             width: 100%;
@@ -1683,6 +1700,7 @@
                 if (forgotMessage) {
                     forgotMessage.className = 'modal-message';
                     forgotMessage.textContent = '';
+                    forgotMessage.style.display = 'none';
                 }
             }
         }
@@ -1737,9 +1755,20 @@
                 sendResetBtn.addEventListener('click', async function() {
                     var email = forgotEmail ? forgotEmail.value.trim() : '';
 
+                    // ✅ إظهار رسالة التحميل
+                    if (forgotMessage) {
+                        forgotMessage.className = 'modal-message show';
+                        forgotMessage.style.display = 'block';
+                        forgotMessage.textContent = '⏳ جاري المعالجة...';
+                        forgotMessage.style.color = '#f5d76e';
+                        forgotMessage.style.background = 'rgba(230,179,30,0.08)';
+                        forgotMessage.style.border = '1px solid rgba(230,179,30,0.1)';
+                    }
+
                     if (!email) {
                         if (forgotMessage) {
                             forgotMessage.className = 'modal-message show error';
+                            forgotMessage.style.display = 'block';
                             forgotMessage.textContent = '⚠️ الرجاء إدخال البريد الإلكتروني';
                         }
                         return;
@@ -1748,6 +1777,7 @@
                     if (!email.includes('@') || !email.includes('.')) {
                         if (forgotMessage) {
                             forgotMessage.className = 'modal-message show error';
+                            forgotMessage.style.display = 'block';
                             forgotMessage.textContent = '⚠️ الرجاء إدخال بريد إلكتروني صحيح';
                         }
                         return;
@@ -1755,11 +1785,6 @@
 
                     sendResetBtn.disabled = true;
                     sendResetBtn.innerHTML = '⏳ جاري الإرسال...';
-
-                    if (forgotMessage) {
-                        forgotMessage.className = 'modal-message';
-                        forgotMessage.textContent = '';
-                    }
 
                     try {
                         var csrfRes = await fetch('/api/csrf-token', {
@@ -1784,13 +1809,29 @@
 
                         if (forgotMessage) {
                             forgotMessage.className = 'modal-message show';
-                            if (response.ok && data.success) {
+                            forgotMessage.style.display = 'block';
+
+                            if (response.status === 404) {
+                                forgotMessage.className += ' error';
+                                forgotMessage.textContent = '❌ ' + (data.error || 'هذا البريد الإلكتروني غير مسجل في النظام');
+                            } else if (response.ok && data.success) {
                                 forgotMessage.className += ' success';
-                                forgotMessage.textContent = '✅ ' + (data.message || 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني');
+                                
+                                // ✅ عرض الرابط مباشرة للمستخدم
+                                var resetLink = data.resetLink || '';
+                                if (resetLink) {
+                                    forgotMessage.innerHTML = '✅ تم إنشاء رابط إعادة التعيين:<br><br>' +
+                                        '<div class="reset-link-box">' +
+                                        '<a href="' + resetLink + '" target="_blank">' + resetLink + '</a>' +
+                                        '</div><br>' +
+                                        '<span style="font-size:13px;color:rgba(255,255,255,0.4);">📌 انسخ الرابط وألصقه في المتصفح، أو اضغط عليه مباشرة</span>';
+                                } else {
+                                    forgotMessage.textContent = '✅ ' + (data.message || 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني');
+                                }
+                                
                                 if (forgotEmail) forgotEmail.value = '';
-                                setTimeout(function() {
-                                    closeForgotModal();
-                                }, 3000);
+                                
+                                // ✅ إبقاء النافذة مفتوحة لعرض الرابط
                             } else {
                                 forgotMessage.className += ' error';
                                 forgotMessage.textContent = '❌ ' + (data.error || data.message || 'حدث خطأ، يرجى المحاولة مرة أخرى');
@@ -1801,6 +1842,7 @@
                         console.error('❌ Forgot password error:', error);
                         if (forgotMessage) {
                             forgotMessage.className = 'modal-message show error';
+                            forgotMessage.style.display = 'block';
                             forgotMessage.textContent = '❌ خطأ في الاتصال بالخادم';
                         }
                     } finally {
