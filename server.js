@@ -1068,20 +1068,26 @@ function verifyTokenAndGetUser(req) {
 
     try {
         const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+        console.log('🔍 Decoded token - User:', decoded.username, 'Role:', decoded.role);
         return users.find(u => u.id === decoded.id) || null;
-    } catch {
+    } catch (err) {
+        console.log('❌ Token verification failed:', err.message);
         return null;
     }
 }
 
 function isAdminUser(user) {
-    return user && (user.role === 'admin' || user.role === 'مسؤول');
+    if (!user) return false;
+    return user.role === 'admin' || user.role === 'مسؤول';
 }
 
+// ✅ جلب جميع المستخدمين
 app.get('/api/users', (req, res) => {
     try {
         const user = verifyTokenAndGetUser(req);
-        if (!user) return res.status(401).json({ error: 'غير مصرح' });
+        if (!user) {
+            return res.status(401).json({ error: 'غير مصرح' });
+        }
 
         const safeUsers = users.map(u => ({
             id: u.id,
@@ -1094,17 +1100,28 @@ app.get('/api/users', (req, res) => {
             lastLogin: u.lastLogin || null
         }));
 
+        console.log('👥 Users fetched:', safeUsers.length);
         res.json(safeUsers);
     } catch (error) {
+        console.error('❌ Error fetching users:', error);
         res.status(500).json({ error: 'خطأ في جلب المستخدمين' });
     }
 });
 
+// ✅ إضافة مستخدم جديد
 app.post('/api/users', csrfProtection, (req, res) => {
     try {
         const user = verifyTokenAndGetUser(req);
-        if (!user) return res.status(401).json({ success: false, error: 'غير مصرح' });
-        if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+        if (!user) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+
+        console.log('👤 User role:', user.role);
+        console.log('👤 Is admin?', isAdminUser(user));
+
+        if (!isAdminUser(user)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لإضافة مستخدمين' });
+        }
 
         const { username, password, email, role, active } = req.body;
         if (!username || !password) {
@@ -1147,18 +1164,27 @@ app.post('/api/users', csrfProtection, (req, res) => {
         const { password: _, ...userWithoutPassword } = newUser;
         res.status(201).json({ success: true, message: 'تم إضافة المستخدم', user: userWithoutPassword });
     } catch (error) {
+        console.error('❌ Error creating user:', error);
         res.status(500).json({ success: false, error: 'خطأ في إضافة المستخدم' });
     }
 });
 
+// ✅ تحديث مستخدم
 app.put('/api/users/:id', csrfProtection, (req, res) => {
     try {
         const user = verifyTokenAndGetUser(req);
-        if (!user) return res.status(401).json({ success: false, error: 'غير مصرح' });
-        if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+        if (!user) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+
+        if (!isAdminUser(user)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لتعديل المستخدمين' });
+        }
 
         const targetUser = users.find(u => u.id === req.params.id);
-        if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        if (!targetUser) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
 
         if (targetUser.username === 'admin' && user.username !== 'admin') {
             return res.status(403).json({ success: false, error: 'لا يمكن تعديل المستخدم الرئيسي' });
@@ -1187,18 +1213,28 @@ app.put('/api/users/:id', csrfProtection, (req, res) => {
         const { password: _, ...userWithoutPassword } = targetUser;
         res.json({ success: true, message: 'تم تحديث المستخدم', user: userWithoutPassword });
     } catch (error) {
+        console.error('❌ Error updating user:', error);
         res.status(500).json({ success: false, error: 'خطأ في تحديث المستخدم' });
     }
 });
 
+// ✅ حذف مستخدم
 app.delete('/api/users/:id', csrfProtection, (req, res) => {
     try {
         const user = verifyTokenAndGetUser(req);
-        if (!user) return res.status(401).json({ success: false, error: 'غير مصرح' });
-        if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+        if (!user) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+
+        if (!isAdminUser(user)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لحذف المستخدمين' });
+        }
 
         const index = users.findIndex(u => u.id === req.params.id);
-        if (index === -1) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        if (index === -1) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+
         if (users[index].username === 'admin') {
             return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
         }
@@ -1216,7 +1252,44 @@ app.delete('/api/users/:id', csrfProtection, (req, res) => {
 
         res.json({ success: true, message: 'تم حذف المستخدم' });
     } catch (error) {
+        console.error('❌ Error deleting user:', error);
         res.status(500).json({ success: false, error: 'خطأ في حذف المستخدم' });
+    }
+});
+
+// ✅ تغيير حالة مستخدم
+app.put('/api/users-status/:id', csrfProtection, (req, res) => {
+    try {
+        const user = verifyTokenAndGetUser(req);
+        if (!user) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+
+        if (!isAdminUser(user)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+        }
+
+        const targetUser = users.find(u => u.id === req.params.id);
+        if (!targetUser) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+
+        const { active } = req.body;
+        targetUser.active = active;
+        targetUser.updatedAt = new Date().toISOString();
+
+        systemLogs.push({
+            id: crypto.randomBytes(8).toString('hex'),
+            userId: user.id,
+            action: 'USER_STATUS_CHANGED',
+            details: `User ${targetUser.username} ${active ? 'activated' : 'deactivated'} by ${user.username}`,
+            timestamp: new Date().toISOString()
+        });
+
+        res.json({ success: true, message: `تم ${active ? 'تفعيل' : 'تعطيل'} المستخدم` });
+    } catch (error) {
+        console.error('❌ Error updating user status:', error);
+        res.status(500).json({ success: false, error: 'خطأ في تحديث حالة المستخدم' });
     }
 });
 
@@ -1343,6 +1416,7 @@ app.listen(PORT, () => {
     console.log('=========================================');
     console.log('✅ Email: Ethereal (test mode)');
     console.log('✅ Forgot password: ENABLED');
+    console.log('✅ Users API: FIXED');
     console.log('📌 Use /api/users to verify');
     console.log('=========================================');
 });
