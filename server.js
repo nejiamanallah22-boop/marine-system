@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (FULLY FIXED)
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (SUPER ADMIN FIXED)
 // ============================================================
 
 require('dotenv').config();
@@ -85,12 +85,11 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
 
 // ============================================================
-// 📧 EMAIL CONFIGURATION - ETHEREAL (بدون Resend)
+// 📧 EMAIL CONFIGURATION - ETHEREAL
 // ============================================================
 
 let emailTransporter = null;
 
-// ✅ إنشاء حساب Ethereal تلقائياً
 async function setupEtherealEmail() {
     try {
         const testAccount = await nodemailer.createTestAccount();
@@ -118,18 +117,15 @@ async function setupEtherealEmail() {
     }
 }
 
-// ✅ تهيئة البريد
 async function initEmailService() {
     console.log('📧 Using Ethereal email service');
     return await setupEtherealEmail();
 }
 
-// ✅ بدء الخدمة
 (async function initEmail() {
     emailTransporter = await initEmailService();
 })();
 
-// ✅ دالة إرسال البريد
 async function sendEmail(to, subject, html) {
     if (!emailTransporter) {
         console.log('⏳ Email service not ready, retrying...');
@@ -397,7 +393,7 @@ const initialVessels = [
 initialVessels.forEach(v => vessels.push(v));
 
 // ============================================================
-// 📊 DATA - USERS
+// 📊 DATA - USERS (SUPER ADMIN)
 // ============================================================
 
 const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 12);
@@ -409,7 +405,7 @@ const users = [
         password: hashedPassword,
         name: ADMIN_NAME,
         email: 'nejiamanallah22@gmail.com',
-        role: 'admin',
+        role: 'super_admin',  // ✅ SUPER ADMIN
         active: true,
         createdAt: new Date().toISOString(),
         lastLogin: null,
@@ -573,8 +569,14 @@ app.post('/api/auth/login', (req, res) => {
         user.lockedUntil = null;
         user.lastLogin = new Date().toISOString();
 
+        // ✅ إضافة role في التوكن
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
+            { 
+                id: user.id, 
+                username: user.username, 
+                role: user.role,
+                name: user.name
+            },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -661,7 +663,7 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // ============================================================
-// 🔐 PASSWORD RESET API (مع إصلاح عرض الرابط)
+// 🔐 PASSWORD RESET API
 // ============================================================
 
 app.post('/api/auth/forgot-password', async (req, res) => {
@@ -689,7 +691,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         console.log(`🔑 Reset token generated for ${email}`);
         console.log(`🔗 Reset link: ${resetLink}`);
 
-        // ✅ إرسال البريد (اختياري)
         const emailHtml = `
             <div dir="rtl" style="font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0a1628; color: #e2e8f0; border-radius: 12px; border: 1px solid #1a2a4a;">
                 <div style="text-align: center; padding: 20px 0;">
@@ -715,10 +716,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             </div>
         `;
 
-        // ✅ محاولة إرسال البريد (إذا فشل، نعرض الرابط مباشرة)
         try {
             await sendEmail(email, '🔐 إعادة تعيين كلمة المرور - منظومة الوسائل البحرية', emailHtml);
-            console.log('✅ Email sent to:', email);
         } catch (emailError) {
             console.warn('⚠️ Could not send email:', emailError.message);
         }
@@ -731,7 +730,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             timestamp: new Date().toISOString()
         });
 
-        // ✅ إرجاع الرابط مباشرة للمستخدم
         res.json({
             success: true,
             message: '✅ تم إنشاء رابط إعادة تعيين كلمة المرور',
@@ -1066,7 +1064,7 @@ app.get('/api/maintenance', (req, res) => {
 });
 
 // ============================================================
-// 👥 USERS API - مع إصلاحات الصلاحيات
+// 👥 USERS API - SUPER ADMIN ONLY
 // ============================================================
 
 function verifyTokenAndGetUser(req) {
@@ -1083,9 +1081,10 @@ function verifyTokenAndGetUser(req) {
     }
 }
 
+// ✅ دالة التحقق من الصلاحية - تدعم super_admin
 function isAdminUser(user) {
     if (!user) return false;
-    return user.role === 'admin' || user.role === 'مسؤول';
+    return user.role === 'admin' || user.role === 'super_admin' || user.role === 'مسؤول';
 }
 
 // ✅ جلب جميع المستخدمين
@@ -1115,7 +1114,7 @@ app.get('/api/users', (req, res) => {
     }
 });
 
-// ✅ إضافة مستخدم جديد - مع صلاحيات admin
+// ✅ إضافة مستخدم جديد - SUPER ADMIN فقط
 app.post('/api/users', csrfProtection, (req, res) => {
     try {
         const user = verifyTokenAndGetUser(req);
@@ -1409,10 +1408,10 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM v8.0 - PROFESSIONAL');
+    console.log('🚢 MARINE SYSTEM v8.0 - SUPER ADMIN');
     console.log('=========================================');
     console.log(`📍 Server: http://localhost:${PORT}`);
-    console.log(`👤 Admin: ${ADMIN_USERNAME}`);
+    console.log(`👤 Super Admin: ${ADMIN_USERNAME}`);
     console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log('🔒 Security Level: ULTRA HIGH');
@@ -1421,10 +1420,10 @@ app.listen(PORT, () => {
     console.log(`📋 System Logs: ${systemLogs.length}`);
     console.log(`👥 Users: ${users.length}`);
     console.log('=========================================');
+    console.log('✅ Role: super_admin (full access)');
     console.log('✅ Email: Ethereal (test mode)');
-    console.log('✅ Forgot password: ENABLED (with direct link)');
-    console.log('✅ Users API: FIXED (admin only)');
-    console.log('✅ updateDateTime: FIXED');
+    console.log('✅ Forgot password: ENABLED');
+    console.log('✅ Users API: SUPER ADMIN ONLY');
     console.log('📌 Use /api/users to verify');
     console.log('=========================================');
 });
