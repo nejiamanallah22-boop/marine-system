@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (FULLY FIXED)
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (FULL)
 // ============================================================
 
 require('dotenv').config();
@@ -17,7 +17,6 @@ const rateLimit = require('express-rate-limit');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const compression = require('compression');
-const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,9 +30,6 @@ function generateSecureKey(length = 64) {
 }
 
 const isProduction = process.env.NODE_ENV === 'production';
-
-// ✅ إصلاح trust proxy لـ Render
-app.set('trust proxy', isProduction ? 1 : 0);
 
 function isStrongPassword(password) {
     const hasUpperCase = /[A-Z]/.test(password);
@@ -83,84 +79,6 @@ const JWT_SECRET = process.env.JWT_SECRET || generateSecureKey(64);
 const SESSION_SECRET = process.env.SESSION_SECRET || generateSecureKey(64);
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
-
-// ============================================================
-// 📧 EMAIL CONFIGURATION - ETHEREAL (بدون Resend)
-// ============================================================
-
-let emailTransporter = null;
-
-// ✅ إنشاء حساب Ethereal تلقائياً
-async function setupEtherealEmail() {
-    try {
-        const testAccount = await nodemailer.createTestAccount();
-        console.log('📧 Ethereal account created:');
-        console.log('✉️ Email:', testAccount.user);
-        console.log('🔑 Password:', testAccount.pass);
-        console.log('🔗 Login: https://ethereal.email/login');
-
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.ethereal.email',
-            port: 587,
-            secure: false,
-            auth: {
-                user: testAccount.user,
-                pass: testAccount.pass
-            }
-        });
-
-        await transporter.verify();
-        console.log('✅ Ethereal email service ready!');
-        return transporter;
-    } catch (error) {
-        console.error('❌ Ethereal setup error:', error);
-        return null;
-    }
-}
-
-// ✅ تهيئة البريد
-async function initEmailService() {
-    console.log('📧 Using Ethereal email service');
-    return await setupEtherealEmail();
-}
-
-// ✅ بدء الخدمة
-(async function initEmail() {
-    emailTransporter = await initEmailService();
-})();
-
-// ✅ دالة إرسال البريد
-async function sendEmail(to, subject, html) {
-    if (!emailTransporter) {
-        console.log('⏳ Email service not ready, retrying...');
-        emailTransporter = await initEmailService();
-        if (!emailTransporter) {
-            console.error('❌ Email service failed to initialize');
-            return null;
-        }
-    }
-
-    try {
-        const from = emailTransporter.options?.auth?.user || 'no-reply@marine-system.com';
-        const info = await emailTransporter.sendMail({
-            from: `"منظومة الوسائل البحرية" <${from}>`,
-            to: to,
-            subject: subject,
-            html: html
-        });
-
-        console.log('✅ Email sent successfully!');
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        if (previewUrl) {
-            console.log('📧 Preview URL:', previewUrl);
-        }
-
-        return info;
-    } catch (error) {
-        console.error('❌ Email send error:', error.message);
-        return null;
-    }
-}
 
 // ============================================================
 // 🔐 ENCRYPTION FUNCTIONS
@@ -297,7 +215,7 @@ app.use((req, res, next) => {
 
 const csrfProtection = (req, res, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
-    if (['/api/auth/login', '/api/auth/forgot-password', '/api/auth/reset-password', '/api/auth/verify-reset-token', '/api/csrf-token'].includes(req.path)) return next();
+    if (['/api/auth/login', '/api/csrf-token'].includes(req.path)) return next();
 
     const token = req.headers['x-csrf-token'] || req.body.csrf_token;
     const sessionToken = req.session.csrfToken;
@@ -408,7 +326,7 @@ const users = [
         username: 'admin',
         password: hashedPassword,
         name: ADMIN_NAME,
-        email: 'nejiamanallah22@gmail.com',
+        email: 'admin@marine.com',
         role: 'admin',
         active: true,
         createdAt: new Date().toISOString(),
@@ -444,6 +362,7 @@ function initMaintenanceLogs() {
         }
     });
     
+    // ✅ إضافة سجلات افتراضية للاختبار
     if (maintenanceLogs.length < 3) {
         maintenanceLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
@@ -471,19 +390,6 @@ function initMaintenanceLogs() {
             notes: 'استبدال المحرك التالف',
             createdAt: new Date().toISOString()
         });
-        maintenanceLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            vesselId: '3',
-            vesselName: 'الوحدة 312',
-            vesselNum: '312',
-            type: 'إصلاح هيكل',
-            status: 'متأخرة',
-            date: new Date().toISOString(),
-            repairUnit: 'وحدة الصيانة جرجيس',
-            cost: 2000,
-            notes: 'إصلاح ضرر في الهيكل',
-            createdAt: new Date().toISOString()
-        });
     }
 }
 
@@ -496,35 +402,15 @@ initMaintenanceLogs();
 const systemLogs = [];
 
 // ============================================================
-// 📊 DATA - PASSWORD RESET TOKENS
-// ============================================================
-
-const passwordResetTokens = [];
-
-function createPasswordResetToken(email) {
-    const existingIndex = passwordResetTokens.findIndex(t => t.email === email);
-    if (existingIndex !== -1) passwordResetTokens.splice(existingIndex, 1);
-
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = Date.now() + (60 * 60 * 1000);
-
-    passwordResetTokens.push({ email, token, expiresAt, createdAt: new Date().toISOString() });
-    return token;
-}
-
-function verifyResetToken(email, token) {
-    const record = passwordResetTokens.find(t => t.email === email && t.token === token);
-    return record && Date.now() < record.expiresAt;
-}
-
-// ============================================================
 // 🔐 AUTH ENDPOINTS
 // ============================================================
 
 app.get('/api/csrf-token', (req, res) => {
     try {
         const token = req.session.csrfToken;
-        res.json({ success: true, token: token, expiresIn: 8 * 60 * 60 * 1000 });
+        const expiry = req.session.csrfExpiry || Date.now() + (8 * 60 * 60 * 1000);
+        res.setHeader('Content-Type', 'application/json');
+        res.json({ success: true, token: token, expiresIn: expiry - Date.now() });
     } catch (error) {
         res.status(500).json({ success: false, error: 'Failed to generate CSRF token' });
     }
@@ -534,7 +420,7 @@ app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
         const clientIP = req.ip || req.connection.remoteAddress;
-
+        
         console.log(`🔐 Login attempt: ${username} from ${clientIP}`);
 
         if (!username || !password) {
@@ -579,7 +465,13 @@ app.post('/api/auth/login', (req, res) => {
             { expiresIn: '7d' }
         );
 
+        const newToken = generateSecureToken();
+        req.session.csrfToken = newToken;
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
         req.session.userId = user.id;
+
+        res.setHeader('X-CSRF-Token', newToken);
+        res.setHeader('X-User-ID', user.id);
 
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
@@ -600,7 +492,8 @@ app.post('/api/auth/login', (req, res) => {
                 role: user.role,
                 active: user.active,
                 lastLogin: user.lastLogin
-            }
+            },
+            csrfToken: newToken
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -622,6 +515,15 @@ app.get('/api/auth/me', (req, res) => {
         if (!user || !user.active) {
             return res.status(401).json({ success: false, error: 'المستخدم غير موجود أو غير نشط' });
         }
+
+        if (req.session.userId !== user.id) {
+            return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
+        }
+
+        const newToken = generateSecureToken();
+        req.session.csrfToken = newToken;
+        req.session.csrfExpiry = Date.now() + (8 * 60 * 60 * 1000);
+        res.setHeader('X-CSRF-Token', newToken);
 
         res.json({
             success: true,
@@ -645,6 +547,7 @@ app.get('/api/auth/me', (req, res) => {
 
 app.post('/api/auth/logout', (req, res) => {
     const userId = req.session.userId;
+    
     if (userId) {
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
@@ -654,6 +557,7 @@ app.post('/api/auth/logout', (req, res) => {
             timestamp: new Date().toISOString()
         });
     }
+    
     req.session.destroy(() => {
         res.clearCookie('__Secure-marine.sid');
         res.json({ success: true, message: 'تم تسجيل الخروج' });
@@ -661,142 +565,10 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // ============================================================
-// 🔐 PASSWORD RESET API
-// ============================================================
-
-app.post('/api/auth/forgot-password', async (req, res) => {
-    try {
-        const { email } = req.body;
-        const clientIP = req.ip || req.connection.remoteAddress;
-
-        console.log(`📧 Forgot password request for: ${email} from ${clientIP}`);
-
-        if (!email) {
-            return res.status(400).json({ success: false, error: 'البريد الإلكتروني مطلوب' });
-        }
-
-        const user = users.find(u => u.email === email);
-        if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'هذا البريد الإلكتروني غير مسجل في النظام' 
-            });
-        }
-
-        const resetToken = createPasswordResetToken(email);
-        const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
-
-        console.log(`🔑 Reset token generated for ${email}`);
-        console.log(`🔗 Reset link: ${resetLink}`);
-
-        // ✅ إرسال البريد
-        const emailHtml = `
-            <div dir="rtl" style="font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0a1628; color: #e2e8f0; border-radius: 12px; border: 1px solid #1a2a4a;">
-                <div style="text-align: center; padding: 20px 0;">
-                    <span style="font-size: 48px;">⚓</span>
-                    <h1 style="color: #f5d76e; margin: 10px 0;">منظومة الوسائل البحرية</h1>
-                    <p style="color: rgba(255,255,255,0.3);">نظام متابعة وإدارة الأسطول البحري</p>
-                </div>
-                <div style="background: rgba(255,255,255,0.04); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-                    <h2 style="color: #fff; font-size: 20px;">🔐 إعادة تعيين كلمة المرور</h2>
-                    <p style="color: rgba(255,255,255,0.6);">مرحباً <strong style="color: #f5d76e;">${user.name || user.username}</strong>،</p>
-                    <p style="color: rgba(255,255,255,0.6);">لقد تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
-                    <div style="text-align: center; margin: 25px 0;">
-                        <a href="${resetLink}" style="display: inline-block; padding: 14px 40px; background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 30px rgba(230,179,30,0.2);">
-                            🔑 إعادة تعيين كلمة المرور
-                        </a>
-                    </div>
-                    <p style="color: rgba(255,255,255,0.4); font-size: 13px;">هذا الرابط صالح لمدة <strong style="color: #f5d76e;">ساعة واحدة</strong>.</p>
-                    <p style="color: rgba(255,255,255,0.3); font-size: 12px; margin-top: 10px;">إذا لم تطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد.</p>
-                </div>
-                <div style="text-align: center; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 20px;">
-                    <p style="color: rgba(255,255,255,0.15); font-size: 12px;">© 2024 منظومة الوسائل البحرية - جميع الحقوق محفوظة</p>
-                </div>
-            </div>
-        `;
-
-        const result = await sendEmail(email, '🔐 إعادة تعيين كلمة المرور - منظومة الوسائل البحرية', emailHtml);
-
-        systemLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            userId: user.id,
-            action: 'PASSWORD_RESET_REQUESTED',
-            details: `Password reset requested for ${email} from ${clientIP}`,
-            timestamp: new Date().toISOString()
-        });
-
-        res.json({
-            success: true,
-            message: result ? 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني' : 'لم نتمكن من إرسال البريد، يرجى استخدام الرابط',
-            resetLink: resetLink
-        });
-
-    } catch (error) {
-        console.error('❌ Forgot password error:', error);
-        res.status(500).json({ success: false, error: 'حدث خطأ في الخادم' });
-    }
-});
-
-app.post('/api/auth/reset-password', async (req, res) => {
-    try {
-        const { email, token, newPassword } = req.body;
-
-        if (!email || !token || !newPassword) {
-            return res.status(400).json({ success: false, error: 'جميع الحقول مطلوبة' });
-        }
-
-        if (!verifyResetToken(email, token)) {
-            return res.status(400).json({ success: false, error: 'رابط إعادة التعيين غير صالح أو منتهي الصلاحية' });
-        }
-
-        if (newPassword.length < 8) {
-            return res.status(400).json({ success: false, error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' });
-        }
-
-        const user = users.find(u => u.email === email);
-        if (!user) {
-            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-
-        user.password = bcrypt.hashSync(newPassword, 12);
-        user.updatedAt = new Date().toISOString();
-
-        const index = passwordResetTokens.findIndex(t => t.email === email && t.token === token);
-        if (index !== -1) passwordResetTokens.splice(index, 1);
-
-        systemLogs.push({
-            id: crypto.randomBytes(8).toString('hex'),
-            userId: user.id,
-            action: 'PASSWORD_RESET_SUCCESS',
-            details: `Password reset successful for ${email}`,
-            timestamp: new Date().toISOString()
-        });
-
-        console.log(`✅ Password reset successful for: ${email}`);
-
-        res.json({ success: true, message: 'تم إعادة تعيين كلمة المرور بنجاح' });
-
-    } catch (error) {
-        console.error('❌ Reset password error:', error);
-        res.status(500).json({ success: false, error: 'حدث خطأ في الخادم' });
-    }
-});
-
-app.post('/api/auth/verify-reset-token', (req, res) => {
-    try {
-        const { email, token } = req.body;
-        const isValid = verifyResetToken(email, token);
-        res.json({ success: true, valid: isValid });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'حدث خطأ في الخادم' });
-    }
-});
-
-// ============================================================
 // 📊 VESSELS API
 // ============================================================
 
-app.get('/api/vessels', (req, res) => {
+app.get('/api/vessels', csrfProtection, (req, res) => {
     try {
         res.json(vessels);
     } catch (error) {
@@ -935,21 +707,14 @@ app.delete('/api/vessels/:id', csrfProtection, (req, res) => {
 // 📊 MAINTENANCE LOGS API
 // ============================================================
 
-app.get('/api/maintenance-logs', (req, res) => {
+app.get('/api/maintenance-logs', csrfProtection, (req, res) => {
     try {
-        const formattedLogs = maintenanceLogs.map(log => ({
-            id: log.id,
-            vessel: log.vesselName,
-            type: log.type,
-            date: new Date(log.date).toLocaleDateString('ar-EG'),
-            unit: log.repairUnit || '—',
-            status: log.status,
-            cost: log.cost || 0,
-            notes: log.notes || ''
-        }));
-        res.json(formattedLogs);
+        console.log('📡 Fetching maintenance logs...');
+        console.log('📊 Total logs:', maintenanceLogs.length);
+        res.json(maintenanceLogs);
     } catch (error) {
-        res.status(500).json([]);
+        console.error('❌ Error fetching maintenance logs:', error);
+        res.status(500).json({ success: false, error: 'خطأ في جلب سجلات الصيانة' });
     }
 });
 
@@ -976,12 +741,15 @@ app.post('/api/maintenance-logs', csrfProtection, (req, res) => {
         };
         
         maintenanceLogs.push(logEntry);
+        console.log('✅ Maintenance log added:', logEntry.vesselName);
+        
         res.status(201).json({
             success: true,
             message: 'تم إضافة سجل الصيانة',
             log: logEntry
         });
     } catch (error) {
+        console.error('❌ Error adding maintenance log:', error);
         res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
     }
 });
@@ -1001,12 +769,15 @@ app.put('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
         if (notes) log.notes = notes;
         log.updatedAt = new Date().toISOString();
         
+        console.log('✅ Maintenance log updated:', log.vesselName);
+        
         res.json({
             success: true,
             message: 'تم تحديث سجل الصيانة',
             log: log
         });
     } catch (error) {
+        console.error('❌ Error updating maintenance log:', error);
         res.status(500).json({ success: false, error: 'خطأ في تحديث سجل الصيانة' });
     }
 });
@@ -1019,109 +790,168 @@ app.delete('/api/maintenance-logs/:id', csrfProtection, (req, res) => {
             return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
         }
         maintenanceLogs.splice(index, 1);
-        res.json({ success: true, message: 'تم حذف سجل الصيانة' });
+        console.log('✅ Maintenance log deleted:', logId);
+        
+        res.json({
+            success: true,
+            message: 'تم حذف سجل الصيانة'
+        });
     } catch (error) {
+        console.error('❌ Error deleting maintenance log:', error);
         res.status(500).json({ success: false, error: 'خطأ في حذف سجل الصيانة' });
     }
 });
 
 // ============================================================
-// 📊 MAINTENANCE PAGE API
+// 📊 MAINTENANCE PAGE API - مسار مخصص لصفحة الصيانة
 // ============================================================
 
-app.get('/api/maintenance', (req, res) => {
+app.get('/api/maintenance', csrfProtection, (req, res) => {
     try {
-        const formattedLogs = maintenanceLogs.map(log => ({
-            id: log.id,
-            vessel: log.vesselName,
-            type: log.type,
-            date: new Date(log.date).toLocaleDateString('ar-EG'),
-            unit: log.repairUnit || '—',
-            status: log.status,
-            cost: log.cost || 0,
-            notes: log.notes || ''
-        }));
+        console.log('📡 Fetching maintenance data...');
+        
+        const total = vessels.length;
+        const damaged = vessels.filter(v => v.status === 'معطب').length;
+        const maintenance = vessels.filter(v => v.status === 'صيانة').length;
+        const ready = vessels.filter(v => v.status === 'صالح').length;
         
         res.json({
             success: true,
-            records: formattedLogs,
+            vessels: vessels,
             stats: {
-                total: formattedLogs.length,
-                completed: formattedLogs.filter(l => l.status === 'مكتملة').length,
-                pending: formattedLogs.filter(l => l.status === 'معلقة').length,
-                overdue: formattedLogs.filter(l => l.status === 'متأخرة').length,
-                inProgress: formattedLogs.filter(l => l.status === 'قيد التنفيذ').length
-            }
+                total: total,
+                damaged: damaged,
+                maintenance: maintenance,
+                ready: ready
+            },
+            logs: maintenanceLogs
         });
     } catch (error) {
-        res.status(500).json({ success: false, error: 'خطأ في جلب بيانات الصيانة' });
+        console.error('❌ Error fetching maintenance data:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في جلب بيانات الصيانة' 
+        });
+    }
+});
+
+app.put('/api/maintenance/:id', csrfProtection, (req, res) => {
+    try {
+        const vesselId = req.params.id;
+        const { status, repairUnit, break: breakType, eDate } = req.body;
+        
+        const vessel = vessels.find(v => v.id === vesselId);
+        if (!vessel) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'المركب غير موجود' 
+            });
+        }
+        
+        const oldStatus = vessel.status;
+        
+        if (status) vessel.status = status;
+        if (repairUnit) vessel.repairUnit = repairUnit;
+        if (breakType !== undefined) vessel.break = breakType;
+        if (eDate) vessel.eDate = eDate;
+        vessel.updatedAt = new Date().toISOString();
+        
+        if (status === 'صالح' && oldStatus !== 'صالح') {
+            maintenanceLogs.push({
+                id: crypto.randomBytes(8).toString('hex'),
+                vesselId: vessel.id,
+                vesselName: vessel.name,
+                vesselNum: vessel.num || '',
+                type: 'إصلاح',
+                status: 'مكتملة',
+                date: new Date().toISOString(),
+                repairUnit: repairUnit || vessel.repairUnit || '—',
+                cost: 0,
+                notes: `تم إصلاح المركب ${vessel.name}`,
+                createdAt: new Date().toISOString()
+            });
+        }
+        
+        if (status && (status === 'معطب' || status === 'صيانة') && oldStatus !== status) {
+            maintenanceLogs.push({
+                id: crypto.randomBytes(8).toString('hex'),
+                vesselId: vessel.id,
+                vesselName: vessel.name,
+                vesselNum: vessel.num || '',
+                type: breakType || 'صيانة دورية',
+                status: status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+                date: new Date().toISOString(),
+                repairUnit: repairUnit || vessel.repairUnit || '—',
+                cost: 0,
+                notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
+                createdAt: new Date().toISOString()
+            });
+        }
+        
+        console.log('✅ Vessel updated:', vessel.name);
+        
+        res.json({
+            success: true,
+            message: 'تم تحديث المركب بنجاح',
+            vessel: vessel
+        });
+    } catch (error) {
+        console.error('❌ Error updating maintenance:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في تحديث المركب' 
+        });
     }
 });
 
 // ============================================================
-// 👥 USERS API
+// 👥 USERS API - المسارات المطلوبة لصفحة users.html
 // ============================================================
 
-function verifyTokenAndGetUser(req) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
-
+// ✅ جلب جميع المستخدمين
+app.get('/api/users', csrfProtection, (req, res) => {
     try {
-        const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
-        return users.find(u => u.id === decoded.id) || null;
-    } catch {
-        return null;
-    }
-}
-
-function isAdminUser(user) {
-    return user && (user.role === 'admin' || user.role === 'مسؤول');
-}
-
-app.get('/api/users', (req, res) => {
-    try {
-        const user = verifyTokenAndGetUser(req);
-        if (!user) return res.status(401).json({ error: 'غير مصرح' });
-
+        console.log('📡 Fetching users...');
         const safeUsers = users.map(u => ({
             id: u.id,
             username: u.username,
-            name: u.name || u.username,
+            name: u.name,
             email: u.email,
-            role: u.role || 'viewer',
-            active: u.active !== false,
+            role: u.role,
+            active: u.active,
             createdAt: u.createdAt,
-            lastLogin: u.lastLogin || null
+            lastLogin: u.lastLogin
         }));
-
         res.json(safeUsers);
     } catch (error) {
-        res.status(500).json({ error: 'خطأ في جلب المستخدمين' });
+        console.error('❌ Error fetching users:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في جلب المستخدمين' 
+        });
     }
 });
 
+// ✅ إضافة مستخدم جديد
 app.post('/api/users', csrfProtection, (req, res) => {
     try {
-        const user = verifyTokenAndGetUser(req);
-        if (!user) return res.status(401).json({ success: false, error: 'غير مصرح' });
-        if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
-
         const { username, password, email, role, active } = req.body;
-        if (!username || !password) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم وكلمة المرور مطلوبان' });
+        
+        if (!username) {
+            return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
         }
-
-        if (password.length < 8) {
-            return res.status(400).json({ success: false, error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' });
+        if (!password) {
+            return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
         }
-
-        if (users.find(u => u.username === username)) {
+        
+        const existingUser = users.find(u => u.username === username);
+        if (existingUser) {
             return res.status(400).json({ success: false, error: 'اسم المستخدم موجود بالفعل' });
         }
-
+        
         const newUser = {
             id: crypto.randomBytes(8).toString('hex'),
-            username,
+            username: username,
             password: bcrypt.hashSync(password, 12),
             email: email || `${username}@marine.com`,
             name: username,
@@ -1133,108 +963,213 @@ app.post('/api/users', csrfProtection, (req, res) => {
             locked: false,
             lockedUntil: null
         };
-
+        
         users.push(newUser);
-
+        console.log('✅ User created:', username);
+        
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
-            userId: user.id,
+            userId: newUser.id,
             action: 'USER_CREATED',
-            details: `User ${username} created by ${user.username}`,
+            details: `User ${username} created`,
             timestamp: new Date().toISOString()
         });
-
+        
         const { password: _, ...userWithoutPassword } = newUser;
-        res.status(201).json({ success: true, message: 'تم إضافة المستخدم', user: userWithoutPassword });
+        res.status(201).json({
+            success: true,
+            message: 'تم إضافة المستخدم بنجاح',
+            user: userWithoutPassword
+        });
     } catch (error) {
+        console.error('❌ Error creating user:', error);
         res.status(500).json({ success: false, error: 'خطأ في إضافة المستخدم' });
     }
 });
 
+// ✅ تحديث مستخدم
 app.put('/api/users/:id', csrfProtection, (req, res) => {
     try {
-        const user = verifyTokenAndGetUser(req);
-        if (!user) return res.status(401).json({ success: false, error: 'غير مصرح' });
-        if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
-
-        const targetUser = users.find(u => u.id === req.params.id);
-        if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-
-        if (targetUser.username === 'admin' && user.username !== 'admin') {
-            return res.status(403).json({ success: false, error: 'لا يمكن تعديل المستخدم الرئيسي' });
-        }
-
+        const userId = req.params.id;
         const { username, email, role, active, password } = req.body;
-        if (username) targetUser.username = username;
-        if (email) targetUser.email = email;
-        if (role) targetUser.role = role;
-        if (active !== undefined) targetUser.active = active;
-        if (password) {
-            if (password.length < 8) {
-                return res.status(400).json({ success: false, error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' });
-            }
-            targetUser.password = bcrypt.hashSync(password, 12);
+        
+        const user = users.find(u => u.id === userId);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
         }
-
+        
+        if (user.username === 'admin' && req.body.username && req.body.username !== 'admin') {
+            return res.status(403).json({ success: false, error: 'لا يمكن تغيير اسم المستخدم الرئيسي' });
+        }
+        
+        if (username) user.username = username;
+        if (email) user.email = email;
+        if (role) user.role = role;
+        if (active !== undefined) user.active = active;
+        if (password) {
+            user.password = bcrypt.hashSync(password, 12);
+        }
+        
+        console.log('✅ User updated:', user.username);
+        
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: user.id,
             action: 'USER_UPDATED',
-            details: `User ${targetUser.username} updated by ${user.username}`,
+            details: `User ${user.username} updated`,
             timestamp: new Date().toISOString()
         });
-
-        const { password: _, ...userWithoutPassword } = targetUser;
-        res.json({ success: true, message: 'تم تحديث المستخدم', user: userWithoutPassword });
+        
+        const { password: _, ...userWithoutPassword } = user;
+        res.json({
+            success: true,
+            message: 'تم تحديث المستخدم بنجاح',
+            user: userWithoutPassword
+        });
     } catch (error) {
+        console.error('❌ Error updating user:', error);
         res.status(500).json({ success: false, error: 'خطأ في تحديث المستخدم' });
     }
 });
 
+// ✅ حذف مستخدم
 app.delete('/api/users/:id', csrfProtection, (req, res) => {
     try {
-        const user = verifyTokenAndGetUser(req);
-        if (!user) return res.status(401).json({ success: false, error: 'غير مصرح' });
-        if (!isAdminUser(user)) return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
-
-        const index = users.findIndex(u => u.id === req.params.id);
-        if (index === -1) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-        if (users[index].username === 'admin') {
+        const userId = req.params.id;
+        
+        const userToDelete = users.find(u => u.id === userId);
+        if (!userToDelete) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+        
+        if (userToDelete.username === 'admin') {
             return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
         }
-
-        const deletedUser = users[index];
+        
+        const index = users.findIndex(u => u.id === userId);
         users.splice(index, 1);
-
+        
+        console.log('✅ User deleted:', userToDelete.username);
+        
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
-            userId: user.id,
+            userId: null,
             action: 'USER_DELETED',
-            details: `User ${deletedUser.username} deleted by ${user.username}`,
+            details: `User ${userToDelete.username} deleted`,
             timestamp: new Date().toISOString()
         });
-
-        res.json({ success: true, message: 'تم حذف المستخدم' });
+        
+        res.json({
+            success: true,
+            message: 'تم حذف المستخدم بنجاح'
+        });
     } catch (error) {
+        console.error('❌ Error deleting user:', error);
         res.status(500).json({ success: false, error: 'خطأ في حذف المستخدم' });
     }
 });
 
+// ✅ تغيير حالة مستخدم (تفعيل/تعطيل) - مسار إضافي
+app.put('/api/users-status/:id', csrfProtection, (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { active } = req.body;
+        
+        const user = users.find(u => u.id === userId);
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'المستخدم غير موجود' 
+            });
+        }
+        
+        if (user.username === 'admin') {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'لا يمكن تغيير حالة المستخدم الرئيسي' 
+            });
+        }
+        
+        user.active = active;
+        user.updatedAt = new Date().toISOString();
+        
+        console.log(`✅ User ${user.username} ${active ? 'activated' : 'deactivated'}`);
+        
+        res.json({
+            success: true,
+            message: `تم ${active ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`,
+            user: {
+                id: user.id,
+                username: user.username,
+                active: user.active
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error updating user status:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في تحديث حالة المستخدم' 
+        });
+    }
+});
+
 // ============================================================
-// 📊 LOGS API
+// 📊 USERS DATA API - مسار إضافي لصفحة المستخدمين
 // ============================================================
 
-app.get('/api/logs', (req, res) => {
+app.get('/api/users-data', csrfProtection, (req, res) => {
     try {
+        console.log('📡 Fetching users data...');
+        
+        const safeUsers = users.map(u => ({
+            id: u.id,
+            username: u.username,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            active: u.active,
+            createdAt: u.createdAt,
+            lastLogin: u.lastLogin
+        }));
+        
+        res.json({
+            success: true,
+            users: safeUsers,
+            stats: {
+                total: users.length,
+                active: users.filter(u => u.active).length,
+                inactive: users.filter(u => !u.active).length,
+                admins: users.filter(u => u.role === 'admin').length
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error fetching users data:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في جلب بيانات المستخدمين' 
+        });
+    }
+});
+
+// ============================================================
+// 📊 SYSTEM LOGS API
+// ============================================================
+
+app.get('/api/logs', csrfProtection, (req, res) => {
+    try {
+        console.log('📡 Fetching system logs...');
+        console.log('📊 Total logs:', systemLogs.length);
         res.json(systemLogs.slice(-100));
     } catch (error) {
+        console.error('❌ Error fetching logs:', error);
         res.status(500).json({ success: false, error: 'خطأ في جلب السجلات' });
     }
 });
 
-app.post('/api/logs', (req, res) => {
+app.post('/api/logs', csrfProtection, (req, res) => {
     try {
         const { action, details, userId } = req.body;
+        
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: userId || null,
@@ -1242,9 +1177,26 @@ app.post('/api/logs', (req, res) => {
             details: details || '',
             timestamp: new Date().toISOString()
         });
+        
         res.status(201).json({ success: true, message: 'تم إضافة السجل' });
     } catch (error) {
+        console.error('❌ Error adding log:', error);
         res.status(500).json({ success: false, error: 'خطأ في إضافة السجل' });
+    }
+});
+
+app.delete('/api/logs/:id', csrfProtection, (req, res) => {
+    try {
+        const logId = req.params.id;
+        const index = systemLogs.findIndex(l => l.id === logId);
+        if (index === -1) {
+            return res.status(404).json({ success: false, error: 'السجل غير موجود' });
+        }
+        systemLogs.splice(index, 1);
+        res.json({ success: true, message: 'تم حذف السجل' });
+    } catch (error) {
+        console.error('❌ Error deleting log:', error);
+        res.status(500).json({ success: false, error: 'خطأ في حذف السجل' });
     }
 });
 
@@ -1256,6 +1208,8 @@ app.get('/api/session-status', (req, res) => {
     res.json({
         success: true,
         hasSession: !!req.session,
+        hasCsrf: !!req.session.csrfToken,
+        sessionId: req.sessionID,
         userId: req.session.userId || null
     });
 });
@@ -1272,7 +1226,9 @@ function findPageFile(pageName) {
         path.join(__dirname, pageName + '.html')
     ];
     for (const p of possiblePaths) {
-        if (fs.existsSync(p)) return p;
+        if (fs.existsSync(p)) {
+            return p;
+        }
     }
     return null;
 }
@@ -1285,9 +1241,164 @@ app.get('/', (req, res) => {
         path.join(publicPagesDir, 'index.html')
     ];
     for (const p of paths) {
-        if (fs.existsSync(p)) return res.sendFile(p);
+        if (fs.existsSync(p)) {
+            return res.sendFile(p);
+        }
     }
-    res.send(`<h1>🚢 Marine System</h1><p>System is running</p>`);
+    res.send(`
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>🚢 Marine System</title>
+            <style>
+                *{margin:0;padding:0;box-sizing:border-box}
+                body{font-family:'Segoe UI',sans-serif;background:#0a0e1a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+                .container{background:linear-gradient(145deg,#1a1f35,#0d1528);padding:50px;border-radius:30px;max-width:600px;width:100%;border:1px solid #2a3a5a;text-align:center}
+                h1{color:#00d4ff;font-size:2.5em}
+                .status{background:#0d1528;padding:20px;border-radius:15px;margin:20px 0;border-right:5px solid #00ff88}
+                .info{color:#aabbcc;line-height:2}
+                .info strong{color:#00d4ff}
+                .btn{background:linear-gradient(135deg,#00d4ff,#0099cc);color:#0a0e1a;border:none;padding:15px 40px;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.3s;width:100%;margin-top:15px}
+                .btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,212,255,0.3)}
+                .btn-logout{background:linear-gradient(135deg,#ff4444,#cc0000)}
+                .error{color:#ff4444;margin:10px 0}
+                .success-msg{color:#00ff88;margin:10px 0}
+                .login-section,.user-section{margin-top:30px;text-align:right}
+                .user-section{display:none}
+                .badge{display:inline-block;padding:5px 15px;border-radius:20px;font-size:14px;margin:5px 0;background:#ff4444;color:#fff}
+                .login-form input{width:100%;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #2a3a5a;background:#0d1528;color:#fff;font-size:16px}
+                .login-form input:focus{outline:none;border-color:#00d4ff}
+                .footer{margin-top:30px;padding-top:20px;border-top:1px solid #2a3a5a;color:#667788;font-size:12px}
+                .links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
+                .links a{display:inline-block;padding:10px 20px;background:#2a3a5a;color:#fff;text-decoration:none;border-radius:8px;font-size:14px}
+                .links a:hover{background:#3a4a6a}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🚢 MARINE SYSTEM</h1>
+                <p style="color:#8899aa;">نظام إدارة الأسطول البحري</p>
+                <div class="status">
+                    <h3 style="color:#00ff88;">✅ النظام يعمل</h3>
+                    <p class="info">🔒 <strong>الأمان:</strong> عالي جداً</p>
+                    <p class="info">👤 <strong>المستخدم:</strong> admin</p>
+                    <p class="info">🔑 <strong>كلمة المرور:</strong> ${ADMIN_PASSWORD}</p>
+                    <p class="info">📊 <strong>المراكب:</strong> ${vessels.length}</p>
+                    <p class="info">📝 <strong>سجلات الصيانة:</strong> ${maintenanceLogs.length}</p>
+                    <p class="info">👥 <strong>المستخدمين:</strong> ${users.length}</p>
+                </div>
+                <div id="loginSection" class="login-section">
+                    <h3 style="color:#00d4ff;">🔐 تسجيل الدخول</h3>
+                    <div id="message"></div>
+                    <div class="login-form">
+                        <input type="text" id="username" placeholder="اسم المستخدم" value="admin">
+                        <input type="password" id="password" placeholder="كلمة المرور">
+                        <button class="btn" onclick="handleLogin()">🚀 دخول</button>
+                    </div>
+                </div>
+                <div id="userSection" class="user-section">
+                    <p style="font-size:18px;">👋 <strong>مرحباً بك، <span id="userName"></span></strong></p>
+                    <p>📋 <strong>الدور:</strong> <span id="userRole" class="badge">admin</span></p>
+                    <div class="links">
+                        <a href="/dashboard">📊 لوحة التحكم</a>
+                        <a href="/fleet">🚢 الأسطول</a>
+                        <a href="/maintenance">🔧 الصيانة</a>
+                        <a href="/logs">📝 سجلات الصيانة</a>
+                        <a href="/users">👥 المستخدمين</a>
+                    </div>
+                    <button class="btn btn-logout" onclick="handleLogout()">🚪 تسجيل الخروج</button>
+                </div>
+                <div class="footer">🔒 جميع البيانات مشفرة | v8.0</div>
+            </div>
+            <script>
+                let csrfToken = '';
+
+                async function getCsrfToken() {
+                    try {
+                        const r = await fetch('/api/csrf-token', { credentials: 'include', headers: { 'Accept': 'application/json' } });
+                        const d = await r.json();
+                        if (d.success) { csrfToken = d.token; return d.token; }
+                        return null;
+                    } catch(e) { return null; }
+                }
+
+                async function handleLogin() {
+                    const username = document.getElementById('username').value.trim();
+                    const password = document.getElementById('password').value;
+                    const msg = document.getElementById('message');
+                    if (!username || !password) { msg.innerHTML = '<div class="error">⚠️ الرجاء إدخال جميع البيانات</div>'; return; }
+                    try {
+                        const t = await getCsrfToken();
+                        if (!t) { msg.innerHTML = '<div class="error">❌ فشل الحصول على CSRF token</div>'; return; }
+                        msg.innerHTML = '<div style="color:#00d4ff;">⏳ جاري تسجيل الدخول...</div>';
+                        const r = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': t },
+                            credentials: 'include',
+                            body: JSON.stringify({ username, password })
+                        });
+                        const d = await r.json();
+                        if (r.ok && d.success) {
+                            localStorage.setItem('authToken', d.token);
+                            localStorage.setItem('userData', JSON.stringify(d.user));
+                            document.getElementById('loginSection').style.display = 'none';
+                            document.getElementById('userSection').style.display = 'block';
+                            document.getElementById('userName').textContent = d.user.name || d.user.username;
+                            document.getElementById('userRole').textContent = d.user.role || 'مستخدم';
+                            msg.innerHTML = '<div class="success-msg">✅ تم تسجيل الدخول بنجاح</div>';
+                        } else {
+                            msg.innerHTML = '<div class="error">❌ ' + (d.error || 'فشل تسجيل الدخول') + '</div>';
+                        }
+                    } catch(e) {
+                        msg.innerHTML = '<div class="error">❌ خطأ في الاتصال بالخادم</div>';
+                    }
+                }
+
+                async function handleLogout() {
+                    try {
+                        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                        localStorage.clear();
+                        document.getElementById('loginSection').style.display = 'block';
+                        document.getElementById('userSection').style.display = 'none';
+                        document.getElementById('message').innerHTML = '<div class="success-msg">✅ تم تسجيل الخروج</div>';
+                    } catch(e) {}
+                }
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        const loginSection = document.getElementById('loginSection');
+                        if (loginSection.style.display !== 'none') handleLogin();
+                    }
+                });
+
+                async function checkAuth() {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) return;
+                    try {
+                        const csrf = await getCsrfToken();
+                        const r = await fetch('/api/auth/me', {
+                            headers: { 'Authorization': 'Bearer ' + token, 'X-CSRF-Token': csrf || '', 'Accept': 'application/json' },
+                            credentials: 'include'
+                        });
+                        const d = await r.json();
+                        if (d.success && d.user) {
+                            document.getElementById('loginSection').style.display = 'none';
+                            document.getElementById('userSection').style.display = 'block';
+                            document.getElementById('userName').textContent = d.user.name || d.user.username;
+                            document.getElementById('userRole').textContent = d.user.role || 'مستخدم';
+                        } else {
+                            localStorage.removeItem('authToken');
+                        }
+                    } catch(e) { localStorage.removeItem('authToken'); }
+                }
+
+                getCsrfToken().then(checkAuth);
+            </script>
+        </body>
+        </html>
+    `);
 });
 
 app.get('/pages/:page', (req, res) => {
@@ -1307,6 +1418,9 @@ app.get('/:page', (req, res, next) => {
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ success: false, error: 'API not found' });
+    }
+    if (req.path.includes('.') && !req.path.startsWith('/api')) {
+        return res.status(404).send('❌ ملف غير موجود');
     }
     res.redirect('/');
 });
@@ -1340,9 +1454,6 @@ app.listen(PORT, () => {
     console.log(`📝 Maintenance Logs: ${maintenanceLogs.length}`);
     console.log(`📋 System Logs: ${systemLogs.length}`);
     console.log(`👥 Users: ${users.length}`);
-    console.log('=========================================');
-    console.log('✅ Email: Ethereal (test mode)');
-    console.log('📌 Use /api/users to verify');
     console.log('=========================================');
 });
 
