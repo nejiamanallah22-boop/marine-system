@@ -1785,6 +1785,29 @@
             }
         }
 
+        // ✅ بدء التحديث فقط إذا كانت العناصر موجودة
+        (function initDateTime() {
+            const hasDate = !!document.getElementById('currentDate');
+            const hasTime = !!document.getElementById('currentTime');
+            
+            if (hasDate || hasTime) {
+                updateDateTime();
+                window._dateTimeInterval = setInterval(updateDateTime, 1000);
+                console.log('⏰ Date/Time updater started');
+            } else {
+                console.log('⏰ No date/time elements found, skipping');
+            }
+        })();
+
+        // ✅ دالة لإيقاف التحديث
+        function stopDateTimeUpdate() {
+            if (window._dateTimeInterval) {
+                clearInterval(window._dateTimeInterval);
+                window._dateTimeInterval = null;
+                console.log('⏰ Date/Time updater stopped');
+            }
+        }
+
         // ============================================================
         // 🔐 FORGOT PASSWORD - MODAL FUNCTIONS
         // ============================================================
@@ -2504,6 +2527,7 @@
         window.loadAllData = loadAllData;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
+        window.stopDateTimeUpdate = stopDateTimeUpdate;
         window.refreshCurrentPage = refreshCurrentPage;
         window.csrfManager = csrfManager;
         window.CONFIG = CONFIG;
