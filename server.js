@@ -661,7 +661,7 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // ============================================================
-// 🔐 PASSWORD RESET API
+// 🔐 PASSWORD RESET API (بعد إصلاح مشكلة الرابط)
 // ============================================================
 
 app.post('/api/auth/forgot-password', async (req, res) => {
@@ -689,7 +689,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         console.log(`🔑 Reset token generated for ${email}`);
         console.log(`🔗 Reset link: ${resetLink}`);
 
-        // ✅ إرسال البريد
+        // ✅ إرسال البريد (اختياري)
         const emailHtml = `
             <div dir="rtl" style="font-family: 'Cairo', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0a1628; color: #e2e8f0; border-radius: 12px; border: 1px solid #1a2a4a;">
                 <div style="text-align: center; padding: 20px 0;">
@@ -715,7 +715,14 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             </div>
         `;
 
-        const result = await sendEmail(email, '🔐 إعادة تعيين كلمة المرور - منظومة الوسائل البحرية', emailHtml);
+        // ✅ محاولة إرسال البريد (إذا فشل، نعرض الرابط مباشرة)
+        let emailSent = false;
+        try {
+            const result = await sendEmail(email, '🔐 إعادة تعيين كلمة المرور - منظومة الوسائل البحرية', emailHtml);
+            if (result) emailSent = true;
+        } catch (emailError) {
+            console.warn('⚠️ Could not send email:', emailError.message);
+        }
 
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
@@ -725,9 +732,10 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             timestamp: new Date().toISOString()
         });
 
+        // ✅ إرجاع الرابط في كل الأحوال
         res.json({
             success: true,
-            message: result ? 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني' : 'لم نتمكن من إرسال البريد، يرجى استخدام الرابط',
+            message: emailSent ? 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني' : '✅ تم إنشاء رابط إعادة التعيين',
             resetLink: resetLink
         });
 
@@ -1059,7 +1067,7 @@ app.get('/api/maintenance', (req, res) => {
 });
 
 // ============================================================
-// 👥 USERS API
+// 👥 USERS API - مع إصلاحات الصلاحيات
 // ============================================================
 
 function verifyTokenAndGetUser(req) {
@@ -1108,7 +1116,7 @@ app.get('/api/users', (req, res) => {
     }
 });
 
-// ✅ إضافة مستخدم جديد
+// ✅ إضافة مستخدم جديد - مع صلاحيات admin
 app.post('/api/users', csrfProtection, (req, res) => {
     try {
         const user = verifyTokenAndGetUser(req);
@@ -1415,8 +1423,8 @@ app.listen(PORT, () => {
     console.log(`👥 Users: ${users.length}`);
     console.log('=========================================');
     console.log('✅ Email: Ethereal (test mode)');
-    console.log('✅ Forgot password: ENABLED');
-    console.log('✅ Users API: FIXED');
+    console.log('✅ Forgot password: ENABLED (with direct link)');
+    console.log('✅ Users API: FIXED (admin only)');
     console.log('📌 Use /api/users to verify');
     console.log('=========================================');
 });
