@@ -661,7 +661,7 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // ============================================================
-// 🔐 PASSWORD RESET API (بعد إصلاح مشكلة الرابط)
+// 🔐 PASSWORD RESET API (مع إصلاح عرض الرابط)
 // ============================================================
 
 app.post('/api/auth/forgot-password', async (req, res) => {
@@ -716,10 +716,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         `;
 
         // ✅ محاولة إرسال البريد (إذا فشل، نعرض الرابط مباشرة)
-        let emailSent = false;
         try {
-            const result = await sendEmail(email, '🔐 إعادة تعيين كلمة المرور - منظومة الوسائل البحرية', emailHtml);
-            if (result) emailSent = true;
+            await sendEmail(email, '🔐 إعادة تعيين كلمة المرور - منظومة الوسائل البحرية', emailHtml);
+            console.log('✅ Email sent to:', email);
         } catch (emailError) {
             console.warn('⚠️ Could not send email:', emailError.message);
         }
@@ -732,10 +731,10 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             timestamp: new Date().toISOString()
         });
 
-        // ✅ إرجاع الرابط في كل الأحوال
+        // ✅ إرجاع الرابط مباشرة للمستخدم
         res.json({
             success: true,
-            message: emailSent ? 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني' : '✅ تم إنشاء رابط إعادة التعيين',
+            message: '✅ تم إنشاء رابط إعادة تعيين كلمة المرور',
             resetLink: resetLink
         });
 
@@ -1425,6 +1424,7 @@ app.listen(PORT, () => {
     console.log('✅ Email: Ethereal (test mode)');
     console.log('✅ Forgot password: ENABLED (with direct link)');
     console.log('✅ Users API: FIXED (admin only)');
+    console.log('✅ updateDateTime: FIXED');
     console.log('📌 Use /api/users to verify');
     console.log('=========================================');
 });
