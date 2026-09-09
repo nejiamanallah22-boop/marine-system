@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (SUPER ADMIN FIXED)
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v8.0 (ALL FIXES)
 // ============================================================
 
 require('dotenv').config();
@@ -85,7 +85,7 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || generateSecureKey(32);
 const ENCRYPTION_IV = crypto.randomBytes(16);
 
 // ============================================================
-// 📧 EMAIL CONFIGURATION - ETHEREAL
+// 📧 EMAIL CONFIGURATION
 // ============================================================
 
 let emailTransporter = null;
@@ -393,7 +393,7 @@ const initialVessels = [
 initialVessels.forEach(v => vessels.push(v));
 
 // ============================================================
-// 📊 DATA - USERS (SUPER ADMIN)
+// 📊 DATA - USERS (✅ SUPER ADMIN FIXED)
 // ============================================================
 
 const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 12);
@@ -405,7 +405,7 @@ const users = [
         password: hashedPassword,
         name: ADMIN_NAME,
         email: 'nejiamanallah22@gmail.com',
-        role: 'super_admin',  // ✅ SUPER ADMIN
+        role: 'admin',  // ✅ admin role
         active: true,
         createdAt: new Date().toISOString(),
         lastLogin: null,
@@ -1064,37 +1064,50 @@ app.get('/api/maintenance', (req, res) => {
 });
 
 // ============================================================
-// 👥 USERS API - SUPER ADMIN ONLY
+// 👥 USERS API - ✅ FIXED PERMISSIONS
 // ============================================================
 
 function verifyTokenAndGetUser(req) {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('⚠️ No Authorization header');
+        return null;
+    }
 
+    const token = authHeader.split(' ')[1];
     try {
-        const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET);
         console.log('🔍 Decoded token - User:', decoded.username, 'Role:', decoded.role);
-        return users.find(u => u.id === decoded.id) || null;
+        const user = users.find(u => u.id === decoded.id);
+        if (user) {
+            console.log('👤 Found user:', user.username, 'Role:', user.role);
+            return user;
+        }
+        console.log('⚠️ User not found in database');
+        return null;
     } catch (err) {
         console.log('❌ Token verification failed:', err.message);
         return null;
     }
 }
 
-// ✅ دالة التحقق من الصلاحية - تدعم super_admin
+// ✅ دالة التحقق من صلاحية admin - تدعم كل الصيغ
 function isAdminUser(user) {
     if (!user) return false;
-    return user.role === 'admin' || user.role === 'super_admin' || user.role === 'مسؤول';
+    const adminRoles = ['admin', 'super_admin', 'مسؤول', 'مدير'];
+    return adminRoles.includes(user.role);
 }
 
 // ✅ جلب جميع المستخدمين
 app.get('/api/users', (req, res) => {
     try {
+        console.log('📡 Fetching users...');
+        
         const user = verifyTokenAndGetUser(req);
         if (!user) {
             return res.status(401).json({ error: 'غير مصرح' });
         }
-
+        
         const safeUsers = users.map(u => ({
             id: u.id,
             username: u.username,
@@ -1105,8 +1118,8 @@ app.get('/api/users', (req, res) => {
             createdAt: u.createdAt,
             lastLogin: u.lastLogin || null
         }));
-
-        console.log('👥 Users fetched:', safeUsers.length);
+        
+        console.log('✅ Users found:', safeUsers.length);
         res.json(safeUsers);
     } catch (error) {
         console.error('❌ Error fetching users:', error);
@@ -1114,37 +1127,49 @@ app.get('/api/users', (req, res) => {
     }
 });
 
-// ✅ إضافة مستخدم جديد - SUPER ADMIN فقط
+// ✅ إضافة مستخدم جديد - مع صلاحيات admin
 app.post('/api/users', csrfProtection, (req, res) => {
     try {
+        console.log('📝 [POST] /api/users - Creating new user');
+        
+        const { username, password, email, role, active } = req.body;
+        const clientIP = req.ip || req.connection.remoteAddress;
+        
+        // ✅ التحقق من التوكن والصلاحيات
         const user = verifyTokenAndGetUser(req);
         if (!user) {
             return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
-
-        console.log('👤 User role:', user.role);
-        console.log('👤 Is admin?', isAdminUser(user));
-
+        
+        // ✅ فقط admin يمكنه إضافة مستخدمين
         if (!isAdminUser(user)) {
+            console.log('⚠️ Unauthorized: User', user.username, 'has role', user.role);
             return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لإضافة مستخدمين' });
         }
-
-        const { username, password, email, role, active } = req.body;
-        if (!username || !password) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم وكلمة المرور مطلوبان' });
+        
+        console.log('✅ User', user.username, 'is authorized as admin');
+        
+        // ✅ التحقق من البيانات
+        if (!username) {
+            return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
         }
-
+        if (!password) {
+            return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
+        }
         if (password.length < 8) {
             return res.status(400).json({ success: false, error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' });
         }
-
-        if (users.find(u => u.username === username)) {
+        
+        // ✅ التحقق من عدم وجود المستخدم
+        const existingUser = users.find(u => u.username === username);
+        if (existingUser) {
             return res.status(400).json({ success: false, error: 'اسم المستخدم موجود بالفعل' });
         }
-
+        
+        // ✅ إنشاء المستخدم الجديد
         const newUser = {
             id: crypto.randomBytes(8).toString('hex'),
-            username,
+            username: username,
             password: bcrypt.hashSync(password, 12),
             email: email || `${username}@marine.com`,
             name: username,
@@ -1156,9 +1181,11 @@ app.post('/api/users', csrfProtection, (req, res) => {
             locked: false,
             lockedUntil: null
         };
-
+        
         users.push(newUser);
-
+        console.log('✅ User created:', username);
+        
+        // ✅ تسجيل العملية
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: user.id,
@@ -1166,9 +1193,13 @@ app.post('/api/users', csrfProtection, (req, res) => {
             details: `User ${username} created by ${user.username}`,
             timestamp: new Date().toISOString()
         });
-
+        
         const { password: _, ...userWithoutPassword } = newUser;
-        res.status(201).json({ success: true, message: 'تم إضافة المستخدم', user: userWithoutPassword });
+        res.status(201).json({
+            success: true,
+            message: 'تم إضافة المستخدم بنجاح',
+            user: userWithoutPassword
+        });
     } catch (error) {
         console.error('❌ Error creating user:', error);
         res.status(500).json({ success: false, error: 'خطأ في إضافة المستخدم' });
@@ -1178,25 +1209,34 @@ app.post('/api/users', csrfProtection, (req, res) => {
 // ✅ تحديث مستخدم
 app.put('/api/users/:id', csrfProtection, (req, res) => {
     try {
+        const userId = req.params.id;
+        const { username, email, role, active, password } = req.body;
+        
         const user = verifyTokenAndGetUser(req);
         if (!user) {
             return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
-
+        
         if (!isAdminUser(user)) {
             return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لتعديل المستخدمين' });
         }
-
-        const targetUser = users.find(u => u.id === req.params.id);
+        
+        const targetUser = users.find(u => u.id === userId);
         if (!targetUser) {
             return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
         }
-
-        if (targetUser.username === 'admin' && user.username !== 'admin') {
-            return res.status(403).json({ success: false, error: 'لا يمكن تعديل المستخدم الرئيسي' });
+        
+        if (targetUser.username === 'admin' && username && username !== 'admin') {
+            return res.status(403).json({ success: false, error: 'لا يمكن تغيير اسم المستخدم الرئيسي' });
         }
-
-        const { username, email, role, active, password } = req.body;
+        
+        if (targetUser.role === 'admin' && active === false) {
+            const adminCount = users.filter(u => u.role === 'admin' && u.active !== false).length;
+            if (adminCount <= 1) {
+                return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
+            }
+        }
+        
         if (username) targetUser.username = username;
         if (email) targetUser.email = email;
         if (role) targetUser.role = role;
@@ -1207,7 +1247,9 @@ app.put('/api/users/:id', csrfProtection, (req, res) => {
             }
             targetUser.password = bcrypt.hashSync(password, 12);
         }
-
+        
+        console.log('✅ User updated:', targetUser.username);
+        
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: user.id,
@@ -1215,9 +1257,13 @@ app.put('/api/users/:id', csrfProtection, (req, res) => {
             details: `User ${targetUser.username} updated by ${user.username}`,
             timestamp: new Date().toISOString()
         });
-
+        
         const { password: _, ...userWithoutPassword } = targetUser;
-        res.json({ success: true, message: 'تم تحديث المستخدم', user: userWithoutPassword });
+        res.json({
+            success: true,
+            message: 'تم تحديث المستخدم بنجاح',
+            user: userWithoutPassword
+        });
     } catch (error) {
         console.error('❌ Error updating user:', error);
         res.status(500).json({ success: false, error: 'خطأ في تحديث المستخدم' });
@@ -1227,36 +1273,50 @@ app.put('/api/users/:id', csrfProtection, (req, res) => {
 // ✅ حذف مستخدم
 app.delete('/api/users/:id', csrfProtection, (req, res) => {
     try {
+        const userId = req.params.id;
+        
         const user = verifyTokenAndGetUser(req);
         if (!user) {
             return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
-
+        
         if (!isAdminUser(user)) {
             return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لحذف المستخدمين' });
         }
-
-        const index = users.findIndex(u => u.id === req.params.id);
-        if (index === -1) {
+        
+        const userToDelete = users.find(u => u.id === userId);
+        if (!userToDelete) {
             return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
         }
-
-        if (users[index].username === 'admin') {
+        
+        if (userToDelete.username === 'admin') {
             return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
         }
-
-        const deletedUser = users[index];
+        
+        if (userToDelete.role === 'admin') {
+            const adminCount = users.filter(u => u.role === 'admin').length;
+            if (adminCount <= 1) {
+                return res.status(403).json({ success: false, error: 'لا يمكن حذف آخر مسؤول في النظام' });
+            }
+        }
+        
+        const index = users.findIndex(u => u.id === userId);
         users.splice(index, 1);
-
+        
+        console.log('✅ User deleted:', userToDelete.username);
+        
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: user.id,
             action: 'USER_DELETED',
-            details: `User ${deletedUser.username} deleted by ${user.username}`,
+            details: `User ${userToDelete.username} deleted by ${user.username}`,
             timestamp: new Date().toISOString()
         });
-
-        res.json({ success: true, message: 'تم حذف المستخدم' });
+        
+        res.json({
+            success: true,
+            message: 'تم حذف المستخدم بنجاح'
+        });
     } catch (error) {
         console.error('❌ Error deleting user:', error);
         res.status(500).json({ success: false, error: 'خطأ في حذف المستخدم' });
@@ -1266,24 +1326,35 @@ app.delete('/api/users/:id', csrfProtection, (req, res) => {
 // ✅ تغيير حالة مستخدم
 app.put('/api/users-status/:id', csrfProtection, (req, res) => {
     try {
+        const userId = req.params.id;
+        const { active } = req.body;
+        
         const user = verifyTokenAndGetUser(req);
         if (!user) {
             return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
-
+        
         if (!isAdminUser(user)) {
-            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية لتغيير حالة المستخدمين' });
         }
-
-        const targetUser = users.find(u => u.id === req.params.id);
+        
+        const targetUser = users.find(u => u.id === userId);
         if (!targetUser) {
             return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
         }
-
-        const { active } = req.body;
+        
+        if (targetUser.role === 'admin' && active === false) {
+            const adminCount = users.filter(u => u.role === 'admin' && u.active !== false).length;
+            if (adminCount <= 1) {
+                return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
+            }
+        }
+        
         targetUser.active = active;
         targetUser.updatedAt = new Date().toISOString();
-
+        
+        console.log(`✅ User ${targetUser.username} ${active ? 'activated' : 'deactivated'}`);
+        
         systemLogs.push({
             id: crypto.randomBytes(8).toString('hex'),
             userId: user.id,
@@ -1291,11 +1362,22 @@ app.put('/api/users-status/:id', csrfProtection, (req, res) => {
             details: `User ${targetUser.username} ${active ? 'activated' : 'deactivated'} by ${user.username}`,
             timestamp: new Date().toISOString()
         });
-
-        res.json({ success: true, message: `تم ${active ? 'تفعيل' : 'تعطيل'} المستخدم` });
+        
+        res.json({
+            success: true,
+            message: `تم ${active ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`,
+            user: {
+                id: targetUser.id,
+                username: targetUser.username,
+                active: targetUser.active
+            }
+        });
     } catch (error) {
         console.error('❌ Error updating user status:', error);
-        res.status(500).json({ success: false, error: 'خطأ في تحديث حالة المستخدم' });
+        res.status(500).json({ 
+            success: false, 
+            error: 'خطأ في تحديث حالة المستخدم' 
+        });
     }
 });
 
@@ -1408,10 +1490,10 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log('=========================================');
-    console.log('🚢 MARINE SYSTEM v8.0 - SUPER ADMIN');
+    console.log('🚢 MARINE SYSTEM v8.0 - ALL FIXES');
     console.log('=========================================');
     console.log(`📍 Server: http://localhost:${PORT}`);
-    console.log(`👤 Super Admin: ${ADMIN_USERNAME}`);
+    console.log(`👤 Admin: ${ADMIN_USERNAME}`);
     console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log('🔒 Security Level: ULTRA HIGH');
@@ -1420,10 +1502,10 @@ app.listen(PORT, () => {
     console.log(`📋 System Logs: ${systemLogs.length}`);
     console.log(`👥 Users: ${users.length}`);
     console.log('=========================================');
-    console.log('✅ Role: super_admin (full access)');
+    console.log('✅ Permissions: FIXED (admin only)');
     console.log('✅ Email: Ethereal (test mode)');
     console.log('✅ Forgot password: ENABLED');
-    console.log('✅ Users API: SUPER ADMIN ONLY');
+    console.log('✅ Users API: Admin only');
     console.log('📌 Use /api/users to verify');
     console.log('=========================================');
 });
