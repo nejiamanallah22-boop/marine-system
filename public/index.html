@@ -11,8 +11,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Cairo', sans-serif;
-            background: #0a1628;
-            color: #e2e8f0;
+            background: #0a0e1a;
+            color: #e8edf5;
             min-height: 100vh;
             direction: rtl;
             overflow-x: hidden;
@@ -21,6 +21,7 @@
             --gold: #e6b31e;
             --gold-light: #f5d76e;
             --gold-dark: #c99a0e;
+            --gold-glow: rgba(230,179,30,0.3);
             --success: #22c55e;
             --danger: #ef4444;
             --warning: #eab308;
@@ -28,8 +29,8 @@
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a1628; }
-        ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
 
         /* ===== LOGIN ===== */
         #loginOverlay {
@@ -39,16 +40,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #0a1628, #1a2a4a);
+            background: linear-gradient(135deg, #0a0e1a, #0f1a2e);
             overflow: hidden;
         }
         #loginOverlay::before {
             content: '';
             position: absolute;
             inset: -50%;
-            background: radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.06) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(230,179,30,0.04) 0%, transparent 60%);
-            animation: bgPulse 12s ease-in-out infinite;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(245,215,110,0.05) 0%, transparent 60%);
+            animation: bgPulse 15s ease-in-out infinite;
         }
         @keyframes bgPulse {
             0%, 100% { transform: scale(1) rotate(0); }
@@ -65,12 +67,40 @@
         .login-box {
             background: rgba(255,255,255,0.04);
             backdrop-filter: blur(40px);
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(230,179,30,0.08);
             border-radius: 24px;
             padding: 48px 40px 36px;
             text-align: center;
             animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1);
-            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 60px rgba(230,179,30,0.03);
+            position: relative;
+            overflow: hidden;
+        }
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(230,179,30,0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .login-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent);
+            background-size: 300% 100%;
+            animation: goldBar 4s ease-in-out infinite;
+        }
+        @keyframes goldBar {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(40px) scale(0.96); }
@@ -81,6 +111,7 @@
             display: inline-block;
             font-size: 56px;
             animation: logoFloat 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(230,179,30,0.15));
         }
         @keyframes logoFloat {
             0%, 100% { transform: translateY(0) scale(1); }
@@ -91,9 +122,17 @@
             font-size: 26px;
             font-weight: 900;
             margin-top: 6px;
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            background: linear-gradient(135deg, #e6b31e, #f5d76e, #e6b31e);
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: shimmerGold 3s ease-in-out infinite;
+            text-shadow: 0 0 40px rgba(230,179,30,0.1);
+        }
+        @keyframes shimmerGold {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         .login-subtitle {
             font-size: 14px;
@@ -119,14 +158,20 @@
         }
         .dev-badge { font-size: 12px; color: rgba(255,255,255,0.3); }
         .dev-badge i { color: var(--gold-light); }
-        .dev-name { font-size: 16px; font-weight: 700; color: var(--gold-light); }
+        .dev-name { 
+            font-size: 16px; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
         .dev-version {
             font-size: 11px;
             color: rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.04);
+            background: rgba(230,179,30,0.06);
             padding: 2px 12px;
             border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.04);
+            border: 1px solid rgba(230,179,30,0.06);
         }
 
         .login-form { margin-top: 4px; }
@@ -136,19 +181,19 @@
             display: flex;
             align-items: center;
             background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(230,179,30,0.06);
             border-radius: 12px;
             transition: all 0.3s;
         }
         .input-wrapper:focus-within {
             border-color: var(--gold);
-            background: rgba(255,255,255,0.06);
-            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+            background: rgba(230,179,30,0.04);
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.04), 0 0 30px rgba(230,179,30,0.03);
         }
         .input-wrapper .input-icon {
             position: absolute;
             right: 16px;
-            color: rgba(255,255,255,0.2);
+            color: rgba(230,179,30,0.3);
             font-size: 14px;
         }
         .input-wrapper input {
@@ -173,7 +218,7 @@
             border-radius: 8px;
             transition: all 0.3s;
         }
-        .toggle-password:hover { color: #fff; background: rgba(255,255,255,0.04); }
+        .toggle-password:hover { color: var(--gold-light); background: rgba(230,179,30,0.04); }
 
         .login-options {
             display: flex;
@@ -193,7 +238,7 @@
         .checkbox-label .checkmark {
             width: 20px;
             height: 20px;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(230,179,30,0.2);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -203,6 +248,7 @@
         .checkbox-label input:checked+.checkmark {
             background: var(--gold);
             border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(230,179,30,0.2);
         }
         .checkbox-label input:checked+.checkmark::after {
             content: '✓';
@@ -215,6 +261,7 @@
             font-size: 13px;
             text-decoration: none;
             transition: all 0.3s;
+            cursor: pointer;
         }
         .forgot-link:hover { color: var(--gold-light); }
 
@@ -231,6 +278,19 @@
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 30px rgba(230,179,30,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        .login-btn:hover:not(:disabled)::before {
+            transform: translateX(100%);
         }
         .login-btn:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -293,7 +353,7 @@
             color: rgba(255,255,255,0.2);
             font-size: 12px;
         }
-        .security-badge i { color: var(--success); }
+        .security-badge i { color: var(--gold); }
 
         .login-footer {
             display: flex;
@@ -306,10 +366,11 @@
             font-size: 11px;
         }
         .login-footer .footer-version {
-            background: rgba(255,255,255,0.03);
+            background: rgba(230,179,30,0.04);
             padding: 2px 12px;
             border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.03);
+            border: 1px solid rgba(230,179,30,0.04);
+            color: var(--gold-light);
         }
 
         /* ===== AUTHENTIFICATION EN COURS ===== */
@@ -318,7 +379,7 @@
             position: fixed;
             inset: 0;
             z-index: 99999;
-            background: rgba(10,22,40,0.92);
+            background: rgba(10,14,26,0.95);
             backdrop-filter: blur(20px);
             align-items: center;
             justify-content: center;
@@ -328,10 +389,11 @@
         #authLoadingOverlay .spinner {
             width: 64px;
             height: 64px;
-            border: 4px solid rgba(255,255,255,0.08);
+            border: 4px solid rgba(230,179,30,0.08);
             border-top-color: var(--gold);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+            box-shadow: 0 0 40px rgba(230,179,30,0.05);
         }
         #authLoadingOverlay .title {
             color: #f5d76e;
@@ -367,15 +429,195 @@
             40% { transform: scale(1); opacity: 1; }
         }
 
+        /* ===== FORGOT PASSWORD MODAL - GOLD EDITION ===== */
+        #forgotPasswordModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(15px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #forgotPasswordModal .modal-box {
+            background: linear-gradient(145deg, #111e3a, #0a1628);
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            border: 1px solid rgba(230,179,30,0.08);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 60px rgba(230,179,30,0.02);
+            animation: modalFade 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        #forgotPasswordModal .modal-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent);
+            background-size: 300% 100%;
+            animation: goldBar 4s ease-in-out infinite;
+        }
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        #forgotPasswordModal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #forgotPasswordModal .modal-header h3 {
+            color: #f5d76e;
+            margin: 0;
+            font-size: 20px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        #forgotPasswordModal .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 8px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        #forgotPasswordModal .modal-close:hover {
+            color: #fff;
+            background: rgba(230,179,30,0.04);
+        }
+        #forgotPasswordModal .modal-desc {
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        #forgotPasswordModal .form-group {
+            margin-bottom: 16px;
+        }
+        #forgotPasswordModal .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(230,179,30,0.06);
+            border-radius: 10px;
+            color: #e2e8f0;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        #forgotPasswordModal .form-group input:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: rgba(230,179,30,0.04);
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.04), 0 0 30px rgba(230,179,30,0.02);
+        }
+        #forgotPasswordModal .form-group input::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+        #forgotPasswordModal .modal-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        #forgotPasswordModal .modal-message.show {
+            display: block;
+        }
+        #forgotPasswordModal .modal-message.success {
+            background: rgba(34,197,94,0.08);
+            color: #4ade80;
+            border: 1px solid rgba(34,197,94,0.05);
+        }
+        #forgotPasswordModal .modal-message.error {
+            background: rgba(239,68,68,0.08);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.05);
+        }
+        #forgotPasswordModal .modal-message .reset-link-box {
+            background: rgba(230,179,30,0.04);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-size: 13px;
+            direction: ltr;
+            text-align: left;
+            border: 1px solid rgba(230,179,30,0.06);
+        }
+        #forgotPasswordModal .modal-message .reset-link-box a {
+            color: #f5d76e;
+            text-decoration: underline;
+        }
+        #forgotPasswordModal .btn-send {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        #forgotPasswordModal .btn-send::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        #forgotPasswordModal .btn-send:hover:not(:disabled)::before {
+            transform: translateX(100%);
+        }
+        #forgotPasswordModal .btn-send:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.2);
+        }
+        #forgotPasswordModal .btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        #forgotPasswordModal .modal-footer {
+            text-align: center;
+            margin-top: 12px;
+        }
+        #forgotPasswordModal .modal-footer a {
+            color: rgba(255,255,255,0.3);
+            text-decoration: none;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #forgotPasswordModal .modal-footer a:hover {
+            color: var(--gold-light);
+        }
+
         /* ===== MAIN APP ===== */
         #mainApp { display: none; min-height: 100vh; }
         .main-header {
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(10,22,40,0.92);
+            background: rgba(10,14,26,0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(230,179,30,0.04);
             height: 64px;
             display: flex;
             align-items: center;
@@ -395,7 +637,7 @@
             gap: 16px;
         }
         .menu-toggle {
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 4px;
             background: none;
@@ -405,7 +647,7 @@
             border-radius: 8px;
             transition: all 0.3s;
         }
-        .menu-toggle:hover { background: rgba(255,255,255,0.04); }
+        .menu-toggle:hover { background: rgba(230,179,30,0.04); }
         .menu-toggle span {
             display: block;
             width: 24px;
@@ -423,16 +665,22 @@
             align-items: center;
             gap: 10px;
         }
-        .brand .brand-icon { font-size: 24px; }
-        .brand h1 { font-size: 17px; font-weight: 700; color: #fff; }
+        .brand .brand-icon { font-size: 24px; filter: drop-shadow(0 0 20px rgba(230,179,30,0.1)); }
+        .brand h1 { 
+            font-size: 17px; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
         .brand .brand-tag {
             font-size: 11px;
             font-weight: 400;
             color: var(--gold-light);
-            background: rgba(230,179,30,0.1);
+            background: rgba(230,179,30,0.06);
             padding: 2px 14px;
             border-radius: 20px;
-            border: 1px solid rgba(230,179,30,0.1);
+            border: 1px solid rgba(230,179,30,0.04);
         }
 
         .header-right {
@@ -444,14 +692,15 @@
             display: flex;
             align-items: center;
             background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(230,179,30,0.04);
             border-radius: 20px;
             padding: 0 16px;
             transition: all 0.3s;
         }
         .search-wrapper:focus-within {
             border-color: var(--gold);
-            background: rgba(255,255,255,0.06);
+            background: rgba(230,179,30,0.02);
+            box-shadow: 0 0 30px rgba(230,179,30,0.02);
         }
         .search-wrapper input {
             background: transparent;
@@ -469,7 +718,7 @@
             font-size: 12px;
         }
         .search-wrapper .search-icon {
-            color: rgba(255,255,255,0.2);
+            color: rgba(230,179,30,0.2);
             font-size: 13px;
             margin-left: 10px;
         }
@@ -495,7 +744,7 @@
             border-radius: 50%;
             transition: all 0.3s;
         }
-        .notif-btn:hover { color: #fff; background: rgba(255,255,255,0.04); }
+        .notif-btn:hover { color: var(--gold-light); background: rgba(230,179,30,0.04); }
         .notif-badge {
             position: absolute;
             top: 4px;
@@ -524,7 +773,7 @@
             border-radius: 20px;
             transition: all 0.3s;
         }
-        .user-btn:hover { background: rgba(255,255,255,0.04); }
+        .user-btn:hover { background: rgba(230,179,30,0.04); }
         .user-avatar {
             width: 32px;
             height: 32px;
@@ -537,6 +786,7 @@
             font-size: 14px;
             color: #0a1628;
             flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(230,179,30,0.1);
         }
         .user-name { font-size: 13px; color: #e2e8f0; font-weight: 500; }
         .user-arrow {
@@ -544,7 +794,7 @@
             color: rgba(255,255,255,0.2);
             transition: all 0.3s;
         }
-        .user-btn:hover .user-arrow { color: #fff; }
+        .user-btn:hover .user-arrow { color: var(--gold-light); }
 
         /* ===== SIDEBAR ===== */
         .sidebar {
@@ -553,9 +803,9 @@
             right: 0;
             bottom: 0;
             width: 240px;
-            background: rgba(10,22,40,0.95);
+            background: rgba(10,14,26,0.98);
             backdrop-filter: blur(20px);
-            border-left: 1px solid rgba(255,255,255,0.04);
+            border-left: 1px solid rgba(230,179,30,0.04);
             padding: 16px 12px;
             overflow-y: auto;
             z-index: 50;
@@ -572,7 +822,7 @@
             align-items: center;
             justify-content: space-between;
             padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(230,179,30,0.04);
             margin-bottom: 16px;
         }
         .sidebar-brand {
@@ -581,7 +831,13 @@
             gap: 10px;
         }
         .sidebar-brand .brand-icon { font-size: 24px; color: var(--gold); }
-        .sidebar-brand .brand-title { font-size: 16px; font-weight: 700; color: #fff; }
+        .sidebar-brand .brand-title { 
+            font-size: 16px; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
         .sidebar-brand .brand-subtitle { font-size: 10px; color: rgba(255,255,255,0.2); }
         .sidebar-close {
             display: none;
@@ -594,16 +850,16 @@
             border-radius: 8px;
             transition: all 0.3s;
         }
-        .sidebar-close:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .sidebar-close:hover { background: rgba(230,179,30,0.04); color: var(--gold-light); }
 
         .sidebar-user {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 12px 14px;
-            background: rgba(255,255,255,0.04);
+            background: rgba(230,179,30,0.02);
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.04);
+            border: 1px solid rgba(230,179,30,0.02);
             margin-bottom: 16px;
         }
         .sidebar-user .user-avatar {
@@ -618,6 +874,7 @@
             font-weight: 700;
             color: #0a1628;
             flex-shrink: 0;
+            box-shadow: 0 0 30px rgba(230,179,30,0.05);
         }
         .sidebar-user .user-info {
             display: flex;
@@ -633,7 +890,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .sidebar-user .user-role { font-size: 11px; color: rgba(255,255,255,0.3); }
+        .sidebar-user .user-role { font-size: 11px; color: rgba(230,179,30,0.4); }
 
         .sidebar-nav {
             flex: 1;
@@ -650,7 +907,7 @@
         .nav-group-title {
             font-size: 10px;
             font-weight: 700;
-            color: rgba(255,255,255,0.15);
+            color: rgba(230,179,30,0.15);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             padding: 8px 12px 4px;
@@ -678,12 +935,15 @@
             text-align: center;
             font-size: 15px;
             flex-shrink: 0;
+            color: rgba(230,179,30,0.3);
         }
-        .nav-btn:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .nav-btn:hover { background: rgba(230,179,30,0.02); color: #fff; }
+        .nav-btn:hover i { color: var(--gold-light); }
         .nav-btn.active {
-            background: rgba(230,179,30,0.06);
+            background: rgba(230,179,30,0.04);
             color: var(--gold-light);
         }
+        .nav-btn.active i { color: var(--gold-light); }
         .nav-btn.active::before {
             content: '';
             position: absolute;
@@ -699,27 +959,27 @@
             font-size: 9px;
             padding: 2px 8px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.04);
+            background: rgba(230,179,30,0.04);
             color: rgba(255,255,255,0.2);
             min-width: 18px;
             text-align: center;
             display: none;
         }
         .nav-btn .nav-badge.warning {
-            background: rgba(239,68,68,0.12);
+            background: rgba(239,68,68,0.08);
             color: var(--danger);
         }
         .nav-btn .nav-badge.success {
-            background: rgba(34,197,94,0.12);
+            background: rgba(34,197,94,0.08);
             color: var(--success);
         }
         .nav-btn .nav-badge.info {
-            background: rgba(59,130,246,0.12);
+            background: rgba(59,130,246,0.08);
             color: var(--info);
         }
 
         .sidebar-footer {
-            border-top: 1px solid rgba(255,255,255,0.04);
+            border-top: 1px solid rgba(230,179,30,0.04);
             padding-top: 14px;
             margin-top: 8px;
             display: flex;
@@ -763,7 +1023,7 @@
             padding: 8px 14px;
             border: none;
             border-radius: 8px;
-            background: rgba(239,68,68,0.08);
+            background: rgba(239,68,68,0.04);
             color: var(--danger);
             font-size: 13px;
             font-weight: 600;
@@ -772,7 +1032,7 @@
             transition: all 0.3s;
             width: 100%;
         }
-        .footer-logout:hover { background: rgba(239,68,68,0.16); }
+        .footer-logout:hover { background: rgba(239,68,68,0.08); }
         .footer-logout i { font-size: 14px; }
 
         .main-content {
@@ -792,7 +1052,7 @@
         .loader-spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid rgba(255,255,255,0.04);
+            border: 3px solid rgba(230,179,30,0.04);
             border-top-color: var(--gold);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -896,7 +1156,7 @@
         }
         .modal-box {
             background: #111e3a;
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(230,179,30,0.06);
             border-radius: 16px;
             max-width: 520px;
             width: 100%;
@@ -914,7 +1174,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(230,179,30,0.04);
         }
         .modal-header h3 { font-size: 18px; font-weight: 700; color: #fff; }
         .modal-close {
@@ -927,7 +1187,7 @@
             border-radius: 8px;
             transition: all 0.3s;
         }
-        .modal-close:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .modal-close:hover { background: rgba(230,179,30,0.04); color: var(--gold-light); }
         .modal-body {
             padding: 20px;
             max-height: 400px;
@@ -939,7 +1199,7 @@
             justify-content: flex-end;
             gap: 8px;
             padding: 16px 20px;
-            border-top: 1px solid rgba(255,255,255,0.04);
+            border-top: 1px solid rgba(230,179,30,0.04);
         }
 
         .btn {
@@ -974,19 +1234,44 @@
         .btn-gold:hover { box-shadow: 0 4px 30px rgba(230,179,30,0.25); }
         .btn-outline {
             background: transparent;
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(230,179,30,0.06);
             color: #e2e8f0;
         }
         .btn-outline:hover {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.12);
+            background: rgba(230,179,30,0.02);
+            border-color: rgba(230,179,30,0.08);
         }
         .btn-secondary {
             background: rgba(255,255,255,0.04);
             color: #94a3b8;
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(230,179,30,0.04);
         }
-        .btn-secondary:hover { background: rgba(255,255,255,0.06); }
+        .btn-secondary:hover { background: rgba(230,179,30,0.02); }
+
+        /* ===== REFRESH BUTTON ===== */
+        .btn-refresh {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(230,179,30,0.04);
+            border-radius: 8px;
+            color: rgba(255,255,255,0.4);
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-refresh:hover {
+            color: var(--gold-light);
+            background: rgba(230,179,30,0.04);
+        }
+        .btn-refresh:active {
+            transform: scale(0.95);
+        }
+        .btn-refresh.spinning i {
+            animation: spin 0.6s linear infinite;
+        }
 
         @media (max-width: 992px) {
             .search-wrapper input { width: 120px; }
@@ -1077,7 +1362,7 @@
                             <span class="checkmark"></span>
                             تذكرني
                         </label>
-                        <a href="#" class="forgot-link">نسيت كلمة المرور؟</a>
+                        <a href="#" class="forgot-link" id="forgotPasswordLink">نسيت كلمة المرور؟</a>
                     </div>
                     <button type="submit" class="login-btn" id="loginButton">
                         <span class="btn-content">
@@ -1111,6 +1396,25 @@
         </div>
     </div>
 
+    <!-- ===== FORGOT PASSWORD MODAL ===== -->
+    <div id="forgotPasswordModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>🔐 إعادة تعيين كلمة المرور</h3>
+                <button class="modal-close" id="closeForgotModal">✕</button>
+            </div>
+            <p class="modal-desc">أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.</p>
+            <div class="form-group">
+                <input type="email" id="forgotEmail" placeholder="البريد الإلكتروني">
+            </div>
+            <div class="modal-message" id="forgotMessage"></div>
+            <button class="btn-send" id="sendResetLinkBtn">📧 إرسال رابط إعادة التعيين</button>
+            <div class="modal-footer">
+                <a href="#" id="backToLoginLink">← العودة إلى تسجيل الدخول</a>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== MAIN APP ===== -->
     <div id="mainApp" style="display:none;">
         <header class="main-header">
@@ -1131,6 +1435,9 @@
                         <i class="fas fa-search search-icon"></i>
                         <kbd class="search-shortcut">⌘K</kbd>
                     </div>
+                    <button class="btn-refresh" id="refreshBtn" title="تحديث الصفحة">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                     <div class="notification-wrapper">
                         <button class="notif-btn" id="notifBtn">
                             <i class="fas fa-bell"></i>
@@ -1266,7 +1573,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - الكامل مع حل مشكلة updateDateTime نهائياً
+    JAVASCRIPT - الكامل مع حل مشكلة التوكن و updateDateTime نهائياً
     ============================================================ -->
     <script>
         // ============================================================
@@ -1446,7 +1753,210 @@
         }
 
         // ============================================================
-        // 🔐 LOGIN WITH AUTHENTIFICATION EN COURS
+        // ⏰ UPDATE DATE TIME - SAFE VERSION (FIXED)
+        // ============================================================
+
+        // ✅ نسخة آمنة تماماً - لا تسبب أي أخطاء
+        function updateDateTime() {
+            try {
+                const now = new Date();
+                const dateEl = document.getElementById('currentDate');
+                const timeEl = document.getElementById('currentTime');
+
+                if (dateEl) {
+                    dateEl.textContent = now.toLocaleDateString('ar-TN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+
+                if (timeEl) {
+                    timeEl.textContent = now.toLocaleTimeString('ar-TN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
+            } catch (e) {
+                // ✅ تجاهل جميع الأخطاء - لا تؤثر على التطبيق
+                console.debug('⏰ updateDateTime (safe):', e.message);
+            }
+        }
+
+        // ============================================================
+        // 🔐 FORGOT PASSWORD - MODAL FUNCTIONS
+        // ============================================================
+
+        var forgotModal = document.getElementById('forgotPasswordModal');
+        var forgotEmail = document.getElementById('forgotEmail');
+        var forgotMessage = document.getElementById('forgotMessage');
+        var sendResetBtn = document.getElementById('sendResetLinkBtn');
+        var closeForgotBtn = document.getElementById('closeForgotModal');
+        var backToLoginLink = document.getElementById('backToLoginLink');
+
+        function openForgotModal(e) {
+            if (e) e.preventDefault();
+            if (forgotModal) {
+                forgotModal.style.display = 'flex';
+                if (forgotEmail) {
+                    forgotEmail.value = '';
+                    forgotEmail.focus();
+                }
+                if (forgotMessage) {
+                    forgotMessage.className = 'modal-message';
+                    forgotMessage.textContent = '';
+                    forgotMessage.style.display = 'none';
+                }
+            }
+        }
+
+        function closeForgotModal() {
+            if (forgotModal) {
+                forgotModal.style.display = 'none';
+            }
+        }
+
+        // ✅ ربط أحداث "نسيت كلمة المرور"
+        document.addEventListener('DOMContentLoaded', function() {
+            var forgotLink = document.getElementById('forgotPasswordLink');
+            if (forgotLink) {
+                forgotLink.addEventListener('click', openForgotModal);
+            }
+
+            if (closeForgotBtn) {
+                closeForgotBtn.addEventListener('click', closeForgotModal);
+            }
+
+            if (backToLoginLink) {
+                backToLoginLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeForgotModal();
+                });
+            }
+
+            if (forgotModal) {
+                forgotModal.addEventListener('click', function(e) {
+                    if (e.target === forgotModal) {
+                        closeForgotModal();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && forgotModal && forgotModal.style.display === 'flex') {
+                    closeForgotModal();
+                }
+            });
+
+            if (forgotEmail) {
+                forgotEmail.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && sendResetBtn) {
+                        sendResetBtn.click();
+                    }
+                });
+            }
+
+            if (sendResetBtn) {
+                sendResetBtn.addEventListener('click', async function() {
+                    var email = forgotEmail ? forgotEmail.value.trim() : '';
+
+                    if (forgotMessage) {
+                        forgotMessage.className = 'modal-message show';
+                        forgotMessage.style.display = 'block';
+                        forgotMessage.textContent = '⏳ جاري المعالجة...';
+                        forgotMessage.style.color = '#f5d76e';
+                        forgotMessage.style.background = 'rgba(230,179,30,0.08)';
+                        forgotMessage.style.border = '1px solid rgba(230,179,30,0.1)';
+                    }
+
+                    if (!email) {
+                        if (forgotMessage) {
+                            forgotMessage.className = 'modal-message show error';
+                            forgotMessage.style.display = 'block';
+                            forgotMessage.textContent = '⚠️ الرجاء إدخال البريد الإلكتروني';
+                        }
+                        return;
+                    }
+
+                    if (!email.includes('@') || !email.includes('.')) {
+                        if (forgotMessage) {
+                            forgotMessage.className = 'modal-message show error';
+                            forgotMessage.style.display = 'block';
+                            forgotMessage.textContent = '⚠️ الرجاء إدخال بريد إلكتروني صحيح';
+                        }
+                        return;
+                    }
+
+                    sendResetBtn.disabled = true;
+                    sendResetBtn.innerHTML = '⏳ جاري الإرسال...';
+
+                    try {
+                        var csrfRes = await fetch('/api/csrf-token', {
+                            credentials: 'include',
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        var csrfData = await csrfRes.json();
+                        var csrfToken = csrfData.token || '';
+
+                        var response = await fetch('/api/auth/forgot-password', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({ email: email })
+                        });
+
+                        var data = await response.json();
+
+                        if (forgotMessage) {
+                            forgotMessage.className = 'modal-message show';
+                            forgotMessage.style.display = 'block';
+
+                            if (response.status === 404) {
+                                forgotMessage.className += ' error';
+                                forgotMessage.textContent = '❌ ' + (data.error || 'هذا البريد الإلكتروني غير مسجل في النظام');
+                            } else if (response.ok && data.success) {
+                                forgotMessage.className += ' success';
+                                
+                                var resetLink = data.resetLink || '';
+                                if (resetLink) {
+                                    forgotMessage.innerHTML = 
+                                        '✅ تم إنشاء رابط إعادة التعيين:<br><br>' +
+                                        '<div class="reset-link-box">' +
+                                        '<a href="' + resetLink + '" target="_blank">' + resetLink + '</a>' +
+                                        '</div><br>' +
+                                        '<span style="font-size:13px;color:rgba(255,255,255,0.4);">📌 انسخ الرابط وألصقه في المتصفح، أو اضغط عليه مباشرة</span>';
+                                } else {
+                                    forgotMessage.textContent = '✅ ' + (data.message || 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني');
+                                }
+                            } else {
+                                forgotMessage.className += ' error';
+                                forgotMessage.textContent = '❌ ' + (data.error || data.message || 'حدث خطأ، يرجى المحاولة مرة أخرى');
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error('❌ Forgot password error:', error);
+                        if (forgotMessage) {
+                            forgotMessage.className = 'modal-message show error';
+                            forgotMessage.style.display = 'block';
+                            forgotMessage.textContent = '❌ خطأ في الاتصال بالخادم';
+                        }
+                    } finally {
+                        sendResetBtn.disabled = false;
+                        sendResetBtn.innerHTML = '📧 إرسال رابط إعادة التعيين';
+                    }
+                });
+            }
+        });
+
+        // ============================================================
+        // 🔐 LOGIN
         // ============================================================
 
         function doLogin() {
@@ -1560,19 +2070,6 @@
                 console.error('❌ Login error:', error);
                 errorEl.textContent = '❌ ' + error.message;
                 errorEl.classList.add('show');
-
-                fetch('/api/csrf-refresh', {
-                    method: 'POST',
-                    credentials: 'include'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.token) {
-                        localStorage.setItem(CONFIG.KEYS.CSRF, data.token);
-                        localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + data.expiresIn);
-                    }
-                })
-                .catch(() => {});
             });
         }
 
@@ -1584,9 +2081,9 @@
             try {
                 console.log('🛡️ التحقق من التوكن...');
 
-                const authOverlay = document.getElementById('authLoadingOverlay');
-                if (authOverlay) {
-                    authOverlay.style.display = 'flex';
+                if (!token) {
+                    console.warn('⚠️ لا يوجد توكن');
+                    return false;
                 }
 
                 const csrfToken = csrfManager.getToken();
@@ -1600,14 +2097,17 @@
                     credentials: 'include'
                 });
 
-                if (authOverlay) {
-                    authOverlay.style.display = 'none';
-                }
-
                 const newCsrfToken = response.headers.get('X-CSRF-Token');
                 if (newCsrfToken) {
                     localStorage.setItem(CONFIG.KEYS.CSRF, newCsrfToken);
                     localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
+                }
+
+                if (response.status === 401) {
+                    console.warn('⚠️ التوكن غير صالح (401)');
+                    localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                    csrfManager.clearToken();
+                    return false;
                 }
 
                 if (response.ok) {
@@ -1625,10 +2125,6 @@
                 csrfManager.clearToken();
                 return false;
             } catch (error) {
-                const authOverlay = document.getElementById('authLoadingOverlay');
-                if (authOverlay) {
-                    authOverlay.style.display = 'none';
-                }
                 console.warn('⚠️ خطأ في التحقق:', error.message);
                 localStorage.removeItem(CONFIG.KEYS.TOKEN);
                 csrfManager.clearToken();
@@ -1711,108 +2207,6 @@
             document.getElementById('sidebarUserName').textContent = n;
             document.getElementById('sidebarUserRole').textContent = getRoleName(currentUser.role);
             document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);
-        }
-
-        // ============================================================
-        // ⏰ UPDATE DATE TIME - SAFE VERSION (FIXED)
-        // ============================================================
-
-        // ✅ نسخة آمنة تماماً - لا تسبب أي أخطاء
-        function updateDateTime() {
-            try {
-                const now = new Date();
-                const dateEl = document.getElementById('currentDate');
-                const timeEl = document.getElementById('currentTime');
-
-                if (dateEl) {
-                    dateEl.textContent = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                }
-
-                if (timeEl) {
-                    timeEl.textContent = now.toLocaleTimeString('ar-TN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                }
-            } catch (e) {
-                // ✅ تجاهل جميع الأخطاء - لا تؤثر على التطبيق
-                console.debug('⏰ updateDateTime:', e.message);
-            }
-        }
-
-        // ✅ بدء التحديث فقط إذا كانت العناصر موجودة
-        (function initDateTime() {
-            const hasDate = !!document.getElementById('currentDate');
-            const hasTime = !!document.getElementById('currentTime');
-            
-            if (hasDate || hasTime) {
-                updateDateTime();
-                window._dateTimeInterval = setInterval(updateDateTime, 1000);
-                console.log('⏰ Date/Time updater started');
-            } else {
-                console.log('⏰ No date/time elements found, skipping');
-            }
-        })();
-
-        // ✅ دالة لإيقاف التحديث
-        function stopDateTimeUpdate() {
-            if (window._dateTimeInterval) {
-                clearInterval(window._dateTimeInterval);
-                window._dateTimeInterval = null;
-                console.log('⏰ Date/Time updater stopped');
-            }
-        }
-
-        // ============================================================
-        // 🔄 REFRESH BUTTON - تحديث الصفحة الحالية
-        // ============================================================
-
-        // ✅ زر التحديث العام
-        function refreshCurrentPage() {
-            const currentPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
-            console.log('🔄 Refreshing page:', currentPage);
-            
-            const loader = document.getElementById('pageLoader');
-            if (loader) {
-                loader.style.display = 'flex';
-            }
-            
-            loadPage(currentPage);
-            loadAllData();
-            
-            showToast('🔄 تم تحديث الصفحة', 'info');
-        }
-
-        // ✅ زر التحديث الخاص بكل صفحة
-        function refreshPageWithData(pageName) {
-            console.log('🔄 Refreshing page with data:', pageName);
-            
-            loadPage(pageName);
-            loadAllData();
-            
-            if (pageName === 'dashboard' && typeof window.loadDashboardData === 'function') {
-                window.loadDashboardData();
-            }
-            if (pageName === 'fleet' && typeof window.loadFleetData === 'function') {
-                window.loadFleetData();
-            }
-            if (pageName === 'maintenance' && typeof window.loadMaintenanceData === 'function') {
-                window.loadMaintenanceData();
-            }
-            if (pageName === 'users' && typeof window.loadUsersData === 'function') {
-                window.loadUsersData();
-            }
-            if (pageName === 'logs' && typeof window.loadLogsData === 'function') {
-                window.loadLogsData();
-            }
-            
-            showToast('🔄 تم تحديث البيانات', 'success');
         }
 
         // ============================================================
@@ -1916,6 +2310,31 @@
         }
 
         // ============================================================
+        // 🔄 REFRESH CURRENT PAGE
+        // ============================================================
+
+        function refreshCurrentPage() {
+            const currentPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
+            console.log('🔄 جاري تحديث الصفحة:', currentPage);
+
+            const btn = document.getElementById('refreshBtn');
+            if (btn) {
+                btn.classList.add('spinning');
+            }
+
+            loadPage(currentPage);
+            loadAllData();
+
+            setTimeout(() => {
+                if (btn) {
+                    btn.classList.remove('spinning');
+                }
+            }, 1000);
+
+            showToast('🔄 تم تحديث الصفحة', 'info');
+        }
+
+        // ============================================================
         // 🚪 LOGOUT
         // ============================================================
 
@@ -1963,89 +2382,16 @@
         }
 
         // ============================================================
-        // ✅ التحقق من حالة الخادم
-        // ============================================================
-
-        function checkServerStatus() {
-            fetch('/api/session-status', {
-                credentials: 'include'
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('🖥️ Server status:', data);
-                if (data.success && data.hasCsrf) {
-                    const csrfInput = document.querySelector('input[name="csrf_token"]');
-                    if (csrfInput) {
-                        csrfInput.value = localStorage.getItem(CONFIG.KEYS.CSRF) || '';
-                    }
-                }
-            })
-            .catch(error => {
-                console.warn('⚠️ Server status check failed:', error);
-            });
-        }
-
-        // ============================================================
         // 🚀 INIT
         // ============================================================
 
         const csrfManager = new CSRFTokenManager();
         window.csrfManager = csrfManager;
 
-        const originalFetch = window.fetch;
-        window.fetch = function(url, options = {}) {
-            const token = csrfManager.getToken();
-
-            if (options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
-                options.headers = options.headers || {};
-                if (!options.headers['X-CSRF-Token']) {
-                    options.headers['X-CSRF-Token'] = token;
-                }
-            }
-
-            if (options.body && options.body instanceof FormData) {
-                if (!options.body.has('csrf_token')) {
-                    options.body.append('csrf_token', token);
-                }
-            }
-
-            return originalFetch.call(this, url, options).then(response => {
-                const newToken = response.headers.get('X-CSRF-Token');
-                if (newToken) {
-                    csrfManager.token = newToken;
-                    localStorage.setItem(CONFIG.KEYS.CSRF, newToken);
-                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
-                }
-                return response;
-            });
-        };
-
-        // ✅ ربط زر التحديث
-        document.addEventListener('DOMContentLoaded', function() {
-            // ✅ زر التحديث في الـ Header
-            const refreshBtn = document.querySelector('.btn-action.primary .fa-sync-alt')?.closest('.btn-action');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    refreshCurrentPage();
-                });
-            }
-            
-            // ✅ زر التحديث في كل صفحة (إذا وجد)
-            const refreshButtons = document.querySelectorAll('[id*="refresh"], [class*="refresh"]');
-            refreshButtons.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const pageName = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
-                    refreshPageWithData(pageName);
-                });
-            });
-        });
-
-        // ✅ DOM Ready
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 DOM جاهز');
 
+            // ===== LOGIN FORM =====
             document.getElementById('loginForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const button = document.getElementById('loginButton');
@@ -2059,6 +2405,7 @@
                 ic.className = i.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
             };
 
+            // ===== SIDEBAR =====
             document.getElementById('menuToggle').onclick = toggleSidebar;
             document.getElementById('sidebarClose').onclick = closeSidebar;
 
@@ -2070,14 +2417,22 @@
                 });
             });
 
+            // ===== NOTIFICATIONS =====
             document.getElementById('notifBtn').onclick = function() {
                 showToast('📬 تم فتح الإشعارات', 'info');
             };
 
+            // ===== USER BUTTON =====
             document.getElementById('userBtn').onclick = function() {
                 if (confirm('هل تريد تسجيل الخروج؟')) doLogout();
             };
 
+            // ===== REFRESH BUTTON =====
+            document.getElementById('refreshBtn').onclick = function() {
+                refreshCurrentPage();
+            };
+
+            // ===== BACK TO TOP =====
             document.getElementById('backToTop').onclick = function() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
@@ -2085,6 +2440,7 @@
                 document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';
             });
 
+            // ===== CSRF INJECTION =====
             const observer = new MutationObserver(() => {
                 csrfManager.injectTokenToForms();
             });
@@ -2093,22 +2449,27 @@
                 subtree: true
             });
 
-            // ✅ تحديث الوقت فقط إذا كانت العناصر موجودة
-            if (document.getElementById('currentDate') || document.getElementById('currentTime')) {
+            // ===== UPDATE DATE/TIME =====
+            setTimeout(() => {
                 updateDateTime();
-                setInterval(updateDateTime, 1000);
-            }
+            }, 100);
+            setInterval(updateDateTime, 60000);
 
-            setTimeout(checkServerStatus, 1000);
+            // ===== CHECK SERVER STATUS =====
+            setTimeout(function() {
+                fetch('/api/session-status', {
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('🖥️ Server status:', data);
+                })
+                .catch(error => {
+                    console.warn('⚠️ Server status check failed:', error);
+                });
+            }, 1000);
 
-            const csrfInput = document.querySelector('input[name="csrf_token"]');
-            if (csrfInput) {
-                const token = csrfManager.getToken();
-                if (token) {
-                    csrfInput.value = token;
-                }
-            }
-
+            // ===== VERIFY TOKEN =====
             const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
             if (token) {
                 const isValid = await verifyToken(token);
@@ -2143,10 +2504,11 @@
         window.loadAllData = loadAllData;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
-        window.stopDateTimeUpdate = stopDateTimeUpdate;
         window.refreshCurrentPage = refreshCurrentPage;
-        window.refreshPageWithData = refreshPageWithData;
         window.csrfManager = csrfManager;
+        window.CONFIG = CONFIG;
+        window.openForgotModal = openForgotModal;
+        window.closeForgotModal = closeForgotModal;
 
         console.log('✅ Marine System v8.0 loaded successfully');
     </script>
