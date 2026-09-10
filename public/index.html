@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية v9.1</title>
+    <title>⚓ منظومة الوسائل البحرية v9.5</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -428,7 +428,7 @@
             40% { transform: scale(1); opacity: 1; }
         }
 
-        /* ===== FORGOT PASSWORD MODAL - GOLD EDITION ===== */
+        /* ===== FORGOT PASSWORD MODAL ===== */
         #forgotPasswordModal {
             display: none;
             position: fixed;
@@ -519,7 +519,7 @@
             outline: none;
             border-color: var(--gold);
             background: rgba(230,179,30,0.04);
-            box-shadow: 0 0 0 4px rgba(230,179,30,0.04), 0 0 30px rgba(230,179,30,0.02);
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.04);
         }
         #forgotPasswordModal .form-group input::placeholder {
             color: rgba(255,255,255,0.15);
@@ -573,17 +573,6 @@
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
-        }
-        #forgotPasswordModal .btn-send::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.6s;
-        }
-        #forgotPasswordModal .btn-send:hover:not(:disabled)::before {
-            transform: translateX(100%);
         }
         #forgotPasswordModal .btn-send:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -873,7 +862,6 @@
             font-weight: 700;
             color: #0a1628;
             flex-shrink: 0;
-            box-shadow: 0 0 30px rgba(230,179,30,0.05);
         }
         .sidebar-user .user-info {
             display: flex;
@@ -1336,7 +1324,7 @@
                 <div class="developer-info">
                     <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
                     <span class="dev-name">أمان الله ناجي</span>
-                    <span class="dev-version">v9.1</span>
+                    <span class="dev-version">v9.5</span>
                 </div>
                 <form id="loginForm" class="login-form" autocomplete="off" novalidate>
                     <input type="hidden" name="csrf_token" id="csrfTokenInput">
@@ -1377,7 +1365,7 @@
                 </form>
                 <div class="login-footer">
                     <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                    <span class="footer-version">الإصدار الاحترافي v9.1</span>
+                    <span class="footer-version">الإصدار الاحترافي v9.5</span>
                 </div>
             </div>
         </div>
@@ -1387,7 +1375,7 @@
     <div id="authLoadingOverlay">
         <div class="spinner"></div>
         <p class="title">⏳ جاري التحقق من المصادقة</p>
-        <p class="subtitle">  يرجى الانتظار وتاكيد الدخول من طرف المطور البرمجي الوكيل أول أمان الله نــــــــــــــــاجي...</p>
+        <p class="subtitle">يرجى الانتظار وتأكيد الدخول من طرف المطور البرمجي الوكيل أول أمان الله ناجي...</p>
         <div class="dots">
             <span></span>
             <span></span>
@@ -1530,7 +1518,7 @@
             </div>
             <div class="sidebar-footer">
                 <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>
-                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v9.1 · آمن مع CSRF</span></div>
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v9.5 · آمن مع CSRF</span></div>
                 <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
             </div>
         </nav>
@@ -1572,18 +1560,18 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - v9.1 (FULL CLEANUP + MEMORY LEAK FIXED)
+    JAVASCRIPT - v9.5 (FULL CLEANUP + SAFE UPDATES)
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v9.1
-        // Full cleanup + memory leak fix + _pageCleanup integration
+        // 🚢 MARINE SYSTEM - v9.5
+        // Full cleanup + memory leak fix + safe DOM updates
         // ============================================================
 
-        console.log('🚢 Marine System v9.1 - Loading...');
+        console.log('🚢 Marine System v9.5 - Loading...');
 
         // ============================================================
-        // ✅ v9.1: GLOBAL CLEANUP STATE
+        // ✅ GLOBAL CLEANUP STATE
         // ============================================================
 
         window._pageCleanup = window._pageCleanup || [];
@@ -1592,13 +1580,11 @@
 
         function _globalCleanup() {
             try {
-                // إيقاف مؤقت التاريخ
                 if (window._dateTimeInterval) {
                     clearInterval(window._dateTimeInterval);
                     window._dateTimeInterval = null;
                 }
 
-                // إلغاء كل الـ intervals
                 if (Array.isArray(window._pageIntervals)) {
                     window._pageIntervals.forEach(id => {
                         try { clearInterval(id); } catch (e) {}
@@ -1606,7 +1592,6 @@
                     window._pageIntervals = [];
                 }
 
-                // إلغاء كل الـ timeouts
                 if (Array.isArray(window._pageTimeouts)) {
                     window._pageTimeouts.forEach(id => {
                         try { clearTimeout(id); } catch (e) {}
@@ -1614,7 +1599,6 @@
                     window._pageTimeouts = [];
                 }
 
-                // تنفيذ cleanup الصفحة الحالية
                 if (Array.isArray(window._pageCleanup)) {
                     window._pageCleanup.forEach(fn => {
                         try {
@@ -1632,7 +1616,7 @@
         window.addEventListener('pagehide', _globalCleanup);
 
         // ============================================================
-        // ⏰ UPDATE DATE TIME - SAFE VERSION
+        // ⏰ UPDATE DATE TIME - SAFE
         // ============================================================
 
         function updateDateTime() {
@@ -1662,10 +1646,8 @@
             }
         }
 
-        // ✅ v9.1: دالة ذكية مع إيقاف المؤقت القديم أولاً
         function syncDateTimeInterval() {
             try {
-                // ✅ أوقف أي مؤقت قديم أولاً
                 if (window._dateTimeInterval) {
                     clearInterval(window._dateTimeInterval);
                     window._dateTimeInterval = null;
@@ -1678,13 +1660,12 @@
                     updateDateTime();
                     window._dateTimeInterval = setInterval(updateDateTime, 60000);
 
-                    // ✅ سجّل في _pageIntervals
                     window._pageIntervals = window._pageIntervals || [];
                     window._pageIntervals.push(window._dateTimeInterval);
 
                     console.log('⏰ Date/Time updater started');
                 } else {
-                    console.log('⏰ No date/time elements found, skipping');
+                    console.debug('⏰ No date/time elements found, skipping');
                 }
             } catch (e) {
                 console.debug('⏰ syncDateTimeInterval:', e.message);
@@ -1837,7 +1818,9 @@
         // 🔧 HELPERS
         // ============================================================
 
-        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
+        function getToken() {
+            return localStorage.getItem(CONFIG.KEYS.TOKEN);
+        }
 
         function getRoleName(r) {
             const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
@@ -1851,7 +1834,7 @@
         }
 
         // ============================================================
-        // 🍞 TOAST - v9.1 SAFE
+        // 🍞 TOAST
         // ============================================================
 
         function showToast(msg, type = 'info') {
@@ -1863,7 +1846,6 @@
                 const t = document.createElement('div');
                 t.className = 'toast toast-' + type;
 
-                // ✅ استخدام textContent للرسالة
                 const icon = document.createElement('span');
                 icon.textContent = I[type] || 'ℹ️';
 
@@ -1874,7 +1856,6 @@
                 t.appendChild(text);
                 c.appendChild(t);
 
-                // ✅ تتبع الـ timeouts
                 const tid1 = setTimeout(() => {
                     t.style.opacity = '0';
                     t.style.transform = 'translateX(30px)';
@@ -1884,6 +1865,7 @@
                     window._pageTimeouts = window._pageTimeouts || [];
                     window._pageTimeouts.push(tid2);
                 }, 3000);
+
                 window._pageTimeouts = window._pageTimeouts || [];
                 window._pageTimeouts.push(tid1);
             } catch (e) {
@@ -1892,7 +1874,25 @@
         }
 
         // ============================================================
-        // 🔐 FORGOT PASSWORD - MODAL FUNCTIONS
+        // 🔔 UPDATE BADGE - v9.5 SAFE (FIXED)
+        // ============================================================
+
+        function updateBadge(id, count) {
+            try {
+                const el = document.getElementById(id);
+                if (!el) {
+                    console.debug('🔔 Badge not found:', id);
+                    return;
+                }
+                el.textContent = String(count || 0);
+                el.style.display = (count > 0) ? 'inline' : 'none';
+            } catch (e) {
+                console.debug('🔔 updateBadge error:', e.message);
+            }
+        }
+
+        // ============================================================
+        // 🔐 FORGOT PASSWORD MODAL
         // ============================================================
 
         var forgotModal = document.getElementById('forgotPasswordModal');
@@ -2139,7 +2139,7 @@
         }
 
         // ============================================================
-        // 📊 LOAD DATA
+        // 📊 LOAD DATA - v9.5 SAFE
         // ============================================================
 
         async function loadAllData() {
@@ -2170,6 +2170,7 @@
                     window.allVessels = allVessels;
                     updateBadge('fleetBadge', allVessels.length);
                 }
+
                 if (usersRes.ok) {
                     const data = await usersRes.json();
                     allUsers = Array.isArray(data) ? data : [];
@@ -2186,18 +2187,12 @@
                         updateBadge('logsBadge', allLogs.length);
                         updateBadge('maintenanceBadge', allLogs.filter(l => l.status === 'قيد التنفيذ').length);
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.debug('⚠️ Logs fetch skipped:', e.message);
+                }
 
             } catch (error) {
                 console.error('❌ خطأ أثناء تحميل البيانات:', error);
-            }
-        }
-
-        function updateBadge(id, count) {
-            const el = document.getElementById(id);
-            if (el) {
-                el.textContent = count;
-                el.style.display = count > 0 ? 'inline' : 'none';
             }
         }
 
@@ -2207,12 +2202,15 @@
 
         function updateUserDisplay() {
             if (!currentUser) return;
+
             const n = currentUser.name || currentUser.username;
+
             const el1 = document.getElementById('userDisplayName');
             const el2 = document.getElementById('userInitial');
             const el3 = document.getElementById('sidebarUserName');
             const el4 = document.getElementById('sidebarUserRole');
             const el5 = document.getElementById('sidebarUserAvatar');
+
             if (el1) el1.textContent = n;
             if (el2) el2.textContent = n.charAt(0);
             if (el3) el3.textContent = n;
@@ -2221,7 +2219,7 @@
         }
 
         // ============================================================
-        // 📄 LOAD PAGE - v9.1 (with cleanup)
+        // 📄 LOAD PAGE - v9.5
         // ============================================================
 
         function loadPage(page) {
@@ -2229,7 +2227,7 @@
                 currentPage = page;
                 localStorage.setItem(CONFIG.KEYS.PAGE, page);
 
-                // ✅ v9.1: تنفيذ دوال التنظيف من الصفحة السابقة
+                // ✅ v9.5: تنفيذ دوال التنظيف من الصفحة السابقة
                 if (Array.isArray(window._pageCleanup) && window._pageCleanup.length > 0) {
                     console.log('🧹 Running cleanup for previous page...');
                     window._pageCleanup.forEach(fn => {
@@ -2242,7 +2240,7 @@
                     window._pageCleanup = [];
                 }
 
-                // ✅ v9.1: إلغاء أي intervals مسجلة من الصفحة السابقة
+                // ✅ v9.5: إلغاء أي intervals مسجلة من الصفحة السابقة
                 if (Array.isArray(window._pageIntervals) && window._pageIntervals.length > 0) {
                     window._pageIntervals.forEach(id => {
                         try { clearInterval(id); } catch (e) {}
@@ -2250,7 +2248,7 @@
                     window._pageIntervals = [];
                 }
 
-                // ✅ v9.1: إلغاء أي timeouts مسجلة من الصفحة السابقة
+                // ✅ v9.5: إلغاء أي timeouts مسجلة من الصفحة السابقة
                 if (Array.isArray(window._pageTimeouts) && window._pageTimeouts.length > 0) {
                     window._pageTimeouts.forEach(id => {
                         try { clearTimeout(id); } catch (e) {}
@@ -2258,7 +2256,7 @@
                     window._pageTimeouts = [];
                 }
 
-                // ✅ v9.1: إيقاف مؤقت التاريخ العام
+                // ✅ v9.5: إيقاف مؤقت التاريخ العام
                 if (typeof stopDateTimeUpdate === 'function') {
                     stopDateTimeUpdate();
                 }
@@ -2300,7 +2298,6 @@
                             const tempDiv = document.createElement('div');
                             tempDiv.innerHTML = html;
 
-                            // ✅ v9.1: استخراج الـ scripts
                             const scripts = tempDiv.querySelectorAll('script');
                             const scriptContents = [];
                             scripts.forEach(script => {
@@ -2310,7 +2307,6 @@
 
                             container.innerHTML = tempDiv.innerHTML;
 
-                            // ✅ v9.1: تنفيذ الـ scripts مع تتبع
                             scriptContents.forEach(content => {
                                 if (content && content.trim()) {
                                     try {
@@ -2319,7 +2315,6 @@
                                         newScript.setAttribute('data-page-script', page);
                                         document.body.appendChild(newScript);
 
-                                        // ✅ v9.1: تتبع الـ timeout
                                         const tid = setTimeout(() => {
                                             if (newScript.parentNode) {
                                                 newScript.remove();
@@ -2333,7 +2328,6 @@
                                 }
                             });
 
-                            // ✅ v9.1: حقن CSRF في النماذج الجديدة
                             if (csrfManager && typeof csrfManager.injectTokenToForms === 'function') {
                                 csrfManager.injectTokenToForms();
                             }
@@ -2341,7 +2335,6 @@
                             if (loader) loader.style.display = 'none';
                             document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
 
-                            // ✅ v9.1: مزامنة مؤقت التاريخ
                             syncDateTimeInterval();
 
                             console.log('✅ تم تحميل الصفحة:', page);
@@ -2361,7 +2354,6 @@
                     break;
                 }
 
-                // ✅ v9.1: فحص أخير
                 if (!loaded) {
                     const tid = setTimeout(() => {
                         if (container.innerHTML === '') {
@@ -2383,7 +2375,7 @@
         }
 
         // ============================================================
-        // 🔄 REFRESH CURRENT PAGE - v9.1 (async)
+        // 🔄 REFRESH CURRENT PAGE
         // ============================================================
 
         async function refreshCurrentPage() {
@@ -2414,31 +2406,79 @@
         }
 
         // ============================================================
-        // 🚪 LOGOUT
+        // 🚪 LOGOUT - v9.5 (FIXED - with fresh CSRF)
         // ============================================================
 
-        function doLogout() {
+        async function doLogout() {
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
 
-            const token = getToken();
-            if (token) {
-                const csrfToken = csrfManager.getToken();
-                fetch('/api/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'X-CSRF-Token': csrfToken
-                    },
-                    credentials: 'include'
-                }).catch(() => {});
+            console.log('🚪 Starting logout...');
+
+            try {
+                // ✅ v9.5: احصل على CSRF طازج من السيرفر أولاً
+                let csrfToken = null;
+                try {
+                    const csrfRes = await fetch('/api/csrf-token', {
+                        credentials: 'include',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (csrfRes.ok) {
+                        const csrfData = await csrfRes.json();
+                        csrfToken = csrfData.token || null;
+                        if (csrfToken) {
+                            localStorage.setItem(CONFIG.KEYS.CSRF, csrfToken);
+                            csrfManager.token = csrfToken;
+                            console.log('✅ Fresh CSRF for logout:', csrfToken.substring(0, 15) + '...');
+                        }
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Could not fetch fresh CSRF:', e.message);
+                }
+
+                if (!csrfToken) {
+                    csrfToken = csrfManager.getToken();
+                }
+
+                const token = getToken();
+
+                if (token) {
+                    try {
+                        const logoutRes = await fetch('/api/auth/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + token,
+                                'X-CSRF-Token': csrfToken || '',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            credentials: 'include'
+                        });
+
+                        if (logoutRes.ok) {
+                            console.log('✅ Logout successful on server');
+                        } else if (logoutRes.status === 403) {
+                            console.warn('⚠️ Server returned 403 — proceeding with local logout');
+                        } else {
+                            console.warn('⚠️ Logout response:', logoutRes.status);
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ Logout request failed:', e.message);
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Logout error:', e.message);
             }
 
-            // ✅ v9.1: تنظيف شامل قبل الخروج
-            _globalCleanup();
+            // ✅ المتابعة مع local logout دائماً
+            if (typeof _globalCleanup === 'function') {
+                try { _globalCleanup(); } catch (e) {}
+            }
 
             currentUser = null;
             window.currentUser = null;
             localStorage.removeItem(CONFIG.KEYS.TOKEN);
+            localStorage.removeItem(CONFIG.KEYS.CSRF);
+            localStorage.removeItem(CONFIG.KEYS.CSRF + '_expiry');
             csrfManager.clearToken();
 
             window._tokenVerified = false;
@@ -2487,12 +2527,22 @@
             console.log('📄 DOM جاهز');
 
             // ===== FORGOT PASSWORD =====
+            const forgotLink = document.getElementById('forgotPasswordLink');
+            if (forgotLink) {
+                forgotLink.addEventListener('click', openForgotModal);
+            }
+
+            if (closeForgotBtn) {
+                closeForgotBtn.addEventListener('click', closeForgotModal);
+            }
+
             if (backToLoginLink) {
                 backToLoginLink.addEventListener('click', function(e) {
                     e.preventDefault();
                     closeForgotModal();
                 });
             }
+
             if (forgotModal) {
                 forgotModal.addEventListener('click', function(e) {
                     if (e.target === forgotModal) {
@@ -2500,11 +2550,13 @@
                     }
                 });
             }
+
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && forgotModal && forgotModal.style.display === 'flex') {
                     closeForgotModal();
                 }
             });
+
             if (forgotEmail) {
                 forgotEmail.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' && sendResetBtn) {
@@ -2512,6 +2564,7 @@
                     }
                 });
             }
+
             if (sendResetBtn) {
                 sendResetBtn.addEventListener('click', async function() {
                     var email = forgotEmail ? forgotEmail.value.trim() : '';
@@ -2571,10 +2624,7 @@
                             forgotMessage.className = 'modal-message show';
                             forgotMessage.style.display = 'block';
 
-                            if (response.status === 404) {
-                                forgotMessage.className += ' error';
-                                forgotMessage.textContent = '❌ ' + (data.error || 'هذا البريد الإلكتروني غير مسجل في النظام');
-                            } else if (response.ok && data.success) {
+                            if (response.ok && data.success) {
                                 forgotMessage.className += ' success';
                                 
                                 var resetLink = data.resetLink || '';
@@ -2583,8 +2633,7 @@
                                         '✅ تم إنشاء رابط إعادة التعيين:<br><br>' +
                                         '<div class="reset-link-box">' +
                                         '<a href="' + escapeHTML(resetLink) + '" target="_blank">' + escapeHTML(resetLink) + '</a>' +
-                                        '</div><br>' +
-                                        '<span style="font-size:13px;color:rgba(255,255,255,0.4);">📌 انسخ الرابط وألصقه في المتصفح، أو اضغط عليه مباشرة</span>';
+                                        '</div>';
                                 } else {
                                     forgotMessage.textContent = '✅ ' + (data.message || 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني');
                                 }
@@ -2606,14 +2655,6 @@
                         sendResetBtn.innerHTML = '📧 إرسال رابط إعادة التعيين';
                     }
                 });
-            }
-
-            const forgotLink = document.getElementById('forgotPasswordLink');
-            if (forgotLink) {
-                forgotLink.addEventListener('click', openForgotModal);
-            }
-            if (closeForgotBtn) {
-                closeForgotBtn.addEventListener('click', closeForgotModal);
             }
 
             // ===== LOGIN FORM =====
@@ -2683,7 +2724,6 @@
                 };
             }
 
-            // ✅ v9.1: scroll listener مع requestAnimationFrame
             let _scrollTicking = false;
             function _handleScroll() {
                 if (_scrollTicking) return;
@@ -2738,10 +2778,9 @@
                 }
             }
 
-            console.log('✅ Marine System v9.1 ready');
+            console.log('✅ Marine System v9.5 ready');
         }
 
-        // ✅ v9.1: تشغيل init بشكل مضمون
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initApp);
         } else {
@@ -2749,7 +2788,7 @@
         }
 
         // ============================================================
-        // 🌐 GLOBAL
+        // 🌐 GLOBAL EXPORTS
         // ============================================================
 
         window.doLogin = doLogin;
@@ -2761,6 +2800,7 @@
         window.verifyToken = verifyToken;
         window.loadAllData = loadAllData;
         window.fetchServerStatus = fetchServerStatus;
+        window.updateBadge = updateBadge;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
         window.syncDateTimeInterval = syncDateTimeInterval;
@@ -2771,7 +2811,7 @@
         window.openForgotModal = openForgotModal;
         window.closeForgotModal = closeForgotModal;
 
-        console.log('✅ Marine System v9.1 loaded successfully');
+        console.log('✅ Marine System v9.5 loaded successfully');
     </script>
 
 </body>
