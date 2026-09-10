@@ -194,4 +194,111 @@ router.post('/logout', async (req, res) => {
     }
 });
 
-// ===========================================================
+// ============================================================
+// POST /api/auth/refresh - تجديد Access Token
+// ============================================================
+router.post('/refresh', async (req, res) => {
+    try {
+        const refreshToken = req.cookies?.[security.cookie.refreshName];
+        if (!refreshToken) {
+            return res.status(401).json({ error: 'مطلوب تجديد' });
+        }
+
+        const result = await tokenService.verifyRefreshToken(refreshToken, req.ip);
+        if (!result) {
+            res.clearCookie(security.cookie.refreshName, { path: '/api/auth/refresh' });
+            return res.status(401).json({ error: 'جلسة منتهية' });
+        }
+
+        // ✅ Rotation: إلغاء القديم وإصدار جديد
+        await tokenService.revokeRefreshToken(result.tokenId);
+
+        const newAccessToken = tokenService.generateAccessToken(result.user);
+        const newRefreshToken = tokenService.generateRefreshToken();
+        await tokenService.storeRefreshToken(
+            result.user.id, newRefreshToken, req.ip, req.get('user-agent')
+        );
+
+        res.cookie(
+            security.cookie.accessName,
+            newAccessToken,
+            security.cookie.accessOptions
+        );
+        res.cookie(
+            security.cookie.refreshName,
+            newRefreshToken,
+            security.cookie.refreshOptions
+        );
+
+        return res.json({ success: true, token: newAccessToken });
+    } catch (err) {
+        console.error('❌ Refresh error:', err);
+        return res.status(401).json({ error: 'فشل التجديد' });
+    }
+});
+
+// ============================================================
+// POST /api/auth/forgot-password
+// ============================================================
+router.post('/forgot-password',
+    forgotPasswordLimiter,
+    body('email').isEmail().normalizeEmail(),
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ error: 'بريد إلكتروني غير صالح' });
+            }
+
+            const { email } = req.body;
+
+            // ✅ نفس الاستجابة دائمًا (منع user enumeration)
+            const genericResponse = {
+                success: true,
+                message: 'إذا كان البريد مسجلاً، ستصلك رسالة قريبًا'
+            };
+
+            const [rows] = await db.execute(
+                'SELECT id FROM users WHERE email = ? AND is_active = 1',
+                [email]
+            );
+
+            if (!rows.length) {
+                return res.json(genericResponse);
+            }
+
+            const userId = rows[0].id;
+
+            // ✅ توليد token قوي + تخزين hash فقط
+            const crypto = require('crypto');
+            const resetToken = crypto.randomBytes(48).toString('base64url');
+            const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // ساعة
+
+            await db.execute(
+                `INSERT INTO password_resets
+                 (user_id, token_hash, expires_at, created_at)
+                 VALUES (?, ?, ?, NOW())`,
+                [userId, tokenHash, expiresAt]
+            );
+
+            // ⚠️ في الإنتاج: أرسل الرابط بالبريد فقط.
+            // لا ترجعه في الاستجابة.
+            // هنا نرجعه فقط في وضع التطوير.
+            if (security.isProduction) {
+                // await sendEmail(...)
+                return res.json(genericResponse);
+            } else {
+                return res.json({
+                    ...genericResponse,
+                    resetLink: `/reset-password?token=${resetToken}`
+                });
+            }
+        } catch (err) {
+            console.error('❌ Forgot password error:', err);
+            return res.status(500).json({ error: 'خطأ داخلي' });
+        }
+    }
+);
+
+module.exports = router;
