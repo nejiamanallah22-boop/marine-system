@@ -2,7 +2,7 @@
 <div id="page-fleet">
     <style>
         /* ============================================================
-           🚢 FLEET PAGE - PROFESSIONAL GOLD EDITION (FIXED)
+           🚢 FLEET PAGE - PROFESSIONAL GOLD EDITION (FIXED v9.1)
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -866,131 +866,564 @@
 
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - GOLD EDITION (FIXED)
+    // 🚢 FLEET PAGE - GOLD EDITION (FIXED v9.1)
+    // ✨ مع حماية null + cleanup تلقائي
     // ============================================================
+    (function() {
+        'use strict';
 
-    // ============================================================
-    // 1. DATA
-    // ============================================================
+        // ============================================================
+        // ✅ v9.1: تنظيف تلقائي عند مغادرة الصفحة
+        // ============================================================
+        var _isDestroyed = false;
 
-    if (typeof ZONES_DATA === 'undefined') {
-        var ZONES_DATA = {
-            "الشمال": ["تونس", "بنزرت", "طبرقة"],
-            "الساحل": ["سوسة", "المنستير", "نابل"],
-            "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-            "الجنوب": ["جرجيس", "جربة", "قابس"],
-            "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
-            "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
-            "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
-            "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
-            "المجمع الأمني بقبيبة": ["قبيبة"]
-        };
-    }
+        function _fleetCleanup() {
+            if (_isDestroyed) return;
+            _isDestroyed = true;
 
-    if (typeof CATS_LIST === 'undefined') {
-        var CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
-    }
+            // إزالة الـ globals المُعرَّفة
+            try {
+                delete window.renderMain;
+                delete window.addItem;
+                delete window.editItem;
+                delete window.updateItem;
+                delete window.deleteItem;
+                delete window.clearMainSearch;
+                delete window.updateZones;
+                delete window.refreshFleet;
+            } catch (e) {}
 
-    // ============================================================
-    // 2. TOKEN FUNCTIONS
-    // ============================================================
-
-    function getToken() {
-        return localStorage.getItem('marine_token') ||
-               localStorage.getItem('token') ||
-               localStorage.getItem('authToken') ||
-               localStorage.getItem('accessToken') ||
-               null;
-    }
-
-    function getAuthHeaders() {
-        const token = getToken();
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': token ? 'Bearer ' + token : ''
-        };
-    }
-
-    // ============================================================
-    // 3. PERMISSIONS
-    // ============================================================
-
-    function getUser() {
-        return window.currentUser || null;
-    }
-
-    function canEdit() {
-        const user = getUser();
-        if (!user) return false;
-        const role = user.role;
-        return role === 'مسؤول' || role === 'محرر' || role === 'admin' || role === 'مدير';
-    }
-
-    function canDelete() {
-        const user = getUser();
-        if (!user) return false;
-        return user.role === 'مسؤول' || user.role === 'admin' || user.role === 'مدير';
-    }
-
-    // ============================================================
-    // 4. HELPERS
-    // ============================================================
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
-    }
-
-    function formatDate(val) {
-        if (!val) return '-';
-        try {
-            const d = new Date(val);
-            if (isNaN(d.getTime())) return escapeHtml(val);
-            return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-        } catch (_) { return escapeHtml(val); }
-    }
-
-    function getCategory(len) {
-        const n = parseFloat(len);
-        if (isNaN(n)) return 'زوارق مزدوجة';
-        if (n === 11) return 'البروق';
-        if (n >= 8 && n <= 12) return 'صقور';
-        if (n > 12 && n <= 25) return 'خوافر';
-        if (n >= 30) return 'طوافات';
-        return 'زوارق مزدوجة';
-    }
-
-    // ============================================================
-    // 5. UPDATE ZONES
-    // ============================================================
-
-    function updateZones() {
-        const reg = document.getElementById('iReg').value;
-        const zoneSel = document.getElementById('iZone');
-        zoneSel.innerHTML = '<option value="">المنطقة</option>';
-        if (ZONES_DATA[reg]) {
-            ZONES_DATA[reg].forEach(z => {
-                zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
-            });
+            console.log('🧹 Fleet cleanup done');
         }
-    }
 
-    // ============================================================
-    // 6. RENDER MAIN - FIXED
-    // ============================================================
+        window._pageCleanup = window._pageCleanup || [];
+        window._pageCleanup.push(_fleetCleanup);
 
-    async function renderMain() {
-        const mainBody = document.getElementById('mainBody');
+        window.addEventListener('beforeunload', _fleetCleanup);
+        window.addEventListener('pagehide', _fleetCleanup);
 
-        mainBody.innerHTML = `
-            <tr><td colspan="14" class="empty-state">
-                <div class="spinner"></div>
-                <h3>جاري التحميل...</h3>
-                <p>يرجى الانتظار</p>
-            </td></tr>
-        `;
+        // ============================================================
+        // 1. DATA
+        // ============================================================
 
-        try {
+        if (typeof ZONES_DATA === 'undefined') {
+            window.ZONES_DATA = {
+                "الشمال": ["تونس", "بنزرت", "طبرقة"],
+                "الساحل": ["سوسة", "المنستير", "نابل"],
+                "الوسط": ["صفاقس", "المهدية", "قرقنة"],
+                "الجنوب": ["جرجيس", "جربة", "قابس"],
+                "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+                "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
+                "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
+                "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+                "المجمع الأمني بقبيبة": ["قبيبة"]
+            };
+        }
+
+        if (typeof CATS_LIST === 'undefined') {
+            window.CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
+        }
+
+        var ZONES_DATA = window.ZONES_DATA;
+        var CATS_LIST = window.CATS_LIST;
+
+        // ============================================================
+        // 2. TOKEN FUNCTIONS
+        // ============================================================
+
+        function getToken() {
+            return localStorage.getItem('marine_token') ||
+                   localStorage.getItem('token') ||
+                   localStorage.getItem('authToken') ||
+                   localStorage.getItem('accessToken') ||
+                   null;
+        }
+
+        function getAuthHeaders() {
+            const token = getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': token ? 'Bearer ' + token : ''
+            };
+        }
+
+        // ============================================================
+        // 3. PERMISSIONS
+        // ============================================================
+
+        function getUser() {
+            return window.currentUser || null;
+        }
+
+        function canEdit() {
+            const user = getUser();
+            if (!user) return false;
+            const role = user.role;
+            return role === 'مسؤول' || role === 'محرر' || role === 'admin' || role === 'مدير';
+        }
+
+        function canDelete() {
+            const user = getUser();
+            if (!user) return false;
+            return user.role === 'مسؤول' || user.role === 'admin' || user.role === 'مدير';
+        }
+
+        // ============================================================
+        // 4. HELPERS
+        // ============================================================
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
+        }
+
+        function formatDate(val) {
+            if (!val) return '-';
+            try {
+                const d = new Date(val);
+                if (isNaN(d.getTime())) return escapeHtml(val);
+                return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+            } catch (_) { return escapeHtml(val); }
+        }
+
+        function getCategory(len) {
+            const n = parseFloat(len);
+            if (isNaN(n)) return 'زوارق مزدوجة';
+            if (n === 11) return 'البروق';
+            if (n >= 8 && n <= 12) return 'صقور';
+            if (n > 12 && n <= 25) return 'خوافر';
+            if (n >= 30) return 'طوافات';
+            return 'زوارق مزدوجة';
+        }
+
+        // ============================================================
+        // 5. UPDATE ZONES - ✅ SAFE
+        // ============================================================
+
+        function updateZones() {
+            const regEl = document.getElementById('iReg');
+            const zoneSel = document.getElementById('iZone');
+            if (!regEl || !zoneSel) return;  // ✅ v9.1
+
+            const reg = regEl.value;
+            zoneSel.innerHTML = '<option value="">المنطقة</option>';
+            if (ZONES_DATA[reg]) {
+                ZONES_DATA[reg].forEach(z => {
+                    zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
+                });
+            }
+        }
+
+        // ============================================================
+        // 6. RENDER MAIN - ✅ SAFE
+        // ============================================================
+
+        async function renderMain() {
+            // ✅ v9.1: حماية
+            if (_isDestroyed) return;
+
+            const mainBody = document.getElementById('mainBody');
+            if (!mainBody) return;  // ✅ v9.1
+
+            mainBody.innerHTML = `
+                <tr><td colspan="14" class="empty-state">
+                    <div class="spinner"></div>
+                    <h3>جاري التحميل...</h3>
+                    <p>يرجى الانتظار</p>
+                </td></tr>
+            `;
+
+            try {
+                const token = getToken();
+                if (!token) {
+                    console.warn('⚠️ لا يوجد توكن');
+                    window.location.href = '/index.html';
+                    return;
+                }
+
+                console.log('📡 جلب بيانات المراكب...');
+                const response = await fetch('/api/vessels', {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('marine_token');
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    throw new Error('فشل تحميل البيانات (Status: ' + response.status + ')');
+                }
+
+                const vessels = await response.json();
+                console.log('✅ تم تحميل', vessels.length, 'مركب');
+
+                // ✅ v9.1: إذا تم تدمير الصفحة أثناء الانتظار، توقف
+                if (_isDestroyed) return;
+
+                const total = vessels.length;
+                const active = vessels.filter(v => v.status === 'صالح').length;
+                const maintenance = vessels.filter(v => v.status === 'صيانة').length;
+                const damaged = vessels.filter(v => v.status === 'معطب').length;
+
+                // ✅ v9.1: null check قبل الكتابة
+                const tv = document.getElementById('totalVessels');
+                const av = document.getElementById('activeVessels');
+                const mv = document.getElementById('maintenanceVessels');
+                const dv = document.getElementById('damagedVessels');
+                if (tv) tv.textContent = total;
+                if (av) av.textContent = active;
+                if (mv) mv.textContent = maintenance;
+                if (dv) dv.textContent = damaged;
+
+                // ✅ تطبيق الفلاتر
+                const fCatMain = document.getElementById('fCatMain');
+                const fRegMain = document.getElementById('fRegMain');
+                const searchMain = document.getElementById('searchMain');
+
+                const catFilter = (fCatMain && fCatMain.value) || 'الكل';
+                const regFilter = (fRegMain && fRegMain.value) || 'الكل';
+                const search = ((searchMain && searchMain.value) || '').trim().toLowerCase();
+
+                let filtered = vessels.filter(v => {
+                    const vCat = v.cat || getCategory(v.len);
+                    const vReg = v.region || v.reg || '';
+                    const catMatch = (catFilter === 'الكل' || vCat === catFilter);
+                    const regMatch = (regFilter === 'الكل' || vReg === regFilter);
+                    return catMatch && regMatch;
+                });
+
+                if (search) {
+                    filtered = filtered.filter(v => {
+                        const text = [v.name, v.num, v.region || v.reg, v.zone, v.port, v.status, v.cat, v.repairUnit]
+                            .filter(Boolean).join(' ').toLowerCase();
+                        return text.includes(search);
+                    });
+                }
+
+                if (filtered.length === 0) {
+                    mainBody.innerHTML = `
+                        <tr><td colspan="14" class="empty-state">
+                            <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+                            <h3>لا توجد مراكب</h3>
+                            <p>لم يتم العثور على أي مراكب مطابقة</p>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                for (const v of filtered) {
+                    const id = v._id || v.id;
+                    const name = v.name || '-';
+                    const number = v.num || '-';
+                    const length = v.len || '-';
+                    const category = v.cat || getCategory(length);
+                    const region = v.region || v.reg || '-';
+                    const zone = v.zone || '-';
+                    const port = v.port || '-';
+                    const supp = v.supp || '-';
+                    const status = v.status || '-';
+                    const breakType = v.break || '-';
+                    const fDate = v.fDate;
+                    const eDate = v.eDate;
+                    const repairUnit = v.repairUnit || '-';
+
+                    const statusColor = status === 'صالح' ? '#4ade80' : (status === 'معطب' ? '#e17055' : '#fbbf24');
+                    const isDamaged = status === 'معطب';
+
+                    const editBtn = canEdit() ?
+                        `<button class="btn-sm edit" onclick="editItem('${id}')"><i class="fas fa-edit"></i></button>` : '';
+                    const delBtn = canDelete() ?
+                        `<button class="btn-sm delete" onclick="deleteItem('${id}','${escapeHtml(name)}')"><i class="fas fa-trash-alt"></i></button>` : '';
+
+                    html += `<tr class="${isDamaged ? 'damaged' : ''}">
+                        <td class="vessel-name">${escapeHtml(name)}</td>
+                        <td>${escapeHtml(number)}</td>
+                        <td>${escapeHtml(length)}</td>
+                        <td>${escapeHtml(category)}</td>
+                        <td>${escapeHtml(region)}</td>
+                        <td>${escapeHtml(zone)}</td>
+                        <td>${escapeHtml(port)}</td>
+                        <td>${escapeHtml(supp)}</td>
+                        <td style="color:${statusColor}; font-weight:700;">${escapeHtml(status)}</td>
+                        <td>${escapeHtml(breakType)}</td>
+                        <td>${formatDate(fDate)}</td>
+                        <td>${formatDate(eDate)}</td>
+                        <td>${escapeHtml(repairUnit)}</td>
+                        <td><div class="action-btns">${editBtn} ${delBtn}</div></td>
+                    </tr>`;
+                }
+                mainBody.innerHTML = html;
+
+            } catch (err) {
+                console.error('❌ renderMain error:', err);
+                if (_isDestroyed) return;
+                mainBody.innerHTML = `
+                    <tr><td colspan="14" class="empty-state">
+                        <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
+                        <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
+                        <p style="color:rgba(255,255,255,0.3);">${escapeHtml(err.message)}</p>
+                        <button class="retry-btn" onclick="renderMain()">
+                            <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                        </button>
+                    </td></tr>
+                `;
+            }
+        }
+
+        // ============================================================
+        // 7. ADD ITEM
+        // ============================================================
+
+        async function addItem() {
+            if (_isDestroyed) return;
+            if (!canEdit()) {
+                alert('⚠️ ليس لديك صلاحية لإضافة مركب');
+                return;
+            }
+
+            const nameEl = document.getElementById('iName');
+            if (!nameEl) return;
+            const name = nameEl.value.trim();
+            if (!name) { alert('⚠️ يرجى إدخال اسم المركب'); return; }
+
+            const statEl = document.getElementById('iStat');
+            const dateEl = document.getElementById('iDate');
+            const status = statEl ? statEl.value : 'صالح';
+            const faultDate = dateEl ? dateEl.value : '';
+            if ((status === 'معطب' || status === 'صيانة') && !faultDate) {
+                alert('⚠️ تاريخ العطب مطلوب للمركب المعطب أو الذي تحت الصيانة');
+                return;
+            }
+
+            const vessel = {
+                name: name,
+                num: (document.getElementById('iNum') || {}).value || '',
+                len: (document.getElementById('iLen') || {}).value || '',
+                region: (document.getElementById('iReg') || {}).value || '',
+                zone: (document.getElementById('iZone') || {}).value || '',
+                port: (document.getElementById('iPort') || {}).value || '',
+                supp: (document.getElementById('iSupp') || {}).value || '',
+                status: status,
+                break: (document.getElementById('iBreak') || {}).value || '',
+                fDate: faultDate,
+                eDate: (document.getElementById('iEnd') || {}).value || '',
+                ref: (document.getElementById('iRef') || {}).value || '',
+                repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
+            };
+
+            try {
+                const response = await fetch('/api/vessels', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(vessel)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'فشل حفظ المركب');
+                }
+
+                clearForm();
+                await renderMain();
+                alert('✅ تم حفظ المركب بنجاح');
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        }
+
+        // ============================================================
+        // 8. CLEAR FORM - ✅ SAFE
+        // ============================================================
+
+        function clearForm() {
+            const ids = ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'];
+            ids.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.value = '';  // ✅ v9.1: null check
+            });
+
+            var iReg = document.getElementById('iReg');
+            if (iReg) iReg.value = '';
+
+            var iZone = document.getElementById('iZone');
+            if (iZone) iZone.innerHTML = '<option value="">المنطقة</option>';
+
+            var iStat = document.getElementById('iStat');
+            if (iStat) iStat.value = 'صالح';
+
+            var iRepairUnit = document.getElementById('iRepairUnit');
+            if (iRepairUnit) iRepairUnit.value = '';
+        }
+
+        // ============================================================
+        // 9. DELETE ITEM
+        // ============================================================
+
+        async function deleteItem(id, name) {
+            if (_isDestroyed) return;
+            if (!canDelete()) { alert('⚠️ ليس لديك صلاحية للحذف'); return; }
+            if (!confirm(`⚠️ هل أنت متأكد من حذف المركب "${name}"؟`)) return;
+
+            try {
+                const response = await fetch(`/api/vessels/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'فشل حذف المركب');
+                }
+
+                await renderMain();
+                alert('✅ تم حذف المركب بنجاح');
+            } catch (err) { alert('❌ ' + err.message); }
+        }
+
+        // ============================================================
+        // 10. EDIT ITEM
+        // ============================================================
+
+        async function editItem(id) {
+            if (_isDestroyed) return;
+            if (!canEdit()) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
+
+            try {
+                const response = await fetch('/api/vessels', { headers: getAuthHeaders() });
+                if (!response.ok) throw new Error('فشل تحميل البيانات');
+
+                const vessels = await response.json();
+                const v = vessels.find(item => String(item._id || item.id) === String(id));
+                if (!v) { alert('❌ المركب غير موجود'); return; }
+
+                var el;
+                el = document.getElementById('iName'); if (el) el.value = v.name || '';
+                el = document.getElementById('iNum'); if (el) el.value = v.num || '';
+                el = document.getElementById('iLen'); if (el) el.value = v.len || '';
+                el = document.getElementById('iReg'); if (el) el.value = v.region || v.reg || '';
+                updateZones();
+                var id2 = setTimeout(() => {
+                    var z = document.getElementById('iZone');
+                    if (z) z.value = v.zone || '';
+                }, 50);
+                window._pageTimeouts = window._pageTimeouts || [];
+                window._pageTimeouts.push(id2);
+
+                el = document.getElementById('iPort'); if (el) el.value = v.port || '';
+                el = document.getElementById('iSupp'); if (el) el.value = v.supp || '';
+                el = document.getElementById('iStat'); if (el) el.value = v.status || 'صالح';
+                el = document.getElementById('iBreak'); if (el) el.value = v.break || '';
+                el = document.getElementById('iDate'); if (el) el.value = v.fDate || '';
+                el = document.getElementById('iEnd'); if (el) el.value = v.eDate || '';
+                el = document.getElementById('iRef'); if (el) el.value = v.ref || '';
+                el = document.getElementById('iRepairUnit'); if (el) el.value = v.repairUnit || '';
+
+                const saveBtn = document.getElementById('saveVesselBtn');
+                if (saveBtn) {
+                    saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
+                    saveBtn.onclick = async function() { await updateItem(id); };
+                }
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) { alert('❌ ' + err.message); }
+        }
+
+        // ============================================================
+        // 11. UPDATE ITEM
+        // ============================================================
+
+        async function updateItem(id) {
+            if (_isDestroyed) return;
+
+            const nameEl = document.getElementById('iName');
+            if (!nameEl) return;
+            const name = nameEl.value.trim();
+            if (!name) { alert('⚠️ اسم المركب مطلوب'); return; }
+
+            const vessel = {
+                name: name,
+                num: (document.getElementById('iNum') || {}).value || '',
+                len: (document.getElementById('iLen') || {}).value || '',
+                region: (document.getElementById('iReg') || {}).value || '',
+                zone: (document.getElementById('iZone') || {}).value || '',
+                port: (document.getElementById('iPort') || {}).value || '',
+                supp: (document.getElementById('iSupp') || {}).value || '',
+                status: (document.getElementById('iStat') || {}).value || 'صالح',
+                break: (document.getElementById('iBreak') || {}).value || '',
+                fDate: (document.getElementById('iDate') || {}).value || '',
+                eDate: (document.getElementById('iEnd') || {}).value || '',
+                ref: (document.getElementById('iRef') || {}).value || '',
+                repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
+            };
+
+            try {
+                const response = await fetch(`/api/vessels/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(vessel)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'فشل تحديث المركب');
+                }
+
+                clearForm();
+                const saveBtn = document.getElementById('saveVesselBtn');
+                if (saveBtn) {
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
+                    saveBtn.onclick = addItem;
+                }
+                await renderMain();
+                alert('✅ تم تحديث المركب بنجاح');
+            } catch (err) { alert('❌ ' + err.message); }
+        }
+
+        // ============================================================
+        // 12. CLEAR SEARCH
+        // ============================================================
+
+        function clearMainSearch() {
+            var s = document.getElementById('searchMain'); if (s) s.value = '';
+            var c = document.getElementById('fCatMain'); if (c) c.value = 'الكل';
+            var r = document.getElementById('fRegMain'); if (r) r.value = 'الكل';
+            renderMain();
+        }
+
+        // ============================================================
+        // 13. INIT FILTERS
+        // ============================================================
+
+        function initFilters() {
+            const fCatMain = document.getElementById('fCatMain');
+            const fRegMain = document.getElementById('fRegMain');
+            if (!fCatMain || !fRegMain) return;
+
+            fCatMain.innerHTML = '<option value="الكل">الكل</option>';
+            CATS_LIST.forEach(c => { fCatMain.innerHTML += `<option value="${c}">${c}</option>`; });
+
+            fRegMain.innerHTML = '<option value="الكل">الكل</option>';
+            Object.keys(ZONES_DATA).forEach(r => { fRegMain.innerHTML += `<option value="${r}">${r}</option>`; });
+        }
+
+        // ============================================================
+        // 14. REFRESH
+        // ============================================================
+
+        function refreshFleet() {
+            renderMain();
+        }
+
+        // ============================================================
+        // 15. INIT
+        // ============================================================
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (_isDestroyed) return;
+            console.log('🚀 تحميل صفحة السجل العام - Gold Edition...');
+
             const token = getToken();
             if (!token) {
                 console.warn('⚠️ لا يوجد توكن');
@@ -998,407 +1431,59 @@
                 return;
             }
 
-            console.log('📡 جلب بيانات المراكب...');
-            const response = await fetch('/api/vessels', {
-                headers: getAuthHeaders()
-            });
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: getAuthHeaders()
+                });
 
-            if (!response.ok) {
-                if (response.status === 401) {
+                if (!response.ok) {
+                    console.warn('⚠️ جلسة غير صالحة');
                     localStorage.removeItem('marine_token');
                     window.location.href = '/index.html';
                     return;
                 }
-                throw new Error('فشل تحميل البيانات (Status: ' + response.status + ')');
-            }
 
-            const vessels = await response.json();
-            console.log('✅ تم تحميل', vessels.length, 'مركب');
-
-            // ✅ تحديث الإحصائيات - FIXED
-            const total = vessels.length;
-            const active = vessels.filter(v => v.status === 'صالح').length;        // ✅ مصحح
-            const maintenance = vessels.filter(v => v.status === 'صيانة').length;  // ✅ مصحح
-            const damaged = vessels.filter(v => v.status === 'معطب').length;       // ✅ مصحح
-
-            document.getElementById('totalVessels').textContent = total;
-            document.getElementById('activeVessels').textContent = active;
-            document.getElementById('maintenanceVessels').textContent = maintenance;
-            document.getElementById('damagedVessels').textContent = damaged;
-
-            // ✅ تطبيق الفلاتر
-            const fCatMain = document.getElementById('fCatMain');
-            const fRegMain = document.getElementById('fRegMain');
-            const searchMain = document.getElementById('searchMain');
-
-            const catFilter = fCatMain.value || 'الكل';
-            const regFilter = fRegMain.value || 'الكل';
-            const search = searchMain.value.trim().toLowerCase();
-
-            let filtered = vessels.filter(v => {
-                const vCat = v.cat || getCategory(v.len);
-                const vReg = v.region || v.reg || '';
-                const catMatch = (catFilter === 'الكل' || vCat === catFilter);
-                const regMatch = (regFilter === 'الكل' || vReg === regFilter);
-                return catMatch && regMatch;
-            });
-
-            if (search) {
-                filtered = filtered.filter(v => {
-                    const text = [v.name, v.num, v.region || v.reg, v.zone, v.port, v.status, v.cat, v.repairUnit]
-                        .filter(Boolean).join(' ').toLowerCase();
-                    return text.includes(search);
-                });
-            }
-
-            if (filtered.length === 0) {
-                mainBody.innerHTML = `
-                    <tr><td colspan="14" class="empty-state">
-                        <span class="empty-icon"><i class="fas fa-inbox"></i></span>
-                        <h3>لا توجد مراكب</h3>
-                        <p>لم يتم العثور على أي مراكب مطابقة</p>
-                    </td></tr>
-                `;
-                return;
-            }
-
-            let html = '';
-            for (const v of filtered) {
-                const id = v._id || v.id;
-                const name = v.name || '-';
-                const number = v.num || '-';
-                const length = v.len || '-';
-                const category = v.cat || getCategory(length);
-                const region = v.region || v.reg || '-';
-                const zone = v.zone || '-';
-                const port = v.port || '-';
-                const supp = v.supp || '-';
-                const status = v.status || '-';
-                const breakType = v.break || '-';
-                const fDate = v.fDate;
-                const eDate = v.eDate;
-                const repairUnit = v.repairUnit || '-';
-
-                const statusColor = status === 'صالح' ? '#4ade80' : (status === 'معطب' ? '#e17055' : '#fbbf24');
-                const isDamaged = status === 'معطب';
-
-                const editBtn = canEdit() ?
-                    `<button class="btn-sm edit" onclick="editItem('${id}')"><i class="fas fa-edit"></i></button>` : '';
-                const delBtn = canDelete() ?
-                    `<button class="btn-sm delete" onclick="deleteItem('${id}','${escapeHtml(name)}')"><i class="fas fa-trash-alt"></i></button>` : '';
-
-                html += `<tr class="${isDamaged ? 'damaged' : ''}">
-                    <td class="vessel-name">${escapeHtml(name)}</td>
-                    <td>${escapeHtml(number)}</td>
-                    <td>${escapeHtml(length)}</td>
-                    <td>${escapeHtml(category)}</td>
-                    <td>${escapeHtml(region)}</td>
-                    <td>${escapeHtml(zone)}</td>
-                    <td>${escapeHtml(port)}</td>
-                    <td>${escapeHtml(supp)}</td>
-                    <td style="color:${statusColor}; font-weight:700;">${escapeHtml(status)}</td>
-                    <td>${escapeHtml(breakType)}</td>
-                    <td>${formatDate(fDate)}</td>
-                    <td>${formatDate(eDate)}</td>
-                    <td>${escapeHtml(repairUnit)}</td>
-                    <td><div class="action-btns">${editBtn} ${delBtn}</div></td>
-                </tr>`;
-            }
-            mainBody.innerHTML = html;
-
-        } catch (err) {
-            console.error('❌ renderMain error:', err);
-            mainBody.innerHTML = `
-                <tr><td colspan="14" class="empty-state">
-                    <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
-                    <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
-                    <p style="color:rgba(255,255,255,0.3);">${escapeHtml(err.message)}</p>
-                    <button class="retry-btn" onclick="renderMain()">
-                        <i class="fas fa-sync-alt"></i> إعادة المحاولة
-                    </button>
-                </td></tr>
-            `;
-        }
-    }
-
-    // ============================================================
-    // 7. ADD ITEM - FIXED
-    // ============================================================
-
-    async function addItem() {
-        if (!canEdit()) {
-            alert('⚠️ ليس لديك صلاحية لإضافة مركب');
-            return;
-        }
-
-        const name = document.getElementById('iName').value.trim();
-        if (!name) { alert('⚠️ يرجى إدخال اسم المركب'); return; }
-
-        const status = document.getElementById('iStat').value;
-        const faultDate = document.getElementById('iDate').value;
-        if ((status === 'معطب' || status === 'صيانة') && !faultDate) {
-            alert('⚠️ تاريخ العطب مطلوب للمركب المعطب أو الذي تحت الصيانة');
-            return;
-        }
-
-        const vessel = {
-            name: name,
-            num: document.getElementById('iNum').value.trim(),
-            len: document.getElementById('iLen').value,
-            region: document.getElementById('iReg').value,
-            zone: document.getElementById('iZone').value,
-            port: document.getElementById('iPort').value.trim(),
-            supp: document.getElementById('iSupp').value.trim(),
-            status: status,  // ✅ مصحح: stat → status
-            break: document.getElementById('iBreak').value.trim(),
-            fDate: faultDate,
-            eDate: document.getElementById('iEnd').value,
-            ref: document.getElementById('iRef').value.trim(),
-            repairUnit: document.getElementById('iRepairUnit').value
-        };
-
-        try {
-            const token = getToken();
-            const response = await fetch('/api/vessels', {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(vessel)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'فشل حفظ المركب');
-            }
-
-            clearForm();
-            await renderMain();
-            alert('✅ تم حفظ المركب بنجاح');
-        } catch (err) {
-            alert('❌ ' + err.message);
-        }
-    }
-
-    // ============================================================
-    // 8. CLEAR FORM
-    // ============================================================
-
-    function clearForm() {
-        ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'].forEach(id => {
-            document.getElementById(id).value = '';
-        });
-        document.getElementById('iReg').value = '';
-        document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
-        document.getElementById('iStat').value = 'صالح';
-        document.getElementById('iRepairUnit').value = '';
-    }
-
-    // ============================================================
-    // 9. DELETE ITEM
-    // ============================================================
-
-    window.deleteItem = async function(id, name) {
-        if (!canDelete()) { alert('⚠️ ليس لديك صلاحية للحذف'); return; }
-        if (!confirm(`⚠️ هل أنت متأكد من حذف المركب "${name}"؟`)) return;
-
-        try {
-            const token = getToken();
-            const response = await fetch(`/api/vessels/${id}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'فشل حذف المركب');
-            }
-
-            await renderMain();
-            alert('✅ تم حذف المركب بنجاح');
-        } catch (err) { alert('❌ ' + err.message); }
-    };
-
-    // ============================================================
-    // 10. EDIT ITEM - FIXED
-    // ============================================================
-
-    window.editItem = async function(id) {
-        if (!canEdit()) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
-
-        try {
-            const token = getToken();
-            const response = await fetch('/api/vessels', { headers: getAuthHeaders() });
-            if (!response.ok) throw new Error('فشل تحميل البيانات');
-
-            const vessels = await response.json();
-            const v = vessels.find(item => String(item._id || item.id) === String(id));
-            if (!v) { alert('❌ المركب غير موجود'); return; }
-
-            document.getElementById('iName').value = v.name || '';
-            document.getElementById('iNum').value = v.num || '';
-            document.getElementById('iLen').value = v.len || '';
-            document.getElementById('iReg').value = v.region || v.reg || '';
-            updateZones();
-            setTimeout(() => { document.getElementById('iZone').value = v.zone || ''; }, 50);
-            document.getElementById('iPort').value = v.port || '';
-            document.getElementById('iSupp').value = v.supp || '';
-            document.getElementById('iStat').value = v.status || 'صالح';  // ✅ مصحح: v.status بدلاً من v.stat
-            document.getElementById('iBreak').value = v.break || '';
-            document.getElementById('iDate').value = v.fDate || '';
-            document.getElementById('iEnd').value = v.eDate || '';
-            document.getElementById('iRef').value = v.ref || '';
-            document.getElementById('iRepairUnit').value = v.repairUnit || '';
-
-            const saveBtn = document.getElementById('saveVesselBtn');
-            saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
-            saveBtn.onclick = async function() { await updateItem(id); };
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch (err) { alert('❌ ' + err.message); }
-    };
-
-    // ============================================================
-    // 11. UPDATE ITEM
-    // ============================================================
-
-    async function updateItem(id) {
-        const name = document.getElementById('iName').value.trim();
-        if (!name) { alert('⚠️ اسم المركب مطلوب'); return; }
-
-        const vessel = {
-            name: name,
-            num: document.getElementById('iNum').value.trim(),
-            len: document.getElementById('iLen').value,
-            region: document.getElementById('iReg').value,
-            zone: document.getElementById('iZone').value,
-            port: document.getElementById('iPort').value.trim(),
-            supp: document.getElementById('iSupp').value.trim(),
-            status: document.getElementById('iStat').value,  // ✅ مصحح
-            break: document.getElementById('iBreak').value.trim(),
-            fDate: document.getElementById('iDate').value,
-            eDate: document.getElementById('iEnd').value,
-            ref: document.getElementById('iRef').value.trim(),
-            repairUnit: document.getElementById('iRepairUnit').value
-        };
-
-        try {
-            const token = getToken();
-            const response = await fetch(`/api/vessels/${id}`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(vessel)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'فشل تحديث المركب');
-            }
-
-            clearForm();
-            const saveBtn = document.getElementById('saveVesselBtn');
-            saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
-            saveBtn.onclick = addItem;
-            await renderMain();
-            alert('✅ تم تحديث المركب بنجاح');
-        } catch (err) { alert('❌ ' + err.message); }
-    }
-
-    // ============================================================
-    // 12. CLEAR SEARCH
-    // ============================================================
-
-    window.clearMainSearch = function() {
-        document.getElementById('searchMain').value = '';
-        document.getElementById('fCatMain').value = 'الكل';
-        document.getElementById('fRegMain').value = 'الكل';
-        renderMain();
-    };
-
-    // ============================================================
-    // 13. INIT FILTERS
-    // ============================================================
-
-    function initFilters() {
-        const fCatMain = document.getElementById('fCatMain');
-        const fRegMain = document.getElementById('fRegMain');
-
-        fCatMain.innerHTML = '<option value="الكل">الكل</option>';
-        CATS_LIST.forEach(c => { fCatMain.innerHTML += `<option value="${c}">${c}</option>`; });
-
-        fRegMain.innerHTML = '<option value="الكل">الكل</option>';
-        Object.keys(ZONES_DATA).forEach(r => { fRegMain.innerHTML += `<option value="${r}">${r}</option>`; });
-    }
-
-    // ============================================================
-    // 14. REFRESH
-    // ============================================================
-
-    window.refreshFleet = function() {
-        renderMain();
-    };
-
-    // ============================================================
-    // 15. INIT
-    // ============================================================
-
-    document.addEventListener('DOMContentLoaded', async function() {
-        console.log('🚀 تحميل صفحة السجل العام - Gold Edition...');
-
-        const token = getToken();
-        if (!token) {
-            console.warn('⚠️ لا يوجد توكن');
-            window.location.href = '/index.html';
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/auth/me', {
-                headers: getAuthHeaders()
-            });
-
-            if (!response.ok) {
-                console.warn('⚠️ جلسة غير صالحة');
-                localStorage.removeItem('marine_token');
+                const data = await response.json();
+                if (data.success && data.user) {
+                    window.currentUser = data.user;
+                    console.log('✅ المستخدم الحالي:', window.currentUser);
+                    console.log('👤 الدور:', window.currentUser.role);
+                }
+            } catch (error) {
+                console.error('❌ خطأ:', error);
                 window.location.href = '/index.html';
                 return;
             }
 
-            const data = await response.json();
-            if (data.success && data.user) {
-                window.currentUser = data.user;
-                console.log('✅ المستخدم الحالي:', window.currentUser);
-                console.log('👤 الدور:', window.currentUser.role);
+            if (_isDestroyed) return;
+
+            const addBtn = document.getElementById('saveVesselBtn');
+            if (addBtn) {
+                addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
             }
-        } catch (error) {
-            console.error('❌ خطأ:', error);
-            window.location.href = '/index.html';
-            return;
-        }
 
-        const addBtn = document.getElementById('saveVesselBtn');
-        if (addBtn) {
-            addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
-        }
+            initFilters();
+            updateZones();
+            await renderMain();
 
-        initFilters();
-        updateZones();
-        await renderMain();
+            console.log('✅ صفحة السجل العام - Gold Edition جاهزة');
+        });
 
-        console.log('✅ صفحة السجل العام - Gold Edition جاهزة');
-    });
+        // ============================================================
+        // 16. GLOBAL EXPOSURE
+        // ============================================================
 
-    // ============================================================
-    // 16. GLOBAL EXPOSURE
-    // ============================================================
+        window.renderMain = renderMain;
+        window.addItem = addItem;
+        window.editItem = editItem;
+        window.updateItem = updateItem;
+        window.deleteItem = deleteItem;
+        window.clearMainSearch = clearMainSearch;
+        window.updateZones = updateZones;
+        window.refreshFleet = refreshFleet;
+        window.getToken = getToken;
+        window.getAuthHeaders = getAuthHeaders;
 
-    window.renderMain = renderMain;
-    window.addItem = addItem;
-    window.editItem = editItem;
-    window.updateItem = updateItem;
-    window.deleteItem = deleteItem;
-    window.clearMainSearch = clearMainSearch;
-    window.updateZones = updateZones;
-    window.refreshFleet = refreshFleet;
-    window.getToken = getToken;
-    window.getAuthHeaders = getAuthHeaders;
+    })();
 </script>
 </div>
