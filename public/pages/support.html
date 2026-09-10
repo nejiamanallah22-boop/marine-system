@@ -1,19 +1,59 @@
 <!-- public/pages/support.html -->
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الدعم الفني</title>
+<div id="page-support">
     <style>
-        /* ===== الأساسيات ===== */
+        /* ============================================================
+           🛟 SUPPORT PAGE - FIXED v9.1
+           Fragment + Full JS + Cleanup
+           ============================================================ */
+
+        #page-support {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0e1a;
+            color: #e8edf5;
+            position: relative;
+            z-index: 1;
+        }
+
+        #page-support *,
+        #page-support *::before,
+        #page-support *::after {
+            box-sizing: border-box;
+        }
+
+        #page-support::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(96,165,250,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(74,222,128,0.03) 0%, transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+            animation: supportBgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes supportBgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        #page-support ::-webkit-scrollbar { width: 5px; height: 5px; }
+        #page-support ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        #page-support ::-webkit-scrollbar-thumb { background: #60a5fa; border-radius: 10px; }
+
         .support-container {
             padding: 20px;
             max-width: 1100px;
             margin: 0 auto;
         }
 
-        /* ===== الهيدر الاحترافي ===== */
+        /* ===== الهيدر ===== */
         .support-header {
             background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(74,222,128,0.05));
             border-radius: 20px;
@@ -196,7 +236,7 @@
             color: rgba(255,255,255,0.3);
         }
 
-        /* ===== عناصر التذاكر ===== */
+        /* ===== تذاكر ===== */
         .ticket-item {
             background: rgba(255,255,255,0.02);
             padding: 14px 16px;
@@ -295,7 +335,7 @@
             opacity: 0.3;
         }
 
-        /* ===== نموذج الإرسال ===== */
+        /* ===== نموذج ===== */
         .support-form .form-group {
             margin-bottom: 14px;
         }
@@ -358,7 +398,7 @@
             gap: 8px;
         }
 
-        .support-form .btn-submit:hover {
+        .support-form .btn-submit:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(96,165,250,0.2);
         }
@@ -370,74 +410,52 @@
             box-shadow: none;
         }
 
-        /* ===== شريط التمرير ===== */
+        /* ===== Scroll ===== */
         .tickets-scroll {
             max-height: 380px;
             overflow-y: auto;
             padding-left: 4px;
         }
 
-        .tickets-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-
+        .tickets-scroll::-webkit-scrollbar { width: 4px; }
         .tickets-scroll::-webkit-scrollbar-track {
             background: rgba(255,255,255,0.02);
             border-radius: 10px;
         }
-
         .tickets-scroll::-webkit-scrollbar-thumb {
             background: rgba(255,255,255,0.08);
             border-radius: 10px;
         }
-
         .tickets-scroll::-webkit-scrollbar-thumb:hover {
             background: rgba(255,255,255,0.15);
         }
 
-        /* ===== تحسين للشاشات الصغيرة ===== */
+        /* ===== Responsive ===== */
         @media (max-width: 992px) {
             .support-grid {
                 grid-template-columns: 1fr;
             }
-
             .support-header .header-content {
                 flex-direction: column;
                 text-align: center;
             }
-
             .support-header .title-section {
                 flex-direction: column;
             }
-
             .support-header .developer-badge {
                 width: 100%;
             }
         }
 
         @media (max-width: 600px) {
-            .support-container {
-                padding: 12px;
-            }
-
-            .support-header {
-                padding: 20px;
-            }
-
-            .support-header .title {
-                font-size: 18px;
-            }
-
-            .stats-row {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .support-card {
-                padding: 16px;
-            }
+            .support-container { padding: 12px; }
+            .support-header { padding: 20px; }
+            .support-header .title { font-size: 18px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .support-card { padding: 16px; }
         }
 
-        /* ===== تأثيرات ===== */
+        /* ===== Animations ===== */
         .fade-in {
             animation: fadeIn 0.4s ease;
         }
@@ -464,11 +482,50 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
+
+        /* ===== Toast ===== */
+        .support-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 99999;
+            max-width: 360px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,.35);
+            animation: supportToastIn .25s ease-out;
+        }
+
+        .support-toast.success {
+            background: rgba(34,197,94,.15);
+            border: 1px solid rgba(34,197,94,.2);
+        }
+
+        .support-toast.error {
+            background: rgba(239,68,68,.15);
+            border: 1px solid rgba(239,68,68,.2);
+        }
+
+        .support-toast.info {
+            background: rgba(96,165,250,.15);
+            border: 1px solid rgba(96,165,250,.2);
+        }
+
+        @keyframes supportToastIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-</head>
-<body>
+
     <div class="support-container">
-        <!-- ===== الهيدر الاحترافي ===== -->
+        <!-- ===== الهيدر ===== -->
         <div class="support-header">
             <div class="header-content">
                 <div class="title-section">
@@ -509,9 +566,9 @@
             </div>
         </div>
 
-        <!-- ===== المحتوى الرئيسي ===== -->
+        <!-- ===== المحتوى ===== -->
         <div class="support-grid">
-            <!-- ===== قائمة التذاكر ===== -->
+            <!-- قائمة التذاكر -->
             <div class="support-card">
                 <div class="card-header">
                     <h4><i class="fas fa-ticket-alt" style="color:#fbbf24;"></i> تذاكر الدعم</h4>
@@ -527,23 +584,23 @@
                 </div>
             </div>
 
-            <!-- ===== نموذج إرسال تذكرة ===== -->
+            <!-- نموذج الإرسال -->
             <div class="support-card">
                 <div class="card-header">
                     <h4><i class="fas fa-pen" style="color:#60a5fa;"></i> إنشاء تذكرة جديدة</h4>
                     <span class="badge-count">📨 جديد</span>
                 </div>
-                <form class="support-form" id="ticketForm" onsubmit="sendTicket(event)">
+                <form class="support-form" id="ticketForm">
                     <div class="form-group">
-                        <label>✏️ الموضوع</label>
-                        <input type="text" id="ticketSubject" placeholder="أدخل موضوع التذكرة..." required>
+                        <label for="ticketSubject">✏️ الموضوع</label>
+                        <input type="text" id="ticketSubject" placeholder="أدخل موضوع التذكرة..." required maxlength="120">
                     </div>
                     <div class="form-group">
-                        <label>📝 وصف المشكلة</label>
-                        <textarea id="ticketMessage" placeholder="اكتب تفاصيل مشكلتك بالتفصيل..." required></textarea>
+                        <label for="ticketMessage">📝 وصف المشكلة</label>
+                        <textarea id="ticketMessage" placeholder="اكتب تفاصيل مشكلتك بالتفصيل..." required maxlength="2000"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>🔵 مستوى الأولوية</label>
+                        <label for="ticketPriority">🔵 مستوى الأولوية</label>
                         <select id="ticketPriority">
                             <option value="منخفضة">🟢 منخفضة</option>
                             <option value="متوسطة" selected>🟡 متوسطة</option>
@@ -558,5 +615,388 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- ============================================================
+         JAVASCRIPT - v9.1 (Fragment + Full Logic + Cleanup)
+         ============================================================ -->
+    <script>
+    (function() {
+        'use strict';
+
+        console.log('🛟 Support Page v9.1 - Loading...');
+
+        // ============================================================
+        // ✅ v9.1: CLEANUP
+        // ============================================================
+        var _isDestroyed = false;
+        var _pageIntervals = [];
+        var _pageTimeouts = [];
+        var _eventListeners = [];
+
+        function _supportCleanup() {
+            if (_isDestroyed) return;
+            _isDestroyed = true;
+
+            _pageIntervals.forEach(function(id) {
+                try { clearInterval(id); } catch (e) {}
+            });
+            _pageIntervals = [];
+
+            _pageTimeouts.forEach(function(id) {
+                try { clearTimeout(id); } catch (e) {}
+            });
+            _pageTimeouts = [];
+
+            _eventListeners.forEach(function(item) {
+                try {
+                    if (item.el && item.fn) {
+                        item.el.removeEventListener(item.type, item.fn);
+                    }
+                } catch (e) {}
+            });
+            _eventListeners = [];
+
+            try {
+                delete window.sendTicket;
+                delete window.loadTickets;
+                delete window.renderTickets;
+                delete window.updateStats;
+                delete window.showToast;
+            } catch (e) {}
+
+            console.log('🧹 Support cleanup done');
+        }
+
+        window._pageCleanup = window._pageCleanup || [];
+        window._pageCleanup.push(_supportCleanup);
+
+        window.addEventListener('beforeunload', _supportCleanup);
+        window.addEventListener('pagehide', _supportCleanup);
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
+        function getToken() {
+            return localStorage.getItem('marine_token') ||
+                   localStorage.getItem('token') ||
+                   sessionStorage.getItem('token') ||
+                   null;
+        }
+
+        function getAuthHeaders() {
+            var token = getToken();
+            var headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            return headers;
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+            });
+        }
+
+        function addSafeListener(el, type, fn) {
+            if (!el) return;
+            el.addEventListener(type, fn);
+            _eventListeners.push({ el: el, type: type, fn: fn });
+        }
+
+        function formatDate(d) {
+            try {
+                var date = new Date(d);
+                if (isNaN(date.getTime())) return '-';
+                return date.toLocaleDateString('ar-TN') + ' ' + date.toLocaleTimeString('ar-TN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) { return '-'; }
+        }
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(message, type, duration) {
+            if (_isDestroyed) return;
+            type = type || 'info';
+            duration = duration || 3000;
+
+            var existing = document.querySelector('.support-toast');
+            if (existing) existing.remove();
+
+            var toast = document.createElement('div');
+            toast.className = 'support-toast ' + type;
+
+            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            var icon = document.createElement('span');
+            icon.textContent = icons[type] || icons.info;
+
+            var text = document.createElement('span');
+            text.textContent = String(message || '');
+
+            toast.appendChild(icon);
+            toast.appendChild(text);
+            document.body.appendChild(toast);
+
+            var id = setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all .25s ease';
+                var id2 = setTimeout(function() {
+                    if (toast.parentNode) toast.remove();
+                }, 250);
+                _pageTimeouts.push(id2);
+            }, duration);
+            _pageTimeouts.push(id);
+        }
+
+        // ============================================================
+        // STATE
+        // ============================================================
+        var tickets = [];
+
+        // ============================================================
+        // STATS
+        // ============================================================
+        function updateStats() {
+            if (_isDestroyed) return;
+
+            var total = tickets.length;
+            var open = tickets.filter(function(t) { return t.status === 'مفتوحة'; }).length;
+            var progress = tickets.filter(function(t) { return t.status === 'قيد المعالجة'; }).length;
+            var closed = tickets.filter(function(t) { return t.status === 'مغلقة'; }).length;
+
+            var el;
+            el = document.getElementById('statTotal'); if (el) el.textContent = total;
+            el = document.getElementById('statOpen'); if (el) el.textContent = open;
+            el = document.getElementById('statProgress'); if (el) el.textContent = progress;
+            el = document.getElementById('statClosed'); if (el) el.textContent = closed;
+
+            el = document.getElementById('ticketCount');
+            if (el) el.textContent = total + ' تذكرة';
+        }
+
+        // ============================================================
+        // RENDER TICKETS
+        // ============================================================
+        function renderTickets() {
+            if (_isDestroyed) return;
+
+            var list = document.getElementById('ticketsList');
+            if (!list) return;
+
+            if (!tickets.length) {
+                list.innerHTML = '<div class="no-tickets"><i class="fas fa-inbox"></i> لا توجد تذاكر</div>';
+                return;
+            }
+
+            var statusClass = {
+                'مفتوحة': 'open',
+                'قيد المعالجة': 'progress',
+                'مغلقة': 'closed'
+            };
+
+            var priorityClass = {
+                'منخفضة': 'low',
+                'متوسطة': 'medium',
+                'عالية': 'high',
+                'عاجلة': 'urgent'
+            };
+
+            var html = '';
+            tickets.forEach(function(t) {
+                var sClass = statusClass[t.status] || 'open';
+                var pClass = priorityClass[t.priority] || 'medium';
+
+                html +=
+                    '<div class="ticket-item fade-in">' +
+                        '<div class="ticket-header">' +
+                            '<div class="ticket-subject">' + escapeHtml(t.subject) + '</div>' +
+                            '<span class="ticket-status ' + sClass + '">' + escapeHtml(t.status) + '</span>' +
+                        '</div>' +
+                        '<div class="ticket-message">' + escapeHtml(t.message) + '</div>' +
+                        '<div class="ticket-footer">' +
+                            '<div class="user-info">' +
+                                '<i class="fas fa-user"></i> ' + escapeHtml(t.user || 'مستخدم') +
+                                ' &nbsp;|&nbsp; <i class="fas fa-clock"></i> ' + formatDate(t.createdAt) +
+                            '</div>' +
+                            '<span class="ticket-priority ' + pClass + '">' + escapeHtml(t.priority) + '</span>' +
+                        '</div>' +
+                    '</div>';
+            });
+            list.innerHTML = html;
+        }
+
+        // ============================================================
+        // LOAD TICKETS
+        // ============================================================
+        function loadTickets() {
+            if (_isDestroyed) return;
+
+            var token = getToken();
+            if (!token) {
+                console.log('ℹ️ No token — using local tickets only');
+                renderTickets();
+                updateStats();
+                return;
+            }
+
+            fetch('/api/support/tickets', { headers: getAuthHeaders() })
+                .then(function(res) {
+                    if (res.status === 401) throw new Error('Unauthorized');
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function(data) {
+                    if (_isDestroyed) return;
+                    tickets = Array.isArray(data) ? data : (data.tickets || []);
+                    renderTickets();
+                    updateStats();
+                })
+                .catch(function(err) {
+                    if (_isDestroyed) return;
+                    console.warn('⚠️ Could not load tickets from server:', err.message);
+                    renderTickets();
+                    updateStats();
+                });
+        }
+
+        // ============================================================
+        // SEND TICKET
+        // ============================================================
+        function sendTicket(event) {
+            if (event && event.preventDefault) event.preventDefault();
+            if (_isDestroyed) return;
+
+            var subjectEl = document.getElementById('ticketSubject');
+            var messageEl = document.getElementById('ticketMessage');
+            var priorityEl = document.getElementById('ticketPriority');
+            var btn = document.getElementById('sendTicketBtn');
+
+            if (!subjectEl || !messageEl || !priorityEl) return;
+
+            var subject = subjectEl.value.trim();
+            var message = messageEl.value.trim();
+            var priority = priorityEl.value;
+
+            if (!subject) { showToast('⚠️ يرجى إدخال الموضوع', 'error'); return; }
+            if (!message) { showToast('⚠️ يرجى إدخال وصف المشكلة', 'error'); return; }
+
+            var newTicket = {
+                id: 'T-' + Date.now(),
+                subject: subject,
+                message: message,
+                priority: priority,
+                status: 'مفتوحة',
+                user: (window.currentUser && window.currentUser.name) || 'مستخدم',
+                createdAt: new Date().toISOString()
+            };
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ جاري الإرسال...';
+            }
+
+            var token = getToken();
+
+            // ✅ Try to send to server, fallback to local
+            var promise;
+            if (token) {
+                promise = fetch('/api/support/tickets', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(newTicket)
+                })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                });
+            } else {
+                promise = Promise.resolve({ success: true, local: true });
+            }
+
+            promise
+                .then(function() {
+                    if (_isDestroyed) return;
+                    tickets.unshift(newTicket);
+                    renderTickets();
+                    updateStats();
+
+                    if (subjectEl) subjectEl.value = '';
+                    if (messageEl) messageEl.value = '';
+                    if (priorityEl) priorityEl.value = 'متوسطة';
+
+                    showToast('✅ تم إرسال التذكرة بنجاح', 'success');
+                })
+                .catch(function(err) {
+                    if (_isDestroyed) return;
+                    console.warn('⚠️ Server error, saving locally:', err.message);
+                    // ✅ Fallback: keep ticket locally
+                    tickets.unshift(newTicket);
+                    renderTickets();
+                    updateStats();
+
+                    if (subjectEl) subjectEl.value = '';
+                    if (messageEl) messageEl.value = '';
+                    if (priorityEl) priorityEl.value = 'متوسطة';
+
+                    showToast('✅ تم حفظ التذكرة محلياً', 'info');
+                })
+                .finally(function() {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '📨 إرسال التذكرة';
+                    }
+                });
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        function init() {
+            if (_isDestroyed) return;
+            console.log('🚀 Initializing Support page...');
+
+            // ✅ Event listeners
+            var form = document.getElementById('ticketForm');
+            if (form) {
+                addSafeListener(form, 'submit', sendTicket);
+            }
+
+            // ✅ Load tickets
+            loadTickets();
+
+            console.log('✅ Support page ready');
+        }
+
+        // ============================================================
+        // BOOT
+        // ============================================================
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+                _pageTimeouts.push(id);
+            });
+        } else {
+            var id0 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+            _pageTimeouts.push(id0);
+        }
+
+        // ============================================================
+        // EXPOSE
+        // ============================================================
+        window.sendTicket = sendTicket;
+        window.loadTickets = loadTickets;
+        window.renderTickets = renderTickets;
+        window.updateStats = updateStats;
+        window.showToast = showToast;
+
+        console.log('✅ Support Page v9.1 ready');
+
+    })();
+    </script>
+</div>
