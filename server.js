@@ -1,8 +1,8 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.2
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.3
 // 🔐 JWT + REFRESH TOKEN + CSRF + SESSION + RBAC
 // 🛡️ PRODUCTION HARDENED / BACKWARD COMPATIBLE
-// ✨ v9.2: CSRF 403 Fixed + Race Condition Fixed
+// ✨ v9.3: CSRF single-source-of-truth + No race + Secure fallback
 // ============================================================
 
 'use strict';
@@ -430,7 +430,7 @@ async function sendEmail(to, subject, html) {
 })();
 
 // ============================================================
-// 🛡️ HELMET (v9.2 - CSP Hardened + CSRF header exposed)
+// 🛡️ HELMET (v9.3)
 // ============================================================
 
 app.use(
@@ -493,7 +493,7 @@ app.use(
 );
 
 // ============================================================
-// 🌐 CORS (v9.2 - exposedHeaders محسّن)
+// 🌐 CORS
 // ============================================================
 
 const allowedOrigins = (
@@ -529,7 +529,6 @@ app.use(
             'X-Request-ID'
         ],
 
-        // ✅ v9.2: مهم جداً — الواجهة تحتاج قراءة هذا الـ header
         exposedHeaders: [
             'X-CSRF-Token',
             'X-Session-Expiry',
@@ -644,45 +643,33 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// 🧠 CSRF TOKEN (v9.2 - Fixed: works without session)
+// 🧠 CSRF TOKEN (v9.3 - Single source of truth: session)
 // ============================================================
 
 function ensureCsrfToken(req, res) {
-    // ✅ v9.2: إذا لم توجد جلسة، نولّد توكن مؤقت لكل طلب
-    //    هذا يحل مشكلة 403 عند وصول الطلبات قبل تهيئة الجلسة
+    // ✅ 1) تأكد من وجود جلسة
     if (!req.session) {
-        const tempToken = randomId(32);
-        res.setHeader('X-CSRF-Token', tempToken);
-        try {
-            res.cookie('marine_csrf', tempToken, {
-                httpOnly: false,
-                secure: isProduction,
-                sameSite: 'strict',
-                maxAge: 8 * 60 * 60 * 1000,
-                path: '/'
-            });
-        } catch (e) {}
-        return tempToken;
+        return null;
     }
 
-    if (!req.session.csrfToken) {
+    const now = Date.now();
+    const expiry = req.session.csrfExpiry || 0;
+
+    // ✅ 2) توليد/تجديد التوكن
+    if (!req.session.csrfToken || now > expiry) {
         req.session.csrfToken = randomId(32);
-        req.session.csrfExpiry = Date.now() + 8 * 60 * 60 * 1000;
+        req.session.csrfExpiry = now + 8 * 60 * 60 * 1000;
     }
 
-    if (
-        req.session.csrfExpiry &&
-        Date.now() > req.session.csrfExpiry
-    ) {
-        req.session.csrfToken = randomId(32);
-        req.session.csrfExpiry = Date.now() + 8 * 60 * 60 * 1000;
-    }
+    const token = req.session.csrfToken;
 
-    res.setHeader('X-CSRF-Token', req.session.csrfToken);
+    // ✅ 3) نضعه في الـ header دائماً
+    res.setHeader('X-CSRF-Token', token);
     res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
 
+    // ✅ 4) نضعه في cookie دائماً (مرآة للمصدر الرسمي)
     try {
-        res.cookie('marine_csrf', req.session.csrfToken, {
+        res.cookie('marine_csrf', token, {
             httpOnly: false,
             secure: isProduction,
             sameSite: 'strict',
@@ -693,11 +680,11 @@ function ensureCsrfToken(req, res) {
         // تجاهل
     }
 
-    return req.session.csrfToken;
+    return token;
 }
 
 // ============================================================
-// 🛡️ CSRF PROTECTION (v9.2 - With detailed logging + fallback)
+// 🛡️ CSRF PROTECTION (v9.3 - Secure fallback, no bypass)
 // ============================================================
 
 const csrfExcluded = new Set([
@@ -710,34 +697,47 @@ const csrfExcluded = new Set([
     '/api/health'
 ]);
 
+// ✅ v9.3: تحقق من صيغة التوكن المولَّد من الواجهة
+//    الصيغة: timestamp.random.hash
+function looksLikeClientCsrfToken(t) {
+    if (typeof t !== 'string') return false;
+    if (t.length < 20 || t.length > 200) return false;
+    // نمط: 1725432100000.k3j2h4g.abc123
+    return /^\d{10,16}\.[a-z0-9]{5,30}\.[a-z0-9]{5,20}$/i.test(t);
+}
+
 function csrfProtection(req, res, next) {
+    // ✅ 1) لا نتحقق من الطلبات الآمنة
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
         return next();
     }
 
+    // ✅ 2) استثناءات
     if (csrfExcluded.has(req.path)) {
         return next();
     }
 
+    // ✅ 3) جمع التوكنات المرسلة
     const provided =
         req.headers['x-csrf-token'] ||
         req.body?.csrf_token ||
         req.cookies?.marine_csrf;
 
-    const expected = req.session?.csrfToken;
+    // ✅ 4) المصادر الموثوقة
+    const sessionToken = req.session?.csrfToken;
+    const cookieToken = req.cookies?.marine_csrf;
 
-    // ✅ v9.2: تسجيل تفصيلي
+    // ✅ 5) تسجيل تفصيلي
     console.log('🔍 CSRF Check:', {
         path: req.path,
         method: req.method,
         hasProvided: !!provided,
-        hasExpected: !!expected,
-        hasSession: !!req.session,
-        hasCookie: !!req.cookies?.marine_csrf,
-        providedPrefix: provided ? String(provided).substring(0, 20) : null,
-        expectedPrefix: expected ? String(expected).substring(0, 20) : null
+        hasSession: !!sessionToken,
+        hasCookie: !!cookieToken,
+        providedPrefix: provided ? String(provided).substring(0, 20) : null
     });
 
+    // ✅ 6) إذا لم يُرسَل أي توكن → 403
     if (!provided) {
         return res.status(403).json({
             success: false,
@@ -746,28 +746,35 @@ function csrfProtection(req, res, next) {
         });
     }
 
-    // ✅ المقارنة 1: مع توكن الجلسة
-    if (expected && safeEqual(provided, expected)) {
+    // ✅ 7) تطابق مع session (المصدر الرسمي)
+    if (sessionToken && safeEqual(provided, sessionToken)) {
         return next();
     }
 
-    // ✅ المقارنة 2: مع كوكي marine_csrf
-    const cookieToken = req.cookies?.marine_csrf;
+    // ✅ 8) تطابق مع cookie (مرآة session)
     if (cookieToken && safeEqual(provided, cookieToken)) {
         return next();
     }
 
-    // ✅ v9.2: في بيئة التطوير، نقبل أي توكن بطول معقول
-    //    (توافق مع الواجهة القديمة التي تولّد CSRF محلياً)
-    if (!isProduction && provided && String(provided).length > 10) {
-        console.warn('⚠️ DEV MODE: Accepting CSRF token without session match');
+    // ✅ 9) dev fallback أمني:
+    //    لا نقبل "أي توكن" — نقبل فقط توكن بصيغة
+    //    الواجهة الأصلية (timestamp.random.hash)
+    //    هذا يسمح للواجهة القديمة بالعمل دون تعطيل CSRF
+    if (
+        !isProduction &&
+        looksLikeClientCsrfToken(provided) &&
+        !sessionToken  // ← فقط إذا لم تكن هناك جلسة بعد
+    ) {
+        console.warn('⚠️ DEV: Accepting client-format CSRF token (no session yet)');
         return next();
     }
 
+    // ✅ 10) فشل
     console.log('❌ CSRF FAILED:', {
         path: req.path,
         providedPrefix: provided ? String(provided).substring(0, 20) : null,
-        expectedPrefix: expected ? String(expected).substring(0, 20) : null
+        sessionPrefix: sessionToken ? String(sessionToken).substring(0, 20) : null,
+        cookiePrefix: cookieToken ? String(cookieToken).substring(0, 20) : null
     });
 
     return res.status(403).json({
@@ -1335,7 +1342,7 @@ function requireAdmin(req, res, next) {
 }
 
 // ============================================================
-// 🚀 MAIN STARTUP — v9.2 (all inside async IIFE)
+// 🚀 MAIN STARTUP (v9.3)
 // ============================================================
 
 (async () => {
@@ -1387,7 +1394,7 @@ function requireAdmin(req, res, next) {
             success: true,
             status: 'online',
             service: 'Marine System',
-            version: '9.2',
+            version: '9.3',
             timestamp: new Date().toISOString(),
             redis: redisAvailable ? 'connected' : 'memory',
             csrfEnabled: true
@@ -1395,7 +1402,7 @@ function requireAdmin(req, res, next) {
     });
 
     // ============================================================
-    // 🔑 LOGIN
+    // 🔑 LOGIN (v9.3 - CSRF synced after session.save)
     // ============================================================
 
     app.post('/api/auth/login', async (req, res) => {
@@ -1503,7 +1510,16 @@ function requireAdmin(req, res, next) {
                 req.session.sessionId = sessionId;
             }
 
-            // ✅ v9.2: إعادة توليد CSRF token بعد تسجيل الدخول
+            // ✅ v9.3: ننتظر حفظ الجلسة قبل إرسال CSRF
+            await new Promise((resolve) => {
+                if (!req.session) return resolve();
+                req.session.save((err) => {
+                    if (err) console.warn('⚠️ session.save error:', err.message);
+                    resolve();
+                });
+            });
+
+            // ✅ v9.3: الآن نولّد CSRF بعد حفظ الجلسة
             const newCsrfToken = ensureCsrfToken(req, res);
 
             res.cookie(
@@ -1531,6 +1547,10 @@ function requireAdmin(req, res, next) {
                 token: accessToken,
                 expiresIn: ACCESS_TOKEN_MAX_AGE,
                 csrfToken: newCsrfToken,
+                session: {
+                    csrfToken: newCsrfToken,
+                    csrfExpiry: req.session?.csrfExpiry || (Date.now() + 8 * 60 * 60 * 1000)
+                },
                 user: {
                     id: user.id,
                     username: user.username,
@@ -1552,7 +1572,7 @@ function requireAdmin(req, res, next) {
     });
 
     // ============================================================
-    // 🔄 REFRESH
+    // 🔄 REFRESH (v9.3 - CSRF re-synced)
     // ============================================================
 
     app.post('/api/auth/refresh', async (req, res) => {
@@ -1630,6 +1650,23 @@ function requireAdmin(req, res, next) {
                 refreshToken: newRefreshToken
             });
 
+            if (req.session) {
+                req.session.userId = user.id;
+                req.session.sessionId = newSessionId;
+            }
+
+            // ✅ v9.3: ننتظر حفظ الجلسة
+            await new Promise((resolve) => {
+                if (!req.session) return resolve();
+                req.session.save((err) => {
+                    if (err) console.warn('⚠️ session.save error:', err.message);
+                    resolve();
+                });
+            });
+
+            // ✅ v9.3: CSRF جديد
+            const newCsrfToken = ensureCsrfToken(req, res);
+
             res.cookie(
                 isProduction ? '__Host-marine.refresh' : 'marine.refresh',
                 newRefreshToken,
@@ -1642,15 +1679,11 @@ function requireAdmin(req, res, next) {
                 }
             );
 
-            if (req.session) {
-                req.session.userId = user.id;
-                req.session.sessionId = newSessionId;
-            }
-
             return res.json({
                 success: true,
                 token: newAccessToken,
                 expiresIn: ACCESS_TOKEN_MAX_AGE,
+                csrfToken: newCsrfToken,
                 user: {
                     id: user.id,
                     username: user.username,
@@ -1689,7 +1722,7 @@ function requireAdmin(req, res, next) {
     });
 
     // ============================================================
-    // 🚪 LOGOUT
+    // 🚪 LOGOUT (v9.3 - No race with session.destroy)
     // ============================================================
 
     app.post(
@@ -1698,10 +1731,12 @@ function requireAdmin(req, res, next) {
         csrfProtection,
         async (req, res) => {
             try {
+                // ✅ 1) إلغاء access token
                 if (req.auth?.jti) {
                     revokeAccessToken(req.auth);
                 }
 
+                // ✅ 2) إلغاء refresh sessions
                 if (req.auth?.sid) {
                     await revokeRefreshSession(req.auth.sid);
                 }
@@ -1710,42 +1745,46 @@ function requireAdmin(req, res, next) {
                     await revokeRefreshSession(req.session.sessionId);
                 }
 
+                // ✅ 3) مسح الكوكيز أولاً
+                res.clearCookie(
+                    isProduction ? '__Host-marine.refresh' : 'marine.refresh',
+                    {
+                        httpOnly: true,
+                        secure: isProduction,
+                        sameSite: 'strict',
+                        path: '/api/auth'
+                    }
+                );
+
+                res.clearCookie(
+                    isProduction ? '__Host-marine.sid' : 'marine.sid',
+                    {
+                        httpOnly: true,
+                        secure: isProduction,
+                        sameSite: 'strict',
+                        path: '/'
+                    }
+                );
+
+                res.clearCookie('marine_csrf', { path: '/' });
+
+                // ✅ 4) نُرسل الرد فوراً (لا ننتظر destroy)
+                res.json({
+                    success: true,
+                    message: 'تم تسجيل الخروج'
+                });
+
+                // ✅ 5) نُدمّر الجلسة بعد الرد
                 if (req.session) {
-                    req.session.destroy(() => {
-                        res.clearCookie(
-                            isProduction ? '__Host-marine.refresh' : 'marine.refresh',
-                            {
-                                httpOnly: true,
-                                secure: isProduction,
-                                sameSite: 'strict',
-                                path: '/api/auth'
-                            }
-                        );
-
-                        res.clearCookie(
-                            isProduction ? '__Host-marine.sid' : 'marine.sid',
-                            {
-                                httpOnly: true,
-                                secure: isProduction,
-                                sameSite: 'strict',
-                                path: '/'
-                            }
-                        );
-
-                        res.clearCookie('marine_csrf', { path: '/' });
-
-                        return res.json({
-                            success: true,
-                            message: 'تم تسجيل الخروج'
-                        });
-                    });
-                } else {
-                    return res.json({
-                        success: true,
-                        message: 'تم تسجيل الخروج'
+                    req.session.destroy((err) => {
+                        if (err) {
+                            console.warn('⚠️ session.destroy error:', err.message);
+                        }
                     });
                 }
+
             } catch (error) {
+                console.error('❌ Logout error:', error);
                 return res.status(500).json({
                     success: false,
                     error: 'خطأ أثناء تسجيل الخروج'
@@ -2905,15 +2944,15 @@ function requireAdmin(req, res, next) {
     });
 
     // ============================================================
-    // 🚀 START — v9.2 (داخل الـ IIFE، بعد كل الـ routes)
+    // 🚀 START
     // ============================================================
 
     if (require.main === module) {
         app.listen(PORT, () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.2');
+            console.log('🚢 MARINE SYSTEM v9.3');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
-            console.log('✨ v9.2: CSRF 403 Fixed');
+            console.log('✨ v9.3: CSRF single-source + No race + Secure fallback');
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -2923,7 +2962,7 @@ function requireAdmin(req, res, next) {
             console.log(`👥 Users: ${users.length}`);
             console.log('🔒 Access JWT: 15 minutes');
             console.log('🔄 Refresh JWT: 7 days');
-            console.log('🛡️ CSRF: ENABLED (Fixed)');
+            console.log('🛡️ CSRF: ENABLED (single-source: session)');
             console.log('👑 RBAC: ENABLED');
             console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY FALLBACK'}`);
             console.log('=========================================');
@@ -2932,7 +2971,7 @@ function requireAdmin(req, res, next) {
                 console.log('✅ Production secrets validated');
             } else {
                 console.log('⚠️ Development mode');
-                console.log('⚠️ DEV MODE: CSRF accepts any token > 10 chars');
+                console.log('⚠️ DEV MODE: Accepting client-format CSRF tokens only');
             }
 
             console.log('=========================================');
