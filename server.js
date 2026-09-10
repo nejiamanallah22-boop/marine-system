@@ -317,7 +317,6 @@ function sanitizeString(value) {
         }
     }
 
-    // fallback بسيط: إزالة < > والرموز الخطيرة
     return value
         .replace(/[<>]/g, '')
         .replace(/javascript:/gi, '')
@@ -442,7 +441,7 @@ app.use(
 
                 scriptSrc: [
                     "'self'",
-                    "'unsafe-inline'",     // ⚠️ ضروري للواجهة الحالية
+                    "'unsafe-inline'",
                     // ✅ v9.1: تم حذف 'unsafe-eval'
                     'https://unpkg.com',
                     'https://cdnjs.cloudflare.com',
@@ -493,7 +492,6 @@ app.use(
 
                 formAction: ["'self'"],
 
-                // ✅ v9.1: منع تحويل HTTP إلى HTTPS في التطوير
                 ...(isProduction ? {
                     upgradeInsecureRequests: []
                 } : {})
@@ -520,7 +518,6 @@ app.use(
 
         hidePoweredBy: true,
 
-        // ✅ v9.1: إضافات أمنية
         crossOriginEmbedderPolicy: false,
         crossOriginResourcePolicy: { policy: 'same-origin' },
         crossOriginOpenerPolicy: { policy: 'same-origin' }
@@ -632,7 +629,6 @@ app.use(express.urlencoded({ extended: false, limit: '20kb' }));
 
 app.use(cookieParser());
 
-// ✅ v9.1: XSS Sanitization بدل xss-clean المهجور
 app.use(xssSanitizer);
 
 app.use(hpp());
@@ -641,7 +637,7 @@ app.use(hpp());
 // 🧠 SESSION (v9.1 - Redis Support)
 // ============================================================
 
-let sessionStore = undefined; // memory store افتراضياً
+let sessionStore = undefined;
 
 async function buildSessionStore() {
     await initRedis();
@@ -659,30 +655,6 @@ async function buildSessionStore() {
         }
     }
 }
-
-// نُهيّئ الجلسة بعد Redis
-(async () => {
-    await buildSessionStore();
-
-    app.use(
-        session({
-            secret: SESSION_SECRET,
-            resave: false,
-            saveUninitialized: false,
-            store: sessionStore,
-            name: isProduction ? '__Host-marine.sid' : 'marine.sid',
-            cookie: {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: 'strict',
-                maxAge: 30 * 24 * 60 * 60 * 1000,
-                path: '/'
-            },
-            rolling: true,
-            proxy: isProduction
-        })
-    );
-})();
 
 // ============================================================
 // 🆔 REQUEST ID
@@ -720,14 +692,15 @@ app.use((req, res, next) => {
 // ============================================================
 
 function ensureCsrfToken(req, res) {
-    // ✅ نولّد توكن جديد فقط لو مش موجود
-    if (!req.session || !req.session.csrfToken) {
-        if (!req.session) return; // لا جلسة
+    if (!req.session) {
+        return;
+    }
+
+    if (!req.session.csrfToken) {
         req.session.csrfToken = randomId(32);
         req.session.csrfExpiry = Date.now() + 8 * 60 * 60 * 1000;
     }
 
-    // ✅ نجدد لو انتهى
     if (
         req.session.csrfExpiry &&
         Date.now() > req.session.csrfExpiry
@@ -736,30 +709,21 @@ function ensureCsrfToken(req, res) {
         req.session.csrfExpiry = Date.now() + 8 * 60 * 60 * 1000;
     }
 
-    // ✅ نرسله في Header (للواجهة الحديثة)
     res.setHeader('X-CSRF-Token', req.session.csrfToken);
     res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
 
-    // ✅ v9.1: نرسله في Cookie قابل للقراءة من JS
-    //    (لأن الواجهة الحالية تقرأ CSRF من localStorage الذي لا يعمل معنا)
-    //    هذا آمن لأن الخادم هو مصدر الحقيقة
     try {
         res.cookie('marine_csrf', req.session.csrfToken, {
-            httpOnly: false, // الواجهة تحتاج قراءته
+            httpOnly: false,
             secure: isProduction,
             sameSite: 'strict',
             maxAge: 8 * 60 * 60 * 1000,
             path: '/'
         });
     } catch (e) {
-        // تجاهل — قد لا تكون الجلسة جاهزة بعد
+        // تجاهل
     }
 }
-
-app.use((req, res, next) => {
-    ensureCsrfToken(req, res);
-    next();
-});
 
 // ============================================================
 // 🛡️ CSRF PROTECTION (v9.1 - Compatible)
@@ -784,7 +748,6 @@ function csrfProtection(req, res, next) {
         return next();
     }
 
-    // ✅ v9.1: نقبل التوكن من أماكن متعددة (توافق مع الواجهة)
     const provided =
         req.headers['x-csrf-token'] ||
         req.body?.csrf_token ||
@@ -804,8 +767,6 @@ function csrfProtection(req, res, next) {
         return next();
     }
 
-    // ✅ v9.1: لو التوكن يطابق الكوكي الذي أرسلناه → نقبله
-    //    (هذا يحل التعارض مع الواجهة الحالية التي تولد CSRF محلياً)
     const cookieToken = req.cookies?.marine_csrf;
     if (cookieToken && safeEqual(provided, cookieToken)) {
         return next();
@@ -831,6 +792,7 @@ function generateAccessToken(user, sessionId) {
             role: user.role,
             name: user.name,
             sid: sessionId,
+            ver: user.tokenVersion || 0,
             type: 'access'
         },
         JWT_SECRET,
@@ -865,7 +827,7 @@ function generateRefreshToken(user, sessionId) {
 // 🔄 REFRESH TOKEN STORE (v9.1 - Redis + Memory Fallback)
 // ============================================================
 
-const refreshSessions = new Map(); // fallback
+const refreshSessions = new Map();
 
 async function saveRefreshSession({ sessionId, userId, refreshToken }) {
     const record = {
@@ -926,14 +888,12 @@ async function revokeRefreshSession(sessionId) {
 }
 
 async function revokeAllUserSessions(userId) {
-    // Memory
     for (const [sessionId, record] of refreshSessions) {
         if (record.userId === userId) {
             refreshSessions.delete(sessionId);
         }
     }
 
-    // Redis
     if (redisAvailable && redisClient) {
         try {
             const keys = await redisClient.keys('marine:refresh:*');
@@ -1019,6 +979,14 @@ const users = [
         lockedUntil: null
     }
 ];
+
+// ============================================================
+// 🔗 BRIDGE: expose users & revoked tokens globally
+// ============================================================
+
+global.__marineUsers = users;
+global.__isAccessTokenRevoked = isAccessTokenRevoked;
+global.__marineRevokedTokens = revokedAccessTokens;
 
 // ============================================================
 // 🚢 VESSELS
@@ -1209,7 +1177,6 @@ function createPasswordResetToken(email) {
     return token;
 }
 
-// ✅ v9.1: التحقق يعتمد على token فقط (أكثر أماناً)
 function findResetTokenRecord(token) {
     if (typeof token !== 'string' || !token) return null;
 
@@ -1225,7 +1192,6 @@ function findResetTokenRecord(token) {
     return record;
 }
 
-// ✅ v9.1: توافق رجعي للدالة القديمة
 function verifyResetToken(email, token) {
     const record = findResetTokenRecord(token);
     return !!(record && record.email === email);
@@ -1375,1595 +1341,1618 @@ function requireAdmin(req, res, next) {
 }
 
 // ============================================================
-// 🔐 PUBLIC AUTH ROUTES
+// 🧠 SESSION MIDDLEWARE (يجب أن يكون بعد تعريف CSRF)
 // ============================================================
 
-app.get('/api/csrf-token', (req, res) => {
-    ensureCsrfToken(req, res);
+(async () => {
+    await buildSessionStore();
 
-    res.json({
-        success: true,
-        token: req.session.csrfToken,
-        expiresIn: 8 * 60 * 60 * 1000
+    app.use(
+        session({
+            secret: SESSION_SECRET,
+            resave: false,
+            saveUninitialized: false,
+            store: sessionStore,
+            name: isProduction ? '__Host-marine.sid' : 'marine.sid',
+            cookie: {
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: 'strict',
+                maxAge: 30 * 24 * 60 * 60 * 1000,
+                path: '/'
+            },
+            rolling: true,
+            proxy: isProduction
+        })
+    );
+
+    // ✅ CSRF middleware بعد الجلسة
+    app.use((req, res, next) => {
+        ensureCsrfToken(req, res);
+        next();
     });
-});
 
-app.get('/api/health', (req, res) => {
-    res.json({
-        success: true,
-        status: 'online',
-        service: 'Marine System',
-        version: '9.1',
-        timestamp: new Date().toISOString(),
-        redis: redisAvailable ? 'connected' : 'memory'
+    // ============================================================
+    // 🔐 PUBLIC AUTH ROUTES
+    // ============================================================
+
+    app.get('/api/csrf-token', (req, res) => {
+        ensureCsrfToken(req, res);
+
+        res.json({
+            success: true,
+            token: req.session?.csrfToken || null,
+            expiresIn: 8 * 60 * 60 * 1000
+        });
     });
-});
 
-// ============================================================
-// 🔑 LOGIN
-// ============================================================
+    app.get('/api/health', (req, res) => {
+        res.json({
+            success: true,
+            status: 'online',
+            service: 'Marine System',
+            version: '9.1',
+            timestamp: new Date().toISOString(),
+            redis: redisAvailable ? 'connected' : 'memory'
+        });
+    });
 
-app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
+    // ============================================================
+    // 🔑 LOGIN
+    // ============================================================
 
-        const clientIP = req.ip || req.socket.remoteAddress;
+    app.post('/api/auth/login', async (req, res) => {
+        try {
+            const { username, password } = req.body;
 
-        if (
-            typeof username !== 'string' ||
-            typeof password !== 'string' ||
-            !username ||
-            !password
-        ) {
-            return res.status(400).json({
-                success: false,
-                error: 'بيانات غير صالحة'
-            });
-        }
+            const clientIP = req.ip || req.socket.remoteAddress;
 
-        const user = users.find(item => item.username === username);
+            if (
+                typeof username !== 'string' ||
+                typeof password !== 'string' ||
+                !username ||
+                !password
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'بيانات غير صالحة'
+                });
+            }
 
-        if (!user) {
-            addSystemLog({
-                action: 'LOGIN_FAILED',
-                details: 'Unknown username',
-                ip: clientIP,
-                requestId: req.requestId
-            });
+            const user = users.find(item => item.username === username);
 
-            return res.status(401).json({
-                success: false,
-                error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
-            });
-        }
-
-        if (
-            user.locked &&
-            user.lockedUntil &&
-            Date.now() < user.lockedUntil
-        ) {
-            return res.status(403).json({
-                success: false,
-                error: `الحساب مقفل. حاول مرة أخرى بعد ${Math.ceil(
-                    (user.lockedUntil - Date.now()) / 60000
-                )} دقيقة`
-            });
-        }
-
-        const valid = await bcrypt.compare(password, user.password);
-
-        if (!valid) {
-            user.loginAttempts = (user.loginAttempts || 0) + 1;
-
-            if (user.loginAttempts >= 5) {
-                user.locked = true;
-                user.lockedUntil = Date.now() + 30 * 60 * 1000;
-
+            if (!user) {
                 addSystemLog({
-                    userId: user.id,
-                    action: 'ACCOUNT_LOCKED',
-                    details: 'Too many failed login attempts',
+                    action: 'LOGIN_FAILED',
+                    details: 'Unknown username',
                     ip: clientIP,
                     requestId: req.requestId
                 });
 
+                return res.status(401).json({
+                    success: false,
+                    error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
+                });
+            }
+
+            if (
+                user.locked &&
+                user.lockedUntil &&
+                Date.now() < user.lockedUntil
+            ) {
                 return res.status(403).json({
                     success: false,
-                    error: 'الحساب مقفل لمدة 30 دقيقة بسبب كثرة المحاولات الفاشلة'
+                    error: `الحساب مقفل. حاول مرة أخرى بعد ${Math.ceil(
+                        (user.lockedUntil - Date.now()) / 60000
+                    )} دقيقة`
                 });
             }
 
-            addSystemLog({
-                userId: user.id,
-                action: 'LOGIN_FAILED',
-                details: 'Invalid password',
-                ip: clientIP,
-                requestId: req.requestId
-            });
+            const valid = await bcrypt.compare(password, user.password);
 
-            return res.status(401).json({
-                success: false,
-                error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
-            });
-        }
+            if (!valid) {
+                user.loginAttempts = (user.loginAttempts || 0) + 1;
 
-        user.loginAttempts = 0;
-        user.locked = false;
-        user.lockedUntil = null;
-        user.lastLogin = new Date().toISOString();
+                if (user.loginAttempts >= 5) {
+                    user.locked = true;
+                    user.lockedUntil = Date.now() + 30 * 60 * 1000;
 
-        const sessionId = randomId(32);
+                    addSystemLog({
+                        userId: user.id,
+                        action: 'ACCOUNT_LOCKED',
+                        details: 'Too many failed login attempts',
+                        ip: clientIP,
+                        requestId: req.requestId
+                    });
 
-        const accessToken = generateAccessToken(user, sessionId);
-        const refreshToken = generateRefreshToken(user, sessionId);
+                    return res.status(403).json({
+                        success: false,
+                        error: 'الحساب مقفل لمدة 30 دقيقة بسبب كثرة المحاولات الفاشلة'
+                    });
+                }
 
-        await saveRefreshSession({
-            sessionId,
-            userId: user.id,
-            refreshToken
-        });
-
-        req.session.userId = user.id;
-        req.session.sessionId = sessionId;
-
-        // ✅ v9.1: تحديث CSRF بعد تسجيل الدخول
-        ensureCsrfToken(req, res);
-
-        res.cookie(
-            isProduction ? '__Host-marine.refresh' : 'marine.refresh',
-            refreshToken,
-            {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: 'strict',
-                maxAge: REFRESH_TOKEN_MAX_AGE,
-                path: '/api/auth'
-            }
-        );
-
-        addSystemLog({
-            userId: user.id,
-            action: 'LOGIN_SUCCESS',
-            details: `User ${user.username} logged in`,
-            ip: clientIP,
-            requestId: req.requestId
-        });
-
-        // IMPORTANT: token remains returned for old frontend
-
-        return res.json({
-            success: true,
-            token: accessToken,
-            expiresIn: ACCESS_TOKEN_MAX_AGE,
-            user: {
-                id: user.id,
-                username: user.username,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                active: user.active,
-                lastLogin: user.lastLogin
-            }
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-
-        return res.status(500).json({
-            success: false,
-            error: 'خطأ في الخادم'
-        });
-    }
-});
-
-// ============================================================
-// 🔄 REFRESH
-// ============================================================
-
-app.post('/api/auth/refresh', async (req, res) => {
-    try {
-        const refreshToken =
-            req.cookies[
-                isProduction ? '__Host-marine.refresh' : 'marine.refresh'
-            ];
-
-        if (!refreshToken) {
-            return res.status(401).json({
-                success: false,
-                error: 'Refresh token غير موجود'
-            });
-        }
-
-        const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET, {
-            issuer: 'marine-system',
-            audience: 'marine-system-client'
-        });
-
-        if (decoded.type !== 'refresh') {
-            return res.status(401).json({
-                success: false,
-                error: 'Refresh token غير صالح'
-            });
-        }
-
-        const record = await getRefreshSession(decoded.sid);
-
-        if (!record) {
-            return res.status(401).json({
-                success: false,
-                error: 'جلسة Refresh غير موجودة أو منتهية'
-            });
-        }
-
-        if (record.userId !== decoded.sub) {
-            return res.status(401).json({
-                success: false,
-                error: 'جلسة غير صالحة'
-            });
-        }
-
-        if (!safeEqual(record.tokenHash, hashToken(refreshToken))) {
-            // Possible token reuse
-            await revokeRefreshSession(decoded.sid);
-
-            return res.status(401).json({
-                success: false,
-                error: 'Refresh token غير صالح'
-            });
-        }
-
-        const user = users.find(item => item.id === decoded.sub);
-
-        if (!user || !user.active) {
-            await revokeRefreshSession(decoded.sid);
-
-            return res.status(401).json({
-                success: false,
-                error: 'المستخدم غير موجود أو غير نشط'
-            });
-        }
-
-        // ROTATION
-        const newSessionId = randomId(32);
-
-        const newRefreshToken = generateRefreshToken(user, newSessionId);
-        const newAccessToken = generateAccessToken(user, newSessionId);
-
-        await revokeRefreshSession(decoded.sid);
-
-        await saveRefreshSession({
-            sessionId: newSessionId,
-            userId: user.id,
-            refreshToken: newRefreshToken
-        });
-
-        res.cookie(
-            isProduction ? '__Host-marine.refresh' : 'marine.refresh',
-            newRefreshToken,
-            {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: 'strict',
-                maxAge: REFRESH_TOKEN_MAX_AGE,
-                path: '/api/auth'
-            }
-        );
-
-        req.session.userId = user.id;
-        req.session.sessionId = newSessionId;
-
-        return res.json({
-            success: true,
-            token: newAccessToken,
-            expiresIn: ACCESS_TOKEN_MAX_AGE,
-            user: {
-                id: user.id,
-                username: user.username,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                active: user.active,
-                lastLogin: user.lastLogin
-            }
-        });
-    } catch (error) {
-        return res.status(401).json({
-            success: false,
-            error: 'Refresh token غير صالح أو منتهي'
-        });
-    }
-});
-
-// ============================================================
-// 👤 CURRENT USER
-// ============================================================
-
-app.get('/api/auth/me', authenticateAccessToken, (req, res) => {
-    res.json({
-        success: true,
-        user: {
-            id: req.user.id,
-            username: req.user.username,
-            name: req.user.name,
-            email: req.user.email,
-            role: req.user.role,
-            active: req.user.active,
-            lastLogin: req.user.lastLogin
-        }
-    });
-});
-
-// ============================================================
-// 🚪 LOGOUT
-// ============================================================
-
-app.post(
-    '/api/auth/logout',
-    authenticateAccessToken,
-    csrfProtection,
-    async (req, res) => {
-        try {
-            if (req.auth?.jti) {
-                revokeAccessToken(req.auth);
-            }
-
-            if (req.auth?.sid) {
-                await revokeRefreshSession(req.auth.sid);
-            }
-
-            if (req.session?.sessionId) {
-                await revokeRefreshSession(req.session.sessionId);
-            }
-
-            req.session.destroy(() => {
-                res.clearCookie(
-                    isProduction ? '__Host-marine.refresh' : 'marine.refresh',
-                    {
-                        httpOnly: true,
-                        secure: isProduction,
-                        sameSite: 'strict',
-                        path: '/api/auth'
-                    }
-                );
-
-                res.clearCookie(
-                    isProduction ? '__Host-marine.sid' : 'marine.sid',
-                    {
-                        httpOnly: true,
-                        secure: isProduction,
-                        sameSite: 'strict',
-                        path: '/'
-                    }
-                );
-
-                return res.json({
-                    success: true,
-                    message: 'تم تسجيل الخروج'
+                addSystemLog({
+                    userId: user.id,
+                    action: 'LOGIN_FAILED',
+                    details: 'Invalid password',
+                    ip: clientIP,
+                    requestId: req.requestId
                 });
-            });
-        } catch (error) {
-            return res.status(500).json({
-                success: false,
-                error: 'خطأ أثناء تسجيل الخروج'
-            });
-        }
-    }
-);
 
-// ============================================================
-// 🔐 PASSWORD RESET
-// ============================================================
-
-app.post(
-    '/api/auth/forgot-password',
-    forgotPasswordLimiter,
-    async (req, res) => {
-        try {
-            const { email } = req.body;
-
-            if (typeof email !== 'string' || !email.trim()) {
-                return res.status(400).json({
+                return res.status(401).json({
                     success: false,
-                    error: 'البريد الإلكتروني مطلوب'
+                    error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
                 });
             }
 
-            const user = users.find(item => item.email === email.trim());
+            user.loginAttempts = 0;
+            user.locked = false;
+            user.lockedUntil = null;
+            user.lastLogin = new Date().toISOString();
 
-            // Do not reveal account existence
-            if (!user) {
-                return res.json({
-                    success: true,
-                    message:
-                        'إذا كان البريد مسجلاً فسيتم إرسال تعليمات إعادة التعيين'
-                });
+            const sessionId = randomId(32);
+
+            const accessToken = generateAccessToken(user, sessionId);
+            const refreshToken = generateRefreshToken(user, sessionId);
+
+            await saveRefreshSession({
+                sessionId,
+                userId: user.id,
+                refreshToken
+            });
+
+            if (req.session) {
+                req.session.userId = user.id;
+                req.session.sessionId = sessionId;
+                ensureCsrfToken(req, res);
             }
 
-            const resetToken = createPasswordResetToken(user.email);
-
-            const resetLink = `${req.protocol}://${req.get(
-                'host'
-            )}/reset-password?token=${encodeURIComponent(
-                resetToken
-            )}&email=${encodeURIComponent(user.email)}`;
-
-            const emailHtml = `
-                <div dir="rtl" style="font-family:Arial,sans-serif">
-                    <h2>🔐 إعادة تعيين كلمة المرور</h2>
-                    <p>مرحباً <strong>${String(user.name || user.username)}</strong></p>
-                    <p>استخدم الرابط التالي لإعادة تعيين كلمة المرور.</p>
-                    <p><a href="${resetLink}">إعادة تعيين كلمة المرور</a></p>
-                    <p>الرابط صالح لمدة ساعة واحدة.</p>
-                </div>
-            `;
-
-            await sendEmail(
-                user.email,
-                'إعادة تعيين كلمة المرور - منظومة الوسائل البحرية',
-                emailHtml
+            res.cookie(
+                isProduction ? '__Host-marine.refresh' : 'marine.refresh',
+                refreshToken,
+                {
+                    httpOnly: true,
+                    secure: isProduction,
+                    sameSite: 'strict',
+                    maxAge: REFRESH_TOKEN_MAX_AGE,
+                    path: '/api/auth'
+                }
             );
 
             addSystemLog({
                 userId: user.id,
-                action: 'PASSWORD_RESET_REQUESTED',
-                details: 'Password reset requested',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            // ✅ v9.1: في وضع التطوير: نُرجع الرابط للواجهة
-            const responsePayload = {
-                success: true,
-                message: 'تم إنشاء طلب إعادة تعيين كلمة المرور'
-            };
-
-            if (!isProduction) {
-                responsePayload.resetLink = resetLink;
-                responsePayload.devNote = 'DEV ONLY - Reset link exposed';
-            }
-
-            return res.json(responsePayload);
-        } catch (error) {
-            console.error('Forgot password:', error.message);
-
-            return res.status(500).json({
-                success: false,
-                error: 'حدث خطأ في الخادم'
-            });
-        }
-    }
-);
-
-app.post('/api/auth/verify-reset-token', (req, res) => {
-    try {
-        const { email, token } = req.body;
-
-        const valid =
-            typeof email === 'string' &&
-            typeof token === 'string' &&
-            verifyResetToken(email, token);
-
-        return res.json({
-            success: true,
-            valid
-        });
-    } catch {
-        return res.status(500).json({
-            success: false,
-            error: 'حدث خطأ في الخادم'
-        });
-    }
-});
-
-app.post('/api/auth/reset-password', async (req, res) => {
-    try {
-        const { email, token, newPassword } = req.body;
-
-        if (!email || !token || !newPassword) {
-            return res.status(400).json({
-                success: false,
-                error: 'جميع الحقول مطلوبة'
-            });
-        }
-
-        if (!verifyResetToken(email, token)) {
-            return res.status(400).json({
-                success: false,
-                error: 'رابط إعادة التعيين غير صالح أو منتهي الصلاحية'
-            });
-        }
-
-        if (!isStrongPassword(newPassword)) {
-            return res.status(400).json({
-                success: false,
-                error: 'كلمة المرور يجب أن تكون قوية وتحتوي على 12 حرفاً على الأقل'
-            });
-        }
-
-        const user = users.find(item => item.email === email);
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: 'المستخدم غير موجود'
-            });
-        }
-
-        user.password = await bcrypt.hash(newPassword, 12);
-
-        // Invalidate all refresh sessions
-        await revokeAllUserSessions(user.id);
-
-        user.tokenVersion = (user.tokenVersion || 0) + 1;
-
-        const index = passwordResetTokens.findIndex(
-            item =>
-                item.email === email &&
-                safeEqual(item.tokenHash, hashToken(token))
-        );
-
-        if (index !== -1) {
-            passwordResetTokens.splice(index, 1);
-        }
-
-        addSystemLog({
-            userId: user.id,
-            action: 'PASSWORD_RESET_SUCCESS',
-            details: 'Password reset successful',
-            ip: req.ip,
-            requestId: req.requestId
-        });
-
-        return res.json({
-            success: true,
-            message: 'تم إعادة تعيين كلمة المرور بنجاح'
-        });
-    } catch (error) {
-        console.error('Reset password:', error.message);
-
-        return res.status(500).json({
-            success: false,
-            error: 'حدث خطأ في الخادم'
-        });
-    }
-});
-
-// ============================================================
-// 🚢 VESSELS API
-// ============================================================
-
-app.get(
-    '/api/vessels',
-    authenticateAccessToken,
-    requirePermission('vessels:read'),
-    (req, res) => {
-        res.json(vessels);
-    }
-);
-
-app.post(
-    '/api/vessels',
-    authenticateAccessToken,
-    requirePermission('vessels:create'),
-    csrfProtection,
-    (req, res) => {
-        try {
-            const {
-                name,
-                num,
-                len,
-                region,
-                zone,
-                port,
-                supp,
-                status,
-                break: breakType,
-                fDate,
-                eDate,
-                ref,
-                repairUnit,
-                cat
-            } = req.body;
-
-            if (typeof name !== 'string' || !name.trim()) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'اسم المركب مطلوب'
-                });
-            }
-
-            const newVessel = {
-                id: randomId(8),
-                name: name.trim(),
-                num: num || '',
-                len: Number(len) || 0,
-                region: region || '',
-                zone: zone || '',
-                port: port || '',
-                supp: supp || '',
-                status: status || 'صالح',
-                break: breakType || '',
-                fDate: fDate || null,
-                eDate: eDate || null,
-                ref: ref || '',
-                repairUnit: repairUnit || '',
-                cat: cat || '',
-                createdAt: new Date().toISOString()
-            };
-
-            vessels.push(newVessel);
-
-            if (
-                newVessel.status === 'معطب' ||
-                newVessel.status === 'صيانة'
-            ) {
-                maintenanceLogs.push({
-                    id: randomId(8),
-                    vesselId: newVessel.id,
-                    vesselName: newVessel.name,
-                    vesselNum: newVessel.num,
-                    type: breakType || 'صيانة دورية',
-                    status:
-                        newVessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-                    date: fDate || new Date().toISOString(),
-                    repairUnit: repairUnit || '—',
-                    cost: 0,
-                    notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
-                    createdAt: new Date().toISOString()
-                });
-            }
-
-            addSystemLog({
-                userId: req.user.id,
-                action: 'VESSEL_CREATED',
-                details: `Vessel ${newVessel.name} created`,
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            return res.status(201).json({
-                success: true,
-                message: 'تم إضافة المركب بنجاح',
-                vessel: newVessel
-            });
-        } catch (error) {
-            console.error('Add vessel:', error.message);
-
-            return res.status(500).json({
-                success: false,
-                error: 'خطأ في إضافة المركب'
-            });
-        }
-    }
-);
-
-app.put(
-    '/api/vessels/:id',
-    authenticateAccessToken,
-    requirePermission('vessels:update'),
-    csrfProtection,
-    (req, res) => {
-        try {
-            const vessel = vessels.find(item => item.id === req.params.id);
-
-            if (!vessel) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'المركب غير موجود'
-                });
-            }
-
-            const {
-                name,
-                num,
-                len,
-                region,
-                zone,
-                port,
-                supp,
-                status,
-                break: breakType,
-                fDate,
-                eDate,
-                ref,
-                repairUnit,
-                cat
-            } = req.body;
-
-            const oldStatus = vessel.status;
-
-            if (typeof name === 'string' && name.trim()) {
-                vessel.name = name.trim();
-            }
-
-            if (num !== undefined) vessel.num = num;
-            if (len !== undefined) vessel.len = Number(len) || 0;
-            if (region !== undefined) vessel.region = region;
-            if (zone !== undefined) vessel.zone = zone;
-            if (port !== undefined) vessel.port = port;
-            if (supp !== undefined) vessel.supp = supp;
-            if (status !== undefined) vessel.status = status;
-            if (breakType !== undefined) vessel.break = breakType;
-            if (fDate !== undefined) vessel.fDate = fDate;
-            if (eDate !== undefined) vessel.eDate = eDate;
-            if (ref !== undefined) vessel.ref = ref;
-            if (repairUnit !== undefined) vessel.repairUnit = repairUnit;
-            if (cat !== undefined) vessel.cat = cat;
-
-            vessel.updatedAt = new Date().toISOString();
-
-            if (
-                vessel.status &&
-                (vessel.status === 'معطب' || vessel.status === 'صيانة') &&
-                oldStatus !== vessel.status
-            ) {
-                maintenanceLogs.push({
-                    id: randomId(8),
-                    vesselId: vessel.id,
-                    vesselName: vessel.name,
-                    vesselNum: vessel.num,
-                    type: breakType || 'صيانة دورية',
-                    status:
-                        vessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-                    date: fDate || new Date().toISOString(),
-                    repairUnit: repairUnit || '—',
-                    cost: 0,
-                    notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
-                    createdAt: new Date().toISOString()
-                });
-            }
-
-            addSystemLog({
-                userId: req.user.id,
-                action: 'VESSEL_UPDATED',
-                details: `Vessel ${vessel.name} updated`,
-                ip: req.ip,
+                action: 'LOGIN_SUCCESS',
+                details: `User ${user.username} logged in`,
+                ip: clientIP,
                 requestId: req.requestId
             });
 
             return res.json({
                 success: true,
-                message: 'تم تحديث المركب بنجاح',
-                vessel
+                token: accessToken,
+                expiresIn: ACCESS_TOKEN_MAX_AGE,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    active: user.active,
+                    lastLogin: user.lastLogin
+                }
             });
         } catch (error) {
+            console.error('Login error:', error);
+
             return res.status(500).json({
                 success: false,
-                error: 'خطأ في تحديث المركب'
+                error: 'خطأ في الخادم'
             });
         }
-    }
-);
+    });
 
-app.delete(
-    '/api/vessels/:id',
-    authenticateAccessToken,
-    requireAdmin,
-    csrfProtection,
-    (req, res) => {
-        const index = vessels.findIndex(item => item.id === req.params.id);
+    // ============================================================
+    // 🔄 REFRESH
+    // ============================================================
 
-        if (index === -1) {
-            return res.status(404).json({
-                success: false,
-                error: 'المركب غير موجود'
-            });
-        }
-
-        const deleted = vessels[index];
-
-        vessels.splice(index, 1);
-
-        addSystemLog({
-            userId: req.user.id,
-            action: 'VESSEL_DELETED',
-            details: `Vessel ${deleted.name} deleted`,
-            ip: req.ip,
-            requestId: req.requestId
-        });
-
-        return res.json({
-            success: true,
-            message: 'تم حذف المركب بنجاح'
-        });
-    }
-);
-
-// ============================================================
-// 🔧 MAINTENANCE API
-// ============================================================
-
-function formatMaintenanceLogs() {
-    return maintenanceLogs.map(log => ({
-        id: log.id,
-        vessel: log.vesselName,
-        type: log.type,
-        date: new Date(log.date).toLocaleDateString('ar-EG'),
-        unit: log.repairUnit || '—',
-        status: log.status,
-        cost: log.cost || 0,
-        notes: log.notes || ''
-    }));
-}
-
-app.get(
-    '/api/maintenance-logs',
-    authenticateAccessToken,
-    requirePermission('maintenance:read'),
-    (req, res) => {
-        res.json(formatMaintenanceLogs());
-    }
-);
-
-app.get(
-    '/api/maintenance',
-    authenticateAccessToken,
-    requirePermission('maintenance:read'),
-    (req, res) => {
-        const records = formatMaintenanceLogs();
-
-        res.json({
-            success: true,
-            records,
-            stats: {
-                total: records.length,
-                completed: records.filter(item => item.status === 'مكتملة')
-                    .length,
-                pending: records.filter(item => item.status === 'معلقة').length,
-                overdue: records.filter(item => item.status === 'متأخرة')
-                    .length,
-                inProgress: records.filter(
-                    item => item.status === 'قيد التنفيذ'
-                ).length
-            }
-        });
-    }
-);
-
-app.post(
-    '/api/maintenance-logs',
-    authenticateAccessToken,
-    requirePermission('maintenance:create'),
-    csrfProtection,
-    (req, res) => {
+    app.post('/api/auth/refresh', async (req, res) => {
         try {
-            const {
-                vesselId,
-                vesselName,
-                vesselNum,
-                type,
-                status,
-                date,
-                repairUnit,
-                cost,
-                notes
-            } = req.body;
+            const refreshToken =
+                req.cookies[
+                    isProduction ? '__Host-marine.refresh' : 'marine.refresh'
+                ];
 
-            if (typeof vesselName !== 'string' || !vesselName.trim()) {
-                return res.status(400).json({
+            if (!refreshToken) {
+                return res.status(401).json({
                     success: false,
-                    error: 'اسم المركب مطلوب'
+                    error: 'Refresh token غير موجود'
                 });
             }
 
-            const logEntry = {
-                id: randomId(8),
-                vesselId: vesselId || '',
-                vesselName: vesselName.trim(),
-                vesselNum: vesselNum || '',
-                type: type || 'صيانة دورية',
-                status: status || 'قيد التنفيذ',
-                date: date || new Date().toISOString(),
-                repairUnit: repairUnit || '—',
-                cost: Number(cost) || 0,
-                notes: notes || '',
-                createdAt: new Date().toISOString()
-            };
-
-            maintenanceLogs.push(logEntry);
-
-            addSystemLog({
-                userId: req.user.id,
-                action: 'MAINTENANCE_CREATED',
-                details: `Maintenance created for ${logEntry.vesselName}`,
-                ip: req.ip,
-                requestId: req.requestId
+            const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET, {
+                issuer: 'marine-system',
+                audience: 'marine-system-client'
             });
 
-            return res.status(201).json({
+            if (decoded.type !== 'refresh') {
+                return res.status(401).json({
+                    success: false,
+                    error: 'Refresh token غير صالح'
+                });
+            }
+
+            const record = await getRefreshSession(decoded.sid);
+
+            if (!record) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'جلسة Refresh غير موجودة أو منتهية'
+                });
+            }
+
+            if (record.userId !== decoded.sub) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'جلسة غير صالحة'
+                });
+            }
+
+            if (!safeEqual(record.tokenHash, hashToken(refreshToken))) {
+                await revokeRefreshSession(decoded.sid);
+
+                return res.status(401).json({
+                    success: false,
+                    error: 'Refresh token غير صالح'
+                });
+            }
+
+            const user = users.find(item => item.id === decoded.sub);
+
+            if (!user || !user.active) {
+                await revokeRefreshSession(decoded.sid);
+
+                return res.status(401).json({
+                    success: false,
+                    error: 'المستخدم غير موجود أو غير نشط'
+                });
+            }
+
+            const newSessionId = randomId(32);
+
+            const newRefreshToken = generateRefreshToken(user, newSessionId);
+            const newAccessToken = generateAccessToken(user, newSessionId);
+
+            await revokeRefreshSession(decoded.sid);
+
+            await saveRefreshSession({
+                sessionId: newSessionId,
+                userId: user.id,
+                refreshToken: newRefreshToken
+            });
+
+            res.cookie(
+                isProduction ? '__Host-marine.refresh' : 'marine.refresh',
+                newRefreshToken,
+                {
+                    httpOnly: true,
+                    secure: isProduction,
+                    sameSite: 'strict',
+                    maxAge: REFRESH_TOKEN_MAX_AGE,
+                    path: '/api/auth'
+                }
+            );
+
+            if (req.session) {
+                req.session.userId = user.id;
+                req.session.sessionId = newSessionId;
+            }
+
+            return res.json({
                 success: true,
-                message: 'تم إضافة سجل الصيانة',
-                log: logEntry
+                token: newAccessToken,
+                expiresIn: ACCESS_TOKEN_MAX_AGE,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    active: user.active,
+                    lastLogin: user.lastLogin
+                }
+            });
+        } catch (error) {
+            return res.status(401).json({
+                success: false,
+                error: 'Refresh token غير صالح أو منتهي'
+            });
+        }
+    });
+
+    // ============================================================
+    // 👤 CURRENT USER
+    // ============================================================
+
+    app.get('/api/auth/me', authenticateAccessToken, (req, res) => {
+        res.json({
+            success: true,
+            user: {
+                id: req.user.id,
+                username: req.user.username,
+                name: req.user.name,
+                email: req.user.email,
+                role: req.user.role,
+                active: req.user.active,
+                lastLogin: req.user.lastLogin
+            }
+        });
+    });
+
+    // ============================================================
+    // 🚪 LOGOUT
+    // ============================================================
+
+    app.post(
+        '/api/auth/logout',
+        authenticateAccessToken,
+        csrfProtection,
+        async (req, res) => {
+            try {
+                if (req.auth?.jti) {
+                    revokeAccessToken(req.auth);
+                }
+
+                if (req.auth?.sid) {
+                    await revokeRefreshSession(req.auth.sid);
+                }
+
+                if (req.session?.sessionId) {
+                    await revokeRefreshSession(req.session.sessionId);
+                }
+
+                if (req.session) {
+                    req.session.destroy(() => {
+                        res.clearCookie(
+                            isProduction ? '__Host-marine.refresh' : 'marine.refresh',
+                            {
+                                httpOnly: true,
+                                secure: isProduction,
+                                sameSite: 'strict',
+                                path: '/api/auth'
+                            }
+                        );
+
+                        res.clearCookie(
+                            isProduction ? '__Host-marine.sid' : 'marine.sid',
+                            {
+                                httpOnly: true,
+                                secure: isProduction,
+                                sameSite: 'strict',
+                                path: '/'
+                            }
+                        );
+
+                        res.clearCookie('marine_csrf', { path: '/' });
+
+                        return res.json({
+                            success: true,
+                            message: 'تم تسجيل الخروج'
+                        });
+                    });
+                } else {
+                    return res.json({
+                        success: true,
+                        message: 'تم تسجيل الخروج'
+                    });
+                }
+            } catch (error) {
+                return res.status(500).json({
+                    success: false,
+                    error: 'خطأ أثناء تسجيل الخروج'
+                });
+            }
+        }
+    );
+
+    // ============================================================
+    // 🔐 PASSWORD RESET
+    // ============================================================
+
+    app.post(
+        '/api/auth/forgot-password',
+        forgotPasswordLimiter,
+        async (req, res) => {
+            try {
+                const { email } = req.body;
+
+                if (typeof email !== 'string' || !email.trim()) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'البريد الإلكتروني مطلوب'
+                    });
+                }
+
+                const user = users.find(item => item.email === email.trim());
+
+                if (!user) {
+                    return res.json({
+                        success: true,
+                        message:
+                            'إذا كان البريد مسجلاً فسيتم إرسال تعليمات إعادة التعيين'
+                    });
+                }
+
+                const resetToken = createPasswordResetToken(user.email);
+
+                const resetLink = `${req.protocol}://${req.get(
+                    'host'
+                )}/reset-password?token=${encodeURIComponent(
+                    resetToken
+                )}&email=${encodeURIComponent(user.email)}`;
+
+                const emailHtml = `
+                    <div dir="rtl" style="font-family:Arial,sans-serif">
+                        <h2>🔐 إعادة تعيين كلمة المرور</h2>
+                        <p>مرحباً <strong>${String(user.name || user.username)}</strong></p>
+                        <p>استخدم الرابط التالي لإعادة تعيين كلمة المرور.</p>
+                        <p><a href="${resetLink}">إعادة تعيين كلمة المرور</a></p>
+                        <p>الرابط صالح لمدة ساعة واحدة.</p>
+                    </div>
+                `;
+
+                await sendEmail(
+                    user.email,
+                    'إعادة تعيين كلمة المرور - منظومة الوسائل البحرية',
+                    emailHtml
+                );
+
+                addSystemLog({
+                    userId: user.id,
+                    action: 'PASSWORD_RESET_REQUESTED',
+                    details: 'Password reset requested',
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                const responsePayload = {
+                    success: true,
+                    message: 'تم إنشاء طلب إعادة تعيين كلمة المرور'
+                };
+
+                if (!isProduction) {
+                    responsePayload.resetLink = resetLink;
+                    responsePayload.devNote = 'DEV ONLY - Reset link exposed';
+                }
+
+                return res.json(responsePayload);
+            } catch (error) {
+                console.error('Forgot password:', error.message);
+
+                return res.status(500).json({
+                    success: false,
+                    error: 'حدث خطأ في الخادم'
+                });
+            }
+        }
+    );
+
+    app.post('/api/auth/verify-reset-token', (req, res) => {
+        try {
+            const { email, token } = req.body;
+
+            const valid =
+                typeof email === 'string' &&
+                typeof token === 'string' &&
+                verifyResetToken(email, token);
+
+            return res.json({
+                success: true,
+                valid
             });
         } catch {
             return res.status(500).json({
                 success: false,
-                error: 'خطأ في إضافة سجل الصيانة'
+                error: 'حدث خطأ في الخادم'
             });
         }
-    }
-);
+    });
 
-app.put(
-    '/api/maintenance-logs/:id',
-    authenticateAccessToken,
-    requirePermission('maintenance:update'),
-    csrfProtection,
-    (req, res) => {
-        const log = maintenanceLogs.find(item => item.id === req.params.id);
-
-        if (!log) {
-            return res.status(404).json({
-                success: false,
-                error: 'سجل الصيانة غير موجود'
-            });
-        }
-
-        const { status, cost, notes } = req.body;
-
-        if (status !== undefined) log.status = status;
-        if (cost !== undefined) log.cost = Number(cost) || 0;
-        if (notes !== undefined) log.notes = notes;
-
-        log.updatedAt = new Date().toISOString();
-
-        return res.json({
-            success: true,
-            message: 'تم تحديث سجل الصيانة',
-            log
-        });
-    }
-);
-
-app.delete(
-    '/api/maintenance-logs/:id',
-    authenticateAccessToken,
-    requireAdmin,
-    csrfProtection,
-    (req, res) => {
-        const index = maintenanceLogs.findIndex(
-            item => item.id === req.params.id
-        );
-
-        if (index === -1) {
-            return res.status(404).json({
-                success: false,
-                error: 'سجل الصيانة غير موجود'
-            });
-        }
-
-        maintenanceLogs.splice(index, 1);
-
-        return res.json({
-            success: true,
-            message: 'تم حذف سجل الصيانة'
-        });
-    }
-);
-
-// ============================================================
-// 👥 USERS API
-// ============================================================
-
-app.get('/api/users', authenticateAccessToken, requireAdmin, (req, res) => {
-    const safeUsers = users.map(user => ({
-        id: user.id,
-        username: user.username,
-        name: user.name || user.username,
-        email: user.email,
-        role: user.role || 'viewer',
-        active: user.active !== false,
-        createdAt: user.createdAt,
-        lastLogin: user.lastLogin || null
-    }));
-
-    res.json(safeUsers);
-});
-
-app.post(
-    '/api/users',
-    authenticateAccessToken,
-    requireAdmin,
-    csrfProtection,
-    async (req, res) => {
+    app.post('/api/auth/reset-password', async (req, res) => {
         try {
-            const { username, password, email, role, active } = req.body;
+            const { email, token, newPassword } = req.body;
 
-            if (typeof username !== 'string' || !username.trim()) {
+            if (!email || !token || !newPassword) {
                 return res.status(400).json({
                     success: false,
-                    error: 'اسم المستخدم مطلوب'
+                    error: 'جميع الحقول مطلوبة'
                 });
             }
 
-            if (typeof password !== 'string' || !password) {
+            if (!verifyResetToken(email, token)) {
                 return res.status(400).json({
                     success: false,
-                    error: 'كلمة المرور مطلوبة'
+                    error: 'رابط إعادة التعيين غير صالح أو منتهي الصلاحية'
                 });
             }
 
-            if (!isStrongPassword(password)) {
+            if (!isStrongPassword(newPassword)) {
                 return res.status(400).json({
                     success: false,
                     error: 'كلمة المرور يجب أن تكون قوية وتحتوي على 12 حرفاً على الأقل'
                 });
             }
 
-            const cleanUsername = username.trim();
+            const user = users.find(item => item.email === email);
 
-            if (
-                users.some(
-                    item =>
-                        item.username.toLowerCase() ===
-                        cleanUsername.toLowerCase()
-                )
-            ) {
-                return res.status(400).json({
+            if (!user) {
+                return res.status(404).json({
                     success: false,
-                    error: 'اسم المستخدم موجود بالفعل'
+                    error: 'المستخدم غير موجود'
                 });
             }
 
-            const allowedRoles = [
-                'admin',
-                'super_admin',
-                'manager',
-                'operator',
-                'viewer',
-                'مسؤول',
-                'مدير'
-            ];
+            user.password = await bcrypt.hash(newPassword, 12);
 
-            const finalRole = allowedRoles.includes(role) ? role : 'viewer';
+            await revokeAllUserSessions(user.id);
 
-            const newUser = {
-                id: randomId(8),
-                username: cleanUsername,
-                password: await bcrypt.hash(password, 12),
-                email:
-                    typeof email === 'string'
-                        ? email.trim()
-                        : `${cleanUsername}@marine.com`,
-                name: cleanUsername,
-                role: finalRole,
-                active: active !== undefined ? Boolean(active) : true,
-                tokenVersion: 0,
-                createdAt: new Date().toISOString(),
-                lastLogin: null,
-                loginAttempts: 0,
-                locked: false,
-                lockedUntil: null
-            };
+            user.tokenVersion = (user.tokenVersion || 0) + 1;
 
-            users.push(newUser);
+            const index = passwordResetTokens.findIndex(
+                item =>
+                    item.email === email &&
+                    safeEqual(item.tokenHash, hashToken(token))
+            );
+
+            if (index !== -1) {
+                passwordResetTokens.splice(index, 1);
+            }
 
             addSystemLog({
-                userId: req.user.id,
-                action: 'USER_CREATED',
-                details: `User ${newUser.username} created`,
+                userId: user.id,
+                action: 'PASSWORD_RESET_SUCCESS',
+                details: 'Password reset successful',
                 ip: req.ip,
                 requestId: req.requestId
             });
 
-            const { password: ignored, ...safeUser } = newUser;
-
-            return res.status(201).json({
+            return res.json({
                 success: true,
-                message: 'تم إضافة المستخدم بنجاح',
-                user: safeUser
+                message: 'تم إعادة تعيين كلمة المرور بنجاح'
             });
         } catch (error) {
-            console.error('Create user:', error.message);
+            console.error('Reset password:', error.message);
 
             return res.status(500).json({
                 success: false,
-                error: 'خطأ في إضافة المستخدم'
+                error: 'حدث خطأ في الخادم'
             });
         }
+    });
+
+    // ============================================================
+    // 🚢 VESSELS API
+    // ============================================================
+
+    app.get(
+        '/api/vessels',
+        authenticateAccessToken,
+        requirePermission('vessels:read'),
+        (req, res) => {
+            res.json(vessels);
+        }
+    );
+
+    app.post(
+        '/api/vessels',
+        authenticateAccessToken,
+        requirePermission('vessels:create'),
+        csrfProtection,
+        (req, res) => {
+            try {
+                const {
+                    name, num, len, region, zone, port, supp, status,
+                    break: breakType, fDate, eDate, ref, repairUnit, cat
+                } = req.body;
+
+                if (typeof name !== 'string' || !name.trim()) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'اسم المركب مطلوب'
+                    });
+                }
+
+                const newVessel = {
+                    id: randomId(8),
+                    name: name.trim(),
+                    num: num || '',
+                    len: Number(len) || 0,
+                    region: region || '',
+                    zone: zone || '',
+                    port: port || '',
+                    supp: supp || '',
+                    status: status || 'صالح',
+                    break: breakType || '',
+                    fDate: fDate || null,
+                    eDate: eDate || null,
+                    ref: ref || '',
+                    repairUnit: repairUnit || '',
+                    cat: cat || '',
+                    createdAt: new Date().toISOString()
+                };
+
+                vessels.push(newVessel);
+
+                if (
+                    newVessel.status === 'معطب' ||
+                    newVessel.status === 'صيانة'
+                ) {
+                    maintenanceLogs.push({
+                        id: randomId(8),
+                        vesselId: newVessel.id,
+                        vesselName: newVessel.name,
+                        vesselNum: newVessel.num,
+                        type: breakType || 'صيانة دورية',
+                        status:
+                            newVessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+                        date: fDate || new Date().toISOString(),
+                        repairUnit: repairUnit || '—',
+                        cost: 0,
+                        notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                addSystemLog({
+                    userId: req.user.id,
+                    action: 'VESSEL_CREATED',
+                    details: `Vessel ${newVessel.name} created`,
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                return res.status(201).json({
+                    success: true,
+                    message: 'تم إضافة المركب بنجاح',
+                    vessel: newVessel
+                });
+            } catch (error) {
+                console.error('Add vessel:', error.message);
+
+                return res.status(500).json({
+                    success: false,
+                    error: 'خطأ في إضافة المركب'
+                });
+            }
+        }
+    );
+
+    app.put(
+        '/api/vessels/:id',
+        authenticateAccessToken,
+        requirePermission('vessels:update'),
+        csrfProtection,
+        (req, res) => {
+            try {
+                const vessel = vessels.find(item => item.id === req.params.id);
+
+                if (!vessel) {
+                    return res.status(404).json({
+                        success: false,
+                        error: 'المركب غير موجود'
+                    });
+                }
+
+                const {
+                    name, num, len, region, zone, port, supp, status,
+                    break: breakType, fDate, eDate, ref, repairUnit, cat
+                } = req.body;
+
+                const oldStatus = vessel.status;
+
+                if (typeof name === 'string' && name.trim()) {
+                    vessel.name = name.trim();
+                }
+
+                if (num !== undefined) vessel.num = num;
+                if (len !== undefined) vessel.len = Number(len) || 0;
+                if (region !== undefined) vessel.region = region;
+                if (zone !== undefined) vessel.zone = zone;
+                if (port !== undefined) vessel.port = port;
+                if (supp !== undefined) vessel.supp = supp;
+                if (status !== undefined) vessel.status = status;
+                if (breakType !== undefined) vessel.break = breakType;
+                if (fDate !== undefined) vessel.fDate = fDate;
+                if (eDate !== undefined) vessel.eDate = eDate;
+                if (ref !== undefined) vessel.ref = ref;
+                if (repairUnit !== undefined) vessel.repairUnit = repairUnit;
+                if (cat !== undefined) vessel.cat = cat;
+
+                vessel.updatedAt = new Date().toISOString();
+
+                if (
+                    vessel.status &&
+                    (vessel.status === 'معطب' || vessel.status === 'صيانة') &&
+                    oldStatus !== vessel.status
+                ) {
+                    maintenanceLogs.push({
+                        id: randomId(8),
+                        vesselId: vessel.id,
+                        vesselName: vessel.name,
+                        vesselNum: vessel.num,
+                        type: breakType || 'صيانة دورية',
+                        status:
+                            vessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+                        date: fDate || new Date().toISOString(),
+                        repairUnit: repairUnit || '—',
+                        cost: 0,
+                        notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                addSystemLog({
+                    userId: req.user.id,
+                    action: 'VESSEL_UPDATED',
+                    details: `Vessel ${vessel.name} updated`,
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                return res.json({
+                    success: true,
+                    message: 'تم تحديث المركب بنجاح',
+                    vessel
+                });
+            } catch (error) {
+                return res.status(500).json({
+                    success: false,
+                    error: 'خطأ في تحديث المركب'
+                });
+            }
+        }
+    );
+
+    app.delete(
+        '/api/vessels/:id',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        (req, res) => {
+            const index = vessels.findIndex(item => item.id === req.params.id);
+
+            if (index === -1) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'المركب غير موجود'
+                });
+            }
+
+            const deleted = vessels[index];
+
+            vessels.splice(index, 1);
+
+            addSystemLog({
+                userId: req.user.id,
+                action: 'VESSEL_DELETED',
+                details: `Vessel ${deleted.name} deleted`,
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            return res.json({
+                success: true,
+                message: 'تم حذف المركب بنجاح'
+            });
+        }
+    );
+
+    // ============================================================
+    // 🔧 MAINTENANCE API
+    // ============================================================
+
+    function formatMaintenanceLogs() {
+        return maintenanceLogs.map(log => ({
+            id: log.id,
+            vessel: log.vesselName,
+            type: log.type,
+            date: new Date(log.date).toLocaleDateString('ar-EG'),
+            unit: log.repairUnit || '—',
+            status: log.status,
+            cost: log.cost || 0,
+            notes: log.notes || ''
+        }));
     }
-);
 
-app.put(
-    '/api/users/:id',
-    authenticateAccessToken,
-    requireAdmin,
-    csrfProtection,
-    async (req, res) => {
-        const targetUser = users.find(item => item.id === req.params.id);
+    app.get(
+        '/api/maintenance-logs',
+        authenticateAccessToken,
+        requirePermission('maintenance:read'),
+        (req, res) => {
+            res.json(formatMaintenanceLogs());
+        }
+    );
 
-        if (!targetUser) {
-            return res.status(404).json({
-                success: false,
-                error: 'المستخدم غير موجود'
+    app.get(
+        '/api/maintenance',
+        authenticateAccessToken,
+        requirePermission('maintenance:read'),
+        (req, res) => {
+            const records = formatMaintenanceLogs();
+
+            res.json({
+                success: true,
+                records,
+                stats: {
+                    total: records.length,
+                    completed: records.filter(item => item.status === 'مكتملة')
+                        .length,
+                    pending: records.filter(item => item.status === 'معلقة').length,
+                    overdue: records.filter(item => item.status === 'متأخرة')
+                        .length,
+                    inProgress: records.filter(
+                        item => item.status === 'قيد التنفيذ'
+                    ).length
+                }
             });
         }
+    );
 
-        const { username, email, role, active, password } = req.body;
+    app.post(
+        '/api/maintenance-logs',
+        authenticateAccessToken,
+        requirePermission('maintenance:create'),
+        csrfProtection,
+        (req, res) => {
+            try {
+                const {
+                    vesselId, vesselName, vesselNum, type, status,
+                    date, repairUnit, cost, notes
+                } = req.body;
 
-        if (
-            targetUser.username === 'admin' &&
-            username &&
-            username !== 'admin'
-        ) {
-            return res.status(403).json({
-                success: false,
-                error: 'لا يمكن تغيير اسم المستخدم الرئيسي'
+                if (typeof vesselName !== 'string' || !vesselName.trim()) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'اسم المركب مطلوب'
+                    });
+                }
+
+                const logEntry = {
+                    id: randomId(8),
+                    vesselId: vesselId || '',
+                    vesselName: vesselName.trim(),
+                    vesselNum: vesselNum || '',
+                    type: type || 'صيانة دورية',
+                    status: status || 'قيد التنفيذ',
+                    date: date || new Date().toISOString(),
+                    repairUnit: repairUnit || '—',
+                    cost: Number(cost) || 0,
+                    notes: notes || '',
+                    createdAt: new Date().toISOString()
+                };
+
+                maintenanceLogs.push(logEntry);
+
+                addSystemLog({
+                    userId: req.user.id,
+                    action: 'MAINTENANCE_CREATED',
+                    details: `Maintenance created for ${logEntry.vesselName}`,
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                return res.status(201).json({
+                    success: true,
+                    message: 'تم إضافة سجل الصيانة',
+                    log: logEntry
+                });
+            } catch {
+                return res.status(500).json({
+                    success: false,
+                    error: 'خطأ في إضافة سجل الصيانة'
+                });
+            }
+        }
+    );
+
+    app.put(
+        '/api/maintenance-logs/:id',
+        authenticateAccessToken,
+        requirePermission('maintenance:update'),
+        csrfProtection,
+        (req, res) => {
+            const log = maintenanceLogs.find(item => item.id === req.params.id);
+
+            if (!log) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'سجل الصيانة غير موجود'
+                });
+            }
+
+            const { status, cost, notes } = req.body;
+
+            if (status !== undefined) log.status = status;
+            if (cost !== undefined) log.cost = Number(cost) || 0;
+            if (notes !== undefined) log.notes = notes;
+
+            log.updatedAt = new Date().toISOString();
+
+            return res.json({
+                success: true,
+                message: 'تم تحديث سجل الصيانة',
+                log
             });
         }
+    );
 
-        if (targetUser.role === 'admin' && active === false) {
-            const activeAdmins = users.filter(
-                user => user.role === 'admin' && user.active !== false
-            ).length;
+    app.delete(
+        '/api/maintenance-logs/:id',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        (req, res) => {
+            const index = maintenanceLogs.findIndex(
+                item => item.id === req.params.id
+            );
 
-            if (activeAdmins <= 1) {
+            if (index === -1) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'سجل الصيانة غير موجود'
+                });
+            }
+
+            maintenanceLogs.splice(index, 1);
+
+            return res.json({
+                success: true,
+                message: 'تم حذف سجل الصيانة'
+            });
+        }
+    );
+
+    // ============================================================
+    // 👥 USERS API
+    // ============================================================
+
+    app.get('/api/users', authenticateAccessToken, requireAdmin, (req, res) => {
+        const safeUsers = users.map(user => ({
+            id: user.id,
+            username: user.username,
+            name: user.name || user.username,
+            email: user.email,
+            role: user.role || 'viewer',
+            active: user.active !== false,
+            createdAt: user.createdAt,
+            lastLogin: user.lastLogin || null
+        }));
+
+        res.json(safeUsers);
+    });
+
+    app.post(
+        '/api/users',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        async (req, res) => {
+            try {
+                const { username, password, email, role, active } = req.body;
+
+                if (typeof username !== 'string' || !username.trim()) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'اسم المستخدم مطلوب'
+                    });
+                }
+
+                if (typeof password !== 'string' || !password) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'كلمة المرور مطلوبة'
+                    });
+                }
+
+                if (!isStrongPassword(password)) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'كلمة المرور يجب أن تكون قوية وتحتوي على 12 حرفاً على الأقل'
+                    });
+                }
+
+                const cleanUsername = username.trim();
+
+                if (
+                    users.some(
+                        item =>
+                            item.username.toLowerCase() ===
+                            cleanUsername.toLowerCase()
+                    )
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'اسم المستخدم موجود بالفعل'
+                    });
+                }
+
+                const allowedRoles = [
+                    'admin',
+                    'super_admin',
+                    'manager',
+                    'operator',
+                    'viewer',
+                    'مسؤول',
+                    'مدير'
+                ];
+
+                const finalRole = allowedRoles.includes(role) ? role : 'viewer';
+
+                const newUser = {
+                    id: randomId(8),
+                    username: cleanUsername,
+                    password: await bcrypt.hash(password, 12),
+                    email:
+                        typeof email === 'string'
+                            ? email.trim()
+                            : `${cleanUsername}@marine.com`,
+                    name: cleanUsername,
+                    role: finalRole,
+                    active: active !== undefined ? Boolean(active) : true,
+                    tokenVersion: 0,
+                    createdAt: new Date().toISOString(),
+                    lastLogin: null,
+                    loginAttempts: 0,
+                    locked: false,
+                    lockedUntil: null
+                };
+
+                users.push(newUser);
+
+                addSystemLog({
+                    userId: req.user.id,
+                    action: 'USER_CREATED',
+                    details: `User ${newUser.username} created`,
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                const { password: ignored, ...safeUser } = newUser;
+
+                return res.status(201).json({
+                    success: true,
+                    message: 'تم إضافة المستخدم بنجاح',
+                    user: safeUser
+                });
+            } catch (error) {
+                console.error('Create user:', error.message);
+
+                return res.status(500).json({
+                    success: false,
+                    error: 'خطأ في إضافة المستخدم'
+                });
+            }
+        }
+    );
+
+    app.put(
+        '/api/users/:id',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        async (req, res) => {
+            const targetUser = users.find(item => item.id === req.params.id);
+
+            if (!targetUser) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'المستخدم غير موجود'
+                });
+            }
+
+            const { username, email, role, active, password } = req.body;
+
+            if (
+                targetUser.username === 'admin' &&
+                username &&
+                username !== 'admin'
+            ) {
                 return res.status(403).json({
                     success: false,
-                    error: 'لا يمكن تعطيل آخر مسؤول نشط'
+                    error: 'لا يمكن تغيير اسم المستخدم الرئيسي'
                 });
             }
+
+            if (targetUser.role === 'admin' && active === false) {
+                const activeAdmins = users.filter(
+                    user => user.role === 'admin' && user.active !== false
+                ).length;
+
+                if (activeAdmins <= 1) {
+                    return res.status(403).json({
+                        success: false,
+                        error: 'لا يمكن تعطيل آخر مسؤول نشط'
+                    });
+                }
+            }
+
+            if (username) targetUser.username = username.trim();
+            if (email) targetUser.email = email.trim();
+
+            if (role) {
+                const allowedRoles = [
+                    'admin',
+                    'super_admin',
+                    'manager',
+                    'operator',
+                    'viewer',
+                    'مسؤول',
+                    'مدير'
+                ];
+
+                if (!allowedRoles.includes(role)) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'صلاحية غير صالحة'
+                    });
+                }
+
+                targetUser.role = role;
+            }
+
+            if (active !== undefined) targetUser.active = Boolean(active);
+
+            if (password) {
+                if (!isStrongPassword(password)) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'كلمة المرور ضعيفة'
+                    });
+                }
+
+                targetUser.password = await bcrypt.hash(password, 12);
+
+                targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
+
+                await revokeAllUserSessions(targetUser.id);
+            }
+
+            targetUser.updatedAt = new Date().toISOString();
+
+            addSystemLog({
+                userId: req.user.id,
+                action: 'USER_UPDATED',
+                details: `User ${targetUser.username} updated`,
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            const { password: ignored, ...safeUser } = targetUser;
+
+            return res.json({
+                success: true,
+                message: 'تم تحديث المستخدم بنجاح',
+                user: safeUser
+            });
         }
+    );
 
-        if (username) targetUser.username = username.trim();
-        if (email) targetUser.email = email.trim();
+    app.delete(
+        '/api/users/:id',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        async (req, res) => {
+            const targetUser = users.find(item => item.id === req.params.id);
 
-        if (role) {
-            const allowedRoles = [
-                'admin',
-                'super_admin',
-                'manager',
-                'operator',
-                'viewer',
-                'مسؤول',
-                'مدير'
-            ];
-
-            if (!allowedRoles.includes(role)) {
-                return res.status(400).json({
+            if (!targetUser) {
+                return res.status(404).json({
                     success: false,
-                    error: 'صلاحية غير صالحة'
+                    error: 'المستخدم غير موجود'
                 });
             }
 
-            targetUser.role = role;
-        }
-
-        if (active !== undefined) targetUser.active = Boolean(active);
-
-        if (password) {
-            if (!isStrongPassword(password)) {
-                return res.status(400).json({
+            if (targetUser.username === 'admin') {
+                return res.status(403).json({
                     success: false,
-                    error: 'كلمة المرور ضعيفة'
+                    error: 'لا يمكن حذف المستخدم الرئيسي'
                 });
             }
 
-            targetUser.password = await bcrypt.hash(password, 12);
+            if (targetUser.role === 'admin') {
+                const adminCount = users.filter(
+                    user => user.role === 'admin'
+                ).length;
 
-            targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
+                if (adminCount <= 1) {
+                    return res.status(403).json({
+                        success: false,
+                        error: 'لا يمكن حذف آخر مسؤول في النظام'
+                    });
+                }
+            }
 
             await revokeAllUserSessions(targetUser.id);
-        }
 
-        targetUser.updatedAt = new Date().toISOString();
+            const index = users.findIndex(user => user.id === targetUser.id);
 
-        addSystemLog({
-            userId: req.user.id,
-            action: 'USER_UPDATED',
-            details: `User ${targetUser.username} updated`,
-            ip: req.ip,
-            requestId: req.requestId
-        });
+            users.splice(index, 1);
 
-        const { password: ignored, ...safeUser } = targetUser;
+            addSystemLog({
+                userId: req.user.id,
+                action: 'USER_DELETED',
+                details: `User ${targetUser.username} deleted`,
+                ip: req.ip,
+                requestId: req.requestId
+            });
 
-        return res.json({
-            success: true,
-            message: 'تم تحديث المستخدم بنجاح',
-            user: safeUser
-        });
-    }
-);
-
-app.delete(
-    '/api/users/:id',
-    authenticateAccessToken,
-    requireAdmin,
-    csrfProtection,
-    async (req, res) => {
-        const targetUser = users.find(item => item.id === req.params.id);
-
-        if (!targetUser) {
-            return res.status(404).json({
-                success: false,
-                error: 'المستخدم غير موجود'
+            return res.json({
+                success: true,
+                message: 'تم حذف المستخدم بنجاح'
             });
         }
+    );
 
-        if (targetUser.username === 'admin') {
-            return res.status(403).json({
-                success: false,
-                error: 'لا يمكن حذف المستخدم الرئيسي'
-            });
-        }
+    app.put(
+        '/api/users-status/:id',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        async (req, res) => {
+            const { active } = req.body;
 
-        if (targetUser.role === 'admin') {
-            const adminCount = users.filter(
-                user => user.role === 'admin'
-            ).length;
+            const targetUser = users.find(item => item.id === req.params.id);
 
-            if (adminCount <= 1) {
-                return res.status(403).json({
+            if (!targetUser) {
+                return res.status(404).json({
                     success: false,
-                    error: 'لا يمكن حذف آخر مسؤول في النظام'
+                    error: 'المستخدم غير موجود'
                 });
             }
-        }
 
-        await revokeAllUserSessions(targetUser.id);
+            if (targetUser.role === 'admin' && active === false) {
+                const adminCount = users.filter(
+                    user => user.role === 'admin' && user.active !== false
+                ).length;
 
-        const index = users.findIndex(user => user.id === targetUser.id);
+                if (adminCount <= 1) {
+                    return res.status(403).json({
+                        success: false,
+                        error: 'لا يمكن تعطيل آخر مسؤول نشط'
+                    });
+                }
+            }
 
-        users.splice(index, 1);
+            targetUser.active = Boolean(active);
+            targetUser.updatedAt = new Date().toISOString();
 
-        addSystemLog({
-            userId: req.user.id,
-            action: 'USER_DELETED',
-            details: `User ${targetUser.username} deleted`,
-            ip: req.ip,
-            requestId: req.requestId
-        });
+            if (!targetUser.active) {
+                await revokeAllUserSessions(targetUser.id);
+            }
 
-        return res.json({
-            success: true,
-            message: 'تم حذف المستخدم بنجاح'
-        });
-    }
-);
-
-app.put(
-    '/api/users-status/:id',
-    authenticateAccessToken,
-    requireAdmin,
-    csrfProtection,
-    async (req, res) => {
-        const { active } = req.body;
-
-        const targetUser = users.find(item => item.id === req.params.id);
-
-        if (!targetUser) {
-            return res.status(404).json({
-                success: false,
-                error: 'المستخدم غير موجود'
+            return res.json({
+                success: true,
+                message: `تم ${
+                    targetUser.active ? 'تفعيل' : 'تعطيل'
+                } المستخدم بنجاح`,
+                user: {
+                    id: targetUser.id,
+                    username: targetUser.username,
+                    active: targetUser.active
+                }
             });
         }
+    );
 
-        if (targetUser.role === 'admin' && active === false) {
-            const adminCount = users.filter(
-                user => user.role === 'admin' && user.active !== false
-            ).length;
+    // ============================================================
+    // 📋 LOGS API (v9.1 - Restricted)
+    // ============================================================
 
-            if (adminCount <= 1) {
+    app.get('/api/logs', authenticateAccessToken, requireAdmin, (req, res) => {
+        const safeLogs = systemLogs.slice(-100).map(log => ({
+            id: log.id,
+            userId: log.userId,
+            action: log.action,
+            details: log.details,
+            requestId: log.requestId,
+            timestamp: log.timestamp
+        }));
+
+        res.json(safeLogs);
+    });
+
+    app.post(
+        '/api/logs',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        (req, res) => {
+            const { action, details } = req.body;
+
+            addSystemLog({
+                userId: req.user.id,
+                action: typeof action === 'string' ? action : 'Unknown',
+                details: typeof details === 'string' ? details : '',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: 'تم إضافة السجل'
+            });
+        }
+    );
+
+    // ============================================================
+    // 🧠 SESSION STATUS
+    // ============================================================
+
+    app.get(
+        '/api/session-status',
+        authenticateAccessToken,
+        (req, res) => {
+            res.json({
+                success: true,
+                hasSession: !!req.session,
+                userId: req.user.id,
+                sessionId:
+                    (req.session && req.session.sessionId) ||
+                    (req.auth && req.auth.sid) ||
+                    null
+            });
+        }
+    );
+
+    // ============================================================
+    // 📍 LOCATIONS
+    // ============================================================
+
+    const locations = [];
+
+    app.get('/api/locations', authenticateAccessToken, (req, res) => {
+        res.json(locations);
+    });
+
+    app.post(
+        '/api/locations',
+        authenticateAccessToken,
+        csrfProtection,
+        (req, res) => {
+            if (!hasPermission(req.user, 'vessels:update')) {
                 return res.status(403).json({
                     success: false,
-                    error: 'لا يمكن تعطيل آخر مسؤول نشط'
+                    error: 'ليس لديك صلاحية تسجيل الموقع'
                 });
             }
-        }
 
-        targetUser.active = Boolean(active);
-        targetUser.updatedAt = new Date().toISOString();
+            const { latitude, longitude, accuracy, vesselId } = req.body;
 
-        if (!targetUser.active) {
-            await revokeAllUserSessions(targetUser.id);
-        }
+            const lat = Number(latitude);
+            const lng = Number(longitude);
 
-        return res.json({
-            success: true,
-            message: `تم ${
-                targetUser.active ? 'تفعيل' : 'تعطيل'
-            } المستخدم بنجاح`,
-            user: {
-                id: targetUser.id,
-                username: targetUser.username,
-                active: targetUser.active
+            if (
+                !Number.isFinite(lat) ||
+                !Number.isFinite(lng) ||
+                lat < -90 ||
+                lat > 90 ||
+                lng < -180 ||
+                lng > 180
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'إحداثيات غير صالحة'
+                });
             }
-        });
-    }
-);
 
-// ============================================================
-// 📋 LOGS API (v9.1 - Restricted)
-// ============================================================
+            const location = {
+                id: randomId(8),
+                userId: req.user.id,
+                username: req.user.username,
+                vesselId: vesselId || null,
+                latitude: lat,
+                longitude: lng,
+                accuracy: Number(accuracy) || null,
+                timestamp: new Date().toISOString()
+            };
 
-app.get('/api/logs', authenticateAccessToken, requireAdmin, (req, res) => {
-    // ✅ v9.1: نُخفي IPs والمعلومات الحساسة
-    const safeLogs = systemLogs.slice(-100).map(log => ({
-        id: log.id,
-        userId: log.userId,
-        action: log.action,
-        details: log.details,
-        requestId: log.requestId,
-        timestamp: log.timestamp
-        // ⚠️ لا نُرجع ip
-    }));
+            locations.push(location);
 
-    res.json(safeLogs);
-});
+            if (locations.length > 5000) {
+                locations.splice(0, locations.length - 5000);
+            }
 
-app.post(
-    '/api/logs',
-    authenticateAccessToken,
-    requireAdmin,
-    csrfProtection,
-    (req, res) => {
-        const { action, details } = req.body;
-
-        addSystemLog({
-            userId: req.user.id,
-            action: typeof action === 'string' ? action : 'Unknown',
-            details: typeof details === 'string' ? details : '',
-            ip: req.ip,
-            requestId: req.requestId
-        });
-
-        return res.status(201).json({
-            success: true,
-            message: 'تم إضافة السجل'
-        });
-    }
-);
-
-// ============================================================
-// 🧠 SESSION STATUS
-// ============================================================
-
-app.get(
-    '/api/session-status',
-    authenticateAccessToken,
-    (req, res) => {
-        res.json({
-            success: true,
-            hasSession: !!req.session,
-            userId: req.user.id,
-            sessionId: req.session.sessionId || req.auth.sid || null
-        });
-    }
-);
-
-// ============================================================
-// 📍 LOCATIONS
-// ============================================================
-
-const locations = [];
-
-app.get('/api/locations', authenticateAccessToken, (req, res) => {
-    res.json(locations);
-});
-
-app.post(
-    '/api/locations',
-    authenticateAccessToken,
-    csrfProtection,
-    (req, res) => {
-        if (!hasPermission(req.user, 'vessels:update')) {
-            return res.status(403).json({
-                success: false,
-                error: 'ليس لديك صلاحية تسجيل الموقع'
+            return res.status(201).json({
+                success: true,
+                location
             });
         }
+    );
 
-        const { latitude, longitude, accuracy, vesselId } = req.body;
+    // ============================================================
+    // 🌐 STATIC FILES
+    // ============================================================
 
-        const lat = Number(latitude);
-        const lng = Number(longitude);
+    const pagesDir = path.join(__dirname, 'pages');
+    const publicPagesDir = path.join(__dirname, 'public', 'pages');
+    const publicDir = path.join(__dirname, 'public');
 
-        if (
-            !Number.isFinite(lat) ||
-            !Number.isFinite(lng) ||
-            lat < -90 ||
-            lat > 90 ||
-            lng < -180 ||
-            lng > 180
-        ) {
-            return res.status(400).json({
-                success: false,
-                error: 'إحداثيات غير صالحة'
-            });
-        }
-
-        const location = {
-            id: randomId(8),
-            userId: req.user.id,
-            username: req.user.username,
-            vesselId: vesselId || null,
-            latitude: lat,
-            longitude: lng,
-            accuracy: Number(accuracy) || null,
-            timestamp: new Date().toISOString()
-        };
-
-        locations.push(location);
-
-        if (locations.length > 5000) {
-            locations.splice(0, locations.length - 5000);
-        }
-
-        return res.status(201).json({
-            success: true,
-            location
-        });
-    }
-);
-
-// ============================================================
-// 🌐 STATIC FILES
-// ============================================================
-
-const pagesDir = path.join(__dirname, 'pages');
-const publicPagesDir = path.join(__dirname, 'public', 'pages');
-const publicDir = path.join(__dirname, 'public');
-
-if (!fs.existsSync(pagesDir)) {
-    fs.mkdirSync(pagesDir, { recursive: true });
-}
-
-if (!fs.existsSync(publicPagesDir)) {
-    fs.mkdirSync(publicPagesDir, { recursive: true });
-}
-
-function findPageFile(pageName) {
-    const possiblePaths = [
-        path.join(publicPagesDir, pageName + '.html'),
-        path.join(pagesDir, pageName + '.html'),
-        path.join(publicDir, pageName + '.html'),
-        path.join(__dirname, pageName + '.html')
-    ];
-
-    for (const filePath of possiblePaths) {
-        if (fs.existsSync(filePath)) {
-            return filePath;
-        }
+    if (!fs.existsSync(pagesDir)) {
+        fs.mkdirSync(pagesDir, { recursive: true });
     }
 
-    return null;
-}
+    if (!fs.existsSync(publicPagesDir)) {
+        fs.mkdirSync(publicPagesDir, { recursive: true });
+    }
 
-app.use(
-    express.static(__dirname, {
-        index: false
-    })
-);
+    function findPageFile(pageName) {
+        const possiblePaths = [
+            path.join(publicPagesDir, pageName + '.html'),
+            path.join(pagesDir, pageName + '.html'),
+            path.join(publicDir, pageName + '.html'),
+            path.join(__dirname, pageName + '.html')
+        ];
 
-app.use('/pages', express.static(pagesDir));
-app.use('/pages', express.static(publicPagesDir));
-app.use('/public', express.static(publicDir));
-app.use('/public/pages', express.static(publicPagesDir));
+        for (const filePath of possiblePaths) {
+            if (fs.existsSync(filePath)) {
+                return filePath;
+            }
+        }
 
-// ============================================================
-// 🌐 PAGE ROUTES
-// ============================================================
+        return null;
+    }
 
-app.get('/', (req, res) => {
-    const possible = [
-        path.join(__dirname, 'index.html'),
-        path.join(publicDir, 'index.html'),
-        path.join(pagesDir, 'index.html'),
-        path.join(publicPagesDir, 'index.html')
-    ];
+    app.use(
+        express.static(__dirname, {
+            index: false
+        })
+    );
 
-    for (const filePath of possible) {
-        if (fs.existsSync(filePath)) {
+    app.use('/pages', express.static(pagesDir));
+    app.use('/pages', express.static(publicPagesDir));
+    app.use('/public', express.static(publicDir));
+    app.use('/public/pages', express.static(publicPagesDir));
+
+    // ============================================================
+    // 🌐 PAGE ROUTES
+    // ============================================================
+
+    app.get('/', (req, res) => {
+        const possible = [
+            path.join(__dirname, 'index.html'),
+            path.join(publicDir, 'index.html'),
+            path.join(pagesDir, 'index.html'),
+            path.join(publicPagesDir, 'index.html')
+        ];
+
+        for (const filePath of possible) {
+            if (fs.existsSync(filePath)) {
+                return res.sendFile(filePath);
+            }
+        }
+
+        return res.send(
+            '<h1>🚢 Marine System</h1>' + '<p>System is running</p>'
+        );
+    });
+
+    app.get('/pages/:page', (req, res) => {
+        const filePath = findPageFile(req.params.page);
+
+        if (filePath) {
             return res.sendFile(filePath);
         }
-    }
 
-    return res.send(
-        '<h1>🚢 Marine System</h1>' + '<p>System is running</p>'
-    );
-});
-
-app.get('/pages/:page', (req, res) => {
-    const filePath = findPageFile(req.params.page);
-
-    if (filePath) {
-        return res.sendFile(filePath);
-    }
-
-    return res.status(404).send('<h1>❌ 404</h1>' + '<p>Page not found</p>');
-});
-
-app.get('/:page', (req, res, next) => {
-    const skip = [
-        'api',
-        'pages',
-        'public',
-        'css',
-        'js',
-        'assets',
-        'favicon.ico'
-    ];
-
-    if (skip.includes(req.params.page)) {
-        return next();
-    }
-
-    const filePath = findPageFile(req.params.page);
-
-    if (filePath) {
-        return res.sendFile(filePath);
-    }
-
-    next();
-});
-
-// ============================================================
-// ❌ 404
-// ============================================================
-
-app.use((req, res) => {
-    if (req.path.startsWith('/api')) {
-        return res.status(404).json({
-            success: false,
-            error: 'API not found'
-        });
-    }
-
-    return res.redirect('/');
-});
-
-// ============================================================
-// 🚨 GLOBAL ERROR HANDLER
-// ============================================================
-
-app.use((err, req, res, next) => {
-    console.error('❌ Global error:', err.message);
-
-    if (err.message === 'CORS origin denied') {
-        return res.status(403).json({
-            success: false,
-            error: 'CORS origin denied'
-        });
-    }
-
-    return res.status(err.status || 500).json({
-        success: false,
-        error: isProduction ? 'حدث خطأ في الخادم' : err.message
+        return res.status(404).send('<h1>❌ 404</h1>' + '<p>Page not found</p>');
     });
-});
 
-// ============================================================
-// 🚀 START
-// ============================================================
+    app.get('/:page', (req, res, next) => {
+        const skip = [
+            'api',
+            'pages',
+            'public',
+            'css',
+            'js',
+            'assets',
+            'favicon.ico'
+        ];
 
-if (require.main === module) {
-    app.listen(PORT, () => {
-        console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v9.1');
-        console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
-        console.log('✨ v9.1: CSRF-Frontend Compatible');
-        console.log('=========================================');
-        console.log(`📍 Port: ${PORT}`);
-        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`👤 Admin: ${ADMIN_USERNAME}`);
-        console.log(`📊 Vessels: ${vessels.length}`);
-        console.log(`📝 Maintenance: ${maintenanceLogs.length}`);
-        console.log(`👥 Users: ${users.length}`);
-        console.log('🔒 Access JWT: 15 minutes');
-        console.log('🔄 Refresh JWT: 7 days');
-        console.log('🛡️ CSRF: ENABLED (Frontend Compatible)');
-        console.log('👑 RBAC: ENABLED');
-        console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY FALLBACK'}`);
-        console.log('=========================================');
-
-        if (isProduction) {
-            console.log('✅ Production secrets validated');
-        } else {
-            console.log('⚠️ Development mode');
+        if (skip.includes(req.params.page)) {
+            return next();
         }
 
-        console.log('=========================================');
+        const filePath = findPageFile(req.params.page);
+
+        if (filePath) {
+            return res.sendFile(filePath);
+        }
+
+        next();
     });
-}
+
+    // ============================================================
+    // ❌ 404
+    // ============================================================
+
+    app.use((req, res) => {
+        if (req.path.startsWith('/api')) {
+            return res.status(404).json({
+                success: false,
+                error: 'API not found'
+            });
+        }
+
+        return res.redirect('/');
+    });
+
+    // ============================================================
+    // 🚨 GLOBAL ERROR HANDLER
+    // ============================================================
+
+    app.use((err, req, res, next) => {
+        console.error('❌ Global error:', err.message);
+
+        if (err.message === 'CORS origin denied') {
+            return res.status(403).json({
+                success: false,
+                error: 'CORS origin denied'
+            });
+        }
+
+        return res.status(err.status || 500).json({
+            success: false,
+            error: isProduction ? 'حدث خطأ في الخادم' : err.message
+        });
+    });
+
+    // ============================================================
+    // 🚀 START
+    // ============================================================
+
+    if (require.main === module) {
+        app.listen(PORT, () => {
+            console.log('=========================================');
+            console.log('🚢 MARINE SYSTEM v9.1');
+            console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
+            console.log('✨ v9.1: CSRF-Frontend Compatible');
+            console.log('=========================================');
+            console.log(`📍 Port: ${PORT}`);
+            console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`👤 Admin: ${ADMIN_USERNAME}`);
+            console.log(`📊 Vessels: ${vessels.length}`);
+            console.log(`📝 Maintenance: ${maintenanceLogs.length}`);
+            console.log(`👥 Users: ${users.length}`);
+            console.log('🔒 Access JWT: 15 minutes');
+            console.log('🔄 Refresh JWT: 7 days');
+            console.log('🛡️ CSRF: ENABLED (Frontend Compatible)');
+            console.log('👑 RBAC: ENABLED');
+            console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY FALLBACK'}`);
+            console.log('=========================================');
+
+            if (isProduction) {
+                console.log('✅ Production secrets validated');
+            } else {
+                console.log('⚠️ Development mode');
+            }
+
+            console.log('=========================================');
+        });
+    }
+})();
+
+// ============================================================
+// 📤 EXPORTS
+// ============================================================
 
 module.exports = app;
+module.exports.csrfProtection = csrfProtection;
+module.exports.authenticateAccessToken = authenticateAccessToken;
+module.exports.requirePermission = requirePermission;
+module.exports.requireAdmin = requireAdmin;
+module.exports.hasPermission = hasPermission;
+module.exports.users = users;
+module.exports.vessels = vessels;
+module.exports.maintenanceLogs = maintenanceLogs;
+module.exports.systemLogs = systemLogs;
+module.exports.revokedAccessTokens = revokedAccessTokens;
+module.exports.isAccessTokenRevoked = isAccessTokenRevoked;
+module.exports.addSystemLog = addSystemLog;
