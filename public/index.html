@@ -1572,7 +1572,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - الكامل مع حل مشكلة التوكن و updateDateTime نهائياً
+    JAVASCRIPT - v8.0 (FIXED: dateTime + session-status + token)
     ============================================================ -->
     <script>
         // ============================================================
@@ -1614,21 +1614,34 @@
             }
         }
 
-        // ✅ بدء التحديث فقط إذا كانت العناصر موجودة
-        (function initDateTime() {
-            const hasDate = !!document.getElementById('currentDate');
-            const hasTime = !!document.getElementById('currentTime');
-            
-            if (hasDate || hasTime) {
-                updateDateTime();
-                window._dateTimeInterval = setInterval(updateDateTime, 60000);
-                console.log('⏰ Date/Time updater started');
-            } else {
-                console.log('⏰ No date/time elements found, skipping');
-            }
-        })();
+        // ✅ دالة ذكية: تشغّل/توقف المؤقت حسب وجود العناصر في الصفحة الحالية
+        function syncDateTimeInterval() {
+            try {
+                const hasDate = !!document.getElementById('currentDate');
+                const hasTime = !!document.getElementById('currentTime');
 
-        // ✅ دالة لإيقاف التحديث
+                if (hasDate || hasTime) {
+                    // شغّل فوراً
+                    updateDateTime();
+                    // شغّل المؤقت لو مش شغال
+                    if (!window._dateTimeInterval) {
+                        window._dateTimeInterval = setInterval(updateDateTime, 60000);
+                        console.log('⏰ Date/Time updater started');
+                    }
+                } else {
+                    // وقّف المؤقت لو مفيش عناصر
+                    if (window._dateTimeInterval) {
+                        clearInterval(window._dateTimeInterval);
+                        window._dateTimeInterval = null;
+                        console.log('⏰ Date/Time updater stopped (no elements)');
+                    }
+                }
+            } catch (e) {
+                console.debug('⏰ syncDateTimeInterval:', e.message);
+            }
+        }
+
+        // ✅ دالة لإيقاف التحديث يدوياً
         function stopDateTimeUpdate() {
             if (window._dateTimeInterval) {
                 clearInterval(window._dateTimeInterval);
@@ -2074,7 +2087,10 @@
                     updateUserDisplay();
                     loadPage('dashboard');
                     showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
-                    loadAllData();
+
+                    // ✅ الآن فقط: تحميل البيانات وحالة السيرفر بعد نجاح الدخول
+                    setTimeout(loadAllData, 300);
+                    setTimeout(fetchServerStatus, 500);
                 } else {
                     errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
                     errorEl.classList.add('show');
@@ -2151,6 +2167,38 @@
                 localStorage.removeItem(CONFIG.KEYS.TOKEN);
                 csrfManager.clearToken();
                 return false;
+            }
+        }
+
+        // ============================================================
+        // 🖥️ SERVER STATUS (بعد الدخول فقط)
+        // ============================================================
+
+        async function fetchServerStatus() {
+            const token = getToken();
+            if (!token) {
+                console.log('🖥️ Server status: skipped (no token)');
+                return;
+            }
+            try {
+                const response = await fetch('/api/session-status', {
+                    credentials: 'include',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.status === 401) {
+                    console.log('🖥️ Server status: not authenticated');
+                    return;
+                }
+                if (!response.ok) return;
+
+                const data = await response.json();
+                console.log('🖥️ Server status:', data);
+            } catch (error) {
+                console.warn('⚠️ Server status check failed:', error.message);
             }
         }
 
@@ -2301,6 +2349,10 @@
 
                         loader.style.display = 'none';
                         document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
+
+                        // ✅ مزامنة مؤقت التاريخ مع العناصر الجديدة في الصفحة
+                        syncDateTimeInterval();
+
                         console.log('✅ تم تحميل الصفحة:', page);
                     })
                     .catch(error => {
@@ -2380,6 +2432,9 @@
             window.currentUser = null;
             localStorage.removeItem(CONFIG.KEYS.TOKEN);
             csrfManager.clearToken();
+
+            // ✅ إعادة تعيين علم التحقق من التوكن
+            window._tokenVerified = false;
 
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
@@ -2471,41 +2526,31 @@
                 subtree: true
             });
 
-            // ===== UPDATE DATE/TIME =====
-            setTimeout(() => {
-                updateDateTime();
-            }, 100);
-            setInterval(updateDateTime, 60000);
+            // ===== UPDATE DATE/TIME (ذكي - لا setInterval دائم) =====
+            syncDateTimeInterval();
 
-            // ===== CHECK SERVER STATUS =====
-            setTimeout(function() {
-                fetch('/api/session-status', {
-                    credentials: 'include'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('🖥️ Server status:', data);
-                })
-                .catch(error => {
-                    console.warn('⚠️ Server status check failed:', error);
-                });
-            }, 1000);
+            // ===== CHECK SERVER STATUS (بعد الدخول فقط) =====
+            // ✅ نتحقق من وجود توكن قبل الإرسال
+            setTimeout(fetchServerStatus, 1000);
 
-            // ===== VERIFY TOKEN =====
-            const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
-            if (token) {
-                const isValid = await verifyToken(token);
-                if (isValid) {
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-                    updateUserDisplay();
-                    const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
-                    loadPage(savedPage);
-                    showToast('👋 مرحباً بعودتك', 'success');
-                    setTimeout(loadAllData, 500);
-                } else {
-                    localStorage.removeItem(CONFIG.KEYS.TOKEN);
-                    csrfManager.clearToken();
+            // ===== VERIFY TOKEN (مرة واحدة فقط) =====
+            if (!window._tokenVerified) {
+                window._tokenVerified = true;
+                const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
+                if (token) {
+                    const isValid = await verifyToken(token);
+                    if (isValid) {
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'block';
+                        updateUserDisplay();
+                        const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
+                        loadPage(savedPage);
+                        showToast('👋 مرحباً بعودتك', 'success');
+                        setTimeout(loadAllData, 500);
+                    } else {
+                        localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                        csrfManager.clearToken();
+                    }
                 }
             }
 
@@ -2524,8 +2569,10 @@
         window.showToast = showToast;
         window.verifyToken = verifyToken;
         window.loadAllData = loadAllData;
+        window.fetchServerStatus = fetchServerStatus;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
+        window.syncDateTimeInterval = syncDateTimeInterval;
         window.stopDateTimeUpdate = stopDateTimeUpdate;
         window.refreshCurrentPage = refreshCurrentPage;
         window.csrfManager = csrfManager;
