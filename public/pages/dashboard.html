@@ -857,7 +857,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT
+    JAVASCRIPT (v9.1 - Safe updateDateTime + Cleanup)
     ============================================================ -->
     <script>
         (function() {
@@ -865,47 +865,124 @@
 
             console.log('📊 Dashboard - loading...');
 
+            // ✅ v9.1: تسجيل كل الـ intervals الخاصة بهذه الصفحة
+            //    ليتم إلغاؤها عند مغادرة الصفحة
+            var _dashboardIntervals = [];
+            var _dashboardTimeouts = [];
+            var _isDestroyed = false;
+
+            // ✅ v9.1: دالة تنظيف شاملة
+            function _dashboardCleanup() {
+                if (_isDestroyed) return;
+                _isDestroyed = true;
+
+                _dashboardIntervals.forEach(function(id) {
+                    try { clearInterval(id); } catch (e) {}
+                });
+                _dashboardIntervals = [];
+
+                _dashboardTimeouts.forEach(function(id) {
+                    try { clearTimeout(id); } catch (e) {}
+                });
+                _dashboardTimeouts = [];
+
+                // ✅ إزالة الرسوم البيانية
+                try {
+                    if (window._perfChart) {
+                        window._perfChart.destroy();
+                        window._perfChart = null;
+                    }
+                    if (window._distChart) {
+                        window._distChart.destroy();
+                        window._distChart = null;
+                    }
+                } catch (e) {}
+
+                console.log('🧹 Dashboard cleanup done');
+            }
+
+            // ✅ v9.1: تسجيل دوال التنظيف عالمياً
+            //    لتنفذها loadPage قبل تحميل صفحة جديدة
+            window._pageCleanup = window._pageCleanup || [];
+            window._pageCleanup.push(_dashboardCleanup);
+
+            // ✅ v9.1: تنظيف عند مغادرة الصفحة (احتياطي)
+            window.addEventListener('beforeunload', _dashboardCleanup);
+            window.addEventListener('pagehide', _dashboardCleanup);
+
             // ============================================================
-            // DATE & TIME
+            // ⏰ DATE & TIME - SAFE VERSION (v9.1)
             // ============================================================
             function updateDateTime() {
-                var now = new Date();
-                var date = now.toLocaleDateString('ar-TN', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                var time = now.toLocaleTimeString('ar-TN', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-                document.getElementById('currentDate').textContent = date;
-                document.getElementById('currentTime').textContent = time;
+                try {
+                    // ✅ v9.1: لا نعمل إذا تم تدمير الصفحة
+                    if (_isDestroyed) return;
+
+                    var now = new Date();
+                    var date = now.toLocaleDateString('ar-TN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    var time = now.toLocaleTimeString('ar-TN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+
+                    // ✅ v9.1: فحص وجود العناصر قبل الكتابة
+                    var dateEl = document.getElementById('currentDate');
+                    var timeEl = document.getElementById('currentTime');
+
+                    if (dateEl) {
+                        dateEl.textContent = date;
+                    }
+                    if (timeEl) {
+                        timeEl.textContent = time;
+                    }
+                } catch (e) {
+                    // ✅ تجاهل صامت — لا نكسر الصفحة
+                    console.debug('⏰ updateDateTime (safe):', e.message);
+                }
             }
+
+            // ✅ استدعاء أولي
             updateDateTime();
-            setInterval(updateDateTime, 1000);
+
+            // ✅ v9.1: تخزين الـ interval لتسهيل تنظيفه
+            var _dateTimeIntervalId = setInterval(updateDateTime, 1000);
+            _dashboardIntervals.push(_dateTimeIntervalId);
 
             // ============================================================
             // USER NAME
             // ============================================================
-            var userName = localStorage.getItem('userName') || 'المستخدم';
-            document.getElementById('userNameDisplay').textContent = userName;
+            var userNameEl = document.getElementById('userNameDisplay');
+            if (userNameEl) {
+                var userName = localStorage.getItem('userName') || 'المستخدم';
+                userNameEl.textContent = userName;
+            }
 
             // ============================================================
             // STATS
             // ============================================================
             function updateStats() {
-                document.getElementById('totalVessels').textContent = 24;
-                document.getElementById('activeVessels').textContent = 18;
-                document.getElementById('maintenanceVessels').textContent = 4;
-                document.getElementById('efficiencyRate').textContent = '87%';
-                document.getElementById('totalUsers').textContent = 12;
-                document.getElementById('newUsers').textContent = 3;
-                document.getElementById('pendingMaintenance').textContent = 8;
-                document.getElementById('overdueMaintenance').textContent = 2;
-                document.getElementById('operationsToday').textContent = 15;
+                var ids = {
+                    totalVessels: 24,
+                    activeVessels: 18,
+                    maintenanceVessels: 4,
+                    efficiencyRate: '87%',
+                    totalUsers: 12,
+                    newUsers: 3,
+                    pendingMaintenance: 8,
+                    overdueMaintenance: 2,
+                    operationsToday: 15
+                };
+
+                Object.keys(ids).forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el) el.textContent = ids[id];
+                });
             }
             updateStats();
 
@@ -913,96 +990,106 @@
             // CHARTS
             // ============================================================
             function initCharts() {
+                if (_isDestroyed) return;
+
                 // Performance Chart
                 var perfCtx = document.getElementById('performanceChart');
-                if (perfCtx) {
-                    var perfChart = new Chart(perfCtx, {
-                        type: 'line',
-                        data: {
-                            labels: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
-                            datasets: [{
-                                label: 'الجاهزية %',
-                                data: [75, 80, 78, 85, 82, 88, 87],
-                                borderColor: '#e6b31e',
-                                backgroundColor: 'rgba(230,179,30,0.08)',
-                                fill: true,
-                                tension: 0.4,
-                                pointBackgroundColor: '#f5d76e',
-                                pointBorderColor: '#0a1628',
-                                pointBorderWidth: 2,
-                                pointRadius: 4
-                            }, {
-                                label: 'الصيانة',
-                                data: [8, 6, 9, 5, 7, 4, 4],
-                                borderColor: '#a78bfa',
-                                backgroundColor: 'rgba(167,139,250,0.08)',
-                                fill: true,
-                                tension: 0.4,
-                                pointBackgroundColor: '#a78bfa',
-                                pointBorderColor: '#0a1628',
-                                pointBorderWidth: 2,
-                                pointRadius: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: true,
-                            plugins: {
-                                legend: {
-                                    labels: {
-                                        color: 'rgba(255,255,255,0.4)',
-                                        font: { family: 'Cairo, sans-serif', size: 11 }
+                if (perfCtx && typeof Chart !== 'undefined') {
+                    try {
+                        var perfChart = new Chart(perfCtx, {
+                            type: 'line',
+                            data: {
+                                labels: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+                                datasets: [{
+                                    label: 'الجاهزية %',
+                                    data: [75, 80, 78, 85, 82, 88, 87],
+                                    borderColor: '#e6b31e',
+                                    backgroundColor: 'rgba(230,179,30,0.08)',
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointBackgroundColor: '#f5d76e',
+                                    pointBorderColor: '#0a1628',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4
+                                }, {
+                                    label: 'الصيانة',
+                                    data: [8, 6, 9, 5, 7, 4, 4],
+                                    borderColor: '#a78bfa',
+                                    backgroundColor: 'rgba(167,139,250,0.08)',
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointBackgroundColor: '#a78bfa',
+                                    pointBorderColor: '#0a1628',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                plugins: {
+                                    legend: {
+                                        labels: {
+                                            color: 'rgba(255,255,255,0.4)',
+                                            font: { family: 'Cairo, sans-serif', size: 11 }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        grid: { color: 'rgba(255,255,255,0.04)' },
+                                        ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif',
+                                                size: 10 } }
+                                    },
+                                    y: {
+                                        grid: { color: 'rgba(255,255,255,0.04)' },
+                                        ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif',
+                                                size: 10 } },
+                                        beginAtZero: true
                                     }
                                 }
-                            },
-                            scales: {
-                                x: {
-                                    grid: { color: 'rgba(255,255,255,0.04)' },
-                                    ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif',
-                                            size: 10 } }
-                                },
-                                y: {
-                                    grid: { color: 'rgba(255,255,255,0.04)' },
-                                    ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif',
-                                            size: 10 } },
-                                    beginAtZero: true
-                                }
                             }
-                        }
-                    });
-                    window._perfChart = perfChart;
+                        });
+                        window._perfChart = perfChart;
+                    } catch (e) {
+                        console.warn('⚠️ Performance chart error:', e.message);
+                    }
                 }
 
                 // Distribution Chart (Pie)
                 var distCtx = document.getElementById('distributionChart');
-                if (distCtx) {
-                    var distChart = new Chart(distCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'],
-                            datasets: [{
-                                data: [18, 12, 8, 6, 4],
-                                backgroundColor: ['#f5d76e', '#60a5fa', '#a78bfa', '#f472b6', '#4ade80'],
-                                borderColor: '#0a1628',
-                                borderWidth: 3
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: true,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        color: 'rgba(255,255,255,0.4)',
-                                        font: { family: 'Cairo, sans-serif', size: 11 },
-                                        padding: 12
+                if (distCtx && typeof Chart !== 'undefined') {
+                    try {
+                        var distChart = new Chart(distCtx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'],
+                                datasets: [{
+                                    data: [18, 12, 8, 6, 4],
+                                    backgroundColor: ['#f5d76e', '#60a5fa', '#a78bfa', '#f472b6', '#4ade80'],
+                                    borderColor: '#0a1628',
+                                    borderWidth: 3
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            color: 'rgba(255,255,255,0.4)',
+                                            font: { family: 'Cairo, sans-serif', size: 11 },
+                                            padding: 12
+                                        }
                                     }
                                 }
                             }
-                        }
-                    });
-                    window._distChart = distChart;
+                        });
+                        window._distChart = distChart;
+                    } catch (e) {
+                        console.warn('⚠️ Distribution chart error:', e.message);
+                    }
                 }
             }
 
@@ -1028,9 +1115,10 @@
             // ============================================================
             window.exportDashboard = function() {
                 showToast('📥 جاري تصدير التقرير...', 'info');
-                setTimeout(function() {
+                var id = setTimeout(function() {
                     showToast('✅ تم تصدير التقرير بنجاح', 'success');
                 }, 1500);
+                _dashboardTimeouts.push(id);
             };
 
             // ============================================================
@@ -1038,19 +1126,26 @@
             // ============================================================
             window.refreshDashboard = function() {
                 var btn = document.getElementById('refreshBtn');
+                if (!btn) return;
                 var orig = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
 
-                setTimeout(function() {
+                var id = setTimeout(function() {
                     updateStats();
-                    btn.innerHTML = orig;
-                    btn.disabled = false;
+                    if (btn) {
+                        btn.innerHTML = orig;
+                        btn.disabled = false;
+                    }
                     showToast('✅ تم تحديث لوحة القيادة', 'success');
                 }, 600);
+                _dashboardTimeouts.push(id);
             };
 
-            document.getElementById('refreshBtn').addEventListener('click', window.refreshDashboard);
+            var refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', window.refreshDashboard);
+            }
 
             // ============================================================
             // TOAST
@@ -1062,12 +1157,14 @@
                 n.className = 'toast toast-' + (type || 'info');
                 n.textContent = msg;
                 document.body.appendChild(n);
-                setTimeout(function() {
+                var id = setTimeout(function() {
                     n.style.opacity = '0';
                     n.style.transform = 'translateY(20px)';
                     n.style.transition = 'all 0.4s';
-                    setTimeout(function() { n.remove(); }, 400);
+                    var id2 = setTimeout(function() { n.remove(); }, 400);
+                    _dashboardTimeouts.push(id2);
                 }, 2500);
+                _dashboardTimeouts.push(id);
             }
             window.showToast = showToast;
 
@@ -1075,13 +1172,16 @@
             // INIT
             // ============================================================
             function init() {
+                if (_isDestroyed) return;
                 console.log('🚀 Initializing Dashboard...');
 
                 // Load Chart.js
                 if (typeof Chart === 'undefined') {
                     var script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
-                    script.onload = initCharts;
+                    script.onload = function() {
+                        if (!_isDestroyed) initCharts();
+                    };
                     document.head.appendChild(script);
                 } else {
                     initCharts();
