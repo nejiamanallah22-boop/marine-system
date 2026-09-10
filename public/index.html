@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية v8.0</title>
+    <title>⚓ منظومة الوسائل البحرية v9.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -1336,7 +1336,7 @@
                 <div class="developer-info">
                     <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
                     <span class="dev-name">أمان الله ناجي</span>
-                    <span class="dev-version">v8.0</span>
+                    <span class="dev-version">v9.1</span>
                 </div>
                 <form id="loginForm" class="login-form" autocomplete="off" novalidate>
                     <input type="hidden" name="csrf_token" id="csrfTokenInput">
@@ -1377,7 +1377,7 @@
                 </form>
                 <div class="login-footer">
                     <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                    <span class="footer-version">الإصدار الاحترافي v8.0</span>
+                    <span class="footer-version">الإصدار الاحترافي v9.1</span>
                 </div>
             </div>
         </div>
@@ -1530,7 +1530,7 @@
             </div>
             <div class="sidebar-footer">
                 <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>
-                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v8.0 · آمن مع CSRF</span></div>
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v9.1 · آمن مع CSRF</span></div>
                 <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
             </div>
         </nav>
@@ -1572,20 +1572,69 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - v8.0 (FIXED: dateTime + session-status + token)
+    JAVASCRIPT - v9.1 (FULL CLEANUP + MEMORY LEAK FIXED)
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v8.0 (FULL WITH LOGIN FIX)
+        // 🚢 MARINE SYSTEM - v9.1
+        // Full cleanup + memory leak fix + _pageCleanup integration
         // ============================================================
 
-        console.log('🚢 Marine System v8.0 - Loading with Login Fix...');
+        console.log('🚢 Marine System v9.1 - Loading...');
 
         // ============================================================
-        // ⏰ UPDATE DATE TIME - SAFE VERSION (FIXED)
+        // ✅ v9.1: GLOBAL CLEANUP STATE
         // ============================================================
 
-        // ✅ نسخة آمنة تماماً - لا تسبب أي أخطاء
+        window._pageCleanup = window._pageCleanup || [];
+        window._pageIntervals = window._pageIntervals || [];
+        window._pageTimeouts = window._pageTimeouts || [];
+
+        function _globalCleanup() {
+            try {
+                // إيقاف مؤقت التاريخ
+                if (window._dateTimeInterval) {
+                    clearInterval(window._dateTimeInterval);
+                    window._dateTimeInterval = null;
+                }
+
+                // إلغاء كل الـ intervals
+                if (Array.isArray(window._pageIntervals)) {
+                    window._pageIntervals.forEach(id => {
+                        try { clearInterval(id); } catch (e) {}
+                    });
+                    window._pageIntervals = [];
+                }
+
+                // إلغاء كل الـ timeouts
+                if (Array.isArray(window._pageTimeouts)) {
+                    window._pageTimeouts.forEach(id => {
+                        try { clearTimeout(id); } catch (e) {}
+                    });
+                    window._pageTimeouts = [];
+                }
+
+                // تنفيذ cleanup الصفحة الحالية
+                if (Array.isArray(window._pageCleanup)) {
+                    window._pageCleanup.forEach(fn => {
+                        try {
+                            if (typeof fn === 'function') fn();
+                        } catch (e) {}
+                    });
+                    window._pageCleanup = [];
+                }
+            } catch (e) {
+                console.warn('⚠️ Global cleanup error:', e.message);
+            }
+        }
+
+        window.addEventListener('beforeunload', _globalCleanup);
+        window.addEventListener('pagehide', _globalCleanup);
+
+        // ============================================================
+        // ⏰ UPDATE DATE TIME - SAFE VERSION
+        // ============================================================
+
         function updateDateTime() {
             try {
                 const now = new Date();
@@ -1609,39 +1658,39 @@
                     });
                 }
             } catch (e) {
-                // ✅ تجاهل جميع الأخطاء - لا تؤثر على التطبيق
                 console.debug('⏰ updateDateTime (safe):', e.message);
             }
         }
 
-        // ✅ دالة ذكية: تشغّل/توقف المؤقت حسب وجود العناصر في الصفحة الحالية
+        // ✅ v9.1: دالة ذكية مع إيقاف المؤقت القديم أولاً
         function syncDateTimeInterval() {
             try {
+                // ✅ أوقف أي مؤقت قديم أولاً
+                if (window._dateTimeInterval) {
+                    clearInterval(window._dateTimeInterval);
+                    window._dateTimeInterval = null;
+                }
+
                 const hasDate = !!document.getElementById('currentDate');
                 const hasTime = !!document.getElementById('currentTime');
 
                 if (hasDate || hasTime) {
-                    // شغّل فوراً
                     updateDateTime();
-                    // شغّل المؤقت لو مش شغال
-                    if (!window._dateTimeInterval) {
-                        window._dateTimeInterval = setInterval(updateDateTime, 60000);
-                        console.log('⏰ Date/Time updater started');
-                    }
+                    window._dateTimeInterval = setInterval(updateDateTime, 60000);
+
+                    // ✅ سجّل في _pageIntervals
+                    window._pageIntervals = window._pageIntervals || [];
+                    window._pageIntervals.push(window._dateTimeInterval);
+
+                    console.log('⏰ Date/Time updater started');
                 } else {
-                    // وقّف المؤقت لو مفيش عناصر
-                    if (window._dateTimeInterval) {
-                        clearInterval(window._dateTimeInterval);
-                        window._dateTimeInterval = null;
-                        console.log('⏰ Date/Time updater stopped (no elements)');
-                    }
+                    console.log('⏰ No date/time elements found, skipping');
                 }
             } catch (e) {
                 console.debug('⏰ syncDateTimeInterval:', e.message);
             }
         }
 
-        // ✅ دالة لإيقاف التحديث يدوياً
         function stopDateTimeUpdate() {
             if (window._dateTimeInterval) {
                 clearInterval(window._dateTimeInterval);
@@ -1802,22 +1851,44 @@
         }
 
         // ============================================================
-        // 🍞 TOAST
+        // 🍞 TOAST - v9.1 SAFE
         // ============================================================
 
         function showToast(msg, type = 'info') {
-            const c = document.getElementById('toastContainer');
-            if (!c) return;
-            const I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-            const t = document.createElement('div');
-            t.className = 'toast toast-' + type;
-            t.innerHTML = '<span>' + I[type] + '</span> ' + msg;
-            c.appendChild(t);
-            setTimeout(() => {
-                t.style.opacity = '0';
-                t.style.transform = 'translateX(30px)';
-                setTimeout(() => t.remove(), 300);
-            }, 3000);
+            try {
+                const c = document.getElementById('toastContainer');
+                if (!c) return;
+
+                const I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+                const t = document.createElement('div');
+                t.className = 'toast toast-' + type;
+
+                // ✅ استخدام textContent للرسالة
+                const icon = document.createElement('span');
+                icon.textContent = I[type] || 'ℹ️';
+
+                const text = document.createElement('span');
+                text.textContent = String(msg || '');
+
+                t.appendChild(icon);
+                t.appendChild(text);
+                c.appendChild(t);
+
+                // ✅ تتبع الـ timeouts
+                const tid1 = setTimeout(() => {
+                    t.style.opacity = '0';
+                    t.style.transform = 'translateX(30px)';
+                    const tid2 = setTimeout(() => {
+                        if (t.parentNode) t.remove();
+                    }, 300);
+                    window._pageTimeouts = window._pageTimeouts || [];
+                    window._pageTimeouts.push(tid2);
+                }, 3000);
+                window._pageTimeouts = window._pageTimeouts || [];
+                window._pageTimeouts.push(tid1);
+            } catch (e) {
+                console.debug('Toast error:', e.message);
+            }
         }
 
         // ============================================================
@@ -1853,143 +1924,6 @@
             }
         }
 
-        // ✅ ربط أحداث "نسيت كلمة المرور"
-        document.addEventListener('DOMContentLoaded', function() {
-            var forgotLink = document.getElementById('forgotPasswordLink');
-            if (forgotLink) {
-                forgotLink.addEventListener('click', openForgotModal);
-            }
-
-            if (closeForgotBtn) {
-                closeForgotBtn.addEventListener('click', closeForgotModal);
-            }
-
-            if (backToLoginLink) {
-                backToLoginLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    closeForgotModal();
-                });
-            }
-
-            if (forgotModal) {
-                forgotModal.addEventListener('click', function(e) {
-                    if (e.target === forgotModal) {
-                        closeForgotModal();
-                    }
-                });
-            }
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && forgotModal && forgotModal.style.display === 'flex') {
-                    closeForgotModal();
-                }
-            });
-
-            if (forgotEmail) {
-                forgotEmail.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' && sendResetBtn) {
-                        sendResetBtn.click();
-                    }
-                });
-            }
-
-            if (sendResetBtn) {
-                sendResetBtn.addEventListener('click', async function() {
-                    var email = forgotEmail ? forgotEmail.value.trim() : '';
-
-                    if (forgotMessage) {
-                        forgotMessage.className = 'modal-message show';
-                        forgotMessage.style.display = 'block';
-                        forgotMessage.textContent = '⏳ جاري المعالجة...';
-                        forgotMessage.style.color = '#f5d76e';
-                        forgotMessage.style.background = 'rgba(230,179,30,0.08)';
-                        forgotMessage.style.border = '1px solid rgba(230,179,30,0.1)';
-                    }
-
-                    if (!email) {
-                        if (forgotMessage) {
-                            forgotMessage.className = 'modal-message show error';
-                            forgotMessage.style.display = 'block';
-                            forgotMessage.textContent = '⚠️ الرجاء إدخال البريد الإلكتروني';
-                        }
-                        return;
-                    }
-
-                    if (!email.includes('@') || !email.includes('.')) {
-                        if (forgotMessage) {
-                            forgotMessage.className = 'modal-message show error';
-                            forgotMessage.style.display = 'block';
-                            forgotMessage.textContent = '⚠️ الرجاء إدخال بريد إلكتروني صحيح';
-                        }
-                        return;
-                    }
-
-                    sendResetBtn.disabled = true;
-                    sendResetBtn.innerHTML = '⏳ جاري الإرسال...';
-
-                    try {
-                        var csrfRes = await fetch('/api/csrf-token', {
-                            credentials: 'include',
-                            headers: { 'Accept': 'application/json' }
-                        });
-                        var csrfData = await csrfRes.json();
-                        var csrfToken = csrfData.token || '';
-
-                        var response = await fetch('/api/auth/forgot-password', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-Token': csrfToken,
-                                'Accept': 'application/json'
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({ email: email })
-                        });
-
-                        var data = await response.json();
-
-                        if (forgotMessage) {
-                            forgotMessage.className = 'modal-message show';
-                            forgotMessage.style.display = 'block';
-
-                            if (response.status === 404) {
-                                forgotMessage.className += ' error';
-                                forgotMessage.textContent = '❌ ' + (data.error || 'هذا البريد الإلكتروني غير مسجل في النظام');
-                            } else if (response.ok && data.success) {
-                                forgotMessage.className += ' success';
-                                
-                                var resetLink = data.resetLink || '';
-                                if (resetLink) {
-                                    forgotMessage.innerHTML = 
-                                        '✅ تم إنشاء رابط إعادة التعيين:<br><br>' +
-                                        '<div class="reset-link-box">' +
-                                        '<a href="' + resetLink + '" target="_blank">' + resetLink + '</a>' +
-                                        '</div><br>' +
-                                        '<span style="font-size:13px;color:rgba(255,255,255,0.4);">📌 انسخ الرابط وألصقه في المتصفح، أو اضغط عليه مباشرة</span>';
-                                } else {
-                                    forgotMessage.textContent = '✅ ' + (data.message || 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني');
-                                }
-                            } else {
-                                forgotMessage.className += ' error';
-                                forgotMessage.textContent = '❌ ' + (data.error || data.message || 'حدث خطأ، يرجى المحاولة مرة أخرى');
-                            }
-                        }
-
-                    } catch (error) {
-                        console.error('❌ Forgot password error:', error);
-                        if (forgotMessage) {
-                            forgotMessage.className = 'modal-message show error';
-                            forgotMessage.style.display = 'block';
-                            forgotMessage.textContent = '❌ خطأ في الاتصال بالخادم';
-                        }
-                    } finally {
-                        sendResetBtn.disabled = false;
-                        sendResetBtn.innerHTML = '📧 إرسال رابط إعادة التعيين';
-                    }
-                });
-            }
-        });
-
         // ============================================================
         // 🔐 LOGIN
         // ============================================================
@@ -2002,6 +1936,8 @@
             const errorEl = document.getElementById('loginError');
             const loginBtn = document.getElementById('loginButton');
             const authOverlay = document.getElementById('authLoadingOverlay');
+
+            if (!username || !password || !errorEl || !loginBtn) return;
 
             const user = username.value.trim();
             const pass = password.value.trim();
@@ -2088,9 +2024,9 @@
                     loadPage('dashboard');
                     showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
 
-                    // ✅ الآن فقط: تحميل البيانات وحالة السيرفر بعد نجاح الدخول
-                    setTimeout(loadAllData, 300);
-                    setTimeout(fetchServerStatus, 500);
+                    const tid1 = setTimeout(loadAllData, 300);
+                    const tid2 = setTimeout(fetchServerStatus, 500);
+                    window._pageTimeouts.push(tid1, tid2);
                 } else {
                     errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
                     errorEl.classList.add('show');
@@ -2171,7 +2107,7 @@
         }
 
         // ============================================================
-        // 🖥️ SERVER STATUS (بعد الدخول فقط)
+        // 🖥️ SERVER STATUS
         // ============================================================
 
         async function fetchServerStatus() {
@@ -2272,138 +2208,207 @@
         function updateUserDisplay() {
             if (!currentUser) return;
             const n = currentUser.name || currentUser.username;
-            document.getElementById('userDisplayName').textContent = n;
-            document.getElementById('userInitial').textContent = n.charAt(0);
-            document.getElementById('sidebarUserName').textContent = n;
-            document.getElementById('sidebarUserRole').textContent = getRoleName(currentUser.role);
-            document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);
+            const el1 = document.getElementById('userDisplayName');
+            const el2 = document.getElementById('userInitial');
+            const el3 = document.getElementById('sidebarUserName');
+            const el4 = document.getElementById('sidebarUserRole');
+            const el5 = document.getElementById('sidebarUserAvatar');
+            if (el1) el1.textContent = n;
+            if (el2) el2.textContent = n.charAt(0);
+            if (el3) el3.textContent = n;
+            if (el4) el4.textContent = getRoleName(currentUser.role);
+            if (el5) el5.textContent = n.charAt(0);
         }
 
         // ============================================================
-        // 📄 LOAD PAGE
+        // 📄 LOAD PAGE - v9.1 (with cleanup)
         // ============================================================
 
         function loadPage(page) {
-            currentPage = page;
-            localStorage.setItem(CONFIG.KEYS.PAGE, page);
+            try {
+                currentPage = page;
+                localStorage.setItem(CONFIG.KEYS.PAGE, page);
 
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.page === page);
-            });
-
-            const container = document.getElementById('pageContainer');
-            const loader = document.getElementById('pageLoader');
-
-            if (!container) return;
-
-            loader.style.display = 'flex';
-            container.innerHTML = '';
-
-            const possiblePaths = [
-                '/pages/' + page + '.html',
-                '/public/pages/' + page + '.html',
-                '/public/' + page + '.html',
-                '/' + page + '.html'
-            ];
-
-            let loaded = false;
-
-            for (const path of possiblePaths) {
-                fetch(path, { cache: 'no-store' })
-                    .then(response => {
-                        if (response.ok) {
-                            loaded = true;
-                            return response.text();
+                // ✅ v9.1: تنفيذ دوال التنظيف من الصفحة السابقة
+                if (Array.isArray(window._pageCleanup) && window._pageCleanup.length > 0) {
+                    console.log('🧹 Running cleanup for previous page...');
+                    window._pageCleanup.forEach(fn => {
+                        try {
+                            if (typeof fn === 'function') fn();
+                        } catch (e) {
+                            console.warn('⚠️ Cleanup error:', e.message);
                         }
-                        throw new Error('Page not found');
-                    })
-                    .then(html => {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = html;
+                    });
+                    window._pageCleanup = [];
+                }
 
-                        const scripts = tempDiv.querySelectorAll('script');
-                        const scriptContents = [];
-                        scripts.forEach(script => {
-                            scriptContents.push(script.textContent);
-                            script.remove();
-                        });
+                // ✅ v9.1: إلغاء أي intervals مسجلة من الصفحة السابقة
+                if (Array.isArray(window._pageIntervals) && window._pageIntervals.length > 0) {
+                    window._pageIntervals.forEach(id => {
+                        try { clearInterval(id); } catch (e) {}
+                    });
+                    window._pageIntervals = [];
+                }
 
-                        container.innerHTML = tempDiv.innerHTML;
+                // ✅ v9.1: إلغاء أي timeouts مسجلة من الصفحة السابقة
+                if (Array.isArray(window._pageTimeouts) && window._pageTimeouts.length > 0) {
+                    window._pageTimeouts.forEach(id => {
+                        try { clearTimeout(id); } catch (e) {}
+                    });
+                    window._pageTimeouts = [];
+                }
 
-                        scriptContents.forEach(content => {
-                            if (content && content.trim()) {
-                                try {
-                                    const newScript = document.createElement('script');
-                                    newScript.textContent = content;
-                                    document.body.appendChild(newScript);
-                                    setTimeout(() => {
-                                        if (newScript.parentNode) newScript.remove();
-                                    }, 10);
-                                } catch (e) {
-                                    console.warn('⚠️ خطأ في تنفيذ script:', e.message);
+                // ✅ v9.1: إيقاف مؤقت التاريخ العام
+                if (typeof stopDateTimeUpdate === 'function') {
+                    stopDateTimeUpdate();
+                }
+
+                // ===== تحديث الـ nav =====
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.page === page);
+                });
+
+                const container = document.getElementById('pageContainer');
+                const loader = document.getElementById('pageLoader');
+
+                if (!container) return;
+
+                if (loader) loader.style.display = 'flex';
+                container.innerHTML = '';
+
+                const possiblePaths = [
+                    '/pages/' + page + '.html',
+                    '/public/pages/' + page + '.html',
+                    '/public/' + page + '.html',
+                    '/' + page + '.html'
+                ];
+
+                let loaded = false;
+
+                for (const path of possiblePaths) {
+                    fetch(path, { cache: 'no-store' })
+                        .then(response => {
+                            if (response.ok) {
+                                loaded = true;
+                                return response.text();
+                            }
+                            throw new Error('Page not found');
+                        })
+                        .then(html => {
+                            if (!html) return;
+
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = html;
+
+                            // ✅ v9.1: استخراج الـ scripts
+                            const scripts = tempDiv.querySelectorAll('script');
+                            const scriptContents = [];
+                            scripts.forEach(script => {
+                                scriptContents.push(script.textContent);
+                                script.remove();
+                            });
+
+                            container.innerHTML = tempDiv.innerHTML;
+
+                            // ✅ v9.1: تنفيذ الـ scripts مع تتبع
+                            scriptContents.forEach(content => {
+                                if (content && content.trim()) {
+                                    try {
+                                        const newScript = document.createElement('script');
+                                        newScript.textContent = content;
+                                        newScript.setAttribute('data-page-script', page);
+                                        document.body.appendChild(newScript);
+
+                                        // ✅ v9.1: تتبع الـ timeout
+                                        const tid = setTimeout(() => {
+                                            if (newScript.parentNode) {
+                                                newScript.remove();
+                                            }
+                                        }, 10);
+                                        window._pageTimeouts = window._pageTimeouts || [];
+                                        window._pageTimeouts.push(tid);
+                                    } catch (e) {
+                                        console.warn('⚠️ خطأ في تنفيذ script:', e.message);
+                                    }
                                 }
+                            });
+
+                            // ✅ v9.1: حقن CSRF في النماذج الجديدة
+                            if (csrfManager && typeof csrfManager.injectTokenToForms === 'function') {
+                                csrfManager.injectTokenToForms();
+                            }
+
+                            if (loader) loader.style.display = 'none';
+                            document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
+
+                            // ✅ v9.1: مزامنة مؤقت التاريخ
+                            syncDateTimeInterval();
+
+                            console.log('✅ تم تحميل الصفحة:', page);
+                        })
+                        .catch(error => {
+                            if (!loaded) {
+                                if (loader) loader.style.display = 'none';
+                                container.innerHTML =
+                                    '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
+                                    '<div style="font-size:48px;">❌</div>' +
+                                    '<h2 style="color:#f87171;">فشل تحميل الصفحة</h2>' +
+                                    '<p>' + escapeHTML(error.message) + '</p>' +
+                                    '<button onclick="loadPage(\'dashboard\')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button>' +
+                                    '</div>';
                             }
                         });
+                    break;
+                }
 
-                        csrfManager.injectTokenToForms();
-
-                        loader.style.display = 'none';
-                        document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
-
-                        // ✅ مزامنة مؤقت التاريخ مع العناصر الجديدة في الصفحة
-                        syncDateTimeInterval();
-
-                        console.log('✅ تم تحميل الصفحة:', page);
-                    })
-                    .catch(error => {
-                        if (!loaded) {
-                            loader.style.display = 'none';
-                            container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
+                // ✅ v9.1: فحص أخير
+                if (!loaded) {
+                    const tid = setTimeout(() => {
+                        if (container.innerHTML === '') {
+                            if (loader) loader.style.display = 'none';
+                            container.innerHTML =
+                                '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
                                 '<div style="font-size:48px;">❌</div>' +
-                                '<h2 style="color:#f87171;">فشل تحميل الصفحة</h2>' +
-                                '<p>' + escapeHTML(error.message) + '</p>' +
+                                '<h2 style="color:#f87171;">الصفحة غير موجودة</h2>' +
                                 '<button onclick="loadPage(\'dashboard\')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button>' +
                                 '</div>';
                         }
-                    });
-                break;
-            }
-
-            if (!loaded) {
-                setTimeout(() => {
-                    if (container.innerHTML === '') {
-                        loader.style.display = 'none';
-                        container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
-                            '<div style="font-size:48px;">❌</div>' +
-                            '<h2 style="color:#f87171;">الصفحة غير موجودة</h2>' +
-                            '<button onclick="loadPage(\'dashboard\')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button>' +
-                            '</div>';
-                    }
-                }, 2000);
+                    }, 2000);
+                    window._pageTimeouts = window._pageTimeouts || [];
+                    window._pageTimeouts.push(tid);
+                }
+            } catch (e) {
+                console.error('❌ loadPage error:', e);
             }
         }
 
         // ============================================================
-        // 🔄 REFRESH CURRENT PAGE
+        // 🔄 REFRESH CURRENT PAGE - v9.1 (async)
         // ============================================================
 
-        function refreshCurrentPage() {
-            const currentPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
-            console.log('🔄 جاري تحديث الصفحة:', currentPage);
+        async function refreshCurrentPage() {
+            const page = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
+            console.log('🔄 جاري تحديث الصفحة:', page);
 
             const btn = document.getElementById('refreshBtn');
             if (btn) {
                 btn.classList.add('spinning');
             }
 
-            loadPage(currentPage);
-            loadAllData();
+            try {
+                loadPage(page);
+                await loadAllData();
+            } catch (e) {
+                console.warn('⚠️ Refresh error:', e.message);
+            }
 
-            setTimeout(() => {
+            const tid = setTimeout(() => {
                 if (btn) {
                     btn.classList.remove('spinning');
                 }
             }, 1000);
+            window._pageTimeouts = window._pageTimeouts || [];
+            window._pageTimeouts.push(tid);
 
             showToast('🔄 تم تحديث الصفحة', 'info');
         }
@@ -2428,19 +2433,28 @@
                 }).catch(() => {});
             }
 
+            // ✅ v9.1: تنظيف شامل قبل الخروج
+            _globalCleanup();
+
             currentUser = null;
             window.currentUser = null;
             localStorage.removeItem(CONFIG.KEYS.TOKEN);
             csrfManager.clearToken();
 
-            // ✅ إعادة تعيين علم التحقق من التوكن
             window._tokenVerified = false;
 
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('loginError').className = 'error-msg';
+            const loginOverlay = document.getElementById('loginOverlay');
+            const mainApp = document.getElementById('mainApp');
+            if (loginOverlay) loginOverlay.style.display = 'flex';
+            if (mainApp) mainApp.style.display = 'none';
+
+            const uEl = document.getElementById('username');
+            const pEl = document.getElementById('password');
+            const eEl = document.getElementById('loginError');
+            if (uEl) uEl.value = '';
+            if (pEl) pEl.value = '';
+            if (eEl) eEl.className = 'error-msg';
+
             showToast('👋 تم تسجيل الخروج', 'info');
         }
 
@@ -2449,13 +2463,17 @@
         // ============================================================
 
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('menuToggle').classList.toggle('active');
+            const s = document.getElementById('sidebar');
+            const m = document.getElementById('menuToggle');
+            if (s) s.classList.toggle('open');
+            if (m) m.classList.toggle('active');
         }
 
         function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('menuToggle').classList.remove('active');
+            const s = document.getElementById('sidebar');
+            const m = document.getElementById('menuToggle');
+            if (s) s.classList.remove('open');
+            if (m) m.classList.remove('active');
         }
 
         // ============================================================
@@ -2465,26 +2483,165 @@
         const csrfManager = new CSRFTokenManager();
         window.csrfManager = csrfManager;
 
-        document.addEventListener('DOMContentLoaded', async function() {
+        async function initApp() {
             console.log('📄 DOM جاهز');
 
-            // ===== LOGIN FORM =====
-            document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const button = document.getElementById('loginButton');
-                if (!button.disabled) doLogin();
+            // ===== FORGOT PASSWORD =====
+            if (backToLoginLink) {
+                backToLoginLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeForgotModal();
+                });
+            }
+            if (forgotModal) {
+                forgotModal.addEventListener('click', function(e) {
+                    if (e.target === forgotModal) {
+                        closeForgotModal();
+                    }
+                });
+            }
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && forgotModal && forgotModal.style.display === 'flex') {
+                    closeForgotModal();
+                }
             });
+            if (forgotEmail) {
+                forgotEmail.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && sendResetBtn) {
+                        sendResetBtn.click();
+                    }
+                });
+            }
+            if (sendResetBtn) {
+                sendResetBtn.addEventListener('click', async function() {
+                    var email = forgotEmail ? forgotEmail.value.trim() : '';
 
-            document.getElementById('togglePassword').onclick = function() {
-                const i = document.getElementById('password');
-                const ic = this.querySelector('i');
-                i.type = i.type === 'password' ? 'text' : 'password';
-                ic.className = i.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
-            };
+                    if (forgotMessage) {
+                        forgotMessage.className = 'modal-message show';
+                        forgotMessage.style.display = 'block';
+                        forgotMessage.textContent = '⏳ جاري المعالجة...';
+                        forgotMessage.style.color = '#f5d76e';
+                        forgotMessage.style.background = 'rgba(230,179,30,0.08)';
+                        forgotMessage.style.border = '1px solid rgba(230,179,30,0.1)';
+                    }
+
+                    if (!email) {
+                        if (forgotMessage) {
+                            forgotMessage.className = 'modal-message show error';
+                            forgotMessage.style.display = 'block';
+                            forgotMessage.textContent = '⚠️ الرجاء إدخال البريد الإلكتروني';
+                        }
+                        return;
+                    }
+
+                    if (!email.includes('@') || !email.includes('.')) {
+                        if (forgotMessage) {
+                            forgotMessage.className = 'modal-message show error';
+                            forgotMessage.style.display = 'block';
+                            forgotMessage.textContent = '⚠️ الرجاء إدخال بريد إلكتروني صحيح';
+                        }
+                        return;
+                    }
+
+                    sendResetBtn.disabled = true;
+                    sendResetBtn.innerHTML = '⏳ جاري الإرسال...';
+
+                    try {
+                        var csrfRes = await fetch('/api/csrf-token', {
+                            credentials: 'include',
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        var csrfData = await csrfRes.json();
+                        var csrfToken = csrfData.token || '';
+
+                        var response = await fetch('/api/auth/forgot-password', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({ email: email })
+                        });
+
+                        var data = await response.json();
+
+                        if (forgotMessage) {
+                            forgotMessage.className = 'modal-message show';
+                            forgotMessage.style.display = 'block';
+
+                            if (response.status === 404) {
+                                forgotMessage.className += ' error';
+                                forgotMessage.textContent = '❌ ' + (data.error || 'هذا البريد الإلكتروني غير مسجل في النظام');
+                            } else if (response.ok && data.success) {
+                                forgotMessage.className += ' success';
+                                
+                                var resetLink = data.resetLink || '';
+                                if (resetLink) {
+                                    forgotMessage.innerHTML = 
+                                        '✅ تم إنشاء رابط إعادة التعيين:<br><br>' +
+                                        '<div class="reset-link-box">' +
+                                        '<a href="' + escapeHTML(resetLink) + '" target="_blank">' + escapeHTML(resetLink) + '</a>' +
+                                        '</div><br>' +
+                                        '<span style="font-size:13px;color:rgba(255,255,255,0.4);">📌 انسخ الرابط وألصقه في المتصفح، أو اضغط عليه مباشرة</span>';
+                                } else {
+                                    forgotMessage.textContent = '✅ ' + (data.message || 'تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني');
+                                }
+                            } else {
+                                forgotMessage.className += ' error';
+                                forgotMessage.textContent = '❌ ' + (data.error || data.message || 'حدث خطأ، يرجى المحاولة مرة أخرى');
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error('❌ Forgot password error:', error);
+                        if (forgotMessage) {
+                            forgotMessage.className = 'modal-message show error';
+                            forgotMessage.style.display = 'block';
+                            forgotMessage.textContent = '❌ خطأ في الاتصال بالخادم';
+                        }
+                    } finally {
+                        sendResetBtn.disabled = false;
+                        sendResetBtn.innerHTML = '📧 إرسال رابط إعادة التعيين';
+                    }
+                });
+            }
+
+            const forgotLink = document.getElementById('forgotPasswordLink');
+            if (forgotLink) {
+                forgotLink.addEventListener('click', openForgotModal);
+            }
+            if (closeForgotBtn) {
+                closeForgotBtn.addEventListener('click', closeForgotModal);
+            }
+
+            // ===== LOGIN FORM =====
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const button = document.getElementById('loginButton');
+                    if (button && !button.disabled) doLogin();
+                });
+            }
+
+            const togglePassword = document.getElementById('togglePassword');
+            if (togglePassword) {
+                togglePassword.onclick = function() {
+                    const i = document.getElementById('password');
+                    const ic = this.querySelector('i');
+                    if (!i || !ic) return;
+                    i.type = i.type === 'password' ? 'text' : 'password';
+                    ic.className = i.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+                };
+            }
 
             // ===== SIDEBAR =====
-            document.getElementById('menuToggle').onclick = toggleSidebar;
-            document.getElementById('sidebarClose').onclick = closeSidebar;
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarClose = document.getElementById('sidebarClose');
+            if (menuToggle) menuToggle.onclick = toggleSidebar;
+            if (sidebarClose) sidebarClose.onclick = closeSidebar;
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -2495,43 +2652,69 @@
             });
 
             // ===== NOTIFICATIONS =====
-            document.getElementById('notifBtn').onclick = function() {
-                showToast('📬 تم فتح الإشعارات', 'info');
-            };
+            const notifBtn = document.getElementById('notifBtn');
+            if (notifBtn) {
+                notifBtn.onclick = function() {
+                    showToast('📬 تم فتح الإشعارات', 'info');
+                };
+            }
 
             // ===== USER BUTTON =====
-            document.getElementById('userBtn').onclick = function() {
-                if (confirm('هل تريد تسجيل الخروج؟')) doLogout();
-            };
+            const userBtn = document.getElementById('userBtn');
+            if (userBtn) {
+                userBtn.onclick = function() {
+                    if (confirm('هل تريد تسجيل الخروج؟')) doLogout();
+                };
+            }
 
             // ===== REFRESH BUTTON =====
-            document.getElementById('refreshBtn').onclick = function() {
-                refreshCurrentPage();
-            };
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.onclick = function() {
+                    refreshCurrentPage();
+                };
+            }
 
             // ===== BACK TO TOP =====
-            document.getElementById('backToTop').onclick = function() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            };
-            window.addEventListener('scroll', function() {
-                document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';
-            });
+            const backToTop = document.getElementById('backToTop');
+            if (backToTop) {
+                backToTop.onclick = function() {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
+            }
+
+            // ✅ v9.1: scroll listener مع requestAnimationFrame
+            let _scrollTicking = false;
+            function _handleScroll() {
+                if (_scrollTicking) return;
+                _scrollTicking = true;
+                window.requestAnimationFrame(() => {
+                    const btn = document.getElementById('backToTop');
+                    if (btn) {
+                        btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+                    }
+                    _scrollTicking = false;
+                });
+            }
+            window.addEventListener('scroll', _handleScroll, { passive: true });
 
             // ===== CSRF INJECTION =====
             const observer = new MutationObserver(() => {
-                csrfManager.injectTokenToForms();
+                if (csrfManager && typeof csrfManager.injectTokenToForms === 'function') {
+                    csrfManager.injectTokenToForms();
+                }
             });
             observer.observe(document.body, {
                 childList: true,
                 subtree: true
             });
 
-            // ===== UPDATE DATE/TIME (ذكي - لا setInterval دائم) =====
+            // ===== UPDATE DATE/TIME =====
             syncDateTimeInterval();
 
-            // ===== CHECK SERVER STATUS (بعد الدخول فقط) =====
-            // ✅ نتحقق من وجود توكن قبل الإرسال
-            setTimeout(fetchServerStatus, 1000);
+            // ===== CHECK SERVER STATUS =====
+            const tid1 = setTimeout(fetchServerStatus, 1000);
+            window._pageTimeouts.push(tid1);
 
             // ===== VERIFY TOKEN (مرة واحدة فقط) =====
             if (!window._tokenVerified) {
@@ -2546,7 +2729,8 @@
                         const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
                         loadPage(savedPage);
                         showToast('👋 مرحباً بعودتك', 'success');
-                        setTimeout(loadAllData, 500);
+                        const tid2 = setTimeout(loadAllData, 500);
+                        window._pageTimeouts.push(tid2);
                     } else {
                         localStorage.removeItem(CONFIG.KEYS.TOKEN);
                         csrfManager.clearToken();
@@ -2554,8 +2738,15 @@
                 }
             }
 
-            console.log('✅ Marine System v8.0 ready with Login Fix');
-        });
+            console.log('✅ Marine System v9.1 ready');
+        }
+
+        // ✅ v9.1: تشغيل init بشكل مضمون
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
         // ============================================================
         // 🌐 GLOBAL
@@ -2580,7 +2771,7 @@
         window.openForgotModal = openForgotModal;
         window.closeForgotModal = closeForgotModal;
 
-        console.log('✅ Marine System v8.0 loaded successfully');
+        console.log('✅ Marine System v9.1 loaded successfully');
     </script>
 
 </body>
