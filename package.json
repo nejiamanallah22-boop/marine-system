@@ -1,7 +1,7 @@
 {
   "name": "marine-system-enterprise",
-  "version": "8.0.0",
-  "description": "Marine System with Enterprise Security",
+  "version": "9.1.0",
+  "description": "Marine System with Enterprise Security v9.1",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -17,7 +17,6 @@
     "bcryptjs": "^2.4.3",
     "helmet": "^7.0.0",
     "express-rate-limit": "^7.1.5",
-    "xss-clean": "^0.1.4",
     "hpp": "^0.2.3",
     "compression": "^1.7.4",
     "dotenv": "^16.3.1",
@@ -27,8 +26,7 @@
     "connect-redis": "^7.1.0",
     "redis": "^4.6.10",
     "nodemailer": "^6.9.7",
-    "express-rate-limit": "^7.1.5",
-    "crypto-js": "^4.2.0"
+    "isomorphic-dompurify": "^2.16.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
