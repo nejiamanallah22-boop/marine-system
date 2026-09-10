@@ -1,8 +1,8 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.3
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.4
 // 🔐 JWT + REFRESH TOKEN + CSRF + SESSION + RBAC
 // 🛡️ PRODUCTION HARDENED / BACKWARD COMPATIBLE
-// ✨ v9.3: CSRF single-source-of-truth + No race + Secure fallback
+// ✨ v9.4: tokenVersion check + Ordered logout + CSRF for refresh
 // ============================================================
 
 'use strict';
@@ -430,7 +430,7 @@ async function sendEmail(to, subject, html) {
 })();
 
 // ============================================================
-// 🛡️ HELMET (v9.3)
+// 🛡️ HELMET (v9.4)
 // ============================================================
 
 app.use(
@@ -643,7 +643,7 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// 🧠 CSRF TOKEN (v9.3 - Single source of truth: session)
+// 🧠 CSRF TOKEN (v9.4 - Single source of truth: session)
 // ============================================================
 
 function ensureCsrfToken(req, res) {
@@ -684,21 +684,20 @@ function ensureCsrfToken(req, res) {
 }
 
 // ============================================================
-// 🛡️ CSRF PROTECTION (v9.3 - Secure fallback, no bypass)
+// 🛡️ CSRF PROTECTION (v9.4 - Secure fallback, no bypass)
 // ============================================================
 
+// ✅ v9.4: refresh لم يعد مستثنى — HttpOnly Cookie يحتاج CSRF protection
 const csrfExcluded = new Set([
     '/api/auth/login',
     '/api/auth/forgot-password',
     '/api/auth/reset-password',
     '/api/auth/verify-reset-token',
     '/api/csrf-token',
-    '/api/auth/refresh',
     '/api/health'
 ]);
 
 // ✅ v9.3: تحقق من صيغة التوكن المولَّد من الواجهة
-//    الصيغة: timestamp.random.hash
 function looksLikeClientCsrfToken(t) {
     if (typeof t !== 'string') return false;
     if (t.length < 20 || t.length > 200) return false;
@@ -756,14 +755,11 @@ function csrfProtection(req, res, next) {
         return next();
     }
 
-    // ✅ 9) dev fallback أمني:
-    //    لا نقبل "أي توكن" — نقبل فقط توكن بصيغة
-    //    الواجهة الأصلية (timestamp.random.hash)
-    //    هذا يسمح للواجهة القديمة بالعمل دون تعطيل CSRF
+    // ✅ 9) dev fallback أمني
     if (
         !isProduction &&
         looksLikeClientCsrfToken(provided) &&
-        !sessionToken  // ← فقط إذا لم تكن هناك جلسة بعد
+        !sessionToken
     ) {
         console.warn('⚠️ DEV: Accepting client-format CSRF token (no session yet)');
         return next();
@@ -776,6 +772,77 @@ function csrfProtection(req, res, next) {
         sessionPrefix: sessionToken ? String(sessionToken).substring(0, 20) : null,
         cookiePrefix: cookieToken ? String(cookieToken).substring(0, 20) : null
     });
+
+    return res.status(403).json({
+        success: false,
+        error: 'CSRF token غير صالح',
+        code: 'CSRF_INVALID'
+    });
+}
+
+// ============================================================
+// 🛡️ CSRF PROTECTION FOR AUTH ROUTES (v9.4)
+// ============================================================
+// خاصة بـ logout و refresh — تقبل التوكن من session أو cookie
+// بدون إلغاء الحماية
+// ============================================================
+
+function csrfProtectionForAuth(req, res, next) {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+        return next();
+    }
+
+    const provided =
+        req.headers['x-csrf-token'] ||
+        req.body?.csrf_token ||
+        req.cookies?.marine_csrf;
+
+    const sessionToken = req.session?.csrfToken;
+    const cookieToken = req.cookies?.marine_csrf;
+
+    // ✅ تسجيل تفصيلي
+    console.log('🔍 CSRF(Auth) Check:', {
+        path: req.path,
+        method: req.method,
+        hasProvided: !!provided,
+        hasSession: !!sessionToken,
+        hasCookie: !!cookieToken,
+        providedPrefix: provided ? String(provided).substring(0, 20) : null
+    });
+
+    // ✅ 1) إذا كانت الجلسة موجودة، يجب أن يتطابق التوكن
+    if (sessionToken) {
+        if (
+            provided &&
+            safeEqual(String(provided), String(sessionToken))
+        ) {
+            return next();
+        }
+        return res.status(403).json({
+            success: false,
+            error: 'CSRF token غير صالح أو مفقود',
+            code: 'CSRF_INVALID'
+        });
+    }
+
+    // ✅ 2) إذا لم توجد جلسة، نقبل فقط تطابق الكوكي
+    if (
+        provided &&
+        cookieToken &&
+        safeEqual(String(provided), String(cookieToken))
+    ) {
+        return next();
+    }
+
+    // ✅ 3) dev fallback أمني
+    if (
+        !isProduction &&
+        looksLikeClientCsrfToken(provided) &&
+        !sessionToken
+    ) {
+        console.warn('⚠️ DEV: Accepting client-format CSRF for auth route');
+        return next();
+    }
 
     return res.status(403).json({
         success: false,
@@ -1199,7 +1266,7 @@ function verifyResetToken(email, token) {
 }
 
 // ============================================================
-// 🔐 AUTHENTICATION
+// 🔐 AUTHENTICATION (v9.4 - tokenVersion enforced)
 // ============================================================
 
 function extractBearerToken(req) {
@@ -1256,6 +1323,26 @@ function authenticateAccessToken(req, res, next) {
             return res.status(401).json({
                 success: false,
                 error: 'المستخدم غير موجود أو غير نشط'
+            });
+        }
+
+        // ============================================================
+        // 🔐 TOKEN VERSION VALIDATION (v9.4)
+        // ============================================================
+        // يضمن أن Access Token القديم يُلغى فوراً بعد:
+        // - تغيير كلمة المرور
+        // - إعادة تعيين كلمة المرور
+        // - إبطال الجلسة من admin
+        // ============================================================
+
+        if (
+            typeof decoded.ver !== 'number' ||
+            decoded.ver !== (user.tokenVersion || 0)
+        ) {
+            return res.status(401).json({
+                success: false,
+                error: 'جلسة التوثيق منتهية — يرجى تسجيل الدخول مجدداً',
+                code: 'TOKEN_VERSION_MISMATCH'
             });
         }
 
@@ -1342,7 +1429,7 @@ function requireAdmin(req, res, next) {
 }
 
 // ============================================================
-// 🚀 MAIN STARTUP (v9.3)
+// 🚀 MAIN STARTUP
 // ============================================================
 
 (async () => {
@@ -1394,7 +1481,7 @@ function requireAdmin(req, res, next) {
             success: true,
             status: 'online',
             service: 'Marine System',
-            version: '9.3',
+            version: '9.4',
             timestamp: new Date().toISOString(),
             redis: redisAvailable ? 'connected' : 'memory',
             csrfEnabled: true
@@ -1402,7 +1489,7 @@ function requireAdmin(req, res, next) {
     });
 
     // ============================================================
-    // 🔑 LOGIN (v9.3 - CSRF synced after session.save)
+    // 🔑 LOGIN
     // ============================================================
 
     app.post('/api/auth/login', async (req, res) => {
@@ -1510,7 +1597,7 @@ function requireAdmin(req, res, next) {
                 req.session.sessionId = sessionId;
             }
 
-            // ✅ v9.3: ننتظر حفظ الجلسة قبل إرسال CSRF
+            // ✅ v9.4: ننتظر حفظ الجلسة قبل إرسال CSRF
             await new Promise((resolve) => {
                 if (!req.session) return resolve();
                 req.session.save((err) => {
@@ -1519,7 +1606,7 @@ function requireAdmin(req, res, next) {
                 });
             });
 
-            // ✅ v9.3: الآن نولّد CSRF بعد حفظ الجلسة
+            // ✅ v9.4: الآن نولّد CSRF بعد حفظ الجلسة
             const newCsrfToken = ensureCsrfToken(req, res);
 
             res.cookie(
@@ -1572,135 +1659,139 @@ function requireAdmin(req, res, next) {
     });
 
     // ============================================================
-    // 🔄 REFRESH (v9.3 - CSRF re-synced)
+    // 🔄 REFRESH (v9.4 - CSRF protected)
     // ============================================================
 
-    app.post('/api/auth/refresh', async (req, res) => {
-        try {
-            const refreshToken =
-                req.cookies[
-                    isProduction ? '__Host-marine.refresh' : 'marine.refresh'
-                ];
+    app.post(
+        '/api/auth/refresh',
+        csrfProtectionForAuth,
+        async (req, res) => {
+            try {
+                const refreshToken =
+                    req.cookies[
+                        isProduction ? '__Host-marine.refresh' : 'marine.refresh'
+                    ];
 
-            if (!refreshToken) {
-                return res.status(401).json({
-                    success: false,
-                    error: 'Refresh token غير موجود'
+                if (!refreshToken) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'Refresh token غير موجود'
+                    });
+                }
+
+                const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET, {
+                    issuer: 'marine-system',
+                    audience: 'marine-system-client'
                 });
-            }
 
-            const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET, {
-                issuer: 'marine-system',
-                audience: 'marine-system-client'
-            });
+                if (decoded.type !== 'refresh') {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'Refresh token غير صالح'
+                    });
+                }
 
-            if (decoded.type !== 'refresh') {
-                return res.status(401).json({
-                    success: false,
-                    error: 'Refresh token غير صالح'
-                });
-            }
+                const record = await getRefreshSession(decoded.sid);
 
-            const record = await getRefreshSession(decoded.sid);
+                if (!record) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'جلسة Refresh غير موجودة أو منتهية'
+                    });
+                }
 
-            if (!record) {
-                return res.status(401).json({
-                    success: false,
-                    error: 'جلسة Refresh غير موجودة أو منتهية'
-                });
-            }
+                if (record.userId !== decoded.sub) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'جلسة غير صالحة'
+                    });
+                }
 
-            if (record.userId !== decoded.sub) {
-                return res.status(401).json({
-                    success: false,
-                    error: 'جلسة غير صالحة'
-                });
-            }
+                if (!safeEqual(record.tokenHash, hashToken(refreshToken))) {
+                    await revokeRefreshSession(decoded.sid);
 
-            if (!safeEqual(record.tokenHash, hashToken(refreshToken))) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'Refresh token غير صالح'
+                    });
+                }
+
+                const user = users.find(item => item.id === decoded.sub);
+
+                if (!user || !user.active) {
+                    await revokeRefreshSession(decoded.sid);
+
+                    return res.status(401).json({
+                        success: false,
+                        error: 'المستخدم غير موجود أو غير نشط'
+                    });
+                }
+
+                const newSessionId = randomId(32);
+
+                const newRefreshToken = generateRefreshToken(user, newSessionId);
+                const newAccessToken = generateAccessToken(user, newSessionId);
+
                 await revokeRefreshSession(decoded.sid);
 
+                await saveRefreshSession({
+                    sessionId: newSessionId,
+                    userId: user.id,
+                    refreshToken: newRefreshToken
+                });
+
+                if (req.session) {
+                    req.session.userId = user.id;
+                    req.session.sessionId = newSessionId;
+                }
+
+                // ✅ v9.4: ننتظر حفظ الجلسة
+                await new Promise((resolve) => {
+                    if (!req.session) return resolve();
+                    req.session.save((err) => {
+                        if (err) console.warn('⚠️ session.save error:', err.message);
+                        resolve();
+                    });
+                });
+
+                // ✅ v9.4: CSRF جديد
+                const newCsrfToken = ensureCsrfToken(req, res);
+
+                res.cookie(
+                    isProduction ? '__Host-marine.refresh' : 'marine.refresh',
+                    newRefreshToken,
+                    {
+                        httpOnly: true,
+                        secure: isProduction,
+                        sameSite: 'strict',
+                        maxAge: REFRESH_TOKEN_MAX_AGE,
+                        path: '/api/auth'
+                    }
+                );
+
+                return res.json({
+                    success: true,
+                    token: newAccessToken,
+                    expiresIn: ACCESS_TOKEN_MAX_AGE,
+                    csrfToken: newCsrfToken,
+                    user: {
+                        id: user.id,
+                        username: user.username,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        active: user.active,
+                        lastLogin: user.lastLogin
+                    }
+                });
+            } catch (error) {
                 return res.status(401).json({
                     success: false,
-                    error: 'Refresh token غير صالح'
+                    error: 'Refresh token غير صالح أو منتهي'
                 });
             }
-
-            const user = users.find(item => item.id === decoded.sub);
-
-            if (!user || !user.active) {
-                await revokeRefreshSession(decoded.sid);
-
-                return res.status(401).json({
-                    success: false,
-                    error: 'المستخدم غير موجود أو غير نشط'
-                });
-            }
-
-            const newSessionId = randomId(32);
-
-            const newRefreshToken = generateRefreshToken(user, newSessionId);
-            const newAccessToken = generateAccessToken(user, newSessionId);
-
-            await revokeRefreshSession(decoded.sid);
-
-            await saveRefreshSession({
-                sessionId: newSessionId,
-                userId: user.id,
-                refreshToken: newRefreshToken
-            });
-
-            if (req.session) {
-                req.session.userId = user.id;
-                req.session.sessionId = newSessionId;
-            }
-
-            // ✅ v9.3: ننتظر حفظ الجلسة
-            await new Promise((resolve) => {
-                if (!req.session) return resolve();
-                req.session.save((err) => {
-                    if (err) console.warn('⚠️ session.save error:', err.message);
-                    resolve();
-                });
-            });
-
-            // ✅ v9.3: CSRF جديد
-            const newCsrfToken = ensureCsrfToken(req, res);
-
-            res.cookie(
-                isProduction ? '__Host-marine.refresh' : 'marine.refresh',
-                newRefreshToken,
-                {
-                    httpOnly: true,
-                    secure: isProduction,
-                    sameSite: 'strict',
-                    maxAge: REFRESH_TOKEN_MAX_AGE,
-                    path: '/api/auth'
-                }
-            );
-
-            return res.json({
-                success: true,
-                token: newAccessToken,
-                expiresIn: ACCESS_TOKEN_MAX_AGE,
-                csrfToken: newCsrfToken,
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    active: user.active,
-                    lastLogin: user.lastLogin
-                }
-            });
-        } catch (error) {
-            return res.status(401).json({
-                success: false,
-                error: 'Refresh token غير صالح أو منتهي'
-            });
         }
-    });
+    );
 
     // ============================================================
     // 👤 CURRENT USER
@@ -1722,69 +1813,113 @@ function requireAdmin(req, res, next) {
     });
 
     // ============================================================
-    // 🚪 LOGOUT (v9.3 - No race with session.destroy)
+    // 🚪 LOGOUT - v9.4 SECURE (no race, ordered cleanup)
     // ============================================================
 
     app.post(
         '/api/auth/logout',
         authenticateAccessToken,
-        csrfProtection,
+        csrfProtectionForAuth,
         async (req, res) => {
+            const clientIP = req.ip || req.socket.remoteAddress;
+
             try {
-                // ✅ 1) إلغاء access token
-                if (req.auth?.jti) {
+                const accessJti = req.auth?.jti;
+                const jwtSessionId = req.auth?.sid;
+                const expressSessionId = req.session?.sessionId;
+
+                // ==================================================
+                // 1) Revoke Access JWT
+                // ==================================================
+                if (accessJti) {
                     revokeAccessToken(req.auth);
                 }
 
-                // ✅ 2) إلغاء refresh sessions
-                if (req.auth?.sid) {
-                    await revokeRefreshSession(req.auth.sid);
+                // ==================================================
+                // 2) Revoke JWT Refresh Sessions
+                // ==================================================
+                const sessionIds = new Set();
+
+                if (jwtSessionId) sessionIds.add(jwtSessionId);
+                if (expressSessionId) sessionIds.add(expressSessionId);
+
+                for (const sessionId of sessionIds) {
+                    await revokeRefreshSession(sessionId);
                 }
 
-                if (req.session?.sessionId) {
-                    await revokeRefreshSession(req.session.sessionId);
-                }
-
-                // ✅ 3) مسح الكوكيز أولاً
-                res.clearCookie(
-                    isProduction ? '__Host-marine.refresh' : 'marine.refresh',
-                    {
-                        httpOnly: true,
-                        secure: isProduction,
-                        sameSite: 'strict',
-                        path: '/api/auth'
-                    }
-                );
-
-                res.clearCookie(
-                    isProduction ? '__Host-marine.sid' : 'marine.sid',
-                    {
-                        httpOnly: true,
-                        secure: isProduction,
-                        sameSite: 'strict',
-                        path: '/'
-                    }
-                );
-
-                res.clearCookie('marine_csrf', { path: '/' });
-
-                // ✅ 4) نُرسل الرد فوراً (لا ننتظر destroy)
-                res.json({
-                    success: true,
-                    message: 'تم تسجيل الخروج'
+                // ==================================================
+                // 3) Audit Log
+                // ==================================================
+                addSystemLog({
+                    userId: req.user?.id || null,
+                    action: 'LOGOUT',
+                    details: `User ${req.user?.username || 'unknown'} logged out`,
+                    ip: clientIP,
+                    requestId: req.requestId
                 });
 
-                // ✅ 5) نُدمّر الجلسة بعد الرد
-                if (req.session) {
+                // ==================================================
+                // 4) Destroy Express Session BEFORE response
+                // ==================================================
+                await new Promise((resolve) => {
+                    if (!req.session) {
+                        return resolve();
+                    }
+
                     req.session.destroy((err) => {
                         if (err) {
-                            console.warn('⚠️ session.destroy error:', err.message);
+                            console.warn(
+                                '⚠️ session.destroy error:',
+                                err.message
+                            );
                         }
+                        resolve();
                     });
-                }
+                });
+
+                // ==================================================
+                // 5) Clear Cookies
+                // ==================================================
+                const refreshCookieName = isProduction
+                    ? '__Host-marine.refresh'
+                    : 'marine.refresh';
+
+                const sessionCookieName = isProduction
+                    ? '__Host-marine.sid'
+                    : 'marine.sid';
+
+                res.clearCookie(refreshCookieName, {
+                    httpOnly: true,
+                    secure: isProduction,
+                    sameSite: 'strict',
+                    path: '/api/auth'
+                });
+
+                res.clearCookie(sessionCookieName, {
+                    httpOnly: true,
+                    secure: isProduction,
+                    sameSite: 'strict',
+                    path: '/'
+                });
+
+                res.clearCookie('marine_csrf', {
+                    httpOnly: false,
+                    secure: isProduction,
+                    sameSite: 'strict',
+                    path: '/'
+                });
+
+                // ==================================================
+                // 6) Response
+                // ==================================================
+                return res.status(200).json({
+                    success: true,
+                    message: 'تم تسجيل الخروج بنجاح'
+                });
 
             } catch (error) {
                 console.error('❌ Logout error:', error);
+
                 return res.status(500).json({
                     success: false,
                     error: 'خطأ أثناء تسجيل الخروج'
@@ -2950,9 +3085,9 @@ function requireAdmin(req, res, next) {
     if (require.main === module) {
         app.listen(PORT, () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.3');
+            console.log('🚢 MARINE SYSTEM v9.4');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
-            console.log('✨ v9.3: CSRF single-source + No race + Secure fallback');
+            console.log('✨ v9.4: tokenVersion enforced + Ordered logout');
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -2962,8 +3097,9 @@ function requireAdmin(req, res, next) {
             console.log(`👥 Users: ${users.length}`);
             console.log('🔒 Access JWT: 15 minutes');
             console.log('🔄 Refresh JWT: 7 days');
-            console.log('🛡️ CSRF: ENABLED (single-source: session)');
+            console.log('🛡️ CSRF: ENABLED (session source of truth)');
             console.log('👑 RBAC: ENABLED');
+            console.log('🔐 tokenVersion: ENFORCED');
             console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY FALLBACK'}`);
             console.log('=========================================');
 
@@ -2985,6 +3121,7 @@ function requireAdmin(req, res, next) {
 
 module.exports = app;
 module.exports.csrfProtection = csrfProtection;
+module.exports.csrfProtectionForAuth = csrfProtectionForAuth;
 module.exports.authenticateAccessToken = authenticateAccessToken;
 module.exports.requirePermission = requirePermission;
 module.exports.requireAdmin = requireAdmin;
