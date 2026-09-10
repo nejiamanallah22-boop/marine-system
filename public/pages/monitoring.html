@@ -2,7 +2,7 @@
 <div id="page-monitoring">
     <style>
         /* ============================================================
-           📊 MONITORING PAGE - WITH REAL MAP
+           📊 MONITORING PAGE - WITH REAL MAP (FIXED v9.1)
            ============================================================ */
 
         #page-monitoring {
@@ -783,13 +783,107 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT
+    JAVASCRIPT (v9.1 - Safe + Cleanup)
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
             console.log('🔄 monitoring.html - loading with REAL MAP...');
+
+            // ============================================================
+            // ✅ v9.1: تنظيف تلقائي عند مغادرة الصفحة
+            // ============================================================
+            var _isDestroyed = false;
+            var _map = null;
+            var _markers = [];
+            var _resizeTimer = null;
+            var _dynamicScripts = [];
+            var _pageIntervals = [];
+            var _pageTimeouts = [];
+            var _resizeHandler = null;
+
+            function _monitoringCleanup() {
+                if (_isDestroyed) return;
+                _isDestroyed = true;
+
+                // ✅ إلغاء كل المؤقتات
+                _pageIntervals.forEach(function(id) {
+                    try { clearInterval(id); } catch (e) {}
+                });
+                _pageIntervals = [];
+
+                _pageTimeouts.forEach(function(id) {
+                    try { clearTimeout(id); } catch (e) {}
+                });
+                _pageTimeouts = [];
+
+                // ✅ إلغاء resize timer
+                if (_resizeTimer) {
+                    try { clearTimeout(_resizeTimer); } catch (e) {}
+                    _resizeTimer = null;
+                }
+
+                // ✅ إزالة resize listener
+                if (_resizeHandler) {
+                    try {
+                        window.removeEventListener('resize', _resizeHandler);
+                    } catch (e) {}
+                    _resizeHandler = null;
+                }
+
+                // ✅ تدمير خريطة Leaflet (الأهم!)
+                if (_map) {
+                    try {
+                        _markers.forEach(function(m) {
+                            try { _map.removeLayer(m); } catch (e) {}
+                        });
+                        _markers = [];
+                        _map.off();
+                        _map.remove();
+                    } catch (e) {
+                        console.warn('⚠️ Map cleanup error:', e.message);
+                    }
+                    _map = null;
+                }
+
+                // ✅ إزالة السكربتات الديناميكية التي حمّلناها
+                _dynamicScripts.forEach(function(node) {
+                    try {
+                        if (node && node.parentNode) {
+                            node.parentNode.removeChild(node);
+                        }
+                    } catch (e) {}
+                });
+                _dynamicScripts = [];
+
+                // ✅ إزالة الـ globals
+                try {
+                    delete window.refreshAll;
+                    delete window.terminateAll;
+                    delete window.switchMapType;
+                    delete window.showToast;
+                    delete window.initMap;
+                } catch (e) {}
+
+                console.log('🧹 Monitoring cleanup done');
+            }
+
+            window._pageCleanup = window._pageCleanup || [];
+            window._pageCleanup.push(_monitoringCleanup);
+
+            window.addEventListener('beforeunload', _monitoringCleanup);
+            window.addEventListener('pagehide', _monitoringCleanup);
+
+            // ============================================================
+            // HELPERS
+            // ============================================================
+            function escapeHtml(str) {
+                if (str === null || str === undefined) return '';
+                return String(str).replace(/[&<>"']/g, function(m) {
+                    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+                });
+            }
 
             // ============================================================
             // DATA - USERS
@@ -866,8 +960,6 @@
             // ============================================================
             // STATE
             // ============================================================
-            var map = null;
-            var markers = [];
             var currentMapType = 'satellite';
             var mapInitialized = false;
 
@@ -922,27 +1014,32 @@
             }
 
             // ============================================================
-            // TOAST
+            // TOAST - ✅ SAFE
             // ============================================================
             function showToast(msg, type) {
+                if (_isDestroyed) return;
                 var old = document.querySelector('.toast');
                 if (old) old.remove();
                 var n = document.createElement('div');
                 n.className = 'toast toast-' + (type || 'info');
                 n.textContent = msg;
                 document.body.appendChild(n);
-                setTimeout(function() {
+                var id = setTimeout(function() {
                     n.style.opacity = '0';
                     n.style.transform = 'translateY(20px)';
                     n.style.transition = 'all 0.4s';
-                    setTimeout(function() { n.remove(); }, 400);
+                    var id2 = setTimeout(function() { n.remove(); }, 400);
+                    _pageTimeouts.push(id2);
                 }, 2500);
+                _pageTimeouts.push(id);
             }
 
             // ============================================================
-            // STATS
+            // STATS - ✅ SAFE
             // ============================================================
             function updateStats() {
+                if (_isDestroyed) return;
+
                 var total = usersData.length;
                 var active = usersData.filter(function(u) { return u.status === 'نشط'; }).length;
                 var ready = usersData.filter(function(u) { return u.readiness === 'جاهز'; }).length;
@@ -972,49 +1069,64 @@
             }
 
             // ============================================================
-            // ✅ INIT MAP - WITH DYNAMIC LEAFLET LOADING
+            // ✅ INIT MAP - WITH CLEANUP
             // ============================================================
             function initMap() {
+                if (_isDestroyed) return;
                 console.log('🗺️ Initializing map...');
 
                 var container = document.getElementById('realMap');
                 if (!container) {
                     console.warn('⚠️ Map container not found, retrying...');
-                    setTimeout(initMap, 500);
+                    var id = setTimeout(function() {
+                        if (!_isDestroyed) initMap();
+                    }, 500);
+                    _pageTimeouts.push(id);
                     return;
                 }
 
-                // ✅ Check if L (Leaflet) is defined
+                // ✅ إذا كانت الخريطة موجودة، دمرها أولاً
+                if (_map) {
+                    try {
+                        _markers.forEach(function(m) { try { _map.removeLayer(m); } catch (e) {} });
+                        _markers = [];
+                        _map.off();
+                        _map.remove();
+                    } catch (e) {}
+                    _map = null;
+                }
+
+                // ✅ إذا لم يكن Leaflet محمّلاً، حمّله ديناميكياً
                 if (typeof L === 'undefined') {
                     console.warn('⚠️ Leaflet not loaded, loading now...');
-                    // Load Leaflet dynamically
                     var script = document.createElement('script');
                     script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
                     script.onload = function() {
+                        if (_isDestroyed) return;
                         console.log('✅ Leaflet loaded dynamically');
-                        // Load CSS too
                         var link = document.createElement('link');
                         link.rel = 'stylesheet';
                         link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
                         document.head.appendChild(link);
-                        setTimeout(function() {
-                            initMap();
+                        _dynamicScripts.push(link);
+                        var id = setTimeout(function() {
+                            if (!_isDestroyed) initMap();
                         }, 300);
+                        _pageTimeouts.push(id);
                     };
                     script.onerror = function() {
                         console.error('❌ Failed to load Leaflet');
-                        showToast('❌ فشل تحميل الخريطة', 'error');
+                        if (!_isDestroyed) showToast('❌ فشل تحميل الخريطة', 'error');
                     };
                     document.head.appendChild(script);
+                    _dynamicScripts.push(script);
                     return;
                 }
 
-                // ✅ Map is ready - create it
+                // ✅ إنشاء الخريطة
                 try {
-                    // Create map centered on Tunisia
-                    map = L.map('realMap').setView([34.5, 9.5], 7);
+                    _map = L.map('realMap').setView([34.5, 9.5], 7);
 
-                    // ===== TILE LAYERS =====
                     var tileLayers = {
                         satellite: L.tileLayer(
                             'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -1033,48 +1145,45 @@
                             })
                     };
 
-                    // Add default layer
-                    tileLayers.satellite.addTo(map);
+                    tileLayers.satellite.addTo(_map);
 
-                    // Store layers for switching
-                    map._tileLayers = tileLayers;
-                    map._currentLayer = 'satellite';
+                    _map._tileLayers = tileLayers;
+                    _map._currentLayer = 'satellite';
 
-                    // ===== FIT BOUNDS =====
                     var bounds = L.latLngBounds(
                         L.latLng(32.5, 8.0),
                         L.latLng(37.5, 12.0)
                     );
-                    map.fitBounds(bounds, { padding: [20, 20] });
+                    _map.fitBounds(bounds, { padding: [20, 20] });
 
                     mapInitialized = true;
 
-                    // Add markers
                     addMarkers();
 
                     console.log('✅ Real Map initialized with Satellite imagery');
                     console.log('📍 ' + usersData.length + ' users on map');
                 } catch (error) {
                     console.error('❌ Error initializing map:', error);
-                    showToast('❌ خطأ في تحميل الخريطة: ' + error.message, 'error');
+                    if (!_isDestroyed) showToast('❌ خطأ في تحميل الخريطة: ' + error.message, 'error');
                 }
             }
 
             // ============================================================
-            // ADD MARKERS
+            // ✅ ADD MARKERS - WITH ESCAPE
             // ============================================================
             function addMarkers() {
-                if (!map) return;
+                if (_isDestroyed) return;
+                if (!_map) return;
 
-                // Clear existing markers
-                markers.forEach(function(m) { map.removeLayer(m); });
-                markers = [];
+                _markers.forEach(function(m) {
+                    try { _map.removeLayer(m); } catch (e) {}
+                });
+                _markers = [];
 
                 usersData.forEach(function(user) {
                     var color = getColor(user);
-                    var iconHtml = getInitials(user.name);
+                    var iconHtml = escapeHtml(getInitials(user.name));
 
-                    // Custom icon with initials
                     var icon = L.divIcon({
                         className: 'custom-marker',
                         html: '<div style="background:' + color +
@@ -1085,7 +1194,6 @@
                         popupAnchor: [0, -25]
                     });
 
-                    // Status dot
                     var statusDot = user.status === 'نشط' ?
                         '<span class="popup-status online">🟢 نشط</span>' :
                         '<span class="popup-status offline">⚫ غير متصل</span>';
@@ -1096,31 +1204,28 @@
                             '<span class="popup-readiness busy">🔴 مشغول</span>' :
                             '<span class="popup-readiness offline">⚫ غير جاهز</span>');
 
-                    // Popup content
+                    // ✅ escapeHtml لكل البيانات
                     var popupContent =
                         '<div style="text-align:right;font-family:Cairo,sans-serif;">' +
-                        '<div class="popup-user-name">' + user.name + '</div>' +
-                        '<div class="popup-user-detail"><i class="fas fa-user-tag"></i> ' + user.role + ' | ' + user
-                        .region + '</div>' +
-                        '<div class="popup-user-detail"><i class="fas fa-map-pin"></i> ' + user.location + '</div>' +
-                        '<div class="popup-user-detail"><i class="fas fa-id-card"></i> #' + user.id + '</div>' +
+                        '<div class="popup-user-name">' + escapeHtml(user.name) + '</div>' +
+                        '<div class="popup-user-detail"><i class="fas fa-user-tag"></i> ' + escapeHtml(user.role) + ' | ' + escapeHtml(user.region) + '</div>' +
+                        '<div class="popup-user-detail"><i class="fas fa-map-pin"></i> ' + escapeHtml(user.location) + '</div>' +
+                        '<div class="popup-user-detail"><i class="fas fa-id-card"></i> #' + escapeHtml(user.id) + '</div>' +
                         '<div style="margin-top:6px;">' + statusDot + ' ' + readinessDot + '</div>' +
                         '<div class="popup-user-detail" style="margin-top:4px;font-size:10px;color:rgba(255,255,255,0.2);">🕐 ' +
-                        user.lastActive + '</div>' +
-                        '<div class="popup-user-detail" style="font-size:10px;color:rgba(255,255,255,0.15);">📧 ' + user
-                        .email + '</div>' +
+                        escapeHtml(user.lastActive) + '</div>' +
+                        '<div class="popup-user-detail" style="font-size:10px;color:rgba(255,255,255,0.15);">📧 ' + escapeHtml(user.email) + '</div>' +
                         '</div>';
 
                     var marker = L.marker([user.lat, user.lng], { icon: icon })
                         .bindPopup(popupContent, { maxWidth: 280, className: 'custom-popup' });
 
-                    // Click on marker shows panel
                     marker.on('click', function() {
-                        showPanel(user);
+                        if (!_isDestroyed) showPanel(user);
                     });
 
-                    marker.addTo(map);
-                    markers.push(marker);
+                    marker.addTo(_map);
+                    _markers.push(marker);
                 });
             }
 
@@ -1132,23 +1237,27 @@
             }
 
             // ============================================================
-            // SWITCH MAP TYPE
+            // SWITCH MAP TYPE - ✅ SAFE
             // ============================================================
             function switchMapType(type) {
-                if (!map || !map._tileLayers) return;
+                if (_isDestroyed) return;
+                if (!_map || !_map._tileLayers) return;
 
                 currentMapType = type;
 
-                // Remove current layer
-                if (map._currentLayer) {
-                    map.removeLayer(map._tileLayers[map._currentLayer]);
+                if (_map._currentLayer) {
+                    try {
+                        _map.removeLayer(_map._tileLayers[_map._currentLayer]);
+                    } catch (e) {}
                 }
 
-                // Add new layer
-                map._tileLayers[type].addTo(map);
-                map._currentLayer = type;
+                try {
+                    _map._tileLayers[type].addTo(_map);
+                    _map._currentLayer = type;
+                } catch (e) {
+                    return;
+                }
 
-                // Update button states
                 document.querySelectorAll('.map-type-btn').forEach(function(b) {
                     b.classList.toggle('active', b.dataset.type === type);
                 });
@@ -1158,9 +1267,11 @@
             }
 
             // ============================================================
-            // SESSIONS TABLE
+            // SESSIONS TABLE - ✅ SAFE
             // ============================================================
             function renderSessions() {
+                if (_isDestroyed) return;
+
                 var tbody = document.getElementById('sessionsBody');
                 if (!tbody) return;
 
@@ -1177,10 +1288,10 @@
                     var regionColor = getRegionColor(s.region);
                     html += `
                         <tr>
-                            <td class="user-name">${s.user}</td>
-                            <td><span class="region-tag" style="color:${regionColor};border:1px solid ${regionColor}44;">${s.region}</span></td>
-                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.email}</td>
-                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.duration}</td>
+                            <td class="user-name">${escapeHtml(s.user)}</td>
+                            <td><span class="region-tag" style="color:${regionColor};border:1px solid ${regionColor}44;">${escapeHtml(s.region)}</span></td>
+                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${escapeHtml(s.email)}</td>
+                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${escapeHtml(s.duration)}</td>
                             <td><span class="status-badge ${getSessionClass(s.status)}">${getSessionLabel(s.status)}</span></td>
                         </tr>
                     `;
@@ -1192,9 +1303,10 @@
             // USER PANEL
             // ============================================================
             function showPanel(user) {
+                if (_isDestroyed) return;
+
                 var overlay = document.getElementById('panelOverlay');
                 var panel = document.getElementById('userPanel');
-
                 if (!overlay || !panel) return;
 
                 overlay.classList.add('visible');
@@ -1226,6 +1338,7 @@
             }
 
             function closePanel() {
+                if (_isDestroyed) return;
                 var overlay = document.getElementById('panelOverlay');
                 var panel = document.getElementById('userPanel');
                 if (overlay) overlay.classList.remove('visible');
@@ -1233,9 +1346,11 @@
             }
 
             // ============================================================
-            // REFRESH
+            // REFRESH - ✅ SAFE
             // ============================================================
             function refreshAll() {
+                if (_isDestroyed) return;
+
                 var btn = document.getElementById('refreshBtn');
                 if (!btn) return;
 
@@ -1243,7 +1358,8 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
 
-                setTimeout(function() {
+                var id = setTimeout(function() {
+                    if (_isDestroyed) return;
                     updateStats();
                     renderSessions();
                     updateMarkers();
@@ -1251,12 +1367,14 @@
                     btn.disabled = false;
                     showToast('✅ تم تحديث البيانات', 'success');
                 }, 500);
+                _pageTimeouts.push(id);
             }
 
             // ============================================================
-            // TERMINATE ALL
+            // TERMINATE ALL - ✅ SAFE
             // ============================================================
             function terminateAll() {
+                if (_isDestroyed) return;
                 if (!confirm('⚠️ إنهاء جميع الجلسات النشطة؟')) return;
                 var active = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
                 if (active.length === 0) { showToast('ℹ️ لا توجد جلسات', 'info'); return; }
@@ -1267,61 +1385,55 @@
             }
 
             // ============================================================
-            // RESIZE
+            // RESIZE - ✅ TRACKED
             // ============================================================
-            var resizeTimer;
-
-            function handleResize() {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(function() {
-                    if (map) {
-                        map.invalidateSize();
+            _resizeHandler = function() {
+                if (_isDestroyed) return;
+                if (_resizeTimer) clearTimeout(_resizeTimer);
+                _resizeTimer = setTimeout(function() {
+                    if (_isDestroyed) return;
+                    if (_map) {
+                        try { _map.invalidateSize(); } catch (e) {}
                     }
                 }, 300);
-            }
+            };
 
             // ============================================================
             // INIT
             // ============================================================
             function init() {
+                if (_isDestroyed) return;
                 console.log('🚀 Initializing monitoring page...');
 
                 updateStats();
                 renderSessions();
 
-                // ✅ Start map initialization
-                setTimeout(function() {
-                    initMap();
+                // ✅ بدء تهيئة الخريطة
+                var id = setTimeout(function() {
+                    if (!_isDestroyed) initMap();
                 }, 300);
+                _pageTimeouts.push(id);
 
-                // ✅ Event listeners with null checks
+                // ✅ Event listeners
                 var refreshBtn = document.getElementById('refreshBtn');
-                if (refreshBtn) {
-                    refreshBtn.addEventListener('click', refreshAll);
-                }
+                if (refreshBtn) refreshBtn.addEventListener('click', refreshAll);
 
                 var terminateBtn = document.getElementById('terminateAllBtn');
-                if (terminateBtn) {
-                    terminateBtn.addEventListener('click', terminateAll);
-                }
+                if (terminateBtn) terminateBtn.addEventListener('click', terminateAll);
 
                 var closeBtn = document.getElementById('closePanelBtn');
-                if (closeBtn) {
-                    closeBtn.addEventListener('click', closePanel);
-                }
+                if (closeBtn) closeBtn.addEventListener('click', closePanel);
 
                 var overlay = document.getElementById('panelOverlay');
-                if (overlay) {
-                    overlay.addEventListener('click', closePanel);
-                }
+                if (overlay) overlay.addEventListener('click', closePanel);
 
                 document.querySelectorAll('.map-type-btn').forEach(function(b) {
                     b.addEventListener('click', function() {
-                        switchMapType(this.dataset.type);
+                        if (!_isDestroyed) switchMapType(this.dataset.type);
                     });
                 });
 
-                window.addEventListener('resize', handleResize);
+                window.addEventListener('resize', _resizeHandler);
 
                 console.log('✅ Monitoring Page with REAL MAP loaded');
                 console.log('📍 ' + usersData.length + ' users');
