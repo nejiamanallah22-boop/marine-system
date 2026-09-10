@@ -619,8 +619,8 @@
     /*
      * ============================================================
      * MARINE SYSTEM
-     * USERS PAGE v4.0
-     * ENTERPRISE HARDENED CLIENT
+     * USERS PAGE v4.1
+     * ENTERPRISE HARDENED CLIENT + FIXED v9.1
      *
      * ملاحظة أمنية:
      * الواجهة لا تمنح صلاحيات.
@@ -641,13 +641,97 @@
     let currentAbortController = null;
 
     /* ============================================================
+     * ✅ v9.1: CLEANUP STATE
+     * ============================================================ */
+
+    let _isDestroyed = false;
+    const _pageIntervals = [];
+    const _pageTimeouts = [];
+    const _eventListeners = [];
+
+    function _usersCleanup() {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+
+        // ✅ إلغاء auto-refresh
+        if (refreshTimer !== null) {
+            try { window.clearInterval(refreshTimer); } catch (e) {}
+            refreshTimer = null;
+        }
+
+        // ✅ إلغاء كل الـ intervals
+        _pageIntervals.forEach(id => {
+            try { window.clearInterval(id); } catch (e) {}
+        });
+        _pageIntervals.length = 0;
+
+        // ✅ إلغاء كل الـ timeouts
+        _pageTimeouts.forEach(id => {
+            try { window.clearTimeout(id); } catch (e) {}
+        });
+        _pageTimeouts.length = 0;
+
+        // ✅ إزالة كل الـ event listeners
+        _eventListeners.forEach(item => {
+            try {
+                if (item.el && item.fn) {
+                    item.el.removeEventListener(item.type, item.fn);
+                }
+            } catch (e) {}
+        });
+        _eventListeners.length = 0;
+
+        // ✅ إلغاء أي AbortController نشط
+        if (currentAbortController) {
+            try { currentAbortController.abort(); } catch (e) {}
+            currentAbortController = null;
+        }
+
+        // ✅ إزالة الـ globals
+        try {
+            delete window.usersData;
+            delete window.loadUsersData;
+            delete window.renderUsers;
+            delete window.updateStats;
+            delete window.toggleUserForm;
+            delete window.saveUser;
+            delete window.editUser;
+            delete window.toggleUserStatus;
+            delete window.deleteUser;
+            delete window.showToast;
+            delete window.getToken;
+            delete window.cleanupUsersPage;
+        } catch (e) {}
+
+        console.log('🧹 Users cleanup done');
+    }
+
+    // ✅ تسجيل في _pageCleanup العالمي
+    window._pageCleanup = window._pageCleanup || [];
+    window._pageCleanup.push(_usersCleanup);
+
+    // ✅ تنظيف احتياطي
+    window.addEventListener('beforeunload', _usersCleanup);
+    window.addEventListener('pagehide', _usersCleanup);
+
+    /* ============================================================
      * DOM
      * ============================================================ */
 
     const $ = id => document.getElementById(id);
 
     function pageExists() {
-        return !!$(PAGE_ID);
+        return !!$(PAGE_ID) && !_isDestroyed;
+    }
+
+    /* ============================================================
+     * ✅ v9.1: SAFE EVENT LISTENER HELPER
+     * ============================================================ */
+
+    function addSafeListener(el, type, fn, options) {
+        if (!el) return;
+        el.addEventListener(type, fn, options);
+        _eventListeners.push({ el, type, fn });
     }
 
     /* ============================================================
@@ -668,10 +752,6 @@
 
         const value = String(id).trim();
 
-        /*
-         * حماية إضافية من إدخال path غير متوقع.
-         * Mongo ObjectId المعتاد = 24 hex.
-         */
         if (!/^[a-fA-F0-9]{24}$/.test(value)) {
             return '';
         }
@@ -680,14 +760,6 @@
     }
 
     function getToken() {
-        /*
-         * دعم التوافق مع النسخ السابقة.
-         *
-         * الأفضل أمنيًا:
-         * HttpOnly Secure SameSite Cookie
-         *
-         * وليس localStorage.
-         */
         return (
             localStorage.getItem('authToken') ||
             localStorage.getItem('marine_token') ||
@@ -706,16 +778,6 @@
         }
     }
 
-    /*
-     * محاولة الحصول على CSRF token من:
-     *
-     * 1. meta tag
-     * 2. cookie
-     * 3. window.csrfToken
-     *
-     * إذا كان server.js يستخدم /api/csrf-token
-     * يمكن ربطه هنا مباشرة.
-     */
     function getCsrfToken() {
         try {
             const meta = document.querySelector(
@@ -773,18 +835,16 @@
             return false;
         }
 
-        /*
-         * اسم مستخدم آمن نسبيًا:
-         * حروف عربية/لاتينية + أرقام + _ + -
-         */
         return /^[\p{L}\p{N}_-]+$/u.test(username);
     }
 
     /* ============================================================
-     * TOAST
+     * TOAST - ✅ v9.1 SAFE
      * ============================================================ */
 
     function showToast(message, type = 'info') {
+        if (_isDestroyed) return;
+
         let container = $('toastContainer');
 
         if (!container) {
@@ -826,11 +886,13 @@
 
         container.appendChild(toast);
 
-        window.setTimeout(() => {
+        // ✅ v9.1: تتبع الـ timeout
+        const tid = window.setTimeout(() => {
             if (toast.isConnected) {
                 toast.remove();
             }
         }, 4000);
+        _pageTimeouts.push(tid);
     }
 
     /* ============================================================
@@ -857,6 +919,11 @@
         options = {},
         { retryOn401 = false } = {}
     ) {
+        // ✅ v9.1: إذا تم تدمير الصفحة، لا ترسل
+        if (_isDestroyed) {
+            throw new Error('Page destroyed');
+        }
+
         if (!navigator.onLine) {
             throw new Error('لا يوجد اتصال بالإنترنت');
         }
@@ -888,12 +955,6 @@
             );
         }
 
-        /*
-         * Bearer token compatibility.
-         *
-         * إذا كان النظام يستخدم HttpOnly cookie،
-         * فلن يوجد token هنا وسيتم الاعتماد على cookie.
-         */
         const token = getToken();
 
         if (
@@ -906,9 +967,6 @@
             );
         }
 
-        /*
-         * CSRF للطلبات التي تغير البيانات.
-         */
         const method =
             String(options.method || 'GET').toUpperCase();
 
@@ -994,7 +1052,7 @@
     }
 
     /* ============================================================
-     * LOAD USERS
+     * ✅ LOAD USERS - v9.1 SAFE
      * ============================================================ */
 
     async function loadUsersData() {
@@ -1022,6 +1080,9 @@
                 }
             );
 
+            // ✅ v9.1: إذا تم تدمير الصفحة أثناء الانتظار، توقف
+            if (_isDestroyed) return;
+
             const data =
                 await safeJson(response);
 
@@ -1045,9 +1106,6 @@
                 usersData = [];
             }
 
-            /*
-             * إزالة أي عناصر غير صالحة.
-             */
             usersData = usersData.filter(
                 user =>
                     user &&
@@ -1060,6 +1118,8 @@
             updateStats(usersData);
 
         } catch (error) {
+
+            if (_isDestroyed) return;  // ✅ v9.1
 
             console.error(
                 '❌ [USERS] Load error:',
@@ -1108,6 +1168,7 @@
      * ============================================================ */
 
     function updateStats(users) {
+        if (_isDestroyed) return;  // ✅ v9.1
 
         const total = users.length;
 
@@ -1141,6 +1202,7 @@
      * ============================================================ */
 
     function renderUsers(users) {
+        if (_isDestroyed) return;  // ✅ v9.1
 
         const container =
             $('usersTableContainer');
@@ -1502,9 +1564,6 @@
             return false;
         }
 
-        /*
-         * كلمة المرور مطلوبة عند الإنشاء فقط.
-         */
         if (!id && !isStrongEnoughPassword(password)) {
 
             $('userPassword')
@@ -1518,10 +1577,6 @@
             return false;
         }
 
-        /*
-         * إذا تم إدخال password أثناء التعديل،
-         * يجب أن تستوفي نفس السياسة.
-         */
         if (
             id &&
             password &&
@@ -1548,7 +1603,7 @@
 
     async function saveUser() {
 
-        if (isSaving) return;
+        if (isSaving || _isDestroyed) return;
 
         const id =
             normalizeId(
@@ -1586,9 +1641,6 @@
             return;
         }
 
-        /*
-         * حماية إضافية من تغيير قيم غير متوقعة.
-         */
         const allowedRoles = [
             'admin',
             'manager',
@@ -1615,10 +1667,6 @@
             return;
         }
 
-        /*
-         * منع تعديل صلاحيات admin من الواجهة
-         * لا يعني منعها أمنيًا؛ server.js يجب أن يفرض ذلك.
-         */
         const payload = {
             username,
             email,
@@ -1666,6 +1714,8 @@
                     }
                 );
 
+            if (_isDestroyed) return;  // ✅ v9.1
+
             const data =
                 await safeJson(response);
 
@@ -1690,6 +1740,8 @@
             await loadUsersData();
 
         } catch (error) {
+
+            if (_isDestroyed) return;  // ✅ v9.1
 
             console.error(
                 '❌ [USERS] Save error:',
@@ -1723,6 +1775,8 @@
         currentStatus
     ) {
 
+        if (_isDestroyed) return;  // ✅ v9.1
+
         const normalizedId =
             normalizeId(id);
 
@@ -1750,12 +1804,6 @@
             return;
         }
 
-        /*
-         * حماية واجهة إضافية:
-         * لا تسمح بتعطيل آخر admin.
-         *
-         * لكن server.js يجب أن يفرض ذلك أيضًا.
-         */
         if (
             currentStatus &&
             user.role === 'admin'
@@ -1811,6 +1859,8 @@
                     }
                 );
 
+            if (_isDestroyed) return;  // ✅ v9.1
+
             const data =
                 await safeJson(response);
 
@@ -1831,6 +1881,8 @@
 
         } catch (error) {
 
+            if (_isDestroyed) return;  // ✅ v9.1
+
             console.error(
                 '❌ [USERS] Toggle error:',
                 error
@@ -1849,6 +1901,8 @@
      * ============================================================ */
 
     async function deleteUser(id) {
+
+        if (_isDestroyed) return;  // ✅ v9.1
 
         const normalizedId =
             normalizeId(id);
@@ -1877,10 +1931,6 @@
             return;
         }
 
-        /*
-         * منع حذف آخر admin من الواجهة.
-         * يجب أيضًا فرض ذلك في server.js.
-         */
         if (user.role === 'admin') {
 
             const adminCount =
@@ -1921,6 +1971,8 @@
                     }
                 );
 
+            if (_isDestroyed) return;  // ✅ v9.1
+
             const data =
                 await safeJson(response);
 
@@ -1941,6 +1993,8 @@
 
         } catch (error) {
 
+            if (_isDestroyed) return;  // ✅ v9.1
+
             console.error(
                 '❌ [USERS] Delete error:',
                 error
@@ -1959,7 +2013,6 @@
      * ============================================================ */
 
     function startAutoRefresh() {
-
         stopAutoRefresh();
 
         refreshTimer =
@@ -1980,6 +2033,9 @@
                 },
                 AUTO_REFRESH_MS
             );
+
+        // ✅ v9.1: تتبع الـ interval
+        _pageIntervals.push(refreshTimer);
     }
 
     function stopAutoRefresh() {
@@ -1995,128 +2051,66 @@
     }
 
     /* ============================================================
-     * INITIALIZATION
+     * INITIALIZATION - ✅ v9.1 SAFE
      * ============================================================ */
 
     function init() {
 
-        if (!pageExists()) return;
+        if (!pageExists() || _isDestroyed) return;
 
         console.log(
-            '👥 Users v4.0 initializing...'
+            '👥 Users v4.1 initializing...'
         );
 
-        $('addUserBtn')
-            ?.addEventListener(
-                'click',
-                toggleUserForm
-            );
+        // ✅ v9.1: استخدام addSafeListener
+        addSafeListener($('addUserBtn'), 'click', toggleUserForm);
+        addSafeListener($('refreshUsersBtn'), 'click', async () => {
+            if (isLoading || _isDestroyed) return;
+            showToast('🔄 جاري تحديث البيانات...', 'info');
+            await loadUsersData();
+        });
+        addSafeListener($('formCloseBtn'), 'click', closeUserForm);
+        addSafeListener($('cancelUserBtn'), 'click', closeUserForm);
+        addSafeListener($('saveUserBtn'), 'click', saveUser);
 
-        $('refreshUsersBtn')
-            ?.addEventListener(
-                'click',
-                async () => {
+        // ✅ v9.1: منع Enter في النموذج
+        addSafeListener($('userForm'), 'keydown', event => {
+            if (
+                event.key === 'Enter' &&
+                event.target.tagName !== 'TEXTAREA'
+            ) {
+                event.preventDefault();
+            }
+        });
 
-                    if (isLoading) return;
+        // ✅ v9.1: visibilitychange مع tracking
+        addSafeListener(document, 'visibilitychange', () => {
+            if (
+                !document.hidden &&
+                pageExists() &&
+                !isLoading
+            ) {
+                loadUsersData();
+            }
+        });
 
-                    showToast(
-                        '🔄 جاري تحديث البيانات...',
-                        'info'
-                    );
-
-                    await loadUsersData();
-                }
-            );
-
-        $('formCloseBtn')
-            ?.addEventListener(
-                'click',
-                closeUserForm
-            );
-
-        $('cancelUserBtn')
-            ?.addEventListener(
-                'click',
-                closeUserForm
-            );
-
-        $('saveUserBtn')
-            ?.addEventListener(
-                'click',
-                saveUser
-            );
-
-        /*
-         * منع إرسال form عند الضغط Enter
-         * إذا كان هناك form خارجي.
-         */
-        $('userForm')
-            ?.addEventListener(
-                'keydown',
-                event => {
-
-                    if (
-                        event.key === 'Enter' &&
-                        event.target.tagName !== 'TEXTAREA'
-                    ) {
-                        event.preventDefault();
-                    }
-                }
-            );
-
-        /*
-         * تحميل أولي.
-         */
+        // ✅ تحميل أولي
         loadUsersData();
-
         startAutoRefresh();
 
-        /*
-         * إذا رجع المستخدم للصفحة.
-         */
-        document.addEventListener(
-            'visibilitychange',
-            () => {
-
-                if (
-                    !document.hidden &&
-                    pageExists() &&
-                    !isLoading
-                ) {
-                    loadUsersData();
-                }
-            }
-        );
-
         console.log(
-            '✅ Users v4.0 initialized'
+            '✅ Users v4.1 initialized'
         );
     }
 
     /* ============================================================
-     * CLEANUP
+     * CLEANUP - ✅ v9.1 EXPANDED
      * ============================================================ */
 
     function cleanup() {
-
-        stopAutoRefresh();
-
-        if (
-            currentAbortController
-        ) {
-            currentAbortController.abort();
-            currentAbortController = null;
-        }
+        _usersCleanup();
     }
 
-    /*
-     * SPA compatibility.
-     *
-     * إذا كان التطبيق يستخدم navigation داخلي،
-     * يمكن استدعاء:
-     *
-     * window.cleanupUsersPage()
-     */
     window.cleanupUsersPage = cleanup;
 
     /* ============================================================
@@ -2135,9 +2129,10 @@
     window.showToast = showToast;
     window.getToken = getToken;
 
-    /*
-     * SPA قد يحمّل الصفحة بعد DOMContentLoaded.
-     */
+    /* ============================================================
+     * BOOT
+     * ============================================================ */
+
     if (document.readyState === 'loading') {
         document.addEventListener(
             'DOMContentLoaded',
