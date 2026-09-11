@@ -1,19 +1,25 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.6
-// 🔐 JWT + REFRESH + CSRF + SESSION + RBAC
-// 🛡️ PRODUCTION HARDENED / BACKWARD COMPATIBLE
-// ✨ v9.6:
-//    - /api/settings محمي بـ requireAdmin
-//    - /api/monitoring/* جديد (admin فقط)
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.7
+// 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
+// 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
+// ✨ v9.7:
+//    - MongoDB Atlas integration (Users, Vessels, Maintenance)
+//    - All models properly connected
 //    - tokenVersion enforced
 //    - Ordered logout
 //    - Refresh token rotation + replay protection
-//    - Support tickets API
+//    - admin-only pages (users, settings, monitoring)
+//    - Support tickets
+//    - Public IP monitoring API
 // ============================================================
 
 'use strict';
 
 require('dotenv').config();
+
+// ============================================================
+// 📦 DEPENDENCIES
+// ============================================================
 
 const express = require('express');
 const cors = require('cors');
@@ -21,6 +27,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -29,6 +36,25 @@ const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const compression = require('compression');
 const nodemailer = require('nodemailer');
+
+// ============================================================
+// 📦 MODELS
+// ============================================================
+
+let User, Vessel, Maintenance, Log, Ticket;
+
+try {
+    const models = require('./models');
+    User = models.User;
+    Vessel = models.Vessel;
+    Maintenance = models.Maintenance;
+    Log = models.Log;
+    Ticket = models.Ticket;
+    console.log('✅ Models loaded successfully');
+} catch (e) {
+    console.error('❌ Failed to load models:', e.message);
+    process.exit(1);
+}
 
 // ============================================================
 // 🧼 DOMPURIFY
@@ -43,7 +69,7 @@ try {
 }
 
 // ============================================================
-// 🔴 REDIS
+// 🔴 REDIS (OPTIONAL)
 // ============================================================
 
 let redisClient = null;
@@ -101,7 +127,7 @@ app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
 
 // ============================================================
-// 🔐 SECRETS
+// 🔐 SECRETS VALIDATION
 // ============================================================
 
 function generateSecret(bytes = 64) {
@@ -118,6 +144,11 @@ if (isProduction) {
         console.error('❌ FATAL: Missing secrets:', missing.join(', '));
         process.exit(1);
     }
+
+    if (!process.env.MONGODB_URI) {
+        console.error('❌ FATAL: MONGODB_URI is required in production.');
+        process.exit(1);
+    }
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || generateSecret(64);
@@ -132,7 +163,7 @@ const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const CSRF_MAX_AGE = 8 * 60 * 60 * 1000;
 
 // ============================================================
-// 🔑 ADMIN
+// 🔑 ADMIN CONFIG
 // ============================================================
 
 function isStrongPassword(password) {
@@ -176,6 +207,8 @@ function generateStrongPassword(length = 20) {
 }
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.local';
 
 let ADMIN_PASSWORD;
 
@@ -196,10 +229,8 @@ if (process.env.ADMIN_PASSWORD) {
     console.log('🔑 DEV ADMIN PASSWORD:', ADMIN_PASSWORD);
 }
 
-const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
-
 // ============================================================
-// 🔒 ENCRYPTION
+// 🔒 ENCRYPTION KEY
 // ============================================================
 
 if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length !== 64)) {
@@ -434,13 +465,13 @@ app.use(cors({
 // ============================================================
 
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, max: 200,
+    windowMs: 15 * 60 * 1000, max: 300,
     standardHeaders: true, legacyHeaders: false,
     message: { success: false, error: 'Too many requests.' }
 });
 
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, max: 8,
+    windowMs: 15 * 60 * 1000, max: 10,
     standardHeaders: true, legacyHeaders: false,
     message: { success: false, error: 'Too many authentication attempts.' }
 });
@@ -455,7 +486,7 @@ app.use('/api/', apiLimiter);
 app.use('/api/auth/login', authLimiter);
 
 // ============================================================
-// 📦 BODY
+// 📦 BODY PARSERS
 // ============================================================
 
 app.use(compression());
@@ -464,24 +495,6 @@ app.use(express.urlencoded({ extended: false, limit: '20kb' }));
 app.use(cookieParser());
 app.use(xssSanitizer);
 app.use(hpp());
-
-// ============================================================
-// 🧠 SESSION STORE
-// ============================================================
-
-let sessionStore = undefined;
-
-async function buildSessionStore() {
-    await initRedis();
-    if (redisAvailable && redisClient && RedisStore) {
-        try {
-            sessionStore = new RedisStore({ client: redisClient, prefix: 'marine:sess:' });
-            console.log('✅ Redis session store enabled');
-        } catch (e) {
-            sessionStore = undefined;
-        }
-    }
-}
 
 // ============================================================
 // 🆔 REQUEST ID
@@ -501,13 +514,289 @@ app.use((req, res, next) => {
     const started = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - started;
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} ${duration}ms RID=${req.requestId}`);
+        // Skip static files logging
+        if (!req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf)$/)) {
+            console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} ${duration}ms RID=${req.requestId}`);
+        }
     });
     next();
 });
 
 // ============================================================
-// 🧠 CSRF
+// ✅ الجزء 1 انتهى — يتبع في الرد التالي (الجزء 2)
+// ============================================================
+// ============================================================
+// ✅ الجزء 2: MongoDB + Session + CSRF + JWT + RBAC
+// ============================================================
+
+// ============================================================
+// 🍃 MONGODB CONNECTION
+// ============================================================
+
+let mongoConnected = false;
+
+async function connectMongoDB() {
+    const uri = process.env.MONGODB_URI;
+
+    if (!uri) {
+        console.error('❌ MONGODB_URI غير محدد');
+        return false;
+    }
+
+    try {
+        await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 15000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 15000,
+            maxPoolSize: 10,
+            minPoolSize: 2,
+            retryWrites: true,
+            retryReads: true
+        });
+
+        mongoConnected = true;
+        console.log('✅ MongoDB connected');
+        console.log(`📊 Database: ${mongoose.connection.name}`);
+        console.log(`🌐 Host: ${mongoose.connection.host}`);
+
+        // ✅ مراقبة الاتصال
+        mongoose.connection.on('error', err => {
+            console.error('❌ MongoDB error:', err.message);
+            mongoConnected = false;
+        });
+
+        mongoose.connection.on('disconnected', () => {
+            console.warn('⚠️ MongoDB disconnected');
+            mongoConnected = false;
+        });
+
+        mongoose.connection.on('reconnected', () => {
+            console.log('✅ MongoDB reconnected');
+            mongoConnected = true;
+        });
+
+        // ✅ إنشاء الفهارس
+        await createIndexes();
+
+        // ✅ إنشاء admin إذا لم يوجد
+        await ensureAdminExists();
+
+        // ✅ إنشاء البيانات الافتراضية
+        await ensureInitialData();
+
+        return true;
+    } catch (error) {
+        console.error('❌ MongoDB connection failed:', error.message);
+        mongoConnected = false;
+        return false;
+    }
+}
+
+// ============================================================
+// 🔍 CREATE INDEXES
+// ============================================================
+
+async function createIndexes() {
+    try {
+        await User.collection.createIndex({ username: 1 }, { unique: true });
+        await User.collection.createIndex({ email: 1 }, { unique: true });
+        await User.collection.createIndex({ id: 1 }, { unique: true });
+        await User.collection.createIndex({ role: 1 });
+        await User.collection.createIndex({ isActive: 1 });
+
+        await Vessel.collection.createIndex({ id: 1 }, { unique: true });
+        await Vessel.collection.createIndex({ name: 1 });
+        await Vessel.collection.createIndex({ num: 1 });
+        await Vessel.collection.createIndex({ status: 1 });
+
+        await Maintenance.collection.createIndex({ id: 1 });
+        await Maintenance.collection.createIndex({ vesselId: 1 });
+        await Maintenance.collection.createIndex({ status: 1 });
+        await Maintenance.collection.createIndex({ createdAt: -1 });
+
+        await Log.collection.createIndex({ createdAt: -1 });
+        await Log.collection.createIndex({ action: 1 });
+
+        await Ticket.collection.createIndex({ status: 1 });
+        await Ticket.collection.createIndex({ createdBy: 1 });
+
+        console.log('✅ Indexes created');
+    } catch (error) {
+        console.warn('⚠️ Index creation warning:', error.message);
+    }
+}
+
+// ============================================================
+// 👤 ENSURE ADMIN EXISTS
+// ============================================================
+
+async function ensureAdminExists() {
+    try {
+        const existingAdmin = await User.findOne({ username: ADMIN_USERNAME });
+
+        if (existingAdmin) {
+            console.log(`✅ Admin user "${ADMIN_USERNAME}" exists`);
+            return;
+        }
+
+        const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
+
+        const admin = await User.create({
+            username: ADMIN_USERNAME,
+            password: hashedPassword,
+            name: ADMIN_NAME,
+            email: ADMIN_EMAIL,
+            role: 'admin',
+            isActive: true,
+            tokenVersion: 0
+        });
+
+        console.log('✅ Admin user created:', admin.username);
+    } catch (error) {
+        console.error('❌ Failed to ensure admin:', error.message);
+    }
+}
+
+// ============================================================
+// 🚢 ENSURE INITIAL DATA (Vessels + Maintenance)
+// ============================================================
+
+async function ensureInitialData() {
+    try {
+        const vesselCount = await Vessel.countDocuments();
+
+        if (vesselCount > 0) {
+            console.log(`✅ Vessels exist (${vesselCount})`);
+            return;
+        }
+
+        console.log('📦 Creating initial vessels...');
+
+        const initialVessels = [
+            {
+                id: randomId(8),
+                name: 'الوحدة 101',
+                num: '101',
+                len: 11,
+                region: 'الشمال',
+                zone: 'تونس',
+                port: 'الميناء الرئيسي',
+                supp: '—',
+                status: 'صالح',
+                break: '—',
+                cat: 'البروق',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                name: 'الوحدة 205',
+                num: '205',
+                len: 15,
+                region: 'الساحل',
+                zone: 'سوسة',
+                port: 'ميناء سوسة',
+                supp: '—',
+                status: 'صيانة',
+                break: 'محرك',
+                fDate: new Date().toISOString(),
+                ref: 'M-2024-001',
+                repairUnit: 'وحدة الصيانة تونس',
+                cat: 'خوافر',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                name: 'الوحدة 312',
+                num: '312',
+                len: 8,
+                region: 'الجنوب',
+                zone: 'جرجيس',
+                port: 'ميناء جرجيس',
+                supp: '—',
+                status: 'معطب',
+                break: 'هيكل',
+                fDate: new Date().toISOString(),
+                ref: 'M-2024-002',
+                repairUnit: 'وحدة الصيانة جرجيس',
+                cat: 'صقور',
+                createdBy: 'system'
+            }
+        ];
+
+        await Vessel.insertMany(initialVessels);
+        console.log(`✅ ${initialVessels.length} vessels created`);
+
+        // ✅ إنشاء سجلات صيانة افتراضية
+        const initialLogs = [
+            {
+                id: randomId(8),
+                vesselName: 'الوحدة 101',
+                vesselNum: '101',
+                type: 'صيانة دورية',
+                status: 'مكتملة',
+                date: new Date().toISOString(),
+                repairUnit: 'وحدة الصيانة تونس',
+                cost: 500,
+                notes: 'تم إجراء الصيانة الدورية',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                vesselName: 'الوحدة 205',
+                vesselNum: '205',
+                type: 'إصلاح محرك',
+                status: 'قيد التنفيذ',
+                date: new Date().toISOString(),
+                repairUnit: 'وحدة الصيانة صفاقس',
+                cost: 1200,
+                notes: 'استبدال المحرك التالف',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                vesselName: 'الوحدة 312',
+                vesselNum: '312',
+                type: 'إصلاح هيكل',
+                status: 'متأخرة',
+                date: new Date().toISOString(),
+                repairUnit: 'وحدة الصيانة جرجيس',
+                cost: 2000,
+                notes: 'إصلاح ضرر في الهيكل',
+                createdBy: 'system'
+            }
+        ];
+
+        await Maintenance.insertMany(initialLogs);
+        console.log(`✅ ${initialLogs.length} maintenance logs created`);
+    } catch (error) {
+        console.error('❌ Failed to create initial data:', error.message);
+    }
+}
+
+// ============================================================
+// 🧠 SESSION STORE
+// ============================================================
+
+let sessionStore = undefined;
+
+async function buildSessionStore() {
+    await initRedis();
+
+    if (redisAvailable && redisClient && RedisStore) {
+        try {
+            sessionStore = new RedisStore({
+                client: redisClient,
+                prefix: 'marine:sess:'
+            });
+            console.log('✅ Redis session store enabled');
+        } catch (e) {
+            sessionStore = undefined;
+        }
+    }
+}
+
+// ============================================================
+// 🧠 CSRF TOKEN
 // ============================================================
 
 function ensureCsrfToken(req, res) {
@@ -571,9 +860,7 @@ function csrfProtection(req, res, next) {
         method: req.method,
         hasProvided: !!provided,
         hasSession: !!sessionToken,
-        hasCookie: !!cookieToken,
-        hasHeader: !!req.headers['x-csrf-token'],
-        hasAuthorization: !!extractBearerToken(req)
+        hasCookie: !!cookieToken
     });
 
     // 1) تطابق مع session
@@ -583,7 +870,7 @@ function csrfProtection(req, res, next) {
 
     // 2) تطابق مع cookie
     if (provided && cookieToken && safeEqual(String(provided), String(cookieToken))) {
-        if (sessionToken && safeEqual(String(cookieToken), String(sessionToken))) {
+        if (!sessionToken || safeEqual(String(cookieToken), String(sessionToken))) {
             return next();
         }
     }
@@ -600,7 +887,7 @@ function csrfProtection(req, res, next) {
         return Promise.resolve(refreshRecordPromise)
             .then(record => {
                 if (record && record.userId === req.user.id) {
-                    console.warn('⚠️ CSRF compat: authenticated JWT + active session');
+                    console.warn('⚠️ CSRF compat: JWT + active session');
                     return next();
                 }
                 return res.status(403).json({
@@ -621,8 +908,7 @@ function csrfProtection(req, res, next) {
     console.log('❌ CSRF FAILED:', {
         path: req.path,
         providedPrefix: provided ? String(provided).substring(0, 20) : null,
-        sessionPrefix: sessionToken ? String(sessionToken).substring(0, 20) : null,
-        cookiePrefix: cookieToken ? String(cookieToken).substring(0, 20) : null
+        sessionPrefix: sessionToken ? String(sessionToken).substring(0, 20) : null
     });
 
     return res.status(403).json({
@@ -633,7 +919,7 @@ function csrfProtection(req, res, next) {
 }
 
 // ============================================================
-// 🔐 JWT
+// 🔐 JWT GENERATION
 // ============================================================
 
 function generateAccessToken(user, sessionId) {
@@ -677,7 +963,7 @@ function generateRefreshToken(user, sessionId) {
 }
 
 // ============================================================
-// 🔄 REFRESH SESSIONS
+// 🔄 REFRESH SESSIONS (Memory + Redis)
 // ============================================================
 
 const refreshSessions = new Map();
@@ -727,9 +1013,13 @@ async function getRefreshSession(sessionId) {
 
 async function revokeRefreshSession(sessionId) {
     if (!sessionId) return;
+
     if (redisAvailable && redisClient) {
-        try { await redisClient.del(`marine:refresh:${sessionId}`); } catch (e) {}
+        try {
+            await redisClient.del(`marine:refresh:${sessionId}`);
+        } catch (e) {}
     }
+
     refreshSessions.delete(sessionId);
 }
 
@@ -774,6 +1064,7 @@ function isAccessTokenRevoked(jti) {
     return true;
 }
 
+// Cleanup interval
 setInterval(() => {
     const now = Date.now();
     for (const [jti, expiry] of revokedAccessTokens) {
@@ -785,195 +1076,7 @@ setInterval(() => {
 }, 10 * 60 * 1000).unref();
 
 // ============================================================
-// 👤 USERS
-// ============================================================
-
-const hashedPassword = bcrypt.hashSync(ADMIN_PASSWORD, 12);
-
-const users = [
-    {
-        id: '1',
-        username: ADMIN_USERNAME,
-        password: hashedPassword,
-        name: ADMIN_NAME,
-        email: process.env.ADMIN_EMAIL || 'admin@marine-system.local',
-        role: 'admin',
-        active: true,
-        tokenVersion: 0,
-        createdAt: new Date().toISOString(),
-        lastLogin: null,
-        loginAttempts: 0,
-        locked: false,
-        lockedUntil: null
-    }
-];
-
-// ============================================================
-// 🌉 GLOBAL BRIDGE
-// ============================================================
-
-global.__marineUsers = users;
-global.__isAccessTokenRevoked = isAccessTokenRevoked;
-global.__marineRevokedTokens = revokedAccessTokens;
-
-// ============================================================
-// 🚢 VESSELS
-// ============================================================
-
-const vessels = [];
-
-const initialVessels = [
-    {
-        id: '1',
-        name: 'الوحدة 101',
-        num: '101',
-        len: 11,
-        region: 'الشمال',
-        zone: 'تونس',
-        port: 'الميناء الرئيسي',
-        supp: '—',
-        status: 'صالح',
-        break: '—',
-        fDate: null,
-        eDate: null,
-        ref: '',
-        repairUnit: '—',
-        cat: 'البروق'
-    },
-    {
-        id: '2',
-        name: 'الوحدة 205',
-        num: '205',
-        len: 15,
-        region: 'الساحل',
-        zone: 'سوسة',
-        port: 'ميناء سوسة',
-        supp: '—',
-        status: 'صيانة',
-        break: 'محرك',
-        fDate: new Date().toISOString(),
-        eDate: null,
-        ref: 'M-2024-001',
-        repairUnit: 'وحدة الصيانة تونس',
-        cat: 'خوافر'
-    },
-    {
-        id: '3',
-        name: 'الوحدة 312',
-        num: '312',
-        len: 8,
-        region: 'الجنوب',
-        zone: 'جرجيس',
-        port: 'ميناء جرجيس',
-        supp: '—',
-        status: 'معطب',
-        break: 'هيكل',
-        fDate: new Date().toISOString(),
-        eDate: null,
-        ref: 'M-2024-002',
-        repairUnit: 'وحدة الصيانة جرجيس',
-        cat: 'صقور'
-    }
-];
-
-initialVessels.forEach(vessel => vessels.push(vessel));
-
-// ============================================================
-// 🔧 MAINTENANCE
-// ============================================================
-
-const maintenanceLogs = [];
-
-function initMaintenanceLogs() {
-    vessels.forEach(v => {
-        if (v.status === 'معطب' || v.status === 'صيانة') {
-            maintenanceLogs.push({
-                id: randomId(8),
-                vesselId: v.id,
-                vesselName: v.name,
-                vesselNum: v.num || '',
-                type: v.break || 'صيانة دورية',
-                status: v.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-                date: v.fDate || new Date().toISOString(),
-                repairUnit: v.repairUnit || '—',
-                cost: 0,
-                notes: v.break ? `عطب: ${v.break}` : 'صيانة دورية',
-                createdAt: new Date().toISOString()
-            });
-        }
-    });
-
-    if (maintenanceLogs.length < 3) {
-        maintenanceLogs.push({
-            id: randomId(8),
-            vesselId: '1',
-            vesselName: 'الوحدة 101',
-            vesselNum: '101',
-            type: 'صيانة دورية',
-            status: 'مكتملة',
-            date: new Date().toISOString(),
-            repairUnit: 'وحدة الصيانة تونس',
-            cost: 500,
-            notes: 'تم إجراء الصيانة الدورية',
-            createdAt: new Date().toISOString()
-        });
-
-        maintenanceLogs.push({
-            id: randomId(8),
-            vesselId: '2',
-            vesselName: 'الوحدة 205',
-            vesselNum: '205',
-            type: 'إصلاح محرك',
-            status: 'قيد التنفيذ',
-            date: new Date().toISOString(),
-            repairUnit: 'وحدة الصيانة صفاقس',
-            cost: 1200,
-            notes: 'استبدال المحرك التالف',
-            createdAt: new Date().toISOString()
-        });
-
-        maintenanceLogs.push({
-            id: randomId(8),
-            vesselId: '3',
-            vesselName: 'الوحدة 312',
-            vesselNum: '312',
-            type: 'إصلاح هيكل',
-            status: 'متأخرة',
-            date: new Date().toISOString(),
-            repairUnit: 'وحدة الصيانة جرجيس',
-            cost: 2000,
-            notes: 'إصلاح ضرر في الهيكل',
-            createdAt: new Date().toISOString()
-        });
-    }
-}
-
-initMaintenanceLogs();
-
-// ============================================================
-// 📋 SYSTEM LOGS
-// ============================================================
-
-const systemLogs = [];
-
-function addSystemLog({ userId = null, action, details = '', ip = null, requestId = null }) {
-    systemLogs.push({
-        id: randomId(8),
-        userId,
-        action,
-        details,
-        ip,
-        requestId,
-        timestamp: new Date().toISOString()
-    });
-
-    if (systemLogs.length > 5000) {
-        systemLogs.splice(0, systemLogs.length - 5000);
-    }
-}
-
-// ============================================================
-// 🔑 PASSWORD RESET
+// 🔑 PASSWORD RESET TOKENS (Memory)
 // ============================================================
 
 const passwordResetTokens = [];
@@ -1004,6 +1107,46 @@ function findResetTokenRecord(token) {
 function verifyResetToken(email, token) {
     const record = findResetTokenRecord(token);
     return !!(record && record.email === email);
+}
+
+// ============================================================
+// 📋 SYSTEM LOG HELPER
+// ============================================================
+
+async function addSystemLog({
+    userId = null,
+    action = 'view',
+    resource = 'system',
+    resourceId = null,
+    resourceName = '',
+    userName = '',
+    userEmail = '',
+    ip = null,
+    requestId = null,
+    status = 'success',
+    details = {},
+    error = null
+}) {
+    try {
+        if (!mongoConnected) return;
+
+        await Log.create({
+            action,
+            resource,
+            resourceId,
+            resourceModel: null,
+            resourceName,
+            userName,
+            userEmail,
+            ipAddress: ip,
+            userAgent: null,
+            details: { ...details, requestId },
+            status,
+            error
+        });
+    } catch (e) {
+        console.warn('⚠️ Failed to write log:', e.message);
+    }
 }
 
 // ============================================================
@@ -1041,33 +1184,42 @@ function authenticateAccessToken(req, res, next) {
             return res.status(401).json({ success: false, error: 'التوكن ملغى' });
         }
 
-        const user = users.find(item => item.id === decoded.sub);
+        // ✅ MongoDB lookup
+        User.findOne({ id: decoded.sub })
+            .then(user => {
+                if (!user || user.isActive !== true) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'المستخدم غير موجود أو غير نشط'
+                    });
+                }
 
-        if (!user || user.active !== true) {
-            return res.status(401).json({ success: false, error: 'المستخدم غير موجود أو غير نشط' });
-        }
+                // ✅ tokenVersion check
+                if (typeof decoded.ver !== 'number' || decoded.ver !== (user.tokenVersion || 0)) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'جلسة التوثيق منتهية',
+                        code: 'TOKEN_VERSION_MISMATCH'
+                    });
+                }
 
-        // ✅ tokenVersion check
-        if (typeof decoded.ver !== 'number' || decoded.ver !== (user.tokenVersion || 0)) {
-            return res.status(401).json({
-                success: false,
-                error: 'جلسة التوثيق منتهية',
-                code: 'TOKEN_VERSION_MISMATCH'
+                if (!decoded.sid) {
+                    return res.status(401).json({
+                        success: false,
+                        error: 'جلسة التوثيق غير صالحة',
+                        code: 'SESSION_ID_MISSING'
+                    });
+                }
+
+                req.user = user;
+                req.auth = decoded;
+
+                next();
+            })
+            .catch(err => {
+                console.error('❌ Auth lookup error:', err.message);
+                return res.status(500).json({ success: false, error: 'خطأ في الخادم' });
             });
-        }
-
-        if (!decoded.sid) {
-            return res.status(401).json({
-                success: false,
-                error: 'جلسة التوثيق غير صالحة',
-                code: 'SESSION_ID_MISSING'
-            });
-        }
-
-        req.user = user;
-        req.auth = decoded;
-
-        next();
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({ success: false, error: 'انتهت صلاحية التوكن' });
@@ -1133,12 +1285,110 @@ function requireAdmin(req, res, next) {
 }
 
 // ============================================================
-// 🚀 STARTUP
+// 🔄 FORMAT HELPERS
+// ============================================================
+
+function formatUser(user) {
+    if (!user) return null;
+    return {
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        active: user.isActive,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt
+    };
+}
+
+function formatVessel(vessel) {
+    if (!vessel) return null;
+    return {
+        id: vessel.id,
+        _id: vessel._id,
+        name: vessel.name,
+        num: vessel.num || '',
+        len: vessel.len || 0,
+        region: vessel.region || '',
+        zone: vessel.zone || '',
+        port: vessel.port || '',
+        supp: vessel.supp || '',
+        status: vessel.status || 'صالح',
+        break: vessel.break || '',
+        fDate: vessel.fDate || null,
+        eDate: vessel.eDate || null,
+        ref: vessel.ref || '',
+        repairUnit: vessel.repairUnit || '',
+        cat: vessel.cat || '',
+        type: vessel.type || '',
+        location: vessel.location || '',
+        specifications: vessel.specifications || {},
+        createdAt: vessel.createdAt,
+        updatedAt: vessel.updatedAt
+    };
+}
+
+function formatMaintenance(log) {
+    if (!log) return null;
+
+    const isoDate = log.date || log.startDate || log.createdAt || new Date().toISOString();
+    let displayDate = isoDate;
+
+    try {
+        const d = new Date(isoDate);
+        if (!isNaN(d.getTime())) {
+            displayDate = d.toLocaleDateString('ar-EG');
+        }
+    } catch (e) {}
+
+    return {
+        id: log.id,
+        _id: log._id,
+        vesselName: log.vesselName || '—',
+        vessel: log.vesselName || '—',
+        vesselNum: log.vesselNum || '',
+        type: log.type || 'صيانة دورية',
+        status: log.status || 'قيد الانتظار',
+        date: displayDate,
+        isoDate: isoDate,
+        startDate: log.startDate,
+        endDate: log.endDate,
+        createdAt: log.createdAt,
+        repairUnit: log.repairUnit || '—',
+        unit: log.repairUnit || '—',
+        cost: Number(log.cost) || 0,
+        notes: log.notes || '',
+        vesselId: log.vesselId || '',
+        updatedAt: log.updatedAt
+    };
+}
+
+// ============================================================
+// ✅ الجزء 2 انتهى — يتبع الجزء 3
+// ============================================================
+// ============================================================
+// ✅ الجزء 3: API Endpoints + Startup
+// ============================================================
+
+// ============================================================
+// 🚀 MAIN STARTUP
 // ============================================================
 
 (async () => {
+    // ✅ 1. الاتصال بـ MongoDB
+    const mongoOk = await connectMongoDB();
+
+    if (!mongoOk && isProduction) {
+        console.error('❌ FATAL: MongoDB is required in production');
+        process.exit(1);
+    }
+
+    // ✅ 2. بناء Session Store
     await buildSessionStore();
 
+    // ✅ 3. إعداد express-session
     app.use(session({
         secret: SESSION_SECRET,
         resave: false,
@@ -1156,14 +1406,18 @@ function requireAdmin(req, res, next) {
         proxy: isProduction
     }));
 
-    // CSRF middleware
+    // ✅ 4. CSRF middleware
     app.use((req, res, next) => {
         ensureCsrfToken(req, res);
         next();
     });
 
     // ========================================================
-    // CSRF TOKEN ENDPOINT
+    // 🔐 PUBLIC ENDPOINTS
+    // ========================================================
+
+    // ========================================================
+    // CSRF TOKEN
     // ========================================================
 
     app.get('/api/csrf-token', (req, res) => {
@@ -1184,8 +1438,9 @@ function requireAdmin(req, res, next) {
             success: true,
             status: 'online',
             service: 'Marine System',
-            version: '9.6',
+            version: '9.7',
             timestamp: new Date().toISOString(),
+            mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             csrfEnabled: true
         });
@@ -1208,52 +1463,104 @@ function requireAdmin(req, res, next) {
                 return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
             }
 
-            const user = users.find(item => item.username === username);
+            const user = await User.findOne({ username: username.trim() });
 
             if (!user) {
-                addSystemLog({ action: 'LOGIN_FAILED', details: 'Unknown username', ip: clientIP, requestId: req.requestId });
-                return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-            }
+                await addSystemLog({
+                    action: 'login',
+                    resource: 'user',
+                    status: 'error',
+                    ip: clientIP,
+                    requestId: req.requestId,
+                    details: { reason: 'user_not_found', username }
+                });
 
-            if (user.locked && user.lockedUntil && Date.now() < user.lockedUntil) {
-                return res.status(403).json({
+                return res.status(401).json({
                     success: false,
-                    error: `الحساب مقفل. حاول بعد ${Math.ceil((user.lockedUntil - Date.now()) / 60000)} دقيقة`
+                    error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
                 });
             }
 
-            if (user.locked && user.lockedUntil && Date.now() >= user.lockedUntil) {
-                user.locked = false;
-                user.lockedUntil = null;
-                user.loginAttempts = 0;
+            // ✅ قفل الحساب
+            if (user.lockedUntil && Date.now() < user.lockedUntil.getTime()) {
+                const remainingMinutes = Math.ceil(
+                    (user.lockedUntil.getTime() - Date.now()) / 60000
+                );
+                return res.status(403).json({
+                    success: false,
+                    error: `الحساب مقفل. حاول بعد ${remainingMinutes} دقيقة`
+                });
             }
 
+            // ✅ فتح تلقائي
+            if (user.lockedUntil && Date.now() >= user.lockedUntil.getTime()) {
+                user.lockedUntil = null;
+                user.loginAttempts = 0;
+                await user.save();
+            }
+
+            // ✅ فحص النشاط
+            if (user.isActive === false) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'الحساب معطّل. تواصل مع المسؤول'
+                });
+            }
+
+            // ✅ التحقق من كلمة المرور
             const valid = await bcrypt.compare(password, user.password);
 
             if (!valid) {
                 user.loginAttempts = (user.loginAttempts || 0) + 1;
 
                 if (user.loginAttempts >= 5) {
-                    user.locked = true;
-                    user.lockedUntil = Date.now() + 30 * 60 * 1000;
+                    user.lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
 
-                    addSystemLog({ userId: user.id, action: 'ACCOUNT_LOCKED', details: 'Too many failures', ip: clientIP, requestId: req.requestId });
+                    await user.save();
+
+                    await addSystemLog({
+                        userId: user.id,
+                        userName: user.name,
+                        userEmail: user.email,
+                        action: 'login',
+                        resource: 'user',
+                        status: 'error',
+                        ip: clientIP,
+                        requestId: req.requestId,
+                        details: { reason: 'account_locked' }
+                    });
 
                     return res.status(403).json({
                         success: false,
-                        error: 'الحساب مقفل لمدة 30 دقيقة'
+                        error: 'الحساب مقفل لمدة 30 دقيقة بسبب كثرة المحاولات الفاشلة'
                     });
                 }
 
-                addSystemLog({ userId: user.id, action: 'LOGIN_FAILED', details: 'Invalid password', ip: clientIP, requestId: req.requestId });
+                await user.save();
 
-                return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+                await addSystemLog({
+                    userId: user.id,
+                    userName: user.name,
+                    userEmail: user.email,
+                    action: 'login',
+                    resource: 'user',
+                    status: 'error',
+                    ip: clientIP,
+                    requestId: req.requestId,
+                    details: { reason: 'invalid_password', attempts: user.loginAttempts }
+                });
+
+                return res.status(401).json({
+                    success: false,
+                    error: 'اسم المستخدم أو كلمة المرور غير صحيحة'
+                });
             }
 
+            // ✅ تسجيل دخول ناجح
             user.loginAttempts = 0;
-            user.locked = false;
             user.lockedUntil = null;
-            user.lastLogin = new Date().toISOString();
+            user.lastLogin = new Date();
+            await user.save();
 
             const sessionId = randomId(32);
             const accessToken = generateAccessToken(user, sessionId);
@@ -1288,7 +1595,16 @@ function requireAdmin(req, res, next) {
                 }
             );
 
-            addSystemLog({ userId: user.id, action: 'LOGIN_SUCCESS', details: `User ${user.username}`, ip: clientIP, requestId: req.requestId });
+            await addSystemLog({
+                userId: user.id,
+                userName: user.name,
+                userEmail: user.email,
+                action: 'login',
+                resource: 'user',
+                status: 'success',
+                ip: clientIP,
+                requestId: req.requestId
+            });
 
             return res.json({
                 success: true,
@@ -1299,15 +1615,7 @@ function requireAdmin(req, res, next) {
                     csrfToken: newCsrfToken,
                     csrfExpiry: req.session?.csrfExpiry || (Date.now() + CSRF_MAX_AGE)
                 },
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    active: user.active,
-                    lastLogin: user.lastLogin
-                }
+                user: formatUser(user)
             });
         } catch (error) {
             console.error('Login error:', error);
@@ -1348,16 +1656,32 @@ function requireAdmin(req, res, next) {
                 return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
             }
 
+            // ✅ Replay detection
             if (!safeEqual(record.tokenHash, hashToken(refreshToken))) {
                 await revokeRefreshSession(decoded.sid);
-                const replayUser = users.find(item => item.id === decoded.sub);
-                if (replayUser) replayUser.tokenVersion = (replayUser.tokenVersion || 0) + 1;
-                addSystemLog({ userId: decoded.sub, action: 'REFRESH_REPLAY', details: 'Replay detected', ip: req.ip, requestId: req.requestId });
+
+                const replayUser = await User.findOne({ id: decoded.sub });
+                if (replayUser) {
+                    replayUser.tokenVersion = (replayUser.tokenVersion || 0) + 1;
+                    await replayUser.save();
+                }
+
+                await addSystemLog({
+                    userId: decoded.sub,
+                    action: 'view',
+                    resource: 'system',
+                    status: 'error',
+                    ip: req.ip,
+                    requestId: req.requestId,
+                    details: { reason: 'refresh_replay_detected' }
+                });
+
                 return res.status(401).json({ success: false, error: 'Refresh token غير صالح' });
             }
 
-            const user = users.find(item => item.id === decoded.sub);
-            if (!user || !user.active) {
+            const user = await User.findOne({ id: decoded.sub });
+
+            if (!user || !user.isActive) {
                 await revokeRefreshSession(decoded.sid);
                 return res.status(401).json({ success: false, error: 'المستخدم غير نشط' });
             }
@@ -1367,7 +1691,11 @@ function requireAdmin(req, res, next) {
             const newAccessToken = generateAccessToken(user, newSessionId);
 
             await revokeRefreshSession(decoded.sid);
-            await saveRefreshSession({ sessionId: newSessionId, userId: user.id, refreshToken: newRefreshToken });
+            await saveRefreshSession({
+                sessionId: newSessionId,
+                userId: user.id,
+                refreshToken: newRefreshToken
+            });
 
             if (req.session) {
                 req.session.userId = user.id;
@@ -1401,15 +1729,7 @@ function requireAdmin(req, res, next) {
                     csrfToken: newCsrfToken,
                     csrfExpiry: req.session?.csrfExpiry || (Date.now() + CSRF_MAX_AGE)
                 },
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    active: user.active,
-                    lastLogin: user.lastLogin
-                }
+                user: formatUser(user)
             });
         } catch (error) {
             return res.status(401).json({ success: false, error: 'Refresh token غير صالح أو منتهي' });
@@ -1423,15 +1743,7 @@ function requireAdmin(req, res, next) {
     app.get('/api/auth/me', authenticateAccessToken, (req, res) => {
         return res.json({
             success: true,
-            user: {
-                id: req.user.id,
-                username: req.user.username,
-                name: req.user.name,
-                email: req.user.email,
-                role: req.user.role,
-                active: req.user.active,
-                lastLogin: req.user.lastLogin
-            }
+            user: formatUser(req.user)
         });
     });
 
@@ -1456,10 +1768,13 @@ function requireAdmin(req, res, next) {
                 await revokeRefreshSession(sessionId);
             }
 
-            addSystemLog({
+            await addSystemLog({
                 userId: req.user?.id || null,
-                action: 'LOGOUT',
-                details: `User ${req.user?.username || 'unknown'} logged out`,
+                userName: req.user?.name || '',
+                userEmail: req.user?.email || '',
+                action: 'logout',
+                resource: 'user',
+                status: 'success',
                 ip: clientIP,
                 requestId: req.requestId
             });
@@ -1504,7 +1819,7 @@ function requireAdmin(req, res, next) {
                 return res.status(400).json({ success: false, error: 'البريد الإلكتروني مطلوب' });
             }
 
-            const user = users.find(item => item.email === email.trim());
+            const user = await User.findOne({ email: email.trim().toLowerCase() });
 
             if (!user) {
                 return res.json({
@@ -1527,14 +1842,6 @@ function requireAdmin(req, res, next) {
             `;
 
             await sendEmail(user.email, 'إعادة تعيين كلمة المرور - منظومة الوسائل البحرية', emailHtml);
-
-            addSystemLog({
-                userId: user.id,
-                action: 'PASSWORD_RESET_REQUESTED',
-                details: 'Password reset requested',
-                ip: req.ip,
-                requestId: req.requestId
-            });
 
             const responsePayload = {
                 success: true,
@@ -1579,15 +1886,17 @@ function requireAdmin(req, res, next) {
                 return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة (12 حرفاً على الأقل)' });
             }
 
-            const user = users.find(item => item.email === email);
+            const user = await User.findOne({ email: email.toLowerCase() });
 
             if (!user) {
                 return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
             }
 
             user.password = await bcrypt.hash(newPassword, 12);
-            await revokeAllUserSessions(user.id);
             user.tokenVersion = (user.tokenVersion || 0) + 1;
+            await user.save();
+
+            await revokeAllUserSessions(user.id);
 
             const index = passwordResetTokens.findIndex(
                 item => item.email === email && safeEqual(item.tokenHash, hashToken(token))
@@ -1595,12 +1904,16 @@ function requireAdmin(req, res, next) {
 
             if (index !== -1) passwordResetTokens.splice(index, 1);
 
-            addSystemLog({
+            await addSystemLog({
                 userId: user.id,
-                action: 'PASSWORD_RESET_SUCCESS',
-                details: 'Password reset successful',
+                userName: user.name,
+                userEmail: user.email,
+                action: 'update',
+                resource: 'user',
+                status: 'success',
                 ip: req.ip,
-                requestId: req.requestId
+                requestId: req.requestId,
+                details: { reason: 'password_reset' }
             });
 
             return res.json({ success: true, message: 'تم إعادة تعيين كلمة المرور بنجاح' });
@@ -1611,37 +1924,17 @@ function requireAdmin(req, res, next) {
     });
 
     // ========================================================
-    // ⚙️ SETTINGS API (admin فقط)
+    // ⚙️ SETTINGS API (admin only)
     // ========================================================
 
     const userSettings = new Map();
 
     const DEFAULT_SETTINGS = {
-        theme: {
-            primary: '#0a1628',
-            secondary: '#1a2a4a',
-            gold: '#e6b31e'
-        },
-        layout: {
-            darkMode: true,
-            fontSize: 'medium',
-            sidebarPosition: 'right',
-            showStats: true
-        },
-        security: {
-            twoFactorAuth: false,
-            emailNotifications: true,
-            smsNotifications: false,
-            sessionTimeout: 60
-        },
-        notifications: {
-            emergencyAlerts: true,
-            maintenanceAlerts: true,
-            performanceReports: 'weekly'
-        },
-        branding: {
-            logoSize: 'medium'
-        }
+        theme: { primary: '#0a1628', secondary: '#1a2a4a', gold: '#e6b31e' },
+        layout: { darkMode: true, fontSize: 'medium', sidebarPosition: 'right', showStats: true },
+        security: { twoFactorAuth: false, emailNotifications: true, smsNotifications: false, sessionTimeout: 60 },
+        notifications: { emergencyAlerts: true, maintenanceAlerts: true, performanceReports: 'weekly' },
+        branding: { logoSize: 'medium' }
     };
 
     function mergeSettings(defaults, saved) {
@@ -1650,11 +1943,9 @@ function requireAdmin(req, res, next) {
 
         for (const key of Object.keys(saved)) {
             if (
-                saved[key] &&
-                typeof saved[key] === 'object' &&
+                saved[key] && typeof saved[key] === 'object' &&
                 !Array.isArray(saved[key]) &&
-                defaults[key] &&
-                typeof defaults[key] === 'object'
+                defaults[key] && typeof defaults[key] === 'object'
             ) {
                 result[key] = { ...defaults[key], ...saved[key] };
             } else {
@@ -1664,587 +1955,515 @@ function requireAdmin(req, res, next) {
         return result;
     }
 
-    // ✅ GET /api/settings — admin فقط
-    app.get(
-        '/api/settings',
-        authenticateAccessToken,
-        requireAdmin,
-        (req, res) => {
-            try {
-                const userId = req.user.id;
-                const saved = userSettings.get(userId) || {};
-                const settings = mergeSettings(DEFAULT_SETTINGS, saved);
+    app.get('/api/settings', authenticateAccessToken, requireAdmin, (req, res) => {
+        try {
+            const userId = req.user.id;
+            const saved = userSettings.get(userId) || {};
+            const settings = mergeSettings(DEFAULT_SETTINGS, saved);
 
-                console.log('✅ GET /api/settings for admin:', req.user.username);
-
-                return res.json({
-                    success: true,
-                    settings,
-                    updatedAt: saved._updatedAt || null
-                });
-            } catch (error) {
-                console.error('❌ Get settings error:', error);
-                return res.status(500).json({ success: false, error: 'فشل تحميل الإعدادات' });
-            }
+            return res.json({
+                success: true,
+                settings,
+                updatedAt: saved._updatedAt || null
+            });
+        } catch (error) {
+            console.error('❌ Get settings error:', error);
+            return res.status(500).json({ success: false, error: 'فشل تحميل الإعدادات' });
         }
-    );
+    });
 
-    // ✅ PUT /api/settings — admin فقط
-    app.put(
-        '/api/settings',
-        authenticateAccessToken,
-        requireAdmin,
-        csrfProtection,
-        (req, res) => {
-            try {
-                const userId = req.user.id;
-                const incoming = req.body || {};
+    app.put('/api/settings', authenticateAccessToken, requireAdmin, csrfProtection, (req, res) => {
+        try {
+            const userId = req.user.id;
+            const incoming = req.body || {};
+            const current = userSettings.get(userId) || {};
+            const merged = mergeSettings(current, incoming);
 
-                const current = userSettings.get(userId) || {};
-                const merged = mergeSettings(current, incoming);
-
-                if (merged.security) {
-                    const timeout = Number(merged.security.sessionTimeout);
-                    if (!Number.isFinite(timeout) || timeout < 5 || timeout > 480) {
-                        merged.security.sessionTimeout = 60;
-                    } else {
-                        merged.security.sessionTimeout = timeout;
-                    }
-                }
-
-                if (merged.layout) {
-                    const allowedFonts = ['small', 'medium', 'large'];
-                    if (!allowedFonts.includes(merged.layout.fontSize)) {
-                        merged.layout.fontSize = 'medium';
-                    }
-                    const allowedSidebar = ['right', 'left'];
-                    if (!allowedSidebar.includes(merged.layout.sidebarPosition)) {
-                        merged.layout.sidebarPosition = 'right';
-                    }
-                }
-
-                if (merged.notifications) {
-                    const allowedReports = ['daily', 'weekly', 'monthly', 'never'];
-                    if (!allowedReports.includes(merged.notifications.performanceReports)) {
-                        merged.notifications.performanceReports = 'weekly';
-                    }
-                }
-
-                merged._updatedAt = new Date().toISOString();
-                userSettings.set(userId, merged);
-
-                console.log('✅ PUT /api/settings for admin:', req.user.username);
-
-                return res.json({
-                    success: true,
-                    message: 'تم حفظ الإعدادات بنجاح',
-                    settings: merged,
-                    updatedAt: merged._updatedAt
-                });
-            } catch (error) {
-                console.error('❌ Save settings error:', error);
-                return res.status(500).json({ success: false, error: 'فشل حفظ الإعدادات' });
+            if (merged.security) {
+                const timeout = Number(merged.security.sessionTimeout);
+                merged.security.sessionTimeout = (!Number.isFinite(timeout) || timeout < 5 || timeout > 480) ? 60 : timeout;
             }
-        }
-    );
 
-    // ✅ POST /api/settings/reset — admin فقط
-    app.post(
-        '/api/settings/reset',
-        authenticateAccessToken,
-        requireAdmin,
-        csrfProtection,
-        (req, res) => {
-            try {
-                const userId = req.user.id;
-                userSettings.delete(userId);
-
-                console.log('✅ POST /api/settings/reset for admin:', req.user.username);
-
-                return res.json({
-                    success: true,
-                    message: 'تم استعادة الإعدادات الافتراضية',
-                    settings: { ...DEFAULT_SETTINGS }
-                });
-            } catch (error) {
-                console.error('❌ Reset settings error:', error);
-                return res.status(500).json({ success: false, error: 'فشل استعادة الإعدادات' });
+            if (merged.layout) {
+                if (!['small', 'medium', 'large'].includes(merged.layout.fontSize)) merged.layout.fontSize = 'medium';
+                if (!['right', 'left'].includes(merged.layout.sidebarPosition)) merged.layout.sidebarPosition = 'right';
             }
+
+            if (merged.notifications) {
+                if (!['daily', 'weekly', 'monthly', 'never'].includes(merged.notifications.performanceReports)) {
+                    merged.notifications.performanceReports = 'weekly';
+                }
+            }
+
+            merged._updatedAt = new Date().toISOString();
+            userSettings.set(userId, merged);
+
+            return res.json({
+                success: true,
+                message: 'تم حفظ الإعدادات بنجاح',
+                settings: merged,
+                updatedAt: merged._updatedAt
+            });
+        } catch (error) {
+            console.error('❌ Save settings error:', error);
+            return res.status(500).json({ success: false, error: 'فشل حفظ الإعدادات' });
         }
-    );
+    });
+
+    app.post('/api/settings/reset', authenticateAccessToken, requireAdmin, csrfProtection, (req, res) => {
+        try {
+            userSettings.delete(req.user.id);
+            return res.json({
+                success: true,
+                message: 'تم استعادة الإعدادات الافتراضية',
+                settings: { ...DEFAULT_SETTINGS }
+            });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'فشل استعادة الإعدادات' });
+        }
+    });
 
     // ========================================================
-    // 📊 MONITORING API (admin فقط)
+    // 📊 MONITORING API (admin only)
     // ========================================================
 
-    // ✅ GET /api/monitoring/users
-    app.get(
-        '/api/monitoring/users',
-        authenticateAccessToken,
-        requireAdmin,
-        (req, res) => {
-            try {
-                const safeUsers = users.map(u => ({
-                    id: u.id,
-                    username: u.username,
-                    name: u.name || u.username,
-                    email: u.email,
-                    role: u.role,
-                    active: u.active,
-                    lastLogin: u.lastLogin,
-                    createdAt: u.createdAt
-                }));
+    app.get('/api/monitoring/users', authenticateAccessToken, requireAdmin, async (req, res) => {
+        try {
+            const users = await User.find().sort({ createdAt: -1 }).limit(500);
+            const total = await User.countDocuments();
+            const active = await User.countDocuments({ isActive: true });
 
-                return res.json({
-                    success: true,
-                    users: safeUsers,
-                    stats: {
-                        total: users.length,
-                        active: users.filter(u => u.active).length,
-                        inactive: users.filter(u => !u.active).length
-                    }
-                });
-            } catch (error) {
-                console.error('❌ Monitoring users error:', error);
-                return res.status(500).json({ success: false, error: 'فشل تحميل بيانات المستخدمين' });
-            }
-        }
-    );
-
-    // ✅ GET /api/monitoring/sessions
-    app.get(
-        '/api/monitoring/sessions',
-        authenticateAccessToken,
-        requireAdmin,
-        async (req, res) => {
-            try {
-                const sessions = [];
-
-                for (const [sessionId, record] of refreshSessions) {
-                    if (record.expiresAt > Date.now()) {
-                        const user = users.find(u => u.id === record.userId);
-                        sessions.push({
-                            sessionId: sessionId.substring(0, 12) + '...',
-                            userId: record.userId,
-                            username: user?.username || 'unknown',
-                            name: user?.name || 'unknown',
-                            role: user?.role || 'unknown',
-                            createdAt: record.createdAt,
-                            lastUsedAt: record.lastUsedAt,
-                            expiresAt: record.expiresAt
-                        });
-                    }
+            return res.json({
+                success: true,
+                users: users.map(u => formatUser(u)),
+                stats: {
+                    total,
+                    active,
+                    inactive: total - active
                 }
-
-                return res.json({
-                    success: true,
-                    sessions,
-                    stats: {
-                        total: sessions.length
-                    }
-                });
-            } catch (error) {
-                console.error('❌ Monitoring sessions error:', error);
-                return res.status(500).json({ success: false, error: 'فشل تحميل الجلسات' });
-            }
+            });
+        } catch (error) {
+            console.error('❌ Monitoring users error:', error);
+            return res.status(500).json({ success: false, error: 'فشل تحميل بيانات المستخدمين' });
         }
-    );
+    });
+
+    app.get('/api/monitoring/sessions', authenticateAccessToken, requireAdmin, async (req, res) => {
+        try {
+            const sessions = [];
+
+            for (const [sessionId, record] of refreshSessions) {
+                if (record.expiresAt > Date.now()) {
+                    const user = await User.findOne({ id: record.userId });
+                    sessions.push({
+                        sessionId: sessionId.substring(0, 12) + '...',
+                        userId: record.userId,
+                        username: user?.username || 'unknown',
+                        name: user?.name || 'unknown',
+                        role: user?.role || 'unknown',
+                        createdAt: record.createdAt,
+                        lastUsedAt: record.lastUsedAt,
+                        expiresAt: record.expiresAt
+                    });
+                }
+            }
+
+            return res.json({
+                success: true,
+                sessions,
+                stats: { total: sessions.length }
+            });
+        } catch (error) {
+            console.error('❌ Monitoring sessions error:', error);
+            return res.status(500).json({ success: false, error: 'فشل تحميل الجلسات' });
+        }
+    });
 
     // ========================================================
     // 🛟 SUPPORT TICKETS API
     // ========================================================
 
-    const supportTickets = [];
+    app.get('/api/support/tickets', authenticateAccessToken, async (req, res) => {
+        try {
+            let tickets;
 
-    app.get(
-        '/api/support/tickets',
-        authenticateAccessToken,
-        (req, res) => {
-            try {
-                const isAdmin = isAdminUser(req.user);
-                const list = isAdmin
-                    ? supportTickets
-                    : supportTickets.filter(t => t.userId === req.user.id);
-                return res.json(list);
-            } catch (error) {
-                console.error('❌ Get tickets error:', error);
-                return res.status(500).json({ success: false, error: 'فشل تحميل التذاكر' });
+            if (isAdminUser(req.user)) {
+                tickets = await Ticket.find().sort({ createdAt: -1 }).limit(200);
+            } else {
+                tickets = await Ticket.find({ createdByName: req.user.name })
+                    .sort({ createdAt: -1 })
+                    .limit(100);
             }
+
+            const formatted = tickets.map(t => ({
+                id: t._id.toString(),
+                title: t.title,
+                subject: t.title,
+                description: t.description,
+                message: t.description,
+                category: t.category,
+                priority: t.priority,
+                status: t.status,
+                user: t.createdByName || 'مستخدم',
+                username: t.createdByName || 'user',
+                userId: t.createdBy?.toString() || null,
+                assignedTo: t.assignedToName || null,
+                replies: t.replies || [],
+                createdAt: t.createdAt,
+                closedAt: t.closedAt,
+                resolution: t.resolution
+            }));
+
+            return res.json(formatted);
+        } catch (error) {
+            console.error('❌ Get tickets error:', error);
+            return res.status(500).json({ success: false, error: 'فشل تحميل التذاكر' });
         }
-    );
+    });
 
-    app.post(
-        '/api/support/tickets',
-        authenticateAccessToken,
-        csrfProtection,
-        (req, res) => {
-            try {
-                const { subject, message, priority } = req.body;
+    app.post('/api/support/tickets', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            const { subject, title, message, description, priority, category } = req.body;
 
-                if (typeof subject !== 'string' || !subject.trim()) {
-                    return res.status(400).json({ success: false, error: 'الموضوع مطلوب' });
-                }
+            const finalSubject = subject || title;
+            const finalMessage = message || description;
 
-                if (typeof message !== 'string' || !message.trim()) {
-                    return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
-                }
-
-                const allowedPriorities = ['منخفضة', 'متوسطة', 'عالية', 'عاجلة'];
-                const finalPriority = allowedPriorities.includes(priority) ? priority : 'متوسطة';
-
-                const ticket = {
-                    id: 'T-' + Date.now().toString(36) + '-' + randomId(3),
-                    userId: req.user.id,
-                    username: req.user.username,
-                    user: req.user.name || req.user.username,
-                    subject: subject.trim(),
-                    message: message.trim(),
-                    priority: finalPriority,
-                    status: 'مفتوحة',
-                    createdAt: new Date().toISOString()
-                };
-
-                supportTickets.push(ticket);
-
-                if (supportTickets.length > 5000) {
-                    supportTickets.splice(0, supportTickets.length - 5000);
-                }
-
-                console.log('✅ Support ticket created:', ticket.id);
-
-                addSystemLog({
-                    userId: req.user.id,
-                    action: 'SUPPORT_TICKET_CREATED',
-                    details: `Ticket ${ticket.id}: ${ticket.subject}`,
-                    ip: req.ip,
-                    requestId: req.requestId
-                });
-
-                return res.status(201).json({
-                    success: true,
-                    message: 'تم إرسال التذكرة بنجاح',
-                    ticket
-                });
-            } catch (error) {
-                console.error('❌ Create ticket error:', error);
-                return res.status(500).json({ success: false, error: 'فشل إرسال التذكرة' });
+            if (typeof finalSubject !== 'string' || !finalSubject.trim()) {
+                return res.status(400).json({ success: false, error: 'الموضوع مطلوب' });
             }
+
+            if (typeof finalMessage !== 'string' || !finalMessage.trim()) {
+                return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
+            }
+
+            const allowedPriorities = ['منخفضة', 'متوسطة', 'عالية', 'عاجلة', 'منخفض', 'متوسط', 'عالي', 'حرج'];
+            const finalPriority = allowedPriorities.includes(priority) ? priority : 'متوسط';
+
+            const allowedCategories = ['فني', 'لوجستي', 'إداري', 'تشغيلي', 'أمني', 'أخرى'];
+            const finalCategory = allowedCategories.includes(category) ? category : 'فني';
+
+            // ✅ MongoDB ObjectId للـ createdBy
+            let createdById;
+            try {
+                createdById = mongoose.Types.ObjectId.isValid(req.user._id)
+                    ? req.user._id
+                    : new mongoose.Types.ObjectId();
+            } catch (e) {
+                createdById = new mongoose.Types.ObjectId();
+            }
+
+            const ticket = await Ticket.create({
+                title: finalSubject.trim(),
+                description: finalMessage.trim(),
+                category: finalCategory,
+                priority: finalPriority,
+                status: 'مفتوح',
+                createdBy: createdById,
+                createdByName: req.user.name || req.user.username
+            });
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                userEmail: req.user.email,
+                action: 'create',
+                resource: 'ticket',
+                resourceId: ticket._id,
+                resourceName: ticket.title,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: 'تم إرسال التذكرة بنجاح',
+                ticket: {
+                    id: ticket._id.toString(),
+                    title: ticket.title,
+                    subject: ticket.title,
+                    description: ticket.description,
+                    message: ticket.description,
+                    category: ticket.category,
+                    priority: ticket.priority,
+                    status: ticket.status,
+                    user: ticket.createdByName,
+                    createdAt: ticket.createdAt
+                }
+            });
+        } catch (error) {
+            console.error('❌ Create ticket error:', error);
+            return res.status(500).json({ success: false, error: 'فشل إرسال التذكرة' });
         }
-    );
+    });
 
     // ========================================================
     // 🚢 VESSELS API
     // ========================================================
 
-    app.get(
-        '/api/vessels',
-        authenticateAccessToken,
-        requirePermission('vessels:read'),
-        (req, res) => {
-            res.json(vessels);
+    app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
+        try {
+            const vessels = await Vessel.find().sort({ createdAt: -1 }).limit(500);
+            res.json(vessels.map(v => formatVessel(v)));
+        } catch (error) {
+            console.error('❌ Get vessels error:', error);
+            res.status(500).json({ success: false, error: 'فشل تحميل السفن' });
         }
-    );
+    });
 
-    app.post(
-        '/api/vessels',
-        authenticateAccessToken,
-        requirePermission('vessels:create'),
-        csrfProtection,
-        (req, res) => {
-            try {
-                const {
-                    name, num, len, region, zone, port, supp, status,
-                    break: breakType, fDate, eDate, ref, repairUnit, cat
-                } = req.body;
+    app.post('/api/vessels', authenticateAccessToken, requirePermission('vessels:create'), csrfProtection, async (req, res) => {
+        try {
+            const {
+                name, num, len, region, zone, port, supp, status,
+                break: breakType, fDate, eDate, ref, repairUnit, cat
+            } = req.body;
 
-                if (typeof name !== 'string' || !name.trim()) {
-                    return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
-                }
+            if (typeof name !== 'string' || !name.trim()) {
+                return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
+            }
 
-                const newVessel = {
+            const newVessel = await Vessel.create({
+                id: randomId(8),
+                name: name.trim(),
+                num: num || '',
+                len: Number(len) || 0,
+                region: region || '',
+                zone: zone || '',
+                port: port || '',
+                supp: supp || '',
+                status: status || 'صالح',
+                break: breakType || '',
+                fDate: fDate || null,
+                eDate: eDate || null,
+                ref: ref || '',
+                repairUnit: repairUnit || '',
+                cat: cat || '',
+                createdBy: req.user.id
+            });
+
+            // ✅ إنشاء سجل صيانة تلقائي إذا كانت الحالة معطب أو صيانة
+            if (newVessel.status === 'معطب' || newVessel.status === 'صيانة') {
+                await Maintenance.create({
                     id: randomId(8),
-                    name: name.trim(),
-                    num: num || '',
-                    len: Number(len) || 0,
-                    region: region || '',
-                    zone: zone || '',
-                    port: port || '',
-                    supp: supp || '',
-                    status: status || 'صالح',
-                    break: breakType || '',
-                    fDate: fDate || null,
-                    eDate: eDate || null,
-                    ref: ref || '',
-                    repairUnit: repairUnit || '',
-                    cat: cat || '',
-                    createdAt: new Date().toISOString()
-                };
-
-                vessels.push(newVessel);
-
-                if (newVessel.status === 'معطب' || newVessel.status === 'صيانة') {
-                    maintenanceLogs.push({
-                        id: randomId(8),
-                        vesselId: newVessel.id,
-                        vesselName: newVessel.name,
-                        vesselNum: newVessel.num,
-                        type: breakType || 'صيانة دورية',
-                        status: newVessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-                        date: fDate || new Date().toISOString(),
-                        repairUnit: repairUnit || '—',
-                        cost: 0,
-                        notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
-                        createdAt: new Date().toISOString()
-                    });
-                }
-
-                addSystemLog({
-                    userId: req.user.id,
-                    action: 'VESSEL_CREATED',
-                    details: `Vessel ${newVessel.name} created`,
-                    ip: req.ip,
-                    requestId: req.requestId
+                    vesselId: newVessel.id,
+                    vesselName: newVessel.name,
+                    vesselNum: newVessel.num,
+                    type: breakType || 'صيانة دورية',
+                    status: newVessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+                    date: fDate || new Date().toISOString(),
+                    startDate: fDate ? new Date(fDate) : new Date(),
+                    repairUnit: repairUnit || '—',
+                    cost: 0,
+                    notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
+                    createdBy: req.user.id
                 });
-
-                return res.status(201).json({
-                    success: true,
-                    message: 'تم إضافة المركب بنجاح',
-                    vessel: newVessel
-                });
-            } catch (error) {
-                console.error('Add vessel:', error.message);
-                return res.status(500).json({ success: false, error: 'خطأ في إضافة المركب' });
             }
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'create',
+                resource: 'vessel',
+                resourceId: newVessel._id,
+                resourceName: newVessel.name,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: 'تم إضافة المركب بنجاح',
+                vessel: formatVessel(newVessel)
+            });
+        } catch (error) {
+            console.error('Add vessel:', error.message);
+            return res.status(500).json({ success: false, error: 'خطأ في إضافة المركب' });
         }
-    );
+    });
 
-    app.put(
-        '/api/vessels/:id',
-        authenticateAccessToken,
-        requirePermission('vessels:update'),
-        csrfProtection,
-        (req, res) => {
-            try {
-                const vessel = vessels.find(item => item.id === req.params.id);
+    app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:update'), csrfProtection, async (req, res) => {
+        try {
+            const vessel = await Vessel.findOne({ id: req.params.id });
 
-                if (!vessel) {
-                    return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-                }
-
-                const {
-                    name, num, len, region, zone, port, supp, status,
-                    break: breakType, fDate, eDate, ref, repairUnit, cat
-                } = req.body;
-
-                const oldStatus = vessel.status;
-
-                if (typeof name === 'string' && name.trim()) vessel.name = name.trim();
-                if (num !== undefined) vessel.num = num;
-                if (len !== undefined) vessel.len = Number(len) || 0;
-                if (region !== undefined) vessel.region = region;
-                if (zone !== undefined) vessel.zone = zone;
-                if (port !== undefined) vessel.port = port;
-                if (supp !== undefined) vessel.supp = supp;
-                if (status !== undefined) vessel.status = status;
-                if (breakType !== undefined) vessel.break = breakType;
-                if (fDate !== undefined) vessel.fDate = fDate;
-                if (eDate !== undefined) vessel.eDate = eDate;
-                if (ref !== undefined) vessel.ref = ref;
-                if (repairUnit !== undefined) vessel.repairUnit = repairUnit;
-                if (cat !== undefined) vessel.cat = cat;
-
-                vessel.updatedAt = new Date().toISOString();
-
-                if (
-                    vessel.status &&
-                    (vessel.status === 'معطب' || vessel.status === 'صيانة') &&
-                    oldStatus !== vessel.status
-                ) {
-                    maintenanceLogs.push({
-                        id: randomId(8),
-                        vesselId: vessel.id,
-                        vesselName: vessel.name,
-                        vesselNum: vessel.num,
-                        type: breakType || 'صيانة دورية',
-                        status: vessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
-                        date: fDate || new Date().toISOString(),
-                        repairUnit: repairUnit || '—',
-                        cost: 0,
-                        notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
-                        createdAt: new Date().toISOString()
-                    });
-                }
-
-                addSystemLog({
-                    userId: req.user.id,
-                    action: 'VESSEL_UPDATED',
-                    details: `Vessel ${vessel.name} updated`,
-                    ip: req.ip,
-                    requestId: req.requestId
-                });
-
-                return res.json({
-                    success: true,
-                    message: 'تم تحديث المركب بنجاح',
-                    vessel
-                });
-            } catch (error) {
-                return res.status(500).json({ success: false, error: 'خطأ في تحديث المركب' });
-            }
-        }
-    );
-
-    app.delete(
-        '/api/vessels/:id',
-        authenticateAccessToken,
-        requireAdmin,
-        csrfProtection,
-        (req, res) => {
-            const index = vessels.findIndex(item => item.id === req.params.id);
-
-            if (index === -1) {
+            if (!vessel) {
                 return res.status(404).json({ success: false, error: 'المركب غير موجود' });
             }
 
-            const deleted = vessels[index];
-            vessels.splice(index, 1);
+            const {
+                name, num, len, region, zone, port, supp, status,
+                break: breakType, fDate, eDate, ref, repairUnit, cat
+            } = req.body;
 
-            addSystemLog({
+            const oldStatus = vessel.status;
+
+            if (typeof name === 'string' && name.trim()) vessel.name = name.trim();
+            if (num !== undefined) vessel.num = num;
+            if (len !== undefined) vessel.len = Number(len) || 0;
+            if (region !== undefined) vessel.region = region;
+            if (zone !== undefined) vessel.zone = zone;
+            if (port !== undefined) vessel.port = port;
+            if (supp !== undefined) vessel.supp = supp;
+            if (status !== undefined) vessel.status = status;
+            if (breakType !== undefined) vessel.break = breakType;
+            if (fDate !== undefined) vessel.fDate = fDate;
+            if (eDate !== undefined) vessel.eDate = eDate;
+            if (ref !== undefined) vessel.ref = ref;
+            if (repairUnit !== undefined) vessel.repairUnit = repairUnit;
+            if (cat !== undefined) vessel.cat = cat;
+
+            vessel.updatedAt = new Date();
+            await vessel.save();
+
+            // ✅ إنشاء سجل صيانة إذا تغيّرت الحالة
+            if (
+                vessel.status &&
+                (vessel.status === 'معطب' || vessel.status === 'صيانة') &&
+                oldStatus !== vessel.status
+            ) {
+                await Maintenance.create({
+                    id: randomId(8),
+                    vesselId: vessel.id,
+                    vesselName: vessel.name,
+                    vesselNum: vessel.num,
+                    type: breakType || 'صيانة دورية',
+                    status: vessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
+                    date: fDate || new Date().toISOString(),
+                    startDate: fDate ? new Date(fDate) : new Date(),
+                    repairUnit: repairUnit || '—',
+                    cost: 0,
+                    notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
+                    createdBy: req.user.id
+                });
+            }
+
+            await addSystemLog({
                 userId: req.user.id,
-                action: 'VESSEL_DELETED',
-                details: `Vessel ${deleted.name} deleted`,
+                userName: req.user.name,
+                action: 'update',
+                resource: 'vessel',
+                resourceId: vessel._id,
+                resourceName: vessel.name,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            return res.json({
+                success: true,
+                message: 'تم تحديث المركب بنجاح',
+                vessel: formatVessel(vessel)
+            });
+        } catch (error) {
+            console.error('Update vessel:', error);
+            return res.status(500).json({ success: false, error: 'خطأ في تحديث المركب' });
+        }
+    });
+
+    app.delete('/api/vessels/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+        try {
+            const vessel = await Vessel.findOne({ id: req.params.id });
+
+            if (!vessel) {
+                return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+            }
+
+            await Vessel.deleteOne({ _id: vessel._id });
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'delete',
+                resource: 'vessel',
+                resourceId: vessel._id,
+                resourceName: vessel.name,
+                status: 'success',
                 ip: req.ip,
                 requestId: req.requestId
             });
 
             return res.json({ success: true, message: 'تم حذف المركب بنجاح' });
+        } catch (error) {
+            console.error('Delete vessel:', error);
+            return res.status(500).json({ success: false, error: 'خطأ في حذف المركب' });
         }
-    );
+    });
 
     // ========================================================
     // 🔧 MAINTENANCE API
     // ========================================================
 
-    function formatMaintenanceLogs() {
-        return maintenanceLogs.map(log => {
-            const isoDate = log.date || log.createdAt || new Date().toISOString();
-            let displayDate = isoDate;
-
-            try {
-                const d = new Date(isoDate);
-                if (!isNaN(d.getTime())) {
-                    displayDate = d.toLocaleDateString('ar-EG');
-                }
-            } catch (e) {}
-
-            return {
-                id: log.id,
-                vesselName: log.vesselName || log.vessel || '—',
-                vessel: log.vesselName || log.vessel || '—',
-                vesselNum: log.vesselNum || '',
-                type: log.type || 'صيانة دورية',
-                date: displayDate,
-                isoDate: isoDate,
-                createdAt: log.createdAt || isoDate,
-                repairUnit: log.repairUnit || log.unit || '—',
-                unit: log.repairUnit || log.unit || '—',
-                status: log.status || 'قيد الانتظار',
-                cost: Number(log.cost) || 0,
-                notes: log.notes || '',
-                vesselId: log.vesselId || '',
-                updatedAt: log.updatedAt || null
-            };
-        });
-    }
-
-    app.get(
-        '/api/maintenance-logs',
-        authenticateAccessToken,
-        requirePermission('maintenance:read'),
-        (req, res) => {
-            res.json(formatMaintenanceLogs());
+    app.get('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:read'), async (req, res) => {
+        try {
+            const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
+            res.json(logs.map(l => formatMaintenance(l)));
+        } catch (error) {
+            console.error('❌ Get maintenance error:', error);
+            res.status(500).json({ success: false, error: 'فشل تحميل سجلات الصيانة' });
         }
-    );
+    });
 
-    app.get(
-        '/api/maintenance',
-        authenticateAccessToken,
-        requirePermission('maintenance:read'),
-        (req, res) => {
-            const records = formatMaintenanceLogs();
+    app.get('/api/maintenance', authenticateAccessToken, requirePermission('maintenance:read'), async (req, res) => {
+        try {
+            const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
+            const records = logs.map(l => formatMaintenance(l));
 
             res.json({
                 success: true,
                 records,
                 stats: {
                     total: records.length,
-                    completed: records.filter(item => item.status === 'مكتملة').length,
-                    pending: records.filter(item => item.status === 'معلقة').length,
-                    overdue: records.filter(item => item.status === 'متأخرة').length,
-                    inProgress: records.filter(item => item.status === 'قيد التنفيذ').length
+                    completed: records.filter(r => r.status === 'مكتملة').length,
+                    pending: records.filter(r => r.status === 'معلقة' || r.status === 'قيد الانتظار').length,
+                    overdue: records.filter(r => r.status === 'متأخرة').length,
+                    inProgress: records.filter(r => r.status === 'قيد التنفيذ').length
                 }
             });
+        } catch (error) {
+            res.status(500).json({ success: false, error: 'فشل تحميل الصيانة' });
         }
-    );
+    });
 
-    app.post(
-        '/api/maintenance-logs',
-        authenticateAccessToken,
-        requirePermission('maintenance:create'),
-        csrfProtection,
-        (req, res) => {
-            try {
-                const {
-                    vesselId, vesselName, vesselNum, type, status,
-                    date, repairUnit, cost, notes
-                } = req.body;
+    app.post('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, async (req, res) => {
+        try {
+            const {
+                vesselId, vesselName, vesselNum, type, status,
+                date, repairUnit, cost, notes
+            } = req.body;
 
-                if (typeof vesselName !== 'string' || !vesselName.trim()) {
-                    return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
-                }
-
-                const logEntry = {
-                    id: randomId(8),
-                    vesselId: vesselId || '',
-                    vesselName: vesselName.trim(),
-                    vesselNum: vesselNum || '',
-                    type: type || 'صيانة دورية',
-                    status: status || 'قيد التنفيذ',
-                    date: date || new Date().toISOString(),
-                    repairUnit: repairUnit || '—',
-                    cost: Number(cost) || 0,
-                    notes: notes || '',
-                    createdAt: new Date().toISOString()
-                };
-
-                maintenanceLogs.push(logEntry);
-
-                addSystemLog({
-                    userId: req.user.id,
-                    action: 'MAINTENANCE_CREATED',
-                    details: `Maintenance for ${logEntry.vesselName}`,
-                    ip: req.ip,
-                    requestId: req.requestId
-                });
-
-                return res.status(201).json({
-                    success: true,
-                    message: 'تم إضافة سجل الصيانة',
-                    log: logEntry
-                });
-            } catch {
-                return res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
+            if (typeof vesselName !== 'string' || !vesselName.trim()) {
+                return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
             }
-        }
-    );
 
-    app.put(
-        '/api/maintenance-logs/:id',
-        authenticateAccessToken,
-        requirePermission('maintenance:update'),
-        csrfProtection,
-        (req, res) => {
-            const log = maintenanceLogs.find(item => item.id === req.params.id);
+            const logEntry = await Maintenance.create({
+                id: randomId(8),
+                vesselId: vesselId || '',
+                vesselName: vesselName.trim(),
+                vesselNum: vesselNum || '',
+                type: type || 'صيانة دورية',
+                status: status || 'قيد التنفيذ',
+                date: date || new Date().toISOString(),
+                startDate: date ? new Date(date) : new Date(),
+                repairUnit: repairUnit || '—',
+                cost: Number(cost) || 0,
+                notes: notes || '',
+                createdBy: req.user.id
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: 'تم إضافة سجل الصيانة',
+                log: formatMaintenance(logEntry)
+            });
+        } catch (error) {
+            console.error('Create maintenance error:', error);
+            return res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
+        }
+    });
+
+    app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, async (req, res) => {
+        try {
+            const log = await Maintenance.findOne({ id: req.params.id });
 
             if (!log) {
                 return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
@@ -2256,129 +2475,122 @@ function requireAdmin(req, res, next) {
             if (cost !== undefined) log.cost = Number(cost) || 0;
             if (notes !== undefined) log.notes = notes;
 
-            log.updatedAt = new Date().toISOString();
+            log.updatedAt = new Date();
+            await log.save();
 
             return res.json({
                 success: true,
                 message: 'تم تحديث سجل الصيانة',
-                log
+                log: formatMaintenance(log)
             });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'خطأ في تحديث السجل' });
         }
-    );
+    });
 
-    app.delete(
-        '/api/maintenance-logs/:id',
-        authenticateAccessToken,
-        requireAdmin,
-        csrfProtection,
-        (req, res) => {
-            const index = maintenanceLogs.findIndex(item => item.id === req.params.id);
+    app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+        try {
+            const log = await Maintenance.findOne({ id: req.params.id });
 
-            if (index === -1) {
+            if (!log) {
                 return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
             }
 
-            maintenanceLogs.splice(index, 1);
+            await Maintenance.deleteOne({ _id: log._id });
+
             return res.json({ success: true, message: 'تم حذف سجل الصيانة' });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
         }
-    );
+    });
 
     // ========================================================
     // 👥 USERS API
     // ========================================================
 
-    app.get('/api/users', authenticateAccessToken, requireAdmin, (req, res) => {
-        const safeUsers = users.map(user => ({
-            id: user.id,
-            username: user.username,
-            name: user.name || user.username,
-            email: user.email,
-            role: user.role || 'viewer',
-            active: user.active !== false,
-            createdAt: user.createdAt,
-            lastLogin: user.lastLogin || null
-        }));
-
-        res.json(safeUsers);
+    app.get('/api/users', authenticateAccessToken, requireAdmin, async (req, res) => {
+        try {
+            const users = await User.find().sort({ createdAt: -1 }).limit(500);
+            res.json(users.map(u => formatUser(u)));
+        } catch (error) {
+            res.status(500).json({ success: false, error: 'فشل تحميل المستخدمين' });
+        }
     });
 
-    app.post(
-        '/api/users',
-        authenticateAccessToken,
-        requireAdmin,
-        csrfProtection,
-        async (req, res) => {
-            try {
-                const { username, password, email, role, active } = req.body;
+    app.post('/api/users', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+        try {
+            const { username, password, email, role, active } = req.body;
 
-                if (typeof username !== 'string' || !username.trim()) {
-                    return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
-                }
-
-                if (typeof password !== 'string' || !password) {
-                    return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
-                }
-
-                if (!isStrongPassword(password)) {
-                    return res.status(400).json({ success: false, error: 'كلمة المرور يجب أن تكون 12 حرفاً على الأقل' });
-                }
-
-                const cleanUsername = username.trim();
-
-                if (users.some(item => item.username.toLowerCase() === cleanUsername.toLowerCase())) {
-                    return res.status(400).json({ success: false, error: 'اسم المستخدم موجود بالفعل' });
-                }
-
-                const allowedRoles = ['admin', 'super_admin', 'manager', 'operator', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد'];
-                const finalRole = allowedRoles.includes(role) ? role : 'viewer';
-
-                const newUser = {
-                    id: randomId(8),
-                    username: cleanUsername,
-                    password: await bcrypt.hash(password, 12),
-                    email: typeof email === 'string' ? email.trim() : `${cleanUsername}@marine.com`,
-                    name: cleanUsername,
-                    role: finalRole,
-                    active: active !== undefined ? Boolean(active) : true,
-                    tokenVersion: 0,
-                    createdAt: new Date().toISOString(),
-                    lastLogin: null,
-                    loginAttempts: 0,
-                    locked: false,
-                    lockedUntil: null
-                };
-
-                users.push(newUser);
-
-                addSystemLog({
-                    userId: req.user.id,
-                    action: 'USER_CREATED',
-                    details: `User ${newUser.username} created`,
-                    ip: req.ip,
-                    requestId: req.requestId
-                });
-
-                const { password: ignored, ...safeUser } = newUser;
-
-                return res.status(201).json({
-                    success: true,
-                    message: 'تم إضافة المستخدم بنجاح',
-                    user: safeUser
-                });
-            } catch (error) {
-                console.error('Create user:', error.message);
-                return res.status(500).json({ success: false, error: 'خطأ في إضافة المستخدم' });
+            if (typeof username !== 'string' || !username.trim()) {
+                return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
             }
-        }
-    );
 
-    app.put(
-        '/api/users/:id',
-        authenticateAccessToken,
-        requireAdmin,
-        csrfProtection,
-        async (req, res) => {
-            const targetUser = users.find(item => item.id === req.params.id);
+            if (typeof password !== 'string' || !password) {
+                return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
+            }
+
+            if (!isStrongPassword(password)) {
+                return res.status(400).json({ success: false, error: 'كلمة المرور يجب أن تكون 12 حرفاً على الأقل' });
+            }
+
+            const cleanUsername = username.trim();
+
+            const existing = await User.findOne({ username: cleanUsername });
+            if (existing) {
+                return res.status(400).json({ success: false, error: 'اسم المستخدم موجود بالفعل' });
+            }
+
+            const allowedRoles = ['admin', 'super_admin', 'manager', 'operator', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد'];
+            const finalRole = allowedRoles.includes(role) ? role : 'viewer';
+
+            const cleanEmail = typeof email === 'string' && email.trim()
+                ? email.trim().toLowerCase()
+                : `${cleanUsername.toLowerCase()}@marine.com`;
+
+            const emailExists = await User.findOne({ email: cleanEmail });
+            if (emailExists) {
+                return res.status(400).json({ success: false, error: 'البريد الإلكتروني موجود بالفعل' });
+            }
+
+            const hashedPassword = await bcrypt.hash(password, 12);
+
+            const newUser = await User.create({
+                id: randomId(8),
+                username: cleanUsername,
+                password: hashedPassword,
+                email: cleanEmail,
+                name: cleanUsername,
+                role: finalRole,
+                isActive: active !== undefined ? Boolean(active) : true,
+                tokenVersion: 0
+            });
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'create',
+                resource: 'user',
+                resourceId: newUser._id,
+                resourceName: newUser.username,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: 'تم إضافة المستخدم بنجاح',
+                user: formatUser(newUser)
+            });
+        } catch (error) {
+            console.error('Create user:', error.message);
+            return res.status(500).json({ success: false, error: 'خطأ في إضافة المستخدم' });
+        }
+    });
+
+    app.put('/api/users/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+        try {
+            const targetUser = await User.findOne({ id: req.params.id });
 
             if (!targetUser) {
                 return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
@@ -2391,14 +2603,14 @@ function requireAdmin(req, res, next) {
             }
 
             if (targetUser.role === 'admin' && active === false) {
-                const activeAdmins = users.filter(user => user.role === 'admin' && user.active !== false).length;
+                const activeAdmins = await User.countDocuments({ role: 'admin', isActive: true });
                 if (activeAdmins <= 1) {
                     return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
                 }
             }
 
             if (username) targetUser.username = username.trim();
-            if (email) targetUser.email = email.trim();
+            if (email) targetUser.email = email.trim().toLowerCase();
 
             if (role) {
                 const allowedRoles = ['admin', 'super_admin', 'manager', 'operator', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد'];
@@ -2408,7 +2620,7 @@ function requireAdmin(req, res, next) {
                 targetUser.role = role;
             }
 
-            if (active !== undefined) targetUser.active = Boolean(active);
+            if (active !== undefined) targetUser.isActive = Boolean(active);
 
             if (password) {
                 if (!isStrongPassword(password)) {
@@ -2424,33 +2636,23 @@ function requireAdmin(req, res, next) {
                 await revokeAllUserSessions(targetUser.id);
             }
 
-            targetUser.updatedAt = new Date().toISOString();
-
-            addSystemLog({
-                userId: req.user.id,
-                action: 'USER_UPDATED',
-                details: `User ${targetUser.username} updated`,
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            const { password: ignored, ...safeUser } = targetUser;
+            targetUser.updatedAt = new Date();
+            await targetUser.save();
 
             return res.json({
                 success: true,
                 message: 'تم تحديث المستخدم بنجاح',
-                user: safeUser
+                user: formatUser(targetUser)
             });
+        } catch (error) {
+            console.error('Update user:', error);
+            return res.status(500).json({ success: false, error: 'خطأ في تحديث المستخدم' });
         }
-    );
+    });
 
-    app.delete(
-        '/api/users/:id',
-        authenticateAccessToken,
-        requireAdmin,
-        csrfProtection,
-        async (req, res) => {
-            const targetUser = users.find(item => item.id === req.params.id);
+    app.delete('/api/users/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+        try {
+            const targetUser = await User.findOne({ id: req.params.id });
 
             if (!targetUser) {
                 return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
@@ -2461,106 +2663,88 @@ function requireAdmin(req, res, next) {
             }
 
             if (targetUser.role === 'admin') {
-                const adminCount = users.filter(user => user.role === 'admin').length;
+                const adminCount = await User.countDocuments({ role: 'admin' });
                 if (adminCount <= 1) {
                     return res.status(403).json({ success: false, error: 'لا يمكن حذف آخر مسؤول' });
                 }
             }
 
             await revokeAllUserSessions(targetUser.id);
-            targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
 
-            const index = users.findIndex(user => user.id === targetUser.id);
-            users.splice(index, 1);
-
-            addSystemLog({
-                userId: req.user.id,
-                action: 'USER_DELETED',
-                details: `User ${targetUser.username} deleted`,
-                ip: req.ip,
-                requestId: req.requestId
-            });
+            await User.deleteOne({ _id: targetUser._id });
 
             return res.json({ success: true, message: 'تم حذف المستخدم بنجاح' });
+        } catch (error) {
+            console.error('Delete user:', error);
+            return res.status(500).json({ success: false, error: 'خطأ في حذف المستخدم' });
         }
-    );
+    });
 
-    app.put(
-        '/api/users-status/:id',
-        authenticateAccessToken,
-        requireAdmin,
-        csrfProtection,
-        async (req, res) => {
+    app.put('/api/users-status/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+        try {
             const { active } = req.body;
-            const targetUser = users.find(item => item.id === req.params.id);
+            const targetUser = await User.findOne({ id: req.params.id });
 
             if (!targetUser) {
                 return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
             }
 
             if (targetUser.role === 'admin' && active === false) {
-                const adminCount = users.filter(user => user.role === 'admin' && user.active !== false).length;
+                const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
                 if (adminCount <= 1) {
                     return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
                 }
             }
 
-            targetUser.active = Boolean(active);
-            targetUser.updatedAt = new Date().toISOString();
+            targetUser.isActive = Boolean(active);
+            targetUser.updatedAt = new Date();
 
-            if (!targetUser.active) {
+            if (!targetUser.isActive) {
                 targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
                 await revokeAllUserSessions(targetUser.id);
             }
 
+            await targetUser.save();
+
             return res.json({
                 success: true,
-                message: `تم ${targetUser.active ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`,
+                message: `تم ${targetUser.isActive ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`,
                 user: {
                     id: targetUser.id,
                     username: targetUser.username,
-                    active: targetUser.active
+                    active: targetUser.isActive
                 }
             });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'خطأ' });
         }
-    );
-
-    // ========================================================
-    // 📋 LOGS
-    // ========================================================
-
-    app.get('/api/logs', authenticateAccessToken, requireAdmin, (req, res) => {
-        const safeLogs = systemLogs.slice(-100).map(log => ({
-            id: log.id,
-            userId: log.userId,
-            action: log.action,
-            details: log.details,
-            requestId: log.requestId,
-            timestamp: log.timestamp
-        }));
-
-        res.json(safeLogs);
     });
 
-    app.post(
-        '/api/logs',
-        authenticateAccessToken,
-        requireAdmin,
-        csrfProtection,
-        (req, res) => {
-            const { action, details } = req.body;
+    // ========================================================
+    // 📋 LOGS (admin only)
+    // ========================================================
 
-            addSystemLog({
-                userId: req.user.id,
-                action: typeof action === 'string' ? action : 'Unknown',
-                details: typeof details === 'string' ? details : '',
-                ip: req.ip,
-                requestId: req.requestId
-            });
+    app.get('/api/logs', authenticateAccessToken, requireAdmin, async (req, res) => {
+        try {
+            const logs = await Log.find().sort({ createdAt: -1 }).limit(200);
 
-            return res.status(201).json({ success: true, message: 'تم إضافة السجل' });
+            const safeLogs = logs.map(log => ({
+                id: log._id.toString(),
+                userId: log.user?.toString() || null,
+                userName: log.userName || null,
+                action: log.action,
+                resource: log.resource,
+                resourceName: log.resourceName || null,
+                details: log.details,
+                status: log.status,
+                timestamp: log.createdAt
+            }));
+
+            res.json(safeLogs);
+        } catch (error) {
+            res.status(500).json({ success: false, error: 'فشل تحميل السجلات' });
         }
-    );
+    });
 
     // ========================================================
     // 🧠 SESSION STATUS
@@ -2585,46 +2769,41 @@ function requireAdmin(req, res, next) {
         res.json(locations);
     });
 
-    app.post(
-        '/api/locations',
-        authenticateAccessToken,
-        csrfProtection,
-        (req, res) => {
-            if (!hasPermission(req.user, 'vessels:update')) {
-                return res.status(403).json({ success: false, error: 'ليس لديك صلاحية تسجيل الموقع' });
-            }
-
-            const { latitude, longitude, accuracy, vesselId } = req.body;
-            const lat = Number(latitude);
-            const lng = Number(longitude);
-
-            if (
-                !Number.isFinite(lat) || !Number.isFinite(lng) ||
-                lat < -90 || lat > 90 || lng < -180 || lng > 180
-            ) {
-                return res.status(400).json({ success: false, error: 'إحداثيات غير صالحة' });
-            }
-
-            const location = {
-                id: randomId(8),
-                userId: req.user.id,
-                username: req.user.username,
-                vesselId: vesselId || null,
-                latitude: lat,
-                longitude: lng,
-                accuracy: Number(accuracy) || null,
-                timestamp: new Date().toISOString()
-            };
-
-            locations.push(location);
-
-            if (locations.length > 5000) {
-                locations.splice(0, locations.length - 5000);
-            }
-
-            return res.status(201).json({ success: true, location });
+    app.post('/api/locations', authenticateAccessToken, csrfProtection, (req, res) => {
+        if (!hasPermission(req.user, 'vessels:update')) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية تسجيل الموقع' });
         }
-    );
+
+        const { latitude, longitude, accuracy, vesselId } = req.body;
+        const lat = Number(latitude);
+        const lng = Number(longitude);
+
+        if (
+            !Number.isFinite(lat) || !Number.isFinite(lng) ||
+            lat < -90 || lat > 90 || lng < -180 || lng > 180
+        ) {
+            return res.status(400).json({ success: false, error: 'إحداثيات غير صالحة' });
+        }
+
+        const location = {
+            id: randomId(8),
+            userId: req.user.id,
+            username: req.user.username,
+            vesselId: vesselId || null,
+            latitude: lat,
+            longitude: lng,
+            accuracy: Number(accuracy) || null,
+            timestamp: new Date().toISOString()
+        };
+
+        locations.push(location);
+
+        if (locations.length > 5000) {
+            locations.splice(0, locations.length - 5000);
+        }
+
+        return res.status(201).json({ success: true, location });
+    });
 
     // ========================================================
     // 🌐 STATIC FILES
@@ -2720,28 +2899,29 @@ function requireAdmin(req, res, next) {
     });
 
     // ========================================================
-    // 🚀 START
+    // 🚀 START LISTENING
     // ========================================================
 
     if (require.main === module) {
         app.listen(PORT, () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.6');
+            console.log('🚢 MARINE SYSTEM v9.7');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
-            console.log('✨ v9.6: Settings + Monitoring (admin only)');
+            console.log('🍃 MongoDB Atlas Integration');
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
             console.log(`👤 Admin: ${ADMIN_USERNAME}`);
-            console.log(`📊 Vessels: ${vessels.length}`);
-            console.log(`📝 Maintenance: ${maintenanceLogs.length}`);
-            console.log(`👥 Users: ${users.length}`);
+            console.log(`🍃 MongoDB: ${mongoConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
+            console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY'}`);
             console.log('🔒 Access JWT: 15 minutes');
             console.log('🔄 Refresh JWT: 7 days');
             console.log('🛡️ CSRF: ENABLED');
-            console.log('🔐 tokenVersion: ENABLED');
+            console.log('🔐 tokenVersion: ENFORCED');
             console.log('👑 RBAC: ENABLED');
-            console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY FALLBACK'}`);
+            console.log('📊 Monitoring: ADMIN ONLY');
+            console.log('⚙️ Settings: ADMIN ONLY');
+            console.log('👥 Users: ADMIN ONLY');
             console.log('=========================================');
         });
     }
@@ -2757,10 +2937,4 @@ module.exports.authenticateAccessToken = authenticateAccessToken;
 module.exports.requirePermission = requirePermission;
 module.exports.requireAdmin = requireAdmin;
 module.exports.hasPermission = hasPermission;
-module.exports.users = users;
-module.exports.vessels = vessels;
-module.exports.maintenanceLogs = maintenanceLogs;
-module.exports.systemLogs = systemLogs;
-module.exports.revokedAccessTokens = revokedAccessTokens;
-module.exports.isAccessTokenRevoked = isAccessTokenRevoked;
 module.exports.addSystemLog = addSystemLog;
