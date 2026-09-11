@@ -1,20 +1,21 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.10
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.11
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
-// ✨ v9.10:
+// ✨ v9.11:
 //    - ✅ FIXED: Double-hashing bug in ensureAdminExists
 //    - ✅ FIXED: tokenVersion no longer increments on every restart
-//    - ✅ FIXED: Admin password reset now uses updateOne (no pre-save hook)
-//    - ✅ ADDED: Password match verification before reset
-//    - ✅ ADDED: Better logging for admin operations
+//    - ✅ ADDED: RBAC v3 (admin/manager/maintenance_unit/viewer)
+//    - ✅ ADDED: /api/auth/permissions endpoint
+//    - ✅ ADDED: maintenance:delete as separate permission
+//    - ✅ ADDED: requireOneOf middleware
+//    - ✅ ADDED: Page-level access control support
 //    - Auto reset admin (password, lockedUntil, loginAttempts)
 //    - Smart model resolution
 //    - MongoDB Atlas integration
 //    - tokenVersion enforced
 //    - Ordered logout
 //    - Refresh token rotation + replay protection
-//    - admin-only pages
 // ============================================================
 
 'use strict';
@@ -29,7 +30,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.10 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.11 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -586,19 +587,7 @@ async function createIndexes() {
 }
 
 // ============================================================
-// 👤 ENSURE ADMIN EXISTS (v9.10 - Fixed double-hash bug)
-// ============================================================
-//
-// 🐛 v9.9 Bug:
-//    - Used existingAdmin.save() with manual bcrypt.hash
-//    - models/User.js has pre('save') hook that hashes again
-//    - Result: bcrypt(bcrypt(password)) → login always fails
-//
-// ✅ v9.10 Fix:
-//    - Use User.updateOne() which does NOT trigger pre('save') hooks
-//    - Verify password match before resetting
-//    - tokenVersion only increments on actual password change
-//    - Users stay logged in across restarts
+// 👤 ENSURE ADMIN EXISTS (v9.11 - Fixed double-hash)
 // ============================================================
 
 async function ensureAdminExists() {
@@ -623,22 +612,26 @@ async function ensureAdminExists() {
 
             const updateData = {};
 
-            // 🔓 فك القفل تلقائياً
             if (existingAdmin.lockedUntil) {
                 console.log(`🔓 Unlocking admin (lockedUntil was set)`);
                 updateData.lockedUntil = null;
             }
 
-            // 🔄 إعادة تعيين محاولات الدخول
             if (existingAdmin.loginAttempts && existingAdmin.loginAttempts > 0) {
                 console.log(`🔄 Resetting loginAttempts (was ${existingAdmin.loginAttempts})`);
                 updateData.loginAttempts = 0;
             }
 
-            // ✅ إعادة تنشيط الحساب إذا كان معطلاً
             if (existingAdmin.isActive === false) {
                 console.log(`✅ Reactivating admin`);
                 updateData.isActive = true;
+            }
+
+            // ✅ ضمان أن الدور admin (بعد الترقية إلى v9.11)
+            const currentRole = String(existingAdmin.role || '').trim();
+            if (currentRole !== 'admin') {
+                console.log(`⚠️  Fixing admin role: "${currentRole}" → "admin"`);
+                updateData.role = 'admin';
             }
 
             // 🔑 AUTO-RESET كلمة المرور — فقط إذا تغيّرت فعلاً
@@ -652,13 +645,8 @@ async function ensureAdminExists() {
 
                 if (!passwordMatches) {
                     console.log('🔑 AUTO-RESET: Password mismatch detected, updating...');
-
-                    // ✅ تشفير واحد فقط — updateOne لا يُشغّل pre('save')
                     updateData.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
-
-                    // ✅ زيادة tokenVersion لإبطال الجلسات القديمة
                     updateData.tokenVersion = (existingAdmin.tokenVersion || 0) + 1;
-
                     console.log(`   New tokenVersion: ${updateData.tokenVersion}`);
                 } else {
                     console.log('✅ AUTO-RESET: Password already matches, skipping');
@@ -666,18 +654,16 @@ async function ensureAdminExists() {
                 }
             }
 
-            // 📝 تنفيذ التحديث
             if (Object.keys(updateData).length > 0) {
                 updateData.updatedAt = new Date();
 
-                // ✅ updateOne لا يُشغّل pre('save') hooks → لا double-hash
+                // ✅ updateOne لا يُشغّل pre('save') → لا double-hash
                 await User.updateOne(
                     { _id: existingAdmin._id },
                     { $set: updateData }
                 );
 
                 console.log(`✅ Admin user updated (${Object.keys(updateData).length} field(s))`);
-                console.log('   → via updateOne (no double-hash)');
             } else {
                 console.log('ℹ️  Admin user unchanged');
             }
@@ -690,8 +676,7 @@ async function ensureAdminExists() {
         // ============================================================
         console.log(`⚠️  Admin user "${ADMIN_USERNAME}" NOT FOUND - creating...`);
 
-        // ⚠️ هنا نستخدم create() لأن pre('save') سيعمل تلقائياً
-        // → لا نُشفّر يدوياً
+        // ✅ نستخدم create() → pre('save') يُشفّر مرة واحدة فقط
         const admin = await User.create({
             username: ADMIN_USERNAME,
             password: ADMIN_PASSWORD,
@@ -1053,41 +1038,144 @@ function authenticateAccessToken(req, res, next) {
 }
 
 // ============================================================
-// 👑 RBAC
+// 👑 RBAC v3 — نظام صلاحيات احترافي كامل
+// ============================================================
+//
+// 📋 التصميم:
+//    - admin              : كل شيء (مستخدمين + مراقبة + إعدادات + CRUD)
+//    - manager            : مراكب (CRUD) + صيانة (CRUD) + سجلات
+//    - maintenance_unit   : مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل)
+//                           ⚠️ لا يحذف، لا يرى المستخدمين أو المراقبة
+//    - viewer             : قراءة فقط
 // ============================================================
 
 const ROLE_PERMISSIONS = {
-    admin: ['*'], super_admin: ['*'],
-    manager: ['vessels:read', 'vessels:create', 'vessels:update', 'maintenance:read', 'maintenance:create', 'maintenance:update', 'logs:read'],
-    operator: ['vessels:read', 'maintenance:read', 'maintenance:create'],
-    viewer: ['vessels:read', 'maintenance:read'],
-    مسؤول: ['*'], مدير: ['vessels:read', 'vessels:create', 'vessels:update', 'maintenance:read', 'maintenance:create', 'maintenance:update', 'logs:read'],
-    مشغل: ['vessels:read', 'maintenance:read', 'maintenance:create'],
-    مشاهد: ['vessels:read', 'maintenance:read']
+    // 👑 مدير النظام — كل شيء
+    admin: ['*'],
+    
+    // 📋 مدير الأسطول — مراكب + صيانة كاملة + سجلات
+    manager: [
+        'vessels:read', 'vessels:create', 'vessels:update',
+        'maintenance:read', 'maintenance:create', 'maintenance:update', 'maintenance:delete',
+        'logs:read',
+        'dashboard:view'
+    ],
+    
+    // 🔧 وحدة الصيانة — مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل)
+    maintenance_unit: [
+        'vessels:read', 'vessels:create', 'vessels:update',
+        'maintenance:read', 'maintenance:create', 'maintenance:update',
+        'dashboard:view'
+    ],
+    
+    // 👁️ مشاهد/قائد — قراءة فقط
+    viewer: [
+        'vessels:read',
+        'maintenance:read',
+        'dashboard:view'
+    ]
 };
+
+// 🗺️ الصلاحيات الحساسة (admin فقط)
+const SENSITIVE_PERMISSIONS = {
+    'users:manage':    ['admin'],
+    'monitoring:view': ['admin'],
+    'settings:manage': ['admin'],
+    'sensitive:view':  ['admin'],
+    'ready:view':      ['admin']
+};
+
+// 🗺️ تسميات عربية
+const ROLE_LABELS = {
+    admin: 'مسؤول النظام',
+    manager: 'مدير الأسطول',
+    maintenance_unit: 'وحدة الصيانة',
+    viewer: 'مشاهد'
+};
+
+// 🗺️ توافق مع الأدوار القديمة
+const LEGACY_ROLE_MAP = {
+    'مسؤول': 'admin',
+    'مدير': 'manager',
+    'مشغل': 'maintenance_unit',
+    'مشاهد': 'viewer',
+    'operator': 'maintenance_unit',
+    'super_admin': 'admin'
+};
+
+function normalizeRole(role) {
+    if (!role) return 'viewer';
+    const trimmed = String(role).trim();
+    if (ROLE_PERMISSIONS[trimmed]) return trimmed;
+    return LEGACY_ROLE_MAP[trimmed] || 'viewer';
+}
 
 function hasPermission(user, permission) {
     if (!user) return false;
-    const permissions = ROLE_PERMISSIONS[user.role] || [];
-    return permissions.includes('*') || permissions.includes(permission);
+    
+    const role = normalizeRole(user.role);
+    
+    // ✅ الصلاحيات الحساسة (admin فقط)
+    if (SENSITIVE_PERMISSIONS[permission]) {
+        return SENSITIVE_PERMISSIONS[permission].includes(role);
+    }
+    
+    // ✅ الصلاحيات العادية
+    const permissions = ROLE_PERMISSIONS[role] || [];
+    if (permissions.includes('*')) return true;
+    if (permissions.includes(permission)) return true;
+    
+    const [resource] = permission.split(':');
+    if (permissions.includes(`${resource}:*`)) return true;
+    
+    return false;
 }
 
 function requirePermission(permission) {
     return (req, res, next) => {
         if (!req.user || !hasPermission(req.user, permission)) {
-            return res.status(403).json({ success: false, error: 'ليس لديك الصلاحية الكافية' });
+            console.warn(`🚫 Permission denied: user="${req.user?.username}" role="${req.user?.role}" needs="${permission}"`);
+            return res.status(403).json({ 
+                success: false, 
+                error: 'ليس لديك الصلاحية الكافية',
+                code: 'PERMISSION_DENIED',
+                required: permission
+            });
+        }
+        next();
+    };
+}
+
+function requireOneOf(...permissions) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+        const hasAny = permissions.some(p => hasPermission(req.user, p));
+        if (!hasAny) {
+            console.warn(`🚫 Permission denied: user="${req.user.username}" needs one of [${permissions.join(', ')}]`);
+            return res.status(403).json({ 
+                success: false, 
+                error: 'ليس لديك الصلاحية الكافية',
+                code: 'PERMISSION_DENIED',
+                required: permissions
+            });
         }
         next();
     };
 }
 
 function isAdminUser(user) {
-    return user && ['admin', 'super_admin', 'مسؤول', 'مدير'].includes(user.role);
+    return user && normalizeRole(user.role) === 'admin';
 }
 
 function requireAdmin(req, res, next) {
     if (!isAdminUser(req.user)) {
-        return res.status(403).json({ success: false, error: 'هذه العملية متاحة للمسؤول فقط' });
+        return res.status(403).json({ 
+            success: false, 
+            error: 'هذه العملية متاحة للمسؤول فقط',
+            code: 'ADMIN_ONLY'
+        });
     }
     next();
 }
@@ -1098,10 +1186,18 @@ function requireAdmin(req, res, next) {
 
 function formatUser(user) {
     if (!user) return null;
+    const normalizedRole = normalizeRole(user.role);
     return {
-        id: user.id, username: user.username, name: user.name, email: user.email,
-        role: user.role, active: user.isActive, isActive: user.isActive,
-        lastLogin: user.lastLogin, createdAt: user.createdAt
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        role: normalizedRole,
+        roleLabel: ROLE_LABELS[normalizedRole] || normalizedRole,
+        active: user.isActive,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt
     };
 }
 
@@ -1184,7 +1280,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.10', timestamp: new Date().toISOString(),
+            version: '9.11', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory'
         });
@@ -1361,6 +1457,55 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
+    // USER PERMISSIONS — يُرجع صلاحيات المستخدم الحالي
+    // ========================================================
+
+    app.get('/api/auth/permissions', authenticateAccessToken, (req, res) => {
+        const role = normalizeRole(req.user.role);
+        const permissions = ROLE_PERMISSIONS[role] || [];
+        
+        const capabilities = {
+            // 🚢 المراكب
+            canViewVessels:    hasPermission(req.user, 'vessels:read'),
+            canCreateVessels:  hasPermission(req.user, 'vessels:create'),
+            canUpdateVessels:  hasPermission(req.user, 'vessels:update'),
+            canDeleteVessels:  hasPermission(req.user, 'vessels:delete'),
+            
+            // 🔧 الصيانة
+            canViewMaintenance:    hasPermission(req.user, 'maintenance:read'),
+            canCreateMaintenance:  hasPermission(req.user, 'maintenance:create'),
+            canUpdateMaintenance:  hasPermission(req.user, 'maintenance:update'),
+            canDeleteMaintenance:  hasPermission(req.user, 'maintenance:delete'),
+            
+            // 👥 المستخدمين (admin فقط)
+            canManageUsers: hasPermission(req.user, 'users:manage'),
+            
+            // 📊 المراقبة الشاملة (admin فقط)
+            canViewMonitoring: hasPermission(req.user, 'monitoring:view'),
+            
+            // 📋 السجلات
+            canViewLogs: hasPermission(req.user, 'logs:read'),
+            
+            // ⚙️ الإعدادات (admin فقط)
+            canManageSettings: hasPermission(req.user, 'settings:manage'),
+            
+            // 🔒 الصفحات الحساسة (admin فقط)
+            canViewSensitive: hasPermission(req.user, 'sensitive:view'),
+            
+            // 📄 الصفحات الجاهزة (admin فقط)
+            canViewReady: hasPermission(req.user, 'ready:view')
+        };
+        
+        return res.json({
+            success: true,
+            role,
+            roleLabel: ROLE_LABELS[role] || role,
+            permissions,
+            capabilities
+        });
+    });
+
+    // ========================================================
     // LOGOUT
     // ========================================================
 
@@ -1449,7 +1594,8 @@ function formatMaintenance(log) {
             const user = await User.findOne({ email: email.toLowerCase() });
             if (!user) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
 
-            user.password = await bcrypt.hash(newPassword, 12);
+            // ✅ pre('save') سيُشفّرها مرة واحدة
+            user.password = newPassword;
             user.tokenVersion = (user.tokenVersion || 0) + 1;
             await user.save();
 
@@ -1488,7 +1634,7 @@ function formatMaintenance(log) {
         return result;
     }
 
-    app.get('/api/settings', authenticateAccessToken, requireAdmin, (req, res) => {
+    app.get('/api/settings', authenticateAccessToken, requirePermission('settings:manage'), (req, res) => {
         try {
             const saved = userSettings.get(req.user.id) || {};
             const settings = mergeSettings(DEFAULT_SETTINGS, saved);
@@ -1498,7 +1644,7 @@ function formatMaintenance(log) {
         }
     });
 
-    app.put('/api/settings', authenticateAccessToken, requireAdmin, csrfProtection, (req, res) => {
+    app.put('/api/settings', authenticateAccessToken, requirePermission('settings:manage'), csrfProtection, (req, res) => {
         try {
             const userId = req.user.id;
             const current = userSettings.get(userId) || {};
@@ -1525,7 +1671,7 @@ function formatMaintenance(log) {
         }
     });
 
-    app.post('/api/settings/reset', authenticateAccessToken, requireAdmin, csrfProtection, (req, res) => {
+    app.post('/api/settings/reset', authenticateAccessToken, requirePermission('settings:manage'), csrfProtection, (req, res) => {
         try {
             userSettings.delete(req.user.id);
             return res.json({ success: true, message: 'تم استعادة الإعدادات الافتراضية', settings: { ...DEFAULT_SETTINGS } });
@@ -1538,7 +1684,7 @@ function formatMaintenance(log) {
     // MONITORING (admin only)
     // ========================================================
 
-    app.get('/api/monitoring/users', authenticateAccessToken, requireAdmin, async (req, res) => {
+    app.get('/api/monitoring/users', authenticateAccessToken, requirePermission('monitoring:view'), async (req, res) => {
         try {
             const users = await User.find().sort({ createdAt: -1 }).limit(500);
             const total = await User.countDocuments();
@@ -1553,7 +1699,7 @@ function formatMaintenance(log) {
         }
     });
 
-    app.get('/api/monitoring/sessions', authenticateAccessToken, requireAdmin, async (req, res) => {
+    app.get('/api/monitoring/sessions', authenticateAccessToken, requirePermission('monitoring:view'), async (req, res) => {
         try {
             const sessions = [];
             for (const [sessionId, record] of refreshSessions) {
@@ -1687,6 +1833,18 @@ function formatMaintenance(log) {
                 });
             }
 
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'create',
+                resource: 'vessel',
+                resourceId: newVessel.id,
+                resourceName: newVessel.name,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
             return res.status(201).json({ success: true, message: 'تم إضافة المركب بنجاح', vessel: formatVessel(newVessel) });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ في إضافة المركب' });
@@ -1732,17 +1890,44 @@ function formatMaintenance(log) {
                 });
             }
 
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'update',
+                resource: 'vessel',
+                resourceId: vessel.id,
+                resourceName: vessel.name,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
             return res.json({ success: true, message: 'تم تحديث المركب بنجاح', vessel: formatVessel(vessel) });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ في تحديث المركب' });
         }
     });
 
-    app.delete('/api/vessels/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+    // 🚫 حذف المراكب — admin فقط
+    app.delete('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:delete'), csrfProtection, async (req, res) => {
         try {
             const vessel = await Vessel.findOne({ id: req.params.id });
             if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+            
             await Vessel.deleteOne({ _id: vessel._id });
+            
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'delete',
+                resource: 'vessel',
+                resourceId: vessel.id,
+                resourceName: vessel.name,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+            
             return res.json({ success: true, message: 'تم حذف المركب بنجاح' });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ في حذف المركب' });
@@ -1795,6 +1980,18 @@ function formatMaintenance(log) {
                 notes: notes || '', createdBy: req.user.id
             });
 
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'create',
+                resource: 'maintenance',
+                resourceId: logEntry.id,
+                resourceName: logEntry.vesselName,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
             return res.status(201).json({ success: true, message: 'تم إضافة سجل الصيانة', log: formatMaintenance(logEntry) });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
@@ -1819,11 +2016,26 @@ function formatMaintenance(log) {
         }
     });
 
-    app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+    // 🗑️ حذف الصيانة — admin + manager فقط (maintenance_unit ممنوع)
+    app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, async (req, res) => {
         try {
             const log = await Maintenance.findOne({ id: req.params.id });
             if (!log) return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
+            
             await Maintenance.deleteOne({ _id: log._id });
+            
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'delete',
+                resource: 'maintenance',
+                resourceId: log.id,
+                resourceName: log.vesselName,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+            
             return res.json({ success: true, message: 'تم حذف سجل الصيانة' });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
@@ -1831,10 +2043,10 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // USERS
+    // USERS (admin only)
     // ========================================================
 
-    app.get('/api/users', authenticateAccessToken, requireAdmin, async (req, res) => {
+    app.get('/api/users', authenticateAccessToken, requirePermission('users:manage'), async (req, res) => {
         try {
             const users = await User.find().sort({ createdAt: -1 }).limit(500);
             res.json(users.map(u => formatUser(u)));
@@ -1843,7 +2055,7 @@ function formatMaintenance(log) {
         }
     });
 
-    app.post('/api/users', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+    app.post('/api/users', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
             const { username, password, email, role, active } = req.body;
             if (typeof username !== 'string' || !username.trim()) return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
@@ -1854,18 +2066,35 @@ function formatMaintenance(log) {
             const existing = await User.findOne({ username: cleanUsername });
             if (existing) return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
 
-            const allowedRoles = ['admin', 'super_admin', 'manager', 'operator', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد'];
-            const finalRole = allowedRoles.includes(role) ? role : 'viewer';
+            const allowedRoles = [
+                'admin', 'manager', 'maintenance_unit', 'viewer',
+                'مسؤول', 'مدير', 'مشغل', 'مشاهد',
+                'operator', 'super_admin'
+            ];
+            const finalRole = allowedRoles.includes(role) ? normalizeRole(role) : 'viewer';
 
             const cleanEmail = typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : `${cleanUsername.toLowerCase()}@marine.com`;
             const emailExists = await User.findOne({ email: cleanEmail });
             if (emailExists) return res.status(400).json({ success: false, error: 'البريد الإلكتروني موجود' });
 
+            // ✅ pre('save') يُشفّر مرة واحدة
             const newUser = await User.create({
                 id: randomId(8), username: cleanUsername, password: password,
                 email: cleanEmail, name: cleanUsername, role: finalRole,
                 isActive: active !== undefined ? Boolean(active) : true,
                 tokenVersion: 0
+            });
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'create',
+                resource: 'user',
+                resourceId: newUser.id,
+                resourceName: newUser.username,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
             });
 
             return res.status(201).json({ success: true, message: 'تم إضافة المستخدم بنجاح', user: formatUser(newUser) });
@@ -1874,7 +2103,7 @@ function formatMaintenance(log) {
         }
     });
 
-    app.put('/api/users/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+    app.put('/api/users/:id', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
             const targetUser = await User.findOne({ id: req.params.id });
             if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
@@ -1882,7 +2111,7 @@ function formatMaintenance(log) {
             const { username, email, role, active, password } = req.body;
             if (targetUser.username === 'admin' && username && username !== 'admin') return res.status(403).json({ success: false, error: 'لا يمكن تغيير اسم المستخدم الرئيسي' });
 
-            if (targetUser.role === 'admin' && active === false) {
+            if (normalizeRole(targetUser.role) === 'admin' && active === false) {
                 const activeAdmins = await User.countDocuments({ role: 'admin', isActive: true });
                 if (activeAdmins <= 1) return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
             }
@@ -1891,16 +2120,20 @@ function formatMaintenance(log) {
             if (email) targetUser.email = email.trim().toLowerCase();
 
             if (role) {
-                const allowedRoles = ['admin', 'super_admin', 'manager', 'operator', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد'];
+                const allowedRoles = [
+                    'admin', 'manager', 'maintenance_unit', 'viewer',
+                    'مسؤول', 'مدير', 'مشغل', 'مشاهد',
+                    'operator', 'super_admin'
+                ];
                 if (!allowedRoles.includes(role)) return res.status(400).json({ success: false, error: 'صلاحية غير صالحة' });
-                targetUser.role = role;
+                targetUser.role = normalizeRole(role);
             }
 
             if (active !== undefined) targetUser.isActive = Boolean(active);
 
             if (password) {
                 if (!isStrongPassword(password)) return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة' });
-                // ✅ pre('save') will hash it once — do NOT hash here
+                // ✅ pre('save') سيُشفّرها مرة واحدة
                 targetUser.password = password;
                 targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
                 await revokeAllUserSessions(targetUser.id);
@@ -1919,13 +2152,13 @@ function formatMaintenance(log) {
         }
     });
 
-    app.delete('/api/users/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+    app.delete('/api/users/:id', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
             const targetUser = await User.findOne({ id: req.params.id });
             if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
             if (targetUser.username === 'admin') return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
 
-            if (targetUser.role === 'admin') {
+            if (normalizeRole(targetUser.role) === 'admin') {
                 const adminCount = await User.countDocuments({ role: 'admin' });
                 if (adminCount <= 1) return res.status(403).json({ success: false, error: 'لا يمكن حذف آخر مسؤول' });
             }
@@ -1938,13 +2171,13 @@ function formatMaintenance(log) {
         }
     });
 
-    app.put('/api/users-status/:id', authenticateAccessToken, requireAdmin, csrfProtection, async (req, res) => {
+    app.put('/api/users-status/:id', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
             const { active } = req.body;
             const targetUser = await User.findOne({ id: req.params.id });
             if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
 
-            if (targetUser.role === 'admin' && active === false) {
+            if (normalizeRole(targetUser.role) === 'admin' && active === false) {
                 const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
                 if (adminCount <= 1) return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
             }
@@ -1969,10 +2202,10 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // LOGS
+    // LOGS (admin + manager)
     // ========================================================
 
-    app.get('/api/logs', authenticateAccessToken, requireAdmin, async (req, res) => {
+    app.get('/api/logs', authenticateAccessToken, requirePermission('logs:read'), async (req, res) => {
         try {
             const logs = await Log.find().sort({ createdAt: -1 }).limit(200);
             res.json(logs.map(log => ({
@@ -2083,7 +2316,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.10</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.11</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2133,11 +2366,13 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.10');
+            console.log('🚢 MARINE SYSTEM v9.11');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Double-hash fix: APPLIED');
+            console.log('✅ RBAC v3: 4 roles (admin/manager/maintenance_unit/viewer)');
+            console.log('✅ Page-level access control: ENABLED');
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -2148,7 +2383,7 @@ function formatMaintenance(log) {
             console.log('🔄 Refresh JWT: 7 days');
             console.log('🛡️ CSRF: ENABLED');
             console.log('🔐 tokenVersion: ENFORCED');
-            console.log('👑 RBAC: ENABLED');
+            console.log('👑 RBAC: ENABLED (v3)');
             console.log('=========================================');
         });
     }
@@ -2158,6 +2393,8 @@ module.exports = app;
 module.exports.csrfProtection = csrfProtection;
 module.exports.authenticateAccessToken = authenticateAccessToken;
 module.exports.requirePermission = requirePermission;
+module.exports.requireOneOf = requireOneOf;
 module.exports.requireAdmin = requireAdmin;
 module.exports.hasPermission = hasPermission;
+module.exports.normalizeRole = normalizeRole;
 module.exports.addSystemLog = addSystemLog;
