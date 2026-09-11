@@ -1,25 +1,56 @@
 // ============================================================
-// 📦 models/index.js - v2.1
-// ✨ v2.1: Smart loading with verification
+// 🔍 DIAGNOSTIC MODE — models/index.js
+// الهدف: تحديد الملف الذي يُسبب "window is not defined"
 // ============================================================
 
-const Vessel = require('./Vessel');
-const User = require('./User');
-const Ticket = require('./Ticket');
-const Log = require('./Log');
-const Maintenance = require('./Maintenance');
+console.log('');
+console.log('🔍 ============================================');
+console.log('🔍 [DIAGNOSTIC] بدء فحص الموديلات...');
+console.log('🔍 ============================================');
 
-// ✅ التحقق من التحميل الصحيح
-if (!Vessel || !User || !Ticket || !Log || !Maintenance) {
-    throw new Error('❌ Failed to load all models');
+function tryLoad(name, path) {
+    try {
+        console.log(`🔄 [DIAGNOSTIC] محاولة تحميل ${name} من ${path}...`);
+        const mod = require(path);
+        console.log(`✅ [DIAGNOSTIC] ${name} تم تحميله بنجاح (${typeof mod})`);
+        return mod;
+    } catch (err) {
+        console.error('');
+        console.error('❌ ============================================');
+        console.error(`❌ [DIAGNOSTIC] فشل تحميل ${name}:`);
+        console.error(`   مسار: ${path}`);
+        console.error(`   اسم الخطأ: ${err.name}`);
+        console.error(`   رسالة الخطأ: ${err.message}`);
+        console.error(`   Stack Trace:`);
+        console.error(err.stack);
+        console.error('❌ ============================================');
+        console.error('');
+        throw err;
+    }
 }
 
-console.log('✅ models/index.js loaded successfully');
-console.log('   - Vessel:', typeof Vessel);
-console.log('   - User:', typeof User);
-console.log('   - Ticket:', typeof Ticket);
-console.log('   - Log:', typeof Log);
-console.log('   - Maintenance:', typeof Maintenance);
+let Vessel, User, Ticket, Log, Maintenance;
+
+try {
+    Vessel = tryLoad('Vessel', './Vessel');
+    User = tryLoad('User', './User');
+    Ticket = tryLoad('Ticket', './Ticket');
+    Log = tryLoad('Log', './Log');
+    Maintenance = tryLoad('Maintenance', './Maintenance');
+
+    console.log('');
+    console.log('✅ ============================================');
+    console.log('✅ [DIAGNOSTIC] جميع الموديلات تم تحميلها بنجاح');
+    console.log('✅ ============================================');
+    console.log('');
+
+} catch (err) {
+    console.error('');
+    console.error('🔴 [DIAGNOSTIC] توقف التحميل بسبب خطأ في أحد الموديلات');
+    console.error('🔴 راجع السجل أعلاه لمعرفة الملف المُشكِل');
+    console.error('');
+    throw err;
+}
 
 module.exports = {
     Vessel,
