@@ -1,15 +1,15 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.8
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.9
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
-// ✨ v9.8:
-//    - Smart model resolution (multi-path)
+// ✨ v9.9:
+//    - Auto reset admin (password, lockedUntil, loginAttempts)
+//    - Smart model resolution
 //    - MongoDB Atlas integration
 //    - tokenVersion enforced
 //    - Ordered logout
 //    - Refresh token rotation + replay protection
 //    - admin-only pages
-//    - Support tickets
 // ============================================================
 
 'use strict';
@@ -17,14 +17,14 @@
 require('dotenv').config();
 
 // ============================================================
-// 🔍 SMART MODEL RESOLUTION (v9.8)
+// 🔍 SMART MODEL RESOLUTION
 // ============================================================
 
 const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.8 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.9 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -32,42 +32,30 @@ console.log('🔍 Node version:', process.version);
 
 function findModelsPath() {
     const candidates = [
-        // مسارات نسبية
         path.join(__dirname, 'models'),
         path.join(__dirname, '..', 'models'),
-        path.join(__dirname, '..', '..', 'models'),
         path.join(process.cwd(), 'models'),
         path.join(process.cwd(), 'src', 'models'),
-        // مسارات Render المطلقة
         '/opt/render/project/src/models',
         '/opt/render/project/models',
-        '/opt/render/project/repo/models',
-        // fallback
         './models'
     ];
+
+    const REQUIRED_FILES = ['index.js', 'User.js', 'Vessel.js', 'Maintenance.js'];
 
     for (const candidate of candidates) {
         try {
             const resolved = path.resolve(candidate);
-            const exists = fs.existsSync(resolved);
+            if (!fs.existsSync(resolved)) continue;
 
-            console.log(`🔍 Checking: ${resolved} → ${exists ? '✅' : '❌'}`);
+            const files = fs.readdirSync(resolved);
+            const hasAllRequired = REQUIRED_FILES.every(f => files.includes(f));
 
-            if (exists) {
-                const files = fs.readdirSync(resolved);
-                const hasIndex = files.includes('index.js');
-                const hasUser = files.includes('User.js');
-
-                if (hasIndex && hasUser) {
-                    console.log(`✅ Models found at: ${resolved}`);
-                    return resolved;
-                } else {
-                    console.log(`⚠️  Path exists but missing files:`, files.slice(0, 5));
-                }
+            if (hasAllRequired) {
+                console.log(`✅ Models found at: ${resolved}`);
+                return resolved;
             }
-        } catch (e) {
-            // تجاهل الأخطاء
-        }
+        } catch (e) {}
     }
 
     return null;
@@ -75,38 +63,24 @@ function findModelsPath() {
 
 function loadModels() {
     const modelsPath = findModelsPath();
-
     if (!modelsPath) {
         console.error('❌❌❌ FATAL: Cannot find models directory!');
-        console.error('❌ Tried paths:');
-        console.error('   - __dirname/models');
-        console.error('   - __dirname/../models');
-        console.error('   - cwd/models');
-        console.error('   - cwd/src/models');
-        console.error('   - /opt/render/project/src/models');
-        console.error('');
-        console.error('🔍 Files in __dirname:', fs.readdirSync(__dirname));
-        console.error('🔍 Files in cwd:', fs.readdirSync(process.cwd()));
         process.exit(1);
     }
 
     try {
         const models = require(modelsPath);
-
         if (!models.User || !models.Vessel || !models.Maintenance) {
-            throw new Error('Missing required models in models/index.js');
+            throw new Error('Missing required models');
         }
-
         console.log('✅ Models loaded successfully');
         return models;
     } catch (e) {
         console.error('❌ Failed to load models:', e.message);
-        console.error('❌ Stack:', e.stack);
         process.exit(1);
     }
 }
 
-// ✅ تحميل النماذج
 let User, Vessel, Maintenance, Log, Ticket;
 
 try {
@@ -139,15 +113,11 @@ const hpp = require('hpp');
 const compression = require('compression');
 const nodemailer = require('nodemailer');
 
-// ============================================================
-// 🧼 DOMPURIFY
-// ============================================================
-
 let createDOMPurify = null;
 try {
     createDOMPurify = require('isomorphic-dompurify');
 } catch (e) {
-    console.warn('⚠️ isomorphic-dompurify غير مثبت — fallback بسيط');
+    console.warn('⚠️ isomorphic-dompurify غير مثبت');
 }
 
 // ============================================================
@@ -167,25 +137,15 @@ async function initRedis() {
     try {
         const { createClient } = require('redis');
         const ConnectRedis = require('connect-redis');
-
         RedisStore = ConnectRedis.default || ConnectRedis;
 
         redisClient = createClient({
             url: process.env.REDIS_URL,
-            socket: {
-                reconnectStrategy: retries => Math.min(retries * 100, 3000)
-            }
+            socket: { reconnectStrategy: retries => Math.min(retries * 100, 3000) }
         });
 
-        redisClient.on('error', err => {
-            console.warn('⚠️ Redis error:', err.message);
-            redisAvailable = false;
-        });
-
-        redisClient.on('ready', () => {
-            console.log('✅ Redis ready');
-            redisAvailable = true;
-        });
+        redisClient.on('error', err => { redisAvailable = false; });
+        redisClient.on('ready', () => { console.log('✅ Redis ready'); redisAvailable = true; });
 
         await redisClient.connect();
         redisAvailable = true;
@@ -201,7 +161,6 @@ async function initRedis() {
 // ============================================================
 
 const app = express();
-
 const PORT = Number(process.env.PORT) || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -218,17 +177,10 @@ function generateSecret(bytes = 64) {
 
 if (isProduction) {
     const requiredSecrets = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'SESSION_SECRET'];
-    const missing = requiredSecrets.filter(
-        key => !process.env[key] || process.env[key].length < 32
-    );
+    const missing = requiredSecrets.filter(key => !process.env[key] || process.env[key].length < 32);
 
     if (missing.length > 0) {
         console.error('❌ FATAL: Missing secrets:', missing.join(', '));
-        process.exit(1);
-    }
-
-    if (!process.env.MONGODB_URI) {
-        console.error('❌ FATAL: MONGODB_URI is required in production.');
         process.exit(1);
     }
 }
@@ -273,10 +225,7 @@ function generateStrongPassword(length = 20) {
         special[crypto.randomInt(special.length)]
     ];
 
-    while (chars.length < length) {
-        chars.push(all[crypto.randomInt(all.length)]);
-    }
-
+    while (chars.length < length) chars.push(all[crypto.randomInt(all.length)]);
     for (let i = chars.length - 1; i > 0; i--) {
         const j = crypto.randomInt(i + 1);
         [chars[i], chars[j]] = [chars[j], chars[i]];
@@ -289,13 +238,19 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.local';
 
+// ✅ v9.9: خيار إعادة تعيين admin
+const ALLOW_ADMIN_RESET = process.env.ALLOW_ADMIN_RESET !== 'false'; // افتراضياً: true
+console.log('🔑 ALLOW_ADMIN_RESET:', ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED');
+
 let ADMIN_PASSWORD;
+let ADMIN_PASSWORD_GENERATED = false;
 
 if (process.env.ADMIN_PASSWORD) {
     if (!isStrongPassword(process.env.ADMIN_PASSWORD)) {
         console.error('❌ ADMIN_PASSWORD too weak.');
         if (isProduction) process.exit(1);
         ADMIN_PASSWORD = generateStrongPassword();
+        ADMIN_PASSWORD_GENERATED = true;
     } else {
         ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
     }
@@ -305,6 +260,7 @@ if (process.env.ADMIN_PASSWORD) {
         process.exit(1);
     }
     ADMIN_PASSWORD = generateStrongPassword();
+    ADMIN_PASSWORD_GENERATED = true;
     console.log('🔑 DEV ADMIN PASSWORD:', ADMIN_PASSWORD);
 }
 
@@ -318,35 +274,6 @@ if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.l
 }
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
-
-function encrypt(text) {
-    try {
-        if (text === null || text === undefined) return text;
-        const iv = crypto.randomBytes(16);
-        const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
-        let encrypted = cipher.update(String(text), 'utf8', 'hex');
-        encrypted += cipher.final('hex');
-        return `${iv.toString('hex')}:${encrypted}`;
-    } catch (error) {
-        return text;
-    }
-}
-
-function decrypt(payload) {
-    try {
-        if (!payload || typeof payload !== 'string') return payload;
-        const parts = payload.split(':');
-        if (parts.length !== 2) return payload;
-        const iv = Buffer.from(parts[0], 'hex');
-        const encrypted = parts[1];
-        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
-        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-        return decrypted;
-    } catch (error) {
-        return payload;
-    }
-}
 
 // ============================================================
 // 🆔 SECURITY HELPERS
@@ -421,10 +348,7 @@ async function setupEmailService() {
                 host: process.env.EMAIL_HOST,
                 port: Number(process.env.EMAIL_PORT) || 587,
                 secure: process.env.EMAIL_SECURE === 'true',
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                },
+                auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
                 tls: { rejectUnauthorized: false },
                 connectionTimeout: 10000,
                 greetingTimeout: 10000,
@@ -432,12 +356,11 @@ async function setupEmailService() {
             });
 
             await transporter.verify();
-            console.log('✅ Real SMTP email service ready');
-            console.log(`📧 From: ${process.env.EMAIL_USER}`);
+            console.log('✅ SMTP email ready:', process.env.EMAIL_USER);
             return transporter;
         }
 
-        console.warn('⚠️ EMAIL_HOST غير محدد — Ethereal (DEV ONLY)');
+        console.warn('⚠️ EMAIL_HOST غير محدد — Ethereal');
         const testAccount = await nodemailer.createTestAccount();
         const transporter = nodemailer.createTransport({
             host: 'smtp.ethereal.email',
@@ -447,7 +370,7 @@ async function setupEmailService() {
         });
 
         await transporter.verify();
-        console.log('✅ Ethereal email service ready (DEV)');
+        console.log('✅ Ethereal email ready (DEV)');
         return transporter;
     } catch (error) {
         console.error('❌ Email setup error:', error.message);
@@ -460,20 +383,13 @@ async function initEmailService() {
 }
 
 async function sendEmail(to, subject, html) {
-    if (!emailTransporter) {
-        emailTransporter = await initEmailService();
-    }
-    if (!emailTransporter) {
-        console.error('❌ Email transporter not ready');
-        return null;
-    }
+    if (!emailTransporter) emailTransporter = await initEmailService();
+    if (!emailTransporter) return null;
 
     try {
         const from = process.env.EMAIL_FROM || emailTransporter.options?.auth?.user || 'no-reply@marine-system.local';
         const info = await emailTransporter.sendMail({ from, to, subject, html });
         console.log('✅ Email sent:', info.messageId);
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        if (previewUrl) console.log('📧 Ethereal preview:', previewUrl);
         return info;
     } catch (error) {
         console.error('❌ Email error:', error.message);
@@ -481,9 +397,10 @@ async function sendEmail(to, subject, html) {
     }
 }
 
-(async () => {
-    emailTransporter = await initEmailService();
-})();
+// (Email setup في الخلفية - لا يعطل التطبيق)
+setTimeout(() => {
+    initEmailService().then(t => { emailTransporter = t; }).catch(() => {});
+}, 100);
 
 // ============================================================
 // 🛡️ HELMET
@@ -544,13 +461,13 @@ app.use(cors({
 // ============================================================
 
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, max: 300,
+    windowMs: 15 * 60 * 1000, max: 500,
     standardHeaders: true, legacyHeaders: false,
     message: { success: false, error: 'Too many requests.' }
 });
 
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, max: 10,
+    windowMs: 15 * 60 * 1000, max: 20,
     standardHeaders: true, legacyHeaders: false,
     message: { success: false, error: 'Too many authentication attempts.' }
 });
@@ -608,7 +525,6 @@ let mongoConnected = false;
 
 async function connectMongoDB() {
     const uri = process.env.MONGODB_URI;
-
     if (!uri) {
         console.error('❌ MONGODB_URI غير محدد');
         return false;
@@ -620,9 +536,7 @@ async function connectMongoDB() {
             socketTimeoutMS: 45000,
             connectTimeoutMS: 15000,
             maxPoolSize: 10,
-            minPoolSize: 2,
-            retryWrites: true,
-            retryReads: true
+            minPoolSize: 2
         });
 
         mongoConnected = true;
@@ -660,51 +574,115 @@ async function connectMongoDB() {
 async function createIndexes() {
     try {
         await User.collection.createIndex({ username: 1 }, { unique: true });
-        await User.collection.createIndex({ email: 1 }, { unique: true });
-        await User.collection.createIndex({ id: 1 }, { unique: true });
-        await User.collection.createIndex({ role: 1 });
-
-        await Vessel.collection.createIndex({ id: 1 }, { unique: true });
-        await Vessel.collection.createIndex({ name: 1 });
-        await Vessel.collection.createIndex({ status: 1 });
-
-        await Maintenance.collection.createIndex({ id: 1 });
-        await Maintenance.collection.createIndex({ vesselId: 1 });
-        await Maintenance.collection.createIndex({ createdAt: -1 });
-
-        await Log.collection.createIndex({ createdAt: -1 });
-
-        await Ticket.collection.createIndex({ status: 1 });
-
-        console.log('✅ Indexes created');
+        await Vessel.collection.createIndex({ id: 1 }, { unique: true, sparse: true });
+        await Maintenance.collection.createIndex({ id: 1, sparse: true });
+        console.log('✅ Indexes ensured');
     } catch (error) {
-        console.warn('⚠️ Index creation warning:', error.message);
+        console.warn('⚠️ Index warning:', error.message);
     }
 }
 
+// ============================================================
+// 👤 ENSURE ADMIN EXISTS (v9.9 - with auto-reset)
+// ============================================================
+
 async function ensureAdminExists() {
     try {
+        console.log('');
+        console.log('🔍 ================ ADMIN CHECK ================');
+        console.log(`   Username: ${ADMIN_USERNAME}`);
+        console.log(`   Password length: ${ADMIN_PASSWORD.length}`);
+        console.log(`   Password first 3: ${ADMIN_PASSWORD.substring(0, 3)}***`);
+        console.log(`   Password last 3: ***${ADMIN_PASSWORD.substring(ADMIN_PASSWORD.length - 3)}`);
+        console.log(`   Auto reset: ${ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'}`);
+        console.log('================================================');
+        console.log('');
+
         const existingAdmin = await User.findOne({ username: ADMIN_USERNAME });
+
+        // ============================================================
+        // الحالة 1: admin موجود
+        // ============================================================
         if (existingAdmin) {
-            console.log(`✅ Admin user "${ADMIN_USERNAME}" exists`);
+            console.log(`✅ Admin user "${ADMIN_USERNAME}" exists in DB`);
+
+            // ✅ v9.9: فك القفل + إعادة تعيين المحاولات دائماً
+            let needsUpdate = false;
+
+            if (existingAdmin.lockedUntil) {
+                console.log(`🔓 Unlocking admin (lockedUntil was set)`);
+                existingAdmin.lockedUntil = null;
+                needsUpdate = true;
+            }
+
+            if (existingAdmin.loginAttempts && existingAdmin.loginAttempts > 0) {
+                console.log(`🔄 Resetting loginAttempts (was ${existingAdmin.loginAttempts})`);
+                existingAdmin.loginAttempts = 0;
+                needsUpdate = true;
+            }
+
+            if (existingAdmin.isActive === false) {
+                console.log(`✅ Reactivating admin`);
+                existingAdmin.isActive = true;
+                needsUpdate = true;
+            }
+
+            // ✅ v9.9: إعادة تعيين كلمة المرور إذا ALLOW_ADMIN_RESET = true
+            if (ALLOW_ADMIN_RESET) {
+                console.log('🔑 AUTO-RESET: Updating admin password from ADMIN_PASSWORD');
+                const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
+                existingAdmin.password = hashedPassword;
+                existingAdmin.tokenVersion = (existingAdmin.tokenVersion || 0) + 1;
+                needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+                await existingAdmin.save();
+                console.log('✅ Admin user updated');
+            } else {
+                console.log('ℹ️  Admin user unchanged');
+            }
+
             return;
         }
 
+        // ============================================================
+        // الحالة 2: admin غير موجود → إنشاؤه
+        // ============================================================
+        console.log(`⚠️  Admin user "${ADMIN_USERNAME}" NOT FOUND - creating...`);
+
         const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
-        await User.create({
+
+        const admin = await User.create({
             username: ADMIN_USERNAME,
             password: hashedPassword,
             name: ADMIN_NAME,
             email: ADMIN_EMAIL,
             role: 'admin',
             isActive: true,
-            tokenVersion: 0
+            tokenVersion: 0,
+            loginAttempts: 0,
+            lockedUntil: null
         });
-        console.log('✅ Admin user created');
+
+        console.log('✅ Admin user CREATED:', admin.username);
+        console.log(`   Email: ${admin.email}`);
+        console.log(`   Role: ${admin.role}`);
+        console.log('');
+        console.log('🔐 ============================================');
+        console.log(`🔐 LOGIN WITH:`);
+        console.log(`🔐 Username: ${ADMIN_USERNAME}`);
+        console.log(`🔐 Password: (the one from ADMIN_PASSWORD env)`);
+        console.log('🔐 ============================================');
     } catch (error) {
         console.error('❌ Failed to ensure admin:', error.message);
+        console.error(error.stack);
     }
 }
+
+// ============================================================
+// 🚢 ENSURE INITIAL DATA
+// ============================================================
 
 async function ensureInitialData() {
     try {
@@ -714,66 +692,21 @@ async function ensureInitialData() {
             return;
         }
 
-        console.log('📦 Creating initial data...');
+        console.log('📦 Creating initial vessels...');
 
         const initialVessels = [
-            {
-                id: randomId(8),
-                name: 'الوحدة 101',
-                num: '101',
-                len: 11,
-                region: 'الشمال',
-                zone: 'تونس',
-                port: 'الميناء الرئيسي',
-                supp: '—',
-                status: 'صالح',
-                break: '—',
-                cat: 'البروق',
-                createdBy: 'system'
-            },
-            {
-                id: randomId(8),
-                name: 'الوحدة 205',
-                num: '205',
-                len: 15,
-                region: 'الساحل',
-                zone: 'سوسة',
-                port: 'ميناء سوسة',
-                supp: '—',
-                status: 'صيانة',
-                break: 'محرك',
-                fDate: new Date().toISOString(),
-                ref: 'M-2024-001',
-                repairUnit: 'وحدة الصيانة تونس',
-                cat: 'خوافر',
-                createdBy: 'system'
-            },
-            {
-                id: randomId(8),
-                name: 'الوحدة 312',
-                num: '312',
-                len: 8,
-                region: 'الجنوب',
-                zone: 'جرجيس',
-                port: 'ميناء جرجيس',
-                supp: '—',
-                status: 'معطب',
-                break: 'هيكل',
-                fDate: new Date().toISOString(),
-                ref: 'M-2024-002',
-                repairUnit: 'وحدة الصيانة جرجيس',
-                cat: 'صقور',
-                createdBy: 'system'
-            }
+            { id: randomId(8), name: 'الوحدة 101', num: '101', len: 11, region: 'الشمال', zone: 'تونس', port: 'الميناء الرئيسي', supp: '—', status: 'صالح', break: '—', cat: 'البروق', createdBy: 'system' },
+            { id: randomId(8), name: 'الوحدة 205', num: '205', len: 15, region: 'الساحل', zone: 'سوسة', port: 'ميناء سوسة', supp: '—', status: 'صيانة', break: 'محرك', fDate: new Date().toISOString(), ref: 'M-2024-001', repairUnit: 'وحدة الصيانة تونس', cat: 'خوافر', createdBy: 'system' },
+            { id: randomId(8), name: 'الوحدة 312', num: '312', len: 8, region: 'الجنوب', zone: 'جرجيس', port: 'ميناء جرجيس', supp: '—', status: 'معطب', break: 'هيكل', fDate: new Date().toISOString(), ref: 'M-2024-002', repairUnit: 'وحدة الصيانة جرجيس', cat: 'صقور', createdBy: 'system' }
         ];
 
         await Vessel.insertMany(initialVessels);
         console.log(`✅ ${initialVessels.length} vessels created`);
 
         const initialLogs = [
-            { id: randomId(8), vesselName: 'الوحدة 101', vesselNum: '101', type: 'صيانة دورية', status: 'مكتملة', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة تونس', cost: 500, notes: 'تم إجراء الصيانة الدورية', createdBy: 'system' },
-            { id: randomId(8), vesselName: 'الوحدة 205', vesselNum: '205', type: 'إصلاح محرك', status: 'قيد التنفيذ', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة صفاقس', cost: 1200, notes: 'استبدال المحرك التالف', createdBy: 'system' },
-            { id: randomId(8), vesselName: 'الوحدة 312', vesselNum: '312', type: 'إصلاح هيكل', status: 'متأخرة', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة جرجيس', cost: 2000, notes: 'إصلاح ضرر في الهيكل', createdBy: 'system' }
+            { id: randomId(8), vesselName: 'الوحدة 101', vesselNum: '101', type: 'صيانة دورية', status: 'مكتملة', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة تونس', cost: 500, notes: 'صيانة دورية', createdBy: 'system' },
+            { id: randomId(8), vesselName: 'الوحدة 205', vesselNum: '205', type: 'إصلاح محرك', status: 'قيد التنفيذ', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة صفاقس', cost: 1200, notes: 'استبدال المحرك', createdBy: 'system' },
+            { id: randomId(8), vesselName: 'الوحدة 312', vesselNum: '312', type: 'إصلاح هيكل', status: 'متأخرة', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة جرجيس', cost: 2000, notes: 'إصلاح الهيكل', createdBy: 'system' }
         ];
 
         await Maintenance.insertMany(initialLogs);
@@ -855,29 +788,17 @@ function csrfProtection(req, res, next) {
     const sessionToken = req.session?.csrfToken || null;
     const cookieToken = req.cookies?.marine_csrf || null;
 
-    console.log('🔍 CSRF Check:', { path: req.path, method: req.method, hasProvided: !!provided, hasSession: !!sessionToken });
-
-    if (provided && sessionToken && safeEqual(String(provided), String(sessionToken))) {
-        return next();
-    }
-
+    if (provided && sessionToken && safeEqual(String(provided), String(sessionToken))) return next();
     if (provided && cookieToken && safeEqual(String(provided), String(cookieToken))) {
         if (!sessionToken || safeEqual(String(cookieToken), String(sessionToken))) return next();
     }
-
-    if (!isProduction && !sessionToken && looksLikeClientCsrfToken(provided)) {
-        console.warn('⚠️ DEV: accepting client-format CSRF');
-        return next();
-    }
+    if (!isProduction && !sessionToken && looksLikeClientCsrfToken(provided)) return next();
 
     if (req.auth && req.user && req.auth.sid && req.auth.sub === req.user.id) {
         const refreshRecordPromise = getRefreshSession(req.auth.sid);
         return Promise.resolve(refreshRecordPromise)
             .then(record => {
-                if (record && record.userId === req.user.id) {
-                    console.warn('⚠️ CSRF compat: JWT + active session');
-                    return next();
-                }
+                if (record && record.userId === req.user.id) return next();
                 return res.status(403).json({ success: false, error: 'CSRF token غير صالح', code: 'CSRF_INVALID' });
             })
             .catch(() => {
@@ -894,11 +815,7 @@ function csrfProtection(req, res, next) {
 
 function generateAccessToken(user, sessionId) {
     return jwt.sign(
-        {
-            sub: user.id, id: user.id, username: user.username,
-            role: user.role, name: user.name, sid: sessionId,
-            ver: user.tokenVersion || 0, type: 'access'
-        },
+        { sub: user.id, id: user.id, username: user.username, role: user.role, name: user.name, sid: sessionId, ver: user.tokenVersion || 0, type: 'access' },
         JWT_SECRET,
         { expiresIn: ACCESS_TOKEN_EXPIRES, issuer: 'marine-system', audience: 'marine-system-client', jwtid: randomId(16) }
     );
@@ -1005,7 +922,7 @@ setInterval(() => {
 }, 10 * 60 * 1000).unref();
 
 // ============================================================
-// 🔑 PASSWORD RESET TOKENS
+// 🔑 PASSWORD RESET
 // ============================================================
 
 const passwordResetTokens = [];
@@ -1047,9 +964,7 @@ async function addSystemLog({ userId = null, action = 'view', resource = 'system
             userName, userEmail, ipAddress: ip, userAgent: null,
             details: { ...details, requestId }, status, error
         });
-    } catch (e) {
-        console.warn('⚠️ Failed to write log:', e.message);
-    }
+    } catch (e) {}
 }
 
 // ============================================================
@@ -1060,8 +975,7 @@ function extractBearerToken(req) {
     const header = req.headers.authorization;
     if (!header || typeof header !== 'string' || !header.startsWith('Bearer ')) return null;
     const token = header.slice(7).trim();
-    if (!token) return null;
-    return token;
+    return token || null;
 }
 
 function authenticateAccessToken(req, res, next) {
@@ -1161,7 +1075,6 @@ function formatVessel(vessel) {
         break: vessel.break || '', fDate: vessel.fDate || null, eDate: vessel.eDate || null,
         ref: vessel.ref || '', repairUnit: vessel.repairUnit || '', cat: vessel.cat || '',
         type: vessel.type || '', location: vessel.location || '',
-        specifications: vessel.specifications || {},
         createdAt: vessel.createdAt, updatedAt: vessel.updatedAt
     };
 }
@@ -1192,6 +1105,7 @@ function formatMaintenance(log) {
 // ============================================================
 
 (async () => {
+    // ✅ الاتصال بـ MongoDB
     const mongoOk = await connectMongoDB();
 
     if (!mongoOk && isProduction) {
@@ -1199,8 +1113,10 @@ function formatMaintenance(log) {
         process.exit(1);
     }
 
+    // ✅ Session Store
     await buildSessionStore();
 
+    // ✅ Session Middleware
     app.use(session({
         secret: SESSION_SECRET,
         resave: false,
@@ -1215,6 +1131,7 @@ function formatMaintenance(log) {
         proxy: isProduction
     }));
 
+    // ✅ CSRF
     app.use((req, res, next) => {
         ensureCsrfToken(req, res);
         next();
@@ -1232,7 +1149,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.8', timestamp: new Date().toISOString(),
+            version: '9.9', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory'
         });
@@ -1251,29 +1168,37 @@ function formatMaintenance(log) {
                 return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
             }
 
+            console.log(`🔐 Login attempt: "${username}" from ${clientIP}`);
+
             const user = await User.findOne({ username: username.trim() });
 
             if (!user) {
+                console.log(`❌ User not found: "${username}"`);
                 await addSystemLog({ action: 'login', resource: 'user', status: 'error', ip: clientIP, requestId: req.requestId, details: { reason: 'user_not_found', username } });
                 return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
             }
 
+            // ✅ v9.9: فك القفل تلقائياً إذا انتهت المدة
             if (user.lockedUntil && Date.now() < user.lockedUntil.getTime()) {
                 const remainingMinutes = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+                console.log(`🔒 Account locked for ${remainingMinutes} more minutes`);
                 return res.status(403).json({ success: false, error: `الحساب مقفل. حاول بعد ${remainingMinutes} دقيقة` });
             }
 
             if (user.lockedUntil && Date.now() >= user.lockedUntil.getTime()) {
+                console.log(`🔓 Lock expired, unlocking`);
                 user.lockedUntil = null;
                 user.loginAttempts = 0;
                 await user.save();
             }
 
             if (user.isActive === false) {
+                console.log(`❌ Account inactive`);
                 return res.status(403).json({ success: false, error: 'الحساب معطّل. تواصل مع المسؤول' });
             }
 
             const valid = await bcrypt.compare(password, user.password);
+            console.log(`🔐 Password check for "${username}":`, valid ? '✅ VALID' : '❌ INVALID');
 
             if (!valid) {
                 user.loginAttempts = (user.loginAttempts || 0) + 1;
@@ -1281,19 +1206,23 @@ function formatMaintenance(log) {
                 if (user.loginAttempts >= 5) {
                     user.lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
                     await user.save();
-                    await addSystemLog({ userId: user.id, userName: user.name, userEmail: user.email, action: 'login', resource: 'user', status: 'error', ip: clientIP, requestId: req.requestId, details: { reason: 'account_locked' } });
+                    console.log(`🔒 Account locked due to 5 failed attempts`);
+                    await addSystemLog({ userId: user.id, action: 'login', resource: 'user', status: 'error', ip: clientIP, requestId: req.requestId, details: { reason: 'account_locked' } });
                     return res.status(403).json({ success: false, error: 'الحساب مقفل لمدة 30 دقيقة' });
                 }
 
                 await user.save();
-                await addSystemLog({ userId: user.id, userName: user.name, userEmail: user.email, action: 'login', resource: 'user', status: 'error', ip: clientIP, requestId: req.requestId, details: { reason: 'invalid_password' } });
+                console.log(`❌ Failed attempt ${user.loginAttempts}/5`);
                 return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
             }
 
+            // ✅ نجح
             user.loginAttempts = 0;
             user.lockedUntil = null;
             user.lastLogin = new Date();
             await user.save();
+
+            console.log(`✅ Login SUCCESS: ${username} (${user.role})`);
 
             const sessionId = randomId(32);
             const accessToken = generateAccessToken(user, sessionId);
@@ -1328,7 +1257,7 @@ function formatMaintenance(log) {
                 user: formatUser(user)
             });
         } catch (error) {
-            console.error('Login error:', error);
+            console.error('❌ Login error:', error);
             return res.status(500).json({ success: false, error: 'خطأ في الخادم' });
         }
     });
@@ -1341,11 +1270,9 @@ function formatMaintenance(log) {
         try {
             const cookieName = isProduction ? '__Host-marine.refresh' : 'marine.refresh';
             const refreshToken = req.cookies[cookieName];
-
             if (!refreshToken) return res.status(401).json({ success: false, error: 'Refresh token غير موجود' });
 
             const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET, { issuer: 'marine-system', audience: 'marine-system-client' });
-
             if (decoded.type !== 'refresh') return res.status(401).json({ success: false, error: 'Refresh token غير صالح' });
 
             const record = await getRefreshSession(decoded.sid);
@@ -1373,14 +1300,12 @@ function formatMaintenance(log) {
                 req.session.userId = user.id;
                 req.session.sessionId = newSessionId;
             }
-
             await new Promise(resolve => {
                 if (!req.session) return resolve();
                 req.session.save(err => { if (err) console.warn('⚠️ session.save:', err.message); resolve(); });
             });
 
             const newCsrfToken = ensureCsrfToken(req, res);
-
             res.cookie(cookieName, newRefreshToken, { httpOnly: true, secure: isProduction, sameSite: 'strict', maxAge: REFRESH_TOKEN_MAX_AGE, path: '/api/auth' });
 
             return res.json({
@@ -1423,7 +1348,7 @@ function formatMaintenance(log) {
                 await revokeRefreshSession(sessionId);
             }
 
-            await addSystemLog({ userId: req.user?.id || null, userName: req.user?.name || '', userEmail: req.user?.email || '', action: 'logout', resource: 'user', status: 'success', ip: clientIP, requestId: req.requestId });
+            await addSystemLog({ userId: req.user?.id || null, userName: req.user?.name || '', action: 'logout', resource: 'user', status: 'success', ip: clientIP, requestId: req.requestId });
 
             await new Promise(resolve => {
                 if (!req.session) return resolve();
@@ -1439,7 +1364,6 @@ function formatMaintenance(log) {
 
             return res.status(200).json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
         } catch (error) {
-            console.error('❌ Logout error:', error);
             return res.status(500).json({ success: false, error: 'خطأ أثناء تسجيل الخروج' });
         }
     });
@@ -1707,7 +1631,6 @@ function formatMaintenance(log) {
     app.post('/api/vessels', authenticateAccessToken, requirePermission('vessels:create'), csrfProtection, async (req, res) => {
         try {
             const { name, num, len, region, zone, port, supp, status, break: breakType, fDate, eDate, ref, repairUnit, cat } = req.body;
-
             if (typeof name !== 'string' || !name.trim()) return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
 
             const newVessel = await Vessel.create({
@@ -2127,7 +2050,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.9</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2177,9 +2100,10 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.8');
+            console.log('🚢 MARINE SYSTEM v9.9');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
+            console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -2191,17 +2115,10 @@ function formatMaintenance(log) {
             console.log('🛡️ CSRF: ENABLED');
             console.log('🔐 tokenVersion: ENFORCED');
             console.log('👑 RBAC: ENABLED');
-            console.log('📊 Monitoring: ADMIN ONLY');
-            console.log('⚙️ Settings: ADMIN ONLY');
-            console.log('👥 Users: ADMIN ONLY');
             console.log('=========================================');
         });
     }
 })();
-
-// ============================================================
-// EXPORTS
-// ============================================================
 
 module.exports = app;
 module.exports.csrfProtection = csrfProtection;
