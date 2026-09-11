@@ -1,8 +1,13 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.9
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.10
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
-// ✨ v9.9:
+// ✨ v9.10:
+//    - ✅ FIXED: Double-hashing bug in ensureAdminExists
+//    - ✅ FIXED: tokenVersion no longer increments on every restart
+//    - ✅ FIXED: Admin password reset now uses updateOne (no pre-save hook)
+//    - ✅ ADDED: Password match verification before reset
+//    - ✅ ADDED: Better logging for admin operations
 //    - Auto reset admin (password, lockedUntil, loginAttempts)
 //    - Smart model resolution
 //    - MongoDB Atlas integration
@@ -24,7 +29,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.9 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.10 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -238,8 +243,7 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.local';
 
-// ✅ v9.9: خيار إعادة تعيين admin
-const ALLOW_ADMIN_RESET = process.env.ALLOW_ADMIN_RESET !== 'false'; // افتراضياً: true
+const ALLOW_ADMIN_RESET = process.env.ALLOW_ADMIN_RESET !== 'false';
 console.log('🔑 ALLOW_ADMIN_RESET:', ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED');
 
 let ADMIN_PASSWORD;
@@ -397,7 +401,6 @@ async function sendEmail(to, subject, html) {
     }
 }
 
-// (Email setup في الخلفية - لا يعطل التطبيق)
 setTimeout(() => {
     initEmailService().then(t => { emailTransporter = t; }).catch(() => {});
 }, 100);
@@ -583,7 +586,19 @@ async function createIndexes() {
 }
 
 // ============================================================
-// 👤 ENSURE ADMIN EXISTS (v9.9 - with auto-reset)
+// 👤 ENSURE ADMIN EXISTS (v9.10 - Fixed double-hash bug)
+// ============================================================
+//
+// 🐛 v9.9 Bug:
+//    - Used existingAdmin.save() with manual bcrypt.hash
+//    - models/User.js has pre('save') hook that hashes again
+//    - Result: bcrypt(bcrypt(password)) → login always fails
+//
+// ✅ v9.10 Fix:
+//    - Use User.updateOne() which does NOT trigger pre('save') hooks
+//    - Verify password match before resetting
+//    - tokenVersion only increments on actual password change
+//    - Users stay logged in across restarts
 // ============================================================
 
 async function ensureAdminExists() {
@@ -601,44 +616,68 @@ async function ensureAdminExists() {
         const existingAdmin = await User.findOne({ username: ADMIN_USERNAME });
 
         // ============================================================
-        // الحالة 1: admin موجود
+        // الحالة 1: admin موجود → تحديث ذكي
         // ============================================================
         if (existingAdmin) {
             console.log(`✅ Admin user "${ADMIN_USERNAME}" exists in DB`);
 
-            // ✅ v9.9: فك القفل + إعادة تعيين المحاولات دائماً
-            let needsUpdate = false;
+            const updateData = {};
 
+            // 🔓 فك القفل تلقائياً
             if (existingAdmin.lockedUntil) {
                 console.log(`🔓 Unlocking admin (lockedUntil was set)`);
-                existingAdmin.lockedUntil = null;
-                needsUpdate = true;
+                updateData.lockedUntil = null;
             }
 
+            // 🔄 إعادة تعيين محاولات الدخول
             if (existingAdmin.loginAttempts && existingAdmin.loginAttempts > 0) {
                 console.log(`🔄 Resetting loginAttempts (was ${existingAdmin.loginAttempts})`);
-                existingAdmin.loginAttempts = 0;
-                needsUpdate = true;
+                updateData.loginAttempts = 0;
             }
 
+            // ✅ إعادة تنشيط الحساب إذا كان معطلاً
             if (existingAdmin.isActive === false) {
                 console.log(`✅ Reactivating admin`);
-                existingAdmin.isActive = true;
-                needsUpdate = true;
+                updateData.isActive = true;
             }
 
-            // ✅ v9.9: إعادة تعيين كلمة المرور إذا ALLOW_ADMIN_RESET = true
+            // 🔑 AUTO-RESET كلمة المرور — فقط إذا تغيّرت فعلاً
             if (ALLOW_ADMIN_RESET) {
-                console.log('🔑 AUTO-RESET: Updating admin password from ADMIN_PASSWORD');
-                const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
-                existingAdmin.password = hashedPassword;
-                existingAdmin.tokenVersion = (existingAdmin.tokenVersion || 0) + 1;
-                needsUpdate = true;
+                let passwordMatches = false;
+                try {
+                    passwordMatches = await bcrypt.compare(ADMIN_PASSWORD, existingAdmin.password);
+                } catch (e) {
+                    passwordMatches = false;
+                }
+
+                if (!passwordMatches) {
+                    console.log('🔑 AUTO-RESET: Password mismatch detected, updating...');
+
+                    // ✅ تشفير واحد فقط — updateOne لا يُشغّل pre('save')
+                    updateData.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
+
+                    // ✅ زيادة tokenVersion لإبطال الجلسات القديمة
+                    updateData.tokenVersion = (existingAdmin.tokenVersion || 0) + 1;
+
+                    console.log(`   New tokenVersion: ${updateData.tokenVersion}`);
+                } else {
+                    console.log('✅ AUTO-RESET: Password already matches, skipping');
+                    console.log(`   (tokenVersion preserved: ${existingAdmin.tokenVersion || 0})`);
+                }
             }
 
-            if (needsUpdate) {
-                await existingAdmin.save();
-                console.log('✅ Admin user updated');
+            // 📝 تنفيذ التحديث
+            if (Object.keys(updateData).length > 0) {
+                updateData.updatedAt = new Date();
+
+                // ✅ updateOne لا يُشغّل pre('save') hooks → لا double-hash
+                await User.updateOne(
+                    { _id: existingAdmin._id },
+                    { $set: updateData }
+                );
+
+                console.log(`✅ Admin user updated (${Object.keys(updateData).length} field(s))`);
+                console.log('   → via updateOne (no double-hash)');
             } else {
                 console.log('ℹ️  Admin user unchanged');
             }
@@ -651,11 +690,11 @@ async function ensureAdminExists() {
         // ============================================================
         console.log(`⚠️  Admin user "${ADMIN_USERNAME}" NOT FOUND - creating...`);
 
-        const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
-
+        // ⚠️ هنا نستخدم create() لأن pre('save') سيعمل تلقائياً
+        // → لا نُشفّر يدوياً
         const admin = await User.create({
             username: ADMIN_USERNAME,
-            password: hashedPassword,
+            password: ADMIN_PASSWORD,
             name: ADMIN_NAME,
             email: ADMIN_EMAIL,
             role: 'admin',
@@ -1105,7 +1144,6 @@ function formatMaintenance(log) {
 // ============================================================
 
 (async () => {
-    // ✅ الاتصال بـ MongoDB
     const mongoOk = await connectMongoDB();
 
     if (!mongoOk && isProduction) {
@@ -1113,10 +1151,8 @@ function formatMaintenance(log) {
         process.exit(1);
     }
 
-    // ✅ Session Store
     await buildSessionStore();
 
-    // ✅ Session Middleware
     app.use(session({
         secret: SESSION_SECRET,
         resave: false,
@@ -1131,7 +1167,6 @@ function formatMaintenance(log) {
         proxy: isProduction
     }));
 
-    // ✅ CSRF
     app.use((req, res, next) => {
         ensureCsrfToken(req, res);
         next();
@@ -1149,7 +1184,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.9', timestamp: new Date().toISOString(),
+            version: '9.10', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory'
         });
@@ -1178,7 +1213,6 @@ function formatMaintenance(log) {
                 return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
             }
 
-            // ✅ v9.9: فك القفل تلقائياً إذا انتهت المدة
             if (user.lockedUntil && Date.now() < user.lockedUntil.getTime()) {
                 const remainingMinutes = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
                 console.log(`🔒 Account locked for ${remainingMinutes} more minutes`);
@@ -1216,7 +1250,6 @@ function formatMaintenance(log) {
                 return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
             }
 
-            // ✅ نجح
             user.loginAttempts = 0;
             user.lockedUntil = null;
             user.lastLogin = new Date();
@@ -1828,9 +1861,8 @@ function formatMaintenance(log) {
             const emailExists = await User.findOne({ email: cleanEmail });
             if (emailExists) return res.status(400).json({ success: false, error: 'البريد الإلكتروني موجود' });
 
-            const hashedPassword = await bcrypt.hash(password, 12);
             const newUser = await User.create({
-                id: randomId(8), username: cleanUsername, password: hashedPassword,
+                id: randomId(8), username: cleanUsername, password: password,
                 email: cleanEmail, name: cleanUsername, role: finalRole,
                 isActive: active !== undefined ? Boolean(active) : true,
                 tokenVersion: 0
@@ -1868,7 +1900,8 @@ function formatMaintenance(log) {
 
             if (password) {
                 if (!isStrongPassword(password)) return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة' });
-                targetUser.password = await bcrypt.hash(password, 12);
+                // ✅ pre('save') will hash it once — do NOT hash here
+                targetUser.password = password;
                 targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
                 await revokeAllUserSessions(targetUser.id);
             }
@@ -2050,7 +2083,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.9</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.10</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2100,10 +2133,11 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.9');
+            console.log('🚢 MARINE SYSTEM v9.10');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Double-hash fix: APPLIED');
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
