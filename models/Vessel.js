@@ -1,21 +1,23 @@
 /**
- * 🚢 نموذج الوسيلة البحرية
+ * 🚢 نموذج الوسيلة البحرية — v2.0
  * @module models/Vessel
+ * 
+ * ✨ v2.0: توافق كامل مع server.js v9.11
  */
 
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 
-/**
- * مخطط الوسيلة
- */
 const VesselSchema = new mongoose.Schema({
+    // 🆔 المعرفات
     id: {
         type: String,
         default: uuidv4,
         unique: true,
         index: true
     },
+    
+    // 🚢 بيانات أساسية
     name: {
         type: String,
         required: [true, 'اسم الوسيلة مطلوب'],
@@ -23,36 +25,88 @@ const VesselSchema = new mongoose.Schema({
         minlength: [2, 'الاسم يجب أن يكون حرفين على الأقل'],
         maxlength: [100, 'الاسم يجب أن يكون 100 حرف كحد أقصى']
     },
-    type: {
+    num: {
         type: String,
-        required: [true, 'نوع الوسيلة مطلوب'],
-        trim: true,
-        enum: ['زورق دورية', 'سفينة إنزال', 'زورق إنقاذ', 'سفينة دعم', 'زورق استطلاع', 'أخرى']
+        default: '',
+        trim: true
     },
+    len: {
+        type: Number,
+        default: 0
+    },
+    
+    // 🌍 الموقع الجغرافي
+    region: { type: String, default: '' },
+    zone: { type: String, default: '' },
+    port: { type: String, default: '' },
+    
+    // 📋 الحالة التشغيلية
     status: {
         type: String,
-        enum: ['active', 'inactive', 'maintenance', 'reserve'],
-        default: 'active'
+        default: 'صالح',
+        // ✅ يقبل كل القيم العربية المستخدمة في server.js
+        enum: ['صالح', 'معطب', 'صيانة', 'احتياط', 'نشط', 'غير نشط'],
+        trim: true
+    },
+    break: {
+        type: String,
+        default: ''
+    },
+    cat: {
+        type: String,
+        default: ''
+    },
+    supp: {
+        type: String,
+        default: ''
+    },
+    
+    // 📅 تواريخ
+    fDate: {
+        type: String,
+        default: null
+    },
+    eDate: {
+        type: String,
+        default: null
+    },
+    ref: {
+        type: String,
+        default: ''
+    },
+    repairUnit: {
+        type: String,
+        default: ''
+    },
+    
+    // 📦 حقول اختيارية (للتوافق مع النسخة القديمة)
+    type: {
+        type: String,
+        default: '',
+        trim: true
     },
     location: {
         type: String,
-        required: [true, 'الموقع مطلوب'],
+        default: '',
         trim: true
     },
-    specifications: {
-        length: { type: Number, default: null },
-        width: { type: Number, default: null },
-        draft: { type: Number, default: null },
-        speed: { type: Number, default: null },
-        capacity: { type: Number, default: null }
-    },
+    
+    // 🔧 سجل الصيانة
     maintenanceHistory: [{
         date: { type: Date, default: Date.now },
-        type: { type: String, enum: ['routine', 'emergency', 'preventive', 'overhaul'] },
-        description: { type: String, required: true },
+        type: { type: String },
+        description: { type: String },
         cost: { type: Number, default: 0 },
         performedBy: { type: String }
     }],
+    
+    // 👤 من أنشأ
+    createdBy: {
+        type: String,
+        default: 'system'
+    },
+    
+    // ⏰ طوابع زمنية
     createdAt: {
         type: Date,
         default: Date.now
@@ -60,45 +114,28 @@ const VesselSchema = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now
-    },
-    createdBy: {
-        type: String,
-        required: true
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    strict: false  // ⚠️ مهم: يسمح بحقول غير معرّفة (لتفادي الأخطاء)
 });
 
-/**
- * تحديث وقت التعديل
- */
+// ✅ تحديث updatedAt تلقائيًا
 VesselSchema.pre('save', function(next) {
     this.updatedAt = new Date();
     next();
 });
 
-/**
- * الحصول على الوسائل النشطة
- * @returns {Query} - استعلام الوسائل النشطة
- */
+// ✅ Statics
 VesselSchema.statics.findActive = function() {
-    return this.find({ status: 'active' });
+    return this.find({ status: 'صالح' });
 };
 
-/**
- * الحصول على الوسائل حسب النوع
- * @param {string} type - نوع الوسيلة
- * @returns {Query} - استعلام الوسائل حسب النوع
- */
-VesselSchema.statics.findByType = function(type) {
-    return this.find({ type: type });
+VesselSchema.statics.findByStatus = function(status) {
+    return this.find({ status });
 };
 
-/**
- * إضافة سجل صيانة
- * @param {Object} maintenanceData - بيانات الصيانة
- * @returns {Promise<Vessel>} - الوسيلة المحدثة
- */
+// ✅ Methods
 VesselSchema.methods.addMaintenance = async function(maintenanceData) {
     this.maintenanceHistory.push({
         ...maintenanceData,
@@ -108,11 +145,6 @@ VesselSchema.methods.addMaintenance = async function(maintenanceData) {
     return this;
 };
 
-/**
- * تغيير حالة الوسيلة
- * @param {string} newStatus - الحالة الجديدة
- * @returns {Promise<Vessel>} - الوسيلة المحدثة
- */
 VesselSchema.methods.changeStatus = async function(newStatus) {
     this.status = newStatus;
     await this.save();
