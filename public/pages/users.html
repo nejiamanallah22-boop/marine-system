@@ -1,2149 +1,1754 @@
-<!-- public/pages/users.html --><div id="page-users">
+<!-- public/pages/users.html -->
+<div id="page-users">
     <style>
+        /* ============================================================
+           👥 USERS PAGE - v9.5
+           Enterprise Hardened + Fixed normalizeId + Full CRUD
+           ============================================================ */
+
+        #page-users {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        #page-users *,
+        #page-users *::before,
+        #page-users *::after {
+            box-sizing: border-box;
+        }
+
         .users-container {
             padding: 20px;
             max-width: 1400px;
             margin: 0 auto;
-        }    .users-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 25px;
-        background: rgba(255,255,255,.02);
-        padding: 16px 24px;
-        border-radius: 14px;
-        border: 1px solid rgba(255,255,255,.04);
-    }
+        }
 
-    .users-header h2 {
-        color: #fff;
-        margin: 0;
-        font-size: 24px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .users-header h2 .badge {
-        font-size: 11px;
-        padding: 4px 14px;
-        border-radius: 20px;
-        background: rgba(66,133,244,.15);
-        color: #60a5fa;
-        border: 1px solid rgba(66,133,244,.1);
-        font-weight: 400;
-    }
-
-    .header-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .header-actions .btn {
-        padding: 10px 20px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 14px;
-        transition: all .3s;
-        font-family: 'Cairo',sans-serif;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg,#4285f4,#34a853);
-        color: #fff;
-        border: none;
-    }
-
-    .btn-primary:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 30px rgba(66,133,244,.3);
-    }
-
-    .btn-outline {
-        background: rgba(255,255,255,.04);
-        color: rgba(255,255,255,.6);
-        border: 1px solid rgba(255,255,255,.06);
-    }
-
-    .btn-outline:hover {
-        background: rgba(255,255,255,.08);
-        color: #fff;
-    }
-
-    .btn:disabled,
-    .btn-sm:disabled,
-    .btn-save:disabled {
-        opacity: .45;
-        cursor: not-allowed;
-        transform: none !important;
-        box-shadow: none !important;
-    }
-
-    .users-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit,minmax(170px,1fr));
-        gap: 15px;
-        margin-bottom: 25px;
-    }
-
-    .stat-card {
-        background: rgba(255,255,255,.02);
-        padding: 18px 20px;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,.04);
-        text-align: center;
-    }
-
-    .stat-card h4 {
-        margin: 0;
-        font-size: 28px;
-        font-weight: 700;
-    }
-
-    .stat-card p {
-        margin: 5px 0 0;
-        font-size: 13px;
-        color: rgba(255,255,255,.3);
-    }
-
-    .stat-card .stat-icon {
-        font-size: 24px;
-        margin-bottom: 8px;
-    }
-
-    .stat-card.total h4 { color:#60a5fa; }
-    .stat-card.active h4 { color:#4ade80; }
-    .stat-card.inactive h4 { color:#f87171; }
-    .stat-card.admins h4 { color:#f5d76e; }
-
-    .table-container {
-        overflow-x: auto;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,.04);
-        background: rgba(255,255,255,.01);
-    }
-
-    .users-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-        font-family: 'Cairo',sans-serif;
-    }
-
-    .users-table thead th {
-        padding: 12px 14px;
-        text-align: center;
-        color: rgba(255,255,255,.4);
-        border-bottom: 2px solid rgba(255,255,255,.06);
-        background: rgba(255,255,255,.02);
-        font-weight: 600;
-        font-size: 12px;
-    }
-
-    .users-table tbody td {
-        padding: 12px 14px;
-        text-align: center;
-        border-bottom: 1px solid rgba(255,255,255,.04);
-        color: rgba(255,255,255,.7);
-        vertical-align: middle;
-    }
-
-    .users-table tbody tr:hover td {
-        background: rgba(255,255,255,.02);
-    }
-
-    .users-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .status-badge,
-    .role-badge {
-        display: inline-block;
-        border-radius: 20px;
-        font-weight: 600;
-    }
-
-    .status-badge {
-        padding: 4px 14px;
-        font-size: 12px;
-    }
-
-    .status-badge.active {
-        background: rgba(74,222,128,.15);
-        color: #4ade80;
-        border: 1px solid rgba(74,222,128,.1);
-    }
-
-    .status-badge.inactive {
-        background: rgba(248,113,113,.15);
-        color: #f87171;
-        border: 1px solid rgba(248,113,113,.1);
-    }
-
-    .role-badge {
-        padding: 4px 12px;
-        font-size: 11px;
-    }
-
-    .role-badge.admin {
-        background: rgba(245,215,110,.15);
-        color: #f5d76e;
-    }
-
-    .role-badge.manager {
-        background: rgba(96,165,250,.15);
-        color: #60a5fa;
-    }
-
-    .role-badge.operator {
-        background: rgba(74,222,128,.15);
-        color: #4ade80;
-    }
-
-    .role-badge.viewer {
-        background: rgba(255,255,255,.06);
-        color: rgba(255,255,255,.4);
-    }
-
-    .btn-sm {
-        padding: 5px 10px;
-        font-size: 12px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-family: 'Cairo',sans-serif;
-        transition: all .2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .btn-sm:hover {
-        opacity: .8;
-        transform: scale(1.05);
-    }
-
-    .btn-edit {
-        background: rgba(96,165,250,.15);
-        color: #60a5fa;
-        border: 1px solid rgba(96,165,250,.1);
-    }
-
-    .btn-delete {
-        background: rgba(248,113,113,.15);
-        color: #f87171;
-        border: 1px solid rgba(248,113,113,.1);
-    }
-
-    .btn-toggle {
-        background: rgba(251,191,36,.15);
-        color: #fbbf24;
-        border: 1px solid rgba(251,191,36,.1);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: rgba(255,255,255,.2);
-    }
-
-    .empty-state .icon {
-        font-size: 48px;
-        margin-bottom: 10px;
-    }
-
-    .user-form {
-        display: none;
-        background: rgba(255,255,255,.02);
-        border-radius: 14px;
-        padding: 24px;
-        margin: 20px 0;
-        border: 1px solid rgba(255,255,255,.06);
-    }
-
-    .user-form.active {
-        display: block;
-        animation: slideDown .3s ease;
-    }
-
-    @keyframes slideDown {
-        from { opacity:0; transform:translateY(-15px); }
-        to { opacity:1; transform:translateY(0); }
-    }
-
-    .form-header {
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:20px;
-    }
-
-    .form-header h3 {
-        color:#fff;
-        margin:0;
-        font-size:18px;
-    }
-
-    .btn-close {
-        background:none;
-        border:none;
-        color:rgba(255,255,255,.3);
-        font-size:24px;
-        cursor:pointer;
-    }
-
-    .btn-close:hover {
-        color:#f87171;
-    }
-
-    .form-grid {
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-        gap:16px;
-    }
-
-    .form-group {
-        display:flex;
-        flex-direction:column;
-        gap:5px;
-    }
-
-    .form-group label {
-        font-size:13px;
-        color:rgba(255,255,255,.4);
-        font-weight:600;
-    }
-
-    .required {
-        color:#f87171;
-    }
-
-    .form-group input,
-    .form-group select {
-        padding:10px 14px;
-        background:rgba(255,255,255,.04);
-        border:1px solid rgba(255,255,255,.06);
-        border-radius:8px;
-        color:#e2e8f0;
-        font-family:'Cairo',sans-serif;
-        font-size:14px;
-        width:100%;
-        box-sizing:border-box;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus {
-        outline:none;
-        border-color:#4285f4;
-        box-shadow:0 0 0 4px rgba(66,133,244,.06);
-    }
-
-    .form-group input.invalid,
-    .form-group select.invalid {
-        border-color:#f87171;
-    }
-
-    .form-hint {
-        font-size:11px;
-        color:rgba(255,255,255,.25);
-    }
-
-    .form-actions {
-        display:flex;
-        gap:12px;
-        margin-top:20px;
-        flex-wrap:wrap;
-    }
-
-    .btn-save,
-    .btn-cancel {
-        padding:12px 32px;
-        border-radius:10px;
-        cursor:pointer;
-        font-family:'Cairo',sans-serif;
-        font-size:14px;
-    }
-
-    .btn-save {
-        background:linear-gradient(135deg,#4285f4,#34a853);
-        color:#fff;
-        border:none;
-        font-weight:600;
-    }
-
-    .btn-cancel {
-        background:rgba(255,255,255,.04);
-        color:rgba(255,255,255,.4);
-        border:1px solid rgba(255,255,255,.06);
-    }
-
-    .toast-container {
-        position:fixed;
-        bottom:24px;
-        left:50%;
-        transform:translateX(-50%);
-        z-index:99999;
-        display:flex;
-        flex-direction:column;
-        gap:8px;
-        max-width:420px;
-        width:90%;
-        pointer-events:none;
-    }
-
-    .toast {
-        padding:12px 18px;
-        border-radius:12px;
-        color:#fff;
-        font-size:14px;
-        display:flex;
-        align-items:center;
-        gap:10px;
-        box-shadow:0 8px 40px rgba(0,0,0,.3);
-        border:1px solid rgba(255,255,255,.08);
-        animation:slideUp .3s ease-out;
-    }
-
-    .toast.success { background:rgba(16,185,129,.94); }
-    .toast.danger { background:rgba(239,68,68,.94); }
-    .toast.warning { background:rgba(245,158,11,.94); }
-    .toast.info { background:rgba(59,130,246,.94); }
-
-    .toast-close {
-        margin-right:auto;
-        background:none;
-        border:none;
-        color:#fff;
-        cursor:pointer;
-    }
-
-    @keyframes slideUp {
-        from { opacity:0; transform:translateY(15px); }
-        to { opacity:1; transform:translateY(0); }
-    }
-
-    @media(max-width:768px) {
         .users-header {
-            flex-direction:column;
-            align-items:stretch;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: rgba(255,255,255,.02);
+            padding: 16px 24px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.04);
+        }
+
+        .users-header h2 {
+            color: #fff;
+            margin: 0;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .users-header h2 .badge {
+            font-size: 11px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            background: rgba(66,133,244,.15);
+            color: #60a5fa;
+            border: 1px solid rgba(66,133,244,.1);
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-actions .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all .3s;
+            font-family: 'Cairo',sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg,#4285f4,#34a853);
+            color: #fff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 30px rgba(66,133,244,.3);
+        }
+
+        .btn-outline {
+            background: rgba(255,255,255,.04);
+            color: rgba(255,255,255,.6);
+            border: 1px solid rgba(255,255,255,.06);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,.08);
+            color: #fff;
+        }
+
+        .btn:disabled,
+        .btn-sm:disabled,
+        .btn-save:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         .users-stats {
-            grid-template-columns:repeat(2,1fr);
-        }
-
-        .form-grid {
-            grid-template-columns:1fr;
-        }
-    }
-
-    @media(max-width:480px) {
-        .users-stats {
-            gap:10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(170px,1fr));
+            gap: 15px;
+            margin-bottom: 25px;
         }
 
         .stat-card {
-            padding:12px;
+            background: rgba(255,255,255,.02);
+            padding: 18px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.04);
+            text-align: center;
         }
 
         .stat-card h4 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stat-card p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            color: rgba(255,255,255,.3);
+        }
+
+        .stat-card .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card.total h4 { color:#60a5fa; }
+        .stat-card.active h4 { color:#4ade80; }
+        .stat-card.inactive h4 { color:#f87171; }
+        .stat-card.admins h4 { color:#f5d76e; }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.04);
+            background: rgba(255,255,255,.01);
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            font-family: 'Cairo',sans-serif;
+        }
+
+        .users-table thead th {
+            padding: 12px 14px;
+            text-align: center;
+            color: rgba(255,255,255,.4);
+            border-bottom: 2px solid rgba(255,255,255,.06);
+            background: rgba(255,255,255,.02);
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .users-table tbody td {
+            padding: 12px 14px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,.04);
+            color: rgba(255,255,255,.7);
+            vertical-align: middle;
+        }
+
+        .users-table tbody tr:hover td {
+            background: rgba(255,255,255,.02);
+        }
+
+        .users-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge,
+        .role-badge {
+            display: inline-block;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 4px 14px;
+            font-size: 12px;
+        }
+
+        .status-badge.active {
+            background: rgba(74,222,128,.15);
+            color: #4ade80;
+            border: 1px solid rgba(74,222,128,.1);
+        }
+
+        .status-badge.inactive {
+            background: rgba(248,113,113,.15);
+            color: #f87171;
+            border: 1px solid rgba(248,113,113,.1);
+        }
+
+        .role-badge {
+            padding: 4px 12px;
+            font-size: 11px;
+        }
+
+        .role-badge.admin {
+            background: rgba(245,215,110,.15);
+            color: #f5d76e;
+        }
+
+        .role-badge.manager {
+            background: rgba(96,165,250,.15);
+            color: #60a5fa;
+        }
+
+        .role-badge.operator {
+            background: rgba(74,222,128,.15);
+            color: #4ade80;
+        }
+
+        .role-badge.viewer {
+            background: rgba(255,255,255,.06);
+            color: rgba(255,255,255,.4);
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo',sans-serif;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0 2px;
+        }
+
+        .btn-sm:hover:not(:disabled) {
+            opacity: .8;
+            transform: scale(1.05);
+        }
+
+        .btn-edit {
+            background: rgba(96,165,250,.15);
+            color: #60a5fa;
+            border: 1px solid rgba(96,165,250,.1);
+        }
+
+        .btn-delete {
+            background: rgba(248,113,113,.15);
+            color: #f87171;
+            border: 1px solid rgba(248,113,113,.1);
+        }
+
+        .btn-toggle {
+            background: rgba(251,191,36,.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251,191,36,.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,.2);
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255,255,255,.04);
+            border-top-color: #4285f4;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .user-form {
+            display: none;
+            background: rgba(255,255,255,.02);
+            border-radius: 14px;
+            padding: 24px;
+            margin: 20px 0;
+            border: 1px solid rgba(255,255,255,.06);
+        }
+
+        .user-form.active {
+            display: block;
+            animation: slideDown .3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity:0; transform:translateY(-15px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+
+        .form-header {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+        }
+
+        .form-header h3 {
+            color:#fff;
+            margin:0;
             font-size:18px;
         }
 
-        .form-actions button {
+        .btn-close {
+            background:none;
+            border:none;
+            color:rgba(255,255,255,.3);
+            font-size:24px;
+            cursor:pointer;
+        }
+
+        .btn-close:hover {
+            color:#f87171;
+        }
+
+        .form-grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+            gap:16px;
+        }
+
+        .form-group {
+            display:flex;
+            flex-direction:column;
+            gap:5px;
+        }
+
+        .form-group label {
+            font-size:13px;
+            color:rgba(255,255,255,.4);
+            font-weight:600;
+        }
+
+        .required {
+            color:#f87171;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding:10px 14px;
+            background:rgba(255,255,255,.04);
+            border:1px solid rgba(255,255,255,.06);
+            border-radius:8px;
+            color:#e2e8f0;
+            font-family:'Cairo',sans-serif;
+            font-size:14px;
             width:100%;
-            justify-content:center;
+            box-sizing:border-box;
         }
-    }
-</style>
 
-<div class="users-container">
+        .form-group input:focus,
+        .form-group select:focus {
+            outline:none;
+            border-color:#4285f4;
+            box-shadow:0 0 0 4px rgba(66,133,244,.06);
+        }
 
-    <div class="users-header">
-        <h2>
-            👥 إدارة المستخدمين
-            <span class="badge">v4.0 🔐 Enterprise</span>
-        </h2>
+        .form-group input.invalid,
+        .form-group select.invalid {
+            border-color:#f87171;
+        }
 
-        <div class="header-actions">
-            <button type="button" class="btn btn-primary" id="addUserBtn">
-                ➕ إضافة مستخدم
-            </button>
+        .form-hint {
+            font-size:11px;
+            color:rgba(255,255,255,.25);
+        }
 
-            <button type="button" class="btn btn-outline" id="refreshUsersBtn">
-                🔄 تحديث
-            </button>
+        .form-actions {
+            display:flex;
+            gap:12px;
+            margin-top:20px;
+            flex-wrap:wrap;
+        }
 
-            <a href="/" class="btn btn-outline" style="text-decoration:none;">
-                🏠 الرئيسية
-            </a>
+        .btn-save,
+        .btn-cancel {
+            padding:12px 32px;
+            border-radius:10px;
+            cursor:pointer;
+            font-family:'Cairo',sans-serif;
+            font-size:14px;
+        }
+
+        .btn-save {
+            background:linear-gradient(135deg,#4285f4,#34a853);
+            color:#fff;
+            border:none;
+            font-weight:600;
+        }
+
+        .btn-cancel {
+            background:rgba(255,255,255,.04);
+            color:rgba(255,255,255,.4);
+            border:1px solid rgba(255,255,255,.06);
+        }
+
+        .toast-container {
+            position:fixed;
+            bottom:24px;
+            left:50%;
+            transform:translateX(-50%);
+            z-index:99999;
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+            max-width:420px;
+            width:90%;
+            pointer-events:none;
+        }
+
+        .toast {
+            padding:12px 18px;
+            border-radius:12px;
+            color:#fff;
+            font-size:14px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            box-shadow:0 8px 40px rgba(0,0,0,.3);
+            border:1px solid rgba(255,255,255,.08);
+            animation:slideUp .3s ease-out;
+        }
+
+        .toast.success { background:rgba(16,185,129,.94); }
+        .toast.danger { background:rgba(239,68,68,.94); }
+        .toast.warning { background:rgba(245,158,11,.94); }
+        .toast.info { background:rgba(59,130,246,.94); }
+
+        .toast-close {
+            margin-right:auto;
+            background:none;
+            border:none;
+            color:#fff;
+            cursor:pointer;
+        }
+
+        @keyframes slideUp {
+            from { opacity:0; transform:translateY(15px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+
+        @media(max-width:768px) {
+            .users-header {
+                flex-direction:column;
+                align-items:stretch;
+            }
+
+            .users-stats {
+                grid-template-columns:repeat(2,1fr);
+            }
+
+            .form-grid {
+                grid-template-columns:1fr;
+            }
+        }
+
+        @media(max-width:480px) {
+            .users-stats {
+                gap:10px;
+            }
+
+            .stat-card {
+                padding:12px;
+            }
+
+            .stat-card h4 {
+                font-size:18px;
+            }
+
+            .form-actions button {
+                width:100%;
+                justify-content:center;
+            }
+        }
+    </style>
+
+    <div class="users-container">
+
+        <!-- ============================================================
+             HEADER
+             ============================================================ -->
+        <div class="users-header">
+            <h2>
+                👥 إدارة المستخدمين
+                <span class="badge">v9.5 🔐 Enterprise</span>
+            </h2>
+
+            <div class="header-actions">
+                <button type="button" class="btn btn-primary" id="addUserBtn">
+                    ➕ إضافة مستخدم
+                </button>
+
+                <button type="button" class="btn btn-outline" id="refreshUsersBtn">
+                    🔄 تحديث
+                </button>
+
+                <a href="/" class="btn btn-outline" style="text-decoration:none;">
+                    🏠 الرئيسية
+                </a>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             STATS
+             ============================================================ -->
+        <div class="users-stats">
+            <div class="stat-card total">
+                <div class="stat-icon">👥</div>
+                <h4 id="totalUsers">0</h4>
+                <p>إجمالي المستخدمين</p>
+            </div>
+
+            <div class="stat-card active">
+                <div class="stat-icon">✅</div>
+                <h4 id="activeUsers">0</h4>
+                <p>نشط</p>
+            </div>
+
+            <div class="stat-card inactive">
+                <div class="stat-icon">❌</div>
+                <h4 id="inactiveUsers">0</h4>
+                <p>غير نشط</p>
+            </div>
+
+            <div class="stat-card admins">
+                <div class="stat-icon">⭐</div>
+                <h4 id="adminUsers">0</h4>
+                <p>مسؤولين</p>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             TABLE
+             ============================================================ -->
+        <div id="usersTableContainer">
+            <div class="empty-state">
+                <div class="spinner"></div>
+                <p>جاري تحميل البيانات...</p>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             FORM
+             ============================================================ -->
+        <div class="user-form" id="userForm">
+            <div class="form-header">
+                <h3 id="formTitle">➕ إضافة مستخدم جديد</h3>
+                <button type="button" class="btn-close" id="formCloseBtn">✕</button>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>
+                        👤 اسم المستخدم <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="userUsername"
+                        autocomplete="username"
+                        maxlength="64"
+                        placeholder="اسم المستخدم">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        📧 البريد الإلكتروني <span class="required">*</span>
+                    </label>
+                    <input
+                        type="email"
+                        id="userEmail"
+                        autocomplete="email"
+                        maxlength="254"
+                        placeholder="البريد الإلكتروني">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        🔑 كلمة المرور
+                        <span class="required" id="passwordRequired">*</span>
+                    </label>
+                    <input
+                        type="password"
+                        id="userPassword"
+                        autocomplete="new-password"
+                        minlength="12"
+                        maxlength="128"
+                        placeholder="كلمة المرور">
+                    <span class="form-hint">الحد الأدنى: 12 حرفاً</span>
+                </div>
+
+                <div class="form-group">
+                    <label>👔 الدور</label>
+                    <select id="userRole">
+                        <option value="viewer">مشاهد</option>
+                        <option value="operator">مشغل</option>
+                        <option value="manager">مدير</option>
+                        <option value="admin">مسؤول</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📊 الحالة</label>
+                    <select id="userStatus">
+                        <option value="active">نشط</option>
+                        <option value="inactive">غير نشط</option>
+                    </select>
+                </div>
+
+                <input type="hidden" id="userId" value="">
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-save" id="saveUserBtn">
+                    💾 حفظ
+                </button>
+                <button type="button" class="btn-cancel" id="cancelUserBtn">
+                    ❌ إلغاء
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="users-stats">
-        <div class="stat-card total">
-            <div class="stat-icon">👥</div>
-            <h4 id="totalUsers">0</h4>
-            <p>إجمالي المستخدمين</p>
-        </div>
-
-        <div class="stat-card active">
-            <div class="stat-icon">✅</div>
-            <h4 id="activeUsers">0</h4>
-            <p>نشط</p>
-        </div>
-
-        <div class="stat-card inactive">
-            <div class="stat-icon">❌</div>
-            <h4 id="inactiveUsers">0</h4>
-            <p>غير نشط</p>
-        </div>
-
-        <div class="stat-card admins">
-            <div class="stat-icon">⭐</div>
-            <h4 id="adminUsers">0</h4>
-            <p>مسؤولين</p>
-        </div>
-    </div>
-
-    <div id="usersTableContainer">
-        <div class="empty-state">
-            <div class="icon">⏳</div>
-            <p>جاري تحميل البيانات...</p>
-        </div>
-    </div>
-
-    <div class="user-form" id="userForm">
-
-        <div class="form-header">
-            <h3 id="formTitle">➕ إضافة مستخدم جديد</h3>
-
-            <button type="button" class="btn-close" id="formCloseBtn">
-                ✕
-            </button>
-        </div>
-
-        <div class="form-grid">
-
-            <div class="form-group">
-                <label>
-                    👤 اسم المستخدم <span class="required">*</span>
-                </label>
-
-                <input
-                    type="text"
-                    id="userUsername"
-                    autocomplete="username"
-                    maxlength="64"
-                    placeholder="اسم المستخدم">
-            </div>
-
-            <div class="form-group">
-                <label>
-                    📧 البريد الإلكتروني <span class="required">*</span>
-                </label>
-
-                <input
-                    type="email"
-                    id="userEmail"
-                    autocomplete="email"
-                    maxlength="254"
-                    placeholder="البريد الإلكتروني">
-            </div>
-
-            <div class="form-group">
-                <label>
-                    🔑 كلمة المرور
-                    <span class="required" id="passwordRequired">*</span>
-                </label>
-
-                <input
-                    type="password"
-                    id="userPassword"
-                    autocomplete="new-password"
-                    minlength="12"
-                    maxlength="128"
-                    placeholder="كلمة المرور">
-
-                <span class="form-hint">
-                    الحد الأدنى الموصى به: 12 حرفًا
-                </span>
-            </div>
-
-            <div class="form-group">
-                <label>👔 الدور</label>
-
-                <select id="userRole">
-                    <option value="viewer">مشاهد</option>
-                    <option value="operator">مشغل</option>
-                    <option value="manager">مدير</option>
-                    <option value="admin">مسؤول</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>📊 الحالة</label>
-
-                <select id="userStatus">
-                    <option value="active">نشط</option>
-                    <option value="inactive">غير نشط</option>
-                </select>
-            </div>
-
-            <input type="hidden" id="userId" value="">
-
-        </div>
-
-        <div class="form-actions">
-            <button type="button" class="btn-save" id="saveUserBtn">
-                💾 حفظ
-            </button>
-
-            <button type="button" class="btn-cancel" id="cancelUserBtn">
-                ❌ إلغاء
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-(() => {
-    'use strict';
-
-    /*
-     * ============================================================
-     * MARINE SYSTEM
-     * USERS PAGE v4.1
-     * ENTERPRISE HARDENED CLIENT + FIXED v9.1
-     *
-     * ملاحظة أمنية:
-     * الواجهة لا تمنح صلاحيات.
-     * يجب أن يفرض server.js جميع صلاحيات RBAC وعمليات CRUD.
-     * ============================================================
-     */
-
-    const PAGE_ID = 'page-users';
-    const API_BASE = '/api/users';
-
-    const REQUEST_TIMEOUT = 15000;
-    const AUTO_REFRESH_MS = 60000;
-
-    let usersData = [];
-    let isLoading = false;
-    let isSaving = false;
-    let refreshTimer = null;
-    let currentAbortController = null;
-
-    /* ============================================================
-     * ✅ v9.1: CLEANUP STATE
-     * ============================================================ */
-
-    let _isDestroyed = false;
-    const _pageIntervals = [];
-    const _pageTimeouts = [];
-    const _eventListeners = [];
-
-    function _usersCleanup() {
-        if (_isDestroyed) return;
-        _isDestroyed = true;
-
-        // ✅ إلغاء auto-refresh
-        if (refreshTimer !== null) {
-            try { window.clearInterval(refreshTimer); } catch (e) {}
-            refreshTimer = null;
-        }
-
-        // ✅ إلغاء كل الـ intervals
-        _pageIntervals.forEach(id => {
-            try { window.clearInterval(id); } catch (e) {}
-        });
-        _pageIntervals.length = 0;
-
-        // ✅ إلغاء كل الـ timeouts
-        _pageTimeouts.forEach(id => {
-            try { window.clearTimeout(id); } catch (e) {}
-        });
-        _pageTimeouts.length = 0;
-
-        // ✅ إزالة كل الـ event listeners
-        _eventListeners.forEach(item => {
-            try {
-                if (item.el && item.fn) {
-                    item.el.removeEventListener(item.type, item.fn);
-                }
-            } catch (e) {}
-        });
-        _eventListeners.length = 0;
-
-        // ✅ إلغاء أي AbortController نشط
-        if (currentAbortController) {
-            try { currentAbortController.abort(); } catch (e) {}
-            currentAbortController = null;
-        }
-
-        // ✅ إزالة الـ globals
-        try {
-            delete window.usersData;
-            delete window.loadUsersData;
-            delete window.renderUsers;
-            delete window.updateStats;
-            delete window.toggleUserForm;
-            delete window.saveUser;
-            delete window.editUser;
-            delete window.toggleUserStatus;
-            delete window.deleteUser;
-            delete window.showToast;
-            delete window.getToken;
-            delete window.cleanupUsersPage;
-        } catch (e) {}
-
-        console.log('🧹 Users cleanup done');
-    }
-
-    // ✅ تسجيل في _pageCleanup العالمي
-    window._pageCleanup = window._pageCleanup || [];
-    window._pageCleanup.push(_usersCleanup);
-
-    // ✅ تنظيف احتياطي
-    window.addEventListener('beforeunload', _usersCleanup);
-    window.addEventListener('pagehide', _usersCleanup);
-
-    /* ============================================================
-     * DOM
-     * ============================================================ */
-
-    const $ = id => document.getElementById(id);
-
-    function pageExists() {
-        return !!$(PAGE_ID) && !_isDestroyed;
-    }
-
-    /* ============================================================
-     * ✅ v9.1: SAFE EVENT LISTENER HELPER
-     * ============================================================ */
-
-    function addSafeListener(el, type, fn, options) {
-        if (!el) return;
-        el.addEventListener(type, fn, options);
-        _eventListeners.push({ el, type, fn });
-    }
-
-    /* ============================================================
-     * SECURITY HELPERS
-     * ============================================================ */
-
-    function escapeHtml(value) {
-        if (value === null || value === undefined) return '';
-
-        const div = document.createElement('div');
-        div.textContent = String(value);
-
-        return div.innerHTML;
-    }
-
-    function normalizeId(id) {
-        if (id === null || id === undefined) return '';
-
-        const value = String(id).trim();
-
-        if (!/^[a-fA-F0-9]{24}$/.test(value)) {
-            return '';
-        }
-
-        return value;
-    }
-
-    function getToken() {
-        return (
-            localStorage.getItem('authToken') ||
-            localStorage.getItem('marine_token') ||
-            localStorage.getItem('token') ||
-            null
-        );
-    }
-
-    function clearClientTokens() {
-        try {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('marine_token');
-            localStorage.removeItem('token');
-        } catch (error) {
-            console.warn('[USERS] Unable to clear local tokens');
-        }
-    }
-
-    function getCsrfToken() {
-        try {
-            const meta = document.querySelector(
-                'meta[name="csrf-token"]'
-            );
-
-            if (meta && meta.content) {
-                return meta.content;
-            }
-
-            if (
-                window.csrfToken &&
-                typeof window.csrfToken === 'string'
-            ) {
-                return window.csrfToken;
-            }
-
-            const cookie = document.cookie
-                .split('; ')
-                .find(row =>
-                    row.startsWith('csrfToken=')
-                );
-
-            if (cookie) {
-                return decodeURIComponent(
-                    cookie.split('=').slice(1).join('=')
-                );
-            }
-        } catch (error) {
-            console.warn('[USERS] CSRF token unavailable');
-        }
-
-        return null;
-    }
-
-    function isValidEmail(email) {
-        if (!email || email.length > 254) return false;
-
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    function isStrongEnoughPassword(password) {
-        if (!password) return false;
-
-        return (
-            password.length >= 12 &&
-            password.length <= 128
-        );
-    }
-
-    function isValidUsername(username) {
-        if (!username) return false;
-
-        if (username.length < 3 || username.length > 64) {
-            return false;
-        }
-
-        return /^[\p{L}\p{N}_-]+$/u.test(username);
-    }
-
-    /* ============================================================
-     * TOAST - ✅ v9.1 SAFE
-     * ============================================================ */
-
-    function showToast(message, type = 'info') {
-        if (_isDestroyed) return;
-
-        let container = $('toastContainer');
-
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toastContainer';
-            container.className = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-
-        toast.className = `toast ${type}`;
-
-        const icons = {
-            success: '✅',
-            warning: '⚠️',
-            danger: '❌',
-            info: 'ℹ️'
-        };
-
-        const icon = document.createElement('span');
-        icon.textContent = icons[type] || icons.info;
-
-        const text = document.createElement('span');
-        text.textContent = String(message);
-
-        const close = document.createElement('button');
-        close.type = 'button';
-        close.className = 'toast-close';
-        close.textContent = '✕';
-
-        close.addEventListener('click', () => {
-            toast.remove();
-        });
-
-        toast.appendChild(icon);
-        toast.appendChild(text);
-        toast.appendChild(close);
-
-        container.appendChild(toast);
-
-        // ✅ v9.1: تتبع الـ timeout
-        const tid = window.setTimeout(() => {
-            if (toast.isConnected) {
-                toast.remove();
-            }
-        }, 4000);
-        _pageTimeouts.push(tid);
-    }
-
-    /* ============================================================
-     * REQUEST SYSTEM
-     * ============================================================ */
-
-    async function safeJson(response) {
-        const contentType =
-            response.headers.get('content-type') || '';
-
-        if (!contentType.includes('application/json')) {
-            return null;
-        }
-
-        try {
-            return await response.json();
-        } catch {
-            return null;
-        }
-    }
-
-    async function apiRequest(
-        url,
-        options = {},
-        { retryOn401 = false } = {}
-    ) {
-        // ✅ v9.1: إذا تم تدمير الصفحة، لا ترسل
-        if (_isDestroyed) {
-            throw new Error('Page destroyed');
-        }
-
-        if (!navigator.onLine) {
-            throw new Error('لا يوجد اتصال بالإنترنت');
-        }
-
-        const controller = new AbortController();
-
-        const timeout = window.setTimeout(() => {
-            controller.abort();
-        }, REQUEST_TIMEOUT);
-
-        currentAbortController = controller;
-
-        const headers = new Headers(
-            options.headers || {}
-        );
-
-        if (!headers.has('Accept')) {
-            headers.set('Accept', 'application/json');
-        }
-
-        if (
-            options.body &&
-            typeof options.body === 'string' &&
-            !headers.has('Content-Type')
-        ) {
-            headers.set(
-                'Content-Type',
-                'application/json'
-            );
-        }
-
-        const token = getToken();
-
-        if (
-            token &&
-            !headers.has('Authorization')
-        ) {
-            headers.set(
-                'Authorization',
-                `Bearer ${token}`
-            );
-        }
-
-        const method =
-            String(options.method || 'GET').toUpperCase();
-
-        if (
-            ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
-        ) {
-            const csrf = getCsrfToken();
-
-            if (csrf) {
-                headers.set('X-CSRF-Token', csrf);
-            }
-        }
-
-        try {
-            const response = await fetch(url, {
-                ...options,
-                headers,
-                credentials: 'include',
-                signal: controller.signal,
-                cache: 'no-store'
+    <!-- ============================================================
+         JAVASCRIPT - v9.5
+         ============================================================ -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ============================================================
+        // ✅ v9.5: CLEANUP STATE
+        // ============================================================
+
+        var _isDestroyed = false;
+        var _pageIntervals = [];
+        var _pageTimeouts = [];
+        var _eventListeners = [];
+
+        function _usersCleanup() {
+            if (_isDestroyed) return;
+            _isDestroyed = true;
+
+            _pageIntervals.forEach(function(id) {
+                try { clearInterval(id); } catch (e) {}
             });
+            _pageIntervals = [];
 
-            if (
-                response.status === 401 &&
-                !retryOn401
-            ) {
-                clearClientTokens();
+            _pageTimeouts.forEach(function(id) {
+                try { clearTimeout(id); } catch (e) {}
+            });
+            _pageTimeouts = [];
 
-                throw new Error(
-                    'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.'
-                );
-            }
+            _eventListeners.forEach(function(item) {
+                try {
+                    if (item.el && item.fn) {
+                        item.el.removeEventListener(item.type, item.fn);
+                    }
+                } catch (e) {}
+            });
+            _eventListeners = [];
 
-            if (response.status === 403) {
-                throw new Error(
-                    'ليس لديك صلاحية لتنفيذ هذه العملية.'
-                );
-            }
+            try {
+                delete window.usersData;
+                delete window.loadUsersData;
+                delete window.renderUsers;
+                delete window.updateStats;
+                delete window.toggleUserForm;
+                delete window.saveUser;
+                delete window.editUser;
+                delete window.toggleUserStatus;
+                delete window.deleteUser;
+                delete window.cleanupUsersPage;
+            } catch (e) {}
 
-            if (response.status === 404) {
-                throw new Error(
-                    'المستخدم أو المورد غير موجود.'
-                );
-            }
-
-            if (response.status === 409) {
-                const data = await safeJson(response);
-
-                throw new Error(
-                    data?.error ||
-                    data?.message ||
-                    'تعارض في البيانات.'
-                );
-            }
-
-            if (response.status === 429) {
-                throw new Error(
-                    'تم تجاوز عدد الطلبات المسموح بها. حاول بعد قليل.'
-                );
-            }
-
-            return response;
-
-        } catch (error) {
-
-            if (error.name === 'AbortError') {
-                throw new Error(
-                    'انتهت مهلة الاتصال بالخادم.'
-                );
-            }
-
-            throw error;
-
-        } finally {
-            window.clearTimeout(timeout);
-
-            if (
-                currentAbortController === controller
-            ) {
-                currentAbortController = null;
-            }
-        }
-    }
-
-    /* ============================================================
-     * ✅ LOAD USERS - v9.1 SAFE
-     * ============================================================ */
-
-    async function loadUsersData() {
-        if (isLoading || !pageExists()) return;
-
-        isLoading = true;
-
-        const container =
-            $('usersTableContainer');
-
-        if (container) {
-            container.innerHTML =
-                '<div class="empty-state">' +
-                '<div class="icon">⏳</div>' +
-                '<p>جاري تحميل البيانات...</p>' +
-                '</div>';
+            console.log('🧹 Users cleanup done');
         }
 
-        try {
+        window._pageCleanup = window._pageCleanup || [];
+        window._pageCleanup.push(_usersCleanup);
 
-            const response = await apiRequest(
-                API_BASE,
-                {
-                    method: 'GET'
-                }
+        window.addEventListener('beforeunload', _usersCleanup);
+        window.addEventListener('pagehide', _usersCleanup);
+
+        // ============================================================
+        // 📦 CONFIG
+        // ============================================================
+
+        var PAGE_ID = 'page-users';
+        var API_BASE = '/api/users';
+        var REQUEST_TIMEOUT = 15000;
+
+        var usersData = [];
+        var isLoading = false;
+        var isSaving = false;
+        var currentAbortController = null;
+
+        // ============================================================
+        // 🔧 DOM HELPERS
+        // ============================================================
+
+        function $(id) {
+            return document.getElementById(id);
+        }
+
+        function pageExists() {
+            return !!$(PAGE_ID) && !_isDestroyed;
+        }
+
+        function addSafeListener(el, type, fn, options) {
+            if (!el) return;
+            el.addEventListener(type, fn, options);
+            _eventListeners.push({ el: el, type: type, fn: fn });
+        }
+
+        // ============================================================
+        // 🔐 SECURITY HELPERS
+        // ============================================================
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) return '';
+            var div = document.createElement('div');
+            div.textContent = String(value);
+            return div.innerHTML;
+        }
+
+        // ✅ v9.5: يقبل كل صيغ المعرّفات
+        function normalizeId(id) {
+            if (id === null || id === undefined) return '';
+
+            var value = String(id).trim();
+
+            if (!value) return '';
+
+            // ✅ اسمح بـ:
+            // - hex (16 أو 24 حرف)
+            // - UUID
+            // - أرقام
+            // - نص مع _ و -
+            if (!/^[a-zA-Z0-9_\-]{1,64}$/.test(value)) {
+                console.warn('⚠️ normalizeId: invalid format:', value);
+                return '';
+            }
+
+            return value;
+        }
+
+        function getToken() {
+            return (
+                localStorage.getItem('marine_token') ||
+                localStorage.getItem('authToken') ||
+                localStorage.getItem('token') ||
+                null
             );
+        }
 
-            // ✅ v9.1: إذا تم تدمير الصفحة أثناء الانتظار، توقف
+        function getAuthHeaders() {
+            var token = getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': token ? 'Bearer ' + token : ''
+            };
+        }
+
+        function getCsrfToken() {
+            try {
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta && meta.content) return meta.content;
+
+                if (window.csrfToken && typeof window.csrfToken === 'string') {
+                    return window.csrfToken;
+                }
+
+                var cookies = document.cookie.split('; ');
+                for (var i = 0; i < cookies.length; i++) {
+                    var c = cookies[i];
+                    if (c.startsWith('marine_csrf=')) {
+                        return decodeURIComponent(c.substring('marine_csrf='.length));
+                    }
+                }
+            } catch (e) {
+                console.warn('[USERS] CSRF token unavailable');
+            }
+            return null;
+        }
+
+        // ============================================================
+        // ✅ VALIDATION
+        // ============================================================
+
+        function isValidEmail(email) {
+            if (!email || email.length > 254) return false;
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function isStrongEnoughPassword(password) {
+            if (!password) return false;
+            return password.length >= 12 && password.length <= 128;
+        }
+
+        function isValidUsername(username) {
+            if (!username) return false;
+            if (username.length < 3 || username.length > 64) return false;
+            return /^[\p{L}\p{N}_\-]+$/u.test(username);
+        }
+
+        // ============================================================
+        // 🍞 TOAST
+        // ============================================================
+
+        function showToast(message, type) {
+            type = type || 'info';
             if (_isDestroyed) return;
 
-            const data =
-                await safeJson(response);
+            var container = $('toastContainer');
 
-            if (!data) {
-                throw new Error(
-                    'استجابة غير صالحة من الخادم.'
-                );
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
             }
 
-            if (Array.isArray(data)) {
-                usersData = data;
-            } else if (
-                Array.isArray(data.users)
-            ) {
-                usersData = data.users;
-            } else if (
-                Array.isArray(data.data)
-            ) {
-                usersData = data.data;
-            } else {
-                usersData = [];
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+
+            var icons = {
+                success: '✅',
+                warning: '⚠️',
+                danger: '❌',
+                info: 'ℹ️'
+            };
+
+            var icon = document.createElement('span');
+            icon.textContent = icons[type] || icons.info;
+
+            var text = document.createElement('span');
+            text.textContent = String(message || '');
+
+            var close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'toast-close';
+            close.textContent = '✕';
+
+            close.addEventListener('click', function() {
+                toast.remove();
+            });
+
+            toast.appendChild(icon);
+            toast.appendChild(text);
+            toast.appendChild(close);
+
+            container.appendChild(toast);
+
+            var tid = window.setTimeout(function() {
+                if (toast.isConnected) {
+                    toast.remove();
+                }
+            }, 4000);
+            _pageTimeouts.push(tid);
+        }
+
+        // ============================================================
+        // 🌐 API REQUEST
+        // ============================================================
+
+        async function safeJson(response) {
+            var contentType = response.headers.get('content-type') || '';
+
+            if (!contentType.includes('application/json')) {
+                return null;
             }
 
-            usersData = usersData.filter(
-                user =>
-                    user &&
-                    typeof user === 'object'
-            );
+            try {
+                return await response.json();
+            } catch (e) {
+                return null;
+            }
+        }
 
-            window.usersData = usersData;
+        async function apiRequest(url, options) {
+            options = options || {};
 
-            renderUsers(usersData);
-            updateStats(usersData);
+            if (_isDestroyed) {
+                throw new Error('Page destroyed');
+            }
 
-        } catch (error) {
+            if (!navigator.onLine) {
+                throw new Error('لا يوجد اتصال بالإنترنت');
+            }
 
-            if (_isDestroyed) return;  // ✅ v9.1
+            var controller = new AbortController();
 
-            console.error(
-                '❌ [USERS] Load error:',
-                error
-            );
+            var timeout = window.setTimeout(function() {
+                controller.abort();
+            }, REQUEST_TIMEOUT);
+
+            currentAbortController = controller;
+
+            var headers = new Headers(options.headers || {});
+
+            if (!headers.has('Accept')) {
+                headers.set('Accept', 'application/json');
+            }
+
+            if (
+                options.body &&
+                typeof options.body === 'string' &&
+                !headers.has('Content-Type')
+            ) {
+                headers.set('Content-Type', 'application/json');
+            }
+
+            var token = getToken();
+            if (token && !headers.has('Authorization')) {
+                headers.set('Authorization', 'Bearer ' + token);
+            }
+
+            var method = String(options.method || 'GET').toUpperCase();
+
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+                var csrf = getCsrfToken();
+                if (csrf) {
+                    headers.set('X-CSRF-Token', csrf);
+                }
+            }
+
+            try {
+                var response = await fetch(url, {
+                    method: options.method || 'GET',
+                    headers: headers,
+                    body: options.body,
+                    credentials: 'include',
+                    signal: controller.signal,
+                    cache: 'no-store'
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('marine_token');
+                    throw new Error('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.');
+                }
+
+                if (response.status === 403) {
+                    throw new Error('ليس لديك صلاحية لتنفيذ هذه العملية.');
+                }
+
+                if (response.status === 404) {
+                    throw new Error('المستخدم أو المورد غير موجود.');
+                }
+
+                if (response.status === 409) {
+                    var errData = await safeJson(response);
+                    throw new Error(
+                        (errData && (errData.error || errData.message)) ||
+                        'تعارض في البيانات.'
+                    );
+                }
+
+                if (response.status === 429) {
+                    throw new Error('تم تجاوز عدد الطلبات المسموح بها. حاول بعد قليل.');
+                }
+
+                return response;
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    throw new Error('انتهت مهلة الاتصال بالخادم.');
+                }
+                throw error;
+
+            } finally {
+                window.clearTimeout(timeout);
+
+                if (currentAbortController === controller) {
+                    currentAbortController = null;
+                }
+            }
+        }
+
+        // ============================================================
+        // 📊 LOAD USERS
+        // ============================================================
+
+        async function loadUsersData() {
+            if (isLoading || !pageExists()) return;
+
+            isLoading = true;
+
+            var container = $('usersTableContainer');
 
             if (container) {
-
-                const message =
-                    error.message ||
-                    'حدث خطأ في تحميل البيانات';
-
                 container.innerHTML =
                     '<div class="empty-state">' +
-                    '<div class="icon">❌</div>' +
-                    '<p>' +
-                    escapeHtml(message) +
-                    '</p>' +
+                    '<div class="spinner"></div>' +
+                    '<p>جاري تحميل البيانات...</p>' +
                     '</div>';
             }
 
-            if (
-                error.message &&
-                (
-                    error.message.includes(
-                        'انتهت صلاحية'
-                    ) ||
-                    error.message.includes(
-                        'صلاحية'
-                    )
-                )
-            ) {
-                showToast(
-                    error.message,
-                    'warning'
-                );
+            try {
+                var response = await apiRequest(API_BASE, { method: 'GET' });
+
+                if (_isDestroyed) return;
+
+                var data = await safeJson(response);
+
+                console.log('📦 Users response:', data);
+
+                // ✅ استخراج المصفوفة من أي شكل
+                if (Array.isArray(data)) {
+                    usersData = data;
+                } else if (data && Array.isArray(data.users)) {
+                    usersData = data.users;
+                } else if (data && Array.isArray(data.data)) {
+                    usersData = data.data;
+                } else {
+                    console.warn('⚠️ Unexpected users response shape:', data);
+                    usersData = [];
+                }
+
+                // ✅ تصفية العناصر الصالحة
+                usersData = usersData.filter(function(user) {
+                    return user && typeof user === 'object';
+                });
+
+                window.usersData = usersData;
+
+                console.log('✅ Loaded', usersData.length, 'users');
+
+                renderUsers(usersData);
+                updateStats(usersData);
+
+            } catch (error) {
+                if (_isDestroyed) return;
+
+                console.error('❌ [USERS] Load error:', error);
+
+                if (container) {
+                    var message = error.message || 'حدث خطأ في تحميل البيانات';
+                    container.innerHTML =
+                        '<div class="empty-state">' +
+                        '<div class="icon">❌</div>' +
+                        '<p>' + escapeHtml(message) + '</p>' +
+                        '</div>';
+                }
+
+                if (
+                    error.message &&
+                    (error.message.includes('انتهت صلاحية') ||
+                     error.message.includes('صلاحية'))
+                ) {
+                    showToast(error.message, 'warning');
+                }
+
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // ============================================================
+        // 📊 STATS
+        // ============================================================
+
+        function updateStats(users) {
+            if (_isDestroyed) return;
+
+            var total = users.length;
+
+            var active = users.filter(function(u) {
+                return u.active !== false;
+            }).length;
+
+            var inactive = users.filter(function(u) {
+                return u.active === false;
+            }).length;
+
+            var admins = users.filter(function(u) {
+                return u.role === 'admin';
+            }).length;
+
+            var el;
+
+            el = $('totalUsers');
+            if (el) el.textContent = total;
+
+            el = $('activeUsers');
+            if (el) el.textContent = active;
+
+            el = $('inactiveUsers');
+            if (el) el.textContent = inactive;
+
+            el = $('adminUsers');
+            if (el) el.textContent = admins;
+        }
+
+        // ============================================================
+        // 🎨 RENDER USERS
+        // ============================================================
+
+        function renderUsers(users) {
+            if (_isDestroyed) return;
+
+            var container = $('usersTableContainer');
+            if (!container) return;
+
+            // ✅ حالة فارغة
+            if (!Array.isArray(users) || users.length === 0) {
+                container.innerHTML =
+                    '<div class="empty-state">' +
+                    '<div class="icon">📭</div>' +
+                    '<p>لا توجد مستخدمين</p>' +
+                    '</div>';
+                return;
             }
 
-        } finally {
-            isLoading = false;
+            var roleMap = {
+                admin: '<span class="role-badge admin">مسؤول</span>',
+                manager: '<span class="role-badge manager">مدير</span>',
+                operator: '<span class="role-badge operator">مشغل</span>',
+                viewer: '<span class="role-badge viewer">مشاهد</span>'
+            };
+
+            var html =
+                '<div class="table-container">' +
+                '<table class="users-table">' +
+                '<thead><tr>' +
+                '<th>👤 المستخدم</th>' +
+                '<th>📧 البريد الإلكتروني</th>' +
+                '<th>👔 الدور</th>' +
+                '<th>📊 الحالة</th>' +
+                '<th>📅 آخر تسجيل دخول</th>' +
+                '<th>⚙️ الإجراءات</th>' +
+                '</tr></thead><tbody>';
+
+            var validCount = 0;
+
+            users.forEach(function(user) {
+                // ✅ v9.5: استخراج الـ id من أي مكان
+                var rawId = user.id || user._id || user.userId;
+
+                if (!rawId) {
+                    console.warn('⚠️ User without id:', user);
+                    return;
+                }
+
+                var id = normalizeId(rawId);
+
+                if (!id) {
+                    console.warn('⚠️ User with invalid id:', rawId, user);
+                    return;
+                }
+
+                validCount++;
+
+                var active = user.active !== false;
+
+                var lastLogin = '-';
+                if (user.lastLogin) {
+                    var date = new Date(user.lastLogin);
+                    if (!isNaN(date.getTime())) {
+                        lastLogin = date.toLocaleDateString('ar-TN');
+                    }
+                }
+
+                var username = user.name || user.username || '-';
+                var email = user.email || '-';
+
+                var role = roleMap[user.role] || escapeHtml(user.role || '-');
+
+                html +=
+                    '<tr>' +
+                    '<td><strong>' + escapeHtml(username) + '</strong></td>' +
+                    '<td>' + escapeHtml(email) + '</td>' +
+                    '<td>' + role + '</td>' +
+                    '<td>' + (
+                        active
+                            ? '<span class="status-badge active">✅ نشط</span>'
+                            : '<span class="status-badge inactive">❌ غير نشط</span>'
+                    ) + '</td>' +
+                    '<td>' + escapeHtml(lastLogin) + '</td>' +
+                    '<td>' +
+                        '<button ' +
+                            'type="button" ' +
+                            'class="btn-sm btn-edit edit-btn" ' +
+                            'data-id="' + escapeHtml(id) + '" ' +
+                            'title="تعديل">' +
+                            '✏️' +
+                        '</button>' +
+                        '<button ' +
+                            'type="button" ' +
+                            'class="btn-sm btn-toggle toggle-btn" ' +
+                            'data-id="' + escapeHtml(id) + '" ' +
+                            'data-status="' + String(active) + '" ' +
+                            'title="' + (active ? 'تعطيل' : 'تفعيل') + '">' +
+                            (active ? '🔒' : '🔓') +
+                        '</button>' +
+                        '<button ' +
+                            'type="button" ' +
+                            'class="btn-sm btn-delete delete-btn" ' +
+                            'data-id="' + escapeHtml(id) + '" ' +
+                            'title="حذف">' +
+                            '🗑️' +
+                        '</button>' +
+                    '</td>' +
+                    '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+
+            if (validCount === 0) {
+                container.innerHTML =
+                    '<div class="empty-state">' +
+                    '<div class="icon">⚠️</div>' +
+                    '<p>لا توجد مستخدمين بمعرّفات صالحة</p>' +
+                    '<p style="font-size:12px;color:rgba(255,255,255,.15);margin-top:8px;">' +
+                    'افحص الـ Console لتفاصيل أكثر' +
+                    '</p>' +
+                    '</div>';
+                return;
+            }
+
+            container.innerHTML = html;
+
+            // ✅ ربط الأزرار
+            container.querySelectorAll('.edit-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    editUser(this.dataset.id);
+                });
+            });
+
+            container.querySelectorAll('.toggle-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    toggleUserStatus(
+                        this.dataset.id,
+                        this.dataset.status === 'true'
+                    );
+                });
+            });
+
+            container.querySelectorAll('.delete-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    deleteUser(this.dataset.id);
+                });
+            });
+
+            console.log('✅ Rendered', validCount, 'of', users.length, 'users');
         }
-    }
 
-    /* ============================================================
-     * STATS
-     * ============================================================ */
+        // ============================================================
+        // 📝 FORM
+        // ============================================================
 
-    function updateStats(users) {
-        if (_isDestroyed) return;  // ✅ v9.1
+        function resetForm() {
+            if (!$('userForm')) return;
 
-        const total = users.length;
+            var el;
 
-        const active = users.filter(
-            u => u.active !== false
-        ).length;
+            el = $('userId');
+            if (el) el.value = '';
 
-        const inactive = users.filter(
-            u => u.active === false
-        ).length;
+            el = $('userUsername');
+            if (el) el.value = '';
 
-        const admins = users.filter(
-            u => u.role === 'admin'
-        ).length;
+            el = $('userEmail');
+            if (el) el.value = '';
 
-        if ($('totalUsers'))
-            $('totalUsers').textContent = total;
+            el = $('userPassword');
+            if (el) el.value = '';
 
-        if ($('activeUsers'))
-            $('activeUsers').textContent = active;
+            el = $('userRole');
+            if (el) el.value = 'viewer';
 
-        if ($('inactiveUsers'))
-            $('inactiveUsers').textContent = inactive;
+            el = $('userStatus');
+            if (el) el.value = 'active';
 
-        if ($('adminUsers'))
-            $('adminUsers').textContent = admins;
-    }
+            el = $('formTitle');
+            if (el) el.textContent = '➕ إضافة مستخدم جديد';
 
-    /* ============================================================
-     * RENDER
-     * ============================================================ */
+            el = $('passwordRequired');
+            if (el) el.textContent = '*';
 
-    function renderUsers(users) {
-        if (_isDestroyed) return;  // ✅ v9.1
-
-        const container =
-            $('usersTableContainer');
-
-        if (!container) return;
-
-        if (
-            !Array.isArray(users) ||
-            users.length === 0
-        ) {
-            container.innerHTML =
-                '<div class="empty-state">' +
-                '<div class="icon">📭</div>' +
-                '<p>لا توجد مستخدمين</p>' +
-                '</div>';
-
-            return;
+            ['userUsername', 'userEmail', 'userPassword'].forEach(function(id) {
+                var field = $(id);
+                if (field) field.classList.remove('invalid');
+            });
         }
 
-        const roleMap = {
-            admin:
-                '<span class="role-badge admin">مسؤول</span>',
+        function openUserForm() {
+            var form = $('userForm');
+            if (form) form.classList.add('active');
+        }
 
-            manager:
-                '<span class="role-badge manager">مدير</span>',
+        function closeUserForm() {
+            var form = $('userForm');
+            if (form) form.classList.remove('active');
+            resetForm();
+        }
 
-            operator:
-                '<span class="role-badge operator">مشغل</span>',
+        function toggleUserForm() {
+            var form = $('userForm');
+            if (!form) return;
 
-            viewer:
-                '<span class="role-badge viewer">مشاهد</span>'
-        };
+            if (form.classList.contains('active')) {
+                closeUserForm();
+            } else {
+                resetForm();
+                openUserForm();
+            }
+        }
 
-        let html =
-            '<div class="table-container">' +
-            '<table class="users-table">' +
-            '<thead><tr>' +
-            '<th>👤 المستخدم</th>' +
-            '<th>📧 البريد الإلكتروني</th>' +
-            '<th>👔 الدور</th>' +
-            '<th>📊 الحالة</th>' +
-            '<th>📅 آخر تسجيل دخول</th>' +
-            '<th>⚙️ الإجراءات</th>' +
-            '</tr></thead><tbody>';
+        // ============================================================
+        // ✏️ EDIT USER
+        // ============================================================
 
-        users.forEach(user => {
+        function editUser(id) {
+            var normalizedId = normalizeId(id);
 
-            const id =
-                normalizeId(
-                    user.id || user._id
+            if (!normalizedId) {
+                showToast('معرّف المستخدم غير صالح.', 'danger');
+                return;
+            }
+
+            var user = usersData.find(function(u) {
+                var uid = u.id || u._id || u.userId;
+                return normalizeId(uid) === normalizedId;
+            });
+
+            if (!user) {
+                showToast('المستخدم غير موجود.', 'warning');
+                return;
+            }
+
+            var el;
+
+            el = $('formTitle');
+            if (el) el.textContent = '✏️ تعديل مستخدم';
+
+            el = $('userId');
+            if (el) el.value = normalizedId;
+
+            el = $('userUsername');
+            if (el) el.value = user.username || '';
+
+            el = $('userEmail');
+            if (el) el.value = user.email || '';
+
+            el = $('userPassword');
+            if (el) el.value = '';
+
+            el = $('userRole');
+            if (el) el.value = user.role || 'viewer';
+
+            el = $('userStatus');
+            if (el) el.value = user.active !== false ? 'active' : 'inactive';
+
+            el = $('passwordRequired');
+            if (el) el.textContent = '(اتركها فارغة إذا لم ترد تغييرها)';
+
+            openUserForm();
+
+            var usernameField = $('userUsername');
+            if (usernameField) usernameField.focus();
+        }
+
+        // ============================================================
+        // ✅ VALIDATE FORM
+        // ============================================================
+
+        function validateForm(data) {
+            ['userUsername', 'userEmail', 'userPassword'].forEach(function(field) {
+                var el = $(field);
+                if (el) el.classList.remove('invalid');
+            });
+
+            if (!isValidUsername(data.username)) {
+                var uEl = $('userUsername');
+                if (uEl) uEl.classList.add('invalid');
+                showToast('اسم المستخدم غير صالح.', 'warning');
+                return false;
+            }
+
+            if (!isValidEmail(data.email)) {
+                var eEl = $('userEmail');
+                if (eEl) eEl.classList.add('invalid');
+                showToast('البريد الإلكتروني غير صالح.', 'warning');
+                return false;
+            }
+
+            // كلمة المرور مطلوبة عند الإنشاء
+            if (!data.id && !isStrongEnoughPassword(data.password)) {
+                var pEl = $('userPassword');
+                if (pEl) pEl.classList.add('invalid');
+                showToast('كلمة المرور يجب أن تكون 12 حرفاً على الأقل.', 'warning');
+                return false;
+            }
+
+            // عند التعديل، إذا أُدخلت كلمة مرور يجب أن تكون قوية
+            if (data.id && data.password && !isStrongEnoughPassword(data.password)) {
+                var pEl2 = $('userPassword');
+                if (pEl2) pEl2.classList.add('invalid');
+                showToast('كلمة المرور الجديدة يجب أن تكون 12 حرفاً على الأقل.', 'warning');
+                return false;
+            }
+
+            return true;
+        }
+
+        // ============================================================
+        // 💾 SAVE USER
+        // ============================================================
+
+        async function saveUser() {
+            if (isSaving || _isDestroyed) return;
+
+            var idEl = $('userId');
+            var usernameEl = $('userUsername');
+            var emailEl = $('userEmail');
+            var passwordEl = $('userPassword');
+            var roleEl = $('userRole');
+            var statusEl = $('userStatus');
+
+            if (!usernameEl || !emailEl || !passwordEl || !roleEl || !statusEl) {
+                return;
+            }
+
+            var id = normalizeId(idEl ? idEl.value : '');
+            var username = usernameEl.value.trim();
+            var email = emailEl.value.trim();
+            var password = passwordEl.value;
+            var role = roleEl.value;
+            var status = statusEl.value;
+
+            if (!validateForm({ id: id, username: username, email: email, password: password })) {
+                return;
+            }
+
+            var allowedRoles = ['admin', 'manager', 'operator', 'viewer'];
+
+            if (allowedRoles.indexOf(role) === -1) {
+                showToast('الدور المحدد غير صالح.', 'danger');
+                return;
+            }
+
+            if (['active', 'inactive'].indexOf(status) === -1) {
+                showToast('حالة المستخدم غير صالحة.', 'danger');
+                return;
+            }
+
+            var payload = {
+                username: username,
+                email: email,
+                role: role,
+                active: status === 'active'
+            };
+
+            if (password) {
+                payload.password = password;
+            }
+
+            isSaving = true;
+
+            var saveButton = $('saveUserBtn');
+
+            if (saveButton) {
+                saveButton.disabled = true;
+                saveButton.textContent = '⏳ جاري الحفظ...';
+            }
+
+            try {
+                var url = id
+                    ? API_BASE + '/' + encodeURIComponent(id)
+                    : API_BASE;
+
+                var response = await apiRequest(url, {
+                    method: id ? 'PUT' : 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                if (_isDestroyed) return;
+
+                var data = await safeJson(response);
+
+                if (!response.ok) {
+                    throw new Error(
+                        (data && (data.error || data.message)) ||
+                        'فشل حفظ المستخدم.'
+                    );
+                }
+
+                showToast(
+                    id ? 'تم تحديث المستخدم بنجاح.' : 'تم إضافة المستخدم بنجاح.',
+                    'success'
                 );
 
-            if (!id) return;
+                closeUserForm();
 
-            const active =
-                user.active !== false;
+                await loadUsersData();
 
-            let lastLogin = '-';
+            } catch (error) {
+                if (_isDestroyed) return;
 
-            if (user.lastLogin) {
-                const date =
-                    new Date(user.lastLogin);
+                console.error('❌ [USERS] Save error:', error);
 
-                if (!Number.isNaN(date.getTime())) {
-                    lastLogin =
-                        date.toLocaleDateString(
-                            'ar-TN'
-                        );
+                showToast(error.message || 'فشل حفظ المستخدم.', 'danger');
+
+            } finally {
+                isSaving = false;
+
+                if (saveButton) {
+                    saveButton.disabled = false;
+                    saveButton.textContent = '💾 حفظ';
+                }
+            }
+        }
+
+        // ============================================================
+        // 🔄 TOGGLE STATUS
+        // ============================================================
+
+        async function toggleUserStatus(id, currentStatus) {
+            if (_isDestroyed) return;
+
+            var normalizedId = normalizeId(id);
+
+            if (!normalizedId) {
+                showToast('معرّف المستخدم غير صالح.', 'danger');
+                return;
+            }
+
+            var user = usersData.find(function(u) {
+                var uid = u.id || u._id || u.userId;
+                return normalizeId(uid) === normalizedId;
+            });
+
+            if (!user) {
+                showToast('المستخدم غير موجود.', 'warning');
+                return;
+            }
+
+            // منع تعطيل آخر admin
+            if (currentStatus && user.role === 'admin') {
+                var activeAdmins = usersData.filter(function(u) {
+                    return u.role === 'admin' && u.active !== false;
+                });
+
+                if (activeAdmins.length <= 1) {
+                    showToast('لا يمكن تعطيل آخر مسؤول نشط.', 'warning');
+                    return;
                 }
             }
 
-            const username =
-                user.name ||
-                user.username ||
-                '-';
+            var action = currentStatus ? 'تعطيل' : 'تفعيل';
 
-            const email =
-                user.email ||
-                '-';
-
-            const role =
-                roleMap[user.role] ||
-                escapeHtml(
-                    user.role || '-'
-                );
-
-            html +=
-                '<tr>' +
-
-                '<td><strong>' +
-                escapeHtml(username) +
-                '</strong></td>' +
-
-                '<td>' +
-                escapeHtml(email) +
-                '</td>' +
-
-                '<td>' +
-                role +
-                '</td>' +
-
-                '<td>' +
-                (
-                    active
-                        ? '<span class="status-badge active">✅ نشط</span>'
-                        : '<span class="status-badge inactive">❌ غير نشط</span>'
-                ) +
-                '</td>' +
-
-                '<td>' +
-                escapeHtml(lastLogin) +
-                '</td>' +
-
-                '<td>' +
-
-                '<button ' +
-                'type="button" ' +
-                'class="btn-sm btn-edit edit-btn" ' +
-                'data-id="' +
-                escapeHtml(id) +
-                '">' +
-                '✏️' +
-                '</button> ' +
-
-                '<button ' +
-                'type="button" ' +
-                'class="btn-sm btn-toggle toggle-btn" ' +
-                'data-id="' +
-                escapeHtml(id) +
-                '" ' +
-                'data-status="' +
-                String(active) +
-                '">' +
-                (
-                    active
-                        ? '🔒'
-                        : '🔓'
-                ) +
-                '</button> ' +
-
-                '<button ' +
-                'type="button" ' +
-                'class="btn-sm btn-delete delete-btn" ' +
-                'data-id="' +
-                escapeHtml(id) +
-                '">' +
-                '🗑️' +
-                '</button>' +
-
-                '</td>' +
-
-                '</tr>';
-        });
-
-        html +=
-            '</tbody></table></div>';
-
-        container.innerHTML = html;
-
-        container
-            .querySelectorAll('.edit-btn')
-            .forEach(button => {
-
-                button.addEventListener(
-                    'click',
-                    () =>
-                        editUser(
-                            button.dataset.id
-                        )
-                );
-            });
-
-        container
-            .querySelectorAll('.toggle-btn')
-            .forEach(button => {
-
-                button.addEventListener(
-                    'click',
-                    () =>
-                        toggleUserStatus(
-                            button.dataset.id,
-                            button.dataset.status === 'true'
-                        )
-                );
-            });
-
-        container
-            .querySelectorAll('.delete-btn')
-            .forEach(button => {
-
-                button.addEventListener(
-                    'click',
-                    () =>
-                        deleteUser(
-                            button.dataset.id
-                        )
-                );
-            });
-    }
-
-    /* ============================================================
-     * FORM
-     * ============================================================ */
-
-    function resetForm() {
-
-        if (!$('userForm')) return;
-
-        $('userId').value = '';
-        $('userUsername').value = '';
-        $('userEmail').value = '';
-        $('userPassword').value = '';
-        $('userRole').value = 'viewer';
-        $('userStatus').value = 'active';
-
-        $('formTitle').textContent =
-            '➕ إضافة مستخدم جديد';
-
-        $('passwordRequired').textContent =
-            '*';
-
-        [
-            'userUsername',
-            'userEmail',
-            'userPassword'
-        ].forEach(id => {
-            $(id)?.classList.remove('invalid');
-        });
-    }
-
-    function openUserForm() {
-        $('userForm')?.classList.add('active');
-    }
-
-    function closeUserForm() {
-        $('userForm')?.classList.remove('active');
-        resetForm();
-    }
-
-    function toggleUserForm() {
-
-        const form = $('userForm');
-
-        if (!form) return;
-
-        if (form.classList.contains('active')) {
-            closeUserForm();
-        } else {
-            resetForm();
-            openUserForm();
-        }
-    }
-
-    /* ============================================================
-     * EDIT
-     * ============================================================ */
-
-    function editUser(id) {
-
-        const normalizedId =
-            normalizeId(id);
-
-        if (!normalizedId) {
-            showToast(
-                'معرّف المستخدم غير صالح.',
-                'danger'
-            );
-            return;
-        }
-
-        const user =
-            usersData.find(
-                u =>
-                    normalizeId(
-                        u.id || u._id
-                    ) === normalizedId
-            );
-
-        if (!user) {
-            showToast(
-                'المستخدم غير موجود.',
-                'warning'
-            );
-            return;
-        }
-
-        $('formTitle').textContent =
-            '✏️ تعديل مستخدم';
-
-        $('userId').value =
-            normalizedId;
-
-        $('userUsername').value =
-            user.username || '';
-
-        $('userEmail').value =
-            user.email || '';
-
-        $('userPassword').value = '';
-
-        $('userRole').value =
-            user.role || 'viewer';
-
-        $('userStatus').value =
-            user.active !== false
-                ? 'active'
-                : 'inactive';
-
-        $('passwordRequired').textContent =
-            '(اتركها فارغة إذا لم ترد تغييرها)';
-
-        openUserForm();
-
-        $('userUsername')?.focus();
-    }
-
-    /* ============================================================
-     * FORM VALIDATION
-     * ============================================================ */
-
-    function validateForm({
-        id,
-        username,
-        email,
-        password
-    }) {
-
-        [
-            'userUsername',
-            'userEmail',
-            'userPassword'
-        ].forEach(field => {
-            $(field)?.classList.remove('invalid');
-        });
-
-        if (!isValidUsername(username)) {
-
-            $('userUsername')
-                ?.classList.add('invalid');
-
-            showToast(
-                'اسم المستخدم غير صالح.',
-                'warning'
-            );
-
-            return false;
-        }
-
-        if (!isValidEmail(email)) {
-
-            $('userEmail')
-                ?.classList.add('invalid');
-
-            showToast(
-                'البريد الإلكتروني غير صالح.',
-                'warning'
-            );
-
-            return false;
-        }
-
-        if (!id && !isStrongEnoughPassword(password)) {
-
-            $('userPassword')
-                ?.classList.add('invalid');
-
-            showToast(
-                'كلمة المرور يجب أن تكون 12 حرفًا على الأقل.',
-                'warning'
-            );
-
-            return false;
-        }
-
-        if (
-            id &&
-            password &&
-            !isStrongEnoughPassword(password)
-        ) {
-
-            $('userPassword')
-                ?.classList.add('invalid');
-
-            showToast(
-                'كلمة المرور الجديدة يجب أن تكون 12 حرفًا على الأقل.',
-                'warning'
-            );
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /* ============================================================
-     * SAVE
-     * ============================================================ */
-
-    async function saveUser() {
-
-        if (isSaving || _isDestroyed) return;
-
-        const id =
-            normalizeId(
-                $('userId').value
-            );
-
-        const username =
-            $('userUsername')
-                .value
-                .trim();
-
-        const email =
-            $('userEmail')
-                .value
-                .trim();
-
-        const password =
-            $('userPassword')
-                .value;
-
-        const role =
-            $('userRole').value;
-
-        const status =
-            $('userStatus').value;
-
-        if (
-            !validateForm({
-                id,
-                username,
-                email,
-                password
-            })
-        ) {
-            return;
-        }
-
-        const allowedRoles = [
-            'admin',
-            'manager',
-            'operator',
-            'viewer'
-        ];
-
-        if (!allowedRoles.includes(role)) {
-            showToast(
-                'الدور المحدد غير صالح.',
-                'danger'
-            );
-            return;
-        }
-
-        if (
-            !['active','inactive']
-                .includes(status)
-        ) {
-            showToast(
-                'حالة المستخدم غير صالحة.',
-                'danger'
-            );
-            return;
-        }
-
-        const payload = {
-            username,
-            email,
-            role,
-            active: status === 'active'
-        };
-
-        if (password) {
-            payload.password = password;
-        }
-
-        isSaving = true;
-
-        const saveButton =
-            $('saveUserBtn');
-
-        if (saveButton) {
-            saveButton.disabled = true;
-            saveButton.textContent =
-                '⏳ جاري الحفظ...';
-        }
-
-        try {
-
-            const url =
-                id
-                    ? `${API_BASE}/${encodeURIComponent(id)}`
-                    : API_BASE;
-
-            const response =
-                await apiRequest(
-                    url,
-                    {
-                        method: id
-                            ? 'PUT'
-                            : 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body:
-                            JSON.stringify(payload)
-                    }
-                );
-
-            if (_isDestroyed) return;  // ✅ v9.1
-
-            const data =
-                await safeJson(response);
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data?.error ||
-                    data?.message ||
-                    'فشل حفظ المستخدم.'
-                );
-            }
-
-            showToast(
-                id
-                    ? 'تم تحديث المستخدم بنجاح.'
-                    : 'تم إضافة المستخدم بنجاح.',
-                'success'
-            );
-
-            closeUserForm();
-
-            await loadUsersData();
-
-        } catch (error) {
-
-            if (_isDestroyed) return;  // ✅ v9.1
-
-            console.error(
-                '❌ [USERS] Save error:',
-                error
-            );
-
-            showToast(
-                error.message ||
-                'فشل حفظ المستخدم.',
-                'danger'
-            );
-
-        } finally {
-
-            isSaving = false;
-
-            if (saveButton) {
-                saveButton.disabled = false;
-                saveButton.textContent =
-                    '💾 حفظ';
-            }
-        }
-    }
-
-    /* ============================================================
-     * TOGGLE STATUS
-     * ============================================================ */
-
-    async function toggleUserStatus(
-        id,
-        currentStatus
-    ) {
-
-        if (_isDestroyed) return;  // ✅ v9.1
-
-        const normalizedId =
-            normalizeId(id);
-
-        if (!normalizedId) {
-            showToast(
-                'معرّف المستخدم غير صالح.',
-                'danger'
-            );
-            return;
-        }
-
-        const user =
-            usersData.find(
-                u =>
-                    normalizeId(
-                        u.id || u._id
-                    ) === normalizedId
-            );
-
-        if (!user) {
-            showToast(
-                'المستخدم غير موجود.',
-                'warning'
-            );
-            return;
-        }
-
-        if (
-            currentStatus &&
-            user.role === 'admin'
-        ) {
-
-            const activeAdmins =
-                usersData.filter(
-                    u =>
-                        u.role === 'admin' &&
-                        u.active !== false
-                );
-
-            if (activeAdmins.length <= 1) {
-                showToast(
-                    'لا يمكن تعطيل آخر مسؤول نشط.',
-                    'warning'
-                );
+            if (!window.confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) {
                 return;
             }
-        }
 
-        const action =
-            currentStatus
-                ? 'تعطيل'
-                : 'تفعيل';
-
-        if (
-            !window.confirm(
-                `⚠️ هل أنت متأكد من ${action} هذا المستخدم؟`
-            )
-        ) {
-            return;
-        }
-
-        try {
-
-            const response =
-                await apiRequest(
-                    `${API_BASE}/${encodeURIComponent(normalizedId)}`,
+            try {
+                var response = await apiRequest(
+                    API_BASE + '/' + encodeURIComponent(normalizedId),
                     {
                         method: 'PUT',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body:
-                            JSON.stringify({
-                                active:
-                                    !currentStatus
-                            })
+                        body: JSON.stringify({ active: !currentStatus })
                     }
                 );
 
-            if (_isDestroyed) return;  // ✅ v9.1
+                if (_isDestroyed) return;
 
-            const data =
-                await safeJson(response);
+                var data = await safeJson(response);
 
-            if (!response.ok) {
-                throw new Error(
-                    data?.error ||
-                    data?.message ||
-                    'فشل تغيير الحالة.'
-                );
+                if (!response.ok) {
+                    throw new Error(
+                        (data && (data.error || data.message)) ||
+                        'فشل تغيير الحالة.'
+                    );
+                }
+
+                showToast('تم ' + action + ' المستخدم بنجاح.', 'success');
+
+                await loadUsersData();
+
+            } catch (error) {
+                if (_isDestroyed) return;
+
+                console.error('❌ [USERS] Toggle error:', error);
+
+                showToast(error.message || 'فشل تغيير حالة المستخدم.', 'danger');
             }
-
-            showToast(
-                `تم ${action} المستخدم بنجاح.`,
-                'success'
-            );
-
-            await loadUsersData();
-
-        } catch (error) {
-
-            if (_isDestroyed) return;  // ✅ v9.1
-
-            console.error(
-                '❌ [USERS] Toggle error:',
-                error
-            );
-
-            showToast(
-                error.message ||
-                'فشل تغيير حالة المستخدم.',
-                'danger'
-            );
-        }
-    }
-
-    /* ============================================================
-     * DELETE
-     * ============================================================ */
-
-    async function deleteUser(id) {
-
-        if (_isDestroyed) return;  // ✅ v9.1
-
-        const normalizedId =
-            normalizeId(id);
-
-        if (!normalizedId) {
-            showToast(
-                'معرّف المستخدم غير صالح.',
-                'danger'
-            );
-            return;
         }
 
-        const user =
-            usersData.find(
-                u =>
-                    normalizeId(
-                        u.id || u._id
-                    ) === normalizedId
-            );
+        // ============================================================
+        // 🗑️ DELETE USER
+        // ============================================================
 
-        if (!user) {
-            showToast(
-                'المستخدم غير موجود.',
-                'warning'
-            );
-            return;
-        }
+        async function deleteUser(id) {
+            if (_isDestroyed) return;
 
-        if (user.role === 'admin') {
+            var normalizedId = normalizeId(id);
 
-            const adminCount =
-                usersData.filter(
-                    u =>
-                        u.role === 'admin'
-                ).length;
-
-            if (adminCount <= 1) {
-                showToast(
-                    'لا يمكن حذف آخر مسؤول في النظام.',
-                    'warning'
-                );
+            if (!normalizedId) {
+                showToast('معرّف المستخدم غير صالح.', 'danger');
                 return;
             }
-        }
 
-        const username =
-            user.username ||
-            user.name ||
-            'هذا المستخدم';
+            var user = usersData.find(function(u) {
+                var uid = u.id || u._id || u.userId;
+                return normalizeId(uid) === normalizedId;
+            });
 
-        if (
-            !window.confirm(
-                `⚠️ سيتم حذف "${username}" نهائيًا.\n\nهل أنت متأكد؟`
-            )
-        ) {
-            return;
-        }
+            if (!user) {
+                showToast('المستخدم غير موجود.', 'warning');
+                return;
+            }
 
-        try {
+            if (user.role === 'admin') {
+                var adminCount = usersData.filter(function(u) {
+                    return u.role === 'admin';
+                }).length;
 
-            const response =
-                await apiRequest(
-                    `${API_BASE}/${encodeURIComponent(normalizedId)}`,
-                    {
-                        method: 'DELETE'
-                    }
+                if (adminCount <= 1) {
+                    showToast('لا يمكن حذف آخر مسؤول في النظام.', 'warning');
+                    return;
+                }
+            }
+
+            var username = user.username || user.name || 'هذا المستخدم';
+
+            if (!window.confirm('⚠️ سيتم حذف "' + username + '" نهائيًا.\n\nهل أنت متأكد؟')) {
+                return;
+            }
+
+            try {
+                var response = await apiRequest(
+                    API_BASE + '/' + encodeURIComponent(normalizedId),
+                    { method: 'DELETE' }
                 );
 
-            if (_isDestroyed) return;  // ✅ v9.1
+                if (_isDestroyed) return;
 
-            const data =
-                await safeJson(response);
+                var data = await safeJson(response);
 
-            if (!response.ok) {
-                throw new Error(
-                    data?.error ||
-                    data?.message ||
-                    'فشل حذف المستخدم.'
-                );
+                if (!response.ok) {
+                    throw new Error(
+                        (data && (data.error || data.message)) ||
+                        'فشل حذف المستخدم.'
+                    );
+                }
+
+                showToast('تم حذف المستخدم بنجاح.', 'success');
+
+                await loadUsersData();
+
+            } catch (error) {
+                if (_isDestroyed) return;
+
+                console.error('❌ [USERS] Delete error:', error);
+
+                showToast(error.message || 'فشل حذف المستخدم.', 'danger');
             }
-
-            showToast(
-                'تم حذف المستخدم بنجاح.',
-                'success'
-            );
-
-            await loadUsersData();
-
-        } catch (error) {
-
-            if (_isDestroyed) return;  // ✅ v9.1
-
-            console.error(
-                '❌ [USERS] Delete error:',
-                error
-            );
-
-            showToast(
-                error.message ||
-                'فشل حذف المستخدم.',
-                'danger'
-            );
         }
-    }
 
-    /* ============================================================
-     * AUTO REFRESH
-     * ============================================================ */
+        // ============================================================
+        // 🚀 INIT
+        // ============================================================
 
-    function startAutoRefresh() {
-        stopAutoRefresh();
+        function init() {
+            if (!pageExists()) return;
 
-        refreshTimer =
-            window.setInterval(
-                () => {
+            console.log('👥 Users v9.5 initializing...');
 
-                    if (
-                        document.hidden ||
-                        isLoading ||
-                        isSaving ||
-                        !pageExists()
-                    ) {
-                        return;
-                    }
+            addSafeListener($('addUserBtn'), 'click', toggleUserForm);
 
-                    loadUsersData();
+            addSafeListener($('refreshUsersBtn'), 'click', async function() {
+                if (isLoading || _isDestroyed) return;
+                showToast('🔄 جاري تحديث البيانات...', 'info');
+                await loadUsersData();
+            });
 
-                },
-                AUTO_REFRESH_MS
-            );
+            addSafeListener($('formCloseBtn'), 'click', closeUserForm);
+            addSafeListener($('cancelUserBtn'), 'click', closeUserForm);
+            addSafeListener($('saveUserBtn'), 'click', saveUser);
 
-        // ✅ v9.1: تتبع الـ interval
-        _pageIntervals.push(refreshTimer);
-    }
+            // منع Enter من الإرسال التلقائي
+            addSafeListener($('userForm'), 'keydown', function(event) {
+                if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
+                    event.preventDefault();
+                }
+            });
 
-    function stopAutoRefresh() {
+            // تحميل أولي
+            loadUsersData();
 
-        if (refreshTimer !== null) {
-
-            window.clearInterval(
-                refreshTimer
-            );
-
-            refreshTimer = null;
+            console.log('✅ Users v9.5 initialized');
         }
-    }
 
-    /* ============================================================
-     * INITIALIZATION - ✅ v9.1 SAFE
-     * ============================================================ */
+        // ============================================================
+        // 🌐 GLOBAL EXPORTS
+        // ============================================================
 
-    function init() {
+        window.usersData = usersData;
+        window.loadUsersData = loadUsersData;
+        window.renderUsers = renderUsers;
+        window.updateStats = updateStats;
+        window.toggleUserForm = toggleUserForm;
+        window.saveUser = saveUser;
+        window.editUser = editUser;
+        window.toggleUserStatus = toggleUserStatus;
+        window.deleteUser = deleteUser;
+        window.showToast = showToast;
+        window.getToken = getToken;
+        window.cleanupUsersPage = _usersCleanup;
 
-        if (!pageExists() || _isDestroyed) return;
+        // ============================================================
+        // 🏁 BOOT
+        // ============================================================
 
-        console.log(
-            '👥 Users v4.1 initializing...'
-        );
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init, { once: true });
+        } else {
+            init();
+        }
 
-        // ✅ v9.1: استخدام addSafeListener
-        addSafeListener($('addUserBtn'), 'click', toggleUserForm);
-        addSafeListener($('refreshUsersBtn'), 'click', async () => {
-            if (isLoading || _isDestroyed) return;
-            showToast('🔄 جاري تحديث البيانات...', 'info');
-            await loadUsersData();
-        });
-        addSafeListener($('formCloseBtn'), 'click', closeUserForm);
-        addSafeListener($('cancelUserBtn'), 'click', closeUserForm);
-        addSafeListener($('saveUserBtn'), 'click', saveUser);
-
-        // ✅ v9.1: منع Enter في النموذج
-        addSafeListener($('userForm'), 'keydown', event => {
-            if (
-                event.key === 'Enter' &&
-                event.target.tagName !== 'TEXTAREA'
-            ) {
-                event.preventDefault();
-            }
-        });
-
-        // ✅ v9.1: visibilitychange مع tracking
-        addSafeListener(document, 'visibilitychange', () => {
-            if (
-                !document.hidden &&
-                pageExists() &&
-                !isLoading
-            ) {
-                loadUsersData();
-            }
-        });
-
-        // ✅ تحميل أولي
-        loadUsersData();
-        startAutoRefresh();
-
-        console.log(
-            '✅ Users v4.1 initialized'
-        );
-    }
-
-    /* ============================================================
-     * CLEANUP - ✅ v9.1 EXPANDED
-     * ============================================================ */
-
-    function cleanup() {
-        _usersCleanup();
-    }
-
-    window.cleanupUsersPage = cleanup;
-
-    /* ============================================================
-     * GLOBAL COMPATIBILITY
-     * ============================================================ */
-
-    window.usersData = usersData;
-    window.loadUsersData = loadUsersData;
-    window.renderUsers = renderUsers;
-    window.updateStats = updateStats;
-    window.toggleUserForm = toggleUserForm;
-    window.saveUser = saveUser;
-    window.editUser = editUser;
-    window.toggleUserStatus = toggleUserStatus;
-    window.deleteUser = deleteUser;
-    window.showToast = showToast;
-    window.getToken = getToken;
-
-    /* ============================================================
-     * BOOT
-     * ============================================================ */
-
-    if (document.readyState === 'loading') {
-        document.addEventListener(
-            'DOMContentLoaded',
-            init,
-            { once: true }
-        );
-    } else {
-        init();
-    }
-
-})();
-</script>
-
+    })();
+    </script>
 </div>
