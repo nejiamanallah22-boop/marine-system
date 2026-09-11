@@ -1,30 +1,26 @@
 /**
  * 🔐 وسائط المصادقة والتحقق من الصلاحيات
  * @module middleware/auth
- * @version 9.1.0
- * @description متوافق 100% مع server.js v9.1
+ * @version 9.11.0
+ * @description متوافق 100% مع server.js v9.11
  *
- * ✨ v9.1 Features:
+ * ✨ v9.11 Features:
+ * - RBAC v3 (admin/manager/maintenance_unit/viewer)
+ * - normalizeRole للتوافق مع الأدوار القديمة
  * - JWT verification with issuer + audience
  * - Token type validation (access only)
  * - Revoked token (jti) checking
  * - Token version checking
  * - Account lockout checking
- * - In-memory user store (no Mongoose dependency)
- * - Built-in logger fallback
  */
 
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
 // ============================================================
-// 🔧 HELPERS
+// 🔧 LOGGER
 // ============================================================
 
-/**
- * Logger fallback — يستخدم winston إن وُجد، وإلا console
- * ✅ لا يكسر التطبيق إن لم يكن utils/logger موجوداً
- */
 let logger;
 try {
     logger = require('../utils/logger');
@@ -38,34 +34,19 @@ try {
 }
 
 // ============================================================
-// 🗂️ IN-MEMORY USER REFERENCE
+// 🗂️ USER STORE HELPERS
 // ============================================================
 
-/**
- * ✅ نحاول الوصول لمصفوفة users من server.js
- *    إن لم نتمكن، نستخدم آلية fallback عبر إعادة التوجيه
- *
- * ملاحظة: في Express، لا يمكن استيراد متغير من ملف التنفيذ الرئيسي
- * مباشرة. لذلك نستخدم `global.__marineUsers` الذي يُضبط من server.js
- */
 function getUserStore() {
-    // ✅ الطريقة 1: عبر global (يُضبط من server.js)
     if (global.__marineUsers && Array.isArray(global.__marineUsers)) {
         return global.__marineUsers;
     }
-
-    // ✅ الطريقة 2: عبر global مع دالة جلب
     if (typeof global.__getMarineUsers === 'function') {
         return global.__getMarineUsers();
     }
-
-    // ✅ الطريقة 3: fallback — مصفوفة فارغة (لن يجد أحداً)
     return null;
 }
 
-/**
- * ✅ البحث عن مستخدم بالمعرّف
- */
 function findUserById(userId) {
     const store = getUserStore();
     if (!store) return null;
@@ -73,22 +54,14 @@ function findUserById(userId) {
 }
 
 // ============================================================
-// 🚫 REVOKED TOKENS STORE
+// 🚫 REVOKED TOKENS
 // ============================================================
 
-/**
- * ✅ نفس مخزن server.js — نصل إليه عبر global
- *    لتفادي الاعتماد على الملف الرئيسي
- */
 function isTokenRevoked(jti) {
     if (!jti) return false;
-
-    // ✅ أولاً: تحقق من global
     if (typeof global.__isAccessTokenRevoked === 'function') {
         return global.__isAccessTokenRevoked(jti);
     }
-
-    // ✅ ثانياً: تحقق من مخزننا الداخلي
     if (global.__marineRevokedTokens instanceof Map) {
         const expiry = global.__marineRevokedTokens.get(jti);
         if (!expiry) return false;
@@ -98,7 +71,106 @@ function isTokenRevoked(jti) {
         }
         return true;
     }
+    return false;
+}
 
+// ============================================================
+// 👑 RBAC v3 — نظام صلاحيات احترافي
+// ============================================================
+//
+// 📋 التصميم:
+//    - admin              : كل شيء
+//    - manager            : مراكب CRUD + صيانة CRUD + سجلات
+//    - maintenance_unit   : مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل)
+//    - viewer             : قراءة فقط
+// ============================================================
+
+const ROLE_PERMISSIONS = {
+    // 👑 admin — كل شيء
+    admin: ['*'],
+    super_admin: ['*'],
+    'مسؤول': ['*'],
+    
+    // 📋 manager — مراكب + صيانة كاملة + سجلات
+    manager: [
+        'vessels:read', 'vessels:create', 'vessels:update',
+        'maintenance:read', 'maintenance:create', 'maintenance:update', 'maintenance:delete',
+        'logs:read',
+        'dashboard:view'
+    ],
+    'مدير': [
+        'vessels:read', 'vessels:create', 'vessels:update',
+        'maintenance:read', 'maintenance:create', 'maintenance:update', 'maintenance:delete',
+        'logs:read',
+        'dashboard:view'
+    ],
+    
+    // 🔧 maintenance_unit — مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل)
+    maintenance_unit: [
+        'vessels:read', 'vessels:create', 'vessels:update',
+        'maintenance:read', 'maintenance:create', 'maintenance:update',
+        'dashboard:view'
+    ],
+    'مشغل': [
+        'vessels:read', 'vessels:create', 'vessels:update',
+        'maintenance:read', 'maintenance:create', 'maintenance:update',
+        'dashboard:view'
+    ],
+    operator: [
+        'vessels:read', 'vessels:create', 'vessels:update',
+        'maintenance:read', 'maintenance:create', 'maintenance:update',
+        'dashboard:view'
+    ],
+    
+    // 👁️ viewer — قراءة فقط
+    viewer: ['vessels:read', 'maintenance:read', 'dashboard:view'],
+    'مشاهد': ['vessels:read', 'maintenance:read', 'dashboard:view']
+};
+
+// 🗺️ الصلاحيات الحساسة (admin فقط)
+const SENSITIVE_PERMISSIONS = {
+    'users:manage':    ['admin'],
+    'monitoring:view': ['admin'],
+    'settings:manage': ['admin'],
+    'sensitive:view':  ['admin'],
+    'ready:view':      ['admin']
+};
+
+// 🗺️ توافق مع الأدوار القديمة
+const LEGACY_ROLE_MAP = {
+    'مسؤول': 'admin',
+    'مدير': 'manager',
+    'مشغل': 'maintenance_unit',
+    'مشاهد': 'viewer',
+    'operator': 'maintenance_unit',
+    'super_admin': 'admin'
+};
+
+function normalizeRole(role) {
+    if (!role) return 'viewer';
+    const trimmed = String(role).trim();
+    if (ROLE_PERMISSIONS[trimmed]) return trimmed;
+    return LEGACY_ROLE_MAP[trimmed] || 'viewer';
+}
+
+function hasPermission(user, permission) {
+    if (!user) return false;
+    
+    const role = normalizeRole(user.role);
+    
+    // ✅ الصلاحيات الحساسة (admin فقط)
+    if (SENSITIVE_PERMISSIONS[permission]) {
+        return SENSITIVE_PERMISSIONS[permission].includes(role);
+    }
+    
+    // ✅ الصلاحيات العادية
+    const permissions = ROLE_PERMISSIONS[role] || [];
+    if (permissions.includes('*')) return true;
+    if (permissions.includes(permission)) return true;
+    
+    const [resource] = permission.split(':');
+    if (permissions.includes(`${resource}:*`)) return true;
+    
     return false;
 }
 
@@ -106,61 +178,35 @@ function isTokenRevoked(jti) {
 // 🔐 AUTHENTICATE
 // ============================================================
 
-/**
- * التحقق من الجلسة (Authentication)
- * @param {Object} req - طلب Express
- * @param {Object} res - رد Express
- * @param {Function} next - الدالة التالية
- */
 async function authenticate(req, res, next) {
     try {
-        // ============================================================
         // 1) استخراج التوكن
-        // ============================================================
-        // ✅ من Authorization header (الطريقة الأساسية)
         let token = null;
-
         const authHeader = req.headers?.authorization;
-        if (authHeader && typeof authHeader === 'string' &&
-            authHeader.startsWith('Bearer ')) {
+        if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
             token = authHeader.slice(7).trim();
         }
-
-        // ✅ fallback: من الكوكي (توافق رجعي)
         if (!token && req.cookies) {
-            token =
-                req.cookies['marine_access'] ||
-                req.cookies['__Host-marine.access'] ||
-                req.cookies['session_token'] ||
-                null;
+            token = req.cookies['marine_access'] ||
+                    req.cookies['__Host-marine.access'] ||
+                    req.cookies['session_token'] ||
+                    null;
         }
 
         if (!token) {
-            logger.warn('⚠️ محاولة وصول بدون توكن', {
-                ip: req.ip,
-                path: req.path
-            });
-            return res.status(401).json({
-                success: false,
-                error: 'غير مسجل الدخول'
-            });
+            logger.warn('⚠️ محاولة وصول بدون توكن', { ip: req.ip, path: req.path });
+            return res.status(401).json({ success: false, error: 'غير مسجل الدخول' });
         }
 
-        // ============================================================
         // 2) التحقق من JWT
-        // ============================================================
         let decoded;
         try {
             const jwtSecret = process.env.JWT_SECRET;
             if (!jwtSecret) {
                 logger.error('❌ JWT_SECRET غير محدد');
-                return res.status(500).json({
-                    success: false,
-                    error: 'خطأ في إعدادات الخادم'
-                });
+                return res.status(500).json({ success: false, error: 'خطأ في إعدادات الخادم' });
             }
 
-            // ✅ نفس خيارات server.js v9.1
             decoded = jwt.verify(token, jwtSecret, {
                 issuer: 'marine-system',
                 audience: 'marine-system-client',
@@ -169,160 +215,68 @@ async function authenticate(req, res, next) {
         } catch (error) {
             if (error.name === 'TokenExpiredError') {
                 logger.warn('⚠️ توكن منتهي الصلاحية', { ip: req.ip });
-                return res.status(401).json({
-                    success: false,
-                    error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً'
-                });
+                return res.status(401).json({ success: false, error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً' });
             }
-            logger.warn('⚠️ توكن غير صالح', {
-                ip: req.ip,
-                error: error.message
-            });
-            return res.status(401).json({
-                success: false,
-                error: 'جلسة غير صالحة'
-            });
+            logger.warn('⚠️ توكن غير صالح', { ip: req.ip, error: error.message });
+            return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
         }
 
-        // ============================================================
-        // 3) التحقق من نوع التوكن (access فقط)
-        // ============================================================
+        // 3) نوع التوكن
         if (decoded.type && decoded.type !== 'access') {
-            logger.warn('⚠️ نوع توكن غير صالح', {
-                ip: req.ip,
-                type: decoded.type
-            });
-            return res.status(401).json({
-                success: false,
-                error: 'نوع التوكن غير صالح'
-            });
+            return res.status(401).json({ success: false, error: 'نوع التوكن غير صالح' });
         }
 
-        // ============================================================
-        // 4) التحقق من الإلغاء (jti)
-        // ============================================================
+        // 4) الإلغاء
         if (isTokenRevoked(decoded.jti)) {
-            logger.warn('⚠️ توكن ملغى', {
-                ip: req.ip,
-                jti: decoded.jti
-            });
-            return res.status(401).json({
-                success: false,
-                error: 'التوكن ملغى'
-            });
+            return res.status(401).json({ success: false, error: 'التوكن ملغى' });
         }
 
-        // ============================================================
         // 5) البحث عن المستخدم
-        // ============================================================
         const userId = decoded.sub || decoded.id || decoded.userId;
-
         if (!userId) {
-            logger.warn('⚠️ توكن بدون معرّف مستخدم', { ip: req.ip });
-            return res.status(401).json({
-                success: false,
-                error: 'جلسة غير صالحة'
-            });
+            return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
         }
 
         let user = findUserById(userId);
-
-        // ✅ fallback: البحث عبر Mongoose إن كان متوفراً
         if (!user) {
             try {
                 const User = require('../models/User');
-                user = await User.findOne({
-                    id: userId,
-                    isActive: true
-                });
-            } catch (e) {
-                // Mongoose غير متوفر — نتجاهل
-            }
+                user = await User.findOne({ id: userId, isActive: true });
+            } catch (e) {}
         }
 
         if (!user) {
-            logger.warn('⚠️ مستخدم غير موجود', {
-                userId,
-                ip: req.ip
-            });
-            return res.status(401).json({
-                success: false,
-                error: 'مستخدم غير موجود'
-            });
+            return res.status(401).json({ success: false, error: 'مستخدم غير موجود' });
         }
 
-        // ============================================================
-        // 6) التحقق من نشاط الحساب
-        // ============================================================
+        // 6) نشاط الحساب
         if (user.active === false || user.isActive === false) {
-            logger.warn('⚠️ حساب غير نشط', {
-                username: user.username,
-                ip: req.ip
-            });
-            return res.status(401).json({
-                success: false,
-                error: 'الحساب غير نشط'
-            });
+            return res.status(401).json({ success: false, error: 'الحساب غير نشط' });
         }
 
-        // ============================================================
-        // 7) التحقق من قفل الحساب
-        // ============================================================
-        if (user.locked && user.lockedUntil && Date.now() < user.lockedUntil) {
-            const remainingMinutes = Math.ceil(
-                (user.lockedUntil - Date.now()) / 60000
-            );
-            logger.warn('🔒 محاولة وصول من حساب مقفل', {
-                username: user.username,
-                ip: req.ip,
-                remainingMinutes
-            });
-            return res.status(423).json({
-                success: false,
-                error: `الحساب مقفل مؤقتاً. حاول بعد ${remainingMinutes} دقيقة`
-            });
+        // 7) القفل
+        if (user.lockedUntil && Date.now() < new Date(user.lockedUntil).getTime()) {
+            const remainingMinutes = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
+            return res.status(423).json({ success: false, error: `الحساب مقفل مؤقتاً. حاول بعد ${remainingMinutes} دقيقة` });
         }
 
-        // ============================================================
-        // 8) التحقق من tokenVersion (v9.1)
-        // ============================================================
-        if (
-            decoded.ver !== undefined &&
-            user.tokenVersion !== undefined &&
-            decoded.ver !== user.tokenVersion
-        ) {
-            logger.warn('⚠️ tokenVersion غير مطابق', {
-                username: user.username,
-                ip: req.ip,
-                tokenVer: decoded.ver,
-                userVer: user.tokenVersion
-            });
-            return res.status(401).json({
-                success: false,
-                error: 'الجلسة ملغاة، يرجى تسجيل الدخول مجدداً'
-            });
+        // 8) tokenVersion
+        if (decoded.ver !== undefined && user.tokenVersion !== undefined && decoded.ver !== user.tokenVersion) {
+            return res.status(401).json({ success: false, error: 'الجلسة ملغاة، يرجى تسجيل الدخول مجدداً' });
         }
 
-        // ============================================================
-        // 9) إضافة المستخدم إلى الطلب
-        // ============================================================
+        // 9) إضافة المستخدم للطلب
         req.user = user;
         req.userId = user.id;
         req.username = user.username;
         req.userRole = user.role;
-        req.auth = decoded; // ✅ معلومات JWT الأصلية
-
-        // ✅ دعم التوافق مع server.js v9.1
+        req.auth = decoded;
         req.token = token;
 
         next();
-
     } catch (error) {
         logger.error('❌ خطأ في المصادقة:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'حدث خطأ في المصادقة'
-        });
+        return res.status(500).json({ success: false, error: 'حدث خطأ في المصادقة' });
     }
 }
 
@@ -330,111 +284,56 @@ async function authenticate(req, res, next) {
 // 👑 AUTHORIZE (RBAC)
 // ============================================================
 
-/**
- * التحقق من الصلاحيات (Authorization)
- * @param {...string} roles - الأدوار المسموحة
- * @returns {Function} - وسيط التحقق من الصلاحيات
- */
 function authorize(...roles) {
     return (req, res, next) => {
         if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                error: 'غير مصدق'
-            });
+            return res.status(401).json({ success: false, error: 'غير مصدق' });
         }
+        if (roles.length === 0) return next();
 
-        // ✅ إن لم تُحدد أدوار → نسمح بالمرور
-        if (roles.length === 0) {
-            return next();
-        }
+        const userRole = normalizeRole(req.user.role);
 
-        // ✅ التوافق مع كل أشكال الأدوار
-        const adminRoles = ['admin', 'super_admin', 'مسؤول', 'مدير'];
-        const userRole = req.user.role;
+        // ✅ admin يمر دائمًا
+        if (userRole === 'admin') return next();
 
-        // ✅ الأدمن يمر دائماً
-        if (adminRoles.includes(userRole)) {
-            return next();
-        }
-
-        // ✅ التحقق من الأدوار المطلوبة
-        if (!roles.includes(userRole)) {
+        const normalizedRequired = roles.map(r => normalizeRole(r));
+        if (!normalizedRequired.includes(userRole)) {
             logger.warn('⚠️ محاولة وصول غير مصرح بها', {
                 username: req.user.username,
-                role: userRole,
+                role: req.user.role,
+                normalizedRole: userRole,
                 requiredRoles: roles,
                 path: req.path
             });
-            return res.status(403).json({
-                success: false,
-                error: 'ليس لديك صلاحية للوصول إلى هذه الصفحة'
-            });
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية للوصول إلى هذه الصفحة' });
         }
-
         next();
     };
 }
 
 // ============================================================
-// 👑 REQUIRE ADMIN (مكافئ لـ authorize('admin'))
+// 👑 REQUIRE ADMIN
 // ============================================================
 
 function requireAdmin(req, res, next) {
     if (!req.user) {
-        return res.status(401).json({
-            success: false,
-            error: 'غير مصدق'
-        });
+        return res.status(401).json({ success: false, error: 'غير مصدق' });
     }
-
-    const adminRoles = ['admin', 'super_admin', 'مسؤول', 'مدير'];
-    if (!adminRoles.includes(req.user.role)) {
+    const role = normalizeRole(req.user.role);
+    if (role !== 'admin') {
         logger.warn('⚠️ محاولة وصول غير مصرح بها (admin required)', {
             username: req.user.username,
             role: req.user.role,
             path: req.path
         });
-        return res.status(403).json({
-            success: false,
-            error: 'هذه العملية متاحة للمسؤول فقط'
-        });
+        return res.status(403).json({ success: false, error: 'هذه العملية متاحة للمسؤول فقط' });
     }
-
     next();
 }
 
 // ============================================================
-// 👑 REQUIRE PERMISSION (RBAC متقدم)
+// 👑 REQUIRE PERMISSION
 // ============================================================
-
-const ROLE_PERMISSIONS = {
-    admin: ['*'],
-    super_admin: ['*'],
-    manager: [
-        'vessels:read',
-        'vessels:create',
-        'vessels:update',
-        'maintenance:read',
-        'maintenance:create',
-        'maintenance:update',
-        'logs:read'
-    ],
-    operator: [
-        'vessels:read',
-        'maintenance:read',
-        'maintenance:create'
-    ],
-    viewer: ['vessels:read', 'maintenance:read'],
-    مسؤول: ['*'],
-    مدير: ['*']
-};
-
-function hasPermission(user, permission) {
-    if (!user) return false;
-    const permissions = ROLE_PERMISSIONS[user.role] || [];
-    return permissions.includes('*') || permissions.includes(permission);
-}
 
 function requirePermission(permission) {
     return (req, res, next) => {
@@ -442,13 +341,24 @@ function requirePermission(permission) {
             logger.warn('⚠️ صلاحية مرفوضة', {
                 username: req.user?.username,
                 role: req.user?.role,
+                normalizedRole: req.user ? normalizeRole(req.user.role) : null,
                 requiredPermission: permission,
                 path: req.path
             });
-            return res.status(403).json({
-                success: false,
-                error: 'ليس لديك الصلاحية الكافية'
-            });
+            return res.status(403).json({ success: false, error: 'ليس لديك الصلاحية الكافية' });
+        }
+        next();
+    };
+}
+
+function requireOneOf(...permissions) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ success: false, error: 'غير مصدق' });
+        }
+        const hasAny = permissions.some(p => hasPermission(req.user, p));
+        if (!hasAny) {
+            return res.status(403).json({ success: false, error: 'ليس لديك الصلاحية الكافية' });
         }
         next();
     };
@@ -463,8 +373,11 @@ module.exports = {
     authorize,
     requireAdmin,
     requirePermission,
+    requireOneOf,
     hasPermission,
-    // ✅ أدوات مساعدة
+    normalizeRole,
     findUserById,
-    isTokenRevoked
+    isTokenRevoked,
+    ROLE_PERMISSIONS,
+    SENSITIVE_PERMISSIONS
 };
