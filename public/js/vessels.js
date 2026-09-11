@@ -1,9 +1,9 @@
 // ============================================================
-// 🚢 vessels.js - إدارة المراكب
+// 🚢 vessels.js - إدارة المراكب (v2.0 — متوافق مع server v9.11)
 // ============================================================
 
 // ============================================================
-// 🚢 دوال المراكب
+// ➕ إضافة مركب جديد
 // ============================================================
 
 function addItem() {
@@ -11,15 +11,17 @@ function addItem() {
         name: document.getElementById('iName')?.value,
         num: document.getElementById('iNum')?.value,
         len: parseFloat(document.getElementById('iLen')?.value) || 0,
-        reg: document.getElementById('iReg')?.value,
+        region: document.getElementById('iReg')?.value,        // ✅ region
         zone: document.getElementById('iZone')?.value,
         port: document.getElementById('iPort')?.value,
         supp: document.getElementById('iSupp')?.value,
-        stat: document.getElementById('iStat')?.value,
+        status: document.getElementById('iStat')?.value,        // ✅ status
         break: document.getElementById('iBreak')?.value,
         fDate: document.getElementById('iDate')?.value,
         eDate: document.getElementById('iEnd')?.value,
-        ref: document.getElementById('iRef')?.value
+        ref: document.getElementById('iRef')?.value,
+        cat: document.getElementById('iCat')?.value,            // ✅ cat (إن وُجد)
+        repairUnit: document.getElementById('iRepairUnit')?.value  // ✅ repairUnit (إن وُجد)
     };
     
     if (!data.name) {
@@ -28,6 +30,7 @@ function addItem() {
     }
     
     const token = getToken();
+    const csrf = getCsrfToken();
     if (!token) {
         showNotification('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
@@ -37,7 +40,8 @@ function addItem() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
+            'Authorization': 'Bearer ' + token,
+            'X-CSRF-Token': csrf                        // ✅ CSRF
         },
         body: JSON.stringify(data)
     })
@@ -57,10 +61,15 @@ function addItem() {
     });
 }
 
+// ============================================================
+// 🗑️ حذف مركب
+// ============================================================
+
 function deleteVessel(id) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا المركب؟')) return;
     
     const token = getToken();
+    const csrf = getCsrfToken();
     if (!token) {
         showNotification('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
@@ -69,7 +78,8 @@ function deleteVessel(id) {
     fetch('/api/vessels/' + id, {
         method: 'DELETE',
         headers: {
-            'Authorization': 'Bearer ' + token
+            'Authorization': 'Bearer ' + token,
+            'X-CSRF-Token': csrf
         }
     })
     .then(res => res.json())
@@ -87,54 +97,73 @@ function deleteVessel(id) {
     });
 }
 
+// ============================================================
+// ✏️ تعديل مركب
+// ============================================================
+
 function editVessel(id) {
-    const vessel = allVessels.find(v => v._id === id);
+    const vessel = allVessels.find(v => v._id === id || v.id === id);
     if (!vessel) {
         showNotification('⚠️ المركب غير موجود', 'warning');
         return;
     }
     
+    // ✅ استخدم أسماء السيرفر
     document.getElementById('iName').value = vessel.name || '';
     document.getElementById('iNum').value = vessel.num || '';
     document.getElementById('iLen').value = vessel.len || 0;
-    document.getElementById('iReg').value = vessel.reg || '';
+    document.getElementById('iReg').value = vessel.region || '';     // ✅
     document.getElementById('iZone').value = vessel.zone || '';
     document.getElementById('iPort').value = vessel.port || '';
     document.getElementById('iSupp').value = vessel.supp || '';
-    document.getElementById('iStat').value = vessel.stat || 'صالح';
+    document.getElementById('iStat').value = vessel.status || 'صالح'; // ✅
     document.getElementById('iBreak').value = vessel.break || '';
     document.getElementById('iDate').value = vessel.fDate || '';
     document.getElementById('iEnd').value = vessel.eDate || '';
     document.getElementById('iRef').value = vessel.ref || '';
     
+    // إن وُجدت حقول إضافية
+    const catEl = document.getElementById('iCat');
+    if (catEl) catEl.value = vessel.cat || '';
+    
+    const repairUnitEl = document.getElementById('iRepairUnit');
+    if (repairUnitEl) repairUnitEl.value = vessel.repairUnit || '';
+    
     const saveBtn = document.querySelector('#inputArea .btn-success');
     if (saveBtn) {
         saveBtn.textContent = '✏️ تحديث';
         saveBtn.onclick = function() {
-            updateVessel(id);
+            updateVessel(vessel.id);   // ✅ استخدم id وليس _id
         };
     }
     
     showNotification('✏️ قم بتعديل البيانات ثم اضغط تحديث', 'info');
 }
 
+// ============================================================
+// 💾 تحديث مركب
+// ============================================================
+
 function updateVessel(id) {
     const data = {
         name: document.getElementById('iName')?.value,
         num: document.getElementById('iNum')?.value,
         len: parseFloat(document.getElementById('iLen')?.value) || 0,
-        reg: document.getElementById('iReg')?.value,
+        region: document.getElementById('iReg')?.value,           // ✅
         zone: document.getElementById('iZone')?.value,
         port: document.getElementById('iPort')?.value,
         supp: document.getElementById('iSupp')?.value,
-        stat: document.getElementById('iStat')?.value,
+        status: document.getElementById('iStat')?.value,           // ✅
         break: document.getElementById('iBreak')?.value,
         fDate: document.getElementById('iDate')?.value,
         eDate: document.getElementById('iEnd')?.value,
-        ref: document.getElementById('iRef')?.value
+        ref: document.getElementById('iRef')?.value,
+        cat: document.getElementById('iCat')?.value,
+        repairUnit: document.getElementById('iRepairUnit')?.value
     };
     
     const token = getToken();
+    const csrf = getCsrfToken();
     if (!token) {
         showNotification('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
@@ -144,7 +173,8 @@ function updateVessel(id) {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
+            'Authorization': 'Bearer ' + token,
+            'X-CSRF-Token': csrf
         },
         body: JSON.stringify(data)
     })
@@ -156,11 +186,6 @@ function updateVessel(id) {
             showNotification('✅ تم تحديث المركب بنجاح', 'success');
             clearInputs();
             loadVessels();
-            const saveBtn = document.querySelector('#inputArea .btn-success');
-            if (saveBtn) {
-                saveBtn.textContent = '💾 حفظ';
-                saveBtn.onclick = addItem;
-            }
         }
     })
     .catch(err => {
@@ -169,19 +194,19 @@ function updateVessel(id) {
     });
 }
 
+// ============================================================
+// 🧹 تفريغ الحقول
+// ============================================================
+
 function clearInputs() {
-    document.getElementById('iName').value = '';
-    document.getElementById('iNum').value = '';
-    document.getElementById('iLen').value = '';
-    document.getElementById('iReg').value = '';
-    document.getElementById('iZone').value = '';
-    document.getElementById('iPort').value = '';
-    document.getElementById('iSupp').value = '';
-    document.getElementById('iStat').value = 'صالح';
-    document.getElementById('iBreak').value = '';
-    document.getElementById('iDate').value = '';
-    document.getElementById('iEnd').value = '';
-    document.getElementById('iRef').value = '';
+    ['iName', 'iNum', 'iLen', 'iReg', 'iZone', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef', 'iCat', 'iRepairUnit']
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+    
+    const statEl = document.getElementById('iStat');
+    if (statEl) statEl.value = 'صالح';
     
     const saveBtn = document.querySelector('#inputArea .btn-success');
     if (saveBtn) {
@@ -190,10 +215,13 @@ function clearInputs() {
     }
 }
 
+// ============================================================
+// 🌍 تحديث المناطق
+// ============================================================
+
 function updateZones() {
     const reg = document.getElementById('iReg')?.value;
     const zoneSelect = document.getElementById('iZone');
-    
     if (!zoneSelect) return;
     
     const zones = {
@@ -216,7 +244,25 @@ function updateZones() {
 }
 
 // ============================================================
-// 🔄 تصدير للاستخدام العالمي
+// 🔐 دوال مساعدة
+// ============================================================
+
+function getToken() {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+}
+
+function getCsrfToken() {
+    // من الكوكي
+    const cookies = document.cookie.split('; ');
+    const csrfCookie = cookies.find(c => c.startsWith('marine_csrf='));
+    if (csrfCookie) return decodeURIComponent(csrfCookie.split('=')[1]);
+    
+    // أو من localStorage
+    return localStorage.getItem('csrfToken') || '';
+}
+
+// ============================================================
+// 🌐 تصدير عالمي
 // ============================================================
 
 window.addItem = addItem;
