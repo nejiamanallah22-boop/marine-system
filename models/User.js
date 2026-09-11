@@ -1,15 +1,14 @@
 /**
- * 👤 نموذج المستخدم
+ * 👤 نموذج المستخدم - v2.0
  * @module models/User
+ * 
+ * ✨ v2.0: توافق كامل مع server.js v9.6
  */
 
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
-/**
- * مخطط المستخدم
- */
 const UserSchema = new mongoose.Schema({
     id: {
         type: String,
@@ -17,6 +16,7 @@ const UserSchema = new mongoose.Schema({
         unique: true,
         index: true
     },
+    
     username: {
         type: String,
         required: [true, 'اسم المستخدم مطلوب'],
@@ -26,6 +26,7 @@ const UserSchema = new mongoose.Schema({
         maxlength: [50, 'اسم المستخدم يجب أن يكون 50 حرفاً كحد أقصى'],
         match: [/^[a-zA-Z0-9_\u0600-\u06FF]+$/, 'اسم المستخدم يحتوي على أحرف غير مسموحة']
     },
+    
     email: {
         type: String,
         required: [true, 'البريد الإلكتروني مطلوب'],
@@ -34,54 +35,75 @@ const UserSchema = new mongoose.Schema({
         lowercase: true,
         match: [/^\S+@\S+\.\S+$/, 'البريد الإلكتروني غير صالح']
     },
+    
     password: {
         type: String,
         required: [true, 'كلمة المرور مطلوبة'],
         minlength: [12, 'كلمة المرور يجب أن تكون 12 حرفاً على الأقل']
     },
+    
     name: {
         type: String,
         required: [true, 'الاسم مطلوب'],
         trim: true,
         minlength: [2, 'الاسم يجب أن يكون حرفين على الأقل']
     },
+    
+    // ✅ الدور - يقبل العربية والإنجليزية
     role: {
         type: String,
-        enum: ['admin', 'manager', 'operator', 'viewer'],
-        default: 'viewer'
+        default: 'viewer',
+        trim: true
     },
+    
     permissions: {
         type: [String],
         default: []
     },
+    
+    // ✅ isActive (الحقل الرسمي)
     isActive: {
         type: Boolean,
-        default: true
+        default: true,
+        index: true
     },
+    
     twoFactorEnabled: {
         type: Boolean,
-        default: true
+        default: false
     },
+    
     twoFactorSecret: {
         type: String,
         default: null
     },
+    
     lastLogin: {
         type: Date,
         default: null
     },
+    
     loginAttempts: {
         type: Number,
         default: 0
     },
+    
     lockedUntil: {
         type: Date,
         default: null
     },
+    
+    // ✅ tokenVersion - مهم لـ JWT invalidation
+    tokenVersion: {
+        type: Number,
+        default: 0
+    },
+    
     createdAt: {
         type: Date,
         default: Date.now
     },
+    
     updatedAt: {
         type: Date,
         default: Date.now
@@ -92,9 +114,23 @@ const UserSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-/**
- * تشفير كلمة المرور قبل الحفظ
- */
+// ============================================================
+// ✅ Virtuals (للتوافق مع server.js)
+// ============================================================
+
+// ✅ `active` = `isActive` (للتوافق مع الواجهة)
+UserSchema.virtual('active').get(function() {
+    return this.isActive;
+});
+
+UserSchema.virtual('active').set(function(val) {
+    this.isActive = Boolean(val);
+});
+
+// ============================================================
+// ✅ Hooks
+// ============================================================
+
 UserSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
     
@@ -107,40 +143,29 @@ UserSchema.pre('save', async function(next) {
     }
 });
 
-/**
- * تحديث وقت التعديل
- */
 UserSchema.pre('save', function(next) {
     this.updatedAt = new Date();
     next();
 });
 
-/**
- * مقارنة كلمة المرور
- * @param {string} candidatePassword - كلمة المرور المدخلة
- * @returns {Promise<boolean>} - هل هي صحيحة
- */
+// ============================================================
+// ✅ Methods
+// ============================================================
+
 UserSchema.methods.comparePassword = async function(candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
 };
 
-/**
- * التحقق من قفل الحساب
- * @returns {boolean} - هل الحساب مقفل
- */
 UserSchema.methods.isLocked = function() {
     if (!this.lockedUntil) return false;
     return new Date() < this.lockedUntil;
 };
 
-/**
- * زيادة عدد محاولات الدخول الفاشلة
- */
 UserSchema.methods.incrementLoginAttempts = async function() {
     this.loginAttempts += 1;
     
     const maxAttempts = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 5;
-    const lockoutMinutes = parseInt(process.env.LOCKOUT_MINUTES) || 15;
+    const lockoutMinutes = parseInt(process.env.LOCKOUT_MINUTES) || 30;
     
     if (this.loginAttempts >= maxAttempts) {
         this.lockedUntil = new Date(Date.now() + lockoutMinutes * 60 * 1000);
@@ -149,25 +174,34 @@ UserSchema.methods.incrementLoginAttempts = async function() {
     await this.save();
 };
 
-/**
- * إعادة تعيين محاولات الدخول
- */
 UserSchema.methods.resetLoginAttempts = async function() {
     this.loginAttempts = 0;
     this.lockedUntil = null;
     await this.save();
 };
 
-/**
- * الحصول على المستخدم بدون بيانات حساسة
- * @returns {Object} - بيانات المستخدم الآمنة
- */
 UserSchema.methods.toSafeObject = function() {
     const obj = this.toObject();
     delete obj.password;
     delete obj.twoFactorSecret;
     delete obj.__v;
+    
+    // ✅ أضف active
+    obj.active = this.isActive;
+    
     return obj;
+};
+
+// ============================================================
+// ✅ Statics
+// ============================================================
+
+UserSchema.statics.findActive = function() {
+    return this.find({ isActive: true });
+};
+
+UserSchema.statics.findByRole = function(role) {
+    return this.find({ role: role });
 };
 
 const User = mongoose.model('User', UserSchema);
