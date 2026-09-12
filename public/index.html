@@ -1221,15 +1221,22 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============================================================
-    JAVASCRIPT - v9.6 (with RBAC)
+    JAVASCRIPT - v9.12 (RBAC 5 roles + secure CSRF + refresh flow)
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v9.6
-        // RBAC + Full Cleanup + Safe DOM
+        // 🚢 MARINE SYSTEM - v9.12
+        // - CSRF من الخادم فقط (بدون توليد محلي)
+        // - Refresh Token عبر HttpOnly Cookie فقط (لا وجود له في JS إطلاقًا)
+        // - تجديد تلقائي للـ Access Token عند 401
+        // - RBAC مطابق لصلاحيات السيرفر (admin/manager/editor/maintenance_unit/viewer)
+        // - إصلاح loadPage() (fallback عبر المسارات فعليًا)
+        // - إزالة MutationObserver على body بالكامل
+        // - إزالة password.trim()
+        // - عدم إرسال CSRF مع GET
         // ============================================================
 
-        console.log('🚢 Marine System v9.6 - Loading...');
+        console.log('🚢 Marine System v9.12 - Loading...');
 
         // ============================================================
         // ✅ GLOBAL CLEANUP STATE
@@ -1343,7 +1350,9 @@
 
         const CONFIG = {
             API: '/api',
-            KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page', CSRF: 'csrf_token' },
+            // ✅ v9.12: لم يعد هناك أي مفتاح CSRF في localStorage.
+            //           CSRF يُحفظ فقط في الذاكرة (متغير جافاسكريبت) ويُجدَّد من الخادم.
+            KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },
             PAGES: {
                 dashboard: 'لوحة التحكم',
                 fleet: 'السجل العام',
@@ -1360,102 +1369,118 @@
         };
 
         // ============================================================
-        // 🔐 RBAC - Role-Based Access Control (v9.6)
+        // 🔐 RBAC - Role-Based Access Control (v9.12)
+        // مطابق تمامًا لـ server.js: ROLE_PERMISSIONS + LEGACY_ROLE_MAP
         // ============================================================
 
+        // ✅ صلاحيات كل دور — يجب أن تبقى متطابقة مع server.js دائمًا
         const ROLE_PERMISSIONS = {
-            // English roles
             admin: ['*'],
-            super_admin: ['*'],
 
             manager: [
                 'dashboard:view',
-                'fleet:view', 'fleet:create', 'fleet:update',
-                'maintenance:view', 'maintenance:create', 'maintenance:update',
-                'efficiency:view',
-                'support:view',
-                'notes:view',
-                'logs:view',
-                'ai:view'
+                'vessels:read', 'vessels:create', 'vessels:update',
+                'maintenance:read', 'maintenance:create', 'maintenance:update', 'maintenance:delete',
+                'logs:read'
             ],
 
-            operator: [
+            // ✏️ محرر — إنشاء/تعديل فقط، بدون حذف وبدون سجلات إدارية
+            editor: [
                 'dashboard:view',
-                'fleet:view',
-                'maintenance:view', 'maintenance:create',
-                'support:view',
-                'ai:view'
+                'vessels:read', 'vessels:create', 'vessels:update',
+                'maintenance:read', 'maintenance:create', 'maintenance:update'
+            ],
+
+            // 🔧 وحدة الصيانة — نفس صلاحيات editor (تسمية مختلفة فقط)
+            maintenance_unit: [
+                'dashboard:view',
+                'vessels:read', 'vessels:create', 'vessels:update',
+                'maintenance:read', 'maintenance:create', 'maintenance:update'
             ],
 
             viewer: [
                 'dashboard:view',
-                'fleet:view',
-                'maintenance:view',
-                'support:view',
-                'ai:view'
-            ],
-
-            // Arabic roles
-            مسؤول: ['*'],
-            مدير: [
-                'dashboard:view',
-                'fleet:view', 'fleet:create', 'fleet:update',
-                'maintenance:view', 'maintenance:create', 'maintenance:update',
-                'efficiency:view',
-                'support:view',
-                'notes:view',
-                'logs:view',
-                'ai:view'
-            ],
-            مشغل: [
-                'dashboard:view',
-                'fleet:view',
-                'maintenance:view', 'maintenance:create',
-                'support:view',
-                'ai:view'
-            ],
-            مشاهد: [
-                'dashboard:view',
-                'fleet:view',
-                'maintenance:view',
-                'support:view',
-                'ai:view'
+                'vessels:read',
+                'maintenance:read'
             ]
         };
 
+        // 🗺️ الصلاحيات الحساسة — admin فقط، مطابقة لـ SENSITIVE_PERMISSIONS في السيرفر
+        const SENSITIVE_PERMISSIONS = {
+            'users:manage': ['admin'],
+            'monitoring:view': ['admin'],
+            'settings:manage': ['admin']
+        };
+
+        // 🗺️ تسميات عربية للعرض في الواجهة
+        const ROLE_LABELS = {
+            admin: 'مسؤول النظام',
+            manager: 'مدير الأسطول',
+            editor: 'محرر',
+            maintenance_unit: 'وحدة الصيانة',
+            viewer: 'مشاهد'
+        };
+
+        // 🗺️ توافق مع الأدوار القديمة (عربية / إنجليزية سابقة) — مطابق لسيرفر v9.11
+        const LEGACY_ROLE_MAP = {
+            'مسؤول': 'admin',
+            'مدير': 'manager',
+            'مشغل': 'maintenance_unit',
+            'مشاهد': 'viewer',
+            'operator': 'maintenance_unit',
+            'super_admin': 'admin'
+        };
+
+        // ✅ يحوّل أي دور قديم/عربي/غير معروف إلى أحد الأدوار الخمسة الفعلية
+        function normalizeRole(role) {
+            if (!role) return 'viewer';
+            const trimmed = String(role).trim();
+            if (ROLE_PERMISSIONS[trimmed]) return trimmed;
+            return LEGACY_ROLE_MAP[trimmed] || 'viewer';
+        }
+
         const PAGE_PERMISSIONS = {
             dashboard: 'dashboard:view',
-            fleet: 'fleet:view',
-            maintenance: 'maintenance:view',
-            efficiency: 'efficiency:view',
-            support: 'support:view',
-            notes: 'notes:view',
+            fleet: 'vessels:read',
+            maintenance: 'maintenance:read',
+            efficiency: 'dashboard:view',
+            support: 'dashboard:view',
+            notes: 'dashboard:view',
             monitoring: 'monitoring:view',
             users: 'users:manage',
-            logs: 'logs:view',
-            'ai-assistant': 'ai:view',
+            logs: 'logs:read',
+            'ai-assistant': 'dashboard:view',
             settings: 'settings:manage'
         };
 
-        // ✅ الصفحات الخاصة بالأدمن فقط
+        // ✅ الصفحات الخاصة بالأدمن فقط (تطابق SENSITIVE_PERMISSIONS)
         const ADMIN_ONLY_PAGES = ['users', 'settings', 'monitoring'];
 
         function isAdmin() {
             if (!currentUser || !currentUser.role) return false;
-            return ['admin', 'super_admin', 'مسؤول', 'مدير'].includes(currentUser.role);
+            return normalizeRole(currentUser.role) === 'admin';
         }
 
         function hasPermission(permission) {
             if (!currentUser || !currentUser.role) return false;
 
-            const permissions = ROLE_PERMISSIONS[currentUser.role] || [];
-            if (permissions.includes('*')) return true;
+            const role = normalizeRole(currentUser.role);
 
-            return permissions.includes(permission);
+            if (SENSITIVE_PERMISSIONS[permission]) {
+                return SENSITIVE_PERMISSIONS[permission].includes(role);
+            }
+
+            const permissions = ROLE_PERMISSIONS[role] || [];
+            if (permissions.includes('*')) return true;
+            if (permissions.includes(permission)) return true;
+
+            const resource = permission.split(':')[0];
+            if (permissions.includes(resource + ':*')) return true;
+
+            return false;
         }
 
         function canAccessPage(page) {
-            // ✅ الأدمن فقط
             if (ADMIN_ONLY_PAGES.includes(page)) {
                 return isAdmin();
             }
@@ -1469,12 +1494,12 @@
         function applyRBACToUI() {
             if (!currentUser) return;
 
-            console.log('🔐 Applying RBAC for role:', currentUser.role);
+            const role = normalizeRole(currentUser.role);
+            console.log('🔐 Applying RBAC for role:', role, '(raw:', currentUser.role, ')');
 
             let visible = 0;
             let hidden = 0;
 
-            // ✅ لكل زر في القائمة
             document.querySelectorAll('.nav-btn[data-page]').forEach(function(btn) {
                 const page = btn.dataset.page;
 
@@ -1491,20 +1516,15 @@
                 }
             });
 
-            // ✅ إخفاء المجموعات الفارغة
             document.querySelectorAll('.nav-group').forEach(function(group) {
-                const visibleBtns = group.querySelectorAll(
-                    '.nav-btn:not([style*="display: none"])'
+                const visibleBtns = Array.from(group.querySelectorAll('.nav-btn')).filter(
+                    btn => btn.style.display !== 'none'
                 );
 
-                if (visibleBtns.length === 0) {
-                    group.style.display = 'none';
-                } else {
-                    group.style.display = 'flex';
-                }
+                group.style.display = visibleBtns.length === 0 ? 'none' : 'flex';
             });
 
-            console.log('✅ RBAC applied:', { role: currentUser.role, visible, hidden });
+            console.log('✅ RBAC applied:', { role, visible, hidden });
         }
 
         // ============================================================
@@ -1523,60 +1543,67 @@
         window.allLogs = allLogs;
 
         // ============================================================
-        // 🔒 CSRF TOKEN MANAGER
+        // 🔒 CSRF TOKEN MANAGER (v9.12)
+        // ------------------------------------------------------------
+        // ✅ التوكن يأتي حصريًا من الخادم (استجابة /api/csrf-token أو
+        //    هيدر X-CSRF-Token في استجابات auth).
+        // ✅ يُحفظ في الذاكرة فقط (متغير الكلاس) — بدون localStorage.
+        // ✅ لا يوجد أي توليد عشوائي في المتصفح (لا Math.random هنا).
         // ============================================================
 
         class CSRFTokenManager {
             constructor() {
                 this.token = null;
-                this.expiry = null;
-                this.validDuration = 24 * 60 * 60 * 1000;
-                this.loadFromStorage();
+                this.expiry = 0;
+                this.fetchingPromise = null;
             }
 
-            loadFromStorage() {
-                this.token = localStorage.getItem(CONFIG.KEYS.CSRF);
-                this.expiry = parseInt(localStorage.getItem(CONFIG.KEYS.CSRF + '_expiry') || '0');
-                if (!this.token || Date.now() > this.expiry) {
-                    this.generateToken();
-                }
-            }
-
-            generateToken() {
-                const timestamp = Date.now();
-                const random = Math.random().toString(36).substring(2, 15);
-                const hash = this.simpleHash(timestamp + random);
-                this.token = timestamp + '.' + random + '.' + hash;
-                this.expiry = timestamp + this.validDuration;
-                localStorage.setItem(CONFIG.KEYS.CSRF, this.token);
-                localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', this.expiry.toString());
+            // يستخدم توكن أتى من استجابة سيرفر (login/refresh/csrf-token)
+            setToken(token, expiresAt) {
+                if (!token) return;
+                this.token = token;
+                this.expiry = expiresAt || (Date.now() + 8 * 60 * 60 * 1000);
                 this.injectTokenToForms();
-                return this.token;
             }
 
-            validateToken(token) {
-                if (!token) return false;
-                if (Date.now() > this.expiry) return false;
-                const parts = token.split('.');
-                if (parts.length !== 3) return false;
-                const [timestamp, random, hash] = parts;
-                const expectedHash = this.simpleHash(timestamp + random);
-                return hash === expectedHash;
+            isValid() {
+                return !!this.token && Date.now() < this.expiry;
             }
 
-            simpleHash(str) {
-                let hash = 0;
-                for (let i = 0; i < str.length; i++) {
-                    const char = str.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash;
-                }
-                return Math.abs(hash).toString(36);
+            // ✅ يجلب توكن جديد من الخادم فقط (لا توليد محلي إطلاقًا)
+            async fetchFromServer() {
+                if (this.fetchingPromise) return this.fetchingPromise;
+
+                this.fetchingPromise = fetch('/api/csrf-token', {
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                })
+                    .then(res => res.ok ? res.json() : null)
+                    .then(data => {
+                        if (data && data.success && data.token) {
+                            this.setToken(data.token, Date.now() + (data.expiresIn || 8 * 60 * 60 * 1000));
+                        }
+                        return this.token;
+                    })
+                    .catch(() => null)
+                    .finally(() => { this.fetchingPromise = null; });
+
+                return this.fetchingPromise;
+            }
+
+            // ✅ يُرجع توكن صالح؛ يجلب واحدًا من الخادم عند الحاجة
+            async getToken() {
+                if (this.isValid()) return this.token;
+                return this.fetchFromServer();
+            }
+
+            // نسخة متزامنة (بدون انتظار) — تُستخدم فقط حين يكون التوكن متوفرًا أصلاً
+            getTokenSync() {
+                return this.isValid() ? this.token : null;
             }
 
             injectTokenToForms() {
-                const token = this.getToken();
-                if (!token) return;
+                if (!this.token) return;
                 document.querySelectorAll('form').forEach(form => {
                     let csrfInput = form.querySelector('input[name="csrf_token"]');
                     if (!csrfInput) {
@@ -1585,22 +1612,13 @@
                         csrfInput.name = 'csrf_token';
                         form.appendChild(csrfInput);
                     }
-                    csrfInput.value = token;
+                    csrfInput.value = this.token;
                 });
-            }
-
-            getToken() {
-                if (!this.token || !this.validateToken(this.token)) {
-                    return this.generateToken();
-                }
-                return this.token;
             }
 
             clearToken() {
                 this.token = null;
-                this.expiry = null;
-                localStorage.removeItem(CONFIG.KEYS.CSRF);
-                localStorage.removeItem(CONFIG.KEYS.CSRF + '_expiry');
+                this.expiry = 0;
             }
         }
 
@@ -1610,19 +1628,13 @@
 
         function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
 
+        function setToken(token) { localStorage.setItem(CONFIG.KEYS.TOKEN, token); }
+
+        function clearToken() { localStorage.removeItem(CONFIG.KEYS.TOKEN); }
+
         function getRoleName(r) {
-            const R = {
-                admin: 'مسؤول',
-                super_admin: 'مسؤول أول',
-                manager: 'مدير',
-                operator: 'مشغل',
-                viewer: 'مشاهد',
-                مسؤول: 'مسؤول',
-                مدير: 'مدير',
-                مشغل: 'مشغل',
-                مشاهد: 'مشاهد'
-            };
-            return R[r] || r || 'مستخدم';
+            const normalized = normalizeRole(r);
+            return ROLE_LABELS[normalized] || normalized || 'مستخدم';
         }
 
         function escapeHTML(s) {
@@ -1680,6 +1692,116 @@
         }
 
         // ============================================================
+        // 🌐 FETCH WRAPPER + تجديد تلقائي للـ Access Token عند 401
+        // ------------------------------------------------------------
+        // ✅ يُستخدم لكل الطلبات المصادَق عليها بدل fetch() المباشر.
+        // ✅ عند استجابة 401 يحاول تجديد access token عبر
+        //    POST /api/auth/refresh (يعتمد فقط على كوكي HttpOnly)
+        //    ثم يعيد الطلب الأصلي مرة واحدة بالتوكن الجديد.
+        // ✅ لا يرسل X-CSRF-Token إطلاقًا مع GET/HEAD/OPTIONS.
+        // ============================================================
+
+        let _refreshInFlight = null;
+
+        async function refreshAccessToken() {
+            if (_refreshInFlight) return _refreshInFlight;
+
+            _refreshInFlight = fetch('/api/auth/refresh', {
+                method: 'POST',
+                credentials: 'include', // الكوكي HttpOnly يُرسَل تلقائيًا؛ لا حاجة لقراءته من JS
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(async res => {
+                    if (!res.ok) return null;
+                    const data = await res.json();
+                    if (data && data.success && data.token) {
+                        setToken(data.token);
+                        if (data.csrfToken) {
+                            csrfManager.setToken(
+                                data.csrfToken,
+                                data.session?.csrfExpiry || (Date.now() + 8 * 60 * 60 * 1000)
+                            );
+                        }
+                        if (data.user) {
+                            currentUser = data.user;
+                            window.currentUser = data.user;
+                        }
+                        return data.token;
+                    }
+                    return null;
+                })
+                .catch(() => null)
+                .finally(() => { _refreshInFlight = null; });
+
+            return _refreshInFlight;
+        }
+
+        /**
+         * apiFetch(url, options)
+         * - يضيف Authorization تلقائيًا إن وُجد توكن.
+         * - يضيف X-CSRF-Token فقط للطلبات غير الآمنة (POST/PUT/PATCH/DELETE).
+         * - عند 401: يحاول تجديد التوكن مرة واحدة ثم يعيد الطلب.
+         */
+        async function apiFetch(url, options = {}) {
+            const method = (options.method || 'GET').toUpperCase();
+            const isSafeMethod = ['GET', 'HEAD', 'OPTIONS'].includes(method);
+
+            async function buildHeaders() {
+                const headers = Object.assign({}, options.headers || {});
+                const token = getToken();
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                if (!isSafeMethod) {
+                    const csrfToken = await csrfManager.getToken();
+                    if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+                }
+                return headers;
+            }
+
+            const headers = await buildHeaders();
+
+            let response = await fetch(url, {
+                ...options,
+                headers,
+                credentials: 'include'
+            });
+
+            if (response.status === 401 && getToken()) {
+                console.log('🔄 401 مستلم — محاولة تجديد access token...');
+                const newToken = await refreshAccessToken();
+
+                if (newToken) {
+                    const retryHeaders = await buildHeaders();
+                    response = await fetch(url, {
+                        ...options,
+                        headers: retryHeaders,
+                        credentials: 'include'
+                    });
+                } else {
+                    console.warn('⚠️ فشل تجديد التوكن — يتطلب إعادة تسجيل الدخول');
+                    handleSessionExpired();
+                }
+            }
+
+            return response;
+        }
+
+        function handleSessionExpired() {
+            clearToken();
+            csrfManager.clearToken();
+            currentUser = null;
+            window.currentUser = null;
+
+            const loginOverlay = document.getElementById('loginOverlay');
+            const mainApp = document.getElementById('mainApp');
+            if (mainApp && mainApp.style.display !== 'none') {
+                if (loginOverlay) loginOverlay.style.display = 'flex';
+                if (mainApp) mainApp.style.display = 'none';
+                showToast('⏳ انتهت الجلسة، يرجى تسجيل الدخول من جديد', 'warning');
+            }
+        }
+
+        // ============================================================
         // 🔐 FORGOT PASSWORD
         // ============================================================
 
@@ -1728,7 +1850,8 @@
             if (!username || !password || !errorEl || !loginBtn) return;
 
             const user = username.value.trim();
-            const pass = password.value.trim();
+            // ✅ v9.12: لا نستخدم .trim() على كلمة المرور — المسافات جزء من كلمة المرور
+            const pass = password.value;
 
             errorEl.className = 'error-msg';
             errorEl.textContent = '';
@@ -1746,101 +1869,90 @@
                 authOverlay.style.display = 'flex';
             }
 
-            const csrfToken = csrfManager.getToken();
+            (async () => {
+                try {
+                    // ✅ CSRF من الخادم قبل الإرسال (login مستثناة من فحص CSRF في السيرفر،
+                    //    لكن نرسله على أي حال لتوحيد السلوك ولأن السيرفر يقبله إن وُجد)
+                    const csrfToken = await csrfManager.getToken();
 
-            fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    username: user,
-                    password: pass,
-                    csrf_token: csrfToken
-                })
-            })
-            .then(async response => {
-                console.log('📥 Login response status: ' + response.status);
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {})
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({ username: user, password: pass })
+                    });
 
-                if (authOverlay) {
-                    authOverlay.style.display = 'none';
-                }
+                    console.log('📥 Login response status: ' + response.status);
 
-                const newCsrfToken = response.headers.get('X-CSRF-Token');
-                if (newCsrfToken) {
-                    localStorage.setItem(CONFIG.KEYS.CSRF, newCsrfToken);
-                    localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', Date.now() + (24 * 60 * 60 * 1000));
-                }
+                    if (authOverlay) authOverlay.style.display = 'none';
 
-                const data = await response.json();
-                console.log('📦 Login response data:', data);
+                    const data = await response.json();
+                    console.log('📦 Login response data:', data);
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'فشل تسجيل الدخول');
-                }
-
-                return data;
-            })
-            .then(data => {
-                loginBtn.disabled = false;
-                loginBtn.classList.remove('loading');
-
-                if (data.success && data.user) {
-                    const token = data.token;
-                    if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
-
-                    currentUser = data.user;
-                    window.currentUser = data.user;
-                    localStorage.setItem(CONFIG.KEYS.TOKEN, token);
-
-                    if (data.session) {
-                        localStorage.setItem(CONFIG.KEYS.CSRF, data.session.csrfToken);
-                        localStorage.setItem(CONFIG.KEYS.CSRF + '_expiry', data.session.csrfExpiry);
+                    if (!response.ok) {
+                        throw new Error(data.error || 'فشل تسجيل الدخول');
                     }
 
-                    console.log('✅ Login successful for user: ' + currentUser.username);
-                    console.log('👤 Role:', currentUser.role);
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
 
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
+                    if (data.success && data.user) {
+                        const token = data.token;
+                        if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
 
-                    updateUserDisplay();
+                        currentUser = data.user;
+                        window.currentUser = data.user;
+                        setToken(token);
 
-                    // ✅ v9.6: تطبيق RBAC على الواجهة
-                    applyRBACToUI();
+                        // ✅ CSRF الجديد من استجابة الخادم مباشرة (وليس Math.random)
+                        if (data.csrfToken) {
+                            csrfManager.setToken(
+                                data.csrfToken,
+                                data.session?.csrfExpiry || (Date.now() + 8 * 60 * 60 * 1000)
+                            );
+                        }
+                        // ✅ Refresh Token: لا يظهر أبدًا في data، السيرفر يضعه في
+                        //    كوكي HttpOnly (__Host-marine.refresh) تلقائيًا عبر Set-Cookie.
+                        //    لا حاجة ولا إمكانية لقراءته أو تخزينه هنا.
 
-                    // ✅ v9.6: تحميل الصفحة الافتراضية
-                    const defaultPage = 'dashboard';
-                    if (canAccessPage(defaultPage)) {
-                        loadPage(defaultPage);
+                        console.log('✅ Login successful for user: ' + currentUser.username);
+                        console.log('👤 Role:', normalizeRole(currentUser.role));
+
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'block';
+
+                        updateUserDisplay();
+                        applyRBACToUI();
+
+                        const defaultPage = 'dashboard';
+                        if (canAccessPage(defaultPage)) {
+                            loadPage(defaultPage);
+                        } else {
+                            loadPage('fleet');
+                        }
+
+                        showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
+
+                        setTimeout(loadAllData, 300);
+                        setTimeout(fetchServerStatus, 500);
                     } else {
-                        loadPage('fleet');
+                        errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+                        errorEl.classList.add('show');
                     }
+                } catch (error) {
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
+                    if (authOverlay) authOverlay.style.display = 'none';
 
-                    showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
-
-                    setTimeout(loadAllData, 300);
-                    setTimeout(fetchServerStatus, 500);
-                } else {
-                    errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+                    console.error('❌ Login error:', error);
+                    errorEl.textContent = '❌ ' + error.message;
                     errorEl.classList.add('show');
                 }
-            })
-            .catch(error => {
-                loginBtn.disabled = false;
-                loginBtn.classList.remove('loading');
-
-                if (authOverlay) {
-                    authOverlay.style.display = 'none';
-                }
-
-                console.error('❌ Login error:', error);
-                errorEl.textContent = '❌ ' + error.message;
-                errorEl.classList.add('show');
-            });
+            })();
         }
 
         // ============================================================
@@ -1856,20 +1968,23 @@
                     return false;
                 }
 
-                const csrfToken = csrfManager.getToken();
-
+                // ✅ GET → بدون X-CSRF-Token
                 const response = await fetch('/api/auth/me', {
                     headers: {
                         'Authorization': 'Bearer ' + token,
-                        'Accept': 'application/json',
-                        'X-CSRF-Token': csrfToken
+                        'Accept': 'application/json'
                     },
                     credentials: 'include'
                 });
 
                 if (response.status === 401) {
-                    console.warn('⚠️ التوكن غير صالح (401)');
-                    localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                    // ✅ حاول تجديد التوكن قبل الاستسلام (قد يكون الـ access منتهيًا فقط)
+                    console.warn('⚠️ التوكن غير صالح (401) — محاولة تجديد...');
+                    const newToken = await refreshAccessToken();
+                    if (newToken) {
+                        return verifyTokenOnce(newToken);
+                    }
+                    clearToken();
                     csrfManager.clearToken();
                     return false;
                 }
@@ -1879,17 +1994,51 @@
                     if (data.success && data.user) {
                         currentUser = data.user;
                         window.currentUser = data.user;
-                        console.log('✅ التوكن صالح:', currentUser.username, '| Role:', currentUser.role);
+                        console.log('✅ التوكن صالح:', currentUser.username, '| Role:', normalizeRole(currentUser.role));
                         return true;
                     }
                 }
 
-                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                clearToken();
                 csrfManager.clearToken();
                 return false;
             } catch (error) {
                 console.warn('⚠️ خطأ في التحقق:', error.message);
-                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                clearToken();
+                csrfManager.clearToken();
+                return false;
+            }
+        }
+
+        // نسخة بدون إعادة محاولة تجديد (تُستخدم بعد نجاح التجديد لتفادي الحلقات)
+        async function verifyTokenOnce(token) {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    clearToken();
+                    csrfManager.clearToken();
+                    return false;
+                }
+
+                const data = await response.json();
+                if (data.success && data.user) {
+                    currentUser = data.user;
+                    window.currentUser = data.user;
+                    return true;
+                }
+
+                clearToken();
+                csrfManager.clearToken();
+                return false;
+            } catch (e) {
+                clearToken();
                 csrfManager.clearToken();
                 return false;
             }
@@ -1906,12 +2055,10 @@
                 return;
             }
             try {
-                const response = await fetch('/api/session-status', {
-                    credentials: 'include',
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Accept': 'application/json'
-                    }
+                // ✅ GET → بدون X-CSRF-Token؛ يستخدم apiFetch للاستفادة من التجديد التلقائي
+                const response = await apiFetch(CONFIG.API + '/session-status', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
                 });
 
                 if (response.status === 401) {
@@ -1935,18 +2082,12 @@
             const token = getToken();
             if (!token) return;
 
-            const csrfToken = csrfManager.getToken();
-            const headers = {
-                'Authorization': 'Bearer ' + token,
-                'X-CSRF-Token': csrfToken
-            };
-
             try {
+                // ✅ GET كلها عبر apiFetch (بدون CSRF، مع تجديد تلقائي عند 401)
                 const [vesselsRes, usersRes] = await Promise.all([
-                    fetch(CONFIG.API + '/vessels', { headers, credentials: 'include' }),
-                    // ✅ v9.6: users فقط للأدمن
+                    apiFetch(CONFIG.API + '/vessels', { method: 'GET' }),
                     isAdmin()
-                        ? fetch(CONFIG.API + '/users', { headers, credentials: 'include' })
+                        ? apiFetch(CONFIG.API + '/users', { method: 'GET' })
                         : Promise.resolve(null)
                 ]);
 
@@ -1965,7 +2106,7 @@
                 }
 
                 try {
-                    const logsRes = await fetch(CONFIG.API + '/logs', { headers, credentials: 'include' });
+                    const logsRes = await apiFetch(CONFIG.API + '/logs', { method: 'GET' });
                     if (logsRes.ok) {
                         const data = await logsRes.json();
                         allLogs = Array.isArray(data) ? data : [];
@@ -2002,152 +2143,159 @@
         }
 
         // ============================================================
-        // 📄 LOAD PAGE - v9.6 (with RBAC check)
+        // 📄 LOAD PAGE - v9.12
+        // ------------------------------------------------------------
+        // ✅ إصلاح جوهري: الحلقة القديمة كانت async غير منتظرة مع break
+        //    في نهاية أول تكرار → تجرّب مسارًا واحدًا فقط فعليًا.
+        //    الآن: نبحث بالتتابع (await) عن أول مسار ناجح، وإن فشل الكل
+        //    نعرض رسالة خطأ واحدة فقط بعد استنفاد كل المسارات.
         // ============================================================
 
         function loadPage(page) {
-            try {
-                // ✅ v9.6: فحص الصلاحية
-                if (!canAccessPage(page)) {
-                    console.warn('🚫 Access denied:', page, '| Role:', currentUser?.role);
-                    showToast('🚫 ليس لديك صلاحية الوصول لهذه الصفحة', 'error');
+            (async () => {
+                try {
+                    if (!canAccessPage(page)) {
+                        console.warn('🚫 Access denied:', page, '| Role:', currentUser ? normalizeRole(currentUser.role) : null);
+                        showToast('🚫 ليس لديك صلاحية الوصول لهذه الصفحة', 'error');
 
-                    if (page !== 'dashboard' && canAccessPage('dashboard')) {
-                        setTimeout(() => loadPage('dashboard'), 1500);
+                        if (page !== 'dashboard' && canAccessPage('dashboard')) {
+                            setTimeout(() => loadPage('dashboard'), 1500);
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                currentPage = page;
-                localStorage.setItem(CONFIG.KEYS.PAGE, page);
+                    currentPage = page;
+                    localStorage.setItem(CONFIG.KEYS.PAGE, page);
 
-                // ✅ Cleanup من الصفحة السابقة
-                if (Array.isArray(window._pageCleanup) && window._pageCleanup.length > 0) {
-                    console.log('🧹 Running cleanup for previous page...');
-                    window._pageCleanup.forEach(fn => {
-                        try {
-                            if (typeof fn === 'function') fn();
-                        } catch (e) {}
-                    });
-                    window._pageCleanup = [];
-                }
-
-                if (Array.isArray(window._pageIntervals) && window._pageIntervals.length > 0) {
-                    window._pageIntervals.forEach(id => {
-                        try { clearInterval(id); } catch (e) {}
-                    });
-                    window._pageIntervals = [];
-                }
-
-                if (Array.isArray(window._pageTimeouts) && window._pageTimeouts.length > 0) {
-                    window._pageTimeouts.forEach(id => {
-                        try { clearTimeout(id); } catch (e) {}
-                    });
-                    window._pageTimeouts = [];
-                }
-
-                if (typeof stopDateTimeUpdate === 'function') {
-                    stopDateTimeUpdate();
-                }
-
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.page === page);
-                });
-
-                const container = document.getElementById('pageContainer');
-                const loader = document.getElementById('pageLoader');
-
-                if (!container) return;
-
-                if (loader) loader.style.display = 'flex';
-                container.innerHTML = '';
-
-                const possiblePaths = [
-                    '/pages/' + page + '.html',
-                    '/public/pages/' + page + '.html',
-                    '/public/' + page + '.html',
-                    '/' + page + '.html'
-                ];
-
-                let loaded = false;
-
-                for (const path of possiblePaths) {
-                    fetch(path, { cache: 'no-store' })
-                        .then(response => {
-                            if (response.ok) {
-                                loaded = true;
-                                return response.text();
-                            }
-                            throw new Error('Page not found');
-                        })
-                        .then(html => {
-                            if (!html) return;
-
-                            const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = html;
-
-                            const scripts = tempDiv.querySelectorAll('script');
-                            const scriptContents = [];
-                            scripts.forEach(script => {
-                                scriptContents.push(script.textContent);
-                                script.remove();
-                            });
-
-                            container.innerHTML = tempDiv.innerHTML;
-
-                            scriptContents.forEach(content => {
-                                if (content && content.trim()) {
-                                    try {
-                                        const newScript = document.createElement('script');
-                                        newScript.textContent = content;
-                                        newScript.setAttribute('data-page-script', page);
-                                        document.body.appendChild(newScript);
-
-                                        const tid = setTimeout(() => {
-                                            if (newScript.parentNode) {
-                                                newScript.remove();
-                                            }
-                                        }, 10);
-                                        window._pageTimeouts = window._pageTimeouts || [];
-                                        window._pageTimeouts.push(tid);
-                                    } catch (e) {
-                                        console.warn('⚠️ script error:', e.message);
-                                    }
-                                }
-                            });
-
-                            if (csrfManager && typeof csrfManager.injectTokenToForms === 'function') {
-                                csrfManager.injectTokenToForms();
-                            }
-
-                            if (loader) loader.style.display = 'none';
-                            document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
-
-                            syncDateTimeInterval();
-
-                            console.log('✅ تم تحميل الصفحة:', page);
-                        })
-                        .catch(error => {
-                            if (!loaded) {
-                                if (loader) loader.style.display = 'none';
-                                container.innerHTML =
-                                    '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
-                                    '<div style="font-size:48px;">❌</div>' +
-                                    '<h2 style="color:#f87171;">فشل تحميل الصفحة</h2>' +
-                                    '<p>' + escapeHTML(error.message) + '</p>' +
-                                    '</div>';
-                            }
+                    // ✅ Cleanup من الصفحة السابقة
+                    if (Array.isArray(window._pageCleanup) && window._pageCleanup.length > 0) {
+                        console.log('🧹 Running cleanup for previous page...');
+                        window._pageCleanup.forEach(fn => {
+                            try {
+                                if (typeof fn === 'function') fn();
+                            } catch (e) {}
                         });
-                    break;
-                }
+                        window._pageCleanup = [];
+                    }
 
-            } catch (e) {
-                console.error('❌ loadPage error:', e);
-            }
+                    if (Array.isArray(window._pageIntervals) && window._pageIntervals.length > 0) {
+                        window._pageIntervals.forEach(id => {
+                            try { clearInterval(id); } catch (e) {}
+                        });
+                        window._pageIntervals = [];
+                    }
+
+                    if (Array.isArray(window._pageTimeouts) && window._pageTimeouts.length > 0) {
+                        window._pageTimeouts.forEach(id => {
+                            try { clearTimeout(id); } catch (e) {}
+                        });
+                        window._pageTimeouts = [];
+                    }
+
+                    if (typeof stopDateTimeUpdate === 'function') {
+                        stopDateTimeUpdate();
+                    }
+
+                    document.querySelectorAll('.nav-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.page === page);
+                    });
+
+                    const container = document.getElementById('pageContainer');
+                    const loader = document.getElementById('pageLoader');
+
+                    if (!container) return;
+
+                    if (loader) loader.style.display = 'flex';
+                    container.innerHTML = '';
+
+                    const possiblePaths = [
+                        '/pages/' + page + '.html',
+                        '/public/pages/' + page + '.html',
+                        '/public/' + page + '.html',
+                        '/' + page + '.html'
+                    ];
+
+                    let html = null;
+                    let lastError = null;
+
+                    // ✅ الإصلاح الفعلي: تجربة كل مسار بالتتابع فعليًا (await)،
+                    //    والتوقف عند أول نجاح فقط. لا break مبكر يقطع الاحتياطي.
+                    for (const path of possiblePaths) {
+                        try {
+                            const response = await fetch(path, { cache: 'no-store' });
+                            if (response.ok) {
+                                html = await response.text();
+                                break;
+                            }
+                            lastError = new Error('HTTP ' + response.status + ' على ' + path);
+                        } catch (err) {
+                            lastError = err;
+                        }
+                    }
+
+                    if (html === null) {
+                        if (loader) loader.style.display = 'none';
+                        container.innerHTML =
+                            '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
+                            '<div style="font-size:48px;">❌</div>' +
+                            '<h2 style="color:#f87171;">فشل تحميل الصفحة</h2>' +
+                            '<p>' + escapeHTML(lastError ? lastError.message : 'الصفحة غير موجودة') + '</p>' +
+                            '</div>';
+                        return;
+                    }
+
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+
+                    const scripts = tempDiv.querySelectorAll('script');
+                    const scriptContents = [];
+                    scripts.forEach(script => {
+                        scriptContents.push(script.textContent);
+                        script.remove();
+                    });
+
+                    container.innerHTML = tempDiv.innerHTML;
+
+                    scriptContents.forEach(content => {
+                        if (content && content.trim()) {
+                            try {
+                                const newScript = document.createElement('script');
+                                newScript.textContent = content;
+                                newScript.setAttribute('data-page-script', page);
+                                document.body.appendChild(newScript);
+
+                                const tid = setTimeout(() => {
+                                    if (newScript.parentNode) {
+                                        newScript.remove();
+                                    }
+                                }, 10);
+                                window._pageTimeouts = window._pageTimeouts || [];
+                                window._pageTimeouts.push(tid);
+                            } catch (e) {
+                                console.warn('⚠️ script error:', e.message);
+                            }
+                        }
+                    });
+
+                    // ✅ حقن CSRF في أي نموذج ظهر ضمن الصفحة المحمَّلة (بدون MutationObserver عالمي)
+                    if (csrfManager && typeof csrfManager.injectTokenToForms === 'function') {
+                        csrfManager.injectTokenToForms();
+                    }
+
+                    if (loader) loader.style.display = 'none';
+                    document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
+
+                    syncDateTimeInterval();
+
+                    console.log('✅ تم تحميل الصفحة:', page);
+                } catch (e) {
+                    console.error('❌ loadPage error:', e);
+                }
+            })();
         }
 
         // ============================================================
-        // 🔄 REFRESH
+        // 🔄 REFRESH (تحديث الصفحة الحالية، ليس refresh token)
         // ============================================================
 
         async function refreshCurrentPage() {
@@ -2180,26 +2328,8 @@
             console.log('🚪 Starting logout...');
 
             try {
-                let csrfToken = null;
-                try {
-                    const csrfRes = await fetch('/api/csrf-token', {
-                        credentials: 'include',
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    if (csrfRes.ok) {
-                        const csrfData = await csrfRes.json();
-                        csrfToken = csrfData.token || null;
-                        if (csrfToken) {
-                            localStorage.setItem(CONFIG.KEYS.CSRF, csrfToken);
-                            csrfManager.token = csrfToken;
-                        }
-                    }
-                } catch (e) {}
-
-                if (!csrfToken) {
-                    csrfToken = csrfManager.getToken();
-                }
-
+                // ✅ CSRF من الخادم مباشرة قبل logout (بدون تخزينه في localStorage)
+                const csrfToken = await csrfManager.getToken();
                 const token = getToken();
 
                 if (token) {
@@ -2208,7 +2338,7 @@
                             method: 'POST',
                             headers: {
                                 'Authorization': 'Bearer ' + token,
-                                'X-CSRF-Token': csrfToken || '',
+                                ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json'
                             },
@@ -2226,9 +2356,7 @@
 
             currentUser = null;
             window.currentUser = null;
-            localStorage.removeItem(CONFIG.KEYS.TOKEN);
-            localStorage.removeItem(CONFIG.KEYS.CSRF);
-            localStorage.removeItem(CONFIG.KEYS.CSRF + '_expiry');
+            clearToken();
             csrfManager.clearToken();
 
             window._tokenVerified = false;
@@ -2276,6 +2404,9 @@
         async function initApp() {
             console.log('📄 DOM جاهز');
 
+            // ✅ جلب أول CSRF token من الخادم فور تحميل الصفحة (لا يوجد أي توليد محلي)
+            csrfManager.fetchFromServer().catch(() => {});
+
             // FORGOT PASSWORD
             const forgotLink = document.getElementById('forgotPasswordLink');
             if (forgotLink) forgotLink.addEventListener('click', openForgotModal);
@@ -2320,18 +2451,14 @@
                     sendResetBtn.innerHTML = '⏳ جاري الإرسال...';
 
                     try {
-                        var csrfRes = await fetch('/api/csrf-token', {
-                            credentials: 'include',
-                            headers: { 'Accept': 'application/json' }
-                        });
-                        var csrfData = await csrfRes.json();
-                        var csrfToken = csrfData.token || '';
+                        // ✅ CSRF من الخادم مباشرة (نفس مصدر csrfManager، بدون تكرار المنطق)
+                        const csrfToken = await csrfManager.getToken();
 
                         var response = await fetch('/api/auth/forgot-password', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-Token': csrfToken,
+                                ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
                                 'Accept': 'application/json'
                             },
                             credentials: 'include',
@@ -2438,13 +2565,12 @@
             }
             window.addEventListener('scroll', _handleScroll, { passive: true });
 
-            // CSRF injection
-            const observer = new MutationObserver(() => {
-                if (csrfManager && typeof csrfManager.injectTokenToForms === 'function') {
-                    csrfManager.injectTokenToForms();
-                }
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
+            // ✅ v9.12: تمت إزالة MutationObserver على document.body بالكامل.
+            //    الحقن الآن يحدث فقط في نقاط محدَّدة ومعروفة:
+            //    - بعد نجاح تسجيل الدخول (setToken)
+            //    - بعد تحميل كل صفحة فرعية (loadPage)
+            //    - عند تجديد CSRF (setToken داخل CSRFTokenManager)
+            //    هذا يعطي نفس النتيجة العملية بدون مراقبة كامل شجرة DOM بشكل مستمر.
 
             // Date/time
             syncDateTimeInterval();
@@ -2456,15 +2582,13 @@
             // VERIFY TOKEN
             if (!window._tokenVerified) {
                 window._tokenVerified = true;
-                const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
+                const token = getToken();
                 if (token) {
                     const isValid = await verifyToken(token);
                     if (isValid) {
                         document.getElementById('loginOverlay').style.display = 'none';
                         document.getElementById('mainApp').style.display = 'block';
                         updateUserDisplay();
-
-                        // ✅ v9.6: RBAC
                         applyRBACToUI();
 
                         const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
@@ -2473,13 +2597,13 @@
                         showToast('👋 مرحباً بعودتك', 'success');
                         setTimeout(loadAllData, 500);
                     } else {
-                        localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                        clearToken();
                         csrfManager.clearToken();
                     }
                 }
             }
 
-            console.log('✅ Marine System v9.6 ready');
+            console.log('✅ Marine System v9.12 ready');
         }
 
         if (document.readyState === 'loading') {
@@ -2508,12 +2632,15 @@
         window.hasPermission = hasPermission;
         window.isAdmin = isAdmin;
         window.refreshCurrentPage = refreshCurrentPage;
+        window.apiFetch = apiFetch;
+        window.refreshAccessToken = refreshAccessToken;
         window.csrfManager = csrfManager;
         window.CONFIG = CONFIG;
         window.ROLE_PERMISSIONS = ROLE_PERMISSIONS;
         window.PAGE_PERMISSIONS = PAGE_PERMISSIONS;
+        window.normalizeRole = normalizeRole;
 
-        console.log('✅ Marine System v9.6 loaded successfully');
+        console.log('✅ Marine System v9.12 loaded successfully');
     </script>
 
 </body>
