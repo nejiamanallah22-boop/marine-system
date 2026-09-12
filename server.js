@@ -2870,5 +2870,3 @@ module.exports.hasPermission = hasPermission;
 module.exports.normalizeRole = normalizeRole;
 module.exports.addSystemLog = addSystemLog;
     
-    }
-}
