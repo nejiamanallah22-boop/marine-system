@@ -2,10 +2,9 @@
 <div id="page-fleet">
     <style>
         /* ============================================================
-           🚢 FLEET PAGE - PROFESSIONAL GOLD EDITION (FIXED v9.1)
+           🚢 FLEET PAGE - GOLD EDITION v9.12
            ============================================================ */
 
-        /* ===== CSS VARIABLES ===== */
         :root {
             --primary-dark: #0a1628;
             --primary: #0f3460;
@@ -31,7 +30,6 @@
             --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
         }
 
-        /* ===== FULL SCREEN RESET ===== */
         #page-fleet {
             width: 100%;
             max-width: 100%;
@@ -45,7 +43,6 @@
             z-index: 1;
         }
 
-        /* ===== BACKGROUND EFFECT ===== */
         #page-fleet::before {
             content: '';
             position: fixed;
@@ -65,15 +62,11 @@
             50% { transform: scale(1.05) rotate(2deg); }
         }
 
-        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
 
-        /* ============================================================
-           HEADER
-           ============================================================ */
         .fleet-header {
             display: flex;
             justify-content: space-between;
@@ -175,9 +168,6 @@
             transform: translateY(-2px);
         }
 
-        /* ============================================================
-           STATS CARDS - GOLD THEME
-           ============================================================ */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -246,9 +236,6 @@
             pointer-events: none;
         }
 
-        /* ============================================================
-           INPUT FORM - GOLD THEME
-           ============================================================ */
         .input-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -321,9 +308,6 @@
             box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
-        /* ============================================================
-           FILTER BAR - GOLD THEME
-           ============================================================ */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
@@ -442,9 +426,6 @@
             color: #fff;
         }
 
-        /* ============================================================
-           TABLE - GOLD THEME
-           ============================================================ */
         .table-wrapper {
             overflow-x: auto;
             padding: 0 24px 24px;
@@ -515,7 +496,6 @@
             color: #fff;
         }
 
-        /* ===== STATUS BADGES ===== */
         .status-badge {
             padding: 3px 12px;
             border-radius: 20px;
@@ -525,32 +505,12 @@
             white-space: nowrap;
         }
 
-        .status-badge.active {
-            background: rgba(74,222,128,0.12);
-            color: #4ade80;
-        }
+        .status-badge.active { background: rgba(74,222,128,0.12); color: #4ade80; }
+        .status-badge.pending { background: rgba(251,191,36,0.12); color: #fbbf24; }
+        .status-badge.completed { background: rgba(96,165,250,0.12); color: #60a5fa; }
+        .status-badge.cancelled { background: rgba(248,113,113,0.12); color: #f87171; }
+        .status-badge.damaged { background: rgba(225,112,85,0.12); color: #e17055; }
 
-        .status-badge.pending {
-            background: rgba(251,191,36,0.12);
-            color: #fbbf24;
-        }
-
-        .status-badge.completed {
-            background: rgba(96,165,250,0.12);
-            color: #60a5fa;
-        }
-
-        .status-badge.cancelled {
-            background: rgba(248,113,113,0.12);
-            color: #f87171;
-        }
-
-        .status-badge.damaged {
-            background: rgba(225,112,85,0.12);
-            color: #e17055;
-        }
-
-        /* ===== ACTION BUTTONS ===== */
         .action-btns {
             display: flex;
             gap: 4px;
@@ -598,7 +558,6 @@
             transform: scale(1.05);
         }
 
-        /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -656,9 +615,6 @@
             box-shadow: 0 4px 24px rgba(230,179,30,0.2);
         }
 
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
         @media (max-width: 992px) {
             .fleet-header { padding: 12px 16px; top: 60px; }
             .fleet-header-left h2 { font-size: 18px; }
@@ -702,7 +658,7 @@
     </style>
 
     <!-- ============================================================
-    HEADER - GOLD THEME
+    HEADER
     ============================================================ -->
     <div class="fleet-header">
         <div class="fleet-header-left">
@@ -722,7 +678,7 @@
     </div>
 
     <!-- ============================================================
-    STATS CARDS - GOLD THEME
+    STATS CARDS
     ============================================================ -->
     <div class="stats-grid" id="fleetStats">
         <div class="stat-card">
@@ -748,7 +704,7 @@
     </div>
 
     <!-- ============================================================
-    INPUT FORM - GOLD THEME
+    INPUT FORM
     ============================================================ -->
     <div id="inputArea" class="input-grid">
         <input type="text" id="iName" placeholder="اسم المركب">
@@ -802,7 +758,7 @@
     </div>
 
     <!-- ============================================================
-    FILTER BAR - GOLD THEME
+    FILTER BAR
     ============================================================ -->
     <div class="filter-bar">
         <div class="search-input">
@@ -829,7 +785,7 @@
     </div>
 
     <!-- ============================================================
-    TABLE - GOLD THEME
+    TABLE
     ============================================================ -->
     <div class="table-wrapper">
         <table>
@@ -866,14 +822,14 @@
 
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - GOLD EDITION (FIXED v9.1)
-    // ✨ مع حماية null + cleanup تلقائي
+    // 🚢 FLEET PAGE - GOLD EDITION v9.12
+    // ✨ 5 Roles + normalizeRole + apiFetch + Cleanup
     // ============================================================
     (function() {
         'use strict';
 
         // ============================================================
-        // ✅ v9.1: تنظيف تلقائي عند مغادرة الصفحة
+        // ✅ CLEANUP STATE
         // ============================================================
         var _isDestroyed = false;
 
@@ -881,7 +837,6 @@
             if (_isDestroyed) return;
             _isDestroyed = true;
 
-            // إزالة الـ globals المُعرَّفة
             try {
                 delete window.renderMain;
                 delete window.addItem;
@@ -893,7 +848,7 @@
                 delete window.refreshFleet;
             } catch (e) {}
 
-            console.log('🧹 Fleet cleanup done');
+            console.log('🧹 Fleet v9.12 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -901,6 +856,31 @@
 
         window.addEventListener('beforeunload', _fleetCleanup);
         window.addEventListener('pagehide', _fleetCleanup);
+
+        // ============================================================
+        // 🔐 RBAC v9.12 — توحيد الأدوار
+        // ============================================================
+        // مطابق تمامًا لـ LEGACY_ROLE_MAP في server.js
+
+        var LEGACY_ROLE_MAP = {
+            'super_admin': 'admin',
+            'مسؤول': 'admin',
+            'مدير': 'manager',
+            'محرر': 'editor',
+            'مشغل': 'maintenance_unit',
+            'operator': 'maintenance_unit',
+            'user': 'viewer',
+            'مشاهد': 'viewer'
+        };
+
+        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
+
+        function normalizeRole(role) {
+            if (!role) return 'viewer';
+            var r = String(role).trim();
+            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
+            return LEGACY_ROLE_MAP[r] || 'viewer';
+        }
 
         // ============================================================
         // 1. DATA
@@ -939,33 +919,50 @@
                    null;
         }
 
-        function getAuthHeaders() {
-            const token = getToken();
-            return {
-                'Content-Type': 'application/json',
-                'Authorization': token ? 'Bearer ' + token : ''
-            };
+        // ✅ استخدم apiFetch إن وُجد (من index.html v9.12)
+        function fetcher(url, options) {
+            if (typeof window.apiFetch === 'function') {
+                return window.apiFetch(url, options || {});
+            }
+            // fallback
+            var headers = Object.assign({}, (options && options.headers) || {});
+            var token = getToken();
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            if (!headers['Accept']) headers['Accept'] = 'application/json';
+            return fetch(url, Object.assign({}, options || {}, { headers: headers, credentials: 'include' }));
         }
 
         // ============================================================
-        // 3. PERMISSIONS
+        // 3. PERMISSIONS — v9.12
         // ============================================================
+        // ✅ يستخدم window.capabilities أولاً (المصدر الرسمي)
+        // ✅ وإلا يعتمد على role مع normalizeRole
 
         function getUser() {
             return window.currentUser || null;
         }
 
+        // ✅ إضافة / تعديل مركب: admin + manager + editor + maintenance_unit
         function canEdit() {
-            const user = getUser();
+            if (window.capabilities && typeof window.capabilities.canCreateVessels === 'boolean') {
+                return window.capabilities.canCreateVessels || window.capabilities.canUpdateVessels;
+            }
+
+            var user = getUser();
             if (!user) return false;
-            const role = user.role;
-            return role === 'مسؤول' || role === 'محرر' || role === 'admin' || role === 'مدير';
+            var role = normalizeRole(user.role);
+            return ['admin', 'manager', 'editor', 'maintenance_unit'].indexOf(role) !== -1;
         }
 
+        // ✅ حذف مركب: admin فقط
         function canDelete() {
-            const user = getUser();
+            if (window.capabilities && typeof window.capabilities.canDeleteVessels === 'boolean') {
+                return window.capabilities.canDeleteVessels;
+            }
+
+            var user = getUser();
             if (!user) return false;
-            return user.role === 'مسؤول' || user.role === 'admin' || user.role === 'مدير';
+            return normalizeRole(user.role) === 'admin';
         }
 
         // ============================================================
@@ -974,20 +971,24 @@
 
         function escapeHtml(str) {
             if (!str) return '';
-            return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+            });
         }
 
         function formatDate(val) {
             if (!val) return '-';
             try {
-                const d = new Date(val);
+                var d = new Date(val);
                 if (isNaN(d.getTime())) return escapeHtml(val);
-                return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+                return String(d.getDate()).padStart(2,'0') + '/' +
+                       String(d.getMonth()+1).padStart(2,'0') + '/' +
+                       d.getFullYear();
             } catch (_) { return escapeHtml(val); }
         }
 
         function getCategory(len) {
-            const n = parseFloat(len);
+            var n = parseFloat(len);
             if (isNaN(n)) return 'زوارق مزدوجة';
             if (n === 11) return 'البروق';
             if (n >= 8 && n <= 12) return 'صقور';
@@ -997,44 +998,41 @@
         }
 
         // ============================================================
-        // 5. UPDATE ZONES - ✅ SAFE
+        // 5. UPDATE ZONES
         // ============================================================
 
         function updateZones() {
-            const regEl = document.getElementById('iReg');
-            const zoneSel = document.getElementById('iZone');
-            if (!regEl || !zoneSel) return;  // ✅ v9.1
+            var regEl = document.getElementById('iReg');
+            var zoneSel = document.getElementById('iZone');
+            if (!regEl || !zoneSel) return;
 
-            const reg = regEl.value;
+            var reg = regEl.value;
             zoneSel.innerHTML = '<option value="">المنطقة</option>';
             if (ZONES_DATA[reg]) {
-                ZONES_DATA[reg].forEach(z => {
-                    zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
+                ZONES_DATA[reg].forEach(function(z) {
+                    zoneSel.innerHTML += '<option value="' + z + '">' + z + '</option>';
                 });
             }
         }
 
         // ============================================================
-        // 6. RENDER MAIN - ✅ SAFE
+        // 6. RENDER MAIN
         // ============================================================
 
         async function renderMain() {
-            // ✅ v9.1: حماية
             if (_isDestroyed) return;
 
-            const mainBody = document.getElementById('mainBody');
-            if (!mainBody) return;  // ✅ v9.1
+            var mainBody = document.getElementById('mainBody');
+            if (!mainBody) return;
 
-            mainBody.innerHTML = `
-                <tr><td colspan="14" class="empty-state">
-                    <div class="spinner"></div>
-                    <h3>جاري التحميل...</h3>
-                    <p>يرجى الانتظار</p>
-                </td></tr>
-            `;
+            mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
+                '<div class="spinner"></div>' +
+                '<h3>جاري التحميل...</h3>' +
+                '<p>يرجى الانتظار</p>' +
+                '</td></tr>';
 
             try {
-                const token = getToken();
+                var token = getToken();
                 if (!token) {
                     console.warn('⚠️ لا يوجد توكن');
                     window.location.href = '/index.html';
@@ -1042,9 +1040,7 @@
                 }
 
                 console.log('📡 جلب بيانات المراكب...');
-                const response = await fetch('/api/vessels', {
-                    headers: getAuthHeaders()
-                });
+                var response = await fetcher('/api/vessels', { method: 'GET' });
 
                 if (!response.ok) {
                     if (response.status === 401) {
@@ -1055,120 +1051,115 @@
                     throw new Error('فشل تحميل البيانات (Status: ' + response.status + ')');
                 }
 
-                const vessels = await response.json();
+                var vessels = await response.json();
                 console.log('✅ تم تحميل', vessels.length, 'مركب');
 
-                // ✅ v9.1: إذا تم تدمير الصفحة أثناء الانتظار، توقف
                 if (_isDestroyed) return;
 
-                const total = vessels.length;
-                const active = vessels.filter(v => v.status === 'صالح').length;
-                const maintenance = vessels.filter(v => v.status === 'صيانة').length;
-                const damaged = vessels.filter(v => v.status === 'معطب').length;
+                var total = vessels.length;
+                var active = vessels.filter(function(v) { return v.status === 'صالح'; }).length;
+                var maintenance = vessels.filter(function(v) { return v.status === 'صيانة'; }).length;
+                var damaged = vessels.filter(function(v) { return v.status === 'معطب'; }).length;
 
-                // ✅ v9.1: null check قبل الكتابة
-                const tv = document.getElementById('totalVessels');
-                const av = document.getElementById('activeVessels');
-                const mv = document.getElementById('maintenanceVessels');
-                const dv = document.getElementById('damagedVessels');
+                var tv = document.getElementById('totalVessels');
+                var av = document.getElementById('activeVessels');
+                var mv = document.getElementById('maintenanceVessels');
+                var dv = document.getElementById('damagedVessels');
                 if (tv) tv.textContent = total;
                 if (av) av.textContent = active;
                 if (mv) mv.textContent = maintenance;
                 if (dv) dv.textContent = damaged;
 
-                // ✅ تطبيق الفلاتر
-                const fCatMain = document.getElementById('fCatMain');
-                const fRegMain = document.getElementById('fRegMain');
-                const searchMain = document.getElementById('searchMain');
+                var fCatMain = document.getElementById('fCatMain');
+                var fRegMain = document.getElementById('fRegMain');
+                var searchMain = document.getElementById('searchMain');
 
-                const catFilter = (fCatMain && fCatMain.value) || 'الكل';
-                const regFilter = (fRegMain && fRegMain.value) || 'الكل';
-                const search = ((searchMain && searchMain.value) || '').trim().toLowerCase();
+                var catFilter = (fCatMain && fCatMain.value) || 'الكل';
+                var regFilter = (fRegMain && fRegMain.value) || 'الكل';
+                var search = ((searchMain && searchMain.value) || '').trim().toLowerCase();
 
-                let filtered = vessels.filter(v => {
-                    const vCat = v.cat || getCategory(v.len);
-                    const vReg = v.region || v.reg || '';
-                    const catMatch = (catFilter === 'الكل' || vCat === catFilter);
-                    const regMatch = (regFilter === 'الكل' || vReg === regFilter);
+                var filtered = vessels.filter(function(v) {
+                    var vCat = v.cat || getCategory(v.len);
+                    var vReg = v.region || v.reg || '';
+                    var catMatch = (catFilter === 'الكل' || vCat === catFilter);
+                    var regMatch = (regFilter === 'الكل' || vReg === regFilter);
                     return catMatch && regMatch;
                 });
 
                 if (search) {
-                    filtered = filtered.filter(v => {
-                        const text = [v.name, v.num, v.region || v.reg, v.zone, v.port, v.status, v.cat, v.repairUnit]
+                    filtered = filtered.filter(function(v) {
+                        var text = [v.name, v.num, v.region || v.reg, v.zone, v.port, v.status, v.cat, v.repairUnit]
                             .filter(Boolean).join(' ').toLowerCase();
-                        return text.includes(search);
+                        return text.indexOf(search) !== -1;
                     });
                 }
 
                 if (filtered.length === 0) {
-                    mainBody.innerHTML = `
-                        <tr><td colspan="14" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-inbox"></i></span>
-                            <h3>لا توجد مراكب</h3>
-                            <p>لم يتم العثور على أي مراكب مطابقة</p>
-                        </td></tr>
-                    `;
+                    mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
+                        '<span class="empty-icon"><i class="fas fa-inbox"></i></span>' +
+                        '<h3>لا توجد مراكب</h3>' +
+                        '<p>لم يتم العثور على أي مراكب مطابقة</p>' +
+                        '</td></tr>';
                     return;
                 }
 
-                let html = '';
-                for (const v of filtered) {
-                    const id = v._id || v.id;
-                    const name = v.name || '-';
-                    const number = v.num || '-';
-                    const length = v.len || '-';
-                    const category = v.cat || getCategory(length);
-                    const region = v.region || v.reg || '-';
-                    const zone = v.zone || '-';
-                    const port = v.port || '-';
-                    const supp = v.supp || '-';
-                    const status = v.status || '-';
-                    const breakType = v.break || '-';
-                    const fDate = v.fDate;
-                    const eDate = v.eDate;
-                    const repairUnit = v.repairUnit || '-';
+                var editable = canEdit();
+                var deletable = canDelete();
 
-                    const statusColor = status === 'صالح' ? '#4ade80' : (status === 'معطب' ? '#e17055' : '#fbbf24');
-                    const isDamaged = status === 'معطب';
+                var html = '';
+                filtered.forEach(function(v) {
+                    var id = v._id || v.id;
+                    var name = v.name || '-';
+                    var number = v.num || '-';
+                    var length = v.len || '-';
+                    var category = v.cat || getCategory(length);
+                    var region = v.region || v.reg || '-';
+                    var zone = v.zone || '-';
+                    var port = v.port || '-';
+                    var supp = v.supp || '-';
+                    var status = v.status || '-';
+                    var breakType = v.break || '-';
+                    var fDate = v.fDate;
+                    var eDate = v.eDate;
+                    var repairUnit = v.repairUnit || '-';
 
-                    const editBtn = canEdit() ?
-                        `<button class="btn-sm edit" onclick="editItem('${id}')"><i class="fas fa-edit"></i></button>` : '';
-                    const delBtn = canDelete() ?
-                        `<button class="btn-sm delete" onclick="deleteItem('${id}','${escapeHtml(name)}')"><i class="fas fa-trash-alt"></i></button>` : '';
+                    var statusColor = status === 'صالح' ? '#4ade80' : (status === 'معطب' ? '#e17055' : '#fbbf24');
+                    var isDamaged = status === 'معطب';
 
-                    html += `<tr class="${isDamaged ? 'damaged' : ''}">
-                        <td class="vessel-name">${escapeHtml(name)}</td>
-                        <td>${escapeHtml(number)}</td>
-                        <td>${escapeHtml(length)}</td>
-                        <td>${escapeHtml(category)}</td>
-                        <td>${escapeHtml(region)}</td>
-                        <td>${escapeHtml(zone)}</td>
-                        <td>${escapeHtml(port)}</td>
-                        <td>${escapeHtml(supp)}</td>
-                        <td style="color:${statusColor}; font-weight:700;">${escapeHtml(status)}</td>
-                        <td>${escapeHtml(breakType)}</td>
-                        <td>${formatDate(fDate)}</td>
-                        <td>${formatDate(eDate)}</td>
-                        <td>${escapeHtml(repairUnit)}</td>
-                        <td><div class="action-btns">${editBtn} ${delBtn}</div></td>
-                    </tr>`;
-                }
+                    var editBtn = editable ?
+                        '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')"><i class="fas fa-edit"></i></button>' : '';
+                    var delBtn = deletable ?
+                        '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')"><i class="fas fa-trash-alt"></i></button>' : '';
+
+                    html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
+                        '<td class="vessel-name">' + escapeHtml(name) + '</td>' +
+                        '<td>' + escapeHtml(number) + '</td>' +
+                        '<td>' + escapeHtml(length) + '</td>' +
+                        '<td>' + escapeHtml(category) + '</td>' +
+                        '<td>' + escapeHtml(region) + '</td>' +
+                        '<td>' + escapeHtml(zone) + '</td>' +
+                        '<td>' + escapeHtml(port) + '</td>' +
+                        '<td>' + escapeHtml(supp) + '</td>' +
+                        '<td style="color:' + statusColor + '; font-weight:700;">' + escapeHtml(status) + '</td>' +
+                        '<td>' + escapeHtml(breakType) + '</td>' +
+                        '<td>' + formatDate(fDate) + '</td>' +
+                        '<td>' + formatDate(eDate) + '</td>' +
+                        '<td>' + escapeHtml(repairUnit) + '</td>' +
+                        '<td><div class="action-btns">' + editBtn + ' ' + delBtn + '</div></td>' +
+                    '</tr>';
+                });
                 mainBody.innerHTML = html;
 
             } catch (err) {
                 console.error('❌ renderMain error:', err);
                 if (_isDestroyed) return;
-                mainBody.innerHTML = `
-                    <tr><td colspan="14" class="empty-state">
-                        <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
-                        <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
-                        <p style="color:rgba(255,255,255,0.3);">${escapeHtml(err.message)}</p>
-                        <button class="retry-btn" onclick="renderMain()">
-                            <i class="fas fa-sync-alt"></i> إعادة المحاولة
-                        </button>
-                    </td></tr>
-                `;
+                mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
+                    '<span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>' +
+                    '<h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>' +
+                    '<p style="color:rgba(255,255,255,0.3);">' + escapeHtml(err.message) + '</p>' +
+                    '<button class="retry-btn" onclick="renderMain()">' +
+                    '<i class="fas fa-sync-alt"></i> إعادة المحاولة' +
+                    '</button></td></tr>';
             }
         }
 
@@ -1183,21 +1174,21 @@
                 return;
             }
 
-            const nameEl = document.getElementById('iName');
+            var nameEl = document.getElementById('iName');
             if (!nameEl) return;
-            const name = nameEl.value.trim();
+            var name = nameEl.value.trim();
             if (!name) { alert('⚠️ يرجى إدخال اسم المركب'); return; }
 
-            const statEl = document.getElementById('iStat');
-            const dateEl = document.getElementById('iDate');
-            const status = statEl ? statEl.value : 'صالح';
-            const faultDate = dateEl ? dateEl.value : '';
+            var statEl = document.getElementById('iStat');
+            var dateEl = document.getElementById('iDate');
+            var status = statEl ? statEl.value : 'صالح';
+            var faultDate = dateEl ? dateEl.value : '';
             if ((status === 'معطب' || status === 'صيانة') && !faultDate) {
                 alert('⚠️ تاريخ العطب مطلوب للمركب المعطب أو الذي تحت الصيانة');
                 return;
             }
 
-            const vessel = {
+            var vessel = {
                 name: name,
                 num: (document.getElementById('iNum') || {}).value || '',
                 len: (document.getElementById('iLen') || {}).value || '',
@@ -1214,14 +1205,14 @@
             };
 
             try {
-                const response = await fetch('/api/vessels', {
+                var response = await fetcher('/api/vessels', {
                     method: 'POST',
-                    headers: getAuthHeaders(),
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(vessel)
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
+                    var error = await response.json();
                     throw new Error(error.error || 'فشل حفظ المركب');
                 }
 
@@ -1234,14 +1225,14 @@
         }
 
         // ============================================================
-        // 8. CLEAR FORM - ✅ SAFE
+        // 8. CLEAR FORM
         // ============================================================
 
         function clearForm() {
-            const ids = ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'];
+            var ids = ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'];
             ids.forEach(function(id) {
                 var el = document.getElementById(id);
-                if (el) el.value = '';  // ✅ v9.1: null check
+                if (el) el.value = '';
             });
 
             var iReg = document.getElementById('iReg');
@@ -1264,16 +1255,15 @@
         async function deleteItem(id, name) {
             if (_isDestroyed) return;
             if (!canDelete()) { alert('⚠️ ليس لديك صلاحية للحذف'); return; }
-            if (!confirm(`⚠️ هل أنت متأكد من حذف المركب "${name}"؟`)) return;
+            if (!confirm('⚠️ هل أنت متأكد من حذف المركب "' + name + '"؟')) return;
 
             try {
-                const response = await fetch(`/api/vessels/${id}`, {
-                    method: 'DELETE',
-                    headers: getAuthHeaders()
+                var response = await fetcher('/api/vessels/' + id, {
+                    method: 'DELETE'
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
+                    var error = await response.json();
                     throw new Error(error.error || 'فشل حذف المركب');
                 }
 
@@ -1291,11 +1281,13 @@
             if (!canEdit()) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
 
             try {
-                const response = await fetch('/api/vessels', { headers: getAuthHeaders() });
+                var response = await fetcher('/api/vessels', { method: 'GET' });
                 if (!response.ok) throw new Error('فشل تحميل البيانات');
 
-                const vessels = await response.json();
-                const v = vessels.find(item => String(item._id || item.id) === String(id));
+                var vessels = await response.json();
+                var v = vessels.find(function(item) {
+                    return String(item._id || item.id) === String(id);
+                });
                 if (!v) { alert('❌ المركب غير موجود'); return; }
 
                 var el;
@@ -1304,7 +1296,7 @@
                 el = document.getElementById('iLen'); if (el) el.value = v.len || '';
                 el = document.getElementById('iReg'); if (el) el.value = v.region || v.reg || '';
                 updateZones();
-                var id2 = setTimeout(() => {
+                var id2 = setTimeout(function() {
                     var z = document.getElementById('iZone');
                     if (z) z.value = v.zone || '';
                 }, 50);
@@ -1320,7 +1312,7 @@
                 el = document.getElementById('iRef'); if (el) el.value = v.ref || '';
                 el = document.getElementById('iRepairUnit'); if (el) el.value = v.repairUnit || '';
 
-                const saveBtn = document.getElementById('saveVesselBtn');
+                var saveBtn = document.getElementById('saveVesselBtn');
                 if (saveBtn) {
                     saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
                     saveBtn.onclick = async function() { await updateItem(id); };
@@ -1337,12 +1329,12 @@
         async function updateItem(id) {
             if (_isDestroyed) return;
 
-            const nameEl = document.getElementById('iName');
+            var nameEl = document.getElementById('iName');
             if (!nameEl) return;
-            const name = nameEl.value.trim();
+            var name = nameEl.value.trim();
             if (!name) { alert('⚠️ اسم المركب مطلوب'); return; }
 
-            const vessel = {
+            var vessel = {
                 name: name,
                 num: (document.getElementById('iNum') || {}).value || '',
                 len: (document.getElementById('iLen') || {}).value || '',
@@ -1359,19 +1351,19 @@
             };
 
             try {
-                const response = await fetch(`/api/vessels/${id}`, {
+                var response = await fetcher('/api/vessels/' + id, {
                     method: 'PUT',
-                    headers: getAuthHeaders(),
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(vessel)
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
+                    var error = await response.json();
                     throw new Error(error.error || 'فشل تحديث المركب');
                 }
 
                 clearForm();
-                const saveBtn = document.getElementById('saveVesselBtn');
+                var saveBtn = document.getElementById('saveVesselBtn');
                 if (saveBtn) {
                     saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
                     saveBtn.onclick = addItem;
@@ -1397,15 +1389,19 @@
         // ============================================================
 
         function initFilters() {
-            const fCatMain = document.getElementById('fCatMain');
-            const fRegMain = document.getElementById('fRegMain');
+            var fCatMain = document.getElementById('fCatMain');
+            var fRegMain = document.getElementById('fRegMain');
             if (!fCatMain || !fRegMain) return;
 
             fCatMain.innerHTML = '<option value="الكل">الكل</option>';
-            CATS_LIST.forEach(c => { fCatMain.innerHTML += `<option value="${c}">${c}</option>`; });
+            CATS_LIST.forEach(function(c) {
+                fCatMain.innerHTML += '<option value="' + c + '">' + c + '</option>';
+            });
 
             fRegMain.innerHTML = '<option value="الكل">الكل</option>';
-            Object.keys(ZONES_DATA).forEach(r => { fRegMain.innerHTML += `<option value="${r}">${r}</option>`; });
+            Object.keys(ZONES_DATA).forEach(function(r) {
+                fRegMain.innerHTML += '<option value="' + r + '">' + r + '</option>';
+            });
         }
 
         // ============================================================
@@ -1422,9 +1418,9 @@
 
         document.addEventListener('DOMContentLoaded', async function() {
             if (_isDestroyed) return;
-            console.log('🚀 تحميل صفحة السجل العام - Gold Edition...');
+            console.log('🚀 تحميل صفحة السجل العام - Gold Edition v9.12...');
 
-            const token = getToken();
+            var token = getToken();
             if (!token) {
                 console.warn('⚠️ لا يوجد توكن');
                 window.location.href = '/index.html';
@@ -1432,9 +1428,7 @@
             }
 
             try {
-                const response = await fetch('/api/auth/me', {
-                    headers: getAuthHeaders()
-                });
+                var response = await fetcher('/api/auth/me', { method: 'GET' });
 
                 if (!response.ok) {
                     console.warn('⚠️ جلسة غير صالحة');
@@ -1443,11 +1437,14 @@
                     return;
                 }
 
-                const data = await response.json();
+                var data = await response.json();
                 if (data.success && data.user) {
                     window.currentUser = data.user;
                     console.log('✅ المستخدم الحالي:', window.currentUser);
-                    console.log('👤 الدور:', window.currentUser.role);
+                    console.log('👤 الدور (الأصلي):', window.currentUser.role);
+                    console.log('👤 الدور (الموحّد):', normalizeRole(window.currentUser.role));
+                    console.log('🔐 canEdit:', canEdit());
+                    console.log('🔐 canDelete:', canDelete());
                 }
             } catch (error) {
                 console.error('❌ خطأ:', error);
@@ -1457,7 +1454,7 @@
 
             if (_isDestroyed) return;
 
-            const addBtn = document.getElementById('saveVesselBtn');
+            var addBtn = document.getElementById('saveVesselBtn');
             if (addBtn) {
                 addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
             }
@@ -1466,7 +1463,7 @@
             updateZones();
             await renderMain();
 
-            console.log('✅ صفحة السجل العام - Gold Edition جاهزة');
+            console.log('✅ صفحة السجل العام - Gold Edition v9.12 جاهزة');
         });
 
         // ============================================================
@@ -1482,7 +1479,6 @@
         window.updateZones = updateZones;
         window.refreshFleet = refreshFleet;
         window.getToken = getToken;
-        window.getAuthHeaders = getAuthHeaders;
 
     })();
 </script>
