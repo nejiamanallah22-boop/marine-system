@@ -1,15 +1,13 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.17
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.17.1
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
 // 📧 MAILJET HTTP API (Works on Render — no SMTP port blocking)
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
 // ============================================================
-// ✨ v9.17 changes vs v9.16:
-//    - ✅ CHANGED: sendEmail now uses Mailjet HTTP API (port 443)
-//    - ✅ ADDED: fallback to SMTP for local development
-//    - ✅ ADDED: email status in /api/health
-//    - ✅ ADDED: email status in app.listen logs
+// ✨ v9.17.1 fix vs v9.17:
+//    - ✅ FIXED: close ensureInitialData() properly (missing }} after catch)
+//    - ✅ No other changes
 // ============================================================
 
 'use strict';
@@ -20,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.17 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.17.1 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -105,7 +103,6 @@ const hpp = require('hpp');
 const compression = require('compression');
 const nodemailer = require('nodemailer');
 
-// ✅ v9.16: مسارات المساعد الذكي + الاستيراد الذكي (Gemini)
 const aiAndImportRoutes = require('./routes/ai-and-import');
 
 let createDOMPurify = null;
@@ -300,14 +297,9 @@ function xssSanitizer(req, res, next) {
     next();
 }
 
-// ============================================================
-// 📧 EMAIL SERVICE — v9.17 (Mailjet HTTP API)
-// ============================================================
-
 let emailTransporter = null;
 
 async function setupEmailService() {
-    // ✅ v9.17: إن كان Mailjet مُعدّاً، لا حاجة لـ SMTP
     if (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) {
         console.log('✅ Mailjet API configured — SMTP disabled');
         return null;
@@ -349,7 +341,6 @@ async function setupEmailService() {
 async function initEmailService() { return setupEmailService(); }
 
 async function sendEmail(to, subject, html) {
-    // ✅ v9.17: Mailjet HTTP API (يعمل على Render — منفذ 443)
     const mjApiKey = process.env.MAILJET_API_KEY;
     const mjSecretKey = process.env.MAILJET_SECRET_KEY;
 
@@ -393,7 +384,6 @@ async function sendEmail(to, subject, html) {
         }
     }
 
-    // ✅ fallback: SMTP للتطوير المحلي
     if (!emailTransporter) emailTransporter = await initEmailService();
     if (!emailTransporter) return null;
     try {
@@ -410,10 +400,6 @@ async function sendEmail(to, subject, html) {
 setTimeout(() => {
     initEmailService().then(t => { emailTransporter = t; }).catch(() => {});
 }, 100);
-
-// ============================================================
-// 🛡️ HELMET + CORS + RATE LIMIT
-// ============================================================
 
 app.use(
     helmet({
@@ -661,7 +647,9 @@ async function ensureInitialData() {
         console.log(`✅ ${initialLogs.length} maintenance logs created`);
     } catch (error) {
         console.error('❌ Failed to create initial data:', error.message);
-        
+    }
+}
+
 let sessionStore = undefined;
 
 async function buildSessionStore() {
@@ -1175,7 +1163,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.17', timestamp: new Date().toISOString(),
+            version: '9.17.1', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
@@ -2256,7 +2244,7 @@ function formatMaintenance(log) {
             return res.status(500).json({ success: false, error: 'خطأ في حذف المركب' });
         }
     });
-
+    
     // ========================================================
     // MAINTENANCE
     // ========================================================
@@ -2406,7 +2394,6 @@ function formatMaintenance(log) {
             return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
         }
     });
-    
 
     // ========================================================
     // USERS (admin only)
@@ -2720,10 +2707,6 @@ function formatMaintenance(log) {
 
     // ========================================================
     // 🤖 AI + 📥 IMPORT ROUTES
-    // ------------------------------------------------------------
-    // ✅ v9.17: المفتاح GEMINI_API_KEY يبقى على الخادم فقط
-    // ✅ يجب تسجيله قبل STATIC FILES وبعد كل الـ routes الأخرى
-    // ✅ يتطلب: npm install multer pdf-parse mammoth xlsx
     // ========================================================
 
     aiAndImportRoutes(app, {
@@ -2784,7 +2767,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.17</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.17.1</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2834,7 +2817,7 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.17');
+            console.log('🚢 MARINE SYSTEM v9.17.1');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('🤖 AI Assistant + Smart Import: ' + (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED (missing GEMINI_API_KEY)'));
@@ -2869,4 +2852,3 @@ module.exports.requireAdmin = requireAdmin;
 module.exports.hasPermission = hasPermission;
 module.exports.normalizeRole = normalizeRole;
 module.exports.addSystemLog = addSystemLog;
-    
