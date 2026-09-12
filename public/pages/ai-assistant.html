@@ -2,7 +2,7 @@
 <div id="page-ai-assistant">
     <style>
         /* ============================================================
-           🤖 AI ASSISTANT STYLES v2.1 (with Voice)
+           🤖 AI ASSISTANT STYLES v2.2 (Auto Voice)
            ============================================================ */
         .ai-container {
             display: flex;
@@ -94,9 +94,9 @@
             background: rgba(66,133,244,0.08);
         }
         .ai-header .ai-voice-toggle.active {
-            background: rgba(66,133,244,0.15);
-            border-color: #4285f4;
-            color: #fff;
+            background: rgba(74,222,128,0.15);
+            border-color: #4ade80;
+            color: #4ade80;
         }
         .api-status-bar {
             padding: 8px 20px;
@@ -602,8 +602,11 @@
                 <span class="status-dot online" id="aiStatusDot"></span>
                 <span id="aiStatusText">متصل</span>
                 <span style="margin:0 8px;color:rgba(255,255,255,0.1);">|</span>
+                <button class="ai-voice-toggle active" id="quickSpeakBtn" onclick="aiToggleAutoSpeak()" title="تفعيل/تعطيل القراءة التلقائية">
+                    🔊 القراءة التلقائية ✓
+                </button>
                 <button class="ai-voice-toggle" id="voiceToggleBtn" title="إعدادات الصوت">
-                    🎤 الصوت
+                    🎤 الإعدادات
                 </button>
             </div>
         </div>
@@ -655,6 +658,7 @@
             <button class="quick-btn" onclick="aiSendQuick('المراكب المعطوبة')">⚠️ الأعطال</button>
             <button class="quick-btn" onclick="aiSendQuick('تقرير الصيانة الشهري')">🛠️ الصيانة</button>
             <button class="quick-btn" onclick="aiSendQuick('نسبة الجاهزية')">📈 الجاهزية</button>
+            <button class="quick-btn" onclick="aiSendQuick('من هو مطور التطبيق؟')">👨‍💻 المطوّر</button>
             <button class="quick-btn" onclick="aiSendQuick('ما هي عاصمة تونس؟')">🌍 سؤال عام</button>
             <button class="quick-btn clear-btn" onclick="aiClearChat()">🗑️ مسح</button>
         </div>
@@ -689,13 +693,13 @@
 
 <script>
 // ============================================================
-// 🤖 AI ASSISTANT — v2.1 (Voice + Audio)
+// 🤖 AI ASSISTANT — v2.2 (Auto Voice + Persistent)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🧠 AI Assistant v2.1 (Voice) loading...');
+    console.log('🧠 AI Assistant v2.2 (Auto Voice) loading...');
 
     // ===== الحالة =====
     const state = {
@@ -709,7 +713,13 @@
         speechSynthesis: window.speechSynthesis || null,
         currentUtterance: null,
         currentSpeakBtn: null,
-        autoSpeak: false,
+        // ✅ القراءة التلقائية — مفعّلة افتراضيًا، محفوظة في localStorage
+        autoSpeak: (function() {
+            try {
+                const saved = localStorage.getItem('ai_auto_speak');
+                return saved === null ? true : saved === 'true';
+            } catch (e) { return true; }
+        })(),
         voices: [],
         preferredVoice: null
     };
@@ -729,11 +739,24 @@
         return escapeHTML(text).replace(/\n/g, '<br>');
     }
 
+    // ✅ إزالة Markdown + HTML قبل القراءة الصوتية
     function stripHTML(html) {
         if (!html) return '';
+        let text = String(html);
+        text = text
+            .replace(/\*\*(.+?)\*\*/g, '$1')      // **عريض**
+            .replace(/\*(.+?)\*/g, '$1')          // *مائل*
+            .replace(/`(.+?)`/g, '$1')            // `كود`
+            .replace(/^#+\s+/gm, '')              // # عنوان
+            .replace(/^[-•]\s+/gm, '')            // - قائمة
+            .replace(/^\d+\.\s+/gm, '')           // 1. قائمة
+            .replace(/\[(.+?)\]\(.+?\)/g, '$1')   // [رابط](url)
+            .replace(/<br\s*\/?>/gi, ' ')         // <br>
+            .replace(/\n{2,}/g, '. ')             // سطران فارغان → توقف
+            .replace(/\n/g, ' ');                 // سطر واحد → مسافة
         const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || '';
+        tmp.innerHTML = text;
+        return (tmp.textContent || tmp.innerText || '').trim();
     }
 
     function toast(msg, type) {
@@ -777,20 +800,33 @@
     }
 
     // ============================================================
-    // TEXT-TO-SPEECH (قراءة الردود)
+    // TEXT-TO-SPEECH
     // ============================================================
 
     function loadVoices() {
         if (!state.speechSynthesis) return;
         state.voices = state.speechSynthesis.getVoices() || [];
 
-        // اختر صوت عربي إن وُجد
-        const arabicVoice = state.voices.find(v =>
-            v.lang && (v.lang.startsWith('ar') || v.lang.startsWith('ar-'))
-        );
+        // ✅ أولوية: ar-TN > ar-SA > ar-EG > أي صوت عربي > فرنسي > الأول
+        const preferredOrder = ['ar-TN', 'ar-SA', 'ar-EG', 'ar-MA', 'ar-DZ', 'ar'];
+        let arabicVoice = null;
+        for (const lang of preferredOrder) {
+            arabicVoice = state.voices.find(v =>
+                v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase())
+            );
+            if (arabicVoice) break;
+        }
+        if (!arabicVoice) {
+            arabicVoice = state.voices.find(v =>
+                v.lang && v.lang.toLowerCase().startsWith('fr')
+            );
+        }
         state.preferredVoice = arabicVoice || state.voices[0] || null;
 
-        // املأ قائمة الأصوات
+        if (state.preferredVoice) {
+            console.log('🎤 Preferred voice:', state.preferredVoice.name, '(' + state.preferredVoice.lang + ')');
+        }
+
         const select = document.getElementById('voiceSelect');
         if (select) {
             select.innerHTML = '';
@@ -815,7 +851,6 @@
             return;
         }
 
-        // إن كان يتحدث بالفعل، أوقف
         if (state.speechSynthesis.speaking) {
             state.speechSynthesis.cancel();
             if (state.currentSpeakBtn) {
@@ -823,7 +858,6 @@
                 state.currentSpeakBtn.innerHTML = '🔊 استماع';
                 state.currentSpeakBtn = null;
             }
-            // إن كان نفس الزر، توقف هنا
             if (btnEl && btnEl === state.currentSpeakBtn) return;
         }
 
@@ -832,7 +866,6 @@
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
 
-        // الإعدادات
         const rateEl = document.getElementById('voiceRate');
         const pitchEl = document.getElementById('voicePitch');
         const voiceSelectEl = document.getElementById('voiceSelect');
@@ -841,7 +874,6 @@
         utterance.pitch = pitchEl ? Number(pitchEl.value) : 1;
         utterance.volume = 1;
 
-        // الصوت
         if (voiceSelectEl && state.voices[Number(voiceSelectEl.value)]) {
             utterance.voice = state.voices[Number(voiceSelectEl.value)];
             utterance.lang = utterance.voice.lang;
@@ -852,12 +884,11 @@
             utterance.lang = 'ar-SA';
         }
 
-        // كشف اللغة تلقائياً (إن كان النص إنجليزي)
+        // كشف النص الإنجليزي
         if (/^[A-Za-z\s\d\.,!?]+$/.test(cleanText.slice(0, 100))) {
             utterance.lang = 'en-US';
         }
 
-        // عند البدء
         utterance.onstart = function() {
             state.currentSpeakBtn = btnEl;
             if (btnEl) {
@@ -866,7 +897,6 @@
             }
         };
 
-        // عند الانتهاء
         const cleanup = function() {
             if (btnEl) {
                 btnEl.classList.remove('speaking');
@@ -895,10 +925,25 @@
         }
     }
 
+    function updateQuickSpeakBtn() {
+        const quickBtn = document.getElementById('quickSpeakBtn');
+        const autoToggle = document.getElementById('autoSpeakToggle');
+        if (autoToggle) autoToggle.classList.toggle('on', state.autoSpeak);
+        if (quickBtn) {
+            quickBtn.classList.toggle('active', state.autoSpeak);
+            quickBtn.textContent = state.autoSpeak ? '🔊 القراءة التلقائية ✓' : '🔇 القراءة التلقائية';
+        }
+    }
+
     function toggleAutoSpeak() {
         state.autoSpeak = !state.autoSpeak;
-        const toggle = document.getElementById('autoSpeakToggle');
-        if (toggle) toggle.classList.toggle('on', state.autoSpeak);
+        try { localStorage.setItem('ai_auto_speak', String(state.autoSpeak)); } catch (e) {}
+        updateQuickSpeakBtn();
+
+        if (!state.autoSpeak) {
+            stopSpeaking();
+        }
+
         toast(state.autoSpeak ? '🔊 القراءة التلقائية مُفعّلة' : '🔇 القراءة التلقائية مُعطّلة', 'info');
     }
 
@@ -908,14 +953,14 @@
     }
 
     // ============================================================
-    // SPEECH-TO-TEXT (الإدخال الصوتي)
+    // SPEECH-TO-TEXT
     // ============================================================
 
     function initRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-            console.warn('⚠️ Web Speech API غير مدعوم في هذا المتصفح');
+            console.warn('⚠️ Web Speech API غير مدعوم');
             return null;
         }
 
@@ -949,7 +994,6 @@
                 }
             }
 
-            // اعرض النص المؤقت + النهائي في textarea
             const input = getInput();
             if (input) {
                 const text = (finalTranscript + interim).trim();
@@ -960,7 +1004,7 @@
         };
 
         recognition.onerror = function(event) {
-            console.warn('⚠️ Speech recognition error:', event.error);
+            console.warn('⚠️ Speech error:', event.error);
             const errMap = {
                 'not-allowed': '🚫 لم يتم منح إذن الميكروفون',
                 'no-speech': '🎙️ لم يتم الكشف عن صوت',
@@ -986,7 +1030,6 @@
     }
 
     function toggleMic() {
-        // إن كان المتصفح لا يدعم
         if (!state.recognition) {
             state.recognition = initRecognition();
         }
@@ -996,11 +1039,9 @@
             return;
         }
 
-        // تحديث اللغة
         const langSelect = document.getElementById('sttLang');
         if (langSelect) state.recognition.lang = langSelect.value;
 
-        // إيقاف القراءة إن كانت تعمل
         stopSpeaking();
 
         if (state.isListening) {
@@ -1009,7 +1050,6 @@
             try {
                 state.recognition.start();
             } catch (e) {
-                // في حال كان يعمل بالفعل
                 console.debug('Recognition start error:', e.message);
             }
         }
@@ -1035,7 +1075,6 @@
             retryBtn = '<button class="retry-btn" onclick="aiRetry()">🔄 إعادة المحاولة</button>';
         }
 
-        // زر الاستماع للردود فقط
         let speakBtn = '';
         if (role === 'assistant' && !options.isError) {
             speakBtn = '<button class="speak-btn" onclick="aiSpeak(this)" title="استماع">🔊 استماع</button>';
@@ -1052,7 +1091,6 @@
 
         box.appendChild(div);
 
-        // احفظ النص الأصلي للاستماع
         if (role === 'assistant') {
             const bubble = div.querySelector('.bubble');
             if (bubble) bubble.dataset.rawText = text;
@@ -1060,10 +1098,10 @@
 
         scrollToBottom();
 
-        // القراءة التلقائية
+        // ✅ القراءة التلقائية — تعمل الآن افتراضيًا
         if (role === 'assistant' && state.autoSpeak && !options.isError) {
             const btn = div.querySelector('.speak-btn');
-            setTimeout(() => speakText(text, btn), 200);
+            setTimeout(() => speakText(text, btn), 250);
         }
     }
 
@@ -1102,14 +1140,16 @@
                 '<ul style="margin:6px 0 0 20px;color:rgba(255,255,255,0.4);">' +
                     '<li>⚓ شؤون الأسطول البحري</li>' +
                     '<li>🌍 معلومات عامة</li>' +
-                    '<li>📊 تحليل البيانات</li>' +
+                    '<li>📊 تحليل البيانات والإحصائيات</li>' +
+                    '<li>👨‍💻 معلومات المطوّر والحرس الوطني</li>' +
                     '<li>🎤 يمكنك التحدث معي بالضغط على الميكروفون</li>' +
+                    '<li>🔊 سأقرأ إجاباتي بصوت عربي تلقائياً</li>' +
                 '</ul>' +
             '</div>' +
             '<div class="suggestions">' +
                 '<button class="suggestion-btn" onclick="aiSendQuick(\'عرض إحصائيات الأسطول\')">📊 الإحصائيات</button>' +
+                '<button class="suggestion-btn" onclick="aiSendQuick(\'من هو مطور التطبيق؟\')">👨‍💻 المطوّر</button>' +
                 '<button class="suggestion-btn" onclick="aiSendQuick(\'ما هي عاصمة تونس؟\')">🌍 سؤال عام</button>' +
-                '<button class="suggestion-btn" onclick="aiSendQuick(\'المراكب المعطوبة\')">⚠️ الأعطال</button>' +
             '</div>' +
             '<span class="message-time">' + getCurrentTime() + '</span>';
 
@@ -1180,10 +1220,8 @@
             return;
         }
 
-        // أوقف القراءة الجارية
         stopSpeaking();
 
-        // أوقف الاستماع إن كان يعمل
         if (state.isListening && state.recognition) {
             try { state.recognition.stop(); } catch (e) {}
         }
@@ -1237,6 +1275,7 @@
                 return;
             }
 
+            // ✅ عرض الرد + تشغيل الصوت التلقائي (appendMessage تتولى ذلك)
             appendMessage(data.reply, 'assistant');
 
             state.history.push({ role: 'user', content: text });
@@ -1303,8 +1342,8 @@
         showWelcome();
         refreshStatus();
         loadVoices();
+        updateQuickSpeakBtn();   // ✅ مزامنة حالة الزر مع localStorage
 
-        // textarea
         const input = getInput();
         if (input) {
             input.addEventListener('input', function() {
@@ -1316,7 +1355,6 @@
 
         updateCharCounter();
 
-        // voice toggle button
         const voiceBtn = document.getElementById('voiceToggleBtn');
         if (voiceBtn) {
             voiceBtn.addEventListener('click', function(e) {
@@ -1325,7 +1363,6 @@
             });
         }
 
-        // close panel عند النقر خارجها
         document.addEventListener('click', function(e) {
             const panel = document.getElementById('voicePanel');
             const btn = document.getElementById('voiceToggleBtn');
@@ -1334,7 +1371,6 @@
             panel.classList.remove('open');
         });
 
-        // إغلاق عند Escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 const panel = document.getElementById('voicePanel');
@@ -1343,7 +1379,6 @@
             }
         });
 
-        // اختيار الصوت
         const voiceSelect = document.getElementById('voiceSelect');
         if (voiceSelect) {
             voiceSelect.addEventListener('change', function() {
@@ -1352,7 +1387,6 @@
             });
         }
 
-        // تغيير لغة الإدخال
         const langSelect = document.getElementById('sttLang');
         if (langSelect) {
             langSelect.addEventListener('change', function() {
@@ -1363,7 +1397,7 @@
             });
         }
 
-        console.log('✅ AI Assistant v2.1 (Voice) ready');
+        console.log('✅ AI Assistant v2.2 (Auto Voice) ready — autoSpeak:', state.autoSpeak);
     }
 
     // ============================================================
@@ -1386,7 +1420,6 @@
     window.aiToggleVoicePanel = toggleVoicePanel;
     window.aiStopSpeaking = stopSpeaking;
 
-    // تشغيل
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
