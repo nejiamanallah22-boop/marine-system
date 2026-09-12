@@ -2,7 +2,8 @@
 <div id="page-ai-assistant">
     <style>
         /* ============================================================
-           🤖 AI ASSISTANT STYLES v2.3 (Auto Voice + Smart Import)
+           🤖 AI ASSISTANT STYLES v2.4
+           (Auto Voice + Smart Import + Persistent Speak Buttons)
            ============================================================ */
         .ai-container {
             display: flex;
@@ -60,6 +61,7 @@
             gap: 8px;
             font-size: 12px;
             color: rgba(255,255,255,0.4);
+            flex-wrap: wrap;
         }
         .ai-header .ai-status .status-dot {
             width: 8px;
@@ -89,14 +91,23 @@
             align-items: center;
             gap: 6px;
             transition: all 0.3s;
+            white-space: nowrap;
         }
         .ai-header .ai-voice-toggle:hover {
             background: rgba(66,133,244,0.08);
+            transform: translateY(-1px);
         }
         .ai-header .ai-voice-toggle.active {
             background: rgba(74,222,128,0.15);
             border-color: #4ade80;
             color: #4ade80;
+        }
+        .ai-header .ai-voice-toggle.replay {
+            border-color: rgba(230,179,30,0.3);
+            color: #e6b31e;
+        }
+        .ai-header .ai-voice-toggle.replay:hover {
+            background: rgba(230,179,30,0.1);
         }
         .api-status-bar {
             padding: 8px 20px;
@@ -170,7 +181,7 @@
         .message.user .avatar { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #fff; }
         .message.assistant .avatar { background: linear-gradient(135deg, #4285f4, #34a853); color: #fff; }
         .message .bubble {
-            padding: 12px 16px;
+            padding: 32px 16px 12px;
             border-radius: 12px;
             font-size: 14px;
             line-height: 1.6;
@@ -179,6 +190,7 @@
             position: relative;
         }
         .message.user .bubble {
+            padding: 12px 16px;
             background: rgba(59,130,246,0.15);
             border: 1px solid rgba(59,130,246,0.1);
             color: #e2e8f0;
@@ -253,40 +265,58 @@
             transition: all 0.3s;
         }
 
-        /* ===== AUDIO BUTTONS (TTS) ===== */
+        /* ===== SPEAK BUTTONS (Always visible) ===== */
         .message .bubble .speak-btn {
             position: absolute;
             top: 8px;
             left: 8px;
-            background: rgba(66,133,244,0.1);
-            border: 1px solid rgba(66,133,244,0.2);
+            background: rgba(66,133,244,0.12);
+            border: 1px solid rgba(66,133,244,0.25);
             color: #60a5fa;
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 11px;
             font-family: inherit;
-            opacity: 0;
-            transition: all 0.3s;
-            display: flex;
+            opacity: 0.9;
+            transition: all 0.25s ease;
+            display: inline-flex;
             align-items: center;
             gap: 4px;
+            z-index: 2;
+            font-weight: 600;
         }
-        .message .bubble:hover .speak-btn { opacity: 1; }
         .message .bubble .speak-btn:hover {
-            background: rgba(66,133,244,0.2);
+            background: rgba(66,133,244,0.25);
             color: #fff;
+            transform: scale(1.05);
+            opacity: 1;
         }
         .message .bubble .speak-btn.speaking {
-            opacity: 1;
-            background: rgba(74,222,128,0.15);
-            border-color: rgba(74,222,128,0.4);
+            background: rgba(74,222,128,0.2);
+            border-color: rgba(74,222,128,0.5);
             color: #4ade80;
             animation: speakPulse 1.5s ease-in-out infinite;
         }
         @keyframes speakPulse {
             0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
-            50% { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+            50% { box-shadow: 0 0 0 8px rgba(74,222,128,0); }
+        }
+
+        /* Audio playing wave indicator */
+        .message .bubble .speak-btn.speaking::after {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            margin-right: 4px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: audioWave 0.8s ease-in-out infinite;
+        }
+        @keyframes audioWave {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(2.5); opacity: 1; }
         }
 
         .ai-input-area {
@@ -331,7 +361,6 @@
             align-items: center;
         }
 
-        /* ===== MIC BUTTON (STT) ===== */
         .mic-btn {
             width: 50px;
             height: 50px;
@@ -413,7 +442,6 @@
         .ai-input-wrapper .char-counter.warn { color: #fbbf24; }
         .ai-input-wrapper .char-counter.danger { color: #f87171; }
 
-        /* ===== LISTENING OVERLAY ===== */
         .listening-indicator {
             display: none;
             align-items: center;
@@ -480,7 +508,6 @@
             background: rgba(248,113,113,0.08);
         }
 
-        /* ===== VOICE SETTINGS PANEL ===== */
         .voice-panel {
             display: none;
             position: absolute;
@@ -688,9 +715,7 @@
             flex-shrink: 0;
         }
 
-        .import-results {
-            margin-top: 16px;
-        }
+        .import-results { margin-top: 16px; }
         .results-header {
             display: flex;
             justify-content: space-between;
@@ -777,9 +802,7 @@
             font-size: 13px;
             min-width: 900px;
         }
-        .import-table thead {
-            background: rgba(230,179,30,0.06);
-        }
+        .import-table thead { background: rgba(230,179,30,0.06); }
         .import-table th {
             padding: 10px 12px;
             text-align: right;
@@ -795,9 +818,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.03);
             white-space: nowrap;
         }
-        .import-table tr:hover td {
-            background: rgba(255,255,255,0.02);
-        }
+        .import-table tr:hover td { background: rgba(255,255,255,0.02); }
         .import-table td input,
         .import-table td select {
             background: rgba(255,255,255,0.04);
@@ -828,9 +849,7 @@
             font-family: inherit;
             transition: all 0.3s;
         }
-        .import-table .row-delete:hover {
-            background: rgba(248,113,113,0.2);
-        }
+        .import-table .row-delete:hover { background: rgba(248,113,113,0.2); }
 
         .import-final {
             margin-top: 16px;
@@ -877,7 +896,7 @@
             .ai-header { padding: 10px 14px; }
             .ai-header .ai-brand .ai-title { font-size: 15px; }
             .ai-messages { padding: 12px; }
-            .message .bubble { font-size: 13px; padding: 10px 14px; }
+            .message .bubble { font-size: 13px; padding: 30px 14px 10px; }
             .ai-input-area { padding: 10px 14px; }
             .ai-input-wrapper textarea { font-size: 13px; padding: 10px 14px; min-height: 42px; }
             .mic-btn { width: 42px; height: 42px; min-height: 42px; font-size: 16px; }
@@ -974,6 +993,9 @@
                 <span class="status-dot online" id="aiStatusDot"></span>
                 <span id="aiStatusText">متصل</span>
                 <span style="margin:0 8px;color:rgba(255,255,255,0.1);">|</span>
+                <button class="ai-voice-toggle replay" id="replayBtn" onclick="aiSpeakLast()" title="إعادة قراءة آخر رد">
+                    🔊 إعادة
+                </button>
                 <button class="ai-voice-toggle active" id="quickSpeakBtn" onclick="aiToggleAutoSpeak()" title="تفعيل/تعطيل القراءة التلقائية">
                     🔊 القراءة التلقائية ✓
                 </button>
@@ -1065,13 +1087,14 @@
 
 <script>
 // ============================================================
-// 🤖 AI ASSISTANT — v2.3 (Auto Voice + Smart Import)
+// 🤖 AI ASSISTANT — v2.4
+// (Auto Voice + Smart Import + Persistent Speak Buttons)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🧠 AI Assistant v2.3 (Auto Voice + Smart Import) loading...');
+    console.log('🧠 AI Assistant v2.4 loading...');
 
     // ===== الحالة =====
     const state = {
@@ -1238,7 +1261,10 @@
         }
 
         const cleanText = stripHTML(text).trim();
-        if (!cleanText) return;
+        if (!cleanText) {
+            toast('⚠️ لا يوجد نص لقراءته', 'warning');
+            return;
+        }
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
 
@@ -1298,6 +1324,33 @@
             state.currentSpeakBtn.innerHTML = '🔊 استماع';
             state.currentSpeakBtn = null;
         }
+    }
+
+    // ✅ قراءة آخر رد من المساعد
+    function speakLastReply() {
+        const messages = document.querySelectorAll('.message.assistant');
+        if (!messages || messages.length === 0) {
+            toast('⚠️ لا يوجد رد لقراءته', 'warning');
+            return;
+        }
+
+        const lastMsg = messages[messages.length - 1];
+        const bubble = lastMsg.querySelector('.bubble');
+        const btn = lastMsg.querySelector('.speak-btn');
+        const rawText = bubble ? (bubble.dataset.rawText || bubble.textContent || '') : '';
+
+        if (!rawText.trim()) {
+            toast('⚠️ لا يوجد نص لقراءته', 'warning');
+            return;
+        }
+
+        // إن كان يتحدث بالفعل، أوقف
+        if (state.speechSynthesis && state.speechSynthesis.speaking) {
+            stopSpeaking();
+            return;
+        }
+
+        speakText(rawText, btn);
     }
 
     function updateQuickSpeakBtn() {
@@ -1516,7 +1569,12 @@
 
         const div = document.createElement('div');
         div.className = 'message assistant';
-        div.innerHTML = '<div class="avatar">🧠</div><div class="bubble">' + welcome + '</div>';
+        div.innerHTML = '<div class="avatar">🧠</div><div class="bubble">' +
+            '<button class="speak-btn" onclick="aiSpeak(this)" title="استماع">🔊 استماع</button>' +
+            '<div>' + welcome + '</div>' +
+            '</div>';
+        const bubble = div.querySelector('.bubble');
+        if (bubble) bubble.dataset.rawText = stripHTML(welcome);
         box.appendChild(div);
     }
 
@@ -1796,7 +1854,6 @@
         document.getElementById('resultsFile').textContent = ' — ' + (data.fileName || '');
         document.getElementById('importResults').style.display = 'block';
 
-        // التحذيرات
         const warningsEl = document.getElementById('importWarnings');
         const warnings = Array.isArray(data.warnings) ? data.warnings : [];
         if (warnings.length > 0) {
@@ -1839,7 +1896,6 @@
             tbody.appendChild(tr);
         });
 
-        // ربط التعديلات
         tbody.querySelectorAll('input, select').forEach(el => {
             el.addEventListener('change', function() {
                 const idx = Number(this.dataset.idx);
@@ -1921,7 +1977,6 @@
 
             document.getElementById('importResults').style.display = 'none';
 
-            // إشعار صوتي
             if (state.autoSpeak && state.speechSynthesis) {
                 setTimeout(() => {
                     speakText('تم استيراد ' + (results.created || 0) + ' مركب بنجاح', null);
@@ -1948,7 +2003,6 @@
 
         if (!dropZone || !fileInput) return;
 
-        // سحب وإفلات
         ['dragenter', 'dragover'].forEach(evt => {
             dropZone.addEventListener(evt, e => {
                 e.preventDefault();
@@ -2009,6 +2063,15 @@
             });
         }
 
+        // ✅ ربط زر "إعادة"
+        const replayBtn = document.getElementById('replayBtn');
+        if (replayBtn) {
+            replayBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                speakLastReply();
+            });
+        }
+
         document.addEventListener('click', function(e) {
             const panel = document.getElementById('voicePanel');
             const btn = document.getElementById('voiceToggleBtn');
@@ -2043,7 +2106,7 @@
             });
         }
 
-        console.log('✅ AI Assistant v2.3 (Auto Voice + Smart Import) ready');
+        console.log('✅ AI Assistant v2.4 ready — autoSpeak:', state.autoSpeak);
     }
 
     // ============================================================
@@ -2062,6 +2125,7 @@
         const rawText = bubble ? bubble.dataset.rawText : '';
         speakText(rawText || bubble?.textContent || '', btn);
     };
+    window.aiSpeakLast = speakLastReply;
     window.aiToggleAutoSpeak = toggleAutoSpeak;
     window.aiToggleVoicePanel = toggleVoicePanel;
     window.aiStopSpeaking = stopSpeaking;
