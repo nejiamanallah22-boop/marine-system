@@ -1,1390 +1,83 @@
-<!-- public/pages/maintenance.html -->
-<div id="page-maintenance">
-    <style>
-        /* ============================================================
-           🔧 MAINTENANCE - ENTERPRISE PRO v9.15 (Year Checkboxes)
-           ============================================================ */
-
-        :root {
-            --primary: #0a0e1a;
-            --secondary: #111e3a;
-            --accent-1: #e94560;
-            --accent-2: #f5c842;
-            --accent-3: #00b894;
-            --accent-4: #6c5ce7;
-            --accent-5: #0984e3;
-            --gold: #e6b31e;
-            --gold-light: #f5d76e;
-            --success: #00b894;
-            --success-light: #55efc4;
-            --danger: #e17055;
-            --warning: #fdcb6e;
-            --info: #0984e3;
-            --glass-bg: rgba(255,255,255,0.04);
-            --glass-border: rgba(255,255,255,0.06);
-            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
-            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
-            --radius: 14px;
-            --radius-sm: 8px;
-            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
-            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-        }
-
-        #page-maintenance {
-            width: 100%;
-            max-width: 100%;
-            padding: 20px;
-            margin: 0;
-            font-family: var(--font);
-            background: #0a0e1a;
-            color: #e8edf5;
-            min-height: 100vh;
-            position: relative;
-            z-index: 1;
-        }
-
-        #page-maintenance::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background:
-                radial-gradient(ellipse at 80% 20%, rgba(233,69,96,0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at 20% 80%, rgba(108,92,231,0.04) 0%, transparent 50%);
-            z-index: -1;
-            pointer-events: none;
-            animation: bgFloat 20s ease-in-out infinite;
-        }
-
-        @keyframes bgFloat {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.05) rotate(2deg); }
-        }
-
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #e94560, #6c5ce7);
-            border-radius: 10px;
-        }
-
-        .maint-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            flex-wrap: wrap;
-            gap: 12px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            margin-bottom: 20px;
-        }
-
-        .maint-header-left { display: flex; align-items: center; gap: 14px; }
-
-        .maint-header-left .header-icon {
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #e94560, #6c5ce7);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: #0a1628;
-            animation: pulseIcon 2s ease-in-out infinite;
-        }
-
-        @keyframes pulseIcon {
-            0%, 100% { box-shadow: 0 0 20px rgba(233, 69, 96, 0.2); }
-            50% { box-shadow: 0 0 50px rgba(233, 69, 96, 0.4); }
-        }
-
-        .maint-header-left h2 {
-            font-size: 22px; font-weight: 800;
-            background: linear-gradient(135deg, #e94560, #f5c842, #6c5ce7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-
-        .maint-header-left p { font-size: 12px; color: rgba(255, 255, 255, 0.3); margin: 0; }
-        .maint-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-        .btn-action {
-            padding: 8px 18px; border: none; border-radius: 30px;
-            font-weight: 600; font-size: 0.8rem; cursor: pointer;
-            transition: all var(--transition);
-            display: inline-flex; align-items: center; gap: 8px;
-            font-family: var(--font);
-        }
-
-        .btn-action.primary {
-            background: linear-gradient(135deg, #e94560, #f5c842);
-            color: #0a1628;
-            box-shadow: 0 4px 30px rgba(233, 69, 96, 0.2);
-        }
-        .btn-action.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(233, 69, 96, 0.4); }
-
-        .btn-action.secondary {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            color: rgba(255, 255, 255, 0.5);
-        }
-        .btn-action.secondary:hover { background: rgba(255, 255, 255, 0.06); color: #fff; transform: translateY(-2px); }
-
-        .btn-action.success {
-            background: linear-gradient(135deg, #00b894, #55efc4);
-            color: #0a1628;
-        }
-        .btn-action.success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 184, 148, 0.3); }
-
-        .damaged-section {
-            background: rgba(233, 69, 96, 0.04);
-            border: 1px solid rgba(233, 69, 96, 0.1);
-            border-radius: var(--radius);
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(12px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .damaged-section::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #e94560, #f5c842, #e94560);
-            animation: damageGradient 3s ease-in-out infinite;
-            background-size: 300% 100%;
-        }
-
-        @keyframes damageGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .damaged-header {
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
-        }
-
-        .damaged-header h3 {
-            font-size: 16px; font-weight: 700; color: #e94560;
-            display: flex; align-items: center; gap: 10px; margin: 0;
-        }
-
-        .damaged-header h3 i { animation: pulseDanger 1.5s infinite; }
-
-        @keyframes pulseDanger {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.1); }
-        }
-
-        .damaged-header .damaged-count {
-            padding: 4px 16px; border-radius: 20px;
-            font-size: 13px; font-weight: 700;
-            background: rgba(233, 69, 96, 0.15);
-            color: #e94560;
-            border: 1px solid rgba(233, 69, 96, 0.1);
-        }
-
-        .damaged-table-wrapper { overflow-x: auto; }
-
-        .damaged-table {
-            width: 100%; border-collapse: collapse;
-            font-size: 0.78rem; min-width: 600px;
-        }
-
-        .damaged-table thead { background: rgba(233, 69, 96, 0.06); }
-
-        .damaged-table thead th {
-            padding: 8px 12px; text-align: center;
-            font-weight: 700; font-size: 0.6rem;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.3);
-            letter-spacing: 0.5px;
-        }
-
-        .damaged-table tbody td {
-            padding: 8px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.75rem; text-align: center;
-        }
-
-        .damaged-table tbody tr {
-            transition: all var(--transition);
-            border-right: 3px solid transparent;
-        }
-
-        .damaged-table tbody tr:hover { background: rgba(233, 69, 96, 0.05); }
-        .damaged-table tbody tr.critical { border-right: 3px solid #e94560; background: rgba(233, 69, 96, 0.04); }
-        .damaged-table tbody tr.warning { border-right: 3px solid #f5c842; background: rgba(245, 200, 66, 0.04); }
-        .damaged-table .vessel-name-damaged { font-weight: 600; color: #e94560; }
-        .damaged-table .damage-type { color: #f5c842; }
-        .damaged-table .damage-date { color: rgba(255, 255, 255, 0.3); font-size: 0.7rem; }
-
-        .damaged-table .urgency-badge {
-            padding: 2px 12px; border-radius: 20px;
-            font-size: 0.6rem; font-weight: 600;
-        }
-        .damaged-table .urgency-badge.critical {
-            background: rgba(233, 69, 96, 0.15);
-            color: #e94560;
-            animation: pulseDanger 1.5s infinite;
-        }
-        .damaged-table .urgency-badge.warning { background: rgba(245, 200, 66, 0.15); color: #f5c842; }
-        .damaged-table .urgency-badge.normal { background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.3); }
-
-        .damaged-empty { text-align: center; padding: 30px 20px; color: rgba(255, 255, 255, 0.1); }
-        .damaged-empty .empty-icon { font-size: 2.5rem; color: rgba(255, 255, 255, 0.03); display: block; margin-bottom: 8px; }
-        .damaged-empty h4 { font-size: 0.9rem; font-weight: 600; color: rgba(255, 255, 255, 0.15); margin-bottom: 2px; }
-        .damaged-empty p { font-size: 0.75rem; color: rgba(255, 255, 255, 0.06); }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 16px 20px;
-            transition: all var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #e94560, #f5c842, #6c5ce7);
-            opacity: 0.6;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(233, 69, 96, 0.15);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .stat-card .stat-top { display: flex; justify-content: space-between; align-items: flex-start; }
-
-        .stat-card .stat-icon {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; flex-shrink: 0;
-        }
-
-        .stat-card .stat-icon.pink { background: rgba(233, 69, 96, 0.12); color: #e94560; }
-        .stat-card .stat-icon.gold { background: rgba(245, 200, 66, 0.12); color: #f5c842; }
-        .stat-card .stat-icon.green { background: rgba(0, 184, 148, 0.12); color: #00b894; }
-        .stat-card .stat-icon.purple { background: rgba(108, 92, 231, 0.12); color: #6c5ce7; }
-        .stat-card .stat-icon.blue { background: rgba(9, 132, 227, 0.12); color: #0984e3; }
-        .stat-card .stat-icon.red { background: rgba(233, 69, 96, 0.15); color: #e94560; }
-
-        .stat-card .stat-change { font-size: 10px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
-        .stat-card .stat-change.up { background: rgba(0, 184, 148, 0.12); color: #55efc4; }
-        .stat-card .stat-change.down { background: rgba(233, 69, 96, 0.12); color: #e94560; }
-
-        .stat-card .number { font-size: 28px; font-weight: 800; color: #fff; line-height: 1.2; margin-top: 6px; }
-        .stat-card .number.pink { color: #e94560; }
-        .stat-card .number.gold { color: #f5c842; }
-        .stat-card .number.green { color: #55efc4; }
-        .stat-card .number.purple { color: #6c5ce7; }
-        .stat-card .number.blue { color: #0984e3; }
-        .stat-card .number.red { color: #e94560; }
-
-        .stat-card .label { font-size: 11px; color: rgba(255, 255, 255, 0.3); margin-top: 2px; font-weight: 500; }
-
-        .stat-card .stat-bottom {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-top: 8px; padding-top: 8px;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-        }
-        .stat-card .stat-bottom .sub-label { font-size: 10px; color: rgba(255, 255, 255, 0.2); }
-
-        .filter-bar {
-            display: flex; flex-wrap: wrap; align-items: center;
-            gap: 8px 14px;
-            padding: 12px 20px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            margin-bottom: 20px;
-        }
-
-        .filter-bar label {
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.3);
-            font-weight: 600;
-            display: flex; align-items: center; gap: 4px;
-        }
-
-        .filter-bar input,
-        .filter-bar select {
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.03);
-            color: #e2e8f0;
-            font-size: 0.75rem;
-            min-width: 120px;
-            cursor: pointer;
-            font-family: var(--font);
-            transition: all var(--transition);
-        }
-
-        .filter-bar input:focus,
-        .filter-bar select:focus {
-            outline: none;
-            border-color: #e94560;
-            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.06);
-        }
-
-        .filter-bar input::placeholder { color: rgba(255, 255, 255, 0.15); }
-        .filter-bar select option { background: #0a1628; color: #e2e8f0; }
-
-        /* ===== YEAR CHECKBOXES ===== */
-        .year-checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            align-items: center;
-        }
-
-        .year-check {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.03);
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition);
-            user-select: none;
-        }
-
-        .year-check:hover {
-            border-color: #e94560;
-            background: rgba(233, 69, 96, 0.06);
-            color: #fff;
-        }
-
-        .year-check input[type="checkbox"] {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.02);
-            cursor: pointer;
-            position: relative;
-            transition: all 0.2s;
-            margin: 0;
-            flex-shrink: 0;
-        }
-
-        .year-check input[type="checkbox"]:checked {
-            background: linear-gradient(135deg, #e94560, #f5c842);
-            border-color: transparent;
-        }
-
-        .year-check input[type="checkbox"]:checked::after {
-            content: '✓';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: #0a1628;
-            font-size: 11px;
-            font-weight: 900;
-        }
-
-        .year-check:has(input:checked) {
-            background: rgba(233, 69, 96, 0.1);
-            border-color: rgba(233, 69, 96, 0.3);
-            color: #f5c842;
-        }
-
-        .btn-filter {
-            padding: 6px 16px; border: none; border-radius: 20px;
-            font-weight: 600; font-size: 0.75rem; cursor: pointer;
-            transition: all var(--transition); font-family: var(--font);
-            display: inline-flex; align-items: center; gap: 6px;
-        }
-        .btn-filter.primary {
-            background: linear-gradient(135deg, #e94560, #f5c842);
-            color: #0a1628;
-        }
-        .btn-filter.primary:hover { transform: scale(1.04); box-shadow: 0 4px 20px rgba(233, 69, 96, 0.2); }
-
-        .btn-filter.outline {
-            background: transparent;
-            border: 1px solid var(--glass-border);
-            color: rgba(255, 255, 255, 0.3);
-        }
-        .btn-filter.outline:hover { background: rgba(255, 255, 255, 0.04); color: #fff; }
-
-        .table-wrapper {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            overflow: hidden;
-        }
-
-        .table-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.02);
-            flex-wrap: wrap; gap: 8px;
-        }
-
-        .table-header h3 {
-            font-size: 14px; font-weight: 700;
-            color: rgba(255, 255, 255, 0.4);
-            margin: 0;
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        .table-header h3 i { color: #e94560; }
-
-        .table-header .badge {
-            font-size: 10px; padding: 3px 14px;
-            border-radius: 20px; font-weight: 600;
-        }
-        .badge.pink { background: rgba(233, 69, 96, 0.12); color: #e94560; }
-        .badge.gold { background: rgba(245, 200, 66, 0.12); color: #f5c842; }
-        .badge.green { background: rgba(0, 184, 148, 0.12); color: #55efc4; }
-
-        .table-scroll { overflow-x: auto; padding: 0 16px 16px; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.78rem;
-            min-width: 800px;
-        }
-
-        thead {
-            background: rgba(233, 69, 96, 0.04);
-            border-bottom: 2px solid rgba(233, 69, 96, 0.06);
-        }
-
-        thead th {
-            padding: 10px 12px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.3);
-            letter-spacing: 0.8px;
-            white-space: nowrap;
-        }
-
-        thead th i { margin-left: 4px; color: #e94560; }
-
-        tbody td {
-            padding: 9px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-            vertical-align: middle;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.78rem;
-            text-align: center;
-        }
-
-        tbody tr { transition: all var(--transition); }
-        tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
-        tbody tr.damaged { border-right: 3px solid #e94560; }
-        tbody .vessel-name { font-weight: 600; color: #fff; }
-
-        .status-badge {
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            display: inline-block;
-            white-space: nowrap;
-        }
-        .status-badge.active { background: rgba(245, 200, 66, 0.12); color: #f5c842; animation: pulseActive 2s infinite; }
-        @keyframes pulseActive { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .status-badge.completed { background: rgba(0, 184, 148, 0.12); color: #55efc4; }
-        .status-badge.cancelled { background: rgba(233, 69, 96, 0.12); color: #e94560; }
-        .status-badge.damaged { background: rgba(233, 69, 96, 0.2); color: #e94560; animation: pulseDanger 1.5s infinite; }
-
-        .action-btn {
-            padding: 4px 8px; border: none; border-radius: 6px;
-            font-size: 0.6rem; cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex; align-items: center; gap: 4px;
-            margin: 2px;
-        }
-
-        .action-btn.edit { background: rgba(245, 200, 66, 0.1); color: #f5c842; }
-        .action-btn.edit:hover { background: rgba(245, 200, 66, 0.2); transform: scale(1.05); }
-        .action-btn.complete { background: rgba(0, 184, 148, 0.1); color: #55efc4; }
-        .action-btn.complete:hover { background: rgba(0, 184, 148, 0.2); transform: scale(1.05); }
-        .action-btn.history { background: rgba(108, 92, 231, 0.1); color: #6c5ce7; }
-        .action-btn.history:hover { background: rgba(108, 92, 231, 0.2); transform: scale(1.05); }
-        .action-btn.delete { background: rgba(233, 69, 96, 0.1); color: #e94560; }
-        .action-btn.delete:hover { background: rgba(233, 69, 96, 0.2); transform: scale(1.05); }
-
-        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255, 255, 255, 0.1); }
-        .empty-state .empty-icon { font-size: 3.5rem; color: rgba(255, 255, 255, 0.03); display: block; margin-bottom: 12px; }
-        .empty-state h3 { font-size: 1rem; font-weight: 600; color: rgba(255, 255, 255, 0.15); margin-bottom: 4px; }
-        .empty-state p { font-size: 0.8rem; color: rgba(255, 255, 255, 0.06); }
-        .empty-state .retry-btn {
-            margin-top: 12px;
-            padding: 8px 24px;
-            border: none;
-            border-radius: 30px;
-            background: linear-gradient(135deg, #e94560, #f5c842);
-            color: #0a1628;
-            font-weight: 700;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-        }
-        .empty-state .retry-btn:hover { transform: scale(1.04); box-shadow: 0 4px 24px rgba(233, 69, 96, 0.3); }
-
-        .maint-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(12px);
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .maint-modal.active { display: flex; }
-
-        .maint-modal .modal-content {
-            background: #111e3a;
-            border: 1px solid rgba(233, 69, 96, 0.15);
-            border-radius: var(--radius);
-            max-width: 650px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 28px;
-            animation: modalFade 0.3s ease;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        }
-
-        @keyframes modalFade {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .maint-modal .modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .maint-modal .modal-header h3 {
-            color: #fff;
-            font-size: 20px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #e94560, #f5c842);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .maint-modal .modal-close {
-            background: none; border: none;
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 24px; cursor: pointer;
-            padding: 4px 8px; border-radius: 8px;
-            transition: all 0.3s;
-        }
-        .maint-modal .modal-close:hover { background: rgba(255, 255, 255, 0.04); color: #fff; transform: rotate(90deg); }
-
-        .maint-modal .form-group { margin-bottom: 14px; }
-
-        .maint-modal .form-group label {
-            display: block;
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.3);
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-
-        .maint-modal .form-group label .required { color: #e94560; }
-
-        .maint-modal .form-group input,
-        .maint-modal .form-group select,
-        .maint-modal .form-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            background: rgba(255, 255, 255, 0.04);
-            color: #e2e8f0;
-            font-family: inherit;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-        }
-
-        .maint-modal .form-group input:focus,
-        .maint-modal .form-group select:focus,
-        .maint-modal .form-group textarea:focus {
-            border-color: #e94560;
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.06);
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .maint-modal .form-group textarea { min-height: 60px; resize: vertical; }
-        .maint-modal .form-group select option { background: #0a1628; color: #e2e8f0; }
-
-        .maint-modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .maint-modal .modal-footer { display: flex; gap: 10px; margin-top: 16px; }
-        .maint-modal .modal-footer .btn-submit { flex: 1; }
-
-        .btn-submit {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .btn-submit.primary {
-            background: linear-gradient(135deg, #e94560, #f5c842);
-            color: #0a1628;
-        }
-        .btn-submit.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(233, 69, 96, 0.3); }
-        .btn-submit.secondary {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--glass-border);
-            color: rgba(255, 255, 255, 0.4);
-        }
-        .btn-submit.secondary:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-
-        .history-list { max-height: 200px; overflow-y: auto; }
-        .history-item { padding: 8px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.8rem; }
-        .history-item .h-date { color: rgba(255, 255, 255, 0.3); font-size: 0.7rem; }
-        .history-item .h-action { color: #f5c842; font-weight: 600; }
-        .history-item .h-details { color: rgba(255, 255, 255, 0.4); }
-
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 12px 20px;
-            border-radius: 12px;
-            color: #fff;
-            font-family: var(--font);
-            font-size: 13px;
-            z-index: 99999;
-            animation: slideUp 0.4s ease-out;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            max-width: 350px;
-            direction: rtl;
-        }
-
-        .toast-success { background: rgba(0, 184, 148, 0.15); border: 1px solid rgba(0, 184, 148, 0.2); }
-        .toast-error { background: rgba(233, 69, 96, 0.15); border: 1px solid rgba(233, 69, 96, 0.2); }
-        .toast-info { background: rgba(108, 92, 231, 0.15); border: 1px solid rgba(108, 92, 231, 0.2); }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-            #page-maintenance { padding: 12px; }
-            .maint-header { flex-direction: column; align-items: flex-start; padding: 12px 16px; }
-            .maint-header-left { width: 100%; }
-            .maint-header-left h2 { font-size: 16px; }
-            .maint-header-actions { width: 100%; justify-content: flex-start; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .stat-card { padding: 12px 14px; }
-            .stat-card .number { font-size: 20px; }
-            .filter-bar { flex-direction: column; align-items: stretch; padding: 10px 14px; }
-            .filter-bar input,
-            .filter-bar select { min-width: 100%; }
-            .damaged-section { padding: 12px 14px; }
-            .damaged-table { font-size: 0.7rem; min-width: 500px; }
-            .table-scroll { padding: 0 8px 8px; }
-            table { font-size: 0.7rem; min-width: 700px; }
-            .maint-modal .form-row { grid-template-columns: 1fr; }
-            .maint-modal .modal-content { padding: 16px; max-width: 100%; }
-            .maint-modal .modal-header h3 { font-size: 16px; }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
-            .stat-card { padding: 8px 10px; }
-            .stat-card .number { font-size: 16px; }
-            .stat-card .label { font-size: 9px; }
-            .stat-card .stat-icon { width: 32px; height: 32px; font-size: 13px; }
-            .maint-modal .modal-content { padding: 12px; }
-            .year-checkbox-group {
-                width: 100%;
-                overflow-x: auto;
-                flex-wrap: nowrap;
-                padding-bottom: 4px;
-            }
-            .year-check { flex-shrink: 0; }
-        }
-    </style>
-        <!-- HEADER -->
-    <div class="maint-header">
-        <div class="maint-header-left">
-            <div class="header-icon"><i class="fas fa-tools"></i></div>
-            <div>
-                <h2>إدارة الصيانة</h2>
-                <p>متابعة وإدارة مهام الصيانة للمراكب البحرية</p>
-            </div>
-        </div>
-        <div class="maint-header-actions">
-            <button class="btn-action primary" onclick="openAddMaintenance()"><i class="fas fa-plus"></i> إضافة صيانة</button>
-            <button class="btn-action success" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
-            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
-        </div>
-    </div>
-
-    <!-- STATS CARDS -->
-    <div class="stats-grid" id="statsGrid">
-        <div class="stat-card">
-            <div class="stat-top">
-                <div class="stat-icon pink"><i class="fas fa-clipboard-list"></i></div>
-                <span class="stat-change up">↑ 12%</span>
-            </div>
-            <div class="number pink" id="totalTasks">0</div>
-            <div class="label">📋 إجمالي مهام الصيانة</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-sync-alt" style="color:#f5c842;"></i> <span id="activeTasks">0</span> قيد التنفيذ</span>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-top">
-                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-                <span class="stat-change up">↑ 8%</span>
-            </div>
-            <div class="number green" id="completedTasks">0</div>
-            <div class="label">✅ المهام المكتملة</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-calendar" style="color:#55efc4;"></i> هذا الشهر</span>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-top">
-                <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
-                <span class="stat-change down">↑ 5%</span>
-            </div>
-            <div class="number red" id="damagedCount">0</div>
-            <div class="label">🟥 مراكب معطبة</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-clock" style="color:#f5c842;"></i> تحتاج صيانة عاجلة</span>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-top">
-                <div class="stat-icon gold"><i class="fas fa-coins"></i></div>
-                <span class="stat-change down">↓ 2%</span>
-            </div>
-            <div class="number gold" id="totalCost">0</div>
-            <div class="label">💰 التكلفة الإجمالية</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-chart-line" style="color:#f5c842;"></i> د.ت</span>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-top">
-                <div class="stat-icon blue"><i class="fas fa-clock"></i></div>
-                <span class="stat-change up">↑ 15%</span>
-            </div>
-            <div class="number blue" id="pendingTasks">0</div>
-            <div class="label">⏳ قيد الانتظار</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-hourglass-half" style="color:#0984e3;"></i> تحتاج إلى مراجعة</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- DAMAGED VESSELS -->
-    <div class="damaged-section" id="damagedSection">
-        <div class="damaged-header">
-            <h3><i class="fas fa-exclamation-triangle"></i> 🚨 المراكب المعطبة - تحتاج صيانة عاجلة</h3>
-            <span class="damaged-count" id="damagedCountBadge">0 مركب معطب</span>
-        </div>
-        <div class="damaged-table-wrapper" id="damagedTableWrapper">
-            <table class="damaged-table">
-                <thead>
-                    <tr>
-                        <th style="text-align:right;"><i class="fas fa-hashtag"></i> #</th>
-                        <th style="text-align:right;"><i class="fas fa-ship"></i> المركب</th>
-                        <th><i class="fas fa-tools"></i> نوع العطب</th>
-                        <th><i class="fas fa-calendar"></i> تاريخ العطب</th>
-                        <th><i class="fas fa-clock"></i> مدة العطب</th>
-                        <th><i class="fas fa-flag"></i> الإلحاح</th>
-                        <th><i class="fas fa-cog"></i> إجراء</th>
-                    </tr>
-                </thead>
-                <tbody id="damagedBody">
-                    <tr>
-                        <td colspan="7" class="damaged-empty">
-                            <span class="empty-icon"><i class="fas fa-check-circle" style="color:#55efc4;"></i></span>
-                            <h4 style="color:#55efc4;">✅ لا توجد مراكب معطبة</h4>
-                            <p>جميع المراكب في حالة جيدة</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- FILTER BAR -->
-    <div class="filter-bar">
-        <label><i class="fas fa-search"></i> بحث</label>
-        <input type="text" id="searchMaint" placeholder="المركب، العطب، الفني..." />
-
-        <label><i class="fas fa-calendar"></i> السنة</label>
-        <div class="year-checkbox-group" id="yearFilterGroup">
-            <label class="year-check">
-                <input type="checkbox" value="2024" onchange="onYearCheckChange()">
-                <span>2024</span>
-            </label>
-            <label class="year-check">
-                <input type="checkbox" value="2025" onchange="onYearCheckChange()">
-                <span>2025</span>
-            </label>
-            <label class="year-check">
-                <input type="checkbox" value="2026" onchange="onYearCheckChange()">
-                <span>2026</span>
-            </label>
-            <label class="year-check">
-                <input type="checkbox" value="2027" onchange="onYearCheckChange()">
-                <span>2027</span>
-            </label>
-            <label class="year-check">
-                <input type="checkbox" value="2028" onchange="onYearCheckChange()">
-                <span>2028</span>
-            </label>
-            <label class="year-check">
-                <input type="checkbox" value="2029" onchange="onYearCheckChange()">
-                <span>2029</span>
-            </label>
-        </div>
-
-        <label><i class="fas fa-circle"></i> الحالة</label>
-        <select id="statusFilter">
-            <option value="الكل">📊 جميع الحالات</option>
-            <option value="قيد التنفيذ">🔄 قيد التنفيذ</option>
-            <option value="مكتملة">✅ مكتملة</option>
-            <option value="ملغية">❌ ملغية</option>
-            <option value="معطب">🟥 معطب</option>
-        </select>
-
-        <button class="btn-filter primary" id="filterBtn"><i class="fas fa-filter"></i> فلترة</button>
-        <button class="btn-filter outline" id="resetBtn"><i class="fas fa-undo-alt"></i> إلغاء</button>
-    </div>
-
-    <!-- MAIN TABLE -->
-    <div class="table-wrapper">
-        <div class="table-header">
-            <h3><i class="fas fa-list-ul"></i> قائمة مهام الصيانة</h3>
-            <span class="badge pink" id="tableBadge">📊 جاري التحميل...</span>
-        </div>
-        <div class="table-scroll">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="text-align:right;"><i class="fas fa-hashtag"></i> #</th>
-                        <th style="text-align:right;"><i class="fas fa-ship"></i> المركب</th>
-                        <th><i class="fas fa-tools"></i> نوع العطب</th>
-                        <th><i class="fas fa-user"></i> الفني</th>
-                        <th><i class="fas fa-calendar"></i> التاريخ</th>
-                        <th><i class="fas fa-circle"></i> الحالة</th>
-                        <th><i class="fas fa-coins"></i> التكلفة</th>
-                        <th><i class="fas fa-cogs"></i> الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="maintenanceBody">
-                    <tr>
-                        <td colspan="8" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-spinner fa-pulse"></i></span>
-                            <h3>جاري تحميل البيانات...</h3>
-                            <p>يرجى الانتظار</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- MODAL -->
-    <div class="maint-modal" id="maintenanceModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">📝 إدارة الصيانة</h3>
-                <button class="modal-close" id="modalClose">✕</button>
-            </div>
-            <div id="modalBody"></div>
-        </div>
-    </div>
-
-    <script>
-        (function() {
-            'use strict';
-
-            console.log('🔧 Maintenance Page v9.15 - loading...');
-
             // ============================================================
-            // ✅ CLEANUP STATE
-            // ============================================================
-            var _isDestroyed = false;
-
-            function _maintenanceCleanup() {
-                if (_isDestroyed) return;
-                _isDestroyed = true;
-                try {
-                    delete window.openAddMaintenance;
-                    delete window.openEditModal;
-                    delete window.saveMaintenance;
-                    delete window.completeMaintenance;
-                    delete window.deleteMaintenance;
-                    delete window.showHistory;
-                    delete window.closeModal;
-                    delete window.refreshMaintenance;
-                    delete window.resetFilters;
-                    delete window.toggleYearFilter;
-                    delete window.onYearCheckChange;
-                } catch (e) {}
-                console.log('🧹 Maintenance v9.15 cleanup done');
-            }
-
-            window._pageCleanup = window._pageCleanup || [];
-            window._pageCleanup.push(_maintenanceCleanup);
-            window.addEventListener('beforeunload', _maintenanceCleanup);
-            window.addEventListener('pagehide', _maintenanceCleanup);
-
-            // ============================================================
-            // 🔐 RBAC
-            // ============================================================
-            var LEGACY_ROLE_MAP = {
-                'super_admin': 'admin',
-                'مسؤول': 'admin',
-                'مدير': 'manager',
-                'محرر': 'editor',
-                'مشغل': 'maintenance_unit',
-                'operator': 'maintenance_unit',
-                'user': 'viewer',
-                'مشاهد': 'viewer'
-            };
-            var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-
-            function normalizeRole(role) {
-                if (!role) return 'viewer';
-                var r = String(role).trim();
-                if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
-                return LEGACY_ROLE_MAP[r] || 'viewer';
-            }
-
-            function canCreateMaintenance() {
-                if (window.capabilities && typeof window.capabilities.canCreateMaintenance === 'boolean') {
-                    return window.capabilities.canCreateMaintenance;
-                }
-                var u = window.currentUser;
-                if (!u) return false;
-                var r = normalizeRole(u.role);
-                return ['admin', 'manager', 'editor', 'maintenance_unit'].indexOf(r) !== -1;
-            }
-
-            function canDeleteMaintenance() {
-                if (window.capabilities && typeof window.capabilities.canDeleteMaintenance === 'boolean') {
-                    return window.capabilities.canDeleteMaintenance;
-                }
-                var u = window.currentUser;
-                if (!u) return false;
-                var r = normalizeRole(u.role);
-                return ['admin', 'manager'].indexOf(r) !== -1;
-            }
-
-            // ============================================================
-            // 🔥 STATUS NORMALIZATION
-            // ============================================================
-            function normalizeStatusForServer(status) {
-                if (!status) return 'قيد التنفيذ';
-                var s = String(status).trim();
-
-                var ALLOWED = ['معلقة', 'قيد التنفيذ', 'مكتملة', 'ملغاة', 'متأخرة', 'قيد الانتظار'];
-                if (ALLOWED.indexOf(s) !== -1) return s;
-
-                var MAP = {
-                    'قيد الإنجاز': 'قيد التنفيذ',
-                    'جاري': 'قيد التنفيذ',
-                    'in-progress': 'قيد التنفيذ',
-                    'completed': 'مكتملة',
-                    'cancelled': 'ملغاة',
-                    'overdue': 'متأخرة',
-                    'pending': 'قيد الانتظار',
-                    'معطب': 'متأخرة'
-                };
-
-                return MAP[s] || 'قيد التنفيذ';
-            }
-
-            // ============================================================
-            // 📦 DATA
-            // ============================================================
-            var maintenanceData = [];
-            var currentEditId = null;
-            var allVessels = [];
-
-            // ============================================================
-            // 🔑 TOKEN
-            // ============================================================
-            function getToken() {
-                return localStorage.getItem('marine_token') ||
-                    localStorage.getItem('token') ||
-                    localStorage.getItem('authToken') ||
-                    null;
-            }
-
-            function getAuthHeaders() {
-                var token = getToken();
-                var h = {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                };
-                if (token) h['Authorization'] = 'Bearer ' + token;
-
-                try {
-                    var cookies = document.cookie.split('; ');
-                    for (var i = 0; i < cookies.length; i++) {
-                        if (cookies[i].startsWith('marine_csrf=')) {
-                            h['X-CSRF-Token'] = decodeURIComponent(cookies[i].substring('marine_csrf='.length));
-                            break;
-                        }
-                    }
-                } catch (e) {}
-
-                return h;
-            }
-
-            function fetcher(url, options) {
-                if (typeof window.apiFetch === 'function') {
-                    return window.apiFetch(url, options || {});
-                }
-                return fetch(url, Object.assign({}, options || {}, {
-                    headers: Object.assign({}, getAuthHeaders(), (options && options.headers) || {}),
-                    credentials: 'include'
-                }));
-            }
-
-            // ============================================================
-            // 🔧 HELPERS
-            // ============================================================
-            function escapeHtml(str) {
-                if (!str) return '';
-                return String(str).replace(/[&<>"']/g, function(m) {
-                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' } [m];
-                });
-            }
-
-            function formatDate(d) {
-                if (!d) return '-';
-                try {
-                    var dt = new Date(d);
-                    if (isNaN(dt.getTime())) return d;
-                    return String(dt.getDate()).padStart(2, '0') + '/' +
-                        String(dt.getMonth() + 1).padStart(2, '0') + '/' +
-                        dt.getFullYear();
-                } catch (_) { return d; }
-            }
-
-            function getDaysSince(dateStr) {
-                if (!dateStr) return '-';
-                try {
-                    var d = new Date(dateStr);
-                    if (isNaN(d.getTime())) return '-';
-                    var now = new Date();
-                    var diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
-                    if (diff === 0) return 'اليوم';
-                    if (diff === 1) return 'يوم واحد';
-                    if (diff < 7) return diff + ' أيام';
-                    if (diff < 30) return Math.floor(diff / 7) + ' أسابيع';
-                    return Math.floor(diff / 30) + ' شهر';
-                } catch (_) { return '-'; }
-            }
-
-            function showToast(msg, type) {
-                var old = document.querySelector('.toast');
-                if (old) old.remove();
-                var n = document.createElement('div');
-                n.className = 'toast toast-' + (type || 'info');
-                n.textContent = msg;
-                document.body.appendChild(n);
-                setTimeout(function() {
-                    n.style.opacity = '0';
-                    n.style.transform = 'translateY(20px)';
-                    n.style.transition = 'all 0.4s';
-                    setTimeout(function() { n.remove(); }, 400);
-                }, 3000);
-            }
-
-            // ============================================================
-            // 📅 YEAR FILTER — CHECKBOXES
-            // ============================================================
-            function getSelectedYears() {
-                var checkboxes = document.querySelectorAll('#yearFilterGroup input[type="checkbox"]:checked');
-                return Array.from(checkboxes).map(function(cb) { return cb.value; });
-            }
-
-            function onYearCheckChange() {
-                renderTable();
-
-                var selected = getSelectedYears();
-                if (selected.length === 0) {
-                    showToast('📅 عرض كل السنوات', 'info');
-                } else if (selected.length === 1) {
-                    showToast('📅 السنة: ' + selected[0], 'info');
-                } else {
-                    showToast('📅 ' + selected.length + ' سنوات محددة', 'info');
-                }
-            }
-
-            function toggleYearFilter(checkbox) {
-                onYearCheckChange();
-            }
-
-            // ============================================================
-            // 📥 LOAD VESSELS
-            // ============================================================
-            async function loadVessels() {
-                try {
-                    var token = getToken();
-                    if (!token) return [];
-                    var response = await fetcher('/api/vessels', { method: 'GET' });
-                    if (!response.ok) return [];
-                    var data = await response.json();
-                    allVessels = Array.isArray(data) ? data : [];
-                    return allVessels;
-                } catch (error) {
-                    console.error('❌ خطأ في تحميل المراكب:', error);
-                    return [];
-                }
-            }
-
-            // ============================================================
-            // 📥 LOAD MAINTENANCE
-            // ============================================================
-            async function loadMaintenance() {
-                try {
-                    var token = getToken();
-                    if (!token) return [];
-
-                    console.log('📡 جلب بيانات الصيانة...');
-                    var response = await fetcher('/api/maintenance-logs', { method: 'GET' });
-
-                    if (!response.ok) {
-                        console.warn('⚠️ استجابة غير ناجحة:', response.status);
-                        maintenanceData = [];
-                        return [];
-                    }
-
-                    var data = await response.json();
-                    console.log('📦 البيانات المستلمة:', data);
-
-                    var records = [];
-                    if (Array.isArray(data)) {
-                        records = data;
-                    } else if (data && typeof data === 'object') {
-                        if (data.records && Array.isArray(data.records)) records = data.records;
-                        else if (data.data && Array.isArray(data.data)) records = data.data;
-                        else if (data.logs && Array.isArray(data.logs)) records = data.logs;
-                        else if (data.maintenance && Array.isArray(data.maintenance)) records = data.maintenance;
-                    }
-
-                    maintenanceData = records.map(function(r) {
-                        var rawStatus = r.status || 'قيد التنفيذ';
-                        var displayStatus = rawStatus;
-                        if (rawStatus === 'قيد التنفيذ') displayStatus = 'قيد الإنجاز';
-                        else if (rawStatus === 'متأخرة') displayStatus = 'معطب';
-
-                        return {
-                            id: r.id || r._id || 'id_' + Date.now(),
-                            vesselId: r.vesselId || '',
-                            vesselName: r.vesselName || r.vessel || 'مركب غير معروف',
-                            damage: r.type || r.damage || 'عطل غير محدد',
-                            technician: r.repairUnit || r.unit || r.technician || 'غير محدد',
-                            date: r.date || r.startDate || r.createdAt || new Date().toISOString(),
-                            status: displayStatus,
-                            statusRaw: rawStatus,
-                            cost: parseFloat(r.cost || 0),
-                            parts: r.parts || r.spareParts || [],
-                            history: r.history || [],
-                            description: r.notes || r.description || '',
-                            createdAt: r.createdAt || r.date || new Date().toISOString()
-                        };
-                    });
-
-                    console.log('✅ تم تحميل ' + maintenanceData.length + ' سجل صيانة');
-                    return maintenanceData;
-
-                } catch (error) {
-                    console.error('❌ خطأ في جلب الصيانة:', error);
-                    maintenanceData = [];
-                    return [];
-                }
-            }
-
-            // ============================================================
-            // 📊 UPDATE STATS
-            // ============================================================
-            function updateStats() {
-                var total = maintenanceData.length;
-                var active = maintenanceData.filter(function(r) { return r.status === 'قيد الإنجاز'; }).length;
-                var completed = maintenanceData.filter(function(r) { return r.status === 'مكتملة'; }).length;
-                var damaged = maintenanceData.filter(function(r) { return r.status === 'معطب'; }).length;
-                var pending = maintenanceData.filter(function(r) { return r.status === 'قيد الانتظار'; }).length;
-                var totalCost = maintenanceData.reduce(function(sum, r) { return sum + (r.cost || 0); }, 0);
-
-                var damagedVessels = allVessels.filter(function(v) {
-                    return v.stat === 'معطب' || v.status === 'معطب';
-                }).length;
-
-                var el;
-                el = document.getElementById('totalTasks'); if (el) el.textContent = total;
-                el = document.getElementById('activeTasks'); if (el) el.textContent = active;
-                el = document.getElementById('completedTasks'); if (el) el.textContent = completed;
-                el = document.getElementById('damagedCount'); if (el) el.textContent = damagedVessels || damaged;
-                el = document.getElementById('totalCost'); if (el) el.textContent = totalCost.toFixed(0);
-                el = document.getElementById('pendingTasks'); if (el) el.textContent = pending;
-
-                var badge = document.getElementById('tableBadge');
-                if (badge) {
-                    if (damaged > 0) {
-                        badge.textContent = '🚨 ' + damaged + ' مركب معطب';
-                        badge.className = 'badge pink';
-                    } else if (active > 0) {
-                        badge.textContent = '🔄 ' + active + ' مهمة قيد التنفيذ';
-                        badge.className = 'badge gold';
-                    } else {
-                        badge.textContent = '✅ ' + completed + ' مهمة مكتملة';
-                        badge.className = 'badge green';
-                    }
-                }
-
-                var badge2 = document.getElementById('damagedCountBadge');
-                if (badge2) badge2.textContent = (damagedVessels || damaged) + ' مركب معطب';
-            }
-
-            // ============================================================
-            // 🚨 RENDER DAMAGED
-            // ============================================================
-            function renderDamagedVessels() {
-                var damagedVessels = maintenanceData.filter(function(r) {
-                    return r.status === 'معطب';
-                }).sort(function(a, b) {
-                    return new Date(a.date) - new Date(b.date);
-                });
-
-                var tbody = document.getElementById('damagedBody');
-                if (!tbody) return;
-
-                if (damagedVessels.length === 0) {
-                    tbody.innerHTML =
-                        '<tr><td colspan="7" class="damaged-empty">' +
-                        '<span class="empty-icon"><i class="fas fa-check-circle" style="color:#55efc4;"></i></span>' +
-                        '<h4 style="color:#55efc4;">✅ لا توجد مراكب معطبة</h4>' +
-                        '<p>جميع المراكب في حالة جيدة</p>' +
-                        '</td></tr>';
-                    return;
-                }
-
-                var html = '';
-                damagedVessels.forEach(function(r, index) {
-                    var days = getDaysSince(r.date);
-                    var isCritical = days === 'اليوم' || days === 'يوم واحد' || days === '2 أيام' || days === '3 أيام';
-                    var isWarning = days === '4 أيام' || days === '5 أيام' || days === '6 أيام' || days === 'أسبوع';
-                    var rowClass = isCritical ? 'critical' : (isWarning ? 'warning' : '');
-                    var urgencyClass = isCritical ? 'critical' : (isWarning ? 'warning' : 'normal');
-                    var urgencyText = isCritical ? '🚨 عاجل جداً' : (isWarning ? '⚠️ عاجل' : '📌 عادي');
-
-                    html += '<tr class="' + rowClass + '">' +
-                        '<td>' + (index + 1) + '</td>' +
-                        '<td class="vessel-name-damaged">' + escapeHtml(r.vesselName) + '</td>' +
-                        '<td class="damage-type">' + escapeHtml(r.damage || '-') + '</td>' +
-                        '<td class="damage-date">' + formatDate(r.date) + '</td>' +
-                        '<td class="damage-date">' + days + '</td>' +
-                        '<td><span class="urgency-badge ' + urgencyClass + '">' + urgencyText + '</span></td>' +
-                        '<td>' +
-                            '<button class="action-btn edit" onclick="openEditModal(\'' + r.id + '\')"><i class="fas fa-edit"></i></button>' +
-                            '<button class="action-btn history" onclick="showHistory(\'' + r.id + '\')"><i class="fas fa-history"></i></button>' +
-                            '<button class="action-btn complete" onclick="completeMaintenance(\'' + r.id + '\')"><i class="fas fa-check"></i></button>' +
-                        '</td>' +
-                    '</tr>';
-                });
-
-                tbody.innerHTML = html;
-            }
-                        // ============================================================
-            // 📋 RENDER TABLE
+            // 📋 RENDER TABLE - v9.16
             // ============================================================
             function renderTable() {
                 var searchEl = document.getElementById('searchMaint');
                 var statusEl = document.getElementById('statusFilter');
 
-                var search = searchEl ? searchEl.value.toLowerCase() : '';
-                var statusFilter = statusEl ? statusEl.value : 'الكل';
+                var search = searchEl
+                    ? String(searchEl.value || '').trim().toLowerCase()
+                    : '';
+
+                var statusFilter = statusEl
+                    ? String(statusEl.value || 'الكل')
+                    : 'الكل';
+
                 var selectedYears = getSelectedYears();
 
                 var filtered = maintenanceData.filter(function(r) {
-                    var searchText = [r.vesselName, r.damage, r.technician, r.description].filter(Boolean).join(' ').toLowerCase();
-                    var matchSearch = !search || searchText.indexOf(search) !== -1;
+                    if (!r) return false;
+
+                    var searchText = [
+                        r.vesselName,
+                        r.damage,
+                        r.technician,
+                        r.description
+                    ]
+                    .filter(function(value) {
+                        return value !== null &&
+                               value !== undefined &&
+                               value !== '';
+                    })
+                    .join(' ')
+                    .toLowerCase();
+
+                    var matchSearch =
+                        !search ||
+                        searchText.indexOf(search) !== -1;
 
                     var matchYear = true;
+
                     if (selectedYears.length > 0) {
-                        var year = r.date ? new Date(r.date).getFullYear().toString() : '';
+                        var year = '';
+
+                        if (r.date) {
+                            var parsedDate = new Date(r.date);
+
+                            if (!isNaN(parsedDate.getTime())) {
+                                year = parsedDate.getFullYear().toString();
+                            }
+                        }
+
                         matchYear = selectedYears.indexOf(year) !== -1;
                     }
 
-                    var matchStatus = statusFilter === 'الكل' || r.status === statusFilter;
-                    return matchSearch && matchYear && matchStatus;
+                    var matchStatus =
+                        statusFilter === 'الكل' ||
+                        String(r.status || '') === statusFilter;
+
+                    return matchSearch &&
+                           matchYear &&
+                           matchStatus;
                 });
 
-                filtered.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+                filtered.sort(function(a, b) {
+                    var dateA = a && a.date
+                        ? new Date(a.date).getTime()
+                        : 0;
+
+                    var dateB = b && b.date
+                        ? new Date(b.date).getTime()
+                        : 0;
+
+                    if (isNaN(dateA)) dateA = 0;
+                    if (isNaN(dateB)) dateB = 0;
+
+                    return dateB - dateA;
+                });
 
                 var tbody = document.getElementById('maintenanceBody');
+
                 if (!tbody) return;
 
                 if (filtered.length === 0) {
@@ -1393,57 +86,306 @@
                         '<span class="empty-icon"><i class="fas fa-inbox"></i></span>' +
                         '<h3>لا توجد مهام صيانة</h3>' +
                         '<p>قم بإضافة مهمة صيانة جديدة</p>' +
-                        '<button class="retry-btn" onclick="openAddMaintenance()"><i class="fas fa-plus"></i> إضافة صيانة</button>' +
+                        '<button class="retry-btn" onclick="openAddMaintenance()">' +
+                        '<i class="fas fa-plus"></i> إضافة صيانة' +
+                        '</button>' +
                         '</td></tr>';
+
                     return;
                 }
 
                 var canDel = canDeleteMaintenance();
 
                 var html = '';
+
                 filtered.forEach(function(r, index) {
+                    if (!r) return;
+
                     var statusMap = {
                         'مكتملة': 'completed',
                         'ملغية': 'cancelled',
                         'قيد الإنجاز': 'active',
+                        'قيد التنفيذ': 'active',
                         'معطب': 'damaged',
-                        'قيد الانتظار': 'active'
+                        'قيد الانتظار': 'active',
+                        'متأخرة': 'damaged'
                     };
-                    var statusDisplay = r.status || 'قيد الإنجاز';
-                    var statusClass = statusMap[statusDisplay] || 'active';
-                    var isDamaged = statusDisplay === 'معطب';
 
-                    var delBtn = canDel ?
-                        '<button class="action-btn delete" onclick="deleteMaintenance(\'' + r.id + '\')"><i class="fas fa-trash-alt"></i></button>' : '';
+                    var statusDisplay =
+                        String(r.status || 'قيد الإنجاز');
 
-                    html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
-                        '<td>' + (index + 1) + '</td>' +
-                        '<td class="vessel-name">' + escapeHtml(r.vesselName) + '</td>' +
-                        '<td style="color:' + (isDamaged ? '#e94560' : 'rgba(255,255,255,0.6)') + '">' + escapeHtml(r.damage || '-') + '</td>' +
-                        '<td>' + escapeHtml(r.technician || '-') + '</td>' +
-                        '<td>' + formatDate(r.date) + '</td>' +
-                        '<td><span class="status-badge ' + statusClass + '">' + statusDisplay + '</span></td>' +
-                        '<td>' + (r.cost ? r.cost.toFixed(2) : '0.00') + ' د.ت</td>' +
+                    var statusClass =
+                        statusMap[statusDisplay] || 'active';
+
+                    var isDamaged =
+                        statusDisplay === 'معطب' ||
+                        statusDisplay === 'متأخرة';
+
+                    var safeId = String(r.id || '');
+
+                    /*
+                     * السجلات المحلية damaged_* ليست بالضرورة موجودة
+                     * في MongoDB، لذلك لا نظهر أزرار العمليات عليها
+                     * إلا إذا كان للسجل معرف صالح من السيرفر.
+                     */
+                    var isServerRecord =
+                        safeId &&
+                        safeId.indexOf('damaged_') !== 0;
+
+                    var canEdit =
+                        typeof canUpdateMaintenance === 'function'
+                            ? canUpdateMaintenance()
+                            : canCreateMaintenance();
+
+                    var canComplete =
+                        typeof canUpdateMaintenance === 'function'
+                            ? canUpdateMaintenance()
+                            : true;
+
+                    var editBtn = canEdit && isServerRecord
+                        ? '<button class="action-btn edit" ' +
+                          'onclick="openEditModal(\'' +
+                          escapeJsString(safeId) +
+                          '\')">' +
+                          '<i class="fas fa-edit"></i></button>'
+                        : '';
+
+                    var completeBtn =
+                        canComplete &&
+                        isServerRecord &&
+                        statusDisplay !== 'مكتملة'
+                        ? '<button class="action-btn complete" ' +
+                          'onclick="completeMaintenance(\'' +
+                          escapeJsString(safeId) +
+                          '\')">' +
+                          '<i class="fas fa-check"></i></button>'
+                        : '';
+
+                    var historyBtn =
+                        isServerRecord
+                        ? '<button class="action-btn history" ' +
+                          'onclick="showHistory(\'' +
+                          escapeJsString(safeId) +
+                          '\')">' +
+                          '<i class="fas fa-history"></i></button>'
+                        : '';
+
+                    var delBtn =
+                        canDel && isServerRecord
+                        ? '<button class="action-btn delete" ' +
+                          'onclick="deleteMaintenance(\'' +
+                          escapeJsString(safeId) +
+                          '\')">' +
+                          '<i class="fas fa-trash-alt"></i></button>'
+                        : '';
+
+                    var numericCost = Number(r.cost);
+
+                    if (!isFinite(numericCost) || numericCost < 0) {
+                        numericCost = 0;
+                    }
+
+                    var statusStyle =
+                        isDamaged
+                        ? '#e94560'
+                        : 'rgba(255,255,255,0.6)';
+
+                    html +=
+                        '<tr class="' +
+                        (isDamaged ? 'damaged' : '') +
+                        '">' +
+
                         '<td>' +
-                            '<button class="action-btn edit" onclick="openEditModal(\'' + r.id + '\')"><i class="fas fa-edit"></i></button>' +
-                            '<button class="action-btn complete" onclick="completeMaintenance(\'' + r.id + '\')"><i class="fas fa-check"></i></button>' +
-                            '<button class="action-btn history" onclick="showHistory(\'' + r.id + '\')"><i class="fas fa-history"></i></button>' +
-                            delBtn +
+                        (index + 1) +
                         '</td>' +
-                    '</tr>';
+
+                        '<td class="vessel-name">' +
+                        escapeHtml(r.vesselName || 'مركب غير معروف') +
+                        '</td>' +
+
+                        '<td style="color:' +
+                        statusStyle +
+                        '">' +
+                        escapeHtml(r.damage || '-') +
+                        '</td>' +
+
+                        '<td>' +
+                        escapeHtml(r.technician || '-') +
+                        '</td>' +
+
+                        '<td>' +
+                        escapeHtml(formatDate(r.date)) +
+                        '</td>' +
+
+                        '<td>' +
+                        '<span class="status-badge ' +
+                        escapeHtml(statusClass) +
+                        '">' +
+                        escapeHtml(statusDisplay) +
+                        '</span>' +
+                        '</td>' +
+
+                        '<td>' +
+                        numericCost.toFixed(2) +
+                        ' د.ت' +
+                        '</td>' +
+
+                        '<td>' +
+                        editBtn +
+                        completeBtn +
+                        historyBtn +
+                        delBtn +
+                        '</td>' +
+
+                        '</tr>';
                 });
 
                 tbody.innerHTML = html;
             }
 
+
+            // ============================================================
+            // 🔐 SAFE JS STRING
+            // ============================================================
+            function escapeJsString(value) {
+                return String(value || '')
+                    .replace(/\\/g, '\\\\')
+                    .replace(/'/g, "\\'")
+                    .replace(/"/g, '\\"')
+                    .replace(/\r/g, '\\r')
+                    .replace(/\n/g, '\\n')
+                    .replace(/<\/script/gi, '<\\/script');
+            }
+
+
+            // ============================================================
+            // 🔄 MERGE DAMAGED VESSELS
+            // ============================================================
+            function mergeDamagedVessels() {
+                if (!Array.isArray(allVessels)) {
+                    return [];
+                }
+
+                if (!Array.isArray(maintenanceData)) {
+                    maintenanceData = [];
+                }
+
+                var damagedVessels = allVessels.filter(function(v) {
+                    if (!v) return false;
+
+                    return (
+                        v.stat === 'معطب' ||
+                        v.status === 'معطب'
+                    );
+                });
+
+                var existingIds = new Set();
+
+                maintenanceData.forEach(function(m) {
+                    if (!m) return;
+
+                    if (m.vesselId) {
+                        existingIds.add(String(m.vesselId));
+                    }
+                });
+
+                damagedVessels.forEach(function(v) {
+                    var vid = v._id || v.id;
+
+                    if (!vid) return;
+
+                    vid = String(vid);
+
+                    if (existingIds.has(vid)) {
+                        return;
+                    }
+
+                    /*
+                     * مهم:
+                     * هذا سجل عرض محلي فقط.
+                     * لا نفترض أنه موجود في MongoDB.
+                     */
+                    maintenanceData.push({
+                        id:
+                            'damaged_' +
+                            Date.now() +
+                            '_' +
+                            Math.random()
+                                .toString(36)
+                                .substr(2, 8),
+
+                        vesselId: vid,
+
+                        vesselName:
+                            v.name ||
+                            'مركب غير معروف',
+
+                        damage:
+                            v.break ||
+                            'عطل غير محدد',
+
+                        technician:
+                            'غير محدد',
+
+                        date:
+                            v.fDate ||
+                            new Date().toISOString(),
+
+                        status:
+                            'معطب',
+
+                        statusRaw:
+                            'متأخرة',
+
+                        cost:
+                            0,
+
+                        parts:
+                            [],
+
+                        history:
+                            [{
+                                action:
+                                    'تم اكتشاف المركب المعطب تلقائياً',
+
+                                date:
+                                    new Date().toISOString(),
+
+                                details:
+                                    'تم إنشاء سجل عرض محلي للمركب المعطب'
+                            }],
+
+                        description:
+                            v.break || '',
+
+                        createdAt:
+                            new Date().toISOString(),
+
+                        _localOnly:
+                            true
+                    });
+
+                    existingIds.add(vid);
+                });
+
+                return damagedVessels;
+            }
+
+
             // ============================================================
             // 🔄 REFRESH
             // ============================================================
             async function refreshMaintenance() {
-                var btn = document.getElementById('refreshBtn');
-                var orig = btn ? btn.innerHTML : '';
+                var btn =
+                    document.getElementById('refreshBtn');
+
+                var orig =
+                    btn ? btn.innerHTML : '';
+
                 if (btn) {
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                    btn.innerHTML =
+                        '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+
                     btn.disabled = true;
                 }
 
@@ -1451,32 +393,8 @@
                     await loadVessels();
                     await loadMaintenance();
 
-                    var damagedVessels = allVessels.filter(function(v) {
-                        return v.stat === 'معطب' || v.status === 'معطب';
-                    });
-                    var existingIds = new Set();
-                    maintenanceData.forEach(function(m) { existingIds.add(m.vesselId); });
-
-                    damagedVessels.forEach(function(v) {
-                        var vid = v._id || v.id;
-                        if (!existingIds.has(vid)) {
-                            maintenanceData.push({
-                                id: 'damaged_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                                vesselId: vid,
-                                vesselName: v.name || 'مركب غير معروف',
-                                damage: v.break || 'عطل غير محدد',
-                                technician: 'غير محدد',
-                                date: v.fDate || new Date().toISOString(),
-                                status: 'معطب',
-                                statusRaw: 'متأخرة',
-                                cost: 0,
-                                parts: [],
-                                history: [{ action: 'تم إضافة المركب تلقائياً', date: new Date().toISOString() }],
-                                description: v.break || '',
-                                createdAt: new Date().toISOString()
-                            });
-                        }
-                    });
+                    var damagedVessels =
+                        mergeDamagedVessels();
 
                     updateStats();
                     renderDamagedVessels();
@@ -1486,480 +404,1595 @@
                         btn.innerHTML = orig;
                         btn.disabled = false;
                     }
-                    showToast('✅ تم تحديث بيانات الصيانة', 'success');
+
+                    showToast(
+                        '✅ تم تحديث بيانات الصيانة',
+                        'success'
+                    );
+
                 } catch (error) {
+                    console.error(
+                        '❌ Refresh maintenance error:',
+                        error
+                    );
+
                     if (btn) {
                         btn.innerHTML = orig;
                         btn.disabled = false;
                     }
-                    showToast('❌ خطأ: ' + error.message, 'error');
+
+                    showToast(
+                        '❌ خطأ: ' +
+                        escapeHtml(
+                            error && error.message
+                                ? error.message
+                                : 'خطأ غير معروف'
+                        ),
+                        'error'
+                    );
                 }
             }
+
 
             // ============================================================
             // 🔄 RESET FILTERS
             // ============================================================
             function resetFilters() {
-                var s = document.getElementById('searchMaint'); if (s) s.value = '';
-                var st = document.getElementById('statusFilter'); if (st) st.value = 'الكل';
+                var s =
+                    document.getElementById('searchMaint');
 
-                // إلغاء كل checkboxes السنوات
-                document.querySelectorAll('#yearFilterGroup input[type="checkbox"]').forEach(function(cb) {
-                    cb.checked = false;
-                });
+                if (s) {
+                    s.value = '';
+                }
+
+                var st =
+                    document.getElementById('statusFilter');
+
+                if (st) {
+                    st.value = 'الكل';
+                }
+
+                document
+                    .querySelectorAll(
+                        '#yearFilterGroup input[type="checkbox"]'
+                    )
+                    .forEach(function(cb) {
+                        cb.checked = false;
+                    });
 
                 renderTable();
-                showToast('✅ تم إلغاء جميع الفلاتر', 'success');
+
+                showToast(
+                    '✅ تم إلغاء جميع الفلاتر',
+                    'success'
+                );
             }
+
 
             // ============================================================
             // ➕ OPEN ADD MODAL
             // ============================================================
             function openAddMaintenance() {
                 if (!canCreateMaintenance()) {
-                    showToast('⚠️ ليس لديك صلاحية لإضافة صيانة', 'error');
+                    showToast(
+                        '⚠️ ليس لديك صلاحية لإضافة صيانة',
+                        'error'
+                    );
+
                     return;
                 }
 
                 currentEditId = null;
-                var titleEl = document.getElementById('modalTitle');
-                if (titleEl) titleEl.textContent = '➕ إضافة مهمة صيانة جديدة';
 
-                var vesselOptions = '<option value="">اختر المركب</option>';
-                allVessels.forEach(function(v) {
-                    var vid = v._id || v.id;
-                    vesselOptions += '<option value="' + vid + '">' + escapeHtml(v.name || '') + '</option>';
-                });
+                var titleEl =
+                    document.getElementById('modalTitle');
 
-                var modalBody = document.getElementById('modalBody');
+                if (titleEl) {
+                    titleEl.textContent =
+                        '➕ إضافة مهمة صيانة جديدة';
+                }
+
+                var vesselOptions =
+                    '<option value="">اختر المركب</option>';
+
+                if (Array.isArray(allVessels)) {
+                    allVessels.forEach(function(v) {
+                        if (!v) return;
+
+                        var vid =
+                            v._id || v.id;
+
+                        if (!vid) return;
+
+                        vesselOptions +=
+                            '<option value="' +
+                            escapeHtml(String(vid)) +
+                            '">' +
+                            escapeHtml(v.name || '') +
+                            '</option>';
+                    });
+                }
+
+                var modalBody =
+                    document.getElementById('modalBody');
+
                 if (!modalBody) return;
 
                 modalBody.innerHTML =
                     '<div class="form-group">' +
                         '<label>🚢 المركب <span class="required">*</span></label>' +
-                        '<select id="mVessel">' + vesselOptions + '</select>' +
+                        '<select id="mVessel">' +
+                            vesselOptions +
+                        '</select>' +
                     '</div>' +
+
                     '<div class="form-group">' +
                         '<label>🔧 نوع العطب <span class="required">*</span></label>' +
-                        '<input type="text" id="mDamage" placeholder="مثال: عطل في المحرك">' +
+                        '<input type="text" id="mDamage" ' +
+                        'placeholder="مثال: عطل في المحرك" ' +
+                        'maxlength="300">' +
                     '</div>' +
+
                     '<div class="form-group">' +
                         '<label>👤 الفني المسؤول</label>' +
-                        '<input type="text" id="mTechnician" placeholder="اسم الفني">' +
+                        '<input type="text" id="mTechnician" ' +
+                        'placeholder="اسم الفني" ' +
+                        'maxlength="200">' +
                     '</div>' +
+
                     '<div class="form-row">' +
+
                         '<div class="form-group">' +
                             '<label>📅 تاريخ العطب</label>' +
                             '<input type="date" id="mDate">' +
                         '</div>' +
+
                         '<div class="form-group">' +
                             '<label>💰 التكلفة (د.ت)</label>' +
-                            '<input type="number" id="mCost" placeholder="0.00" step="0.01">' +
+                            '<input type="number" id="mCost" ' +
+                            'placeholder="0.00" ' +
+                            'step="0.01" min="0">' +
                         '</div>' +
+
                     '</div>' +
+
                     '<div class="form-group">' +
                         '<label>📝 وصف العطب</label>' +
-                        '<textarea id="mDescription" placeholder="تفاصيل العطب..."></textarea>' +
+                        '<textarea id="mDescription" ' +
+                        'placeholder="تفاصيل العطب..." ' +
+                        'maxlength="2000"></textarea>' +
                     '</div>' +
+
                     '<div class="modal-footer">' +
-                        '<button class="btn-submit primary" onclick="saveMaintenance()"><i class="fas fa-save"></i> حفظ</button>' +
-                        '<button class="btn-submit secondary" onclick="closeModal()">إلغاء</button>' +
+
+                        '<button class="btn-submit primary" ' +
+                        'onclick="saveMaintenance()">' +
+                            '<i class="fas fa-save"></i> حفظ' +
+                        '</button>' +
+
+                        '<button class="btn-submit secondary" ' +
+                        'onclick="closeModal()">' +
+                            'إلغاء' +
+                        '</button>' +
+
                     '</div>';
 
-                var modal = document.getElementById('maintenanceModal');
-                if (modal) modal.classList.add('active');
+                var modal =
+                    document.getElementById(
+                        'maintenanceModal'
+                    );
+
+                if (modal) {
+                    modal.classList.add('active');
+                }
             }
+
 
             // ============================================================
             // ✏️ OPEN EDIT MODAL
             // ============================================================
             function openEditModal(id) {
-                var record = maintenanceData.find(function(r) { return r.id == id; });
-                if (!record) { showToast('❌ المهمة غير موجودة', 'error'); return; }
+                var safeId = String(id || '');
 
-                currentEditId = id;
-                var titleEl = document.getElementById('modalTitle');
-                if (titleEl) titleEl.textContent = '✏️ تعديل مهمة الصيانة';
+                if (!safeId) {
+                    showToast(
+                        '❌ معرف المهمة غير صالح',
+                        'error'
+                    );
 
-                var vesselOptions = '<option value="">اختر المركب</option>';
-                allVessels.forEach(function(v) {
-                    var vid = v._id || v.id;
-                    var selected = vid == record.vesselId ? 'selected' : '';
-                    vesselOptions += '<option value="' + vid + '" ' + selected + '>' + escapeHtml(v.name || '') + '</option>';
-                });
+                    return;
+                }
 
-                var modalBody = document.getElementById('modalBody');
+                if (
+                    safeId.indexOf('damaged_') === 0
+                ) {
+                    showToast(
+                        '⚠️ هذا السجل تم إنشاؤه للعرض فقط. ' +
+                        'قم بإضافة مهمة صيانة لحفظه في النظام.',
+                        'warning'
+                    );
+
+                    return;
+                }
+
+                if (
+                    typeof canUpdateMaintenance === 'function'
+                ) {
+                    if (!canUpdateMaintenance()) {
+                        showToast(
+                            '⚠️ ليس لديك صلاحية تعديل الصيانة',
+                            'error'
+                        );
+
+                        return;
+                    }
+                } else if (!canCreateMaintenance()) {
+                    showToast(
+                        '⚠️ ليس لديك صلاحية تعديل الصيانة',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                var record =
+                    maintenanceData.find(function(r) {
+                        return r &&
+                               String(r.id) === safeId;
+                    });
+
+                if (!record) {
+                    showToast(
+                        '❌ المهمة غير موجودة',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                currentEditId = safeId;
+
+                var titleEl =
+                    document.getElementById('modalTitle');
+
+                if (titleEl) {
+                    titleEl.textContent =
+                        '✏️ تعديل مهمة الصيانة';
+                }
+
+                var vesselOptions =
+                    '<option value="">اختر المركب</option>';
+
+                if (Array.isArray(allVessels)) {
+                    allVessels.forEach(function(v) {
+                        if (!v) return;
+
+                        var vid =
+                            v._id || v.id;
+
+                        if (!vid) return;
+
+                        var selected =
+                            String(vid) ===
+                            String(record.vesselId)
+                                ? 'selected'
+                                : '';
+
+                        vesselOptions +=
+                            '<option value="' +
+                            escapeHtml(String(vid)) +
+                            '" ' +
+                            selected +
+                            '>' +
+                            escapeHtml(v.name || '') +
+                            '</option>';
+                    });
+                }
+
+                var numericCost =
+                    Number(record.cost);
+
+                if (
+                    !isFinite(numericCost) ||
+                    numericCost < 0
+                ) {
+                    numericCost = 0;
+                }
+
+                var dateValue = '';
+
+                if (record.date) {
+                    var editDate =
+                        new Date(record.date);
+
+                    if (!isNaN(editDate.getTime())) {
+                        dateValue =
+                            editDate
+                                .toISOString()
+                                .split('T')[0];
+                    }
+                }
+
+                var modalBody =
+                    document.getElementById('modalBody');
+
                 if (!modalBody) return;
+
+                var currentStatus =
+                    record.status || 'قيد الإنجاز';
 
                 modalBody.innerHTML =
                     '<div class="form-group">' +
                         '<label>🚢 المركب <span class="required">*</span></label>' +
-                        '<select id="mVessel">' + vesselOptions + '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label>🔧 نوع العطب <span class="required">*</span></label>' +
-                        '<input type="text" id="mDamage" value="' + escapeHtml(record.damage || '') + '" placeholder="مثال: عطل في المحرك">' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label>👤 الفني المسؤول</label>' +
-                        '<input type="text" id="mTechnician" value="' + escapeHtml(record.technician || '') + '" placeholder="اسم الفني">' +
-                    '</div>' +
-                    '<div class="form-row">' +
-                        '<div class="form-group">' +
-                            '<label>📅 تاريخ العطب</label>' +
-                            '<input type="date" id="mDate" value="' + (record.date ? record.date.split('T')[0] : '') + '">' +
-                        '</div>' +
-                        '<div class="form-group">' +
-                            '<label>💰 التكلفة (د.ت)</label>' +
-                            '<input type="number" id="mCost" value="' + (record.cost || 0) + '" step="0.01">' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label>📝 وصف العطب</label>' +
-                        '<textarea id="mDescription">' + escapeHtml(record.description || '') + '</textarea>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label>📊 الحالة</label>' +
-                        '<select id="mStatus">' +
-                            '<option value="قيد التنفيذ" ' + (record.statusRaw === 'قيد التنفيذ' || record.status === 'قيد الإنجاز' ? 'selected' : '') + '>🔄 قيد التنفيذ</option>' +
-                            '<option value="مكتملة" ' + (record.status === 'مكتملة' ? 'selected' : '') + '>✅ مكتملة</option>' +
-                            '<option value="ملغاة" ' + (record.status === 'ملغية' ? 'selected' : '') + '>❌ ملغاة</option>' +
-                            '<option value="قيد الانتظار" ' + (record.status === 'قيد الانتظار' ? 'selected' : '') + '>⏳ قيد الانتظار</option>' +
-                            '<option value="متأخرة" ' + (record.status === 'معطب' ? 'selected' : '') + '>🚨 متأخرة</option>' +
+                        '<select id="mVessel">' +
+                            vesselOptions +
                         '</select>' +
                     '</div>' +
+
+                    '<div class="form-group">' +
+                        '<label>🔧 نوع العطب <span class="required">*</span></label>' +
+                        '<input type="text" id="mDamage" ' +
+                        'value="' +
+                        escapeHtml(record.damage || '') +
+                        '" ' +
+                        'placeholder="مثال: عطل في المحرك" ' +
+                        'maxlength="300">' +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                        '<label>👤 الفني المسؤول</label>' +
+                        '<input type="text" id="mTechnician" ' +
+                        'value="' +
+                        escapeHtml(record.technician || '') +
+                        '" ' +
+                        'placeholder="اسم الفني" ' +
+                        'maxlength="200">' +
+                    '</div>' +
+
+                    '<div class="form-row">' +
+
+                        '<div class="form-group">' +
+                            '<label>📅 تاريخ العطب</label>' +
+                            '<input type="date" id="mDate" ' +
+                            'value="' +
+                            escapeHtml(dateValue) +
+                            '">' +
+                        '</div>' +
+
+                        '<div class="form-group">' +
+                            '<label>💰 التكلفة (د.ت)</label>' +
+                            '<input type="number" id="mCost" ' +
+                            'value="' +
+                            numericCost.toFixed(2) +
+                            '" ' +
+                            'step="0.01" min="0">' +
+                        '</div>' +
+
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                        '<label>📝 وصف العطب</label>' +
+                        '<textarea id="mDescription" ' +
+                        'maxlength="2000">' +
+                        escapeHtml(record.description || '') +
+                        '</textarea>' +
+                    '</div>' +
+
+                    '<div class="form-group">' +
+                        '<label>📊 الحالة</label>' +
+
+                        '<select id="mStatus">' +
+
+                            '<option value="قيد التنفيذ" ' +
+                                (
+                                    record.statusRaw === 'قيد التنفيذ' ||
+                                    currentStatus === 'قيد التنفيذ' ||
+                                    currentStatus === 'قيد الإنجاز'
+                                        ? 'selected'
+                                        : ''
+                                ) +
+                            '>🔄 قيد التنفيذ</option>' +
+
+                            '<option value="مكتملة" ' +
+                                (
+                                    currentStatus === 'مكتملة'
+                                        ? 'selected'
+                                        : ''
+                                ) +
+                            '>✅ مكتملة</option>' +
+
+                            '<option value="ملغية" ' +
+                                (
+                                    currentStatus === 'ملغية'
+                                        ? 'selected'
+                                        : ''
+                                ) +
+                            '>❌ ملغاة</option>' +
+
+                            '<option value="قيد الانتظار" ' +
+                                (
+                                    currentStatus === 'قيد الانتظار'
+                                        ? 'selected'
+                                        : ''
+                                ) +
+                            '>⏳ قيد الانتظار</option>' +
+
+                            '<option value="متأخرة" ' +
+                                (
+                                    currentStatus === 'معطب' ||
+                                    currentStatus === 'متأخرة'
+                                        ? 'selected'
+                                        : ''
+                                ) +
+                            '>🚨 متأخرة</option>' +
+
+                        '</select>' +
+
+                    '</div>' +
+
                     '<div class="modal-footer">' +
-                        '<button class="btn-submit primary" onclick="saveMaintenance()"><i class="fas fa-save"></i> تحديث</button>' +
-                        '<button class="btn-submit secondary" onclick="closeModal()">إلغاء</button>' +
+
+                        '<button class="btn-submit primary" ' +
+                        'onclick="saveMaintenance()">' +
+                            '<i class="fas fa-save"></i> تحديث' +
+                        '</button>' +
+
+                        '<button class="btn-submit secondary" ' +
+                        'onclick="closeModal()">' +
+                            'إلغاء' +
+                        '</button>' +
+
                     '</div>';
 
-                var modal = document.getElementById('maintenanceModal');
-                if (modal) modal.classList.add('active');
+                var modal =
+                    document.getElementById(
+                        'maintenanceModal'
+                    );
+
+                if (modal) {
+                    modal.classList.add('active');
+                }
             }
 
+
             // ============================================================
-            // 💾 SAVE MAINTENANCE
+            // 💾 SAVE MAINTENANCE - v9.16
             // ============================================================
-            function saveMaintenance() {
-                if (!canCreateMaintenance()) {
-                    showToast('⚠️ ليس لديك صلاحية', 'error');
+            async function saveMaintenance() {
+                var isEdit =
+                    !!currentEditId;
+
+                /*
+                 * عند الإضافة نحتاج Create.
+                 * عند التعديل نحتاج Update.
+                 */
+                if (isEdit) {
+                    if (
+                        typeof canUpdateMaintenance === 'function'
+                    ) {
+                        if (!canUpdateMaintenance()) {
+                            showToast(
+                                '⚠️ ليس لديك صلاحية تعديل الصيانة',
+                                'error'
+                            );
+
+                            return;
+                        }
+                    } else if (!canCreateMaintenance()) {
+                        showToast(
+                            '⚠️ ليس لديك صلاحية التعديل',
+                            'error'
+                        );
+
+                        return;
+                    }
+                } else {
+                    if (!canCreateMaintenance()) {
+                        showToast(
+                            '⚠️ ليس لديك صلاحية إضافة صيانة',
+                            'error'
+                        );
+
+                        return;
+                    }
+                }
+
+                var vesselIdEl =
+                    document.getElementById('mVessel');
+
+                var damageEl =
+                    document.getElementById('mDamage');
+
+                var techEl =
+                    document.getElementById('mTechnician');
+
+                var dateEl =
+                    document.getElementById('mDate');
+
+                var costEl =
+                    document.getElementById('mCost');
+
+                var descEl =
+                    document.getElementById('mDescription');
+
+                var statusEl =
+                    document.getElementById('mStatus');
+
+                if (!vesselIdEl || !damageEl) {
+                    showToast(
+                        '❌ نموذج الصيانة غير مكتمل',
+                        'error'
+                    );
+
                     return;
                 }
 
-                var vesselIdEl = document.getElementById('mVessel');
-                var damageEl = document.getElementById('mDamage');
-                var techEl = document.getElementById('mTechnician');
-                var dateEl = document.getElementById('mDate');
-                var costEl = document.getElementById('mCost');
-                var descEl = document.getElementById('mDescription');
-                var statusEl = document.getElementById('mStatus');
+                var vesselId =
+                    String(vesselIdEl.value || '').trim();
 
-                if (!vesselIdEl || !damageEl) return;
+                var damage =
+                    String(damageEl.value || '').trim();
 
-                var vesselId = vesselIdEl.value;
-                var damage = damageEl.value.trim();
-                var technician = techEl ? techEl.value.trim() : '';
-                var date = dateEl ? dateEl.value : '';
-                var cost = parseFloat(costEl ? costEl.value : 0) || 0;
-                var description = descEl ? descEl.value.trim() : '';
-                var rawStatus = statusEl ? statusEl.value : 'قيد التنفيذ';
+                var technician =
+                    techEl
+                        ? String(techEl.value || '').trim()
+                        : '';
 
-                if (!vesselId) { showToast('⚠️ يرجى اختيار المركب', 'error'); return; }
-                if (!damage) { showToast('⚠️ يرجى إدخال نوع العطب', 'error'); return; }
+                var date =
+                    dateEl
+                        ? String(dateEl.value || '').trim()
+                        : '';
 
-                var vessel = allVessels.find(function(v) { return (v._id || v.id) == vesselId; });
-                var vesselName = vessel ? vessel.name : 'مركب غير معروف';
-                var serverStatus = normalizeStatusForServer(rawStatus);
+                var rawCost =
+                    costEl
+                        ? String(costEl.value || '').trim()
+                        : '0';
+
+                var cost =
+                    Number(rawCost);
+
+                var description =
+                    descEl
+                        ? String(descEl.value || '').trim()
+                        : '';
+
+                var rawStatus =
+                    statusEl
+                        ? String(statusEl.value || 'قيد التنفيذ')
+                        : 'قيد التنفيذ';
+
+                if (!vesselId) {
+                    showToast(
+                        '⚠️ يرجى اختيار المركب',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                if (!damage) {
+                    showToast(
+                        '⚠️ يرجى إدخال نوع العطب',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                if (
+                    !isFinite(cost) ||
+                    cost < 0
+                ) {
+                    showToast(
+                        '⚠️ يرجى إدخال تكلفة صحيحة',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                /*
+                 * حد أقصى محلي إضافي.
+                 * السيرفر يجب أن يفرض حدوده أيضًا.
+                 */
+                if (damage.length > 300) {
+                    showToast(
+                        '⚠️ نوع العطب طويل جدًا',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                if (technician.length > 200) {
+                    showToast(
+                        '⚠️ اسم الفني طويل جدًا',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                if (description.length > 2000) {
+                    showToast(
+                        '⚠️ وصف العطب طويل جدًا',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                var vessel =
+                    Array.isArray(allVessels)
+                        ? allVessels.find(function(v) {
+                            return v &&
+                                   String(v._id || v.id) ===
+                                   vesselId;
+                        })
+                        : null;
+
+                var vesselName =
+                    vessel && vessel.name
+                        ? String(vessel.name)
+                        : 'مركب غير معروف';
+
+                var serverStatus =
+                    typeof normalizeStatusForServer === 'function'
+                        ? normalizeStatusForServer(rawStatus)
+                        : rawStatus;
 
                 var data = {
                     vesselId: vesselId,
                     vesselName: vesselName,
                     type: damage,
                     status: serverStatus,
-                    date: date || new Date().toISOString(),
-                    repairUnit: technician || 'غير محدد',
-                    cost: cost,
-                    notes: description
+                    date:
+                        date ||
+                        new Date().toISOString(),
+                    repairUnit:
+                        technician ||
+                        'غير محدد',
+                    cost:
+                        Number(cost.toFixed(2)),
+                    notes:
+                        description
                 };
 
-                var token = getToken();
+                var token =
+                    typeof getToken === 'function'
+                        ? getToken()
+                        : null;
+
                 if (!token) {
-                    showToast('⚠️ الرجاء تسجيل الدخول', 'error');
-                    window.location.href = '/index.html';
+                    showToast(
+                        '⚠️ الرجاء تسجيل الدخول',
+                        'error'
+                    );
+
+                    window.location.href =
+                        '/index.html';
+
                     return;
                 }
 
-                var method = currentEditId ? 'PUT' : 'POST';
-                var url = currentEditId
-                    ? '/api/maintenance-logs/' + currentEditId
-                    : '/api/maintenance-logs';
+                var method =
+                    isEdit
+                        ? 'PUT'
+                        : 'POST';
 
-                console.log('📤 إرسال إلى:', method, url);
-                console.log('📦 البيانات المُرسلة:', data);
+                var url =
+                    isEdit
+                        ? '/api/maintenance-logs/' +
+                          encodeURIComponent(
+                              String(currentEditId)
+                          )
+                        : '/api/maintenance-logs';
 
-                fetcher(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                })
-                .then(function(response) {
-                    if (!response.ok) {
-                        return response.json().then(function(err) {
-                            throw new Error(err.error || err.details || 'فشل حفظ البيانات (' + response.status + ')');
+                console.log(
+                    '📤 إرسال إلى:',
+                    method,
+                    url
+                );
+
+                console.log(
+                    '📦 البيانات المُرسلة:',
+                    data
+                );
+
+                try {
+                    var response =
+                        await fetcher(url, {
+                            method: method,
+
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
+
+                            body:
+                                JSON.stringify(data)
                         });
+
+                    var responseData = null;
+
+                    try {
+                        responseData =
+                            await response.json();
+                    } catch (jsonError) {
+                        responseData = {};
                     }
-                    return response.json();
-                })
-                .then(function(res) {
-                    console.log('✅ استجابة السيرفر:', res);
+
+                    if (!response.ok) {
+                        var serverMessage =
+                            responseData &&
+                            (
+                                responseData.error ||
+                                responseData.details ||
+                                responseData.message
+                            );
+
+                        throw new Error(
+                            serverMessage ||
+                            'فشل حفظ البيانات (' +
+                            response.status +
+                            ')'
+                        );
+                    }
+
+                    console.log(
+                        '✅ استجابة السيرفر:',
+                        responseData
+                    );
+
                     closeModal();
-                    refreshMaintenance();
-                    showToast(currentEditId ? '✅ تم تحديث المهمة' : '✅ تم إضافة المهمة بنجاح', 'success');
-                })
-                .catch(function(error) {
-                    console.error('❌ خطأ الحفظ:', error);
-                    showToast('❌ ' + error.message, 'error');
-                });
+
+                    await refreshMaintenance();
+
+                    showToast(
+                        isEdit
+                            ? '✅ تم تحديث المهمة'
+                            : '✅ تم إضافة المهمة بنجاح',
+                        'success'
+                    );
+
+                } catch (error) {
+                    console.error(
+                        '❌ خطأ الحفظ:',
+                        error
+                    );
+
+                    showToast(
+                        '❌ ' +
+                        (
+                            error &&
+                            error.message
+                                ? error.message
+                                : 'فشل حفظ البيانات'
+                        ),
+                        'error'
+                    );
+                }
             }
 
-            // ============================================================
-            // ✅ COMPLETE MAINTENANCE
-            // ============================================================
-            function completeMaintenance(id) {
-                if (!confirm('✅ هل تريد إكمال هذه المهمة؟')) return;
 
-                var token = getToken();
-                if (!token) {
-                    showToast('⚠️ الرجاء تسجيل الدخول', 'error');
+            // ============================================================
+            // ✅ COMPLETE MAINTENANCE - v9.16
+            // ============================================================
+            async function completeMaintenance(id) {
+                var safeId =
+                    String(id || '');
+
+                if (!safeId) {
+                    showToast(
+                        '❌ معرف المهمة غير صالح',
+                        'error'
+                    );
+
                     return;
                 }
 
-                fetcher('/api/maintenance-logs/' + id, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'مكتملة' })
-                })
-                .then(function(response) {
-                    if (!response.ok) {
-                        return response.json().then(function(err) {
-                            throw new Error(err.error || 'فشل إكمال المهمة');
-                        });
+                if (
+                    safeId.indexOf('damaged_') === 0
+                ) {
+                    showToast(
+                        '⚠️ هذا السجل محلي للعرض فقط ولا يمكن إكماله مباشرة.',
+                        'warning'
+                    );
+
+                    return;
+                }
+
+                if (
+                    typeof canUpdateMaintenance === 'function'
+                ) {
+                    if (!canUpdateMaintenance()) {
+                        showToast(
+                            '⚠️ ليس لديك صلاحية إكمال الصيانة',
+                            'error'
+                        );
+
+                        return;
                     }
-                    return response.json();
-                })
-                .then(function() {
-                    refreshMaintenance();
-                    showToast('✅ تم إكمال المهمة', 'success');
-                })
-                .catch(function(error) {
-                    showToast('❌ ' + error.message, 'error');
-                });
+                }
+
+                if (
+                    !confirm(
+                        '✅ هل تريد إكمال هذه المهمة؟'
+                    )
+                ) {
+                    return;
+                }
+
+                var token =
+                    typeof getToken === 'function'
+                        ? getToken()
+                        : null;
+
+                if (!token) {
+                    showToast(
+                        '⚠️ الرجاء تسجيل الدخول',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                try {
+                    var response =
+                        await fetcher(
+                            '/api/maintenance-logs/' +
+                            encodeURIComponent(safeId),
+                            {
+                                method: 'PUT',
+
+                                headers: {
+                                    'Content-Type':
+                                        'application/json'
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        status:
+                                            'مكتملة'
+                                    })
+                            }
+                        );
+
+                    var result = null;
+
+                    try {
+                        result =
+                            await response.json();
+                    } catch (e) {
+                        result = {};
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(
+                            result.error ||
+                            result.details ||
+                            result.message ||
+                            'فشل إكمال المهمة'
+                        );
+                    }
+
+                    await refreshMaintenance();
+
+                    showToast(
+                        '✅ تم إكمال المهمة',
+                        'success'
+                    );
+
+                } catch (error) {
+                    console.error(
+                        '❌ Complete error:',
+                        error
+                    );
+
+                    showToast(
+                        '❌ ' +
+                        (
+                            error &&
+                            error.message
+                                ? error.message
+                                : 'فشل إكمال المهمة'
+                        ),
+                        'error'
+                    );
+                }
             }
 
+
             // ============================================================
-            // 🗑️ DELETE MAINTENANCE
+            // 🗑️ DELETE MAINTENANCE - v9.16
             // ============================================================
-            function deleteMaintenance(id) {
+            async function deleteMaintenance(id) {
                 if (!canDeleteMaintenance()) {
-                    showToast('⚠️ ليس لديك صلاحية الحذف', 'error');
+                    showToast(
+                        '⚠️ ليس لديك صلاحية الحذف',
+                        'error'
+                    );
+
                     return;
                 }
 
-                if (!confirm('⚠️ هل أنت متأكد من حذف هذه المهمة؟')) return;
+                var safeId =
+                    String(id || '');
 
-                var token = getToken();
+                if (!safeId) {
+                    showToast(
+                        '❌ معرف المهمة غير صالح',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                if (
+                    safeId.indexOf('damaged_') === 0
+                ) {
+                    showToast(
+                        '⚠️ هذا سجل عرض محلي وليس سجلًا محفوظًا في قاعدة البيانات.',
+                        'warning'
+                    );
+
+                    return;
+                }
+
+                if (
+                    !confirm(
+                        '⚠️ هل أنت متأكد من حذف هذه المهمة؟'
+                    )
+                ) {
+                    return;
+                }
+
+                var token =
+                    typeof getToken === 'function'
+                        ? getToken()
+                        : null;
+
                 if (!token) {
-                    showToast('⚠️ الرجاء تسجيل الدخول', 'error');
+                    showToast(
+                        '⚠️ الرجاء تسجيل الدخول',
+                        'error'
+                    );
+
                     return;
                 }
 
-                fetcher('/api/maintenance-logs/' + id, {
-                    method: 'DELETE'
-                })
-                .then(function(response) {
-                    if (!response.ok) {
-                        return response.json().then(function(err) {
-                            throw new Error(err.error || 'فشل حذف المهمة');
-                        });
+                try {
+                    var response =
+                        await fetcher(
+                            '/api/maintenance-logs/' +
+                            encodeURIComponent(safeId),
+                            {
+                                method: 'DELETE'
+                            }
+                        );
+
+                    var result = null;
+
+                    try {
+                        result =
+                            await response.json();
+                    } catch (e) {
+                        result = {};
                     }
-                    return response.json();
-                })
-                .then(function() {
-                    refreshMaintenance();
-                    showToast('✅ تم حذف المهمة', 'success');
-                })
-                .catch(function(error) {
-                    showToast('❌ ' + error.message, 'error');
-                });
+
+                    if (!response.ok) {
+                        throw new Error(
+                            result.error ||
+                            result.details ||
+                            result.message ||
+                            'فشل حذف المهمة'
+                        );
+                    }
+
+                    await refreshMaintenance();
+
+                    showToast(
+                        '✅ تم حذف المهمة',
+                        'success'
+                    );
+
+                } catch (error) {
+                    console.error(
+                        '❌ Delete error:',
+                        error
+                    );
+
+                    showToast(
+                        '❌ ' +
+                        (
+                            error &&
+                            error.message
+                                ? error.message
+                                : 'فشل حذف المهمة'
+                        ),
+                        'error'
+                    );
+                }
             }
 
+
             // ============================================================
-            // 📜 SHOW HISTORY
+            // 📜 SHOW HISTORY - v9.16 XSS HARDENED
             // ============================================================
             function showHistory(id) {
-                var record = maintenanceData.find(function(r) { return r.id == id; });
-                if (!record) { showToast('❌ المهمة غير موجودة', 'error'); return; }
+                var safeId =
+                    String(id || '');
 
-                var history = record.history || [];
-                var historyHtml = '<div class="history-list">';
+                if (!safeId) {
+                    showToast(
+                        '❌ معرف المهمة غير صالح',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                var record =
+                    maintenanceData.find(function(r) {
+                        return r &&
+                               String(r.id) === safeId;
+                    });
+
+                if (!record) {
+                    showToast(
+                        '❌ المهمة غير موجودة',
+                        'error'
+                    );
+
+                    return;
+                }
+
+                var history =
+                    Array.isArray(record.history)
+                        ? record.history
+                        : [];
+
+                var historyHtml =
+                    '<div class="history-list">';
+
                 if (history.length === 0) {
-                    historyHtml += '<p style="color:rgba(255,255,255,0.2);text-align:center;padding:20px;">لا يوجد سجل تاريخي</p>';
+                    historyHtml +=
+                        '<p style="color:rgba(255,255,255,0.2);' +
+                        'text-align:center;padding:20px;">' +
+                        'لا يوجد سجل تاريخي' +
+                        '</p>';
+
                 } else {
                     history.forEach(function(h) {
-                        historyHtml += '<div class="history-item">' +
-                            '<div class="h-action">' + (h.action || 'تحديث') + '</div>' +
-                            '<div class="h-date">' + formatDate(h.date) + '</div>' +
-                            '<div class="h-details">' + (h.details || '') + '</div>' +
-                        '</div>';
+                        if (!h) return;
+
+                        historyHtml +=
+                            '<div class="history-item">' +
+
+                                '<div class="h-action">' +
+                                    escapeHtml(
+                                        h.action ||
+                                        'تحديث'
+                                    ) +
+                                '</div>' +
+
+                                '<div class="h-date">' +
+                                    escapeHtml(
+                                        formatDate(
+                                            h.date
+                                        )
+                                    ) +
+                                '</div>' +
+
+                                '<div class="h-details">' +
+                                    escapeHtml(
+                                        h.details ||
+                                        ''
+                                    ) +
+                                '</div>' +
+
+                            '</div>';
                     });
                 }
-                historyHtml += '</div>';
 
-                var modalBody = document.getElementById('modalBody');
-                var titleEl = document.getElementById('modalTitle');
+                historyHtml +=
+                    '</div>';
+
+                var modalBody =
+                    document.getElementById(
+                        'modalBody'
+                    );
+
+                var titleEl =
+                    document.getElementById(
+                        'modalTitle'
+                    );
+
                 if (!modalBody) return;
 
-                if (titleEl) titleEl.textContent = '📜 سجل الصيانة - ' + record.vesselName;
+                if (titleEl) {
+                    titleEl.textContent =
+                        '📜 سجل الصيانة - ' +
+                        String(
+                            record.vesselName ||
+                            'مركب'
+                        );
+                }
+
+                var numericCost =
+                    Number(record.cost);
+
+                if (
+                    !isFinite(numericCost) ||
+                    numericCost < 0
+                ) {
+                    numericCost = 0;
+                }
+
+                var historyStatus =
+                    String(
+                        record.status ||
+                        'قيد الإنجاز'
+                    );
+
+                var historyStatusClass =
+                    historyStatus === 'مكتملة'
+                        ? 'completed'
+                        : (
+                            historyStatus === 'معطب' ||
+                            historyStatus === 'متأخرة'
+                                ? 'damaged'
+                                : 'active'
+                        );
 
                 modalBody.innerHTML =
                     '<div style="margin-bottom:14px;">' +
-                        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;">' +
-                            '<div><strong style="color:#fff;">🔧 العطب:</strong> <span style="color:rgba(255,255,255,0.6);">' + escapeHtml(record.damage || '-') + '</span></div>' +
-                            '<div><strong style="color:#fff;">👤 الفني:</strong> <span style="color:rgba(255,255,255,0.6);">' + escapeHtml(record.technician || '-') + '</span></div>' +
-                            '<div><strong style="color:#fff;">💰 التكلفة:</strong> <span style="color:#f5c842;">' + (record.cost ? record.cost.toFixed(2) + ' د.ت' : '0.00 د.ت') + '</span></div>' +
-                            '<div><strong style="color:#fff;">📊 الحالة:</strong> <span class="status-badge ' + (record.status === 'مكتملة' ? 'completed' : (record.status === 'معطب' ? 'damaged' : 'active')) + '">' + (record.status || 'قيد الإنجاز') + '</span></div>' +
+
+                        '<div style="' +
+                        'display:grid;' +
+                        'grid-template-columns:1fr 1fr;' +
+                        'gap:8px;' +
+                        'font-size:0.85rem;">' +
+
+                            '<div>' +
+                                '<strong style="color:#fff;">' +
+                                    '🔧 العطب:' +
+                                '</strong> ' +
+
+                                '<span style="color:rgba(255,255,255,0.6);">' +
+                                    escapeHtml(
+                                        record.damage ||
+                                        '-'
+                                    ) +
+                                '</span>' +
+                            '</div>' +
+
+                            '<div>' +
+                                '<strong style="color:#fff;">' +
+                                    '👤 الفني:' +
+                                '</strong> ' +
+
+                                '<span style="color:rgba(255,255,255,0.6);">' +
+                                    escapeHtml(
+                                        record.technician ||
+                                        '-'
+                                    ) +
+                                '</span>' +
+                            '</div>' +
+
+                            '<div>' +
+                                '<strong style="color:#fff;">' +
+                                    '💰 التكلفة:' +
+                                '</strong> ' +
+
+                                '<span style="color:#f5c842;">' +
+                                    numericCost.toFixed(2) +
+                                    ' د.ت' +
+                                '</span>' +
+                            '</div>' +
+
+                            '<div>' +
+                                '<strong style="color:#fff;">' +
+                                    '📊 الحالة:' +
+                                '</strong> ' +
+
+                                '<span class="status-badge ' +
+                                escapeHtml(
+                                    historyStatusClass
+                                ) +
+                                '">' +
+                                    escapeHtml(
+                                        historyStatus
+                                    ) +
+                                '</span>' +
+                            '</div>' +
+
                         '</div>' +
-                        (record.description ? '<div style="margin-top:6px;font-size:0.8rem;color:rgba(255,255,255,0.4);">📝 ' + escapeHtml(record.description) + '</div>' : '') +
+
+                        (
+                            record.description
+                                ? '<div style="' +
+                                  'margin-top:6px;' +
+                                  'font-size:0.8rem;' +
+                                  'color:rgba(255,255,255,0.4);">' +
+                                  '📝 ' +
+                                  escapeHtml(
+                                      record.description
+                                  ) +
+                                  '</div>'
+                                : ''
+                        ) +
+
                     '</div>' +
-                    '<hr style="border-color:rgba(255,255,255,0.04);margin:12px 0;">' +
-                    '<h4 style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-bottom:10px;">📋 سجل التعديلات</h4>' +
+
+                    '<hr style="' +
+                    'border-color:rgba(255,255,255,0.04);' +
+                    'margin:12px 0;">' +
+
+                    '<h4 style="' +
+                    'color:rgba(255,255,255,0.4);' +
+                    'font-size:0.85rem;' +
+                    'margin-bottom:10px;">' +
+                        '📋 سجل التعديلات' +
+                    '</h4>' +
+
                     historyHtml +
+
                     '<div style="margin-top:16px;">' +
-                        '<button onclick="closeModal()" style="width:100%;padding:10px;border:none;border-radius:8px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);cursor:pointer;font-weight:600;transition:all 0.3s;">' +
-                            '<i class="fas fa-times"></i> إغلاق' +
+
+                        '<button onclick="closeModal()" ' +
+                        'style="' +
+                        'width:100%;' +
+                        'padding:10px;' +
+                        'border:none;' +
+                        'border-radius:8px;' +
+                        'background:rgba(255,255,255,0.04);' +
+                        'color:rgba(255,255,255,0.4);' +
+                        'cursor:pointer;' +
+                        'font-weight:600;' +
+                        'transition:all 0.3s;">' +
+
+                            '<i class="fas fa-times"></i> ' +
+                            'إغلاق' +
+
                         '</button>' +
+
                     '</div>';
 
-                var modal = document.getElementById('maintenanceModal');
-                if (modal) modal.classList.add('active');
+                var modal =
+                    document.getElementById(
+                        'maintenanceModal'
+                    );
+
+                if (modal) {
+                    modal.classList.add('active');
+                }
             }
+
 
             // ============================================================
             // ❌ CLOSE MODAL
             // ============================================================
             function closeModal() {
-                var modal = document.getElementById('maintenanceModal');
-                if (modal) modal.classList.remove('active');
+                var modal =
+                    document.getElementById(
+                        'maintenanceModal'
+                    );
+
+                if (modal) {
+                    modal.classList.remove(
+                        'active'
+                    );
+                }
+
                 currentEditId = null;
             }
 
+
             // ============================================================
-            // 🚀 INIT
+            // 🚀 INIT - v9.16
             // ============================================================
             async function init() {
                 if (_isDestroyed) return;
-                console.log('🚀 Initializing Maintenance v9.15...');
-                console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
-                console.log('🔐 canCreate:', canCreateMaintenance());
-                console.log('🔐 canDelete:', canDeleteMaintenance());
+
+                console.log(
+                    '🚀 Initializing Maintenance v9.16...'
+                );
+
+                console.log(
+                    '👤 Role:',
+                    window.currentUser
+                        ? normalizeRole(
+                            window.currentUser.role
+                        )
+                        : 'unknown'
+                );
+
+                console.log(
+                    '🔐 canCreate:',
+                    canCreateMaintenance()
+                );
+
+                console.log(
+                    '🔐 canDelete:',
+                    canDeleteMaintenance()
+                );
+
+                if (
+                    typeof canUpdateMaintenance ===
+                    'function'
+                ) {
+                    console.log(
+                        '🔐 canUpdate:',
+                        canUpdateMaintenance()
+                    );
+                }
 
                 try {
                     await loadVessels();
                     await loadMaintenance();
 
-                    var damagedVessels = allVessels.filter(function(v) {
-                        return v.stat === 'معطب' || v.status === 'معطب';
-                    });
-                    var existingIds = new Set();
-                    maintenanceData.forEach(function(m) { existingIds.add(m.vesselId); });
-
-                    damagedVessels.forEach(function(v) {
-                        var vid = v._id || v.id;
-                        if (!existingIds.has(vid)) {
-                            maintenanceData.push({
-                                id: 'damaged_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                                vesselId: vid,
-                                vesselName: v.name || 'مركب غير معروف',
-                                damage: v.break || 'عطل غير محدد',
-                                technician: 'غير محدد',
-                                date: v.fDate || new Date().toISOString(),
-                                status: 'معطب',
-                                statusRaw: 'متأخرة',
-                                cost: 0,
-                                parts: [],
-                                history: [{ action: 'تم إضافة المركب تلقائياً', date: new Date().toISOString() }],
-                                description: v.break || '',
-                                createdAt: new Date().toISOString()
-                            });
-                        }
-                    });
+                    var damagedVessels =
+                        mergeDamagedVessels();
 
                     updateStats();
                     renderDamagedVessels();
                     renderTable();
 
-                    // Events
-                    var rb = document.getElementById('refreshBtn');
-                    if (rb) rb.addEventListener('click', refreshMaintenance);
+                    // ====================================================
+                    // EVENTS
+                    // ====================================================
 
-                    var fb = document.getElementById('filterBtn');
-                    if (fb) fb.addEventListener('click', function() {
-                        renderTable();
-                        showToast('✅ تم تطبيق الفلاتر', 'success');
-                    });
+                    var rb =
+                        document.getElementById(
+                            'refreshBtn'
+                        );
 
-                    var resetB = document.getElementById('resetBtn');
-                    if (resetB) resetB.addEventListener('click', resetFilters);
+                    if (rb) {
+                        rb.addEventListener(
+                            'click',
+                            refreshMaintenance
+                        );
+                    }
 
-                    var mc = document.getElementById('modalClose');
-                    if (mc) mc.addEventListener('click', closeModal);
+                    var fb =
+                        document.getElementById(
+                            'filterBtn'
+                        );
 
-                    var sm = document.getElementById('searchMaint');
-                    if (sm) sm.addEventListener('keyup', renderTable);
+                    if (fb) {
+                        fb.addEventListener(
+                            'click',
+                            function() {
+                                renderTable();
 
-                    var sf = document.getElementById('statusFilter');
-                    if (sf) sf.addEventListener('change', renderTable);
+                                showToast(
+                                    '✅ تم تطبيق الفلاتر',
+                                    'success'
+                                );
+                            }
+                        );
+                    }
 
-                    var modal = document.getElementById('maintenanceModal');
-                    if (modal) modal.addEventListener('click', function(e) {
-                        if (e.target === this) closeModal();
-                    });
+                    var resetB =
+                        document.getElementById(
+                            'resetBtn'
+                        );
 
-                    console.log('✅ Maintenance v9.15 ready');
-                    console.log('🔧 ' + maintenanceData.length + ' tasks');
-                    console.log('🚨 ' + damagedVessels.length + ' damaged vessels');
+                    if (resetB) {
+                        resetB.addEventListener(
+                            'click',
+                            resetFilters
+                        );
+                    }
+
+                    var mc =
+                        document.getElementById(
+                            'modalClose'
+                        );
+
+                    if (mc) {
+                        mc.addEventListener(
+                            'click',
+                            closeModal
+                        );
+                    }
+
+                    var sm =
+                        document.getElementById(
+                            'searchMaint'
+                        );
+
+                    if (sm) {
+                        sm.addEventListener(
+                            'input',
+                            renderTable
+                        );
+                    }
+
+                    var sf =
+                        document.getElementById(
+                            'statusFilter'
+                        );
+
+                    if (sf) {
+                        sf.addEventListener(
+                            'change',
+                            renderTable
+                        );
+                    }
+
+                    var modal =
+                        document.getElementById(
+                            'maintenanceModal'
+                        );
+
+                    if (modal) {
+                        modal.addEventListener(
+                            'click',
+                            function(e) {
+                                if (
+                                    e.target ===
+                                    this
+                                ) {
+                                    closeModal();
+                                }
+                            }
+                        );
+                    }
+
+                    console.log(
+                        '✅ Maintenance v9.16 ready'
+                    );
+
+                    console.log(
+                        '🔧 ' +
+                        maintenanceData.length +
+                        ' tasks'
+                    );
+
+                    console.log(
+                        '🚨 ' +
+                        damagedVessels.length +
+                        ' damaged vessels'
+                    );
 
                 } catch (error) {
-                    console.error('❌ Init error:', error);
-                    showToast('❌ خطأ في تحميل الصفحة', 'error');
+                    console.error(
+                        '❌ Init error:',
+                        error
+                    );
+
+                    showToast(
+                        '❌ خطأ في تحميل الصفحة',
+                        'error'
+                    );
                 }
             }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
+
+            // ============================================================
+            // 🧹 DESTROY / CLEANUP
+            // ============================================================
+            function destroyMaintenancePage() {
+                _isDestroyed = true;
+
+                var rb =
+                    document.getElementById(
+                        'refreshBtn'
+                    );
+
+                if (rb) {
+                    rb.replaceWith(
+                        rb.cloneNode(true)
+                    );
+                }
+
+                var fb =
+                    document.getElementById(
+                        'filterBtn'
+                    );
+
+                if (fb) {
+                    fb.replaceWith(
+                        fb.cloneNode(true)
+                    );
+                }
+
+                var resetB =
+                    document.getElementById(
+                        'resetBtn'
+                    );
+
+                if (resetB) {
+                    resetB.replaceWith(
+                        resetB.cloneNode(true)
+                    );
+                }
+
+                var mc =
+                    document.getElementById(
+                        'modalClose'
+                    );
+
+                if (mc) {
+                    mc.replaceWith(
+                        mc.cloneNode(true)
+                    );
+                }
+            }
+
+
+            // ============================================================
+            // 🚀 START
+            // ============================================================
+            if (
+                document.readyState ===
+                'loading'
+            ) {
+                document.addEventListener(
+                    'DOMContentLoaded',
+                    init,
+                    { once: true }
+                );
             } else {
                 init();
             }
 
+
             // ============================================================
             // 🌐 EXPOSE GLOBALS
             // ============================================================
-            window.openAddMaintenance = openAddMaintenance;
-            window.openEditModal = openEditModal;
-            window.saveMaintenance = saveMaintenance;
-            window.completeMaintenance = completeMaintenance;
-            window.deleteMaintenance = deleteMaintenance;
-            window.showHistory = showHistory;
-            window.closeModal = closeModal;
-            window.refreshMaintenance = refreshMaintenance;
-            window.resetFilters = resetFilters;
-            window.showToast = showToast;
-            window.renderDamagedVessels = renderDamagedVessels;
-            window.renderTable = renderTable;
-            window.updateStats = updateStats;
-            window.onYearCheckChange = onYearCheckChange;
-            window.toggleYearFilter = toggleYearFilter;
-            window.getSelectedYears = getSelectedYears;
+            window.openAddMaintenance =
+                openAddMaintenance;
+
+            window.openEditModal =
+                openEditModal;
+
+            window.saveMaintenance =
+                saveMaintenance;
+
+            window.completeMaintenance =
+                completeMaintenance;
+
+            window.deleteMaintenance =
+                deleteMaintenance;
+
+            window.showHistory =
+                showHistory;
+
+            window.closeModal =
+                closeModal;
+
+            window.refreshMaintenance =
+                refreshMaintenance;
+
+            window.resetFilters =
+                resetFilters;
+
+            window.showToast =
+                showToast;
+
+            window.renderDamagedVessels =
+                renderDamagedVessels;
+
+            window.renderTable =
+                renderTable;
+
+            window.updateStats =
+                updateStats;
+
+            window.onYearCheckChange =
+                onYearCheckChange;
+
+            window.toggleYearFilter =
+                toggleYearFilter;
+
+            window.getSelectedYears =
+                getSelectedYears;
+
+            window.destroyMaintenancePage =
+                destroyMaintenancePage;
 
         })();
     </script>
