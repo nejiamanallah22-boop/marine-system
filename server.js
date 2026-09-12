@@ -1,7 +1,13 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.15
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.16
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
+// 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
+// ============================================================
+// ✨ v9.16 changes vs v9.15:
+//    - ✅ ADDED: require('./routes/ai-and-import')
+//    - ✅ ADDED: aiAndImportRoutes(app, {...}) registration before STATIC FILES
+//    - No other logic changed from v9.15
 // ============================================================
 
 'use strict';
@@ -12,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.15 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.16 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -96,6 +102,9 @@ const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const compression = require('compression');
 const nodemailer = require('nodemailer');
+
+// ✅ v9.16: مسارات المساعد الذكي + الاستيراد الذكي (Gemini)
+const aiAndImportRoutes = require('./routes/ai-and-import');
 
 let createDOMPurify = null;
 try {
@@ -1061,6 +1070,7 @@ function formatMaintenance(log) {
         updatedAt: log.updatedAt
     };
 }
+
 // ============================================================
 // 🚀 STARTUP
 // ============================================================
@@ -1106,7 +1116,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.15', timestamp: new Date().toISOString(),
+            version: '9.16', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             models: {
@@ -2334,7 +2344,8 @@ function formatMaintenance(log) {
             return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
         }
     });
-        // ========================================================
+
+    // ========================================================
     // USERS (admin only)
     // ========================================================
 
@@ -2645,6 +2656,28 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
+    // 🤖 AI + 📥 IMPORT ROUTES
+    // ------------------------------------------------------------
+    // ✅ v9.16: المفتاح GEMINI_API_KEY يبقى على الخادم فقط (routes/ai-and-import.js)
+    // ✅ يجب تسجيله قبل STATIC FILES وبعد كل الـ routes الأخرى
+    // ✅ يتطلب: npm install multer pdf-parse mammoth xlsx
+    // ========================================================
+
+    aiAndImportRoutes(app, {
+        User,
+        Vessel,
+        Maintenance,
+        Notification,
+        authenticateAccessToken,
+        csrfProtection,
+        requirePermission,
+        hasPermission,
+        randomId,
+        addSystemLog,
+        notify
+    });
+
+    // ========================================================
     // STATIC FILES
     // ========================================================
 
@@ -2688,7 +2721,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.15</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.16</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2738,13 +2771,14 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.15');
+            console.log('🚢 MARINE SYSTEM v9.16');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
+            console.log('🤖 AI Assistant + Smart Import: ' + (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED (missing GEMINI_API_KEY)'));
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Double-hash fix: APPLIED');
             console.log('✅ RBAC v4: 5 roles');
-            console.log('✅ ID matching: _id OR id (v9.14)');
+            console.log('✅ ID matching: _id OR id');
             console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Notes: ' + (Note ? 'ENABLED' : 'DISABLED'));
             console.log('=========================================');
