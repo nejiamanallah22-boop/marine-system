@@ -1,13 +1,15 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.16
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.17
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
+// 📧 MAILJET HTTP API (Works on Render — no SMTP port blocking)
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
 // ============================================================
-// ✨ v9.16 changes vs v9.15:
-//    - ✅ ADDED: require('./routes/ai-and-import')
-//    - ✅ ADDED: aiAndImportRoutes(app, {...}) registration before STATIC FILES
-//    - No other logic changed from v9.15
+// ✨ v9.17 changes vs v9.16:
+//    - ✅ CHANGED: sendEmail now uses Mailjet HTTP API (port 443)
+//    - ✅ ADDED: fallback to SMTP for local development
+//    - ✅ ADDED: email status in /api/health
+//    - ✅ ADDED: email status in app.listen logs
 // ============================================================
 
 'use strict';
@@ -18,7 +20,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.16 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.17 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -298,9 +300,19 @@ function xssSanitizer(req, res, next) {
     next();
 }
 
+// ============================================================
+// 📧 EMAIL SERVICE — v9.17 (Mailjet HTTP API)
+// ============================================================
+
 let emailTransporter = null;
 
 async function setupEmailService() {
+    // ✅ v9.17: إن كان Mailjet مُعدّاً، لا حاجة لـ SMTP
+    if (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) {
+        console.log('✅ Mailjet API configured — SMTP disabled');
+        return null;
+    }
+
     try {
         if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             const transporter = nodemailer.createTransport({
@@ -337,15 +349,60 @@ async function setupEmailService() {
 async function initEmailService() { return setupEmailService(); }
 
 async function sendEmail(to, subject, html) {
+    // ✅ v9.17: Mailjet HTTP API (يعمل على Render — منفذ 443)
+    const mjApiKey = process.env.MAILJET_API_KEY;
+    const mjSecretKey = process.env.MAILJET_SECRET_KEY;
+
+    if (mjApiKey && mjSecretKey) {
+        try {
+            const auth = Buffer.from(`${mjApiKey}:${mjSecretKey}`).toString('base64');
+            const response = await fetch('https://api.mailjet.com/v3.1/send', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${auth}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    Messages: [{
+                        From: {
+                            Email: process.env.EMAIL_FROM || 'nejiamanallah22@gmail.com',
+                            Name: process.env.EMAIL_FROM_NAME || 'منظومة الوسائل البحرية'
+                        },
+                        To: [{ Email: to }],
+                        Subject: subject,
+                        HTMLPart: html
+                    }]
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                console.error('❌ Mailjet API error:', response.status, errText.slice(0, 300));
+                return null;
+            }
+
+            const data = await response.json();
+            const msgId = data?.Messages?.[0]?.To?.[0]?.MessageID
+                       || data?.Messages?.[0]?.To?.[0]?.MessageUUID
+                       || 'unknown';
+            console.log('✅ Email sent via Mailjet API:', msgId, '→', to);
+            return data;
+        } catch (error) {
+            console.error('❌ Mailjet error:', error.message);
+            return null;
+        }
+    }
+
+    // ✅ fallback: SMTP للتطوير المحلي
     if (!emailTransporter) emailTransporter = await initEmailService();
     if (!emailTransporter) return null;
     try {
         const from = process.env.EMAIL_FROM || emailTransporter.options?.auth?.user || 'no-reply@marine-system.local';
         const info = await emailTransporter.sendMail({ from, to, subject, html });
-        console.log('✅ Email sent:', info.messageId);
+        console.log('✅ Email sent via SMTP:', info.messageId);
         return info;
     } catch (error) {
-        console.error('❌ Email error:', error.message);
+        console.error('❌ SMTP error:', error.message);
         return null;
     }
 }
@@ -353,6 +410,10 @@ async function sendEmail(to, subject, html) {
 setTimeout(() => {
     initEmailService().then(t => { emailTransporter = t; }).catch(() => {});
 }, 100);
+
+// ============================================================
+// 🛡️ HELMET + CORS + RATE LIMIT
+// ============================================================
 
 app.use(
     helmet({
@@ -600,9 +661,7 @@ async function ensureInitialData() {
         console.log(`✅ ${initialLogs.length} maintenance logs created`);
     } catch (error) {
         console.error('❌ Failed to create initial data:', error.message);
-    }
-}
-
+        
 let sessionStore = undefined;
 
 async function buildSessionStore() {
@@ -1116,9 +1175,12 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.16', timestamp: new Date().toISOString(),
+            version: '9.17', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
+            email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
+                ? 'mailjet-api'
+                : (process.env.EMAIL_HOST ? 'smtp' : 'not-configured'),
             models: {
                 User: !!User,
                 Vessel: !!Vessel,
@@ -2344,6 +2406,7 @@ function formatMaintenance(log) {
             return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
         }
     });
+    
 
     // ========================================================
     // USERS (admin only)
@@ -2658,7 +2721,7 @@ function formatMaintenance(log) {
     // ========================================================
     // 🤖 AI + 📥 IMPORT ROUTES
     // ------------------------------------------------------------
-    // ✅ v9.16: المفتاح GEMINI_API_KEY يبقى على الخادم فقط (routes/ai-and-import.js)
+    // ✅ v9.17: المفتاح GEMINI_API_KEY يبقى على الخادم فقط
     // ✅ يجب تسجيله قبل STATIC FILES وبعد كل الـ routes الأخرى
     // ✅ يتطلب: npm install multer pdf-parse mammoth xlsx
     // ========================================================
@@ -2721,7 +2784,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.16</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.17</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2771,10 +2834,15 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.16');
+            console.log('🚢 MARINE SYSTEM v9.17');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('🤖 AI Assistant + Smart Import: ' + (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED (missing GEMINI_API_KEY)'));
+            console.log('📧 Email: ' + (
+                (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
+                    ? 'MAILJET API ✅'
+                    : (process.env.EMAIL_HOST ? 'SMTP' : '❌ NOT CONFIGURED')
+            ));
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Double-hash fix: APPLIED');
             console.log('✅ RBAC v4: 5 roles');
@@ -2801,3 +2869,6 @@ module.exports.requireAdmin = requireAdmin;
 module.exports.hasPermission = hasPermission;
 module.exports.normalizeRole = normalizeRole;
 module.exports.addSystemLog = addSystemLog;
+    
+    }
+}
