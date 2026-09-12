@@ -2,8 +2,8 @@
 <div id="page-settings">
     <style>
         /* ============================================================
-           ⚙️ MARINE SYSTEM SETTINGS v14.1
-           TRUE 10/10 MILITARY-GRADE HARDENED + FIXED v9.1
+           ⚙️ MARINE SYSTEM SETTINGS v9.12
+           Military-Grade Hardened + RBAC v9.12
            ============================================================ */
 
         :root {
@@ -29,10 +29,6 @@
             --transition: .3s cubic-bezier(.4,0,.2,1);
             --font: 'Cairo','Segoe UI',system-ui,sans-serif;
         }
-
-        /* ============================================================
-           BASE
-           ============================================================ */
 
         #page-settings {
             width:100%;
@@ -77,10 +73,6 @@
         #page-settings ::-webkit-scrollbar { width:5px; height:5px; }
         #page-settings ::-webkit-scrollbar-track { background:rgba(255,255,255,.02); }
         #page-settings ::-webkit-scrollbar-thumb { background:var(--gold); border-radius:10px; }
-
-        /* ============================================================
-           HEADER
-           ============================================================ */
 
         .settings-header {
             display:flex;
@@ -157,9 +149,7 @@
         }
 
         .btn-action:focus-visible,
-        .btn-save:focus-visible,
-        .modal-actions .btn:focus-visible,
-        .btn-sm:focus-visible {
+        .btn-save:focus-visible {
             outline:2px solid var(--gold);
             outline-offset:3px;
         }
@@ -204,10 +194,6 @@
             cursor:not-allowed !important;
         }
 
-        /* ============================================================
-           GRID
-           ============================================================ */
-
         .settings-grid {
             display:grid;
             grid-template-columns:repeat(2,minmax(0,1fr));
@@ -232,6 +218,10 @@
             box-shadow:var(--shadow-hover);
         }
 
+        .settings-card.hidden {
+            display: none !important;
+        }
+
         .card-title {
             display:flex;
             align-items:center;
@@ -250,10 +240,6 @@
             font-size:12px;
             line-height:1.6;
         }
-
-        /* ============================================================
-           FORM
-           ============================================================ */
 
         .form-group {
             margin-bottom:15px;
@@ -304,10 +290,6 @@
             line-height:1.5;
         }
 
-        /* ============================================================
-           COLOR PICKERS
-           ============================================================ */
-
         .color-picker {
             display:flex;
             flex-wrap:wrap;
@@ -330,10 +312,6 @@
             border-color:#fff;
             box-shadow:0 0 0 2px rgba(230,179,30,.3), 0 0 20px rgba(255,255,255,.15);
         }
-
-        /* ============================================================
-           TOGGLE
-           ============================================================ */
 
         .toggle-switch {
             display:flex;
@@ -390,10 +368,6 @@
             font-size:13px;
         }
 
-        /* ============================================================
-           BUTTON SAVE
-           ============================================================ */
-
         .btn-save {
             width:100%;
             min-height:44px;
@@ -424,10 +398,6 @@
             color:#fff;
         }
 
-        /* ============================================================
-           PREVIEW
-           ============================================================ */
-
         .theme-preview {
             display:flex;
             align-items:center;
@@ -455,10 +425,6 @@
 
         .preview-text strong { color:#fff; }
         .preview-text span { color:var(--gold); }
-
-        /* ============================================================
-           LOGO
-           ============================================================ */
 
         .logo-upload-area {
             position:relative;
@@ -550,10 +516,6 @@
             font-size:11px;
         }
 
-        /* ============================================================
-           SECURITY STATUS
-           ============================================================ */
-
         .security-status {
             display:flex;
             align-items:center;
@@ -579,43 +541,6 @@
             background:rgba(253,203,110,.05);
         }
 
-        /* ============================================================
-           PERMISSION LOCK
-           ============================================================ */
-
-        .permission-locked {
-            position:relative;
-        }
-
-        .permission-locked::after {
-            content:"";
-            position:absolute;
-            inset:0;
-            border-radius:var(--radius);
-            background:rgba(5,8,15,.42);
-            backdrop-filter:blur(1px);
-            -webkit-backdrop-filter:blur(1px);
-            z-index:5;
-        }
-
-        .permission-lock-badge {
-            position:absolute;
-            top:14px;
-            left:14px;
-            z-index:10;
-            padding:4px 9px;
-            border-radius:20px;
-            background:rgba(239,68,68,.14);
-            border:1px solid rgba(239,68,68,.18);
-            color:#f87171;
-            font-size:10px;
-            font-weight:700;
-        }
-
-        /* ============================================================
-           ABOUT
-           ============================================================ */
-
         .about-grid {
             display:grid;
             gap:7px;
@@ -624,10 +549,6 @@
         }
 
         .about-grid strong { color:#fff; }
-
-        /* ============================================================
-           TOAST
-           ============================================================ */
 
         .settings-toast {
             position:fixed;
@@ -674,175 +595,6 @@
             to { opacity:1; transform:translateY(0); }
         }
 
-        /* ============================================================
-           LOADING
-           ============================================================ */
-
-        .settings-loading {
-            display:none;
-            position:fixed;
-            inset:0;
-            z-index:199999;
-            align-items:center;
-            justify-content:center;
-            flex-direction:column;
-            background:rgba(0,0,0,.62);
-            backdrop-filter:blur(5px);
-            -webkit-backdrop-filter:blur(5px);
-        }
-
-        .settings-loading.active { display:flex; }
-
-        .settings-spinner {
-            width:48px;
-            height:48px;
-            border:4px solid rgba(255,255,255,.06);
-            border-top-color:var(--gold);
-            border-radius:50%;
-            animation:settingsSpin .8s linear infinite;
-        }
-
-        @keyframes settingsSpin {
-            to { transform:rotate(360deg); }
-        }
-
-        .settings-loading p {
-            margin-top:16px;
-            color:rgba(255,255,255,.5);
-            font-size:14px;
-        }
-
-        /* ============================================================
-           MODAL
-           ============================================================ */
-
-        .settings-modal {
-            display:none;
-            position:fixed;
-            inset:0;
-            z-index:210000;
-            align-items:center;
-            justify-content:center;
-            padding:20px;
-            background:rgba(0,0,0,.75);
-            backdrop-filter:blur(8px);
-            -webkit-backdrop-filter:blur(8px);
-        }
-
-        .settings-modal.active { display:flex; }
-
-        .modal-box {
-            width:min(500px,100%);
-            max-height:90vh;
-            overflow:auto;
-            padding:32px;
-            background:#171a2c;
-            border:1px solid var(--glass-border);
-            border-radius:var(--radius);
-            box-shadow:0 24px 64px rgba(0,0,0,.5);
-        }
-
-        .modal-box h3 {
-            margin:0 0 12px;
-            color:#fff;
-            font-size:20px;
-        }
-
-        .modal-box p {
-            color:rgba(255,255,255,.5);
-            font-size:14px;
-            line-height:1.7;
-        }
-
-        .qr-container {
-            display:flex;
-            justify-content:center;
-            margin:18px 0;
-            padding:16px;
-            background:#fff;
-            border-radius:12px;
-        }
-
-        .qr-container img {
-            width:200px;
-            height:200px;
-            object-fit:contain;
-        }
-
-        .secret-key {
-            padding:12px;
-            background:rgba(255,255,255,.05);
-            border-radius:8px;
-            color:var(--gold);
-            font-family:monospace;
-            font-size:18px;
-            letter-spacing:2px;
-            text-align:center;
-            user-select:all;
-        }
-
-        .modal-form-group {
-            margin-top:15px;
-        }
-
-        .modal-form-group label {
-            display:block;
-            margin-bottom:5px;
-            color:rgba(255,255,255,.4);
-            font-size:12px;
-        }
-
-        .modal-form-group input {
-            width:100%;
-            padding:11px 14px;
-            border:1px solid var(--glass-border);
-            border-radius:10px;
-            background:rgba(255,255,255,.03);
-            color:#fff;
-            font-family:var(--font);
-            font-size:18px;
-            text-align:center;
-            letter-spacing:4px;
-        }
-
-        .modal-form-group input:focus {
-            outline:none;
-            border-color:var(--gold);
-            box-shadow:0 0 0 4px rgba(230,179,30,.06);
-        }
-
-        .modal-actions {
-            display:flex;
-            gap:10px;
-            margin-top:18px;
-        }
-
-        .modal-actions .btn {
-            flex:1;
-            min-height:42px;
-            border:0;
-            border-radius:10px;
-            font-family:var(--font);
-            font-size:14px;
-            font-weight:800;
-            cursor:pointer;
-        }
-
-        .btn-primary {
-            background:linear-gradient(135deg, var(--gold), var(--gold-light));
-            color:#0a1628;
-        }
-
-        .btn-secondary {
-            background:var(--glass-bg);
-            border:1px solid var(--glass-border) !important;
-            color:rgba(255,255,255,.65);
-        }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-
         @media (max-width:992px) {
             .settings-grid { grid-template-columns:1fr; }
         }
@@ -854,7 +606,6 @@
             .settings-header-actions { width:100%; }
             .btn-action { flex:1; }
             .settings-card { padding:16px; }
-            .modal-box { padding:22px; }
         }
 
         @media (max-width:480px) {
@@ -863,52 +614,16 @@
             .settings-card { padding:13px; }
             .settings-header-actions { display:grid; grid-template-columns:1fr; }
             .theme-preview { flex-direction:column; align-items:flex-start; }
-            .modal-box { padding:16px; }
-            .modal-actions { flex-direction:column; }
         }
 
         @media (prefers-reduced-motion:reduce) {
-            *,
-            *::before,
-            *::after {
+            *, *::before, *::after {
                 animation-duration:.01ms !important;
                 animation-iteration-count:1 !important;
                 transition-duration:.01ms !important;
             }
         }
     </style>
-
-    <!-- ============================================================
-         LOADING
-         ============================================================ -->
-
-    <div class="settings-loading" id="settingsLoading" aria-hidden="true">
-        <div class="settings-spinner"></div>
-        <p id="settingsLoadingText">جاري تنفيذ العملية...</p>
-    </div>
-
-    <!-- ============================================================
-         2FA MODAL
-         ============================================================ -->
-
-    <div class="settings-modal" id="twoFactorModal" role="dialog" aria-modal="true" aria-labelledby="twoFactorTitle">
-        <div class="modal-box">
-            <h3 id="twoFactorTitle">🔐 تفعيل المصادقة بخطوتين</h3>
-            <p>قم بمسح رمز QR باستخدام تطبيق مصادقة مثل Google Authenticator أو Authy، ثم أدخل رمز التحقق المكون من 6 أرقام.</p>
-            <div class="qr-container">
-                <img id="qrCodeImage" src="" alt="رمز QR للمصادقة الثنائية" referrerpolicy="no-referrer">
-            </div>
-            <div class="secret-key" id="secretKeyDisplay" aria-label="المفتاح السري">------</div>
-            <div class="modal-form-group">
-                <label for="twoFactorCode">🔑 رمز التحقق</label>
-                <input type="text" id="twoFactorCode" maxlength="6" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" placeholder="000000">
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-primary" id="verify2FABtn">✅ تأكيد التفعيل</button>
-                <button type="button" class="btn btn-secondary" id="cancel2FABtn">إلغاء</button>
-            </div>
-        </div>
-    </div>
 
     <!-- ============================================================
          HEADER
@@ -935,11 +650,8 @@
 
     <div class="settings-grid">
 
-        <!-- ========================================================
-             THEME
-             ======================================================== -->
-
-        <section class="settings-card" id="themeCard" data-permission="canManageTheme">
+        <!-- THEME -->
+        <section class="settings-card" id="themeCard">
             <div class="card-title"><i class="fas fa-palette"></i> مظهر التطبيق</div>
             <div class="card-subtitle">تغيير ألوان واجهة التطبيق</div>
 
@@ -966,12 +678,6 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="bgImageUpload">📷 صورة الخلفية</label>
-                <input type="file" id="bgImageUpload" accept="image/png,image/jpeg,image/webp">
-                <div class="form-hint">PNG أو JPEG أو WebP — الحد الأقصى 5MB</div>
-            </div>
-
             <div class="theme-preview" id="themePreview">
                 <div class="preview-color" id="previewPrimary"></div>
                 <div class="preview-color" id="previewSecondary"></div>
@@ -985,22 +691,10 @@
             <button type="button" class="btn-save" id="saveThemeBtn"><i class="fas fa-palette"></i> تطبيق المظهر</button>
         </section>
 
-        <!-- ========================================================
-             LOGO
-             ======================================================== -->
-
-        <section class="settings-card" id="logoCard" data-permission="canManageBranding">
+        <!-- LOGO -->
+        <section class="settings-card" id="logoCard">
             <div class="card-title"><i class="fas fa-image"></i> شعار التطبيق</div>
             <div class="card-subtitle">إدارة شعار النظام وحجمه</div>
-
-            <div class="form-group">
-                <label for="logoUpload">📷 تحميل شعار جديد</label>
-                <input type="file" id="logoUpload" accept="image/png,image/jpeg,image/webp" hidden>
-                <div class="logo-upload-area" id="logoUploadArea" role="button" tabindex="0" aria-label="تحميل شعار">
-                    <div id="logoPreviewContainer"></div>
-                </div>
-                <div class="form-hint">PNG أو JPEG أو WebP — الحد الأقصى 2MB</div>
-            </div>
 
             <div class="form-group">
                 <label for="logoSize">📏 حجم الشعار</label>
@@ -1020,11 +714,8 @@
             <button type="button" class="btn-save" id="saveLogoBtn"><i class="fas fa-image"></i> حفظ إعدادات الشعار</button>
         </section>
 
-        <!-- ========================================================
-             LAYOUT
-             ======================================================== -->
-
-        <section class="settings-card" id="layoutCard" data-permission="canManageLayout">
+        <!-- LAYOUT -->
+        <section class="settings-card" id="layoutCard">
             <div class="card-title"><i class="fas fa-layer-group"></i> التخطيط والعرض</div>
             <div class="card-subtitle">تخصيص طريقة عرض التطبيق</div>
 
@@ -1066,27 +757,10 @@
             <button type="button" class="btn-save" id="saveLayoutBtn"><i class="fas fa-save"></i> حفظ التخطيط</button>
         </section>
 
-        <!-- ========================================================
-             SECURITY
-             ======================================================== -->
-
-        <section class="settings-card" id="securityCard" data-permission="canManageSecurity">
+        <!-- SECURITY -->
+        <section class="settings-card" id="securityCard">
             <div class="card-title"><i class="fas fa-shield-alt"></i> الأمان والخصوصية</div>
             <div class="card-subtitle">إعدادات الحماية والجلسات</div>
-
-            <div class="form-group">
-                <label>🔐 المصادقة بخطوتين</label>
-                <div class="toggle-switch">
-                    <input type="checkbox" id="twoFactorAuth">
-                    <label class="toggle-track" for="twoFactorAuth"></label>
-                    <span class="toggle-label" id="twoFactorLabel">تفعيل المصادقة بخطوتين</span>
-                </div>
-                <div class="form-hint">تستخدم تطبيق مصادقة مثل Google Authenticator أو Authy.</div>
-                <div class="security-status" id="twoFactorStatus">
-                    <span>●</span>
-                    <span>جارٍ التحقق من حالة 2FA...</span>
-                </div>
-            </div>
 
             <div class="form-group">
                 <label>📧 إشعارات البريد الإلكتروني</label>
@@ -1115,11 +789,8 @@
             <button type="button" class="btn-save" id="saveSecurityBtn"><i class="fas fa-shield-alt"></i> حفظ إعدادات الأمان</button>
         </section>
 
-        <!-- ========================================================
-             NOTIFICATIONS
-             ======================================================== -->
-
-        <section class="settings-card" id="notificationsCard" data-permission="canManageNotifications">
+        <!-- NOTIFICATIONS -->
+        <section class="settings-card" id="notificationsCard">
             <div class="card-title"><i class="fas fa-bell"></i> الإشعارات والتنبيهات</div>
             <div class="card-subtitle">تخصيص التنبيهات والتقارير</div>
 
@@ -1154,22 +825,19 @@
             <button type="button" class="btn-save" id="saveNotificationsBtn"><i class="fas fa-bell"></i> حفظ الإشعارات</button>
         </section>
 
-        <!-- ========================================================
-             ABOUT
-             ======================================================== -->
-
-        <section class="settings-card">
+        <!-- ABOUT -->
+        <section class="settings-card" id="aboutCard">
             <div class="card-title"><i class="fas fa-info-circle"></i> حول التطبيق</div>
             <div class="card-subtitle">معلومات النظام والإصدار</div>
 
             <div class="about-grid">
                 <div><strong>📦 اسم النظام:</strong> منظومة الوسائل البحرية</div>
-                <div><strong>📌 الإصدار:</strong> v14.0 Military-Grade</div>
+                <div><strong>📌 الإصدار:</strong> v9.12 Military-Grade</div>
                 <div><strong>👨‍💻 المطور:</strong> أمان الله ناجي</div>
                 <div><strong>📧 البريد:</strong> nejiamanallah22@gmail.com</div>
                 <div><strong>📱 الهاتف:</strong> +216 29 659 945</div>
                 <div><strong>📅 تاريخ الإصدار:</strong> 2026</div>
-                <div><strong>🔒 الحالة:</strong> <span style="color:#4ade80;">✅ 10/10 Military-Grade</span></div>
+                <div><strong>🔒 الحالة:</strong> <span style="color:#4ade80;">✅ Production-Ready</span></div>
             </div>
 
             <div style="margin-top:14px;padding:12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid rgba(255,255,255,.04);">
@@ -1180,22 +848,20 @@
     </div>
 
     <!-- ============================================================
-         JAVASCRIPT — v14.1 (Fixed v9.1)
+         JAVASCRIPT — v9.12
          ============================================================ -->
 
     <script>
     /**
      * ============================================================
-     * 🚢 MARINE SYSTEM v14.1 — SETTINGS
-     * TRUE 10/10 MILITARY-GRADE HARDENED + FIXED v9.1
+     * 🚢 MARINE SYSTEM SETTINGS v9.12
      * ============================================================
-     * ✨ v9.1 Improvements:
-     * - _isDestroyed flag
-     * - _settingsCleanup() with full cleanup
-     * - _pageIntervals + _pageTimeouts tracking
-     * - null checks everywhere
-     * - No setInterval/setTimeout leaks
-     * - Globals removed on cleanup
+     * ✨ v9.12 Features:
+     * - RBAC v9.12 (5 roles)
+     * - normalizeRole + LEGACY_ROLE_MAP
+     * - apiFetch integration (from index.html)
+     * - Card visibility per role
+     * - Full cleanup (v9.1)
      * ============================================================
      */
 
@@ -1203,18 +869,17 @@
         'use strict';
 
         // ============================================================
-        // 🛡️ CLEANUP STATE (v9.1)
+        // 🛡️ CLEANUP STATE
         // ============================================================
         var _isDestroyed = false;
         var _pageIntervals = [];
         var _pageTimeouts = [];
-        var _eventListeners = []; // لتتبع كل الـ listeners
+        var _eventListeners = [];
 
         function _settingsCleanup() {
             if (_isDestroyed) return;
             _isDestroyed = true;
 
-            // ✅ إلغاء كل المؤقتات
             _pageIntervals.forEach(function(id) {
                 try { clearInterval(id); } catch (e) {}
             });
@@ -1225,7 +890,6 @@
             });
             _pageTimeouts = [];
 
-            // ✅ إزالة event listeners
             _eventListeners.forEach(function(item) {
                 try {
                     if (item.el && item.fn) {
@@ -1235,15 +899,13 @@
             });
             _eventListeners = [];
 
-            // ✅ إزالة الـ globals
             try {
                 delete window.loadSettings;
                 delete window.getToken;
                 delete window.showToast;
-                delete window.safeUpdateDateTime;
             } catch (e) {}
 
-            console.log('🧹 Settings cleanup done');
+            console.log('🧹 Settings v9.12 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -1253,152 +915,82 @@
         window.addEventListener('pagehide', _settingsCleanup);
 
         // ============================================================
-        // 🛡️ CONFIGURATION
+        // 🔐 RBAC v9.12
         // ============================================================
+        var LEGACY_ROLE_MAP = {
+            'super_admin': 'admin',
+            'مسؤول': 'admin',
+            'مدير': 'manager',
+            'محرر': 'editor',
+            'مشغل': 'maintenance_unit',
+            'operator': 'maintenance_unit',
+            'user': 'viewer',
+            'مشاهد': 'viewer'
+        };
 
+        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
+
+        function normalizeRole(role) {
+            if (!role) return 'viewer';
+            var r = String(role).trim();
+            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
+            return LEGACY_ROLE_MAP[r] || 'viewer';
+        }
+
+        // ✅ هذه الصفحة admin فقط
+        function isAdmin() {
+            var u = window.currentUser;
+            if (!u) return false;
+            return normalizeRole(u.role) === 'admin';
+        }
+
+        // ============================================================
+        // 📦 CONFIGURATION
+        // ============================================================
         var CONFIG = {
             API_BASE: '/api',
-            STORAGE_KEY: 'marine_settings_v14_cache',
-            MAX_LOGO_SIZE: 2 * 1024 * 1024,
-            MAX_BG_SIZE: 5 * 1024 * 1024,
-            ALLOWED_IMAGE_TYPES: ['image/png', 'image/jpeg', 'image/webp'],
-            REQUEST_TIMEOUT: 15000,
-            SESSION_MIN: 5,
-            SESSION_MAX: 480,
-            DEFAULT_SETTINGS: {
-                theme: { primary: '#0a1628', secondary: '#1a2a4a', gold: '#e6b31e' },
-                layout: { darkMode: true, fontSize: 'medium', sidebarPosition: 'right', showStats: true },
-                security: { twoFactorAuth: false, emailNotifications: true, smsNotifications: false, sessionTimeout: 60 },
-                notifications: { emergencyAlerts: true, maintenanceAlerts: true, performanceReports: 'weekly' },
-                branding: { logoSize: 'medium' }
-            }
+            REQUEST_TIMEOUT: 15000
         };
 
         // ============================================================
-        // ⏰ SAFE UPDATE DATE TIME — v9.1 TRACKED
+        // 🔧 HELPERS
         // ============================================================
-
-        function safeUpdateDateTime() {
-            if (_isDestroyed) return;  // ✅ v9.1
-            try {
-                var dateEl = document.getElementById('currentDate');
-                var timeEl = document.getElementById('currentTime');
-
-                if (!dateEl && !timeEl) return;
-
-                var now = new Date();
-
-                if (dateEl) {
-                    dateEl.textContent = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                }
-
-                if (timeEl) {
-                    timeEl.textContent = now.toLocaleTimeString('ar-TN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                }
-            } catch (e) {
-                // 🔇 Silent fail
-            }
-        }
-
-        // ✅ v9.1: تتبع الـ interval
-        var _dateTimeIntervalId = setInterval(safeUpdateDateTime, 1000);
-        _pageIntervals.push(_dateTimeIntervalId);
-        setTimeout(safeUpdateDateTime, 50);
-
-        // ============================================================
-        // 🔑 TOKEN MANAGEMENT
-        // ============================================================
+        function $(id) { return document.getElementById(id); }
 
         function getToken() {
-            var token = localStorage.getItem('marine_token') ||
-                        localStorage.getItem('token') ||
-                        sessionStorage.getItem('token');
-
-            if (token) return token;
-
-            try {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    if (cookie.startsWith('marine_session=')) {
-                        return cookie.substring('marine_session='.length);
-                    }
-                    if (cookie.startsWith('token=')) {
-                        return cookie.substring('token='.length);
-                    }
-                }
-            } catch (e) { /* Silent fail */ }
-
-            return null;
+            return localStorage.getItem('marine_token') ||
+                   localStorage.getItem('token') ||
+                   localStorage.getItem('authToken') ||
+                   null;
         }
 
-        function setToken(token) {
-            if (token) {
-                localStorage.setItem('marine_token', token);
-            } else {
-                localStorage.removeItem('marine_token');
-                localStorage.removeItem('token');
-                sessionStorage.removeItem('token');
+        // ✅ v9.12: يستخدم apiFetch إن وُجد
+        function fetcher(url, options) {
+            if (typeof window.apiFetch === 'function') {
+                return window.apiFetch(url, options || {});
             }
-        }
-
-        // ============================================================
-        // 🔐 API SERVICE
-        // ============================================================
-
-        function apiRequest(endpoint, options) {
-            options = options || {};
-            options.headers = options.headers || {};
-            options.credentials = 'include';
-
             var token = getToken();
-            if (token) {
-                options.headers['Authorization'] = 'Bearer ' + token;
-            }
+            var headers = Object.assign({
+                'Accept': 'application/json'
+            }, (options && options.headers) || {});
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            return fetch(url, Object.assign({}, options || {}, {
+                headers: headers,
+                credentials: 'include'
+            }));
+        }
 
-            options.headers['Accept'] = 'application/json';
-
-            var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            if (csrfToken) {
-                options.headers['X-CSRF-Token'] = csrfToken;
-            }
-
-            var url = CONFIG.API_BASE + endpoint;
-
-            return fetch(url, options)
-                .then(function(response) {
-                    if (response.status === 401) {
-                        console.warn('⚠️ Session expired');
-                        if (!_isDestroyed) {
-                            showToast('⏰ انتهت الجلسة، يرجى تسجيل الدخول', 'warning');
-                        }
-                        var id = setTimeout(function() {
-                            if (!_isDestroyed) {
-                                window.location.href = '/';
-                            }
-                        }, 1500);
-                        _pageTimeouts.push(id);
-                        throw new Error('Session expired');
-                    }
-                    return response;
-                });
+        function addSafeListener(el, type, fn) {
+            if (!el) return;
+            el.addEventListener(type, fn);
+            _eventListeners.push({ el: el, type: type, fn: fn });
         }
 
         // ============================================================
         // 🍞 TOAST
         // ============================================================
-
         function showToast(message, type, duration) {
-            if (_isDestroyed) return;  // ✅ v9.1
+            if (_isDestroyed) return;
             type = type || 'info';
             duration = duration || 3500;
 
@@ -1433,189 +1025,391 @@
         }
 
         // ============================================================
+        // 🎛️ APPLY CARD VISIBILITY PER ROLE
+        // ============================================================
+        function applyCardVisibility() {
+            if (_isDestroyed) return;
+
+            // ✅ في v9.12: settings = admin فقط
+            //            إذا لم يكن admin → نخفي كل البطاقات ونظهر رسالة
+            if (!isAdmin()) {
+                document.querySelectorAll('.settings-card').forEach(function(card) {
+                    card.classList.add('hidden');
+                });
+
+                // ✅ أظهر بطاقة "حول التطبيق" فقط
+                var aboutCard = $('aboutCard');
+                if (aboutCard) aboutCard.classList.remove('hidden');
+
+                // ✅ عطّل الأزرار في الأعلى
+                var saveAllBtn = $('saveAllBtn');
+                var resetBtn = $('resetDefaultsBtn');
+                if (saveAllBtn) {
+                    saveAllBtn.disabled = true;
+                    saveAllBtn.title = 'متاح للمسؤول فقط';
+                }
+                if (resetBtn) {
+                    resetBtn.disabled = true;
+                    resetBtn.title = 'متاح للمسؤول فقط';
+                }
+
+                console.log('🔐 Non-admin: cards hidden');
+                return;
+            }
+
+            // ✅ admin: كل شيء ظاهر
+            console.log('👑 Admin: all cards visible');
+        }
+
+        // ============================================================
         // 📊 LOAD SETTINGS
         // ============================================================
-
-        function loadSettings() {
-            if (_isDestroyed) return;  // ✅ v9.1
+        async function loadSettings() {
+            if (_isDestroyed) return;
 
             var token = getToken();
-
             if (!token) {
-                console.warn('⚠️ No token — redirecting');
-                if (!_isDestroyed) {
-                    showToast('⏰ يرجى تسجيل الدخول أولاً', 'warning');
-                }
-                var id = setTimeout(function() {
-                    if (!_isDestroyed) {
-                        window.location.href = '/';
-                    }
-                }, 1500);
-                _pageTimeouts.push(id);
+                console.warn('⚠️ No token');
+                showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+                return;
+            }
+
+            if (!isAdmin()) {
+                console.log('ℹ️ Non-admin: skip settings load');
                 return;
             }
 
             console.log('📡 Loading settings...');
 
-            apiRequest('/settings', { method: 'GET' })
-            .then(function(response) {
+            try {
+                var response = await fetcher('/api/settings', { method: 'GET' });
+
                 if (!response.ok) {
-                    throw new Error('فشل تحميل الإعدادات');
+                    if (response.status === 403) {
+                        throw new Error('ليس لديك صلاحية الوصول للإعدادات');
+                    }
+                    throw new Error('فشل تحميل الإعدادات: ' + response.status);
                 }
-                return response.json();
-            })
-            .then(function(data) {
+
+                var data = await response.json();
+                console.log('✅ Settings loaded:', data);
+
+                if (data && data.settings) {
+                    applySettings(data.settings);
+                }
+
+            } catch (error) {
+                console.error('❌ Load settings error:', error);
                 if (_isDestroyed) return;
-                console.log('✅ Settings loaded successfully');
-                applySettings(data);
-                return data;
-            })
-            .catch(function(error) {
-                if (error.message !== 'Session expired' && !_isDestroyed) {
-                    console.error('❌ Error loading settings:', error.message);
-                    showToast('❌ ' + error.message, 'error');
-                }
-            });
+                showToast('❌ ' + error.message, 'error');
+            }
         }
 
         // ============================================================
-        // 🎨 APPLY SETTINGS
+        // 🎨 APPLY SETTINGS TO UI
         // ============================================================
+        function applySettings(settings) {
+            if (_isDestroyed) return;
+            if (!settings) return;
 
-        function applySettings(data) {
-            if (_isDestroyed) return;  // ✅ v9.1
-            if (!data || !data.settings) return;
-
-            var settings = data.settings;
-
+            // Theme
             if (settings.theme) {
-                var primary = settings.theme.primary || CONFIG.DEFAULT_SETTINGS.theme.primary;
-                var secondary = settings.theme.secondary || CONFIG.DEFAULT_SETTINGS.theme.secondary;
-                var gold = settings.theme.gold || CONFIG.DEFAULT_SETTINGS.theme.gold;
-
-                document.documentElement.style.setProperty('--primary-dark', primary);
-                document.documentElement.style.setProperty('--primary', secondary);
-                document.documentElement.style.setProperty('--secondary', secondary);
-                document.documentElement.style.setProperty('--gold', gold);
-                document.documentElement.style.setProperty('--gold-light', gold);
-                document.documentElement.style.setProperty('--gold-dark', gold);
-            }
-
-            if (settings.layout) {
-                var darkMode = document.getElementById('darkMode');
-                if (darkMode) darkMode.checked = settings.layout.darkMode !== false;
-
-                var fontSize = document.getElementById('fontSize');
-                if (fontSize) fontSize.value = settings.layout.fontSize || 'medium';
-
-                var sidebarPos = document.getElementById('sidebarPosition');
-                if (sidebarPos) sidebarPos.value = settings.layout.sidebarPosition || 'right';
-
-                var showStats = document.getElementById('showStats');
-                if (showStats) showStats.checked = settings.layout.showStats !== false;
-            }
-
-            if (settings.security) {
-                var emailNotif = document.getElementById('emailNotifications');
-                if (emailNotif) emailNotif.checked = settings.security.emailNotifications !== false;
-
-                var smsNotif = document.getElementById('smsNotifications');
-                if (smsNotif) smsNotif.checked = settings.security.smsNotifications === true;
-
-                var sessionTimeout = document.getElementById('sessionTimeout');
-                if (sessionTimeout) {
-                    var timeout = settings.security.sessionTimeout || 60;
-                    sessionTimeout.value = Math.min(Math.max(timeout, 5), 480);
+                var t = settings.theme;
+                if (t.primary) document.documentElement.style.setProperty('--primary-dark', t.primary);
+                if (t.secondary) document.documentElement.style.setProperty('--secondary', t.secondary);
+                if (t.gold) {
+                    document.documentElement.style.setProperty('--gold', t.gold);
+                    document.documentElement.style.setProperty('--gold-light', t.gold);
                 }
             }
 
-            if (settings.notifications) {
-                var emergency = document.getElementById('emergencyAlerts');
-                if (emergency) emergency.checked = settings.notifications.emergencyAlerts !== false;
-
-                var maintenance = document.getElementById('maintenanceAlerts');
-                if (maintenance) maintenance.checked = settings.notifications.maintenanceAlerts !== false;
-
-                var reports = document.getElementById('performanceReports');
-                if (reports) reports.value = settings.notifications.performanceReports || 'weekly';
+            // Layout
+            if (settings.layout) {
+                var el;
+                el = $('darkMode'); if (el) el.checked = settings.layout.darkMode !== false;
+                el = $('fontSize'); if (el) el.value = settings.layout.fontSize || 'medium';
+                el = $('sidebarPosition'); if (el) el.value = settings.layout.sidebarPosition || 'right';
+                el = $('showStats'); if (el) el.checked = settings.layout.showStats !== false;
             }
 
+            // Security
+            if (settings.security) {
+                var el2;
+                el2 = $('emailNotifications'); if (el2) el2.checked = settings.security.emailNotifications !== false;
+                el2 = $('smsNotifications'); if (el2) el2.checked = settings.security.smsNotifications === true;
+                el2 = $('sessionTimeout');
+                if (el2) {
+                    var t2 = settings.security.sessionTimeout || 60;
+                    el2.value = Math.min(Math.max(t2, 5), 480);
+                }
+            }
+
+            // Notifications
+            if (settings.notifications) {
+                var el3;
+                el3 = $('emergencyAlerts'); if (el3) el3.checked = settings.notifications.emergencyAlerts !== false;
+                el3 = $('maintenanceAlerts'); if (el3) el3.checked = settings.notifications.maintenanceAlerts !== false;
+                el3 = $('performanceReports'); if (el3) el3.value = settings.notifications.performanceReports || 'weekly';
+            }
+
+            // Branding
             if (settings.branding) {
-                var logoSize = document.getElementById('logoSize');
-                if (logoSize) logoSize.value = settings.branding.logoSize || 'medium';
+                var el4 = $('logoSize');
+                if (el4) el4.value = settings.branding.logoSize || 'medium';
             }
         }
 
         // ============================================================
-        // 🔗 SAFE EVENT LISTENER HELPER (v9.1)
+        // 💾 COLLECT SETTINGS FROM UI
         // ============================================================
+        function collectSettings() {
+            var settings = {};
 
-        function addSafeListener(el, type, fn) {
-            if (!el) return;
-            el.addEventListener(type, fn);
-            _eventListeners.push({ el: el, type: type, fn: fn });
+            // Theme
+            var activeTheme = document.querySelector('#colorPicker .color-option.active');
+            var activeGold = document.querySelector('#goldColorPicker .color-option.active');
+
+            settings.theme = {
+                primary: activeTheme ? activeTheme.dataset.primary : '#0a1628',
+                secondary: activeTheme ? activeTheme.dataset.secondary : '#1a2a4a',
+                gold: activeGold ? activeGold.dataset.gold : '#e6b31e'
+            };
+
+            // Layout
+            settings.layout = {
+                darkMode: $('darkMode') ? $('darkMode').checked : true,
+                fontSize: $('fontSize') ? $('fontSize').value : 'medium',
+                sidebarPosition: $('sidebarPosition') ? $('sidebarPosition').value : 'right',
+                showStats: $('showStats') ? $('showStats').checked : true
+            };
+
+            // Security
+            settings.security = {
+                emailNotifications: $('emailNotifications') ? $('emailNotifications').checked : true,
+                smsNotifications: $('smsNotifications') ? $('smsNotifications').checked : false,
+                sessionTimeout: $('sessionTimeout') ? Math.min(Math.max(parseInt($('sessionTimeout').value) || 60, 5), 480) : 60
+            };
+
+            // Notifications
+            settings.notifications = {
+                emergencyAlerts: $('emergencyAlerts') ? $('emergencyAlerts').checked : true,
+                maintenanceAlerts: $('maintenanceAlerts') ? $('maintenanceAlerts').checked : true,
+                performanceReports: $('performanceReports') ? $('performanceReports').value : 'weekly'
+            };
+
+            // Branding
+            settings.branding = {
+                logoSize: $('logoSize') ? $('logoSize').value : 'medium'
+            };
+
+            return settings;
+        }
+
+        // ============================================================
+        // 💾 SAVE SETTINGS
+        // ============================================================
+        async function saveSettings() {
+            if (_isDestroyed) return;
+
+            if (!isAdmin()) {
+                showToast('⚠️ ليس لديك صلاحية الحفظ', 'error');
+                return;
+            }
+
+            var settings = collectSettings();
+
+            try {
+                var response = await fetcher('/api/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+
+                if (!response.ok) {
+                    var errData = null;
+                    try { errData = await response.json(); } catch (_) {}
+                    throw new Error(
+                        (errData && (errData.error || errData.message)) ||
+                        'فشل الحفظ'
+                    );
+                }
+
+                showToast('✅ تم حفظ الإعدادات', 'success');
+
+                // ✅ تطبيق فوري على DOM
+                applySettings(settings);
+
+            } catch (error) {
+                console.error('❌ Save error:', error);
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        // ============================================================
+        // 🖼️ PREVIEW THEME
+        // ============================================================
+        function updatePreview() {
+            var activeTheme = document.querySelector('#colorPicker .color-option.active');
+            var activeGold = document.querySelector('#goldColorPicker .color-option.active');
+
+            var pv = $('previewPrimary');
+            var sv = $('previewSecondary');
+            var gv = $('previewGold');
+            var cv = $('previewColors');
+
+            if (activeTheme && pv) pv.style.background = activeTheme.dataset.primary;
+            if (activeTheme && sv) sv.style.background = activeTheme.dataset.secondary;
+            if (activeGold && gv) gv.style.background = activeGold.dataset.gold;
+            if (activeTheme && activeGold && cv) {
+                cv.textContent = (activeTheme.dataset.primary || '') + ' • ' +
+                                 (activeTheme.dataset.secondary || '') + ' • ' +
+                                 (activeGold.dataset.gold || '');
+            }
         }
 
         // ============================================================
         // 🚀 INIT
         // ============================================================
-
         function init() {
-            if (_isDestroyed) return;  // ✅ v9.1
-            console.log('⚙️ Settings Page v14.1 — Military-Grade loading...');
+            if (_isDestroyed) return;
 
-            var token = getToken();
+            console.log('🚀 Settings v9.12 initializing...');
+            console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
+            console.log('👑 isAdmin:', isAdmin());
 
-            if (token) {
-                var id1 = setTimeout(function() {
-                    if (!_isDestroyed) loadSettings();
-                }, 100);
-                _pageTimeouts.push(id1);
-            } else {
-                console.warn('⚠️ No token — please login');
-                if (!_isDestroyed) {
-                    showToast('⏰ يرجى تسجيل الدخول للوصول إلى الإعدادات', 'warning');
-                }
-                var id2 = setTimeout(function() {
-                    if (!_isDestroyed) {
-                        window.location.href = '/';
-                    }
-                }, 2000);
-                _pageTimeouts.push(id2);
+            // ✅ تطبيق رؤية البطاقات أولاً
+            applyCardVisibility();
+
+            // ✅ تحميل الإعدادات إن كان admin
+            if (isAdmin()) {
+                loadSettings();
             }
 
-            // ✅ Event listeners with tracking
-            var refreshBtn = document.getElementById('refreshBtn');
-            addSafeListener(refreshBtn, 'click', function() {
-                if (_isDestroyed) return;
+            // ✅ Color pickers
+            document.querySelectorAll('#colorPicker .color-option').forEach(function(btn) {
+                addSafeListener(btn, 'click', function() {
+                    document.querySelectorAll('#colorPicker .color-option').forEach(function(b) {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
+                    this.classList.add('active');
+                    this.setAttribute('aria-pressed', 'true');
+                    updatePreview();
+                });
+            });
+
+            document.querySelectorAll('#goldColorPicker .color-option').forEach(function(btn) {
+                addSafeListener(btn, 'click', function() {
+                    document.querySelectorAll('#goldColorPicker .color-option').forEach(function(b) {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-pressed', 'false');
+                    });
+                    this.classList.add('active');
+                    this.setAttribute('aria-pressed', 'true');
+                    updatePreview();
+                });
+            });
+
+            // ✅ Preview initial
+            updatePreview();
+
+            // ✅ أزرار الحفظ
+            addSafeListener($('saveAllBtn'), 'click', function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ متاح للمسؤول فقط', 'error');
+                    return;
+                }
+                saveSettings();
+            });
+
+            addSafeListener($('saveThemeBtn'), 'click', function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ متاح للمسؤول فقط', 'error');
+                    return;
+                }
+                saveSettings();
+            });
+
+            addSafeListener($('saveLayoutBtn'), 'click', function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ متاح للمسؤول فقط', 'error');
+                    return;
+                }
+                saveSettings();
+            });
+
+            addSafeListener($('saveSecurityBtn'), 'click', function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ متاح للمسؤول فقط', 'error');
+                    return;
+                }
+                saveSettings();
+            });
+
+            addSafeListener($('saveNotificationsBtn'), 'click', function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ متاح للمسؤول فقط', 'error');
+                    return;
+                }
+                saveSettings();
+            });
+
+            addSafeListener($('saveLogoBtn'), 'click', function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ متاح للمسؤول فقط', 'error');
+                    return;
+                }
+                saveSettings();
+            });
+
+            // ✅ زر التحديث
+            addSafeListener($('refreshBtn'), 'click', function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ متاح للمسؤول فقط', 'error');
+                    return;
+                }
+                showToast('🔄 جاري التحديث...', 'info');
                 loadSettings();
-                showToast('🔄 جاري تحديث الإعدادات...', 'info');
             });
 
-            var saveThemeBtn = document.getElementById('saveThemeBtn');
-            addSafeListener(saveThemeBtn, 'click', function() {
-                if (_isDestroyed) return;
-                showToast('✅ تم تطبيق المظهر', 'success');
+            // ✅ استعادة الافتراضي
+            addSafeListener($('resetDefaultsBtn'), 'click', function() {
+                if (!isAdmin()) {
+                    showToast('⚠️ متاح للمسؤول فقط', 'error');
+                    return;
+                }
+                if (!confirm('⚠️ هل أنت متأكد من استعادة الإعدادات الافتراضية؟')) return;
+
+                fetcher('/api/settings/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('فشل الاستعادة');
+                    return r.json();
+                })
+                .then(function() {
+                    showToast('✅ تم استعادة الإعدادات الافتراضية', 'success');
+                    setTimeout(function() { loadSettings(); }, 500);
+                })
+                .catch(function(err) {
+                    showToast('❌ ' + err.message, 'error');
+                });
             });
 
-            var saveAllBtn = document.getElementById('saveAllBtn');
-            addSafeListener(saveAllBtn, 'click', function() {
-                if (_isDestroyed) return;
-                showToast('✅ تم حفظ جميع الإعدادات', 'success');
-            });
+            console.log('✅ Settings v9.12 ready');
         }
 
         // ============================================================
         // 🏁 BOOT
         // ============================================================
-
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
                 var id = setTimeout(function() {
                     if (!_isDestroyed) init();
                 }, 50);
                 _pageTimeouts.push(id);
-            });
+            }, { once: true });
         } else {
             var id0 = setTimeout(function() {
                 if (!_isDestroyed) init();
@@ -1626,16 +1420,9 @@
         // ============================================================
         // 🌐 EXPOSE
         // ============================================================
-
         window.loadSettings = loadSettings;
         window.getToken = getToken;
         window.showToast = showToast;
-        window.safeUpdateDateTime = safeUpdateDateTime;
-
-        console.log('✅ Settings Page v14.1 — Military-Grade ready');
-        console.log('🔒 Security: HttpOnly Cookies + CSRF');
-        console.log('🛡️ RBAC: Fail-Closed');
-        console.log('🔐 2FA: QR Code + TOTP');
 
     })();
     </script>
