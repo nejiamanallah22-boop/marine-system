@@ -2,7 +2,7 @@
 <div id="page-maintenance">
     <style>
         /* ============================================================
-           🔧 MAINTENANCE - ENTERPRISE PRO v9.12
+           🔧 MAINTENANCE - ENTERPRISE PRO v9.13
            ============================================================ */
 
         :root {
@@ -1096,9 +1096,7 @@
         }
     </style>
 
-    <!-- ============================================================
-    HEADER
-    ============================================================ -->
+    <!-- HEADER -->
     <div class="maint-header">
         <div class="maint-header-left">
             <div class="header-icon"><i class="fas fa-tools"></i></div>
@@ -1114,9 +1112,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    STATS CARDS
-    ============================================================ -->
+    <!-- STATS CARDS -->
     <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
             <div class="stat-top">
@@ -1179,9 +1175,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    DAMAGED VESSELS SECTION
-    ============================================================ -->
+    <!-- DAMAGED VESSELS -->
     <div class="damaged-section" id="damagedSection">
         <div class="damaged-header">
             <h3><i class="fas fa-exclamation-triangle"></i> 🚨 المراكب المعطبة - تحتاج صيانة عاجلة</h3>
@@ -1213,9 +1207,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    FILTER BAR
-    ============================================================ -->
+    <!-- FILTER BAR -->
     <div class="filter-bar">
         <label><i class="fas fa-search"></i> بحث</label>
         <input type="text" id="searchMaint" placeholder="المركب، العطب، الفني..." />
@@ -1228,7 +1220,7 @@
         <label><i class="fas fa-circle"></i> الحالة</label>
         <select id="statusFilter">
             <option value="الكل">📊 جميع الحالات</option>
-            <option value="قيد الإنجاز">🔄 قيد الإنجاز</option>
+            <option value="قيد التنفيذ">🔄 قيد التنفيذ</option>
             <option value="مكتملة">✅ مكتملة</option>
             <option value="ملغية">❌ ملغية</option>
             <option value="معطب">🟥 معطب</option>
@@ -1238,9 +1230,7 @@
         <button class="btn-filter outline" id="resetBtn"><i class="fas fa-undo-alt"></i> إلغاء</button>
     </div>
 
-    <!-- ============================================================
-    MAIN TABLE
-    ============================================================ -->
+    <!-- MAIN TABLE -->
     <div class="table-wrapper">
         <div class="table-header">
             <h3><i class="fas fa-list-ul"></i> قائمة مهام الصيانة</h3>
@@ -1273,9 +1263,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    MODAL
-    ============================================================ -->
+    <!-- MODAL -->
     <div class="maint-modal" id="maintenanceModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1286,14 +1274,11 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    JAVASCRIPT - v9.12
-    ============================================================ -->
     <script>
         (function() {
             'use strict';
 
-            console.log('🔧 Maintenance Page v9.12 - loading...');
+            console.log('🔧 Maintenance Page v9.13 - loading...');
 
             // ============================================================
             // ✅ CLEANUP STATE
@@ -1303,7 +1288,6 @@
             function _maintenanceCleanup() {
                 if (_isDestroyed) return;
                 _isDestroyed = true;
-
                 try {
                     delete window.openAddMaintenance;
                     delete window.openEditModal;
@@ -1315,18 +1299,16 @@
                     delete window.refreshMaintenance;
                     delete window.resetFilters;
                 } catch (e) {}
-
-                console.log('🧹 Maintenance v9.12 cleanup done');
+                console.log('🧹 Maintenance v9.13 cleanup done');
             }
 
             window._pageCleanup = window._pageCleanup || [];
             window._pageCleanup.push(_maintenanceCleanup);
-
             window.addEventListener('beforeunload', _maintenanceCleanup);
             window.addEventListener('pagehide', _maintenanceCleanup);
 
             // ============================================================
-            // 🔐 RBAC v9.12 — توحيد الأدوار
+            // 🔐 RBAC v9.13
             // ============================================================
             var LEGACY_ROLE_MAP = {
                 'super_admin': 'admin',
@@ -1338,7 +1320,6 @@
                 'user': 'viewer',
                 'مشاهد': 'viewer'
             };
-
             var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
 
             function normalizeRole(role) {
@@ -1348,7 +1329,6 @@
                 return LEGACY_ROLE_MAP[r] || 'viewer';
             }
 
-            // ✅ إضافة/تعديل صيانة: admin + manager + editor + maintenance_unit
             function canCreateMaintenance() {
                 if (window.capabilities && typeof window.capabilities.canCreateMaintenance === 'boolean') {
                     return window.capabilities.canCreateMaintenance;
@@ -1359,7 +1339,6 @@
                 return ['admin', 'manager', 'editor', 'maintenance_unit'].indexOf(r) !== -1;
             }
 
-            // ✅ حذف صيانة: admin + manager فقط
             function canDeleteMaintenance() {
                 if (window.capabilities && typeof window.capabilities.canDeleteMaintenance === 'boolean') {
                     return window.capabilities.canDeleteMaintenance;
@@ -1371,6 +1350,43 @@
             }
 
             // ============================================================
+            // 🔥 v9.13: خريطة توحيد الحالات — الحل الجذري للمشكلة
+            // ============================================================
+            // ✅ الحالات المقبولة في السيرفر (models/Maintenance.js):
+            //    'معلقة', 'قيد التنفيذ', 'مكتملة', 'ملغاة', 'متأخرة',
+            //    'قيد الانتظار'
+            //
+            // ✅ الحالات المُستخدمة في الواجهة:
+            //    'قيد الإنجاز' → تُحوَّل إلى 'قيد التنفيذ'
+            // ============================================================
+
+            function normalizeStatusForServer(status) {
+                if (!status) return 'قيد التنفيذ';
+                var s = String(status).trim();
+
+                // الحالات المسموحة في السيرفر — تُرسل كما هي
+                var ALLOWED = [
+                    'معلقة', 'قيد التنفيذ', 'مكتملة', 'ملغاة', 'متأخرة',
+                    'قيد الانتظار'
+                ];
+                if (ALLOWED.indexOf(s) !== -1) return s;
+
+                // تحويل الحالات من الواجهة إلى ما يقبله السيرفر
+                var MAP = {
+                    'قيد الإنجاز': 'قيد التنفيذ',
+                    'جاري':        'قيد التنفيذ',
+                    'in-progress': 'قيد التنفيذ',
+                    'completed':   'مكتملة',
+                    'cancelled':   'ملغاة',
+                    'overdue':     'متأخرة',
+                    'pending':     'قيد الانتظار',
+                    'معطب':        'متأخرة'
+                };
+
+                return MAP[s] || 'قيد التنفيذ';
+            }
+
+            // ============================================================
             // 📦 DATA
             // ============================================================
             var maintenanceData = [];
@@ -1378,7 +1394,7 @@
             var allVessels = [];
 
             // ============================================================
-            // 🔑 TOKEN FUNCTIONS
+            // 🔑 TOKEN
             // ============================================================
             function getToken() {
                 return localStorage.getItem('marine_token') ||
@@ -1395,7 +1411,6 @@
                 };
                 if (token) h['Authorization'] = 'Bearer ' + token;
 
-                // ✅ CSRF للطلبات غير GET
                 try {
                     var cookies = document.cookie.split('; ');
                     for (var i = 0; i < cookies.length; i++) {
@@ -1409,7 +1424,6 @@
                 return h;
             }
 
-            // ✅ استخدم apiFetch إن وُجد (من index.html v9.12)
             function fetcher(url, options) {
                 if (typeof window.apiFetch === 'function') {
                     return window.apiFetch(url, options || {});
@@ -1468,7 +1482,7 @@
                     n.style.transform = 'translateY(20px)';
                     n.style.transition = 'all 0.4s';
                     setTimeout(function() { n.remove(); }, 400);
-                }, 2500);
+                }, 3000);
             }
 
             // ============================================================
@@ -1490,19 +1504,14 @@
             }
 
             // ============================================================
-            // 📥 LOAD MAINTENANCE (v9.12 - المسار الصحيح)
+            // 📥 LOAD MAINTENANCE
             // ============================================================
             async function loadMaintenance() {
                 try {
                     var token = getToken();
-                    if (!token) {
-                        console.warn('⚠️ لا يوجد توكن');
-                        return [];
-                    }
+                    if (!token) return [];
 
-                    console.log('📡 جلب بيانات الصيانة من /api/maintenance-logs...');
-
-                    // ✅ المسار الصحيح
+                    console.log('📡 جلب بيانات الصيانة...');
                     var response = await fetcher('/api/maintenance-logs', { method: 'GET' });
 
                     if (!response.ok) {
@@ -1514,25 +1523,23 @@
                     var data = await response.json();
                     console.log('📦 البيانات المستلمة:', data);
 
-                    // ✅ استخراج السجلات بأمان
                     var records = [];
-
                     if (Array.isArray(data)) {
                         records = data;
                     } else if (data && typeof data === 'object') {
-                        if (data.records && Array.isArray(data.records)) {
-                            records = data.records;
-                        } else if (data.data && Array.isArray(data.data)) {
-                            records = data.data;
-                        } else if (data.logs && Array.isArray(data.logs)) {
-                            records = data.logs;
-                        } else if (data.maintenance && Array.isArray(data.maintenance)) {
-                            records = data.maintenance;
-                        }
+                        if (data.records && Array.isArray(data.records)) records = data.records;
+                        else if (data.data && Array.isArray(data.data)) records = data.data;
+                        else if (data.logs && Array.isArray(data.logs)) records = data.logs;
+                        else if (data.maintenance && Array.isArray(data.maintenance)) records = data.maintenance;
                     }
 
-                    // ✅ تحويل البيانات إلى الشكل المطلوب للواجهة
                     maintenanceData = records.map(function(r) {
+                        var rawStatus = r.status || 'قيد التنفيذ';
+                        // ✅ تحويل الحالات من السيرفر إلى صيغة موحدة للعرض
+                        var displayStatus = rawStatus;
+                        if (rawStatus === 'قيد التنفيذ') displayStatus = 'قيد الإنجاز';
+                        else if (rawStatus === 'متأخرة') displayStatus = 'معطب';
+
                         return {
                             id: r.id || r._id || 'id_' + Date.now(),
                             vesselId: r.vesselId || '',
@@ -1540,7 +1547,8 @@
                             damage: r.type || r.damage || 'عطل غير محدد',
                             technician: r.repairUnit || r.unit || r.technician || 'غير محدد',
                             date: r.date || r.startDate || r.createdAt || new Date().toISOString(),
-                            status: r.status || 'قيد الإنجاز',
+                            status: displayStatus,
+                            statusRaw: rawStatus,
                             cost: parseFloat(r.cost || 0),
                             parts: r.parts || r.spareParts || [],
                             history: r.history || [],
@@ -1601,7 +1609,7 @@
             }
 
             // ============================================================
-            // 🚨 RENDER DAMAGED VESSELS
+            // 🚨 RENDER DAMAGED
             // ============================================================
             function renderDamagedVessels() {
                 var damagedVessels = maintenanceData.filter(function(r) {
@@ -1651,7 +1659,7 @@
             }
 
             // ============================================================
-            // 📅 GET YEARS
+            // 📅 YEARS
             // ============================================================
             function getYears() {
                 var years = new Set();
@@ -1675,7 +1683,7 @@
             }
 
             // ============================================================
-            // 📋 RENDER MAIN TABLE
+            // 📋 RENDER TABLE
             // ============================================================
             function renderTable() {
                 var searchEl = document.getElementById('searchMaint');
@@ -1781,6 +1789,7 @@
                                 technician: 'غير محدد',
                                 date: v.fDate || new Date().toISOString(),
                                 status: 'معطب',
+                                statusRaw: 'متأخرة',
                                 cost: 0,
                                 parts: [],
                                 history: [{ action: 'تم إضافة المركب تلقائياً', date: new Date().toISOString() }],
@@ -1869,10 +1878,6 @@
                         '<label>📝 وصف العطب</label>' +
                         '<textarea id="mDescription" placeholder="تفاصيل العطب..."></textarea>' +
                     '</div>' +
-                    '<div class="form-group">' +
-                        '<label>🔧 قطع الغيار (افصل بينها بفاصلة)</label>' +
-                        '<input type="text" id="mParts" placeholder="مثال: محرك, مضخة, بطارية">' +
-                    '</div>' +
                     '<div class="modal-footer">' +
                         '<button class="btn-submit primary" onclick="saveMaintenance()"><i class="fas fa-save"></i> حفظ</button>' +
                         '<button class="btn-submit secondary" onclick="closeModal()">إلغاء</button>' +
@@ -1899,10 +1904,6 @@
                     var selected = vid == record.vesselId ? 'selected' : '';
                     vesselOptions += '<option value="' + vid + '" ' + selected + '>' + escapeHtml(v.name || '') + '</option>';
                 });
-
-                var partsText = (record.parts || []).map(function(p) {
-                    return typeof p === 'string' ? p : (p.name || p);
-                }).join(', ');
 
                 var modalBody = document.getElementById('modalBody');
                 if (!modalBody) return;
@@ -1935,16 +1936,13 @@
                         '<textarea id="mDescription">' + escapeHtml(record.description || '') + '</textarea>' +
                     '</div>' +
                     '<div class="form-group">' +
-                        '<label>🔧 قطع الغيار (افصل بينها بفاصلة)</label>' +
-                        '<input type="text" id="mParts" value="' + escapeHtml(partsText) + '" placeholder="مثال: محرك, مضخة, بطارية">' +
-                    '</div>' +
-                    '<div class="form-group">' +
                         '<label>📊 الحالة</label>' +
                         '<select id="mStatus">' +
-                            '<option value="قيد الإنجاز" ' + (record.status === 'قيد الإنجاز' ? 'selected' : '') + '>🔄 قيد الإنجاز</option>' +
+                            '<option value="قيد التنفيذ" ' + (record.statusRaw === 'قيد التنفيذ' || record.status === 'قيد الإنجاز' ? 'selected' : '') + '>🔄 قيد التنفيذ</option>' +
                             '<option value="مكتملة" ' + (record.status === 'مكتملة' ? 'selected' : '') + '>✅ مكتملة</option>' +
-                            '<option value="ملغية" ' + (record.status === 'ملغية' ? 'selected' : '') + '>❌ ملغية</option>' +
+                            '<option value="ملغاة" ' + (record.status === 'ملغية' ? 'selected' : '') + '>❌ ملغاة</option>' +
                             '<option value="قيد الانتظار" ' + (record.status === 'قيد الانتظار' ? 'selected' : '') + '>⏳ قيد الانتظار</option>' +
+                            '<option value="متأخرة" ' + (record.status === 'معطب' ? 'selected' : '') + '>🚨 متأخرة</option>' +
                         '</select>' +
                     '</div>' +
                     '<div class="modal-footer">' +
@@ -1957,7 +1955,7 @@
             }
 
             // ============================================================
-            // 💾 SAVE MAINTENANCE (v9.12 - المسار + الحقول الصحيحة)
+            // 💾 SAVE MAINTENANCE — v9.13 (الإصلاح الجذري)
             // ============================================================
             function saveMaintenance() {
                 if (!canCreateMaintenance()) {
@@ -1971,7 +1969,6 @@
                 var dateEl = document.getElementById('mDate');
                 var costEl = document.getElementById('mCost');
                 var descEl = document.getElementById('mDescription');
-                var partsEl = document.getElementById('mParts');
                 var statusEl = document.getElementById('mStatus');
 
                 if (!vesselIdEl || !damageEl) return;
@@ -1982,8 +1979,7 @@
                 var date = dateEl ? dateEl.value : '';
                 var cost = parseFloat(costEl ? costEl.value : 0) || 0;
                 var description = descEl ? descEl.value.trim() : '';
-                var partsInput = partsEl ? partsEl.value.trim() : '';
-                var status = statusEl ? statusEl.value : 'قيد الإنجاز';
+                var rawStatus = statusEl ? statusEl.value : 'قيد التنفيذ';
 
                 if (!vesselId) { showToast('⚠️ يرجى اختيار المركب', 'error'); return; }
                 if (!damage) { showToast('⚠️ يرجى إدخال نوع العطب', 'error'); return; }
@@ -1991,16 +1987,18 @@
                 var vessel = allVessels.find(function(v) { return (v._id || v.id) == vesselId; });
                 var vesselName = vessel ? vessel.name : 'مركب غير معروف';
 
-                // ✅ v9.12: الحقول الصحيحة التي يتوقعها server.js
+                // ✅ v9.13: تحويل الحالة إلى ما يقبله السيرفر
+                var serverStatus = normalizeStatusForServer(rawStatus);
+
                 var data = {
                     vesselId: vesselId,
                     vesselName: vesselName,
-                    type: damage,                              // ✅
-                    status: status,
+                    type: damage,
+                    status: serverStatus,                       // ✅ القيمة المحوّلة
                     date: date || new Date().toISOString(),
-                    repairUnit: technician || 'غير محدد',      // ✅
+                    repairUnit: technician || 'غير محدد',
                     cost: cost,
-                    notes: description                         // ✅
+                    notes: description
                 };
 
                 var token = getToken();
@@ -2011,13 +2009,13 @@
                 }
 
                 var method = currentEditId ? 'PUT' : 'POST';
-
-                // ✅ v9.12: المسار الصحيح
                 var url = currentEditId
                     ? '/api/maintenance-logs/' + currentEditId
                     : '/api/maintenance-logs';
 
                 console.log('📤 إرسال إلى:', method, url);
+                console.log('📦 البيانات المُرسلة:', data);
+                console.log('🔄 تحويل الحالة:', rawStatus, '→', serverStatus);
 
                 fetcher(url, {
                     method: method,
@@ -2027,25 +2025,25 @@
                 .then(function(response) {
                     if (!response.ok) {
                         return response.json().then(function(err) {
-                            throw new Error(err.error || 'فشل حفظ البيانات');
+                            throw new Error(err.error || err.details || 'فشل حفظ البيانات (' + response.status + ')');
                         });
                     }
                     return response.json();
                 })
                 .then(function(res) {
-                    console.log('✅ استجابة:', res);
+                    console.log('✅ استجابة السيرفر:', res);
                     closeModal();
                     refreshMaintenance();
-                    showToast(currentEditId ? '✅ تم تحديث المهمة' : '✅ تم إضافة المهمة', 'success');
+                    showToast(currentEditId ? '✅ تم تحديث المهمة' : '✅ تم إضافة المهمة بنجاح', 'success');
                 })
                 .catch(function(error) {
-                    console.error('❌ Save error:', error);
-                    showToast('❌ خطأ: ' + error.message, 'error');
+                    console.error('❌ خطأ الحفظ:', error);
+                    showToast('❌ ' + error.message, 'error');
                 });
             }
 
             // ============================================================
-            // ✅ COMPLETE MAINTENANCE (v9.12 - المسار الصحيح)
+            // ✅ COMPLETE MAINTENANCE
             // ============================================================
             function completeMaintenance(id) {
                 if (!confirm('✅ هل تريد إكمال هذه المهمة؟')) return;
@@ -2056,7 +2054,6 @@
                     return;
                 }
 
-                // ✅ v9.12: المسار الصحيح
                 fetcher('/api/maintenance-logs/' + id, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -2075,12 +2072,12 @@
                     showToast('✅ تم إكمال المهمة', 'success');
                 })
                 .catch(function(error) {
-                    showToast('❌ خطأ: ' + error.message, 'error');
+                    showToast('❌ ' + error.message, 'error');
                 });
             }
 
             // ============================================================
-            // 🗑️ DELETE MAINTENANCE (v9.12 - المسار الصحيح)
+            // 🗑️ DELETE MAINTENANCE
             // ============================================================
             function deleteMaintenance(id) {
                 if (!canDeleteMaintenance()) {
@@ -2096,7 +2093,6 @@
                     return;
                 }
 
-                // ✅ v9.12: المسار الصحيح
                 fetcher('/api/maintenance-logs/' + id, {
                     method: 'DELETE'
                 })
@@ -2113,7 +2109,7 @@
                     showToast('✅ تم حذف المهمة', 'success');
                 })
                 .catch(function(error) {
-                    showToast('❌ خطأ: ' + error.message, 'error');
+                    showToast('❌ ' + error.message, 'error');
                 });
             }
 
@@ -2139,25 +2135,6 @@
                 }
                 historyHtml += '</div>';
 
-                var parts = record.parts || [];
-                var partsHtml = '';
-                if (parts.length > 0) {
-                    partsHtml = '<div style="margin:12px 0;">' +
-                        '<label style="font-size:0.75rem;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;">🔧 قطع الغيار المستخدمة:</label>' +
-                        '<div class="parts-list">';
-                    parts.forEach(function(p) {
-                        var name = typeof p === 'string' ? p : (p.name || p);
-                        var qty = typeof p === 'string' ? 1 : (p.qty || 1);
-                        var cost = typeof p === 'string' ? 0 : (p.cost || 0);
-                        partsHtml += '<div class="part-item">' +
-                            '<span class="part-name">' + escapeHtml(name) + '</span>' +
-                            '<span class="part-qty">الكمية: ' + qty + '</span>' +
-                            '<span class="part-cost">' + (cost ? cost.toFixed(2) + ' د.ت' : '') + '</span>' +
-                        '</div>';
-                    });
-                    partsHtml += '</div></div>';
-                }
-
                 var modalBody = document.getElementById('modalBody');
                 var titleEl = document.getElementById('modalTitle');
                 if (!modalBody) return;
@@ -2172,7 +2149,6 @@
                             '<div><strong style="color:#fff;">💰 التكلفة:</strong> <span style="color:#f5c842;">' + (record.cost ? record.cost.toFixed(2) + ' د.ت' : '0.00 د.ت') + '</span></div>' +
                             '<div><strong style="color:#fff;">📊 الحالة:</strong> <span class="status-badge ' + (record.status === 'مكتملة' ? 'completed' : (record.status === 'معطب' ? 'damaged' : 'active')) + '">' + (record.status || 'قيد الإنجاز') + '</span></div>' +
                         '</div>' +
-                        partsHtml +
                         (record.description ? '<div style="margin-top:6px;font-size:0.8rem;color:rgba(255,255,255,0.4);">📝 ' + escapeHtml(record.description) + '</div>' : '') +
                     '</div>' +
                     '<hr style="border-color:rgba(255,255,255,0.04);margin:12px 0;">' +
@@ -2202,7 +2178,10 @@
             // ============================================================
             async function init() {
                 if (_isDestroyed) return;
-                console.log('🚀 Initializing Maintenance v9.12...');
+                console.log('🚀 Initializing Maintenance v9.13...');
+                console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
+                console.log('🔐 canCreate:', canCreateMaintenance());
+                console.log('🔐 canDelete:', canDeleteMaintenance());
 
                 try {
                     await loadVessels();
@@ -2225,6 +2204,7 @@
                                 technician: 'غير محدد',
                                 date: v.fDate || new Date().toISOString(),
                                 status: 'معطب',
+                                statusRaw: 'متأخرة',
                                 cost: 0,
                                 parts: [],
                                 history: [{ action: 'تم إضافة المركب تلقائياً', date: new Date().toISOString() }],
@@ -2269,7 +2249,7 @@
                         if (e.target === this) closeModal();
                     });
 
-                    console.log('✅ Maintenance v9.12 ready');
+                    console.log('✅ Maintenance v9.13 ready');
                     console.log('🔧 ' + maintenanceData.length + ' tasks');
                     console.log('🚨 ' + damagedVessels.length + ' damaged vessels');
 
