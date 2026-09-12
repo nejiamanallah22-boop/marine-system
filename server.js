@@ -1,30 +1,18 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.14
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.15
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
-// ✨ v9.14 changes vs v9.13:
-//    - ✅ FIXED: PUT /api/vessels/:id (accepts _id OR id)
-//    - ✅ FIXED: DELETE /api/vessels/:id
-//    - ✅ FIXED: PUT /api/maintenance-logs/:id
-//    - ✅ FIXED: DELETE /api/maintenance-logs/:id
-//    - ✅ FIXED: PUT /api/users/:id
-//    - ✅ FIXED: DELETE /api/users/:id
-//    - ✅ FIXED: PUT /api/users-status/:id
 // ============================================================
 
 'use strict';
 
 require('dotenv').config();
 
-// ============================================================
-// 🔍 SMART MODEL RESOLUTION
-// ============================================================
-
 const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.14 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.15 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -40,24 +28,19 @@ function findModelsPath() {
         '/opt/render/project/models',
         './models'
     ];
-
     const REQUIRED_FILES = ['index.js', 'User.js', 'Vessel.js', 'Maintenance.js'];
-
     for (const candidate of candidates) {
         try {
             const resolved = path.resolve(candidate);
             if (!fs.existsSync(resolved)) continue;
-
             const files = fs.readdirSync(resolved);
             const hasAllRequired = REQUIRED_FILES.every(f => files.includes(f));
-
             if (hasAllRequired) {
                 console.log(`✅ Models found at: ${resolved}`);
                 return resolved;
             }
         } catch (e) {}
     }
-
     return null;
 }
 
@@ -67,7 +50,6 @@ function loadModels() {
         console.error('❌❌❌ FATAL: Cannot find models directory!');
         process.exit(1);
     }
-
     try {
         const models = require(modelsPath);
         if (!models.User || !models.Vessel || !models.Maintenance) {
@@ -92,7 +74,6 @@ try {
     Ticket       = models.Ticket;
     Note         = models.Note || null;
     Notification = models.Notification || null;
-
     console.log('📦 Optional models:',
         'Note=' + (Note ? '✅' : '❌'),
         'Notification=' + (Notification ? '✅' : '❌')
@@ -101,10 +82,6 @@ try {
     console.error('❌ Fatal model loading error:', e.message);
     process.exit(1);
 }
-
-// ============================================================
-// 📦 DEPENDENCIES
-// ============================================================
 
 const express = require('express');
 const cors = require('cors');
@@ -127,10 +104,6 @@ try {
     console.warn('⚠️ isomorphic-dompurify غير مثبت');
 }
 
-// ============================================================
-// 🔴 REDIS (OPTIONAL)
-// ============================================================
-
 let redisClient = null;
 let RedisStore = null;
 let redisAvailable = false;
@@ -140,20 +113,16 @@ async function initRedis() {
         console.log('ℹ️ REDIS_URL غير محدد — Memory Store');
         return;
     }
-
     try {
         const { createClient } = require('redis');
         const ConnectRedis = require('connect-redis');
         RedisStore = ConnectRedis.default || ConnectRedis;
-
         redisClient = createClient({
             url: process.env.REDIS_URL,
             socket: { reconnectStrategy: retries => Math.min(retries * 100, 3000) }
         });
-
         redisClient.on('error', err => { redisAvailable = false; });
         redisClient.on('ready', () => { console.log('✅ Redis ready'); redisAvailable = true; });
-
         await redisClient.connect();
         redisAvailable = true;
     } catch (e) {
@@ -163,20 +132,12 @@ async function initRedis() {
     }
 }
 
-// ============================================================
-// 🚀 EXPRESS
-// ============================================================
-
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 
 app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
-
-// ============================================================
-// 🔐 SECRETS
-// ============================================================
 
 function generateSecret(bytes = 64) {
     return crypto.randomBytes(bytes).toString('hex');
@@ -185,7 +146,6 @@ function generateSecret(bytes = 64) {
 if (isProduction) {
     const requiredSecrets = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'SESSION_SECRET'];
     const missing = requiredSecrets.filter(key => !process.env[key] || process.env[key].length < 32);
-
     if (missing.length > 0) {
         console.error('❌ FATAL: Missing secrets:', missing.join(', '));
         process.exit(1);
@@ -201,10 +161,6 @@ const REFRESH_TOKEN_EXPIRES = '7d';
 const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000;
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const CSRF_MAX_AGE = 8 * 60 * 60 * 1000;
-
-// ============================================================
-// 🔑 ADMIN CONFIG
-// ============================================================
 
 function isStrongPassword(password) {
     if (typeof password !== 'string') return false;
@@ -224,20 +180,17 @@ function generateStrongPassword(length = 20) {
     const numbers = '0123456789';
     const special = '!@#$%^&*()_+-=';
     const all = uppercase + lowercase + numbers + special;
-
     const chars = [
         uppercase[crypto.randomInt(uppercase.length)],
         lowercase[crypto.randomInt(lowercase.length)],
         numbers[crypto.randomInt(numbers.length)],
         special[crypto.randomInt(special.length)]
     ];
-
     while (chars.length < length) chars.push(all[crypto.randomInt(all.length)]);
     for (let i = chars.length - 1; i > 0; i--) {
         const j = crypto.randomInt(i + 1);
         [chars[i], chars[j]] = [chars[j], chars[i]];
     }
-
     return chars.join('');
 }
 
@@ -270,20 +223,12 @@ if (process.env.ADMIN_PASSWORD) {
     console.log('🔑 DEV ADMIN PASSWORD:', ADMIN_PASSWORD);
 }
 
-// ============================================================
-// 🔒 ENCRYPTION
-// ============================================================
-
 if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length !== 64)) {
     console.error('❌ ENCRYPTION_KEY must be 64 hex chars.');
     process.exit(1);
 }
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
-
-// ============================================================
-// 🆔 SECURITY HELPERS
-// ============================================================
 
 function randomId(bytes = 32) {
     return crypto.randomBytes(bytes).toString('hex');
@@ -301,36 +246,22 @@ function safeEqual(a, b) {
     return crypto.timingSafeEqual(A, B);
 }
 
-// ============================================================
-// 🔍 HELPER: Find by _id OR id
-// ============================================================
 function buildIdQuery(idParam) {
     const conditions = [];
     if (!idParam) return null;
-
-    // ✅ ObjectId (MongoDB _id)
     if (mongoose.Types.ObjectId.isValid(idParam)) {
         conditions.push({ _id: idParam });
     }
-
-    // ✅ UUID (custom id field)
     conditions.push({ id: idParam });
-
     return { $or: conditions };
 }
-
-// ============================================================
-// 🧼 SANITIZATION
-// ============================================================
 
 const PURIFY_CONFIG = { ALLOWED_TAGS: [], ALLOWED_ATTR: [], KEEP_CONTENT: true };
 
 function sanitizeString(value) {
     if (typeof value !== 'string') return value;
     if (createDOMPurify) {
-        try {
-            return createDOMPurify.sanitize(value, PURIFY_CONFIG).trim();
-        } catch (e) {}
+        try { return createDOMPurify.sanitize(value, PURIFY_CONFIG).trim(); } catch (e) {}
     }
     return value.replace(/[<>]/g, '').replace(/javascript:/gi, '').replace(/on\w+=/gi, '').trim();
 }
@@ -341,7 +272,6 @@ function sanitizeDeep(obj, depth = 0) {
     if (typeof obj === 'string') return sanitizeString(obj);
     if (typeof obj !== 'object') return obj;
     if (Array.isArray(obj)) return obj.map(item => sanitizeDeep(item, depth + 1));
-
     const cleaned = {};
     for (const key of Object.keys(obj)) {
         if (['__proto__', 'constructor', 'prototype'].includes(key)) continue;
@@ -359,10 +289,6 @@ function xssSanitizer(req, res, next) {
     next();
 }
 
-// ============================================================
-// 📧 EMAIL
-// ============================================================
-
 let emailTransporter = null;
 
 async function setupEmailService() {
@@ -378,12 +304,10 @@ async function setupEmailService() {
                 greetingTimeout: 10000,
                 socketTimeout: 15000
             });
-
             await transporter.verify();
             console.log('✅ SMTP email ready:', process.env.EMAIL_USER);
             return transporter;
         }
-
         console.warn('⚠️ EMAIL_HOST غير محدد — Ethereal');
         const testAccount = await nodemailer.createTestAccount();
         const transporter = nodemailer.createTransport({
@@ -392,7 +316,6 @@ async function setupEmailService() {
             secure: false,
             auth: { user: testAccount.user, pass: testAccount.pass }
         });
-
         await transporter.verify();
         console.log('✅ Ethereal email ready (DEV)');
         return transporter;
@@ -402,14 +325,11 @@ async function setupEmailService() {
     }
 }
 
-async function initEmailService() {
-    return setupEmailService();
-}
+async function initEmailService() { return setupEmailService(); }
 
 async function sendEmail(to, subject, html) {
     if (!emailTransporter) emailTransporter = await initEmailService();
     if (!emailTransporter) return null;
-
     try {
         const from = process.env.EMAIL_FROM || emailTransporter.options?.auth?.user || 'no-reply@marine-system.local';
         const info = await emailTransporter.sendMail({ from, to, subject, html });
@@ -424,10 +344,6 @@ async function sendEmail(to, subject, html) {
 setTimeout(() => {
     initEmailService().then(t => { emailTransporter = t; }).catch(() => {});
 }, 100);
-
-// ============================================================
-// 🛡️ HELMET
-// ============================================================
 
 app.use(
     helmet({
@@ -458,10 +374,6 @@ app.use(
     })
 );
 
-// ============================================================
-// 🌐 CORS
-// ============================================================
-
 const allowedOrigins = (
     process.env.FRONTEND_URL ||
     'http://localhost:5000,http://localhost:3000,https://marine-system-71eo.onrender.com'
@@ -478,10 +390,6 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Request-ID'],
     exposedHeaders: ['X-CSRF-Token', 'X-Session-Expiry', 'X-Request-ID']
 }));
-
-// ============================================================
-// 🚦 RATE LIMITING
-// ============================================================
 
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, max: 500,
@@ -504,10 +412,6 @@ const forgotPasswordLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 app.use('/api/auth/login', authLimiter);
 
-// ============================================================
-// 📦 BODY PARSERS
-// ============================================================
-
 app.use(compression());
 app.use(express.json({ limit: '20kb' }));
 app.use(express.urlencoded({ extended: false, limit: '20kb' }));
@@ -515,19 +419,11 @@ app.use(cookieParser());
 app.use(xssSanitizer);
 app.use(hpp());
 
-// ============================================================
-// 🆔 REQUEST ID
-// ============================================================
-
 app.use((req, res, next) => {
     req.requestId = randomId(16).substring(0, 32);
     res.setHeader('X-Request-ID', req.requestId);
     next();
 });
-
-// ============================================================
-// 📋 REQUEST LOGGER
-// ============================================================
 
 app.use((req, res, next) => {
     const started = Date.now();
@@ -540,10 +436,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// ============================================================
-// 🍃 MONGODB CONNECTION
-// ============================================================
-
 let mongoConnected = false;
 
 async function connectMongoDB() {
@@ -552,7 +444,6 @@ async function connectMongoDB() {
         console.error('❌ MONGODB_URI غير محدد');
         return false;
     }
-
     try {
         await mongoose.connect(uri, {
             serverSelectionTimeoutMS: 15000,
@@ -561,31 +452,25 @@ async function connectMongoDB() {
             maxPoolSize: 10,
             minPoolSize: 2
         });
-
         mongoConnected = true;
         console.log('✅ MongoDB connected');
         console.log(`📊 Database: ${mongoose.connection.name}`);
         console.log(`🌐 Host: ${mongoose.connection.host}`);
-
         mongoose.connection.on('error', err => {
             console.error('❌ MongoDB error:', err.message);
             mongoConnected = false;
         });
-
         mongoose.connection.on('disconnected', () => {
             console.warn('⚠️ MongoDB disconnected');
             mongoConnected = false;
         });
-
         mongoose.connection.on('reconnected', () => {
             console.log('✅ MongoDB reconnected');
             mongoConnected = true;
         });
-
         await createIndexes();
         await ensureAdminExists();
         await ensureInitialData();
-
         return true;
     } catch (error) {
         console.error('❌ MongoDB connection failed:', error.message);
@@ -605,10 +490,6 @@ async function createIndexes() {
     }
 }
 
-// ============================================================
-// 👤 ENSURE ADMIN EXISTS (v9.11 - Fixed double-hash)
-// ============================================================
-
 async function ensureAdminExists() {
     try {
         console.log('');
@@ -620,43 +501,32 @@ async function ensureAdminExists() {
         console.log(`   Auto reset: ${ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'}`);
         console.log('================================================');
         console.log('');
-
         const existingAdmin = await User.findOne({ username: ADMIN_USERNAME });
-
         if (existingAdmin) {
             console.log(`✅ Admin user "${ADMIN_USERNAME}" exists in DB`);
-
             const updateData = {};
-
             if (existingAdmin.lockedUntil) {
                 console.log(`🔓 Unlocking admin (lockedUntil was set)`);
                 updateData.lockedUntil = null;
             }
-
             if (existingAdmin.loginAttempts && existingAdmin.loginAttempts > 0) {
                 console.log(`🔄 Resetting loginAttempts (was ${existingAdmin.loginAttempts})`);
                 updateData.loginAttempts = 0;
             }
-
             if (existingAdmin.isActive === false) {
                 console.log(`✅ Reactivating admin`);
                 updateData.isActive = true;
             }
-
             const currentRole = String(existingAdmin.role || '').trim();
             if (currentRole !== 'admin') {
                 console.log(`⚠️  Fixing admin role: "${currentRole}" → "admin"`);
                 updateData.role = 'admin';
             }
-
             if (ALLOW_ADMIN_RESET) {
                 let passwordMatches = false;
                 try {
                     passwordMatches = await bcrypt.compare(ADMIN_PASSWORD, existingAdmin.password);
-                } catch (e) {
-                    passwordMatches = false;
-                }
-
+                } catch (e) { passwordMatches = false; }
                 if (!passwordMatches) {
                     console.log('🔑 AUTO-RESET: Password mismatch detected, updating...');
                     updateData.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
@@ -667,25 +537,16 @@ async function ensureAdminExists() {
                     console.log(`   (tokenVersion preserved: ${existingAdmin.tokenVersion || 0})`);
                 }
             }
-
             if (Object.keys(updateData).length > 0) {
                 updateData.updatedAt = new Date();
-
-                await User.updateOne(
-                    { _id: existingAdmin._id },
-                    { $set: updateData }
-                );
-
+                await User.updateOne({ _id: existingAdmin._id }, { $set: updateData });
                 console.log(`✅ Admin user updated (${Object.keys(updateData).length} field(s))`);
             } else {
                 console.log('ℹ️  Admin user unchanged');
             }
-
             return;
         }
-
         console.log(`⚠️  Admin user "${ADMIN_USERNAME}" NOT FOUND - creating...`);
-
         const admin = await User.create({
             username: ADMIN_USERNAME,
             password: ADMIN_PASSWORD,
@@ -697,25 +558,14 @@ async function ensureAdminExists() {
             loginAttempts: 0,
             lockedUntil: null
         });
-
         console.log('✅ Admin user CREATED:', admin.username);
         console.log(`   Email: ${admin.email}`);
         console.log(`   Role: ${admin.role}`);
-        console.log('');
-        console.log('🔐 ============================================');
-        console.log(`🔐 LOGIN WITH:`);
-        console.log(`🔐 Username: ${ADMIN_USERNAME}`);
-        console.log(`🔐 Password: (the one from ADMIN_PASSWORD env)`);
-        console.log('🔐 ============================================');
     } catch (error) {
         console.error('❌ Failed to ensure admin:', error.message);
         console.error(error.stack);
     }
 }
-
-// ============================================================
-// 🚢 ENSURE INITIAL DATA
-// ============================================================
 
 async function ensureInitialData() {
     try {
@@ -724,34 +574,25 @@ async function ensureInitialData() {
             console.log(`✅ Vessels exist (${vesselCount})`);
             return;
         }
-
         console.log('📦 Creating initial vessels...');
-
         const initialVessels = [
             { id: randomId(8), name: 'الوحدة 101', num: '101', len: 11, region: 'الشمال', zone: 'تونس', port: 'الميناء الرئيسي', supp: '—', status: 'صالح', break: '—', cat: 'البروق', createdBy: 'system' },
             { id: randomId(8), name: 'الوحدة 205', num: '205', len: 15, region: 'الساحل', zone: 'سوسة', port: 'ميناء سوسة', supp: '—', status: 'صيانة', break: 'محرك', fDate: new Date().toISOString(), ref: 'M-2024-001', repairUnit: 'وحدة الصيانة تونس', cat: 'خوافر', createdBy: 'system' },
             { id: randomId(8), name: 'الوحدة 312', num: '312', len: 8, region: 'الجنوب', zone: 'جرجيس', port: 'ميناء جرجيس', supp: '—', status: 'معطب', break: 'هيكل', fDate: new Date().toISOString(), ref: 'M-2024-002', repairUnit: 'وحدة الصيانة جرجيس', cat: 'صقور', createdBy: 'system' }
         ];
-
         await Vessel.insertMany(initialVessels);
         console.log(`✅ ${initialVessels.length} vessels created`);
-
         const initialLogs = [
             { id: randomId(8), vesselName: 'الوحدة 101', vesselNum: '101', type: 'صيانة دورية', status: 'مكتملة', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة تونس', cost: 500, notes: 'صيانة دورية', createdBy: 'system' },
             { id: randomId(8), vesselName: 'الوحدة 205', vesselNum: '205', type: 'إصلاح محرك', status: 'قيد التنفيذ', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة صفاقس', cost: 1200, notes: 'استبدال المحرك', createdBy: 'system' },
             { id: randomId(8), vesselName: 'الوحدة 312', vesselNum: '312', type: 'إصلاح هيكل', status: 'متأخرة', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة جرجيس', cost: 2000, notes: 'إصلاح الهيكل', createdBy: 'system' }
         ];
-
         await Maintenance.insertMany(initialLogs);
         console.log(`✅ ${initialLogs.length} maintenance logs created`);
     } catch (error) {
         console.error('❌ Failed to create initial data:', error.message);
     }
 }
-
-// ============================================================
-// 🧠 SESSION STORE
-// ============================================================
 
 let sessionStore = undefined;
 
@@ -767,36 +608,24 @@ async function buildSessionStore() {
     }
 }
 
-// ============================================================
-// 🧠 CSRF
-// ============================================================
-
 function ensureCsrfToken(req, res) {
     if (!req.session) return null;
     const now = Date.now();
     const expiry = req.session.csrfExpiry || 0;
-
     if (!req.session.csrfToken || now > expiry) {
         req.session.csrfToken = randomId(32);
         req.session.csrfExpiry = now + CSRF_MAX_AGE;
     }
-
     const token = req.session.csrfToken;
     res.setHeader('X-CSRF-Token', token);
     res.setHeader('X-Session-Expiry', req.session.csrfExpiry);
-
     try {
         res.cookie('marine_csrf', token, {
             httpOnly: false, secure: isProduction, sameSite: 'strict', maxAge: CSRF_MAX_AGE, path: '/'
         });
     } catch (e) {}
-
     return token;
 }
-
-// ============================================================
-// 🛡️ CSRF PROTECTION
-// ============================================================
 
 const csrfExcluded = new Set([
     '/api/auth/login',
@@ -816,17 +645,14 @@ function looksLikeClientCsrfToken(token) {
 function csrfProtection(req, res, next) {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
     if (csrfExcluded.has(req.path)) return next();
-
     const provided = req.headers['x-csrf-token'] || req.body?.csrf_token || req.cookies?.marine_csrf;
     const sessionToken = req.session?.csrfToken || null;
     const cookieToken = req.cookies?.marine_csrf || null;
-
     if (provided && sessionToken && safeEqual(String(provided), String(sessionToken))) return next();
     if (provided && cookieToken && safeEqual(String(provided), String(cookieToken))) {
         if (!sessionToken || safeEqual(String(cookieToken), String(sessionToken))) return next();
     }
     if (!isProduction && !sessionToken && looksLikeClientCsrfToken(provided)) return next();
-
     if (req.auth && req.user && req.auth.sid && req.auth.sub === req.user.id) {
         const refreshRecordPromise = getRefreshSession(req.auth.sid);
         return Promise.resolve(refreshRecordPromise)
@@ -838,13 +664,8 @@ function csrfProtection(req, res, next) {
                 return res.status(403).json({ success: false, error: 'CSRF verification failed', code: 'CSRF_INVALID' });
             });
     }
-
     return res.status(403).json({ success: false, error: 'CSRF token غير صالح أو مفقود', code: 'CSRF_INVALID' });
 }
-
-// ============================================================
-// 🔐 JWT
-// ============================================================
 
 function generateAccessToken(user, sessionId) {
     return jwt.sign(
@@ -862,10 +683,6 @@ function generateRefreshToken(user, sessionId) {
     );
 }
 
-// ============================================================
-// 🔄 REFRESH SESSIONS
-// ============================================================
-
 const refreshSessions = new Map();
 
 async function saveRefreshSession({ sessionId, userId, refreshToken }) {
@@ -874,7 +691,6 @@ async function saveRefreshSession({ sessionId, userId, refreshToken }) {
         createdAt: Date.now(), lastUsedAt: Date.now(),
         expiresAt: Date.now() + REFRESH_TOKEN_MAX_AGE
     };
-
     if (redisAvailable && redisClient) {
         try {
             await redisClient.setEx(`marine:refresh:${sessionId}`, Math.floor(REFRESH_TOKEN_MAX_AGE / 1000), JSON.stringify(record));
@@ -924,10 +740,6 @@ async function revokeAllUserSessions(userId) {
     }
 }
 
-// ============================================================
-// 🚫 REVOKED TOKENS
-// ============================================================
-
 const revokedAccessTokens = new Map();
 
 function revokeAccessToken(decoded) {
@@ -953,10 +765,6 @@ setInterval(() => {
         if (now > record.expiresAt) refreshSessions.delete(sessionId);
     }
 }, 10 * 60 * 1000).unref();
-
-// ============================================================
-// 🔑 PASSWORD RESET
-// ============================================================
 
 const passwordResetTokens = [];
 
@@ -985,10 +793,6 @@ function verifyResetToken(email, token) {
     return !!(record && record.email === email);
 }
 
-// ============================================================
-// 📋 SYSTEM LOG
-// ============================================================
-
 async function addSystemLog({ userId = null, action = 'view', resource = 'system', resourceId = null, resourceName = '', userName = '', userEmail = '', ip = null, requestId = null, status = 'success', details = {}, error = null }) {
     try {
         if (!mongoConnected) return;
@@ -1000,27 +804,14 @@ async function addSystemLog({ userId = null, action = 'view', resource = 'system
     } catch (e) {}
 }
 
-// ============================================================
-// 🔔 NOTIFICATION HELPER (v9.13)
-// ============================================================
-
 async function notify({ userId = null, type = 'info', category = 'system', title, message = '', link = null, icon = 'bell', actorName = null, metadata = {} }) {
     try {
         if (!mongoConnected) return null;
         if (!Notification) return null;
         if (!title) return null;
-
         const notif = new Notification({
             id: randomId(8),
-            userId,
-            type,
-            category,
-            title,
-            message,
-            link,
-            icon,
-            actorName,
-            metadata,
+            userId, type, category, title, message, link, icon, actorName, metadata,
             isRead: false
         });
         return await notif.save();
@@ -1029,10 +820,6 @@ async function notify({ userId = null, type = 'info', category = 'system', title
         return null;
     }
 }
-
-// ============================================================
-// 🔐 AUTH MIDDLEWARE
-// ============================================================
 
 function extractBearerToken(req) {
     const header = req.headers.authorization;
@@ -1044,13 +831,10 @@ function extractBearerToken(req) {
 function authenticateAccessToken(req, res, next) {
     const token = extractBearerToken(req);
     if (!token) return res.status(401).json({ success: false, error: 'غير مصرح' });
-
     try {
         const decoded = jwt.verify(token, JWT_SECRET, { issuer: 'marine-system', audience: 'marine-system-client' });
-
         if (decoded.type !== 'access') return res.status(401).json({ success: false, error: 'نوع التوكن غير صالح' });
         if (isAccessTokenRevoked(decoded.jti)) return res.status(401).json({ success: false, error: 'التوكن ملغى' });
-
         User.findOne({ id: decoded.sub })
             .then(user => {
                 if (!user || user.isActive !== true) {
@@ -1076,13 +860,8 @@ function authenticateAccessToken(req, res, next) {
     }
 }
 
-// ============================================================
-// 👑 RBAC v4 — نظام صلاحيات احترافي (5 أدوار)
-// ============================================================
-
 const ROLE_PERMISSIONS = {
     admin: ['*'],
-
     manager: [
         'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
@@ -1091,7 +870,6 @@ const ROLE_PERMISSIONS = {
         'notifications:read',
         'logs:read'
     ],
-
     editor: [
         'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
@@ -1099,7 +877,6 @@ const ROLE_PERMISSIONS = {
         'notes:read', 'notes:create', 'notes:update',
         'notifications:read'
     ],
-
     maintenance_unit: [
         'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
@@ -1107,7 +884,6 @@ const ROLE_PERMISSIONS = {
         'notes:read', 'notes:create', 'notes:update',
         'notifications:read'
     ],
-
     viewer: [
         'dashboard:view',
         'vessels:read',
@@ -1152,20 +928,15 @@ function normalizeRole(role) {
 
 function hasPermission(user, permission) {
     if (!user) return false;
-
     const role = normalizeRole(user.role);
-
     if (SENSITIVE_PERMISSIONS[permission]) {
         return SENSITIVE_PERMISSIONS[permission].includes(role);
     }
-
     const permissions = ROLE_PERMISSIONS[role] || [];
     if (permissions.includes('*')) return true;
     if (permissions.includes(permission)) return true;
-
     const [resource] = permission.split(':');
     if (permissions.includes(`${resource}:*`)) return true;
-
     return false;
 }
 
@@ -1191,7 +962,6 @@ function requireOneOf(...permissions) {
         }
         const hasAny = permissions.some(p => hasPermission(req.user, p));
         if (!hasAny) {
-            console.warn(`🚫 Permission denied: user="${req.user.username}" needs one of [${permissions.join(', ')}]`);
             return res.status(403).json({
                 success: false,
                 error: 'ليس لديك الصلاحية الكافية',
@@ -1217,10 +987,6 @@ function requireAdmin(req, res, next) {
     }
     next();
 }
-
-// ============================================================
-// 🔄 FORMAT HELPERS
-// ============================================================
 
 function formatUser(user) {
     if (!user) return null;
@@ -1274,7 +1040,6 @@ function formatMaintenance(log) {
         const d = new Date(isoDate);
         if (!isNaN(d.getTime())) displayDate = d.toLocaleDateString('ar-EG');
     } catch (e) {}
-
     return {
         id: log.id,
         _id: log._id ? log._id.toString() : null,
@@ -1296,7 +1061,6 @@ function formatMaintenance(log) {
         updatedAt: log.updatedAt
     };
 }
-
 // ============================================================
 // 🚀 STARTUP
 // ============================================================
@@ -1342,7 +1106,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.14', timestamp: new Date().toISOString(),
+            version: '9.15', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             models: {
@@ -1865,6 +1629,16 @@ function formatMaintenance(log) {
                 requestId: req.requestId
             });
 
+            await notify({
+                type: 'info',
+                category: 'system',
+                title: 'تعديل ملاحظة',
+                message: 'تم تعديل "' + note.title + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/notes.html',
+                icon: 'edit',
+                actorName: req.user.name || req.user.username
+            });
+
             return res.json({
                 success: true,
                 message: 'تم تحديث الملاحظة',
@@ -1891,6 +1665,9 @@ function formatMaintenance(log) {
             const note = await Note.findOne(idQuery);
             if (!note) return res.status(404).json({ success: false, error: 'الملاحظة غير موجودة' });
 
+            const title = note.title;
+            const noteId = note._id.toString();
+
             await Note.deleteOne({ _id: note._id });
 
             await addSystemLog({
@@ -1898,11 +1675,21 @@ function formatMaintenance(log) {
                 userName: req.user.name,
                 action: 'delete',
                 resource: 'note',
-                resourceId: note._id.toString(),
-                resourceName: note.title,
+                resourceId: noteId,
+                resourceName: title,
                 status: 'success',
                 ip: req.ip,
                 requestId: req.requestId
+            });
+
+            await notify({
+                type: 'warning',
+                category: 'system',
+                title: 'حذف ملاحظة',
+                message: 'تم حذف "' + title + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/notes.html',
+                icon: 'trash',
+                actorName: req.user.name || req.user.username
             });
 
             return res.json({ success: true, message: 'تم حذف الملاحظة' });
@@ -2280,11 +2067,11 @@ function formatMaintenance(log) {
 
             return res.status(201).json({ success: true, message: 'تم إضافة المركب بنجاح', vessel: formatVessel(newVessel) });
         } catch (error) {
+            console.error('❌ POST /api/vessels error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في إضافة المركب' });
         }
     });
 
-    // ✅ v9.14 — PUT يقبل _id أو id
     app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:update'), csrfProtection, async (req, res) => {
         try {
             const idQuery = buildIdQuery(req.params.id);
@@ -2339,6 +2126,16 @@ function formatMaintenance(log) {
                 requestId: req.requestId
             });
 
+            await notify({
+                type: 'info',
+                category: 'vessel',
+                title: 'تعديل مركب',
+                message: 'تم تعديل "' + vessel.name + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/fleet.html',
+                icon: 'edit',
+                actorName: req.user.name || req.user.username
+            });
+
             return res.json({ success: true, message: 'تم تحديث المركب بنجاح', vessel: formatVessel(vessel) });
         } catch (error) {
             console.error('❌ PUT /api/vessels error:', error.message);
@@ -2346,7 +2143,6 @@ function formatMaintenance(log) {
         }
     });
 
-    // ✅ v9.14 — DELETE يقبل _id أو id
     app.delete('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:delete'), csrfProtection, async (req, res) => {
         try {
             const idQuery = buildIdQuery(req.params.id);
@@ -2355,6 +2151,9 @@ function formatMaintenance(log) {
             const vessel = await Vessel.findOne(idQuery);
             if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
 
+            const vesselName = vessel.name;
+            const vesselId = vessel.id;
+
             await Vessel.deleteOne({ _id: vessel._id });
 
             await addSystemLog({
@@ -2362,11 +2161,21 @@ function formatMaintenance(log) {
                 userName: req.user.name,
                 action: 'delete',
                 resource: 'vessel',
-                resourceId: vessel.id,
-                resourceName: vessel.name,
+                resourceId: vesselId,
+                resourceName: vesselName,
                 status: 'success',
                 ip: req.ip,
                 requestId: req.requestId
+            });
+
+            await notify({
+                type: 'warning',
+                category: 'vessel',
+                title: 'حذف مركب',
+                message: 'تم حذف "' + vesselName + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/fleet.html',
+                icon: 'trash',
+                actorName: req.user.name || req.user.username
             });
 
             return res.json({ success: true, message: 'تم حذف المركب بنجاح' });
@@ -2446,11 +2255,11 @@ function formatMaintenance(log) {
 
             return res.status(201).json({ success: true, message: 'تم إضافة سجل الصيانة', log: formatMaintenance(logEntry) });
         } catch (error) {
+            console.error('❌ POST /api/maintenance-logs error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
         }
     });
 
-    // ✅ v9.14 — PUT يقبل _id أو id
     app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, async (req, res) => {
         try {
             const idQuery = buildIdQuery(req.params.id);
@@ -2466,6 +2275,17 @@ function formatMaintenance(log) {
 
             log.updatedAt = new Date();
             await log.save();
+
+            await notify({
+                type: 'info',
+                category: 'maintenance',
+                title: 'تعديل صيانة',
+                message: 'تم تعديل "' + log.vesselName + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/maintenance.html',
+                icon: 'edit',
+                actorName: req.user.name || req.user.username
+            });
+
             return res.json({ success: true, message: 'تم تحديث سجل الصيانة', log: formatMaintenance(log) });
         } catch (error) {
             console.error('❌ PUT /api/maintenance-logs error:', error.message);
@@ -2473,7 +2293,6 @@ function formatMaintenance(log) {
         }
     });
 
-    // ✅ v9.14 — DELETE يقبل _id أو id
     app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, async (req, res) => {
         try {
             const idQuery = buildIdQuery(req.params.id);
@@ -2482,6 +2301,9 @@ function formatMaintenance(log) {
             const log = await Maintenance.findOne(idQuery);
             if (!log) return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
 
+            const vesselName = log.vesselName;
+            const logId = log.id;
+
             await Maintenance.deleteOne({ _id: log._id });
 
             await addSystemLog({
@@ -2489,11 +2311,21 @@ function formatMaintenance(log) {
                 userName: req.user.name,
                 action: 'delete',
                 resource: 'maintenance',
-                resourceId: log.id,
-                resourceName: log.vesselName,
+                resourceId: logId,
+                resourceName: vesselName,
                 status: 'success',
                 ip: req.ip,
                 requestId: req.requestId
+            });
+
+            await notify({
+                type: 'warning',
+                category: 'maintenance',
+                title: 'حذف صيانة',
+                message: 'تم حذف "' + vesselName + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/maintenance.html',
+                icon: 'trash',
+                actorName: req.user.name || req.user.username
             });
 
             return res.json({ success: true, message: 'تم حذف سجل الصيانة' });
@@ -2502,8 +2334,7 @@ function formatMaintenance(log) {
             return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
         }
     });
-
-    // ========================================================
+        // ========================================================
     // USERS (admin only)
     // ========================================================
 
@@ -2569,11 +2400,11 @@ function formatMaintenance(log) {
 
             return res.status(201).json({ success: true, message: 'تم إضافة المستخدم بنجاح', user: formatUser(newUser) });
         } catch (error) {
+            console.error('❌ POST /api/users error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في إضافة المستخدم' });
         }
     });
 
-    // ✅ v9.14 — PUT يقبل _id أو id
     app.put('/api/users/:id', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
             const idQuery = buildIdQuery(req.params.id);
@@ -2619,6 +2450,29 @@ function formatMaintenance(log) {
 
             targetUser.updatedAt = new Date();
             await targetUser.save();
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'update',
+                resource: 'user',
+                resourceId: targetUser.id,
+                resourceName: targetUser.username,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            await notify({
+                type: 'info',
+                category: 'user',
+                title: 'تعديل مستخدم',
+                message: 'تم تعديل "' + targetUser.username + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/users.html',
+                icon: 'user-edit',
+                actorName: req.user.name || req.user.username
+            });
+
             return res.json({ success: true, message: 'تم تحديث المستخدم بنجاح', user: formatUser(targetUser) });
         } catch (error) {
             console.error('❌ PUT /api/users error:', error.message);
@@ -2626,7 +2480,6 @@ function formatMaintenance(log) {
         }
     });
 
-    // ✅ v9.14 — DELETE يقبل _id أو id
     app.delete('/api/users/:id', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
             const idQuery = buildIdQuery(req.params.id);
@@ -2641,8 +2494,34 @@ function formatMaintenance(log) {
                 if (adminCount <= 1) return res.status(403).json({ success: false, error: 'لا يمكن حذف آخر مسؤول' });
             }
 
+            const deletedUsername = targetUser.username;
+            const deletedUserId = targetUser.id;
+
             await revokeAllUserSessions(targetUser.id);
             await User.deleteOne({ _id: targetUser._id });
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'delete',
+                resource: 'user',
+                resourceId: deletedUserId,
+                resourceName: deletedUsername,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            await notify({
+                type: 'warning',
+                category: 'user',
+                title: 'حذف مستخدم',
+                message: 'تم حذف "' + deletedUsername + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/users.html',
+                icon: 'user-times',
+                actorName: req.user.name || req.user.username
+            });
+
             return res.json({ success: true, message: 'تم حذف المستخدم بنجاح' });
         } catch (error) {
             console.error('❌ DELETE /api/users error:', error.message);
@@ -2650,7 +2529,6 @@ function formatMaintenance(log) {
         }
     });
 
-    // ✅ v9.14 — PUT يقبل _id أو id
     app.put('/api/users-status/:id', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
             const { active } = req.body;
@@ -2674,6 +2552,17 @@ function formatMaintenance(log) {
             }
 
             await targetUser.save();
+
+            await notify({
+                type: 'info',
+                category: 'user',
+                title: targetUser.isActive ? 'تفعيل مستخدم' : 'تعطيل مستخدم',
+                message: (targetUser.isActive ? 'تم تفعيل "' : 'تم تعطيل "') + targetUser.username + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/users.html',
+                icon: 'user-cog',
+                actorName: req.user.name || req.user.username
+            });
+
             return res.json({
                 success: true,
                 message: `تم ${targetUser.isActive ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`,
@@ -2799,7 +2688,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.14</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.15</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2849,15 +2738,15 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.14');
+            console.log('🚢 MARINE SYSTEM v9.15');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Double-hash fix: APPLIED');
             console.log('✅ RBAC v4: 5 roles');
             console.log('✅ ID matching: _id OR id (v9.14)');
-            console.log('✅ Notes: ' + (Note ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Notes: ' + (Note ? 'ENABLED' : 'DISABLED'));
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
