@@ -1,12 +1,14 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.12
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.13
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
-// ✨ v9.12 changes vs v9.11:
-//    - ✅ ADDED: 'editor' role (same permissions as maintenance_unit)
-//    - ✅ ADDED: editor to ROLE_LABELS
-//    - ✅ ADDED: editor to allowedRoles (POST /api/users & PUT /api/users/:id)
-//    - No other logic changed from v9.11
+// ✨ v9.13 changes vs v9.12:
+//    - ✅ ADDED: Note model integration (Note Verbale)
+//    - ✅ ADDED: Notification model integration (optional)
+//    - ✅ ADDED: notify() helper function
+//    - ✅ ADDED: /api/notes endpoints (GET/POST/PUT/DELETE)
+//    - ✅ ADDED: /api/notifications endpoints (GET/PUT/DELETE)
+//    - ✅ All v9.12 logic preserved without changes
 // ============================================================
 
 'use strict';
@@ -21,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.12 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.13 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -78,15 +80,22 @@ function loadModels() {
     }
 }
 
-let User, Vessel, Maintenance, Log, Ticket;
+let User, Vessel, Maintenance, Log, Ticket, Note, Notification;
 
 try {
     const models = loadModels();
-    User = models.User;
-    Vessel = models.Vessel;
-    Maintenance = models.Maintenance;
-    Log = models.Log;
-    Ticket = models.Ticket;
+    User         = models.User;
+    Vessel       = models.Vessel;
+    Maintenance  = models.Maintenance;
+    Log          = models.Log;
+    Ticket       = models.Ticket;
+    Note         = models.Note || null;
+    Notification = models.Notification || null;
+
+    console.log('📦 Optional models:',
+        'Note=' + (Note ? '✅' : '❌'),
+        'Notification=' + (Notification ? '✅' : '❌')
+    );
 } catch (e) {
     console.error('❌ Fatal model loading error:', e.message);
     process.exit(1);
@@ -595,9 +604,6 @@ async function ensureAdminExists() {
 
         const existingAdmin = await User.findOne({ username: ADMIN_USERNAME });
 
-        // ============================================================
-        // الحالة 1: admin موجود → تحديث ذكي
-        // ============================================================
         if (existingAdmin) {
             console.log(`✅ Admin user "${ADMIN_USERNAME}" exists in DB`);
 
@@ -618,14 +624,12 @@ async function ensureAdminExists() {
                 updateData.isActive = true;
             }
 
-            // ✅ ضمان أن الدور admin (بعد الترقية إلى v9.11)
             const currentRole = String(existingAdmin.role || '').trim();
             if (currentRole !== 'admin') {
                 console.log(`⚠️  Fixing admin role: "${currentRole}" → "admin"`);
                 updateData.role = 'admin';
             }
 
-            // 🔑 AUTO-RESET كلمة المرور — فقط إذا تغيّرت فعلاً
             if (ALLOW_ADMIN_RESET) {
                 let passwordMatches = false;
                 try {
@@ -648,7 +652,6 @@ async function ensureAdminExists() {
             if (Object.keys(updateData).length > 0) {
                 updateData.updatedAt = new Date();
 
-                // ✅ updateOne لا يُشغّل pre('save') → لا double-hash
                 await User.updateOne(
                     { _id: existingAdmin._id },
                     { $set: updateData }
@@ -662,12 +665,8 @@ async function ensureAdminExists() {
             return;
         }
 
-        // ============================================================
-        // الحالة 2: admin غير موجود → إنشاؤه
-        // ============================================================
         console.log(`⚠️  Admin user "${ADMIN_USERNAME}" NOT FOUND - creating...`);
 
-        // ✅ نستخدم create() → pre('save') يُشفّر مرة واحدة فقط
         const admin = await User.create({
             username: ADMIN_USERNAME,
             password: ADMIN_PASSWORD,
@@ -983,6 +982,36 @@ async function addSystemLog({ userId = null, action = 'view', resource = 'system
 }
 
 // ============================================================
+// 🔔 NOTIFICATION HELPER (v9.13)
+// ============================================================
+
+async function notify({ userId = null, type = 'info', category = 'system', title, message = '', link = null, icon = 'bell', actorName = null, metadata = {} }) {
+    try {
+        if (!mongoConnected) return null;
+        if (!Notification) return null;
+        if (!title) return null;
+
+        const notif = new Notification({
+            id: randomId(8),
+            userId,
+            type,
+            category,
+            title,
+            message,
+            link,
+            icon,
+            actorName,
+            metadata,
+            isRead: false
+        });
+        return await notif.save();
+    } catch (e) {
+        console.error('❌ notify() error:', e.message);
+        return null;
+    }
+}
+
+// ============================================================
 // 🔐 AUTH MIDDLEWARE
 // ============================================================
 
@@ -1031,59 +1060,44 @@ function authenticateAccessToken(req, res, next) {
 // ============================================================
 // 👑 RBAC v4 — نظام صلاحيات احترافي (5 أدوار)
 // ============================================================
-//
-// 📋 التصميم:
-//    - admin              : كل شيء (مستخدمين + مراقبة + إعدادات + CRUD)
-//    - manager            : مراكب CRUD + صيانة CRUD (بما فيها الحذف) + سجلات
-//    - editor             : مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل) — بدون حذف
-//    - maintenance_unit   : مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل) — بدون حذف
-//                           ⚠️ نفس صلاحيات editor (تسمية مختلفة فقط)
-//    - viewer             : قراءة فقط
-//
-// 🎯 صلاحيات الحذف:
-//    - vessels:delete         → admin فقط
-//    - maintenance:delete     → admin + manager
-//    - users:*                → admin فقط
-// ============================================================
 
 const ROLE_PERMISSIONS = {
-    // 👑 admin — كل شيء
     admin: ['*'],
 
-    // 📋 manager — مراكب CRUD + صيانة CRUD (بما فيها الحذف) + سجلات
     manager: [
         'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
-        // ⚠️ vessels:delete غير ممنوح — admin فقط
         'maintenance:read', 'maintenance:create', 'maintenance:update', 'maintenance:delete',
+        'notes:read', 'notes:create', 'notes:update', 'notes:delete',
+        'notifications:read',
         'logs:read'
     ],
 
-    // ✏️ editor — مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل) — بدون حذف
     editor: [
         'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
-        'maintenance:read', 'maintenance:create', 'maintenance:update'
-        // ⚠️ لا يحذف مراكب ولا صيانة
+        'maintenance:read', 'maintenance:create', 'maintenance:update',
+        'notes:read', 'notes:create', 'notes:update',
+        'notifications:read'
     ],
 
-    // 🔧 maintenance_unit — مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل) — بدون حذف
     maintenance_unit: [
         'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
-        'maintenance:read', 'maintenance:create', 'maintenance:update'
-        // ⚠️ لا يحذف مراكب ولا صيانة
+        'maintenance:read', 'maintenance:create', 'maintenance:update',
+        'notes:read', 'notes:create', 'notes:update',
+        'notifications:read'
     ],
 
-    // 👁️ viewer — قراءة فقط
     viewer: [
         'dashboard:view',
         'vessels:read',
-        'maintenance:read'
+        'maintenance:read',
+        'notes:read',
+        'notifications:read'
     ]
 };
 
-// 🗺️ الصلاحيات الحساسة (admin فقط)
 const SENSITIVE_PERMISSIONS = {
     'users:manage':    ['admin'],
     'monitoring:view': ['admin'],
@@ -1092,7 +1106,6 @@ const SENSITIVE_PERMISSIONS = {
     'ready:view':      ['admin']
 };
 
-// 🗺️ تسميات عربية
 const ROLE_LABELS = {
     admin: 'مسؤول النظام',
     manager: 'مدير الأسطول',
@@ -1101,10 +1114,10 @@ const ROLE_LABELS = {
     viewer: 'مشاهد'
 };
 
-// 🗺️ توافق مع الأدوار القديمة
 const LEGACY_ROLE_MAP = {
     'مسؤول': 'admin',
     'مدير': 'manager',
+    'محرر': 'editor',
     'مشغل': 'maintenance_unit',
     'مشاهد': 'viewer',
     'operator': 'maintenance_unit',
@@ -1120,22 +1133,20 @@ function normalizeRole(role) {
 
 function hasPermission(user, permission) {
     if (!user) return false;
-    
+
     const role = normalizeRole(user.role);
-    
-    // ✅ الصلاحيات الحساسة (admin فقط)
+
     if (SENSITIVE_PERMISSIONS[permission]) {
         return SENSITIVE_PERMISSIONS[permission].includes(role);
     }
-    
-    // ✅ الصلاحيات العادية
+
     const permissions = ROLE_PERMISSIONS[role] || [];
     if (permissions.includes('*')) return true;
     if (permissions.includes(permission)) return true;
-    
+
     const [resource] = permission.split(':');
     if (permissions.includes(`${resource}:*`)) return true;
-    
+
     return false;
 }
 
@@ -1143,8 +1154,8 @@ function requirePermission(permission) {
     return (req, res, next) => {
         if (!req.user || !hasPermission(req.user, permission)) {
             console.warn(`🚫 Permission denied: user="${req.user?.username}" role="${req.user?.role}" needs="${permission}"`);
-            return res.status(403).json({ 
-                success: false, 
+            return res.status(403).json({
+                success: false,
                 error: 'ليس لديك الصلاحية الكافية',
                 code: 'PERMISSION_DENIED',
                 required: permission
@@ -1162,8 +1173,8 @@ function requireOneOf(...permissions) {
         const hasAny = permissions.some(p => hasPermission(req.user, p));
         if (!hasAny) {
             console.warn(`🚫 Permission denied: user="${req.user.username}" needs one of [${permissions.join(', ')}]`);
-            return res.status(403).json({ 
-                success: false, 
+            return res.status(403).json({
+                success: false,
                 error: 'ليس لديك الصلاحية الكافية',
                 code: 'PERMISSION_DENIED',
                 required: permissions
@@ -1179,8 +1190,8 @@ function isAdminUser(user) {
 
 function requireAdmin(req, res, next) {
     if (!isAdminUser(req.user)) {
-        return res.status(403).json({ 
-            success: false, 
+        return res.status(403).json({
+            success: false,
             error: 'هذه العملية متاحة للمسؤول فقط',
             code: 'ADMIN_ONLY'
         });
@@ -1288,9 +1299,18 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.12', timestamp: new Date().toISOString(),
+            version: '9.13', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
-            redis: redisAvailable ? 'connected' : 'memory'
+            redis: redisAvailable ? 'connected' : 'memory',
+            models: {
+                User: !!User,
+                Vessel: !!Vessel,
+                Maintenance: !!Maintenance,
+                Log: !!Log,
+                Ticket: !!Ticket,
+                Note: !!Note,
+                Notification: !!Notification
+            }
         });
     });
 
@@ -1471,39 +1491,33 @@ function formatMaintenance(log) {
     app.get('/api/auth/permissions', authenticateAccessToken, (req, res) => {
         const role = normalizeRole(req.user.role);
         const permissions = ROLE_PERMISSIONS[role] || [];
-        
+
         const capabilities = {
-            // 🚢 المراكب
             canViewVessels:    hasPermission(req.user, 'vessels:read'),
             canCreateVessels:  hasPermission(req.user, 'vessels:create'),
             canUpdateVessels:  hasPermission(req.user, 'vessels:update'),
             canDeleteVessels:  hasPermission(req.user, 'vessels:delete'),
-            
-            // 🔧 الصيانة
+
             canViewMaintenance:    hasPermission(req.user, 'maintenance:read'),
             canCreateMaintenance:  hasPermission(req.user, 'maintenance:create'),
             canUpdateMaintenance:  hasPermission(req.user, 'maintenance:update'),
             canDeleteMaintenance:  hasPermission(req.user, 'maintenance:delete'),
-            
-            // 👥 المستخدمين (admin فقط)
+
+            canViewNotes:    hasPermission(req.user, 'notes:read'),
+            canCreateNotes:  hasPermission(req.user, 'notes:create'),
+            canUpdateNotes:  hasPermission(req.user, 'notes:update'),
+            canDeleteNotes:  hasPermission(req.user, 'notes:delete'),
+
+            canViewNotifications: hasPermission(req.user, 'notifications:read') || true,
+
             canManageUsers: hasPermission(req.user, 'users:manage'),
-            
-            // 📊 المراقبة الشاملة (admin فقط)
             canViewMonitoring: hasPermission(req.user, 'monitoring:view'),
-            
-            // 📋 السجلات
             canViewLogs: hasPermission(req.user, 'logs:read'),
-            
-            // ⚙️ الإعدادات (admin فقط)
             canManageSettings: hasPermission(req.user, 'settings:manage'),
-            
-            // 🔒 الصفحات الحساسة (admin فقط)
             canViewSensitive: hasPermission(req.user, 'sensitive:view'),
-            
-            // 📄 الصفحات الجاهزة (admin فقط)
             canViewReady: hasPermission(req.user, 'ready:view')
         };
-        
+
         return res.json({
             success: true,
             role,
@@ -1602,7 +1616,6 @@ function formatMaintenance(log) {
             const user = await User.findOne({ email: email.toLowerCase() });
             if (!user) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
 
-            // ✅ pre('save') سيُشفّرها مرة واحدة
             user.password = newPassword;
             user.tokenVersion = (user.tokenVersion || 0) + 1;
             await user.save();
@@ -1615,6 +1628,362 @@ function formatMaintenance(log) {
             return res.json({ success: true, message: 'تم إعادة تعيين كلمة المرور بنجاح' });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'حدث خطأ في الخادم' });
+        }
+    });
+
+    // ========================================================
+    // 📝 NOTES (Note Verbale) — v9.13
+    // ========================================================
+
+    app.get('/api/notes', authenticateAccessToken, async (req, res) => {
+        try {
+            if (!Note) {
+                return res.json([]);
+            }
+            const notes = await Note.find()
+                .sort({ createdAt: -1 })
+                .limit(500)
+                .lean();
+
+            return res.json(
+                notes.map(n => ({
+                    id: n._id.toString(),
+                    title: n.title,
+                    content: n.content,
+                    type: n.type,
+                    number: n.number,
+                    status: n.status,
+                    weekNumber: n.weekNumber,
+                    year: n.year,
+                    createdByName: n.createdByName || 'مستخدم',
+                    createdAt: n.createdAt,
+                    updatedAt: n.updatedAt
+                }))
+            );
+        } catch (error) {
+            console.error('❌ GET /api/notes error:', error.message);
+            return res.status(500).json({ success: false, error: 'فشل تحميل الملاحظات' });
+        }
+    });
+
+    app.get('/api/notes/:id', authenticateAccessToken, async (req, res) => {
+        try {
+            if (!Note) return res.status(404).json({ success: false, error: 'الموديل غير متاح' });
+
+            const note = await Note.findById(req.params.id);
+            if (!note) return res.status(404).json({ success: false, error: 'الملاحظة غير موجودة' });
+
+            note.views = (note.views || 0) + 1;
+            await note.save();
+
+            return res.json({
+                success: true,
+                note: {
+                    id: note._id.toString(),
+                    title: note.title,
+                    content: note.content,
+                    type: note.type,
+                    number: note.number,
+                    status: note.status,
+                    createdByName: note.createdByName,
+                    createdAt: note.createdAt,
+                    views: note.views
+                }
+            });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'فشل تحميل الملاحظة' });
+        }
+    });
+
+    app.post('/api/notes', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            if (!Note) return res.status(500).json({ success: false, error: 'موديل الملاحظات غير متاح' });
+
+            const { title, content, date, priority, type, weekNumber } = req.body;
+
+            if (typeof title !== 'string' || !title.trim()) {
+                return res.status(400).json({ success: false, error: 'العنوان مطلوب' });
+            }
+            if (typeof content !== 'string' || !content.trim()) {
+                return res.status(400).json({ success: false, error: 'المحتوى مطلوب' });
+            }
+
+            var noteType = type || 'عام';
+            if (priority === 'عاجل') noteType = 'عاجلة';
+            else if (priority === 'مهم') noteType = 'مهمة';
+            else if (type) noteType = type;
+
+            var weekNum = weekNumber;
+            if (!weekNum) {
+                try {
+                    var d = date ? new Date(date) : new Date();
+                    var start = new Date(d.getFullYear(), 0, 1);
+                    var diff = Math.floor((d - start) / 86400000);
+                    weekNum = Math.ceil((diff + start.getDay() + 1) / 7);
+                    if (weekNum < 1) weekNum = 1;
+                    if (weekNum > 53) weekNum = 53;
+                } catch (e) {
+                    weekNum = 1;
+                }
+            }
+
+            var createdById;
+            try {
+                createdById = mongoose.Types.ObjectId.isValid(req.user._id)
+                    ? req.user._id
+                    : new mongoose.Types.ObjectId();
+            } catch (e) {
+                createdById = new mongoose.Types.ObjectId();
+            }
+
+            const note = await Note.create({
+                title: title.trim(),
+                content: content.trim(),
+                type: noteType,
+                weekNumber: weekNum,
+                year: new Date().getFullYear(),
+                status: 'مسودة',
+                createdBy: createdById,
+                createdByName: req.user.name || req.user.username
+            });
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'create',
+                resource: 'note',
+                resourceId: note._id.toString(),
+                resourceName: note.title,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            await notify({
+                type: 'success',
+                category: 'system',
+                title: 'ملاحظة جديدة',
+                message: 'تم إضافة "' + note.title + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/notes.html',
+                icon: 'sticky-note',
+                actorName: req.user.name || req.user.username
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: 'تم إضافة الملاحظة بنجاح',
+                note: {
+                    id: note._id.toString(),
+                    title: note.title,
+                    content: note.content,
+                    type: note.type,
+                    status: note.status,
+                    createdByName: note.createdByName,
+                    createdAt: note.createdAt
+                }
+            });
+        } catch (error) {
+            console.error('❌ POST /api/notes error:', error.message);
+            return res.status(500).json({ success: false, error: 'فشل إضافة الملاحظة', details: error.message });
+        }
+    });
+
+    app.put('/api/notes/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            if (!Note) return res.status(500).json({ success: false, error: 'موديل الملاحظات غير متاح' });
+
+            const { title, content, priority, type } = req.body;
+
+            const note = await Note.findById(req.params.id);
+            if (!note) return res.status(404).json({ success: false, error: 'الملاحظة غير موجودة' });
+
+            if (title !== undefined) note.title = title.trim();
+            if (content !== undefined) note.content = content.trim();
+
+            if (type !== undefined) {
+                note.type = type;
+            } else if (priority !== undefined) {
+                if (priority === 'عاجل') note.type = 'عاجلة';
+                else if (priority === 'مهم') note.type = 'مهمة';
+                else note.type = 'عام';
+            }
+
+            await note.save();
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'update',
+                resource: 'note',
+                resourceId: note._id.toString(),
+                resourceName: note.title,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            return res.json({
+                success: true,
+                message: 'تم تحديث الملاحظة',
+                note: {
+                    id: note._id.toString(),
+                    title: note.title,
+                    content: note.content,
+                    type: note.type,
+                    status: note.status,
+                    createdAt: note.createdAt
+                }
+            });
+        } catch (error) {
+            console.error('❌ PUT /api/notes error:', error.message);
+            return res.status(500).json({ success: false, error: 'فشل تحديث الملاحظة', details: error.message });
+        }
+    });
+
+    app.delete('/api/notes/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            if (!Note) return res.status(500).json({ success: false, error: 'موديل الملاحظات غير متاح' });
+
+            const note = await Note.findById(req.params.id);
+            if (!note) return res.status(404).json({ success: false, error: 'الملاحظة غير موجودة' });
+
+            await Note.deleteOne({ _id: note._id });
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'delete',
+                resource: 'note',
+                resourceId: note._id.toString(),
+                resourceName: note.title,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            return res.json({ success: true, message: 'تم حذف الملاحظة' });
+        } catch (error) {
+            console.error('❌ DELETE /api/notes error:', error.message);
+            return res.status(500).json({ success: false, error: 'فشل حذف الملاحظة', details: error.message });
+        }
+    });
+
+    // ========================================================
+    // 🔔 NOTIFICATIONS — v9.13
+    // ========================================================
+
+    app.get('/api/notifications', authenticateAccessToken, async (req, res) => {
+        try {
+            if (!Notification) {
+                return res.json({ success: true, notifications: [], unreadCount: 0, total: 0 });
+            }
+
+            const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+            const userId = req.user.id;
+
+            const notifications = await Notification.find({
+                $or: [{ userId: userId }, { userId: null }]
+            })
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .lean();
+
+            const unreadCount = await Notification.countDocuments({
+                $or: [{ userId: userId }, { userId: null }],
+                isRead: false
+            });
+
+            return res.json({
+                success: true,
+                notifications: notifications.map(n => ({
+                    id: n._id.toString(),
+                    type: n.type,
+                    category: n.category,
+                    title: n.title,
+                    message: n.message,
+                    link: n.link,
+                    icon: n.icon,
+                    isRead: n.isRead,
+                    actorName: n.actorName,
+                    createdAt: n.createdAt
+                })),
+                unreadCount,
+                total: notifications.length
+            });
+        } catch (error) {
+            console.error('❌ GET /api/notifications error:', error.message);
+            return res.status(500).json({ success: false, error: 'فشل تحميل الإشعارات' });
+        }
+    });
+
+    app.get('/api/notifications/unread-count', authenticateAccessToken, async (req, res) => {
+        try {
+            if (!Notification) {
+                return res.json({ success: true, unreadCount: 0 });
+            }
+
+            const unreadCount = await Notification.countDocuments({
+                $or: [{ userId: req.user.id }, { userId: null }],
+                isRead: false
+            });
+            return res.json({ success: true, unreadCount });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'فشل جلب العدد' });
+        }
+    });
+
+    app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            if (!Notification) return res.json({ success: true, updated: 0 });
+
+            const result = await Notification.updateOne(
+                { _id: req.params.id },
+                { $set: { isRead: true } }
+            );
+            return res.json({ success: true, updated: result.modifiedCount });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'فشل التحديث' });
+        }
+    });
+
+    app.put('/api/notifications/read-all', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            if (!Notification) return res.json({ success: true, updated: 0 });
+
+            const result = await Notification.updateMany(
+                {
+                    $or: [{ userId: req.user.id }, { userId: null }],
+                    isRead: false
+                },
+                { $set: { isRead: true } }
+            );
+            return res.json({ success: true, updated: result.modifiedCount });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'فشل التحديث' });
+        }
+    });
+
+    app.delete('/api/notifications/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            if (!Notification) return res.json({ success: true });
+
+            await Notification.deleteOne({ _id: req.params.id });
+            return res.json({ success: true });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'فشل الحذف' });
+        }
+    });
+
+    app.delete('/api/notifications', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            if (!Notification) return res.json({ success: true, deleted: 0 });
+
+            const result = await Notification.deleteMany({
+                $or: [{ userId: req.user.id }, { userId: null }]
+            });
+            return res.json({ success: true, deleted: result.deletedCount });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'فشل الحذف' });
         }
     });
 
@@ -1853,6 +2222,16 @@ function formatMaintenance(log) {
                 requestId: req.requestId
             });
 
+            await notify({
+                type: 'success',
+                category: 'vessel',
+                title: 'مركب جديد',
+                message: 'تم إضافة "' + newVessel.name + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/fleet.html',
+                icon: 'ship',
+                actorName: req.user.name || req.user.username
+            });
+
             return res.status(201).json({ success: true, message: 'تم إضافة المركب بنجاح', vessel: formatVessel(newVessel) });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ في إضافة المركب' });
@@ -1921,9 +2300,9 @@ function formatMaintenance(log) {
         try {
             const vessel = await Vessel.findOne({ id: req.params.id });
             if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-            
+
             await Vessel.deleteOne({ _id: vessel._id });
-            
+
             await addSystemLog({
                 userId: req.user.id,
                 userName: req.user.name,
@@ -1935,7 +2314,7 @@ function formatMaintenance(log) {
                 ip: req.ip,
                 requestId: req.requestId
             });
-            
+
             return res.json({ success: true, message: 'تم حذف المركب بنجاح' });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ في حذف المركب' });
@@ -2000,6 +2379,16 @@ function formatMaintenance(log) {
                 requestId: req.requestId
             });
 
+            await notify({
+                type: 'info',
+                category: 'maintenance',
+                title: 'مهمة صيانة جديدة',
+                message: 'تم إضافة "' + logEntry.vesselName + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/maintenance.html',
+                icon: 'wrench',
+                actorName: req.user.name || req.user.username
+            });
+
             return res.status(201).json({ success: true, message: 'تم إضافة سجل الصيانة', log: formatMaintenance(logEntry) });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
@@ -2024,14 +2413,14 @@ function formatMaintenance(log) {
         }
     });
 
-    // 🗑️ حذف الصيانة — admin + manager فقط (editor + maintenance_unit ممنوعان)
+    // 🗑️ حذف الصيانة — admin + manager فقط
     app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, async (req, res) => {
         try {
             const log = await Maintenance.findOne({ id: req.params.id });
             if (!log) return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
-            
+
             await Maintenance.deleteOne({ _id: log._id });
-            
+
             await addSystemLog({
                 userId: req.user.id,
                 userName: req.user.name,
@@ -2043,7 +2432,7 @@ function formatMaintenance(log) {
                 ip: req.ip,
                 requestId: req.requestId
             });
-            
+
             return res.json({ success: true, message: 'تم حذف سجل الصيانة' });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
@@ -2074,7 +2463,6 @@ function formatMaintenance(log) {
             const existing = await User.findOne({ username: cleanUsername });
             if (existing) return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
 
-            // ✅ v9.12: أضيف 'editor' إلى الأدوار المسموحة
             const allowedRoles = [
                 'admin', 'manager', 'editor', 'maintenance_unit', 'viewer',
                 'مسؤول', 'مدير', 'مشغل', 'مشاهد',
@@ -2086,7 +2474,6 @@ function formatMaintenance(log) {
             const emailExists = await User.findOne({ email: cleanEmail });
             if (emailExists) return res.status(400).json({ success: false, error: 'البريد الإلكتروني موجود' });
 
-            // ✅ pre('save') يُشفّر مرة واحدة
             const newUser = await User.create({
                 id: randomId(8), username: cleanUsername, password: password,
                 email: cleanEmail, name: cleanUsername, role: finalRole,
@@ -2104,6 +2491,16 @@ function formatMaintenance(log) {
                 status: 'success',
                 ip: req.ip,
                 requestId: req.requestId
+            });
+
+            await notify({
+                type: 'success',
+                category: 'user',
+                title: 'مستخدم جديد',
+                message: 'تم إضافة "' + newUser.username + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/users.html',
+                icon: 'user-plus',
+                actorName: req.user.name || req.user.username
             });
 
             return res.status(201).json({ success: true, message: 'تم إضافة المستخدم بنجاح', user: formatUser(newUser) });
@@ -2129,7 +2526,6 @@ function formatMaintenance(log) {
             if (email) targetUser.email = email.trim().toLowerCase();
 
             if (role) {
-                // ✅ v9.12: أضيف 'editor' إلى الأدوار المسموحة
                 const allowedRoles = [
                     'admin', 'manager', 'editor', 'maintenance_unit', 'viewer',
                     'مسؤول', 'مدير', 'مشغل', 'مشاهد',
@@ -2143,7 +2539,6 @@ function formatMaintenance(log) {
 
             if (password) {
                 if (!isStrongPassword(password)) return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة' });
-                // ✅ pre('save') سيُشفّرها مرة واحدة
                 targetUser.password = password;
                 targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
                 await revokeAllUserSessions(targetUser.id);
@@ -2326,7 +2721,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.12</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.13</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2376,24 +2771,20 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.12');
+            console.log('🚢 MARINE SYSTEM v9.13');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Double-hash fix: APPLIED');
-            console.log('✅ RBAC v4: 5 roles (admin/manager/editor/maintenance_unit/viewer)');
-            console.log('✅ Page-level access control: ENABLED');
+            console.log('✅ RBAC v4: 5 roles');
+            console.log('✅ Notes: ' + (Note ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
             console.log(`👤 Admin: ${ADMIN_USERNAME}`);
             console.log(`🍃 MongoDB: ${mongoConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
             console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY'}`);
-            console.log('🔒 Access JWT: 15 minutes');
-            console.log('🔄 Refresh JWT: 7 days');
-            console.log('🛡️ CSRF: ENABLED');
-            console.log('🔐 tokenVersion: ENFORCED');
-            console.log('👑 RBAC: ENABLED (v4, 5 roles)');
             console.log('=========================================');
         });
     }
