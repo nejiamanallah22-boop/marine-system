@@ -2,8 +2,9 @@
 <div id="page-users">
     <style>
         /* ============================================================
-           👥 USERS PAGE - v9.5
-           Enterprise Hardened + Fixed normalizeId + Full CRUD
+           👥 USERS PAGE - v9.12
+           Enterprise Hardened + 5 Roles (admin/manager/editor/
+           maintenance_unit/viewer) + Full CRUD
            ============================================================ */
 
         #page-users {
@@ -56,9 +57,9 @@
             font-size: 11px;
             padding: 4px 14px;
             border-radius: 20px;
-            background: rgba(66,133,244,.15);
-            color: #60a5fa;
-            border: 1px solid rgba(66,133,244,.1);
+            background: rgba(230,179,30,.15);
+            color: #f5d76e;
+            border: 1px solid rgba(230,179,30,.1);
             font-weight: 400;
         }
 
@@ -82,14 +83,14 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg,#4285f4,#34a853);
-            color: #fff;
+            background: linear-gradient(135deg,#e6b31e,#f5d76e);
+            color: #0a1628;
             border: none;
         }
 
         .btn-primary:hover {
             transform: scale(1.02);
-            box-shadow: 0 4px 30px rgba(66,133,244,.3);
+            box-shadow: 0 4px 30px rgba(230,179,30,.3);
         }
 
         .btn-outline {
@@ -144,10 +145,10 @@
             margin-bottom: 8px;
         }
 
-        .stat-card.total h4 { color:#60a5fa; }
+        .stat-card.total h4 { color:#f5d76e; }
         .stat-card.active h4 { color:#4ade80; }
         .stat-card.inactive h4 { color:#f87171; }
-        .stat-card.admins h4 { color:#f5d76e; }
+        .stat-card.admins h4 { color:#a78bfa; }
 
         .table-container {
             overflow-x: auto;
@@ -219,23 +220,33 @@
         }
 
         .role-badge.admin {
-            background: rgba(245,215,110,.15);
+            background: rgba(230,179,30,.15);
             color: #f5d76e;
+            border: 1px solid rgba(230,179,30,.1);
         }
 
         .role-badge.manager {
             background: rgba(96,165,250,.15);
             color: #60a5fa;
+            border: 1px solid rgba(96,165,250,.1);
+        }
+
+        .role-badge.editor {
+            background: rgba(167,139,250,.15);
+            color: #a78bfa;
+            border: 1px solid rgba(167,139,250,.1);
         }
 
         .role-badge.operator {
             background: rgba(74,222,128,.15);
             color: #4ade80;
+            border: 1px solid rgba(74,222,128,.1);
         }
 
         .role-badge.viewer {
             background: rgba(255,255,255,.06);
-            color: rgba(255,255,255,.4);
+            color: rgba(255,255,255,.5);
+            border: 1px solid rgba(255,255,255,.04);
         }
 
         .btn-sm {
@@ -289,7 +300,7 @@
             width: 36px;
             height: 36px;
             border: 3px solid rgba(255,255,255,.04);
-            border-top-color: #4285f4;
+            border-top-color: #e6b31e;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin: 0 auto 12px;
@@ -381,8 +392,13 @@
         .form-group input:focus,
         .form-group select:focus {
             outline:none;
-            border-color:#4285f4;
-            box-shadow:0 0 0 4px rgba(66,133,244,.06);
+            border-color:#e6b31e;
+            box-shadow:0 0 0 4px rgba(230,179,30,.06);
+        }
+
+        .form-group select option {
+            background:#0a1628;
+            color:#e2e8f0;
         }
 
         .form-group input.invalid,
@@ -412,10 +428,14 @@
         }
 
         .btn-save {
-            background:linear-gradient(135deg,#4285f4,#34a853);
-            color:#fff;
+            background:linear-gradient(135deg,#e6b31e,#f5d76e);
+            color:#0a1628;
             border:none;
             font-weight:600;
+        }
+
+        .btn-save:hover:not(:disabled) {
+            box-shadow:0 4px 30px rgba(230,179,30,.3);
         }
 
         .btn-cancel {
@@ -454,7 +474,7 @@
         .toast.success { background:rgba(16,185,129,.94); }
         .toast.danger { background:rgba(239,68,68,.94); }
         .toast.warning { background:rgba(245,158,11,.94); }
-        .toast.info { background:rgba(59,130,246,.94); }
+        .toast.info { background:rgba(230,179,30,.94); }
 
         .toast-close {
             margin-right:auto;
@@ -512,7 +532,7 @@
         <div class="users-header">
             <h2>
                 👥 إدارة المستخدمين
-                <span class="badge">v9.5 🔐 Enterprise</span>
+                <span class="badge">v9.12 🔐 5 Roles</span>
             </h2>
 
             <div class="header-actions">
@@ -621,18 +641,19 @@
                 <div class="form-group">
                     <label>👔 الدور</label>
                     <select id="userRole">
-                        <option value="viewer">مشاهد</option>
-                        <option value="operator">مشغل</option>
-                        <option value="manager">مدير</option>
-                        <option value="admin">مسؤول</option>
+                        <option value="viewer">👁️ مشاهد — قراءة فقط</option>
+                        <option value="maintenance_unit">🔧 وحدة الصيانة — مراكب وصيانة</option>
+                        <option value="editor">✏️ محرر — إضافة وتعديل</option>
+                        <option value="manager">📋 مدير الأسطول — إدارة كاملة</option>
+                        <option value="admin">👑 مسؤول النظام — كل شيء</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label>📊 الحالة</label>
                     <select id="userStatus">
-                        <option value="active">نشط</option>
-                        <option value="inactive">غير نشط</option>
+                        <option value="active">🟢 نشط</option>
+                        <option value="inactive">🔴 غير نشط</option>
                     </select>
                 </div>
 
@@ -651,14 +672,14 @@
     </div>
 
     <!-- ============================================================
-         JAVASCRIPT - v9.5
+         JAVASCRIPT - v9.12
          ============================================================ -->
     <script>
     (function() {
         'use strict';
 
         // ============================================================
-        // ✅ v9.5: CLEANUP STATE
+        // ✅ v9.12: CLEANUP STATE
         // ============================================================
 
         var _isDestroyed = false;
@@ -702,7 +723,7 @@
                 delete window.cleanupUsersPage;
             } catch (e) {}
 
-            console.log('🧹 Users cleanup done');
+            console.log('🧹 Users v9.12 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -723,6 +744,32 @@
         var isLoading = false;
         var isSaving = false;
         var currentAbortController = null;
+
+        // ============================================================
+        // 🔐 ROLE NORMALIZATION — v9.12
+        // ============================================================
+        // ✅ مطابق تمامًا لـ LEGACY_ROLE_MAP في server.js v9.12
+        // ============================================================
+
+        var LEGACY_ROLE_MAP = {
+            'super_admin': 'admin',
+            'مسؤول': 'admin',
+            'مدير': 'manager',
+            'محرر': 'editor',
+            'مشغل': 'maintenance_unit',
+            'operator': 'maintenance_unit',
+            'user': 'viewer',
+            'مشاهد': 'viewer'
+        };
+
+        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
+
+        function normalizeRole(role) {
+            if (!role) return 'viewer';
+            var r = String(role).trim();
+            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
+            return LEGACY_ROLE_MAP[r] || 'viewer';
+        }
 
         // ============================================================
         // 🔧 DOM HELPERS
@@ -753,7 +800,6 @@
             return div.innerHTML;
         }
 
-        // ✅ v9.5: يقبل كل صيغ المعرّفات
         function normalizeId(id) {
             if (id === null || id === undefined) return '';
 
@@ -761,11 +807,6 @@
 
             if (!value) return '';
 
-            // ✅ اسمح بـ:
-            // - hex (16 أو 24 حرف)
-            // - UUID
-            // - أرقام
-            // - نص مع _ و -
             if (!/^[a-zA-Z0-9_\-]{1,64}$/.test(value)) {
                 console.warn('⚠️ normalizeId: invalid format:', value);
                 return '';
@@ -1035,7 +1076,6 @@
 
                 console.log('📦 Users response:', data);
 
-                // ✅ استخراج المصفوفة من أي شكل
                 if (Array.isArray(data)) {
                     usersData = data;
                 } else if (data && Array.isArray(data.users)) {
@@ -1047,7 +1087,6 @@
                     usersData = [];
                 }
 
-                // ✅ تصفية العناصر الصالحة
                 usersData = usersData.filter(function(user) {
                     return user && typeof user === 'object';
                 });
@@ -1104,7 +1143,7 @@
             }).length;
 
             var admins = users.filter(function(u) {
-                return u.role === 'admin';
+                return normalizeRole(u.role) === 'admin';
             }).length;
 
             var el;
@@ -1132,7 +1171,6 @@
             var container = $('usersTableContainer');
             if (!container) return;
 
-            // ✅ حالة فارغة
             if (!Array.isArray(users) || users.length === 0) {
                 container.innerHTML =
                     '<div class="empty-state">' +
@@ -1142,11 +1180,13 @@
                 return;
             }
 
+            // ✅ v9.12: خريطة الأدوار الخمسة
             var roleMap = {
-                admin: '<span class="role-badge admin">مسؤول</span>',
-                manager: '<span class="role-badge manager">مدير</span>',
-                operator: '<span class="role-badge operator">مشغل</span>',
-                viewer: '<span class="role-badge viewer">مشاهد</span>'
+                admin:            '<span class="role-badge admin">👑 مسؤول النظام</span>',
+                manager:          '<span class="role-badge manager">📋 مدير الأسطول</span>',
+                editor:           '<span class="role-badge editor">✏️ محرر</span>',
+                maintenance_unit: '<span class="role-badge operator">🔧 وحدة الصيانة</span>',
+                viewer:           '<span class="role-badge viewer">👁️ مشاهد</span>'
             };
 
             var html =
@@ -1164,7 +1204,6 @@
             var validCount = 0;
 
             users.forEach(function(user) {
-                // ✅ v9.5: استخراج الـ id من أي مكان
                 var rawId = user.id || user._id || user.userId;
 
                 if (!rawId) {
@@ -1194,7 +1233,9 @@
                 var username = user.name || user.username || '-';
                 var email = user.email || '-';
 
-                var role = roleMap[user.role] || escapeHtml(user.role || '-');
+                // ✅ v9.12: استخدم normalizeRole قبل البحث في الخريطة
+                var normalizedRole = normalizeRole(user.role);
+                var role = roleMap[normalizedRole] || escapeHtml(normalizedRole || '-');
 
                 html +=
                     '<tr>' +
@@ -1250,7 +1291,6 @@
 
             container.innerHTML = html;
 
-            // ✅ ربط الأزرار
             container.querySelectorAll('.edit-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     editUser(this.dataset.id);
@@ -1376,8 +1416,9 @@
             el = $('userPassword');
             if (el) el.value = '';
 
+            // ✅ v9.12: normalizeRole قبل التعيين
             el = $('userRole');
-            if (el) el.value = user.role || 'viewer';
+            if (el) el.value = normalizeRole(user.role);
 
             el = $('userStatus');
             if (el) el.value = user.active !== false ? 'active' : 'inactive';
@@ -1415,7 +1456,6 @@
                 return false;
             }
 
-            // كلمة المرور مطلوبة عند الإنشاء
             if (!data.id && !isStrongEnoughPassword(data.password)) {
                 var pEl = $('userPassword');
                 if (pEl) pEl.classList.add('invalid');
@@ -1423,7 +1463,6 @@
                 return false;
             }
 
-            // عند التعديل، إذا أُدخلت كلمة مرور يجب أن تكون قوية
             if (data.id && data.password && !isStrongEnoughPassword(data.password)) {
                 var pEl2 = $('userPassword');
                 if (pEl2) pEl2.classList.add('invalid');
@@ -1463,7 +1502,8 @@
                 return;
             }
 
-            var allowedRoles = ['admin', 'manager', 'operator', 'viewer'];
+            // ✅ v9.12: الأدوار الخمسة المسموحة
+            var allowedRoles = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
 
             if (allowedRoles.indexOf(role) === -1) {
                 showToast('الدور المحدد غير صالح.', 'danger');
@@ -1566,10 +1606,9 @@
                 return;
             }
 
-            // منع تعطيل آخر admin
-            if (currentStatus && user.role === 'admin') {
+            if (currentStatus && normalizeRole(user.role) === 'admin') {
                 var activeAdmins = usersData.filter(function(u) {
-                    return u.role === 'admin' && u.active !== false;
+                    return normalizeRole(u.role) === 'admin' && u.active !== false;
                 });
 
                 if (activeAdmins.length <= 1) {
@@ -1641,9 +1680,9 @@
                 return;
             }
 
-            if (user.role === 'admin') {
+            if (normalizeRole(user.role) === 'admin') {
                 var adminCount = usersData.filter(function(u) {
-                    return u.role === 'admin';
+                    return normalizeRole(u.role) === 'admin';
                 }).length;
 
                 if (adminCount <= 1) {
@@ -1695,7 +1734,7 @@
         function init() {
             if (!pageExists()) return;
 
-            console.log('👥 Users v9.5 initializing...');
+            console.log('👥 Users v9.12 initializing...');
 
             addSafeListener($('addUserBtn'), 'click', toggleUserForm);
 
@@ -1709,17 +1748,15 @@
             addSafeListener($('cancelUserBtn'), 'click', closeUserForm);
             addSafeListener($('saveUserBtn'), 'click', saveUser);
 
-            // منع Enter من الإرسال التلقائي
             addSafeListener($('userForm'), 'keydown', function(event) {
                 if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
                     event.preventDefault();
                 }
             });
 
-            // تحميل أولي
             loadUsersData();
 
-            console.log('✅ Users v9.5 initialized');
+            console.log('✅ Users v9.12 initialized');
         }
 
         // ============================================================
@@ -1737,6 +1774,7 @@
         window.deleteUser = deleteUser;
         window.showToast = showToast;
         window.getToken = getToken;
+        window.normalizeRole = normalizeRole;
         window.cleanupUsersPage = _usersCleanup;
 
         // ============================================================
