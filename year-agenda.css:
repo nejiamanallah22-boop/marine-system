@@ -1,0 +1,61 @@
+.year-agenda-wrapper { position: relative; display: inline-block; }
+.year-agenda-wrapper #yearFilterDisplay {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.03);
+    color: #e2e8f0; font-size: 0.75rem; min-width: 140px;
+    cursor: pointer; font-family: var(--font);
+    text-align: center; transition: all var(--transition);
+}
+.year-agenda-wrapper #yearFilterDisplay:hover { border-color: #e94560; background: rgba(233,69,96,0.04); }
+.year-agenda-wrapper #yearFilterDisplay.active { border-color: #e94560; box-shadow: 0 0 0 4px rgba(233,69,96,0.06); }
+.year-agenda-dropdown {
+    display: none; position: absolute; top: calc(100% + 8px); right: 0;
+    width: 320px; background: linear-gradient(145deg, #111e3a, #0a1628);
+    border: 1px solid rgba(233,69,96,0.15); border-radius: 14px;
+    padding: 14px; z-index: 1000;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.year-agenda-dropdown.open { display: block; }
+.year-agenda-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.year-agenda-header span { color: #f5c842; font-size: 0.85rem; font-weight: 700; }
+.year-nav-btn {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    color: #e94560; width: 32px; height: 32px; border-radius: 50%;
+    cursor: pointer; font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+}
+.year-nav-btn:hover { background: rgba(233,69,96,0.12); }
+.year-agenda-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; max-height: 240px; overflow-y: auto;
+}
+.year-cell {
+    padding: 10px 6px; border-radius: 8px; text-align: center;
+    font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer; position: relative;
+}
+.year-cell:hover { background: rgba(233,69,96,0.08); color: #fff; }
+.year-cell.current { background: rgba(245,200,66,0.1); border-color: rgba(245,200,66,0.3); color: #f5c842; font-weight: 800; }
+.year-cell.current::after { content: '★'; position: absolute; top: 2px; left: 4px; font-size: 0.65rem; color: #f5c842; }
+.year-cell.has-data { color: #55efc4; }
+.year-cell.has-data::before {
+    content: ''; position: absolute; bottom: 3px; right: 50%;
+    transform: translateX(50%); width: 4px; height: 4px;
+    border-radius: 50%; background: #55efc4;
+}
+.year-cell.selected { background: linear-gradient(135deg, #e94560, #f5c842); color: #0a1628; font-weight: 800; border-color: transparent; }
+.year-cell.selected::before, .year-cell.selected::after { display: none; }
+.year-agenda-footer { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.04); }
+.year-agenda-btn-all {
+    background: rgba(233,69,96,0.08); border: 1px solid rgba(233,69,96,0.15);
+    color: #e94560; padding: 6px 16px; border-radius: 20px; cursor: pointer;
+    font-family: var(--font); font-size: 0.75rem; font-weight: 600; width: 100%;
+}
+.year-agenda-btn-all:hover { background: rgba(233,69,96,0.15); }
+@media (max-width: 480px) { .year-agenda-dropdown { width: calc(100vw - 40px); right: auto; left: 0; } }
