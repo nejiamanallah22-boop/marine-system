@@ -1,21 +1,12 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.11
-// 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.12
+// 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
-// ✨ v9.11:
-//    - ✅ FIXED: Double-hashing bug in ensureAdminExists
-//    - ✅ FIXED: tokenVersion no longer increments on every restart
-//    - ✅ ADDED: RBAC v3 (admin/manager/maintenance_unit/viewer)
-//    - ✅ ADDED: /api/auth/permissions endpoint
-//    - ✅ ADDED: maintenance:delete as separate permission
-//    - ✅ ADDED: requireOneOf middleware
-//    - ✅ ADDED: Page-level access control support
-//    - Auto reset admin (password, lockedUntil, loginAttempts)
-//    - Smart model resolution
-//    - MongoDB Atlas integration
-//    - tokenVersion enforced
-//    - Ordered logout
-//    - Refresh token rotation + replay protection
+// ✨ v9.12 changes vs v9.11:
+//    - ✅ ADDED: 'editor' role (same permissions as maintenance_unit)
+//    - ✅ ADDED: editor to ROLE_LABELS
+//    - ✅ ADDED: editor to allowedRoles (POST /api/users & PUT /api/users/:id)
+//    - No other logic changed from v9.11
 // ============================================================
 
 'use strict';
@@ -30,7 +21,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.11 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.12 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -1038,41 +1029,57 @@ function authenticateAccessToken(req, res, next) {
 }
 
 // ============================================================
-// 👑 RBAC v3 — نظام صلاحيات احترافي كامل
+// 👑 RBAC v4 — نظام صلاحيات احترافي (5 أدوار)
 // ============================================================
 //
 // 📋 التصميم:
 //    - admin              : كل شيء (مستخدمين + مراقبة + إعدادات + CRUD)
-//    - manager            : مراكب (CRUD) + صيانة (CRUD) + سجلات
-//    - maintenance_unit   : مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل)
-//                           ⚠️ لا يحذف، لا يرى المستخدمين أو المراقبة
+//    - manager            : مراكب CRUD + صيانة CRUD (بما فيها الحذف) + سجلات
+//    - editor             : مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل) — بدون حذف
+//    - maintenance_unit   : مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل) — بدون حذف
+//                           ⚠️ نفس صلاحيات editor (تسمية مختلفة فقط)
 //    - viewer             : قراءة فقط
+//
+// 🎯 صلاحيات الحذف:
+//    - vessels:delete         → admin فقط
+//    - maintenance:delete     → admin + manager
+//    - users:*                → admin فقط
 // ============================================================
 
 const ROLE_PERMISSIONS = {
-    // 👑 مدير النظام — كل شيء
+    // 👑 admin — كل شيء
     admin: ['*'],
-    
-    // 📋 مدير الأسطول — مراكب + صيانة كاملة + سجلات
+
+    // 📋 manager — مراكب CRUD + صيانة CRUD (بما فيها الحذف) + سجلات
     manager: [
+        'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
+        // ⚠️ vessels:delete غير ممنوح — admin فقط
         'maintenance:read', 'maintenance:create', 'maintenance:update', 'maintenance:delete',
-        'logs:read',
-        'dashboard:view'
+        'logs:read'
     ],
-    
-    // 🔧 وحدة الصيانة — مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل)
-    maintenance_unit: [
+
+    // ✏️ editor — مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل) — بدون حذف
+    editor: [
+        'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
-        'maintenance:read', 'maintenance:create', 'maintenance:update',
-        'dashboard:view'
+        'maintenance:read', 'maintenance:create', 'maintenance:update'
+        // ⚠️ لا يحذف مراكب ولا صيانة
     ],
-    
-    // 👁️ مشاهد/قائد — قراءة فقط
+
+    // 🔧 maintenance_unit — مراكب (إنشاء/تعديل) + صيانة (إنشاء/تعديل) — بدون حذف
+    maintenance_unit: [
+        'dashboard:view',
+        'vessels:read', 'vessels:create', 'vessels:update',
+        'maintenance:read', 'maintenance:create', 'maintenance:update'
+        // ⚠️ لا يحذف مراكب ولا صيانة
+    ],
+
+    // 👁️ viewer — قراءة فقط
     viewer: [
+        'dashboard:view',
         'vessels:read',
-        'maintenance:read',
-        'dashboard:view'
+        'maintenance:read'
     ]
 };
 
@@ -1089,6 +1096,7 @@ const SENSITIVE_PERMISSIONS = {
 const ROLE_LABELS = {
     admin: 'مسؤول النظام',
     manager: 'مدير الأسطول',
+    editor: 'محرر',
     maintenance_unit: 'وحدة الصيانة',
     viewer: 'مشاهد'
 };
@@ -1280,7 +1288,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.11', timestamp: new Date().toISOString(),
+            version: '9.12', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory'
         });
@@ -2016,7 +2024,7 @@ function formatMaintenance(log) {
         }
     });
 
-    // 🗑️ حذف الصيانة — admin + manager فقط (maintenance_unit ممنوع)
+    // 🗑️ حذف الصيانة — admin + manager فقط (editor + maintenance_unit ممنوعان)
     app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, async (req, res) => {
         try {
             const log = await Maintenance.findOne({ id: req.params.id });
@@ -2066,8 +2074,9 @@ function formatMaintenance(log) {
             const existing = await User.findOne({ username: cleanUsername });
             if (existing) return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
 
+            // ✅ v9.12: أضيف 'editor' إلى الأدوار المسموحة
             const allowedRoles = [
-                'admin', 'manager', 'maintenance_unit', 'viewer',
+                'admin', 'manager', 'editor', 'maintenance_unit', 'viewer',
                 'مسؤول', 'مدير', 'مشغل', 'مشاهد',
                 'operator', 'super_admin'
             ];
@@ -2120,8 +2129,9 @@ function formatMaintenance(log) {
             if (email) targetUser.email = email.trim().toLowerCase();
 
             if (role) {
+                // ✅ v9.12: أضيف 'editor' إلى الأدوار المسموحة
                 const allowedRoles = [
-                    'admin', 'manager', 'maintenance_unit', 'viewer',
+                    'admin', 'manager', 'editor', 'maintenance_unit', 'viewer',
                     'مسؤول', 'مدير', 'مشغل', 'مشاهد',
                     'operator', 'super_admin'
                 ];
@@ -2316,7 +2326,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.11</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.12</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2366,12 +2376,12 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.11');
+            console.log('🚢 MARINE SYSTEM v9.12');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Double-hash fix: APPLIED');
-            console.log('✅ RBAC v3: 4 roles (admin/manager/maintenance_unit/viewer)');
+            console.log('✅ RBAC v4: 5 roles (admin/manager/editor/maintenance_unit/viewer)');
             console.log('✅ Page-level access control: ENABLED');
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
@@ -2383,7 +2393,7 @@ function formatMaintenance(log) {
             console.log('🔄 Refresh JWT: 7 days');
             console.log('🛡️ CSRF: ENABLED');
             console.log('🔐 tokenVersion: ENFORCED');
-            console.log('👑 RBAC: ENABLED (v3)');
+            console.log('👑 RBAC: ENABLED (v4, 5 roles)');
             console.log('=========================================');
         });
     }
