@@ -1,9 +1,5 @@
 // ============================================================
-// 📦 models/index.js - v2.3 (Production)
-// ============================================================
-// يحمّل جميع الموديلات بشكل آمن
-// - Note: مطلوب (Note Verbale)
-// - Notification: اختياري
+// 📦 models/index.js - v2.4 (Production)
 // ============================================================
 
 console.log('');
@@ -11,9 +7,6 @@ console.log('📦 ============================================');
 console.log('📦 [MODELS] تحميل الموديلات...');
 console.log('📦 ============================================');
 
-// ============================================================
-// 🔧 دالة تحميل آمنة
-// ============================================================
 function tryLoad(name, path) {
     try {
         const mod = require(path);
@@ -25,16 +18,9 @@ function tryLoad(name, path) {
     }
 }
 
-// ============================================================
-// 📦 متغيرات الموديلات
-// ============================================================
 let Vessel, User, Ticket, Log, Maintenance, Note, Notification;
 
-// ============================================================
-// 🚀 التحميل
-// ============================================================
 try {
-    // ✅ الموديلات الأساسية (مطلوبة)
     Vessel      = tryLoad('Vessel', './Vessel');
     User        = tryLoad('User', './User');
     Ticket      = tryLoad('Ticket', './Ticket');
@@ -42,7 +28,7 @@ try {
     Maintenance = tryLoad('Maintenance', './Maintenance');
     Note        = tryLoad('Note', './Note');
 
-    // ✅ Notification — اختياري (لن يكسر التطبيق إن لم يوجد)
+    // ✅ Notification اختياري
     try {
         Notification = tryLoad('Notification', './Notification');
     } catch (e) {
@@ -64,35 +50,17 @@ try {
     throw err;
 }
 
-// ============================================================
-// ✅ التحقق النهائي من الموديلات المطلوبة
-// ============================================================
-if (!Vessel) {
-    throw new Error('❌ Model "Vessel" is not loaded correctly');
-}
-if (!User) {
-    throw new Error('❌ Model "User" is not loaded correctly');
-}
-if (!Ticket) {
-    throw new Error('❌ Model "Ticket" is not loaded correctly');
-}
-if (!Log) {
-    throw new Error('❌ Model "Log" is not loaded correctly');
-}
-if (!Maintenance) {
-    throw new Error('❌ Model "Maintenance" is not loaded correctly');
-}
-if (!Note) {
-    throw new Error('❌ Model "Note" is not loaded correctly');
-}
-// ✅ Notification اختياري — لا نتحقق منه
+// ✅ التحقق النهائي
+if (!Vessel) throw new Error('❌ Model "Vessel" is not loaded');
+if (!User) throw new Error('❌ Model "User" is not loaded');
+if (!Ticket) throw new Error('❌ Model "Ticket" is not loaded');
+if (!Log) throw new Error('❌ Model "Log" is not loaded');
+if (!Maintenance) throw new Error('❌ Model "Maintenance" is not loaded');
+if (!Note) throw new Error('❌ Model "Note" is not loaded');
 
 console.log('✅ [MODELS] جميع الموديلات المطلوبة جاهزة للاستخدام');
 console.log('');
 
-// ============================================================
-// 📤 التصدير
-// ============================================================
 module.exports = {
     Vessel,
     User,
