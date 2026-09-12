@@ -633,6 +633,179 @@
             display: none;
         }
 
+        /* ✅ ===== NOTIFICATIONS DROPDOWN (NEW v9.16) ===== */
+        .notif-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 0;
+            width: 380px;
+            max-height: 520px;
+            background: linear-gradient(145deg, #111e3a, #0a1628);
+            border: 1px solid rgba(230,179,30,0.12);
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(230,179,30,0.04);
+            z-index: 1000;
+            overflow: hidden;
+            animation: notifSlide 0.25s cubic-bezier(0.16,1,0.3,1);
+        }
+        .notif-dropdown.open { display: block; }
+
+        @keyframes notifSlide {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .notif-dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(230,179,30,0.08);
+            background: rgba(230,179,30,0.02);
+        }
+        .notif-dropdown-header h4 {
+            color: var(--gold-light);
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .notif-mark-all {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            font-size: 11px;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .notif-mark-all:hover {
+            color: var(--gold-light);
+            background: rgba(230,179,30,0.06);
+        }
+        .notif-mark-all:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .notif-dropdown-list {
+            max-height: 440px;
+            overflow-y: auto;
+        }
+        .notif-dropdown-list::-webkit-scrollbar { width: 4px; }
+        .notif-dropdown-list::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 10px; }
+
+        .notif-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .notif-item:hover { background: rgba(230,179,30,0.04); }
+        .notif-item.unread { background: rgba(230,179,30,0.03); }
+        .notif-item.unread::before {
+            content: '';
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background: var(--gold);
+            border-radius: 50%;
+        }
+
+        .notif-item-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+        .notif-item-icon.info    { background: rgba(59,130,246,0.15);  color: #60a5fa; }
+        .notif-item-icon.success { background: rgba(34,197,94,0.15);   color: #4ade80; }
+        .notif-item-icon.warning { background: rgba(234,179,8,0.15);   color: #facc15; }
+        .notif-item-icon.danger  { background: rgba(239,68,68,0.15);   color: #f87171; }
+
+        .notif-item-body { flex: 1; min-width: 0; }
+        .notif-item-title {
+            color: #e8edf5;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        .notif-item-msg {
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
+        .notif-item-time {
+            color: rgba(255,255,255,0.25);
+            font-size: 10px;
+        }
+
+        .notif-item-delete {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.15);
+            cursor: pointer;
+            font-size: 11px;
+            padding: 4px 6px;
+            border-radius: 6px;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+        .notif-item:hover .notif-item-delete { opacity: 1; }
+        .notif-item-delete:hover {
+            color: var(--danger);
+            background: rgba(239,68,68,0.08);
+        }
+
+        .notif-empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: rgba(255,255,255,0.25);
+            font-size: 13px;
+        }
+        .notif-empty i {
+            display: block;
+            font-size: 32px;
+            margin-bottom: 12px;
+            color: rgba(230,179,30,0.15);
+        }
+
+        .notif-loading {
+            text-align: center;
+            padding: 30px 20px;
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+        }
+        .notif-loading i {
+            animation: spin 1s linear infinite;
+            margin-left: 6px;
+        }
+
+        @media (max-width: 480px) {
+            .notif-dropdown {
+                width: calc(100vw - 20px);
+                left: -10px;
+            }
+        }
+        /* ===== END NOTIFICATIONS DROPDOWN ===== */
+
         .user-wrapper { position: relative; }
         .user-btn {
             display: flex;
@@ -1105,6 +1278,20 @@
                             <i class="fas fa-bell"></i>
                             <span class="notif-badge" id="notifBadge">0</span>
                         </button>
+                        <!-- ✅ NEW: Notifications Dropdown -->
+                        <div class="notif-dropdown" id="notifDropdown">
+                            <div class="notif-dropdown-header">
+                                <h4><i class="fas fa-bell"></i> الإشعارات</h4>
+                                <button class="notif-mark-all" id="notifMarkAll" disabled>تعليم الكل كمقروء</button>
+                            </div>
+                            <div class="notif-dropdown-list" id="notifList">
+                                <div class="notif-empty">
+                                    <i class="fas fa-bell-slash"></i>
+                                    لا توجد إشعارات
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ✅ END Notifications Dropdown -->
                     </div>
                     <div class="user-wrapper">
                         <button class="user-btn" id="userBtn">
@@ -1221,22 +1408,19 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============================================================
-    JAVASCRIPT - v9.12 (RBAC 5 roles + secure CSRF + refresh flow)
+    JAVASCRIPT - v9.16 (Notifications Fix)
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v9.12
+        // 🚢 MARINE SYSTEM - v9.16
         // - CSRF من الخادم فقط (بدون توليد محلي)
-        // - Refresh Token عبر HttpOnly Cookie فقط (لا وجود له في JS إطلاقًا)
+        // - Refresh Token عبر HttpOnly Cookie فقط
         // - تجديد تلقائي للـ Access Token عند 401
-        // - RBAC مطابق لصلاحيات السيرفر (admin/manager/editor/maintenance_unit/viewer)
-        // - إصلاح loadPage() (fallback عبر المسارات فعليًا)
-        // - إزالة MutationObserver على body بالكامل
-        // - إزالة password.trim()
-        // - عدم إرسال CSRF مع GET
+        // - RBAC مطابق لصلاحيات السيرفر
+        // - ✅ NEW: نظام إشعارات كامل (Dropdown + Polling + Server Sync)
         // ============================================================
 
-        console.log('🚢 Marine System v9.12 - Loading...');
+        console.log('🚢 Marine System v9.16 - Loading...');
 
         // ============================================================
         // ✅ GLOBAL CLEANUP STATE
@@ -1251,6 +1435,11 @@
                 if (window._dateTimeInterval) {
                     clearInterval(window._dateTimeInterval);
                     window._dateTimeInterval = null;
+                }
+
+                if (window._notifPollingInterval) {
+                    clearInterval(window._notifPollingInterval);
+                    window._notifPollingInterval = null;
                 }
 
                 if (Array.isArray(window._pageIntervals)) {
@@ -1350,8 +1539,6 @@
 
         const CONFIG = {
             API: '/api',
-            // ✅ v9.12: لم يعد هناك أي مفتاح CSRF في localStorage.
-            //           CSRF يُحفظ فقط في الذاكرة (متغير جافاسكريبت) ويُجدَّد من الخادم.
             KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },
             PAGES: {
                 dashboard: 'لوحة التحكم',
@@ -1369,11 +1556,9 @@
         };
 
         // ============================================================
-        // 🔐 RBAC - Role-Based Access Control (v9.12)
-        // مطابق تمامًا لـ server.js: ROLE_PERMISSIONS + LEGACY_ROLE_MAP
+        // 🔐 RBAC - Role-Based Access Control
         // ============================================================
 
-        // ✅ صلاحيات كل دور — يجب أن تبقى متطابقة مع server.js دائمًا
         const ROLE_PERMISSIONS = {
             admin: ['*'],
 
@@ -1384,14 +1569,12 @@
                 'logs:read'
             ],
 
-            // ✏️ محرر — إنشاء/تعديل فقط، بدون حذف وبدون سجلات إدارية
             editor: [
                 'dashboard:view',
                 'vessels:read', 'vessels:create', 'vessels:update',
                 'maintenance:read', 'maintenance:create', 'maintenance:update'
             ],
 
-            // 🔧 وحدة الصيانة — نفس صلاحيات editor (تسمية مختلفة فقط)
             maintenance_unit: [
                 'dashboard:view',
                 'vessels:read', 'vessels:create', 'vessels:update',
@@ -1405,14 +1588,12 @@
             ]
         };
 
-        // 🗺️ الصلاحيات الحساسة — admin فقط، مطابقة لـ SENSITIVE_PERMISSIONS في السيرفر
         const SENSITIVE_PERMISSIONS = {
             'users:manage': ['admin'],
             'monitoring:view': ['admin'],
             'settings:manage': ['admin']
         };
 
-        // 🗺️ تسميات عربية للعرض في الواجهة
         const ROLE_LABELS = {
             admin: 'مسؤول النظام',
             manager: 'مدير الأسطول',
@@ -1421,7 +1602,6 @@
             viewer: 'مشاهد'
         };
 
-        // 🗺️ توافق مع الأدوار القديمة (عربية / إنجليزية سابقة) — مطابق لسيرفر v9.11
         const LEGACY_ROLE_MAP = {
             'مسؤول': 'admin',
             'مدير': 'manager',
@@ -1431,7 +1611,6 @@
             'super_admin': 'admin'
         };
 
-        // ✅ يحوّل أي دور قديم/عربي/غير معروف إلى أحد الأدوار الخمسة الفعلية
         function normalizeRole(role) {
             if (!role) return 'viewer';
             const trimmed = String(role).trim();
@@ -1453,7 +1632,6 @@
             settings: 'settings:manage'
         };
 
-        // ✅ الصفحات الخاصة بالأدمن فقط (تطابق SENSITIVE_PERMISSIONS)
         const ADMIN_ONLY_PAGES = ['users', 'settings', 'monitoring'];
 
         function isAdmin() {
@@ -1543,12 +1721,7 @@
         window.allLogs = allLogs;
 
         // ============================================================
-        // 🔒 CSRF TOKEN MANAGER (v9.12)
-        // ------------------------------------------------------------
-        // ✅ التوكن يأتي حصريًا من الخادم (استجابة /api/csrf-token أو
-        //    هيدر X-CSRF-Token في استجابات auth).
-        // ✅ يُحفظ في الذاكرة فقط (متغير الكلاس) — بدون localStorage.
-        // ✅ لا يوجد أي توليد عشوائي في المتصفح (لا Math.random هنا).
+        // 🔒 CSRF TOKEN MANAGER
         // ============================================================
 
         class CSRFTokenManager {
@@ -1558,7 +1731,6 @@
                 this.fetchingPromise = null;
             }
 
-            // يستخدم توكن أتى من استجابة سيرفر (login/refresh/csrf-token)
             setToken(token, expiresAt) {
                 if (!token) return;
                 this.token = token;
@@ -1570,7 +1742,6 @@
                 return !!this.token && Date.now() < this.expiry;
             }
 
-            // ✅ يجلب توكن جديد من الخادم فقط (لا توليد محلي إطلاقًا)
             async fetchFromServer() {
                 if (this.fetchingPromise) return this.fetchingPromise;
 
@@ -1591,13 +1762,11 @@
                 return this.fetchingPromise;
             }
 
-            // ✅ يُرجع توكن صالح؛ يجلب واحدًا من الخادم عند الحاجة
             async getToken() {
                 if (this.isValid()) return this.token;
                 return this.fetchFromServer();
             }
 
-            // نسخة متزامنة (بدون انتظار) — تُستخدم فقط حين يكون التوكن متوفرًا أصلاً
             getTokenSync() {
                 return this.isValid() ? this.token : null;
             }
@@ -1692,13 +1861,7 @@
         }
 
         // ============================================================
-        // 🌐 FETCH WRAPPER + تجديد تلقائي للـ Access Token عند 401
-        // ------------------------------------------------------------
-        // ✅ يُستخدم لكل الطلبات المصادَق عليها بدل fetch() المباشر.
-        // ✅ عند استجابة 401 يحاول تجديد access token عبر
-        //    POST /api/auth/refresh (يعتمد فقط على كوكي HttpOnly)
-        //    ثم يعيد الطلب الأصلي مرة واحدة بالتوكن الجديد.
-        // ✅ لا يرسل X-CSRF-Token إطلاقًا مع GET/HEAD/OPTIONS.
+        // 🌐 FETCH WRAPPER
         // ============================================================
 
         let _refreshInFlight = null;
@@ -1708,7 +1871,7 @@
 
             _refreshInFlight = fetch('/api/auth/refresh', {
                 method: 'POST',
-                credentials: 'include', // الكوكي HttpOnly يُرسَل تلقائيًا؛ لا حاجة لقراءته من JS
+                credentials: 'include',
                 headers: { 'Accept': 'application/json' }
             })
                 .then(async res => {
@@ -1736,12 +1899,6 @@
             return _refreshInFlight;
         }
 
-        /**
-         * apiFetch(url, options)
-         * - يضيف Authorization تلقائيًا إن وُجد توكن.
-         * - يضيف X-CSRF-Token فقط للطلبات غير الآمنة (POST/PUT/PATCH/DELETE).
-         * - عند 401: يحاول تجديد التوكن مرة واحدة ثم يعيد الطلب.
-         */
         async function apiFetch(url, options = {}) {
             const method = (options.method || 'GET').toUpperCase();
             const isSafeMethod = ['GET', 'HEAD', 'OPTIONS'].includes(method);
@@ -1802,6 +1959,309 @@
         }
 
         // ============================================================
+        // 🔔 NOTIFICATIONS MANAGER (NEW v9.16)
+        // ✅ يجلب من الخادم: GET /api/notifications
+        // ✅ يعلّم كمقروء: PUT /api/notifications/:id/read
+        // ✅ يعلّم الكل: PUT /api/notifications/read-all
+        // ✅ يحذف: DELETE /api/notifications/:id
+        // ✅ Polling كل 60 ثانية
+        // ============================================================
+
+        class NotificationManager {
+            constructor() {
+                this.notifications = [];
+                this.unreadCount = 0;
+                this.isLoading = false;
+                this.isOpen = false;
+                this.pollingInterval = 60000; // 60 ثانية
+            }
+
+            // ✅ يجلب الإشعارات من الخادم
+            async fetch() {
+                if (!getToken()) return;
+                if (this.isLoading) return;
+
+                this.isLoading = true;
+
+                try {
+                    const response = await apiFetch(CONFIG.API + '/notifications?limit=30', {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 401) return;
+                        console.warn('⚠️ Failed to fetch notifications:', response.status);
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data && data.success) {
+                        this.notifications = Array.isArray(data.notifications) ? data.notifications : [];
+                        this.unreadCount = Number(data.unreadCount) || 0;
+                        this.updateBadge();
+                        if (this.isOpen) this.render();
+                    }
+                } catch (e) {
+                    console.debug('🔔 fetch notifications error:', e.message);
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+
+            // ✅ يعرض العدّاد على الجرس
+            updateBadge() {
+                const badge = document.getElementById('notifBadge');
+                if (!badge) return;
+                if (this.unreadCount > 0) {
+                    badge.textContent = this.unreadCount > 99 ? '99+' : String(this.unreadCount);
+                    badge.style.display = 'inline';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            // ✅ فتح/إغلاق Dropdown
+            toggle() {
+                const dropdown = document.getElementById('notifDropdown');
+                if (!dropdown) return;
+
+                this.isOpen = !this.isOpen;
+
+                if (this.isOpen) {
+                    dropdown.classList.add('open');
+                    this.render();
+                    // جلب محدّث عند الفتح
+                    this.fetch();
+                } else {
+                    dropdown.classList.remove('open');
+                }
+            }
+
+            close() {
+                const dropdown = document.getElementById('notifDropdown');
+                if (!dropdown) return;
+                dropdown.classList.remove('open');
+                this.isOpen = false;
+            }
+
+            // ✅ تنسيق الوقت
+            formatTime(isoString) {
+                try {
+                    const date = new Date(isoString);
+                    const diff = Date.now() - date.getTime();
+                    const secs = Math.floor(diff / 1000);
+                    if (secs < 60) return 'الآن';
+                    const mins = Math.floor(secs / 60);
+                    if (mins < 60) return 'منذ ' + mins + ' دقيقة';
+                    const hours = Math.floor(mins / 60);
+                    if (hours < 24) return 'منذ ' + hours + ' ساعة';
+                    const days = Math.floor(hours / 24);
+                    if (days < 30) return 'منذ ' + days + ' يوم';
+                    return date.toLocaleDateString('ar-TN');
+                } catch (e) {
+                    return '';
+                }
+            }
+
+            // ✅ أيقونة حسب النوع
+            getIconClass(type) {
+                const map = {
+                    success: 'fa-check-circle',
+                    error: 'fa-times-circle',
+                    warning: 'fa-exclamation-triangle',
+                    info: 'fa-info-circle'
+                };
+                return map[type] || 'fa-bell';
+            }
+
+            // ✅ رسم القائمة
+            render() {
+                const list = document.getElementById('notifList');
+                const markAllBtn = document.getElementById('notifMarkAll');
+                if (!list) return;
+
+                if (this.notifications.length === 0) {
+                    list.innerHTML =
+                        '<div class="notif-empty">' +
+                            '<i class="fas fa-bell-slash"></i>' +
+                            'لا توجد إشعارات' +
+                        '</div>';
+                    if (markAllBtn) markAllBtn.disabled = true;
+                    return;
+                }
+
+                if (markAllBtn) markAllBtn.disabled = this.unreadCount === 0;
+
+                list.innerHTML = this.notifications.map(n => {
+                    const type = (n.type === 'error' || n.type === 'danger') ? 'danger' : (n.type || 'info');
+                    const icon = this.getIconClass(n.type);
+                    const title = escapeHTML(n.title || 'إشعار');
+                    const message = escapeHTML(n.message || '');
+                    const time = this.formatTime(n.createdAt);
+                    const id = escapeHTML(n.id);
+
+                    return '<div class="notif-item ' + (n.isRead ? '' : 'unread') + '" data-id="' + id + '" data-link="' + escapeHTML(n.link || '') + '">' +
+                        '<div class="notif-item-icon ' + type + '">' +
+                            '<i class="fas ' + icon + '"></i>' +
+                        '</div>' +
+                        '<div class="notif-item-body">' +
+                            '<div class="notif-item-title">' + title + '</div>' +
+                            (message ? '<div class="notif-item-msg">' + message + '</div>' : '') +
+                            '<div class="notif-item-time">' + escapeHTML(time) + '</div>' +
+                        '</div>' +
+                        '<button class="notif-item-delete" data-delete="' + id + '" title="حذف">✕</button>' +
+                    '</div>';
+                }).join('');
+
+                // ربط الأحداث
+                list.querySelectorAll('.notif-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        if (e.target.closest('.notif-item-delete')) return;
+                        this.handleItemClick(item);
+                    });
+                });
+
+                list.querySelectorAll('.notif-item-delete').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const id = btn.dataset.delete;
+                        this.deleteNotification(id);
+                    });
+                });
+            }
+
+            async handleItemClick(item) {
+                const id = item.dataset.id;
+                const link = item.dataset.link;
+
+                if (!id) return;
+
+                // علّم كمقروء
+                await this.markAsRead(id);
+
+                // افتح الرابط إن وُجد
+                if (link) {
+                    const page = link.replace(/^\/?pages\//, '').replace(/\.html$/, '');
+                    if (page && typeof loadPage === 'function') {
+                        this.close();
+                        loadPage(page);
+                    }
+                }
+            }
+
+            async markAsRead(id) {
+                if (!id) return;
+
+                // تحديث محلي فوري
+                const n = this.notifications.find(x => x.id === id);
+                if (n && !n.isRead) {
+                    n.isRead = true;
+                    this.unreadCount = Math.max(0, this.unreadCount - 1);
+                    this.updateBadge();
+                    this.render();
+                }
+
+                try {
+                    await apiFetch(CONFIG.API + '/notifications/' + encodeURIComponent(id) + '/read', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+                    });
+                } catch (e) {
+                    console.debug('🔔 markAsRead error:', e.message);
+                }
+            }
+
+            async markAllAsRead() {
+                const prevUnread = this.unreadCount;
+
+                // تحديث محلي فوري
+                this.notifications.forEach(n => { n.isRead = true; });
+                this.unreadCount = 0;
+                this.updateBadge();
+                this.render();
+
+                try {
+                    const response = await apiFetch(CONFIG.API + '/notifications/read-all', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+                    });
+
+                    if (response.ok) {
+                        showToast('✅ تم تعليم جميع الإشعارات كمقروءة', 'success');
+                    } else {
+                        // استرجاع في حال الفشل
+                        this.unreadCount = prevUnread;
+                        this.updateBadge();
+                        this.fetch();
+                        showToast('❌ فشل التحديث', 'error');
+                    }
+                } catch (e) {
+                    this.unreadCount = prevUnread;
+                    this.updateBadge();
+                    this.fetch();
+                    showToast('❌ خطأ في الاتصال', 'error');
+                }
+            }
+
+            async deleteNotification(id) {
+                if (!id) return;
+
+                // إزالة محلية فورية
+                const removed = this.notifications.find(x => x.id === id);
+                this.notifications = this.notifications.filter(x => x.id !== id);
+                if (removed && !removed.isRead) {
+                    this.unreadCount = Math.max(0, this.unreadCount - 1);
+                }
+                this.updateBadge();
+                this.render();
+
+                try {
+                    await apiFetch(CONFIG.API + '/notifications/' + encodeURIComponent(id), {
+                        method: 'DELETE',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                } catch (e) {
+                    console.debug('🔔 delete error:', e.message);
+                }
+            }
+
+            // ✅ تشغيل polling
+            startPolling() {
+                this.stopPolling();
+                this.fetch();
+                window._notifPollingInterval = setInterval(() => {
+                    if (getToken() && !document.hidden) {
+                        this.fetch();
+                    }
+                }, this.pollingInterval);
+                console.log('🔔 Notifications polling started (60s)');
+            }
+
+            stopPolling() {
+                if (window._notifPollingInterval) {
+                    clearInterval(window._notifPollingInterval);
+                    window._notifPollingInterval = null;
+                    console.log('🔔 Notifications polling stopped');
+                }
+            }
+
+            // ✅ تصفير عند logout
+            reset() {
+                this.notifications = [];
+                this.unreadCount = 0;
+                this.isOpen = false;
+                this.updateBadge();
+                this.render();
+                this.stopPolling();
+            }
+        }
+
+        const notificationManager = new NotificationManager();
+        window.notificationManager = notificationManager;
+
+        // ============================================================
         // 🔐 FORGOT PASSWORD
         // ============================================================
 
@@ -1850,7 +2310,6 @@
             if (!username || !password || !errorEl || !loginBtn) return;
 
             const user = username.value.trim();
-            // ✅ v9.12: لا نستخدم .trim() على كلمة المرور — المسافات جزء من كلمة المرور
             const pass = password.value;
 
             errorEl.className = 'error-msg';
@@ -1871,8 +2330,6 @@
 
             (async () => {
                 try {
-                    // ✅ CSRF من الخادم قبل الإرسال (login مستثناة من فحص CSRF في السيرفر،
-                    //    لكن نرسله على أي حال لتوحيد السلوك ولأن السيرفر يقبله إن وُجد)
                     const csrfToken = await csrfManager.getToken();
 
                     const response = await fetch('/api/auth/login', {
@@ -1908,16 +2365,12 @@
                         window.currentUser = data.user;
                         setToken(token);
 
-                        // ✅ CSRF الجديد من استجابة الخادم مباشرة (وليس Math.random)
                         if (data.csrfToken) {
                             csrfManager.setToken(
                                 data.csrfToken,
                                 data.session?.csrfExpiry || (Date.now() + 8 * 60 * 60 * 1000)
                             );
                         }
-                        // ✅ Refresh Token: لا يظهر أبدًا في data، السيرفر يضعه في
-                        //    كوكي HttpOnly (__Host-marine.refresh) تلقائيًا عبر Set-Cookie.
-                        //    لا حاجة ولا إمكانية لقراءته أو تخزينه هنا.
 
                         console.log('✅ Login successful for user: ' + currentUser.username);
                         console.log('👤 Role:', normalizeRole(currentUser.role));
@@ -1939,6 +2392,9 @@
 
                         setTimeout(loadAllData, 300);
                         setTimeout(fetchServerStatus, 500);
+
+                        // ✅ تشغيل الإشعارات
+                        notificationManager.startPolling();
                     } else {
                         errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
                         errorEl.classList.add('show');
@@ -1968,7 +2424,6 @@
                     return false;
                 }
 
-                // ✅ GET → بدون X-CSRF-Token
                 const response = await fetch('/api/auth/me', {
                     headers: {
                         'Authorization': 'Bearer ' + token,
@@ -1978,7 +2433,6 @@
                 });
 
                 if (response.status === 401) {
-                    // ✅ حاول تجديد التوكن قبل الاستسلام (قد يكون الـ access منتهيًا فقط)
                     console.warn('⚠️ التوكن غير صالح (401) — محاولة تجديد...');
                     const newToken = await refreshAccessToken();
                     if (newToken) {
@@ -2010,7 +2464,6 @@
             }
         }
 
-        // نسخة بدون إعادة محاولة تجديد (تُستخدم بعد نجاح التجديد لتفادي الحلقات)
         async function verifyTokenOnce(token) {
             try {
                 const response = await fetch('/api/auth/me', {
@@ -2055,7 +2508,6 @@
                 return;
             }
             try {
-                // ✅ GET → بدون X-CSRF-Token؛ يستخدم apiFetch للاستفادة من التجديد التلقائي
                 const response = await apiFetch(CONFIG.API + '/session-status', {
                     method: 'GET',
                     headers: { 'Accept': 'application/json' }
@@ -2083,7 +2535,6 @@
             if (!token) return;
 
             try {
-                // ✅ GET كلها عبر apiFetch (بدون CSRF، مع تجديد تلقائي عند 401)
                 const [vesselsRes, usersRes] = await Promise.all([
                     apiFetch(CONFIG.API + '/vessels', { method: 'GET' }),
                     isAdmin()
@@ -2116,6 +2567,11 @@
                     }
                 } catch (e) {}
 
+                // ✅ جلب الإشعارات أيضاً
+                try {
+                    await notificationManager.fetch();
+                } catch (e) {}
+
             } catch (error) {
                 console.error('❌ خطأ أثناء تحميل البيانات:', error);
             }
@@ -2143,12 +2599,7 @@
         }
 
         // ============================================================
-        // 📄 LOAD PAGE - v9.12
-        // ------------------------------------------------------------
-        // ✅ إصلاح جوهري: الحلقة القديمة كانت async غير منتظرة مع break
-        //    في نهاية أول تكرار → تجرّب مسارًا واحدًا فقط فعليًا.
-        //    الآن: نبحث بالتتابع (await) عن أول مسار ناجح، وإن فشل الكل
-        //    نعرض رسالة خطأ واحدة فقط بعد استنفاد كل المسارات.
+        // 📄 LOAD PAGE
         // ============================================================
 
         function loadPage(page) {
@@ -2167,7 +2618,6 @@
                     currentPage = page;
                     localStorage.setItem(CONFIG.KEYS.PAGE, page);
 
-                    // ✅ Cleanup من الصفحة السابقة
                     if (Array.isArray(window._pageCleanup) && window._pageCleanup.length > 0) {
                         console.log('🧹 Running cleanup for previous page...');
                         window._pageCleanup.forEach(fn => {
@@ -2218,8 +2668,6 @@
                     let html = null;
                     let lastError = null;
 
-                    // ✅ الإصلاح الفعلي: تجربة كل مسار بالتتابع فعليًا (await)،
-                    //    والتوقف عند أول نجاح فقط. لا break مبكر يقطع الاحتياطي.
                     for (const path of possiblePaths) {
                         try {
                             const response = await fetch(path, { cache: 'no-store' });
@@ -2277,7 +2725,6 @@
                         }
                     });
 
-                    // ✅ حقن CSRF في أي نموذج ظهر ضمن الصفحة المحمَّلة (بدون MutationObserver عالمي)
                     if (csrfManager && typeof csrfManager.injectTokenToForms === 'function') {
                         csrfManager.injectTokenToForms();
                     }
@@ -2295,7 +2742,7 @@
         }
 
         // ============================================================
-        // 🔄 REFRESH (تحديث الصفحة الحالية، ليس refresh token)
+        // 🔄 REFRESH
         // ============================================================
 
         async function refreshCurrentPage() {
@@ -2328,7 +2775,6 @@
             console.log('🚪 Starting logout...');
 
             try {
-                // ✅ CSRF من الخادم مباشرة قبل logout (بدون تخزينه في localStorage)
                 const csrfToken = await csrfManager.getToken();
                 const token = getToken();
 
@@ -2349,6 +2795,9 @@
                     }
                 }
             } catch (e) {}
+
+            // ✅ إيقاف الإشعارات
+            notificationManager.reset();
 
             if (typeof _globalCleanup === 'function') {
                 try { _globalCleanup(); } catch (e) {}
@@ -2404,7 +2853,6 @@
         async function initApp() {
             console.log('📄 DOM جاهز');
 
-            // ✅ جلب أول CSRF token من الخادم فور تحميل الصفحة (لا يوجد أي توليد محلي)
             csrfManager.fetchFromServer().catch(() => {});
 
             // FORGOT PASSWORD
@@ -2451,7 +2899,6 @@
                     sendResetBtn.innerHTML = '⏳ جاري الإرسال...';
 
                     try {
-                        // ✅ CSRF من الخادم مباشرة (نفس مصدر csrfManager، بدون تكرار المنطق)
                         const csrfToken = await csrfManager.getToken();
 
                         var response = await fetch('/api/auth/forgot-password', {
@@ -2529,13 +2976,48 @@
                 });
             });
 
-            // NOTIF
+            // ============================================================
+            // 🔔 NOTIFICATIONS WIRING (NEW v9.16)
+            // ============================================================
             const notifBtn = document.getElementById('notifBtn');
+            const notifDropdown = document.getElementById('notifDropdown');
+            const notifMarkAll = document.getElementById('notifMarkAll');
+
             if (notifBtn) {
-                notifBtn.onclick = function() {
-                    showToast('📬 تم فتح الإشعارات', 'info');
-                };
+                notifBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    notificationManager.toggle();
+                });
             }
+
+            if (notifMarkAll) {
+                notifMarkAll.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    notificationManager.markAllAsRead();
+                });
+            }
+
+            // إغلاق عند النقر خارجها
+            document.addEventListener('click', function(e) {
+                if (!notificationManager.isOpen) return;
+                const wrapper = document.querySelector('.notification-wrapper');
+                if (wrapper && !wrapper.contains(e.target)) {
+                    notificationManager.close();
+                }
+            });
+
+            // منع إغلاق عند النقر داخل اللوحة
+            if (notifDropdown) {
+                notifDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+            // ============================================================
+            // END NOTIFICATIONS WIRING
+            // ============================================================
+
+            // NOTIF: عرض القائمة الفارغة عند البدء
+            notificationManager.render();
 
             // USER BTN
             const userBtn = document.getElementById('userBtn');
@@ -2565,17 +3047,8 @@
             }
             window.addEventListener('scroll', _handleScroll, { passive: true });
 
-            // ✅ v9.12: تمت إزالة MutationObserver على document.body بالكامل.
-            //    الحقن الآن يحدث فقط في نقاط محدَّدة ومعروفة:
-            //    - بعد نجاح تسجيل الدخول (setToken)
-            //    - بعد تحميل كل صفحة فرعية (loadPage)
-            //    - عند تجديد CSRF (setToken داخل CSRFTokenManager)
-            //    هذا يعطي نفس النتيجة العملية بدون مراقبة كامل شجرة DOM بشكل مستمر.
-
-            // Date/time
             syncDateTimeInterval();
 
-            // Server status
             const tid1 = setTimeout(fetchServerStatus, 1000);
             window._pageTimeouts.push(tid1);
 
@@ -2596,6 +3069,9 @@
                         loadPage(safePage);
                         showToast('👋 مرحباً بعودتك', 'success');
                         setTimeout(loadAllData, 500);
+
+                        // ✅ تشغيل الإشعارات
+                        notificationManager.startPolling();
                     } else {
                         clearToken();
                         csrfManager.clearToken();
@@ -2603,7 +3079,7 @@
                 }
             }
 
-            console.log('✅ Marine System v9.12 ready');
+            console.log('✅ Marine System v9.16 ready');
         }
 
         if (document.readyState === 'loading') {
@@ -2639,8 +3115,9 @@
         window.ROLE_PERMISSIONS = ROLE_PERMISSIONS;
         window.PAGE_PERMISSIONS = PAGE_PERMISSIONS;
         window.normalizeRole = normalizeRole;
+        window.notificationManager = notificationManager;
 
-        console.log('✅ Marine System v9.12 loaded successfully');
+        console.log('✅ Marine System v9.16 loaded successfully');
     </script>
 
 </body>
