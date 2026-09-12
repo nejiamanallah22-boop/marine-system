@@ -2,7 +2,7 @@
 <div id="page-ai-assistant">
     <style>
         /* ============================================================
-           🤖 AI ASSISTANT STYLES v2.2 (Auto Voice)
+           🤖 AI ASSISTANT STYLES v2.3 (Auto Voice + Smart Import)
            ============================================================ */
         .ai-container {
             display: flex;
@@ -566,6 +566,300 @@
             transform: translateX(-18px);
         }
 
+        /* ============================================================
+           📥 SMART IMPORT STYLES
+           ============================================================ */
+        .import-section {
+            margin-bottom: 16px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .import-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: rgba(255,255,255,0.02);
+            cursor: pointer;
+        }
+        .import-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .import-brand .import-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e6b31e, #f59e0b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
+        }
+        .import-brand .import-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .import-brand .import-subtitle {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+        }
+        .import-toggle-btn {
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(230,179,30,0.3);
+            background: rgba(230,179,30,0.08);
+            color: #e6b31e;
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .import-toggle-btn:hover {
+            background: rgba(230,179,30,0.15);
+            border-color: #e6b31e;
+        }
+        .import-toggle-btn.open {
+            background: rgba(230,179,30,0.15);
+            border-color: #e6b31e;
+        }
+        .import-body {
+            display: none;
+            padding: 16px 20px 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .import-body.open { display: block; }
+
+        .drop-zone {
+            border: 2px dashed rgba(230,179,30,0.25);
+            border-radius: 14px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(230,179,30,0.02);
+        }
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: #e6b31e;
+            background: rgba(230,179,30,0.08);
+            transform: scale(1.005);
+        }
+        .drop-zone .drop-icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+            color: #e6b31e;
+        }
+        .drop-zone .drop-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .drop-zone .drop-subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .import-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(66,133,244,0.06);
+            border: 1px solid rgba(66,133,244,0.15);
+            border-radius: 12px;
+            margin-top: 12px;
+            color: #60a5fa;
+            font-size: 13px;
+        }
+        .spinner-import {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(66,133,244,0.2);
+            border-top-color: #4285f4;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .import-results {
+            margin-top: 16px;
+        }
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(74,222,128,0.06);
+            border: 1px solid rgba(74,222,128,0.15);
+            border-radius: 12px;
+            color: #4ade80;
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
+        .results-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .import-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: none;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .import-btn-primary {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: #fff;
+        }
+        .import-btn-primary:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(34,197,94,0.3);
+        }
+        .import-btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .import-btn-secondary {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+        }
+        .import-btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+
+        .import-warnings {
+            margin-top: 10px;
+            padding: 10px 14px;
+            background: rgba(251,191,36,0.06);
+            border: 1px solid rgba(251,191,36,0.15);
+            border-radius: 10px;
+            color: #fbbf24;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .import-warnings ul {
+            margin: 4px 0 0 20px;
+            padding: 0;
+        }
+
+        .import-table-wrapper {
+            margin-top: 12px;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .import-table-wrapper::-webkit-scrollbar { height: 6px; }
+        .import-table-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(230,179,30,0.3);
+            border-radius: 10px;
+        }
+        .import-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 900px;
+        }
+        .import-table thead {
+            background: rgba(230,179,30,0.06);
+        }
+        .import-table th {
+            padding: 10px 12px;
+            text-align: right;
+            color: #e6b31e;
+            font-weight: 600;
+            font-size: 12px;
+            white-space: nowrap;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .import-table td {
+            padding: 8px 12px;
+            color: #e2e8f0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            white-space: nowrap;
+        }
+        .import-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+        .import-table td input,
+        .import-table td select {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 12px;
+            width: 100%;
+            min-width: 70px;
+            outline: none;
+        }
+        .import-table td input:focus,
+        .import-table td select:focus {
+            border-color: #e6b31e;
+            background: rgba(255,255,255,0.06);
+        }
+        .import-table td select option { background: #0a1628; }
+        .import-table .row-delete {
+            background: rgba(248,113,113,0.1);
+            border: 1px solid rgba(248,113,113,0.25);
+            color: #f87171;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .import-table .row-delete:hover {
+            background: rgba(248,113,113,0.2);
+        }
+
+        .import-final {
+            margin-top: 16px;
+            padding: 20px;
+            border-radius: 14px;
+            text-align: center;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+        .import-final.success {
+            background: rgba(74,222,128,0.08);
+            border: 1px solid rgba(74,222,128,0.2);
+            color: #4ade80;
+        }
+        .import-final.error {
+            background: rgba(248,113,113,0.08);
+            border: 1px solid rgba(248,113,113,0.2);
+            color: #f87171;
+        }
+        .import-final .big-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+        .import-final .stats-line {
+            margin-top: 12px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
         @media (max-width: 768px) {
             .ai-container { height: calc(100vh - 150px); min-height: 400px; }
             .message { max-width: 95%; }
@@ -574,6 +868,9 @@
             .ai-input-wrapper .send-btn { flex: 1; justify-content: center; }
             .ai-header .ai-brand .ai-subtitle { display: none; }
             .voice-panel { width: calc(100vw - 40px); left: 20px; }
+            .results-header { flex-direction: column; align-items: stretch; }
+            .results-actions { justify-content: stretch; }
+            .import-btn { flex: 1; justify-content: center; }
         }
         @media (max-width: 480px) {
             .ai-container { height: calc(100vh - 120px); min-height: 350px; }
@@ -586,8 +883,83 @@
             .mic-btn { width: 42px; height: 42px; min-height: 42px; font-size: 16px; }
             .ai-input-wrapper .send-btn { padding: 10px 16px; min-height: 42px; font-size: 13px; }
             .api-status-bar { font-size: 12px; padding: 6px 14px; }
+            .drop-zone { padding: 20px 14px; }
+            .drop-zone .drop-icon { font-size: 32px; }
         }
     </style>
+
+    <!-- ============================================================
+         📥 SMART IMPORT SECTION
+         ============================================================ -->
+    <div class="import-section">
+        <div class="import-header" onclick="importToggle()">
+            <div class="import-brand">
+                <span class="import-icon">📥</span>
+                <div>
+                    <div class="import-title">الاستيراد الذكي</div>
+                    <div class="import-subtitle">ارفع وثيقة → استخرج المراكب تلقائياً → احفظها في التطبيق</div>
+                </div>
+            </div>
+            <button class="import-toggle-btn" id="importToggleBtn" onclick="event.stopPropagation();importToggle()">
+                📂 فتح
+            </button>
+        </div>
+
+        <div class="import-body" id="importBody">
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('importFileInput').click()">
+                <input type="file" id="importFileInput" style="display:none;"
+                       accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.webp">
+                <div class="drop-icon">📄</div>
+                <div class="drop-title">اسحب الملف هنا أو اضغط للاختيار</div>
+                <div class="drop-subtitle">PDF · Word · Excel · CSV · صور (بحد أقصى 10 MB)</div>
+            </div>
+
+            <div class="import-status" id="importStatus" style="display:none;">
+                <div class="spinner-import"></div>
+                <span id="importStatusText">جاري تحليل الملف...</span>
+            </div>
+
+            <div class="import-results" id="importResults" style="display:none;">
+                <div class="results-header">
+                    <div>
+                        ✅ تم استخراج <strong id="resultsCount">0</strong> مركب
+                        <span id="resultsFile" style="color:rgba(255,255,255,0.3);font-size:12px;"></span>
+                    </div>
+                    <div class="results-actions">
+                        <button class="import-btn import-btn-secondary" onclick="importReset()">🔄 ملف آخر</button>
+                        <button class="import-btn import-btn-primary" id="importConfirmBtn" onclick="importConfirm()">
+                            ✅ حفظ الكل في التطبيق
+                        </button>
+                    </div>
+                </div>
+
+                <div class="import-warnings" id="importWarnings" style="display:none;"></div>
+
+                <div class="import-table-wrapper">
+                    <table class="import-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الاسم</th>
+                                <th>الرقم</th>
+                                <th>الطول</th>
+                                <th>المنطقة</th>
+                                <th>الميناء</th>
+                                <th>الفئة</th>
+                                <th>الحالة</th>
+                                <th>العطل</th>
+                                <th>وحدة الإصلاح</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="importTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="import-final" id="importFinal" style="display:none;"></div>
+        </div>
+    </div>
 
     <div class="ai-container" style="position:relative;">
         <div class="ai-header">
@@ -693,13 +1065,13 @@
 
 <script>
 // ============================================================
-// 🤖 AI ASSISTANT — v2.2 (Auto Voice + Persistent)
+// 🤖 AI ASSISTANT — v2.3 (Auto Voice + Smart Import)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🧠 AI Assistant v2.2 (Auto Voice) loading...');
+    console.log('🧠 AI Assistant v2.3 (Auto Voice + Smart Import) loading...');
 
     // ===== الحالة =====
     const state = {
@@ -707,13 +1079,11 @@
         isProcessing: false,
         maxLength: 4000,
         lastMessage: null,
-        // Voice
         recognition: null,
         isListening: false,
         speechSynthesis: window.speechSynthesis || null,
         currentUtterance: null,
         currentSpeakBtn: null,
-        // ✅ القراءة التلقائية — مفعّلة افتراضيًا، محفوظة في localStorage
         autoSpeak: (function() {
             try {
                 const saved = localStorage.getItem('ai_auto_speak');
@@ -722,6 +1092,14 @@
         })(),
         voices: [],
         preferredVoice: null
+    };
+
+    // حالة الاستيراد
+    const importState = {
+        file: null,
+        vessels: [],
+        isAnalyzing: false,
+        isSaving: false
     };
 
     // ============================================================
@@ -739,21 +1117,20 @@
         return escapeHTML(text).replace(/\n/g, '<br>');
     }
 
-    // ✅ إزالة Markdown + HTML قبل القراءة الصوتية
     function stripHTML(html) {
         if (!html) return '';
         let text = String(html);
         text = text
-            .replace(/\*\*(.+?)\*\*/g, '$1')      // **عريض**
-            .replace(/\*(.+?)\*/g, '$1')          // *مائل*
-            .replace(/`(.+?)`/g, '$1')            // `كود`
-            .replace(/^#+\s+/gm, '')              // # عنوان
-            .replace(/^[-•]\s+/gm, '')            // - قائمة
-            .replace(/^\d+\.\s+/gm, '')           // 1. قائمة
-            .replace(/\[(.+?)\]\(.+?\)/g, '$1')   // [رابط](url)
-            .replace(/<br\s*\/?>/gi, ' ')         // <br>
-            .replace(/\n{2,}/g, '. ')             // سطران فارغان → توقف
-            .replace(/\n/g, ' ');                 // سطر واحد → مسافة
+            .replace(/\*\*(.+?)\*\*/g, '$1')
+            .replace(/\*(.+?)\*/g, '$1')
+            .replace(/`(.+?)`/g, '$1')
+            .replace(/^#+\s+/gm, '')
+            .replace(/^[-•]\s+/gm, '')
+            .replace(/^\d+\.\s+/gm, '')
+            .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+            .replace(/<br\s*\/?>/gi, ' ')
+            .replace(/\n{2,}/g, '. ')
+            .replace(/\n/g, ' ');
         const tmp = document.createElement('div');
         tmp.innerHTML = text;
         return (tmp.textContent || tmp.innerText || '').trim();
@@ -807,7 +1184,6 @@
         if (!state.speechSynthesis) return;
         state.voices = state.speechSynthesis.getVoices() || [];
 
-        // ✅ أولوية: ar-TN > ar-SA > ar-EG > أي صوت عربي > فرنسي > الأول
         const preferredOrder = ['ar-TN', 'ar-SA', 'ar-EG', 'ar-MA', 'ar-DZ', 'ar'];
         let arabicVoice = null;
         for (const lang of preferredOrder) {
@@ -884,7 +1260,6 @@
             utterance.lang = 'ar-SA';
         }
 
-        // كشف النص الإنجليزي
         if (/^[A-Za-z\s\d\.,!?]+$/.test(cleanText.slice(0, 100))) {
             utterance.lang = 'en-US';
         }
@@ -940,9 +1315,7 @@
         try { localStorage.setItem('ai_auto_speak', String(state.autoSpeak)); } catch (e) {}
         updateQuickSpeakBtn();
 
-        if (!state.autoSpeak) {
-            stopSpeaking();
-        }
+        if (!state.autoSpeak) stopSpeaking();
 
         toast(state.autoSpeak ? '🔊 القراءة التلقائية مُفعّلة' : '🔇 القراءة التلقائية مُعطّلة', 'info');
     }
@@ -958,7 +1331,6 @@
 
     function initRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
         if (!SpeechRecognition) {
             console.warn('⚠️ Web Speech API غير مدعوم');
             return null;
@@ -987,17 +1359,12 @@
             let interim = '';
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
-                if (event.results[i].isFinal) {
-                    finalTranscript += transcript;
-                } else {
-                    interim += transcript;
-                }
+                if (event.results[i].isFinal) finalTranscript += transcript;
+                else interim += transcript;
             }
-
             const input = getInput();
             if (input) {
-                const text = (finalTranscript + interim).trim();
-                input.value = text;
+                input.value = (finalTranscript + interim).trim();
                 autoResize(input);
                 updateCharCounter();
             }
@@ -1012,9 +1379,8 @@
                 'network': '🌐 خطأ في الشبكة',
                 'aborted': '⏹️ تم الإيقاف'
             };
-            const msg = errMap[event.error] || ('⚠️ خطأ: ' + event.error);
             if (event.error !== 'aborted') {
-                toast(msg, 'warning');
+                toast(errMap[event.error] || ('⚠️ خطأ: ' + event.error), 'warning');
             }
         };
 
@@ -1030,10 +1396,7 @@
     }
 
     function toggleMic() {
-        if (!state.recognition) {
-            state.recognition = initRecognition();
-        }
-
+        if (!state.recognition) state.recognition = initRecognition();
         if (!state.recognition) {
             toast('❌ متصفحك لا يدعم الإدخال الصوتي. استخدم Chrome أو Edge.', 'error');
             return;
@@ -1047,9 +1410,7 @@
         if (state.isListening) {
             try { state.recognition.stop(); } catch (e) {}
         } else {
-            try {
-                state.recognition.start();
-            } catch (e) {
+            try { state.recognition.start(); } catch (e) {
                 console.debug('Recognition start error:', e.message);
             }
         }
@@ -1098,7 +1459,6 @@
 
         scrollToBottom();
 
-        // ✅ القراءة التلقائية — تعمل الآن افتراضيًا
         if (role === 'assistant' && state.autoSpeak && !options.isError) {
             const btn = div.querySelector('.speak-btn');
             setTimeout(() => speakText(text, btn), 250);
@@ -1142,6 +1502,7 @@
                     '<li>🌍 معلومات عامة</li>' +
                     '<li>📊 تحليل البيانات والإحصائيات</li>' +
                     '<li>👨‍💻 معلومات المطوّر والحرس الوطني</li>' +
+                    '<li>📥 استيراد المراكب من وثيقة (فوق)</li>' +
                     '<li>🎤 يمكنك التحدث معي بالضغط على الميكروفون</li>' +
                     '<li>🔊 سأقرأ إجاباتي بصوت عربي تلقائياً</li>' +
                 '</ul>' +
@@ -1275,7 +1636,6 @@
                 return;
             }
 
-            // ✅ عرض الرد + تشغيل الصوت التلقائي (appendMessage تتولى ذلك)
             appendMessage(data.reply, 'assistant');
 
             state.history.push({ role: 'user', content: text });
@@ -1335,6 +1695,291 @@
     }
 
     // ============================================================
+    // 📥 SMART IMPORT LOGIC
+    // ============================================================
+
+    function importToggle() {
+        const body = document.getElementById('importBody');
+        const btn = document.getElementById('importToggleBtn');
+        if (!body || !btn) return;
+
+        const isOpen = body.classList.toggle('open');
+        btn.classList.toggle('open', isOpen);
+        btn.textContent = isOpen ? '📂 إغلاق' : '📂 فتح';
+    }
+
+    function importReset() {
+        importState.file = null;
+        importState.vessels = [];
+
+        document.getElementById('importFileInput').value = '';
+        document.getElementById('importResults').style.display = 'none';
+        document.getElementById('importFinal').style.display = 'none';
+        document.getElementById('importStatus').style.display = 'none';
+        document.getElementById('dropZone').style.display = 'block';
+        document.getElementById('importTableBody').innerHTML = '';
+    }
+
+    function importSetStatus(text) {
+        const statusEl = document.getElementById('importStatus');
+        const textEl = document.getElementById('importStatusText');
+        const dropEl = document.getElementById('dropZone');
+
+        if (text) {
+            textEl.textContent = text;
+            statusEl.style.display = 'flex';
+            dropEl.style.display = 'none';
+        } else {
+            statusEl.style.display = 'none';
+            dropEl.style.display = 'block';
+        }
+    }
+
+    function importHandleFile(file) {
+        if (!file) return;
+
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            toast('⚠️ الملف أكبر من 10 MB', 'error');
+            return;
+        }
+
+        importState.file = file;
+        importAnalyze();
+    }
+
+    async function importAnalyze() {
+        if (!importState.file || importState.isAnalyzing) return;
+
+        importState.isAnalyzing = true;
+        importSetStatus('🔍 جاري تحليل الملف واستخراج المراكب...');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', importState.file);
+
+            const fetcher = (typeof window.apiFetch === 'function') ? window.apiFetch : fetch;
+
+            const res = await fetcher('/api/import/analyze', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || ('خطأ ' + res.status));
+            }
+
+            importState.vessels = Array.isArray(data.vessels) ? data.vessels : [];
+
+            if (importState.vessels.length === 0) {
+                throw new Error('لم يتم التعرف على أي مركب في الملف');
+            }
+
+            importRenderResults(data);
+            toast('✅ تم استخراج ' + importState.vessels.length + ' مركب', 'success');
+
+        } catch (error) {
+            console.error('❌ Import analyze error:', error);
+            importSetStatus(null);
+            toast('❌ ' + error.message, 'error');
+        } finally {
+            importState.isAnalyzing = false;
+        }
+    }
+
+    function importRenderResults(data) {
+        importSetStatus(null);
+
+        document.getElementById('resultsCount').textContent = importState.vessels.length;
+        document.getElementById('resultsFile').textContent = ' — ' + (data.fileName || '');
+        document.getElementById('importResults').style.display = 'block';
+
+        // التحذيرات
+        const warningsEl = document.getElementById('importWarnings');
+        const warnings = Array.isArray(data.warnings) ? data.warnings : [];
+        if (warnings.length > 0) {
+            warningsEl.innerHTML = '⚠️ <strong>تحذيرات:</strong><ul>' +
+                warnings.map(w => '<li>' + escapeHTML(w) + '</li>').join('') +
+                '</ul>';
+            warningsEl.style.display = 'block';
+        } else {
+            warningsEl.style.display = 'none';
+        }
+
+        importRenderTable();
+    }
+
+    function importRenderTable() {
+        const tbody = document.getElementById('importTableBody');
+        tbody.innerHTML = '';
+
+        importState.vessels.forEach((v, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td>' + (i + 1) + '</td>' +
+                '<td><input type="text" value="' + escapeHTML(v.name || '') + '" data-field="name" data-idx="' + i + '"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.num || '') + '" data-field="num" data-idx="' + i + '" style="min-width:60px;"></td>' +
+                '<td><input type="number" value="' + (v.len || 0) + '" data-field="len" data-idx="' + i + '" style="min-width:60px;"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.region || '') + '" data-field="region" data-idx="' + i + '"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.port || '') + '" data-field="port" data-idx="' + i + '"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.cat || '') + '" data-field="cat" data-idx="' + i + '" style="min-width:70px;"></td>' +
+                '<td>' +
+                    '<select data-field="status" data-idx="' + i + '">' +
+                        '<option value="صالح"' + (v.status === 'صالح' ? ' selected' : '') + '>صالح</option>' +
+                        '<option value="صيانة"' + (v.status === 'صيانة' ? ' selected' : '') + '>صيانة</option>' +
+                        '<option value="معطب"' + (v.status === 'معطب' ? ' selected' : '') + '>معطب</option>' +
+                    '</select>' +
+                '</td>' +
+                '<td><input type="text" value="' + escapeHTML(v.break || '') + '" data-field="break" data-idx="' + i + '"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.repairUnit || '') + '" data-field="repairUnit" data-idx="' + i + '"></td>' +
+                '<td><button class="row-delete" onclick="importDeleteRow(' + i + ')">🗑️</button></td>';
+
+            tbody.appendChild(tr);
+        });
+
+        // ربط التعديلات
+        tbody.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('change', function() {
+                const idx = Number(this.dataset.idx);
+                const field = this.dataset.field;
+                if (importState.vessels[idx]) {
+                    if (field === 'len') {
+                        importState.vessels[idx][field] = Number(this.value) || 0;
+                    } else {
+                        importState.vessels[idx][field] = this.value;
+                    }
+                }
+            });
+        });
+    }
+
+    function importDeleteRow(idx) {
+        importState.vessels.splice(idx, 1);
+
+        if (importState.vessels.length === 0) {
+            importReset();
+            toast('تم حذف جميع الصفوف', 'info');
+            return;
+        }
+
+        document.getElementById('resultsCount').textContent = importState.vessels.length;
+        importRenderTable();
+    }
+
+    async function importConfirm() {
+        if (importState.isSaving) return;
+        if (importState.vessels.length === 0) {
+            toast('⚠️ لا توجد مراكب للحفظ', 'warning');
+            return;
+        }
+
+        if (!confirm('هل تريد حفظ ' + importState.vessels.length + ' مركب في التطبيق؟')) {
+            return;
+        }
+
+        importState.isSaving = true;
+        const btn = document.getElementById('importConfirmBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ جاري الحفظ...';
+        }
+
+        try {
+            const fetcher = (typeof window.apiFetch === 'function') ? window.apiFetch : fetch;
+
+            const res = await fetcher('/api/import/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vessels: importState.vessels })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || ('خطأ ' + res.status));
+            }
+
+            const results = data.results || {};
+            const finalEl = document.getElementById('importFinal');
+            finalEl.className = 'import-final success';
+            finalEl.innerHTML =
+                '<div class="big-icon">✅</div>' +
+                '<div><strong>تم الاستيراد بنجاح!</strong></div>' +
+                '<div class="stats-line">' +
+                    '✅ تم إنشاء: <strong>' + (results.created || 0) + '</strong> مركب<br>' +
+                    '⏭️ تم تخطي: <strong>' + (results.skipped || 0) + '</strong> (مكرر أو فارغ)<br>' +
+                    (results.errors && results.errors.length > 0
+                        ? '⚠️ أخطاء: <strong>' + results.errors.length + '</strong>'
+                        : '') +
+                '</div>' +
+                '<div style="margin-top:14px;">' +
+                    '<button class="import-btn import-btn-secondary" onclick="importReset()">📥 استيراد ملف آخر</button>' +
+                '</div>';
+            finalEl.style.display = 'block';
+
+            document.getElementById('importResults').style.display = 'none';
+
+            // إشعار صوتي
+            if (state.autoSpeak && state.speechSynthesis) {
+                setTimeout(() => {
+                    speakText('تم استيراد ' + (results.created || 0) + ' مركب بنجاح', null);
+                }, 300);
+            }
+
+            toast('✅ تم استيراد ' + (results.created || 0) + ' مركب', 'success');
+
+        } catch (error) {
+            console.error('❌ Import confirm error:', error);
+            toast('❌ ' + error.message, 'error');
+        } finally {
+            importState.isSaving = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '✅ حفظ الكل في التطبيق';
+            }
+        }
+    }
+
+    function importInit() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('importFileInput');
+
+        if (!dropZone || !fileInput) return;
+
+        // سحب وإفلات
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('dragover');
+            });
+        });
+
+        dropZone.addEventListener('drop', e => {
+            const files = e.dataTransfer?.files;
+            if (files && files.length > 0) {
+                importHandleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                importHandleFile(this.files[0]);
+            }
+        });
+    }
+
+    // ============================================================
     // التهيئة
     // ============================================================
 
@@ -1342,7 +1987,8 @@
         showWelcome();
         refreshStatus();
         loadVoices();
-        updateQuickSpeakBtn();   // ✅ مزامنة حالة الزر مع localStorage
+        updateQuickSpeakBtn();
+        importInit();
 
         const input = getInput();
         if (input) {
@@ -1397,7 +2043,7 @@
             });
         }
 
-        console.log('✅ AI Assistant v2.2 (Auto Voice) ready — autoSpeak:', state.autoSpeak);
+        console.log('✅ AI Assistant v2.3 (Auto Voice + Smart Import) ready');
     }
 
     // ============================================================
@@ -1419,6 +2065,12 @@
     window.aiToggleAutoSpeak = toggleAutoSpeak;
     window.aiToggleVoicePanel = toggleVoicePanel;
     window.aiStopSpeaking = stopSpeaking;
+
+    // Import functions
+    window.importToggle = importToggle;
+    window.importReset = importReset;
+    window.importConfirm = importConfirm;
+    window.importDeleteRow = importDeleteRow;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
