@@ -1,14 +1,13 @@
 // ============================================================
-// 🤖 AI ASSISTANT + 📥 SMART IMPORT — v1.0
+// 🤖 AI ASSISTANT + 📥 SMART IMPORT — v1.1
 // ملف مستقل يُدمج في server.js
 // ============================================================
 //
-// 📋 الاستخدام في server.js:
-//   1. في الأعلى: const aiAndImportRoutes = require('./routes/ai-and-import');
-//   2. قبل STATIC FILES: aiAndImportRoutes(app, { User, Vessel, Maintenance, Notification, ... });
-//
-// 📦 المكتبات المطلوبة:
-//   npm install multer pdf-parse mammoth
+// 📋 التعديلات v1.1:
+//   - ✅ MODEL: gemini-3.6-flash (بدل gemini-2.0-flash الملغى)
+//   - ✅ إزالة temperature/topP/topK (ملغاة في Gemini 3.x)
+//   - ✅ كشف تلقائي لأسماء موديلات fallback
+//   - ✅ تحسين رسائل الأخطاء
 // ============================================================
 
 'use strict';
@@ -24,9 +23,11 @@ const XLSX = require('xlsx');
 
 const AI_CONFIG = {
     API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/',
-    MODEL: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+    // ✅ الموديل الجديد — إن أردت تغييره استخدم GEMINI_MODEL في Render
+    MODEL: process.env.GEMINI_MODEL || 'gemini-3.6-flash',
+    // 🔄 موديلات احتياطية تُجرَّب بالترتيب إذا فشل الأول
+    FALLBACK_MODELS: ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'],
     MAX_TOKENS: 2048,
-    TEMPERATURE: 0.7,
     TIMEOUT_MS: 30000,
     MAX_PROMPT_LENGTH: 4000,
     DAILY_LIMIT: 100
@@ -138,19 +139,16 @@ const CHAT_SYSTEM_PROMPT = `أنت مساعد ذكي متخصص في الأسط�
 async function extractTextFromFile(buffer, mimetype, originalname) {
     const ext = (originalname.split('.').pop() || '').toLowerCase();
 
-    // PDF
     if (mimetype === 'application/pdf' || ext === 'pdf') {
         const data = await pdfParse(buffer);
         return data.text;
     }
 
-    // Word
     if (mimetype.includes('wordprocessingml') || ext === 'docx') {
         const result = await mammoth.extractRawText({ buffer });
         return result.value;
     }
 
-    // Excel
     if (mimetype.includes('spreadsheetml') || mimetype.includes('ms-excel') ||
         ['xlsx', 'xls'].includes(ext)) {
         const workbook = XLSX.read(buffer, { type: 'buffer' });
@@ -163,13 +161,11 @@ async function extractTextFromFile(buffer, mimetype, originalname) {
         return text;
     }
 
-    // CSV / TXT
     if (mimetype === 'text/csv' || mimetype === 'text/plain' ||
         ['csv', 'txt'].includes(ext)) {
         return buffer.toString('utf-8');
     }
 
-    // صور → Gemini Vision
     if (mimetype.startsWith('image/')) {
         return null;
     }
@@ -178,17 +174,93 @@ async function extractTextFromFile(buffer, mimetype, originalname) {
 }
 
 // ============================================================
-// 🤖 استدعاء Gemini لتحليل النص
+// 🤖 استدعاء Gemini (مع كشف الموديل تلقائياً)
+// ============================================================
+
+/**
+ * يبني جسم الطلب لـ Gemini.
+ * ملاحظة: temperature / topP / topK ملغاة في Gemini 3.x
+ */
+function buildGeminiBody(contents, options) {
+    options = options || {};
+    const generationConfig = {
+        maxOutputTokens: options.maxOutputTokens || 8192
+    };
+    if (options.responseMimeType) {
+        generationConfig.responseMimeType = options.responseMimeType;
+    }
+    return { contents, generationConfig };
+}
+
+/**
+ * استدعاء Gemini مع إعادة المحاولة على موديلات بديلة.
+ * يرجع { ok, data, modelUsed, status, errorText }
+ */
+async function callGemini(contents, options) {
+    options = options || {};
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('GEMINI_API_KEY غير مُعد في متغيرات البيئة');
+
+    // ابنِ قائمة الموديلات: الأولوية للموديل المحدد ثم الباقي
+    const preferred = AI_CONFIG.MODEL;
+    const modelsToTry = [preferred, ...AI_CONFIG.FALLBACK_MODELS.filter(m => m !== preferred)];
+
+    const body = buildGeminiBody(contents, options);
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+        const url = `${AI_CONFIG.API_URL}${model}:generateContent?key=${apiKey}`;
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), options.timeoutMs || 60000);
+
+        let response;
+        try {
+            response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                signal: controller.signal
+            });
+        } catch (e) {
+            clearTimeout(timeoutId);
+            lastError = e;
+            continue;
+        }
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+            const data = await response.json();
+            return { ok: true, data, modelUsed: model };
+        }
+
+        const errText = await response.text();
+
+        // إن كان 404 (الموديل لم يعد موجوداً) → جرّب الموديل التالي
+        if (response.status === 404) {
+            console.warn(`⚠️ Model "${model}" not available (404), trying next...`);
+            lastError = { status: 404, text: errText };
+            continue;
+        }
+
+        // أخطاء أخرى → أرجع فوراً
+        return { ok: false, status: response.status, errorText: errText, modelUsed: model };
+    }
+
+    // فشلت كل الموديلات
+    return {
+        ok: false,
+        status: (lastError && lastError.status) || 502,
+        errorText: (lastError && lastError.text) || 'كل الموديلات فشلت',
+        modelUsed: null
+    };
+}
+
+// ============================================================
+// 🤖 تحليل ملفات الاستيراد
 // ============================================================
 
 async function analyzeWithGemini(text, isImage, imageBuffer, imageMime) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        throw new Error('GEMINI_API_KEY غير مُعد في متغيرات البيئة');
-    }
-
-    const url = `${AI_CONFIG.API_URL}${AI_CONFIG.MODEL}:generateContent?key=${apiKey}`;
-
     let contents;
     if (isImage && imageBuffer) {
         const base64 = imageBuffer.toString('base64');
@@ -205,36 +277,20 @@ async function analyzeWithGemini(text, isImage, imageBuffer, imageMime) {
         }];
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const result = await callGemini(contents, {
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
+        timeoutMs: 60000
+    });
 
-    let response;
-    try {
-        response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents,
-                generationConfig: {
-                    temperature: 0.1,
-                    maxOutputTokens: 8192,
-                    responseMimeType: 'application/json'
-                }
-            }),
-            signal: controller.signal
-        });
-    } finally {
-        clearTimeout(timeoutId);
+    if (!result.ok) {
+        console.error('❌ Gemini API error:', result.status, String(result.errorText).slice(0, 300));
+        throw new Error(`Gemini error (${result.status}): ${String(result.errorText).slice(0, 150)}`);
     }
 
-    if (!response.ok) {
-        const err = await response.text();
-        console.error('❌ Gemini API error:', response.status, err.slice(0, 300));
-        throw new Error(`Gemini error (${response.status}): ${err.slice(0, 150)}`);
-    }
+    console.log(`✅ Import analyzed via model: ${result.modelUsed}`);
 
-    const data = await response.json();
-    let reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    let reply = result.data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!reply) throw new Error('لم يُرجع Gemini أي نتيجة');
 
     reply = reply.trim();
@@ -280,18 +336,18 @@ module.exports = function registerAIAndImport(app, deps) {
         notify
     } = deps;
 
-    // التحقق من المتطلبات
     if (!authenticateAccessToken || !csrfProtection) {
         throw new Error('registerAIAndImport: missing required middleware');
     }
 
     console.log('✅ Registering AI + Import routes...');
+    console.log('   🤖 Model:', AI_CONFIG.MODEL);
+    console.log('   🔄 Fallbacks:', AI_CONFIG.FALLBACK_MODELS.join(', '));
 
     // ========================================================
     // 🤖 AI ENDPOINTS
     // ========================================================
 
-    // حالة المساعد
     app.get('/api/ai/status',
         authenticateAccessToken,
         (req, res) => {
@@ -301,13 +357,13 @@ module.exports = function registerAIAndImport(app, deps) {
                 success: true,
                 configured: hasKey,
                 model: AI_CONFIG.MODEL,
+                fallbacks: AI_CONFIG.FALLBACK_MODELS,
                 dailyLimit: AI_CONFIG.DAILY_LIMIT,
                 remaining: quota.remaining
             });
         }
     );
 
-    // محادثة المساعد
     app.post('/api/ai/chat',
         authenticateAccessToken,
         csrfProtection,
@@ -315,7 +371,6 @@ module.exports = function registerAIAndImport(app, deps) {
             try {
                 const { message, history } = req.body || {};
 
-                // 1. التحقق من الرسالة
                 if (typeof message !== 'string' || !message.trim()) {
                     return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
                 }
@@ -326,7 +381,6 @@ module.exports = function registerAIAndImport(app, deps) {
                     });
                 }
 
-                // 2. التحقق من المفتاح
                 const apiKey = process.env.GEMINI_API_KEY;
                 if (!apiKey) {
                     return res.status(503).json({
@@ -336,7 +390,6 @@ module.exports = function registerAIAndImport(app, deps) {
                     });
                 }
 
-                // 3. حد الاستخدام
                 const quota = checkAIQuota(req.user.id);
                 if (!quota.allowed) {
                     const hoursLeft = Math.ceil((quota.resetAt - Date.now()) / (60 * 60 * 1000));
@@ -347,7 +400,7 @@ module.exports = function registerAIAndImport(app, deps) {
                     });
                 }
 
-                // 4. سياق الأسطول
+                // سياق الأسطول
                 let contextText = '';
                 try {
                     const vessels = await Vessel.find().limit(100).lean();
@@ -366,7 +419,7 @@ module.exports = function registerAIAndImport(app, deps) {
                     console.warn('⚠️ Failed to load vessel context:', e.message);
                 }
 
-                // 5. بناء Prompt
+                // بناء Prompt
                 let fullPrompt = CHAT_SYSTEM_PROMPT + '\n\n';
                 fullPrompt += `بيانات الأسطول (استخدمها فقط إذا سُئلت):\n${contextText}\n\n`;
 
@@ -382,66 +435,44 @@ module.exports = function registerAIAndImport(app, deps) {
                 }
                 fullPrompt += `المستخدم: ${message}`;
 
-                // 6. استدعاء Gemini
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), AI_CONFIG.TIMEOUT_MS);
+                // استدعاء Gemini (مع fallback تلقائي)
+                const result = await callGemini(
+                    [{ parts: [{ text: fullPrompt }] }],
+                    { maxOutputTokens: AI_CONFIG.MAX_TOKENS, timeoutMs: AI_CONFIG.TIMEOUT_MS }
+                );
 
-                let geminiResponse;
-                try {
-                    geminiResponse = await fetch(
-                        `${AI_CONFIG.API_URL}${AI_CONFIG.MODEL}:generateContent?key=${apiKey}`,
-                        {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: fullPrompt }] }],
-                                generationConfig: {
-                                    temperature: AI_CONFIG.TEMPERATURE,
-                                    maxOutputTokens: AI_CONFIG.MAX_TOKENS,
-                                    topP: 0.95,
-                                    topK: 40
-                                }
-                            }),
-                            signal: controller.signal
-                        }
-                    );
-                } finally {
-                    clearTimeout(timeoutId);
-                }
-
-                // 7. معالجة الأخطاء
-                if (!geminiResponse.ok) {
-                    const errorText = await geminiResponse.text();
-                    console.error('❌ Gemini error:', geminiResponse.status, errorText.slice(0, 200));
+                if (!result.ok) {
+                    console.error('❌ Gemini error:', result.status, String(result.errorText).slice(0, 200));
 
                     const errorMap = {
                         400: 'طلب غير صالح',
                         401: 'مفتاح غير مصرح',
                         403: 'المفتاح غير صالح',
+                        404: 'الموديل غير متوفر — تحقق من GEMINI_MODEL',
                         429: 'تم تجاوز الحد اليومي لـ Gemini',
                         500: 'خطأ داخلي في Gemini',
                         503: 'خدمة Gemini غير متاحة'
                     };
 
-                    return res.status(geminiResponse.status === 429 ? 429 : 502).json({
+                    return res.status(result.status === 429 ? 429 : 502).json({
                         success: false,
-                        error: errorMap[geminiResponse.status] || `خطأ ${geminiResponse.status}`,
-                        code: 'AI_UPSTREAM_ERROR'
+                        error: errorMap[result.status] || `خطأ ${result.status}`,
+                        code: 'AI_UPSTREAM_ERROR',
+                        model: result.modelUsed
                     });
                 }
 
-                const data = await geminiResponse.json();
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                const reply = result.data.candidates?.[0]?.content?.parts?.[0]?.text;
 
                 if (!reply) {
                     return res.status(502).json({
                         success: false,
                         error: 'لم يُرجع Gemini أي رد',
-                        code: 'AI_EMPTY_RESPONSE'
+                        code: 'AI_EMPTY_RESPONSE',
+                        model: result.modelUsed
                     });
                 }
 
-                // 8. تسجيل
                 if (addSystemLog) {
                     addSystemLog({
                         userId: req.user.id,
@@ -451,7 +482,11 @@ module.exports = function registerAIAndImport(app, deps) {
                         status: 'success',
                         ip: req.ip,
                         requestId: req.requestId,
-                        details: { messageLength: message.length, replyLength: reply.length }
+                        details: {
+                            messageLength: message.length,
+                            replyLength: reply.length,
+                            model: result.modelUsed
+                        }
                     }).catch(() => {});
                 }
 
@@ -459,7 +494,7 @@ module.exports = function registerAIAndImport(app, deps) {
                     success: true,
                     reply,
                     remaining: quota.remaining,
-                    model: AI_CONFIG.MODEL
+                    model: result.modelUsed || AI_CONFIG.MODEL
                 });
 
             } catch (error) {
@@ -476,7 +511,6 @@ module.exports = function registerAIAndImport(app, deps) {
     // 📥 IMPORT ENDPOINTS
     // ========================================================
 
-    // تحليل (بدون حفظ)
     app.post('/api/import/analyze',
         authenticateAccessToken,
         requirePermission('vessels:create'),
@@ -518,7 +552,6 @@ module.exports = function registerAIAndImport(app, deps) {
                     });
                 }
 
-                // تنظيف البيانات
                 const vessels = extracted.vessels
                     .filter(v => v && typeof v === 'object' && v.name)
                     .map(v => ({
@@ -558,7 +591,6 @@ module.exports = function registerAIAndImport(app, deps) {
         }
     );
 
-    // تأكيد الاستيراد
     app.post('/api/import/confirm',
         authenticateAccessToken,
         requirePermission('vessels:create'),
@@ -575,7 +607,6 @@ module.exports = function registerAIAndImport(app, deps) {
                 }
 
                 const results = { created: 0, skipped: 0, errors: [] };
-                const createdVessels = [];
 
                 for (const v of vessels) {
                     try {
@@ -584,7 +615,6 @@ module.exports = function registerAIAndImport(app, deps) {
                             continue;
                         }
 
-                        // كشف التكرار
                         const existing = await Vessel.findOne({
                             $or: [
                                 { name: v.name.trim() },
@@ -616,7 +646,6 @@ module.exports = function registerAIAndImport(app, deps) {
                             importedFrom: 'ai-import'
                         });
 
-                        // سجل صيانة تلقائي
                         if (newVessel.status === 'معطب' || newVessel.status === 'صيانة') {
                             await Maintenance.create({
                                 id: randomId(8),
@@ -634,14 +663,12 @@ module.exports = function registerAIAndImport(app, deps) {
                         }
 
                         results.created++;
-                        createdVessels.push(newVessel);
 
                     } catch (err) {
                         results.errors.push({ vessel: v.name, error: err.message });
                     }
                 }
 
-                // إشعار
                 if (results.created > 0 && typeof notify === 'function') {
                     await notify({
                         type: 'success',
@@ -654,7 +681,6 @@ module.exports = function registerAIAndImport(app, deps) {
                     });
                 }
 
-                // سجل
                 if (typeof addSystemLog === 'function') {
                     addSystemLog({
                         userId: req.user.id,
