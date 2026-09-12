@@ -2,8 +2,8 @@
 <div id="page-logs">
     <style>
         /* ============================================================
-           📋 LOGS PAGE - v9.5
-           Fixed field mapping + Full cleanup
+           📋 LOGS PAGE - v9.12
+           5 Roles + normalizeRole + apiFetch + Cleanup
            ============================================================ */
 
         #page-logs {
@@ -426,16 +426,6 @@
             transform: scale(1.05);
         }
 
-        .btn-edit {
-            background: rgba(251,191,36,0.12);
-            color: #fbbf24;
-        }
-
-        .btn-edit:hover {
-            background: rgba(251,191,36,0.25);
-            transform: scale(1.05);
-        }
-
         .btn-delete {
             background: rgba(248,113,113,0.12);
             color: #f87171;
@@ -444,6 +434,11 @@
         .btn-delete:hover {
             background: rgba(248,113,113,0.25);
             transform: scale(1.05);
+        }
+
+        .btn-icon:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
 
         /* ===== EMPTY STATE ===== */
@@ -684,18 +679,17 @@
     </div>
 
     <!-- ============================================================
-         JAVASCRIPT - v9.5 (Fixed Field Mapping)
+         JAVASCRIPT - v9.12
          ============================================================ -->
     <script>
     (function() {
         'use strict';
 
-        console.log('📋 Logs Page v9.5 - loading...');
+        console.log('📋 Logs Page v9.12 - loading...');
 
         // ============================================================
-        // ✅ v9.5: CLEANUP STATE
+        // ✅ CLEANUP STATE
         // ============================================================
-
         var _isDestroyed = false;
         var _pageIntervals = [];
         var _pageTimeouts = [];
@@ -729,12 +723,11 @@
                 delete window.applyFilters;
                 delete window.renderTable;
                 delete window.viewLog;
-                delete window.editLog;
                 delete window.deleteLog;
                 delete window.exportLogs;
             } catch (e) {}
 
-            console.log('🧹 Logs cleanup done');
+            console.log('🧹 Logs v9.12 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -744,9 +737,42 @@
         window.addEventListener('pagehide', _logsCleanup);
 
         // ============================================================
+        // 🔐 RBAC v9.12 — توحيد الأدوار
+        // ============================================================
+        var LEGACY_ROLE_MAP = {
+            'super_admin': 'admin',
+            'مسؤول': 'admin',
+            'مدير': 'manager',
+            'محرر': 'editor',
+            'مشغل': 'maintenance_unit',
+            'operator': 'maintenance_unit',
+            'user': 'viewer',
+            'مشاهد': 'viewer'
+        };
+
+        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
+
+        function normalizeRole(role) {
+            if (!role) return 'viewer';
+            var r = String(role).trim();
+            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
+            return LEGACY_ROLE_MAP[r] || 'viewer';
+        }
+
+        // ✅ يمكن الحذف: admin + manager فقط
+        function canDeleteLog() {
+            if (window.capabilities && typeof window.capabilities.canDeleteMaintenance === 'boolean') {
+                return window.capabilities.canDeleteMaintenance;
+            }
+            var u = window.currentUser;
+            if (!u) return false;
+            var r = normalizeRole(u.role);
+            return ['admin', 'manager'].indexOf(r) !== -1;
+        }
+
+        // ============================================================
         // 🔧 HELPERS
         // ============================================================
-
         function $(id) {
             return document.getElementById(id);
         }
@@ -765,9 +791,8 @@
         }
 
         // ============================================================
-        // 🔑 TOKEN
+        // 🔑 TOKEN + AUTH
         // ============================================================
-
         function getToken() {
             return (
                 localStorage.getItem('marine_token') ||
@@ -777,32 +802,26 @@
             );
         }
 
-        function getAuthHeaders() {
-            var token = getToken();
-            return {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': token ? 'Bearer ' + token : ''
-            };
-        }
-
-        async function getCsrfToken() {
-            try {
-                var r = await fetch('/api/csrf-token', {
-                    credentials: 'include',
-                    headers: { 'Accept': 'application/json' }
-                });
-                var d = await r.json();
-                return d.token;
-            } catch (e) {
-                return null;
+        // ✅ v9.12: يستخدم apiFetch إن وُجد (تجديد تلقائي + CSRF من الخادم)
+        function fetcher(url, options) {
+            if (typeof window.apiFetch === 'function') {
+                return window.apiFetch(url, options || {});
             }
+            // fallback
+            var token = getToken();
+            var headers = Object.assign({
+                'Accept': 'application/json'
+            }, (options && options.headers) || {});
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            return fetch(url, Object.assign({}, options || {}, {
+                headers: headers,
+                credentials: 'include'
+            }));
         }
 
         // ============================================================
         // 🍞 TOAST
         // ============================================================
-
         function showToast(message, type) {
             type = type || 'info';
             if (_isDestroyed) return;
@@ -852,18 +871,15 @@
         // ============================================================
         // 📊 STATE
         // ============================================================
-
         var allLogs = [];
         var filteredLogs = [];
 
         // ============================================================
-        // ✅ v9.5: NORMALIZE LOG - يقبل كل الأسماء
+        // ✅ normalizeLog — يقبل كل الأسماء
         // ============================================================
-
         function normalizeLog(log) {
             if (!log || typeof log !== 'object') return null;
 
-            // ✅ اسم المركب - كل الاحتمالات
             var vesselName =
                 log.vesselName ||
                 log.vessel ||
@@ -871,14 +887,12 @@
                 log.ship ||
                 '—';
 
-            // ✅ نوع التدخل
             var type =
                 log.type ||
                 log.intervention_type ||
                 log.maintenance_type ||
                 'صيانة دورية';
 
-            // ✅ التاريخ
             var dateRaw = log.date || log.createdAt || log.startDate || null;
             var displayDate = '—';
             var isoDate = null;
@@ -897,7 +911,6 @@
                 }
             }
 
-            // ✅ الوحدة المسؤولة - كل الاحتمالات
             var repairUnit =
                 log.repairUnit ||
                 log.unit ||
@@ -905,10 +918,8 @@
                 log.department ||
                 '—';
 
-            // ✅ الحالة
             var status = log.status || 'قيد الانتظار';
 
-            // ✅ ID
             var id = log.id || log._id || null;
 
             return {
@@ -926,15 +937,13 @@
                 cost: Number(log.cost) || 0,
                 notes: log.notes || '',
                 vesselId: log.vesselId || '',
-                // ✅ الاحتفاظ بالبيانات الأصلية
                 _raw: log
             };
         }
 
         // ============================================================
-        // 📊 LOAD LOGS
+        // 📊 LOAD LOGS — v9.12
         // ============================================================
-
         async function loadMaintenanceLogs() {
             if (_isDestroyed) return;
 
@@ -965,21 +974,16 @@
                     return;
                 }
 
-                var csrfToken = await getCsrfToken();
-
-                var response = await fetch('/api/maintenance-logs', {
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'X-CSRF-Token': csrfToken || '',
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include'
-                });
+                // ✅ v9.12: عبر fetcher (apiFetch يوفر CSRF والتجديد التلقائي)
+                var response = await fetcher('/api/maintenance-logs', { method: 'GET' });
 
                 if (!response.ok) {
                     if (response.status === 401) {
                         localStorage.removeItem('marine_token');
                         throw new Error('انتهت الجلسة — يرجى إعادة تسجيل الدخول');
+                    }
+                    if (response.status === 403) {
+                        throw new Error('ليس لديك صلاحية لعرض السجلات');
                     }
                     throw new Error('فشل تحميل البيانات: ' + response.status);
                 }
@@ -987,10 +991,7 @@
                 var data = await response.json();
 
                 console.log('📦 Maintenance logs response:', data);
-                console.log('📦 Type:', Array.isArray(data) ? 'array' : typeof data);
-                console.log('📦 Count:', Array.isArray(data) ? data.length : 'N/A');
 
-                // ✅ استخراج المصفوفة من أي شكل
                 var rawLogs = [];
 
                 if (Array.isArray(data)) {
@@ -1005,15 +1006,12 @@
 
                 console.log('✅ Extracted', rawLogs.length, 'raw logs');
 
-                // ✅ تحويل كل log إلى شكل موحّد
                 allLogs = rawLogs
                     .map(normalizeLog)
                     .filter(function(log) { return log !== null; });
 
                 console.log('✅ Normalized', allLogs.length, 'logs');
-                if (allLogs[0]) {
-                    console.log('📋 Sample log:', allLogs[0]);
-                }
+                if (allLogs[0]) console.log('📋 Sample log:', allLogs[0]);
 
                 updateStats();
                 applyFilters();
@@ -1044,7 +1042,6 @@
         // ============================================================
         // 📊 UPDATE STATS
         // ============================================================
-
         function updateStats() {
             if (_isDestroyed) return;
 
@@ -1076,14 +1073,11 @@
             el = $('completedCount'); if (el) el.textContent = completed;
             el = $('overdueCount'); if (el) el.textContent = overdue;
             el = $('inProgressCount'); if (el) el.textContent = inProgress;
-
-            console.log('📊 Stats:', { total, pending, completed, overdue, inProgress });
         }
 
         // ============================================================
         // 🔍 APPLY FILTERS
         // ============================================================
-
         function applyFilters() {
             if (_isDestroyed) return;
 
@@ -1101,7 +1095,6 @@
             };
 
             filteredLogs = allLogs.filter(function(l) {
-                // بحث نصي
                 if (search) {
                     var text = [
                         l.vesselName,
@@ -1114,7 +1107,6 @@
                     if (text.indexOf(search) === -1) return false;
                 }
 
-                // فلتر الحالة
                 if (statusFilter !== 'الكل') {
                     var statusValues = statusMap[statusFilter] || [statusFilter];
                     var match = statusValues.some(function(s) {
@@ -1132,7 +1124,6 @@
         // ============================================================
         // 🎨 RENDER TABLE
         // ============================================================
-
         function renderTable() {
             if (_isDestroyed) return;
 
@@ -1151,11 +1142,17 @@
                 return;
             }
 
+            var canDel = canDeleteLog();
             var html = '';
 
             filteredLogs.forEach(function(l, index) {
                 var statusClass = getStatusClass(l.status);
                 var statusLabel = getStatusLabel(l.status);
+
+                var delBtn = canDel ?
+                    '<button type="button" class="btn-icon btn-delete delete-btn" data-id="' + escapeHtml(l.id || '') + '" title="حذف">' +
+                        '<i class="fas fa-trash"></i>' +
+                    '</button>' : '';
 
                 html +=
                     '<tr>' +
@@ -1170,12 +1167,7 @@
                                 '<button type="button" class="btn-icon btn-view view-btn" data-id="' + escapeHtml(l.id || '') + '" title="عرض">' +
                                     '<i class="fas fa-eye"></i>' +
                                 '</button>' +
-                                '<button type="button" class="btn-icon btn-edit edit-btn" data-id="' + escapeHtml(l.id || '') + '" title="تعديل">' +
-                                    '<i class="fas fa-edit"></i>' +
-                                '</button>' +
-                                '<button type="button" class="btn-icon btn-delete delete-btn" data-id="' + escapeHtml(l.id || '') + '" title="حذف">' +
-                                    '<i class="fas fa-trash"></i>' +
-                                '</button>' +
+                                delBtn +
                             '</div>' +
                         '</td>' +
                     '</tr>';
@@ -1183,16 +1175,9 @@
 
             tbody.innerHTML = html;
 
-            // ✅ ربط الأزرار
             tbody.querySelectorAll('.view-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     window.viewLog(this.dataset.id);
-                });
-            });
-
-            tbody.querySelectorAll('.edit-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    window.editLog(this.dataset.id);
                 });
             });
 
@@ -1206,9 +1191,8 @@
         }
 
         // ============================================================
-        // 🔧 HELPERS
+        // 🔧 STATUS HELPERS
         // ============================================================
-
         function getStatusClass(status) {
             var map = {
                 'مكتملة': 'completed',
@@ -1248,7 +1232,6 @@
         // ============================================================
         // 🌐 GLOBAL FUNCTIONS
         // ============================================================
-
         window.viewLog = function(id) {
             if (_isDestroyed) return;
 
@@ -1274,17 +1257,32 @@
             }
         };
 
-        window.editLog = function(id) {
-            if (_isDestroyed) return;
-            showToast('✏️ تعديل السجل — قيد التطوير', 'info');
-        };
-
         window.deleteLog = function(id) {
             if (_isDestroyed) return;
 
+            if (!canDeleteLog()) {
+                showToast('⚠️ ليس لديك صلاحية الحذف', 'error');
+                return;
+            }
+
             if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) return;
 
-            showToast('🗑️ حذف السجل — قيد التطوير', 'info');
+            fetcher('/api/maintenance-logs/' + id, { method: 'DELETE' })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return response.json().then(function(err) {
+                            throw new Error(err.error || 'فشل الحذف');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function() {
+                    showToast('✅ تم حذف السجل', 'success');
+                    loadMaintenanceLogs();
+                })
+                .catch(function(error) {
+                    showToast('❌ ' + error.message, 'error');
+                });
         };
 
         window.exportLogs = function() {
@@ -1322,11 +1320,12 @@
         // ============================================================
         // 🚀 INIT
         // ============================================================
-
         function init() {
             if (_isDestroyed) return;
 
-            console.log('🚀 Initializing Logs page v9.5...');
+            console.log('🚀 Initializing Logs page v9.12...');
+            console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
+            console.log('🔐 canDeleteLog:', canDeleteLog());
 
             addSafeListener($('refreshBtn'), 'click', function() {
                 if (_isDestroyed) return;
@@ -1360,16 +1359,14 @@
                 applyFilters();
             });
 
-            // تحميل أولي
             loadMaintenanceLogs();
 
-            console.log('✅ Logs page ready');
+            console.log('✅ Logs v9.12 ready');
         }
 
         // ============================================================
         // 🌐 GLOBAL EXPORTS
         // ============================================================
-
         window.loadMaintenanceLogs = loadMaintenanceLogs;
         window.applyFilters = applyFilters;
         window.renderTable = renderTable;
@@ -1378,7 +1375,6 @@
         // ============================================================
         // 🏁 BOOT
         // ============================================================
-
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init, { once: true });
         } else {
