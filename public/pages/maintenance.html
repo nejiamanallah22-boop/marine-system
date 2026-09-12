@@ -1212,10 +1212,22 @@
         <label><i class="fas fa-search"></i> بحث</label>
         <input type="text" id="searchMaint" placeholder="المركب، العطب، الفني..." />
 
-        <label><i class="fas fa-calendar"></i> السنة</label>
-        <select id="yearFilter">
-            <option value="الكل">-- جميع السنوات --</option>
-        </select>
+                <label><i class="fas fa-calendar"></i> السنة</label>
+        <div class="year-agenda-wrapper">
+            <input type="text" id="yearFilterDisplay" readonly placeholder="اختر السنة..." onclick="openYearAgenda(event)">
+            <input type="hidden" id="yearFilter" value="الكل">
+            <div class="year-agenda-dropdown" id="yearAgendaDropdown">
+                <div class="year-agenda-header">
+                    <button type="button" class="year-nav-btn" onclick="navigateYearAgenda(-12)">◀</button>
+                    <span id="yearAgendaRange">2020 - 2031</span>
+                    <button type="button" class="year-nav-btn" onclick="navigateYearAgenda(12)">▶</button>
+                </div>
+                <div class="year-agenda-grid" id="yearAgendaGrid"></div>
+                <div class="year-agenda-footer">
+                    <button type="button" class="year-agenda-btn-all" onclick="selectAllYears()">📅 كل السنوات</button>
+                </div>
+            </div>
+        </div>
 
         <label><i class="fas fa-circle"></i> الحالة</label>
         <select id="statusFilter">
