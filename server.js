@@ -1,14 +1,15 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.13
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.14
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
-// ✨ v9.13 changes vs v9.12:
-//    - ✅ ADDED: Note model integration (Note Verbale)
-//    - ✅ ADDED: Notification model integration (optional)
-//    - ✅ ADDED: notify() helper function
-//    - ✅ ADDED: /api/notes endpoints (GET/POST/PUT/DELETE)
-//    - ✅ ADDED: /api/notifications endpoints (GET/PUT/DELETE)
-//    - ✅ All v9.12 logic preserved without changes
+// ✨ v9.14 changes vs v9.13:
+//    - ✅ FIXED: PUT /api/vessels/:id (accepts _id OR id)
+//    - ✅ FIXED: DELETE /api/vessels/:id
+//    - ✅ FIXED: PUT /api/maintenance-logs/:id
+//    - ✅ FIXED: DELETE /api/maintenance-logs/:id
+//    - ✅ FIXED: PUT /api/users/:id
+//    - ✅ FIXED: DELETE /api/users/:id
+//    - ✅ FIXED: PUT /api/users-status/:id
 // ============================================================
 
 'use strict';
@@ -23,7 +24,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.13 - STARTING');
+console.log('🚢 MARINE SYSTEM v9.14 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -298,6 +299,24 @@ function safeEqual(a, b) {
     const B = Buffer.from(b);
     if (A.length !== B.length) return false;
     return crypto.timingSafeEqual(A, B);
+}
+
+// ============================================================
+// 🔍 HELPER: Find by _id OR id
+// ============================================================
+function buildIdQuery(idParam) {
+    const conditions = [];
+    if (!idParam) return null;
+
+    // ✅ ObjectId (MongoDB _id)
+    if (mongoose.Types.ObjectId.isValid(idParam)) {
+        conditions.push({ _id: idParam });
+    }
+
+    // ✅ UUID (custom id field)
+    conditions.push({ id: idParam });
+
+    return { $or: conditions };
 }
 
 // ============================================================
@@ -1208,6 +1227,7 @@ function formatUser(user) {
     const normalizedRole = normalizeRole(user.role);
     return {
         id: user.id,
+        _id: user._id ? user._id.toString() : null,
         username: user.username,
         name: user.name,
         email: user.email,
@@ -1223,13 +1243,26 @@ function formatUser(user) {
 function formatVessel(vessel) {
     if (!vessel) return null;
     return {
-        id: vessel.id, _id: vessel._id, name: vessel.name, num: vessel.num || '',
-        len: vessel.len || 0, region: vessel.region || '', zone: vessel.zone || '',
-        port: vessel.port || '', supp: vessel.supp || '', status: vessel.status || 'صالح',
-        break: vessel.break || '', fDate: vessel.fDate || null, eDate: vessel.eDate || null,
-        ref: vessel.ref || '', repairUnit: vessel.repairUnit || '', cat: vessel.cat || '',
-        type: vessel.type || '', location: vessel.location || '',
-        createdAt: vessel.createdAt, updatedAt: vessel.updatedAt
+        id: vessel.id,
+        _id: vessel._id ? vessel._id.toString() : null,
+        name: vessel.name,
+        num: vessel.num || '',
+        len: vessel.len || 0,
+        region: vessel.region || '',
+        zone: vessel.zone || '',
+        port: vessel.port || '',
+        supp: vessel.supp || '',
+        status: vessel.status || 'صالح',
+        break: vessel.break || '',
+        fDate: vessel.fDate || null,
+        eDate: vessel.eDate || null,
+        ref: vessel.ref || '',
+        repairUnit: vessel.repairUnit || '',
+        cat: vessel.cat || '',
+        type: vessel.type || '',
+        location: vessel.location || '',
+        createdAt: vessel.createdAt,
+        updatedAt: vessel.updatedAt
     };
 }
 
@@ -1243,14 +1276,24 @@ function formatMaintenance(log) {
     } catch (e) {}
 
     return {
-        id: log.id, _id: log._id,
-        vesselName: log.vesselName || '—', vessel: log.vesselName || '—',
-        vesselNum: log.vesselNum || '', type: log.type || 'صيانة دورية',
-        status: log.status || 'قيد الانتظار', date: displayDate, isoDate: isoDate,
-        startDate: log.startDate, endDate: log.endDate, createdAt: log.createdAt,
-        repairUnit: log.repairUnit || '—', unit: log.repairUnit || '—',
-        cost: Number(log.cost) || 0, notes: log.notes || '',
-        vesselId: log.vesselId || '', updatedAt: log.updatedAt
+        id: log.id,
+        _id: log._id ? log._id.toString() : null,
+        vesselName: log.vesselName || '—',
+        vessel: log.vesselName || '—',
+        vesselNum: log.vesselNum || '',
+        type: log.type || 'صيانة دورية',
+        status: log.status || 'قيد الانتظار',
+        date: displayDate,
+        isoDate: isoDate,
+        startDate: log.startDate,
+        endDate: log.endDate,
+        createdAt: log.createdAt,
+        repairUnit: log.repairUnit || '—',
+        unit: log.repairUnit || '—',
+        cost: Number(log.cost) || 0,
+        notes: log.notes || '',
+        vesselId: log.vesselId || '',
+        updatedAt: log.updatedAt
     };
 }
 
@@ -1299,7 +1342,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.13', timestamp: new Date().toISOString(),
+            version: '9.14', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             models: {
@@ -1485,7 +1528,7 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // USER PERMISSIONS — يُرجع صلاحيات المستخدم الحالي
+    // USER PERMISSIONS
     // ========================================================
 
     app.get('/api/auth/permissions', authenticateAccessToken, (req, res) => {
@@ -1508,7 +1551,7 @@ function formatMaintenance(log) {
             canUpdateNotes:  hasPermission(req.user, 'notes:update'),
             canDeleteNotes:  hasPermission(req.user, 'notes:delete'),
 
-            canViewNotifications: hasPermission(req.user, 'notifications:read') || true,
+            canViewNotifications: true,
 
             canManageUsers: hasPermission(req.user, 'users:manage'),
             canViewMonitoring: hasPermission(req.user, 'monitoring:view'),
@@ -1632,14 +1675,13 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // 📝 NOTES (Note Verbale) — v9.13
+    // 📝 NOTES (Note Verbale)
     // ========================================================
 
     app.get('/api/notes', authenticateAccessToken, async (req, res) => {
         try {
-            if (!Note) {
-                return res.json([]);
-            }
+            if (!Note) return res.json([]);
+
             const notes = await Note.find()
                 .sort({ createdAt: -1 })
                 .limit(500)
@@ -1794,7 +1836,8 @@ function formatMaintenance(log) {
 
             const { title, content, priority, type } = req.body;
 
-            const note = await Note.findById(req.params.id);
+            const idQuery = buildIdQuery(req.params.id);
+            const note = await Note.findOne(idQuery);
             if (!note) return res.status(404).json({ success: false, error: 'الملاحظة غير موجودة' });
 
             if (title !== undefined) note.title = title.trim();
@@ -1844,7 +1887,8 @@ function formatMaintenance(log) {
         try {
             if (!Note) return res.status(500).json({ success: false, error: 'موديل الملاحظات غير متاح' });
 
-            const note = await Note.findById(req.params.id);
+            const idQuery = buildIdQuery(req.params.id);
+            const note = await Note.findOne(idQuery);
             if (!note) return res.status(404).json({ success: false, error: 'الملاحظة غير موجودة' });
 
             await Note.deleteOne({ _id: note._id });
@@ -1869,7 +1913,7 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // 🔔 NOTIFICATIONS — v9.13
+    // 🔔 NOTIFICATIONS
     // ========================================================
 
     app.get('/api/notifications', authenticateAccessToken, async (req, res) => {
@@ -1936,8 +1980,9 @@ function formatMaintenance(log) {
         try {
             if (!Notification) return res.json({ success: true, updated: 0 });
 
+            const idQuery = buildIdQuery(req.params.id);
             const result = await Notification.updateOne(
-                { _id: req.params.id },
+                idQuery,
                 { $set: { isRead: true } }
             );
             return res.json({ success: true, updated: result.modifiedCount });
@@ -1967,7 +2012,8 @@ function formatMaintenance(log) {
         try {
             if (!Notification) return res.json({ success: true });
 
-            await Notification.deleteOne({ _id: req.params.id });
+            const idQuery = buildIdQuery(req.params.id);
+            await Notification.deleteOne(idQuery);
             return res.json({ success: true });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'فشل الحذف' });
@@ -2238,9 +2284,13 @@ function formatMaintenance(log) {
         }
     });
 
+    // ✅ v9.14 — PUT يقبل _id أو id
     app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:update'), csrfProtection, async (req, res) => {
         try {
-            const vessel = await Vessel.findOne({ id: req.params.id });
+            const idQuery = buildIdQuery(req.params.id);
+            if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const vessel = await Vessel.findOne(idQuery);
             if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
 
             const { name, num, len, region, zone, port, supp, status, break: breakType, fDate, eDate, ref, repairUnit, cat } = req.body;
@@ -2291,14 +2341,18 @@ function formatMaintenance(log) {
 
             return res.json({ success: true, message: 'تم تحديث المركب بنجاح', vessel: formatVessel(vessel) });
         } catch (error) {
+            console.error('❌ PUT /api/vessels error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في تحديث المركب' });
         }
     });
 
-    // 🚫 حذف المراكب — admin فقط
+    // ✅ v9.14 — DELETE يقبل _id أو id
     app.delete('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:delete'), csrfProtection, async (req, res) => {
         try {
-            const vessel = await Vessel.findOne({ id: req.params.id });
+            const idQuery = buildIdQuery(req.params.id);
+            if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const vessel = await Vessel.findOne(idQuery);
             if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
 
             await Vessel.deleteOne({ _id: vessel._id });
@@ -2317,6 +2371,7 @@ function formatMaintenance(log) {
 
             return res.json({ success: true, message: 'تم حذف المركب بنجاح' });
         } catch (error) {
+            console.error('❌ DELETE /api/vessels error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في حذف المركب' });
         }
     });
@@ -2395,9 +2450,13 @@ function formatMaintenance(log) {
         }
     });
 
+    // ✅ v9.14 — PUT يقبل _id أو id
     app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, async (req, res) => {
         try {
-            const log = await Maintenance.findOne({ id: req.params.id });
+            const idQuery = buildIdQuery(req.params.id);
+            if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const log = await Maintenance.findOne(idQuery);
             if (!log) return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
 
             const { status, cost, notes } = req.body;
@@ -2409,14 +2468,18 @@ function formatMaintenance(log) {
             await log.save();
             return res.json({ success: true, message: 'تم تحديث سجل الصيانة', log: formatMaintenance(log) });
         } catch (error) {
+            console.error('❌ PUT /api/maintenance-logs error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في تحديث السجل' });
         }
     });
 
-    // 🗑️ حذف الصيانة — admin + manager فقط
+    // ✅ v9.14 — DELETE يقبل _id أو id
     app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, async (req, res) => {
         try {
-            const log = await Maintenance.findOne({ id: req.params.id });
+            const idQuery = buildIdQuery(req.params.id);
+            if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const log = await Maintenance.findOne(idQuery);
             if (!log) return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
 
             await Maintenance.deleteOne({ _id: log._id });
@@ -2435,6 +2498,7 @@ function formatMaintenance(log) {
 
             return res.json({ success: true, message: 'تم حذف سجل الصيانة' });
         } catch (error) {
+            console.error('❌ DELETE /api/maintenance-logs error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
         }
     });
@@ -2509,9 +2573,13 @@ function formatMaintenance(log) {
         }
     });
 
+    // ✅ v9.14 — PUT يقبل _id أو id
     app.put('/api/users/:id', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
-            const targetUser = await User.findOne({ id: req.params.id });
+            const idQuery = buildIdQuery(req.params.id);
+            if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const targetUser = await User.findOne(idQuery);
             if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
 
             const { username, email, role, active, password } = req.body;
@@ -2553,13 +2621,18 @@ function formatMaintenance(log) {
             await targetUser.save();
             return res.json({ success: true, message: 'تم تحديث المستخدم بنجاح', user: formatUser(targetUser) });
         } catch (error) {
+            console.error('❌ PUT /api/users error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في تحديث المستخدم' });
         }
     });
 
+    // ✅ v9.14 — DELETE يقبل _id أو id
     app.delete('/api/users/:id', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
-            const targetUser = await User.findOne({ id: req.params.id });
+            const idQuery = buildIdQuery(req.params.id);
+            if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const targetUser = await User.findOne(idQuery);
             if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
             if (targetUser.username === 'admin') return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
 
@@ -2572,14 +2645,19 @@ function formatMaintenance(log) {
             await User.deleteOne({ _id: targetUser._id });
             return res.json({ success: true, message: 'تم حذف المستخدم بنجاح' });
         } catch (error) {
+            console.error('❌ DELETE /api/users error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في حذف المستخدم' });
         }
     });
 
+    // ✅ v9.14 — PUT يقبل _id أو id
     app.put('/api/users-status/:id', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
             const { active } = req.body;
-            const targetUser = await User.findOne({ id: req.params.id });
+            const idQuery = buildIdQuery(req.params.id);
+            if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const targetUser = await User.findOne(idQuery);
             if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
 
             if (normalizeRole(targetUser.role) === 'admin' && active === false) {
@@ -2721,7 +2799,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.13</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v9.14</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2771,12 +2849,13 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.13');
+            console.log('🚢 MARINE SYSTEM v9.14');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Double-hash fix: APPLIED');
             console.log('✅ RBAC v4: 5 roles');
+            console.log('✅ ID matching: _id OR id (v9.14)');
             console.log('✅ Notes: ' + (Note ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
             console.log('=========================================');
