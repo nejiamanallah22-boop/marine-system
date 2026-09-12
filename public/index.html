@@ -1625,7 +1625,7 @@
             return LEGACY_ROLE_MAP[trimmed] || 'viewer';
         }
 
-                const PAGE_PERMISSIONS = {
+                        const PAGE_PERMISSIONS = {
             dashboard: 'dashboard:view',
             fleet: 'vessels:read',
             maintenance: 'maintenance:read',
@@ -1634,10 +1634,11 @@
             notes: 'dashboard:view',
             monitoring: 'monitoring:view',
             users: 'users:manage',
-            logs: 'logs:read',                    ← 🎯 هنا
+            logs: 'logs:read',
+            activity: 'logs:read',
             'ai-assistant': 'dashboard:view',
             settings: 'settings:manage'
-        }
+        };
 
         const ADMIN_ONLY_PAGES = ['users', 'settings', 'monitoring'];
 
