@@ -1,0 +1,511 @@
+<!-- public/pages/import.html -->
+<div id="page-import">
+    <style>
+        .import-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .import-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .import-header h2 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #f5d76e;
+            margin-bottom: 8px;
+        }
+        .import-header p {
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+        }
+        .upload-zone {
+            border: 2px dashed rgba(230,179,30,0.2);
+            border-radius: 16px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.02);
+        }
+        .upload-zone:hover {
+            border-color: rgba(230,179,30,0.5);
+            background: rgba(230,179,30,0.03);
+        }
+        .upload-zone.dragover {
+            border-color: #e6b31e;
+            background: rgba(230,179,30,0.08);
+            transform: scale(1.01);
+        }
+        .upload-zone .upload-icon {
+            font-size: 60px;
+            color: rgba(230,179,30,0.4);
+            margin-bottom: 16px;
+        }
+        .upload-zone h3 {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+        .upload-zone p {
+            color: rgba(255,255,255,0.3);
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .file-info {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: rgba(34,197,94,0.08);
+            border: 1px solid rgba(34,197,94,0.2);
+            border-radius: 10px;
+            color: #4ade80;
+            font-size: 13px;
+            display: none;
+        }
+        .file-info.show { display: block; }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            padding: 12px 28px;
+            border-radius: 10px;
+            border: none;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+        }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary {
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        .loading-state {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+        .loading-state.show { display: block; }
+        .loading-state .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(230,179,30,0.1);
+            border-top-color: #e6b31e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-state p {
+            color: #f5d76e;
+            font-size: 15px;
+        }
+        .preview-section {
+            margin-top: 30px;
+            display: none;
+        }
+        .preview-section.show { display: block; }
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .preview-header h3 {
+            color: #f5d76e;
+            font-size: 18px;
+        }
+        .preview-header .count {
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            background: rgba(230,179,30,0.08);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 13px;
+        }
+        .preview-table th {
+            background: rgba(230,179,30,0.08);
+            color: #f5d76e;
+            padding: 10px 12px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .preview-table td {
+            padding: 10px 12px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            color: #e2e8f0;
+        }
+        .preview-table tr:hover td {
+            background: rgba(230,179,30,0.02);
+        }
+        .status-badge {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-badge.valid { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .status-badge.maintenance { background: rgba(234,179,8,0.15); color: #facc15; }
+        .status-badge.broken { background: rgba(239,68,68,0.15); color: #f87171; }
+        .warnings-box {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: rgba(234,179,8,0.08);
+            border: 1px solid rgba(234,179,8,0.2);
+            border-radius: 10px;
+            color: #facc15;
+            font-size: 13px;
+        }
+        .warnings-box ul {
+            margin-top: 6px;
+            margin-right: 20px;
+        }
+        .error-box {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 10px;
+            color: #f87171;
+            font-size: 14px;
+        }
+        .supported-formats {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .format-chip {
+            padding: 4px 10px;
+            background: rgba(230,179,30,0.06);
+            border: 1px solid rgba(230,179,30,0.1);
+            border-radius: 20px;
+            font-size: 11px;
+            color: rgba(230,179,30,0.7);
+        }
+    </style>
+
+    <div class="import-container">
+        <div class="import-header">
+            <h2>📥 استيراد ذكي للمراكب</h2>
+            <p>ارفع ملف PDF / Word / Excel / صورة — سيتعرف الذكاء الاصطناعي على المراكب تلقائياً</p>
+        </div>
+
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📄</div>
+            <h3>اسحب الملف هنا أو اضغط للاختيار</h3>
+            <p>الحد الأقصى: 10 MB</p>
+            <input type="file" id="fileInput" style="display:none;" accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.webp">
+            <div class="supported-formats">
+                <span class="format-chip">PDF</span>
+                <span class="format-chip">Word</span>
+                <span class="format-chip">Excel</span>
+                <span class="format-chip">CSV</span>
+                <span class="format-chip">نص</span>
+                <span class="format-chip">صورة</span>
+            </div>
+        </div>
+
+        <div class="file-info" id="fileInfo"></div>
+
+        <div class="action-buttons" id="actionButtons" style="display:none;">
+            <button class="btn-action btn-primary" id="analyzeBtn" onclick="importAnalyze()">
+                🤖 تحليل بالذكاء الاصطناعي
+            </button>
+            <button class="btn-action btn-secondary" onclick="importReset()">
+                ❌ إلغاء
+            </button>
+        </div>
+
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p id="loadingText">جاري تحليل الملف بالذكاء الاصطناعي...</p>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <div class="preview-header">
+                <h3>📋 المراكب المكتشفة</h3>
+                <span class="count" id="previewCount">0 مركب</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="preview-table" id="previewTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم</th>
+                            <th>الرقم</th>
+                            <th>المنطقة</th>
+                            <th>الحالة</th>
+                            <th>الطول</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+            <div id="warningsContainer"></div>
+            <div class="action-buttons">
+                <button class="btn-action btn-primary" id="confirmBtn" onclick="importConfirm()">
+                    ✅ استيراد الكل إلى النظام
+                </button>
+                <button class="btn-action btn-secondary" onclick="importReset()">
+                    🔄 ملف آخر
+                </button>
+            </div>
+        </div>
+
+        <div id="errorContainer"></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('📥 Import page loading...');
+
+    let selectedFile = null;
+    let analyzedVessels = [];
+
+    const zone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const actionButtons = document.getElementById('actionButtons');
+    const loadingState = document.getElementById('loadingState');
+    const loadingText = document.getElementById('loadingText');
+    const previewSection = document.getElementById('previewSection');
+    const errorContainer = document.getElementById('errorContainer');
+
+    // ===== اختيار ملف =====
+    zone.addEventListener('click', () => fileInput.click());
+    zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('dragover');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+        if (file.size > 10 * 1024 * 1024) {
+            showError('⚠️ الملف كبير جداً (حد أقصى 10 MB)');
+            return;
+        }
+        selectedFile = file;
+        clearError();
+        previewSection.classList.remove('show');
+
+        fileInfo.textContent = `📎 ${file.name} (${formatSize(file.size)})`;
+        fileInfo.classList.add('show');
+        actionButtons.style.display = 'flex';
+    }
+
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // ===== تحليل =====
+    async function analyze() {
+        if (!selectedFile) return;
+        clearError();
+        loadingState.classList.add('show');
+        actionButtons.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        try {
+            const fetcher = (typeof window.apiFetch === 'function') ? window.apiFetch : fetch;
+            const res = await fetcher('/api/import/analyze', {
+                method: 'POST',
+                body: formData,
+                // لا نضع Content-Type، المتصفح سيضعه تلقائياً مع boundary
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            loadingState.classList.remove('show');
+
+            if (!res.ok || !data.success) {
+                showError('❌ ' + (data.error || 'فشل التحليل'));
+                actionButtons.style.display = 'flex';
+                return;
+            }
+
+            analyzedVessels = data.vessels || [];
+            renderPreview(analyzedVessels, data.warnings || []);
+            actionButtons.style.display = 'none';
+
+            if (typeof window.showToast === 'function') {
+                window.showToast(`✅ تم اكتشاف ${analyzedVessels.length} مركب`, 'success');
+            }
+
+        } catch (e) {
+            loadingState.classList.remove('show');
+            showError('❌ خطأ في الاتصال: ' + e.message);
+            actionButtons.style.display = 'flex';
+        }
+    }
+
+    function renderPreview(vessels, warnings) {
+        const tbody = document.getElementById('previewBody');
+        document.getElementById('previewCount').textContent = vessels.length + ' مركب';
+
+        tbody.innerHTML = vessels.map((v, i) => {
+            const statusClass = v.status === 'صالح' ? 'valid' :
+                                v.status === 'صيانة' ? 'maintenance' : 'broken';
+            return `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${escapeHTML(v.name)}</strong></td>
+                    <td>${escapeHTML(v.num || '—')}</td>
+                    <td>${escapeHTML(v.region || '—')}</td>
+                    <td><span class="status-badge ${statusClass}">${escapeHTML(v.status)}</span></td>
+                    <td>${v.len || '—'}</td>
+                </tr>
+            `;
+        }).join('');
+
+        const warnEl = document.getElementById('warningsContainer');
+        if (warnings.length > 0) {
+            warnEl.innerHTML = `
+                <div class="warnings-box">
+                    <strong>⚠️ ملاحظات:</strong>
+                    <ul>${warnings.map(w => `<li>${escapeHTML(w)}</li>`).join('')}</ul>
+                </div>
+            `;
+        } else {
+            warnEl.innerHTML = '';
+        }
+
+        previewSection.classList.add('show');
+        previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ===== تأكيد =====
+    async function confirm() {
+        if (analyzedVessels.length === 0) return;
+
+        const btn = document.getElementById('confirmBtn');
+        btn.disabled = true;
+        btn.innerHTML = '⏳ جاري الاستيراد...';
+
+        try {
+            const fetcher = (typeof window.apiFetch === 'function') ? window.apiFetch : fetch;
+            const res = await fetcher('/api/import/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vessels: analyzedVessels })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+                showError('❌ ' + (data.error || 'فشل الاستيراد'));
+                btn.disabled = false;
+                btn.innerHTML = '✅ استيراد الكل إلى النظام';
+                return;
+            }
+
+            if (typeof window.showToast === 'function') {
+                window.showToast('✅ ' + data.message, 'success');
+            }
+
+            // إعادة تحميل بيانات الأسطول
+            if (typeof window.loadAllData === 'function') {
+                window.loadAllData();
+            }
+
+            // عرض النتيجة
+            errorContainer.innerHTML = `
+                <div class="file-info show" style="background:rgba(34,197,94,0.1);">
+                    ${data.message}
+                    ${data.results?.errors?.length ? `<br><small>أخطاء: ${data.results.errors.length}</small>` : ''}
+                </div>
+            `;
+
+            setTimeout(() => importReset(), 2500);
+
+        } catch (e) {
+            showError('❌ خطأ: ' + e.message);
+            btn.disabled = false;
+            btn.innerHTML = '✅ استيراد الكل إلى النظام';
+        }
+    }
+
+    function showError(msg) {
+        errorContainer.innerHTML = `<div class="error-box">${escapeHTML(msg)}</div>`;
+    }
+
+    function clearError() {
+        errorContainer.innerHTML = '';
+    }
+
+    function reset() {
+        selectedFile = null;
+        analyzedVessels = [];
+        fileInput.value = '';
+        fileInfo.classList.remove('show');
+        actionButtons.style.display = 'none';
+        previewSection.classList.remove('show');
+        loadingState.classList.remove('show');
+        clearError();
+    }
+
+    function escapeHTML(s) {
+        if (!s) return '';
+        return String(s).replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+        }[m]));
+    }
+
+    // ===== تصدير =====
+    window.importAnalyze = analyze;
+    window.importConfirm = confirm;
+    window.importReset = reset;
+
+    console.log('✅ Import page ready');
+})();
+</script>
