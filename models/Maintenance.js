@@ -1,22 +1,22 @@
 // ============================================================
-// 🔧 models/Maintenance.js - v2.0
-// ✨ v2.0: توافق كامل مع server.js v9.6
+// 🔧 models/Maintenance.js - v2.1
+// ✨ v2.1: إزالة الفهارس المكررة + توافق كامل مع server.js v9.14
 // ============================================================
 
 const mongoose = require('mongoose');
 
 const MaintenanceSchema = new mongoose.Schema({
-    // ✅ ID للتوافق مع server.js
+    // ✅ ID للتوافق مع server.js (UUID أو hex)
     id: {
-        type: String,
-        index: true
+        type: String
+        // ⚠️ لا index هنا — الفهرس يُعرَّف أدناه
     },
 
     // ✅ vesselId - يقبل String أو ObjectId
     vesselId: {
         type: String,
-        default: '',
-        index: true
+        default: ''
+        // ⚠️ لا index هنا — الفهرس يُعرَّف أدناه
     },
     vesselName: {
         type: String,
@@ -69,7 +69,8 @@ const MaintenanceSchema = new mongoose.Schema({
             values: [
                 'معلقة', 'قيد التنفيذ', 'مكتملة', 'ملغاة', 'متأخرة',
                 'pending', 'in-progress', 'completed', 'cancelled', 'overdue',
-                'قيد الانتظار'
+                'قيد الانتظار',
+                'قيد الإنجاز'   // ✅ v2.1: من الواجهة
             ],
             message: 'حالة غير صالحة'
         },
@@ -150,15 +151,15 @@ const MaintenanceSchema = new mongoose.Schema({
 });
 
 // ============================================================
-// 🔍 الفهارس
+// 🔍 الفهارس — تُعرَّف هنا فقط (بدون تكرار في الحقول)
 // ============================================================
 
+MaintenanceSchema.index({ id: 1 });
 MaintenanceSchema.index({ vesselId: 1 });
 MaintenanceSchema.index({ status: 1 });
 MaintenanceSchema.index({ priority: 1 });
 MaintenanceSchema.index({ startDate: -1 });
 MaintenanceSchema.index({ createdAt: -1 });
-MaintenanceSchema.index({ id: 1 });
 
 // ============================================================
 // 🌀 Virtuals
@@ -190,7 +191,7 @@ MaintenanceSchema.virtual('progress').get(function() {
     if (this.status === 'مكتملة') return 100;
     if (this.status === 'ملغاة') return 0;
     if (this.status === 'معلقة') return 0;
-    if (this.status === 'قيد التنفيذ') return 50;
+    if (this.status === 'قيد التنفيذ' || this.status === 'قيد الإنجاز') return 50;
     return 0;
 });
 
@@ -222,13 +223,13 @@ MaintenanceSchema.statics.findByVessel = function(vesselId) {
 
 MaintenanceSchema.statics.findActive = function() {
     return this.find({
-        status: { $in: ['معلقة', 'قيد التنفيذ', 'قيد الانتظار'] }
+        status: { $in: ['معلقة', 'قيد التنفيذ', 'قيد الانتظار', 'قيد الإنجاز'] }
     }).sort({ priority: -1, startDate: 1 });
 };
 
 MaintenanceSchema.statics.findOverdue = function() {
     return this.find({
-        status: { $in: ['معلقة', 'قيد التنفيذ', 'قيد الانتظار'] },
+        status: { $in: ['معلقة', 'قيد التنفيذ', 'قيد الانتظار', 'قيد الإنجاز'] },
         endDate: { $lt: new Date() }
     });
 };
@@ -250,16 +251,18 @@ MaintenanceSchema.statics.getStats = async function() {
 // ============================================================
 
 MaintenanceSchema.pre('save', async function(next) {
-    if (!this.vesselName && this.vesselId) {
-        try {
-            const Vessel = mongoose.model('Vessel');
-            const vessel = await Vessel.findOne({ id: this.vesselId });
-            if (vessel) {
-                this.vesselName = vessel.name;
-                this.vesselNum = vessel.num || this.vesselNum;
+    if (!this.vesselName || this.vesselName === '—') {
+        if (this.vesselId) {
+            try {
+                const Vessel = mongoose.model('Vessel');
+                const vessel = await Vessel.findOne({ id: this.vesselId });
+                if (vessel) {
+                    this.vesselName = vessel.name;
+                    this.vesselNum = vessel.num || this.vesselNum;
+                }
+            } catch (error) {
+                console.error('Error fetching vessel name:', error);
             }
-        } catch (error) {
-            console.error('Error fetching vessel name:', error);
         }
     }
     next();
