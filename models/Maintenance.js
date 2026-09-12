@@ -1,148 +1,65 @@
-// ============================================================
-// 🔧 models/Maintenance.js - v2.1
-// ✨ v2.1: إزالة الفهارس المكررة + توافق كامل مع server.js v9.14
-// ============================================================
+/**
+ * 🔔 نموذج الإشعارات - v1.0
+ * @module models/Notification
+ */
 
 const mongoose = require('mongoose');
 
-const MaintenanceSchema = new mongoose.Schema({
-    // ✅ ID للتوافق مع server.js (UUID أو hex)
+const NotificationSchema = new mongoose.Schema({
     id: {
-        type: String
-        // ⚠️ لا index هنا — الفهرس يُعرَّف أدناه
-    },
-
-    // ✅ vesselId - يقبل String أو ObjectId
-    vesselId: {
         type: String,
-        default: ''
-        // ⚠️ لا index هنا — الفهرس يُعرَّف أدناه
+        index: true,
+        default: () => require('crypto').randomBytes(8).toString('hex')
     },
-    vesselName: {
+    userId: {
         type: String,
-        trim: true,
-        default: '—'
+        default: null,
+        index: true
     },
-    vesselNum: {
-        type: String,
-        default: ''
-    },
-
-    // ✅ type - بلا enum لقبول أي نوع
     type: {
         type: String,
-        required: [true, 'نوع الصيانة مطلوب'],
-        default: 'صيانة دورية',
-        trim: true
+        enum: ['info', 'success', 'warning', 'error'],
+        default: 'info',
+        index: true
     },
-
-    priority: {
+    category: {
         type: String,
-        default: 'متوسط',
-        trim: true
+        enum: ['user', 'vessel', 'maintenance', 'ticket', 'system', 'auth', 'note'],
+        default: 'system',
+        index: true
     },
-
-    description: {
+    title: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 200
+    },
+    message: {
         type: String,
         default: '',
-        trim: true
+        trim: true,
+        maxlength: 1000
     },
-
-    // ✅ date للتوافق + startDate للنموذج الأصلي
-    date: {
+    link: {
         type: String,
         default: null
     },
-    startDate: {
-        type: Date,
-        default: Date.now
-    },
-    endDate: {
-        type: Date,
-        default: null
-    },
-
-    // ✅ status - يشمل كل الحالات
-    status: {
+    icon: {
         type: String,
-        enum: {
-            values: [
-                'معلقة', 'قيد التنفيذ', 'مكتملة', 'ملغاة', 'متأخرة',
-                'pending', 'in-progress', 'completed', 'cancelled', 'overdue',
-                'قيد الانتظار',
-                'قيد الإنجاز'   // ✅ v2.1: من الواجهة
-            ],
-            message: 'حالة غير صالحة'
-        },
-        default: 'قيد الانتظار'
+        default: 'bell'
     },
-
-    // ✅ repairUnit للتوافق مع server.js
-    repairUnit: {
-        type: String,
-        default: '—',
-        trim: true
+    isRead: {
+        type: Boolean,
+        default: false,
+        index: true
     },
-
-    cost: {
-        type: Number,
-        min: 0,
-        default: 0
-    },
-
-    contractor: {
-        type: String,
-        default: '',
-        trim: true
-    },
-
-    supervisor: {
+    actorName: {
         type: String,
         default: null
     },
-    supervisorName: {
-        type: String,
-        default: '',
-        trim: true
-    },
-
-    partsUsed: [{
-        partName: {
-            type: String,
-            required: true
-        },
-        quantity: {
-            type: Number,
-            min: 1,
-            default: 1
-        },
-        cost: {
-            type: Number,
-            min: 0,
-            default: 0
-        }
-    }],
-
-    notes: {
-        type: String,
-        default: '',
-        trim: true
-    },
-
-    attachments: [{
-        name: String,
-        url: String,
-        type: String
-    }],
-
-    // ✅ الحقول الإدارية
-    createdBy: {
-        type: String,
-        default: 'system'
-    },
-    updatedBy: {
-        type: String,
-        default: null
+    metadata: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
     }
 }, {
     timestamps: true,
@@ -150,126 +67,39 @@ const MaintenanceSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// ============================================================
-// 🔍 الفهارس — تُعرَّف هنا فقط (بدون تكرار في الحقول)
-// ============================================================
+NotificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
+NotificationSchema.index({ createdAt: -1 });
+NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
 
-MaintenanceSchema.index({ id: 1 });
-MaintenanceSchema.index({ vesselId: 1 });
-MaintenanceSchema.index({ status: 1 });
-MaintenanceSchema.index({ priority: 1 });
-MaintenanceSchema.index({ startDate: -1 });
-MaintenanceSchema.index({ createdAt: -1 });
-
-// ============================================================
-// 🌀 Virtuals
-// ============================================================
-
-MaintenanceSchema.virtual('duration').get(function() {
-    if (!this.endDate) return null;
-    const diff = this.endDate - this.startDate;
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
-});
-
-MaintenanceSchema.virtual('totalCost').get(function() {
-    let total = this.cost || 0;
-    if (this.partsUsed && this.partsUsed.length > 0) {
-        total += this.partsUsed.reduce((sum, part) => {
-            return sum + ((part.cost || 0) * (part.quantity || 1));
-        }, 0);
-    }
-    return total;
-});
-
-MaintenanceSchema.virtual('isOverdue').get(function() {
-    if (this.status === 'مكتملة' || this.status === 'ملغاة') return false;
-    if (!this.endDate) return false;
-    return this.endDate < new Date();
-});
-
-MaintenanceSchema.virtual('progress').get(function() {
-    if (this.status === 'مكتملة') return 100;
-    if (this.status === 'ملغاة') return 0;
-    if (this.status === 'معلقة') return 0;
-    if (this.status === 'قيد التنفيذ' || this.status === 'قيد الإنجاز') return 50;
-    return 0;
-});
-
-// ============================================================
-// 🛠️ Methods
-// ============================================================
-
-MaintenanceSchema.methods.complete = async function() {
-    this.status = 'مكتملة';
-    this.endDate = new Date();
-    await this.save();
-    return this;
-};
-
-MaintenanceSchema.methods.cancel = async function(reason) {
-    this.status = 'ملغاة';
-    this.notes = this.notes ? `${this.notes}\nملغاة: ${reason}` : `ملغاة: ${reason}`;
-    await this.save();
-    return this;
-};
-
-// ============================================================
-// 📌 Statics
-// ============================================================
-
-MaintenanceSchema.statics.findByVessel = function(vesselId) {
-    return this.find({ vesselId }).sort({ startDate: -1 });
-};
-
-MaintenanceSchema.statics.findActive = function() {
-    return this.find({
-        status: { $in: ['معلقة', 'قيد التنفيذ', 'قيد الانتظار', 'قيد الإنجاز'] }
-    }).sort({ priority: -1, startDate: 1 });
-};
-
-MaintenanceSchema.statics.findOverdue = function() {
-    return this.find({
-        status: { $in: ['معلقة', 'قيد التنفيذ', 'قيد الانتظار', 'قيد الإنجاز'] },
-        endDate: { $lt: new Date() }
+NotificationSchema.statics.getUnreadCount = function(userId) {
+    return this.countDocuments({
+        $or: [{ userId: userId }, { userId: null }],
+        isRead: false
     });
 };
 
-MaintenanceSchema.statics.getStats = async function() {
-    return await this.aggregate([
-        {
-            $group: {
-                _id: '$status',
-                count: { $sum: 1 },
-                totalCost: { $sum: '$cost' }
-            }
-        }
-    ]);
+NotificationSchema.statics.createNotification = async function(data) {
+    try {
+        const notif = new this({
+            id: require('crypto').randomBytes(8).toString('hex'),
+            userId: data.userId || null,
+            type: data.type || 'info',
+            category: data.category || 'system',
+            title: data.title,
+            message: data.message || '',
+            link: data.link || null,
+            icon: data.icon || 'bell',
+            actorName: data.actorName || null,
+            metadata: data.metadata || {},
+            isRead: false
+        });
+        return await notif.save();
+    } catch (e) {
+        console.error('❌ createNotification error:', e.message);
+        return null;
+    }
 };
 
-// ============================================================
-// 🔄 Middleware
-// ============================================================
+const Notification = mongoose.model('Notification', NotificationSchema);
 
-MaintenanceSchema.pre('save', async function(next) {
-    if (!this.vesselName || this.vesselName === '—') {
-        if (this.vesselId) {
-            try {
-                const Vessel = mongoose.model('Vessel');
-                const vessel = await Vessel.findOne({ id: this.vesselId });
-                if (vessel) {
-                    this.vesselName = vessel.name;
-                    this.vesselNum = vessel.num || this.vesselNum;
-                }
-            } catch (error) {
-                console.error('Error fetching vessel name:', error);
-            }
-        }
-    }
-    next();
-});
-
-// ============================================================
-// 🚀 تصدير
-// ============================================================
-
-module.exports = mongoose.model('Maintenance', MaintenanceSchema);
+module.exports = Notification;
