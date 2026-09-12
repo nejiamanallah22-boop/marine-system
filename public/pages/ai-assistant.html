@@ -2,7 +2,7 @@
 <div id="page-ai-assistant">
     <style>
         /* ============================================================
-           🤖 AI ASSISTANT STYLES
+           🤖 AI ASSISTANT STYLES v2.1 (with Voice)
            ============================================================ */
         .ai-container {
             display: flex;
@@ -14,7 +14,6 @@
             border: 1px solid rgba(255,255,255,0.05);
             overflow: hidden;
         }
-        
         .ai-header {
             display: flex;
             justify-content: space-between;
@@ -25,13 +24,11 @@
             flex-wrap: wrap;
             gap: 8px;
         }
-        
         .ai-header .ai-brand {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        
         .ai-header .ai-brand .ai-icon {
             width: 40px;
             height: 40px;
@@ -44,23 +41,19 @@
             color: #fff;
             animation: pulseGlow 2s ease-in-out infinite;
         }
-        
         @keyframes pulseGlow {
             0%, 100% { box-shadow: 0 0 20px rgba(66,133,244,0.1); }
             50% { box-shadow: 0 0 40px rgba(66,133,244,0.25); }
         }
-        
         .ai-header .ai-brand .ai-title {
             font-size: 18px;
             font-weight: 700;
             color: #fff;
         }
-        
         .ai-header .ai-brand .ai-subtitle {
             font-size: 12px;
             color: rgba(255,255,255,0.3);
         }
-        
         .ai-header .ai-status {
             display: flex;
             align-items: center;
@@ -68,29 +61,43 @@
             font-size: 12px;
             color: rgba(255,255,255,0.4);
         }
-        
         .ai-header .ai-status .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             display: inline-block;
         }
-        
         .ai-header .ai-status .status-dot.online {
             background: #4ade80;
             animation: pulseDot 2s ease-in-out infinite;
         }
-        
-        .ai-header .ai-status .status-dot.offline {
-            background: #f87171;
-        }
-        
+        .ai-header .ai-status .status-dot.offline { background: #f87171; }
         @keyframes pulseDot {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(1.2); }
         }
-        
-        /* ===== API Key Status ===== */
+        .ai-header .ai-voice-toggle {
+            background: none;
+            border: 1px solid rgba(66,133,244,0.2);
+            color: #60a5fa;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+        .ai-header .ai-voice-toggle:hover {
+            background: rgba(66,133,244,0.08);
+        }
+        .ai-header .ai-voice-toggle.active {
+            background: rgba(66,133,244,0.15);
+            border-color: #4285f4;
+            color: #fff;
+        }
         .api-status-bar {
             padding: 8px 20px;
             background: rgba(255,255,255,0.02);
@@ -101,39 +108,32 @@
             flex-wrap: wrap;
             font-size: 13px;
         }
-        
         .api-status-bar .status-label {
             color: rgba(255,255,255,0.4);
             font-weight: 600;
         }
-        
         .api-status-bar .status-value {
             padding: 4px 14px;
             border-radius: 20px;
             font-weight: 500;
         }
-        
         .api-status-bar .status-value.valid {
             color: #4ade80;
             background: rgba(74,222,128,0.1);
         }
-        
         .api-status-bar .status-value.invalid {
             color: #f87171;
             background: rgba(248,113,113,0.1);
         }
-        
         .api-status-bar .status-value.checking {
             color: #fbbf24;
             background: rgba(251,191,36,0.1);
         }
-        
-        .api-status-bar .status-value .model-name {
-            color: rgba(255,255,255,0.2);
-            font-weight: 400;
+        .api-status-bar .quota-info {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin-right: auto;
         }
-        
-        /* ===== CHAT MESSAGES ===== */
         .ai-messages {
             flex: 1;
             overflow-y: auto;
@@ -143,26 +143,20 @@
             gap: 12px;
             min-height: 300px;
         }
-        
         .ai-messages::-webkit-scrollbar { width: 4px; }
-        .ai-messages::-webkit-scrollbar-track { background: transparent; }
         .ai-messages::-webkit-scrollbar-thumb { background: rgba(66,133,244,0.3); border-radius: 10px; }
-        
         .message {
             display: flex;
             gap: 12px;
             max-width: 85%;
             animation: messageSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
         @keyframes messageSlide {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         .message.user { align-self: flex-end; flex-direction: row-reverse; }
         .message.assistant { align-self: flex-start; }
-        
         .message .avatar {
             width: 36px;
             height: 36px;
@@ -173,10 +167,8 @@
             justify-content: center;
             font-size: 16px;
         }
-        
         .message.user .avatar { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #fff; }
         .message.assistant .avatar { background: linear-gradient(135deg, #4285f4, #34a853); color: #fff; }
-        
         .message .bubble {
             padding: 12px 16px;
             border-radius: 12px;
@@ -184,35 +176,31 @@
             line-height: 1.6;
             word-wrap: break-word;
             max-width: 100%;
+            position: relative;
         }
-        
         .message.user .bubble {
             background: rgba(59,130,246,0.15);
             border: 1px solid rgba(59,130,246,0.1);
             color: #e2e8f0;
             border-bottom-left-radius: 4px;
         }
-        
         .message.assistant .bubble {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
             color: #e2e8f0;
             border-bottom-right-radius: 4px;
         }
-        
         .message .bubble .message-time {
             font-size: 10px;
             color: rgba(255,255,255,0.2);
             margin-top: 6px;
             display: block;
         }
-        
         .message .bubble .typing-indicator {
             display: flex;
             gap: 4px;
             padding: 4px 0;
         }
-        
         .message .bubble .typing-indicator span {
             width: 8px;
             height: 8px;
@@ -220,22 +208,18 @@
             background: rgba(255,255,255,0.2);
             animation: typingBounce 1.2s ease-in-out infinite;
         }
-        
         .message .bubble .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
         .message .bubble .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        
         @keyframes typingBounce {
             0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
             30% { transform: translateY(-8px); opacity: 1; }
         }
-        
         .message .bubble .suggestions {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
             margin-top: 8px;
         }
-        
         .message .bubble .suggestions .suggestion-btn {
             padding: 4px 12px;
             border-radius: 20px;
@@ -247,30 +231,78 @@
             transition: all 0.3s;
             font-family: inherit;
         }
-        
         .message .bubble .suggestions .suggestion-btn:hover {
             background: rgba(66,133,244,0.12);
             border-color: #4285f4;
         }
-        
-        /* ===== AI INPUT ===== */
+        .message.error .bubble {
+            background: rgba(248,113,113,0.08);
+            border-color: rgba(248,113,113,0.2);
+            color: #fca5a5;
+        }
+        .message.error .bubble .retry-btn {
+            margin-top: 8px;
+            padding: 6px 14px;
+            background: rgba(248,113,113,0.15);
+            border: 1px solid rgba(248,113,113,0.3);
+            color: #fca5a5;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        /* ===== AUDIO BUTTONS (TTS) ===== */
+        .message .bubble .speak-btn {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(66,133,244,0.1);
+            border: 1px solid rgba(66,133,244,0.2);
+            color: #60a5fa;
+            padding: 4px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: inherit;
+            opacity: 0;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .message .bubble:hover .speak-btn { opacity: 1; }
+        .message .bubble .speak-btn:hover {
+            background: rgba(66,133,244,0.2);
+            color: #fff;
+        }
+        .message .bubble .speak-btn.speaking {
+            opacity: 1;
+            background: rgba(74,222,128,0.15);
+            border-color: rgba(74,222,128,0.4);
+            color: #4ade80;
+            animation: speakPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes speakPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+        }
+
         .ai-input-area {
             padding: 16px 20px;
             border-top: 1px solid rgba(255,255,255,0.05);
             background: rgba(255,255,255,0.02);
         }
-        
         .ai-input-wrapper {
             display: flex;
             gap: 10px;
             align-items: flex-end;
         }
-        
         .ai-input-wrapper .input-container {
             flex: 1;
             position: relative;
         }
-        
         .ai-input-wrapper textarea {
             width: 100%;
             padding: 12px 16px;
@@ -286,24 +318,57 @@
             transition: all 0.3s;
             line-height: 1.5;
         }
-        
         .ai-input-wrapper textarea:focus {
             outline: none;
             border-color: #4285f4;
             background: rgba(255,255,255,0.06);
             box-shadow: 0 0 0 4px rgba(66,133,244,0.06);
         }
-        
-        .ai-input-wrapper textarea::placeholder {
-            color: rgba(255,255,255,0.2);
-        }
-        
+        .ai-input-wrapper textarea::placeholder { color: rgba(255,255,255,0.2); }
         .ai-input-wrapper .input-actions {
             display: flex;
             gap: 8px;
             align-items: center;
         }
-        
+
+        /* ===== MIC BUTTON (STT) ===== */
+        .mic-btn {
+            width: 50px;
+            height: 50px;
+            min-height: 50px;
+            border-radius: 12px;
+            border: 1px solid rgba(66,133,244,0.2);
+            background: rgba(66,133,244,0.06);
+            color: #60a5fa;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .mic-btn:hover:not(:disabled) {
+            background: rgba(66,133,244,0.12);
+            border-color: #4285f4;
+            transform: scale(1.02);
+        }
+        .mic-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .mic-btn.listening {
+            background: rgba(248,113,113,0.15);
+            border-color: #f87171;
+            color: #f87171;
+            animation: micPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes micPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0.6); }
+            50% { box-shadow: 0 0 0 10px rgba(248,113,113,0); }
+        }
+
         .ai-input-wrapper .send-btn {
             padding: 12px 20px;
             border: none;
@@ -321,17 +386,11 @@
             min-height: 50px;
             white-space: nowrap;
         }
-        
         .ai-input-wrapper .send-btn:hover:not(:disabled) {
             transform: scale(1.02);
             box-shadow: 0 4px 30px rgba(66,133,244,0.25);
         }
-        
-        .ai-input-wrapper .send-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
+        .ai-input-wrapper .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .ai-input-wrapper .send-btn .spinner {
             display: none;
             width: 18px;
@@ -341,27 +400,60 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-        
         .ai-input-wrapper .send-btn.loading .spinner { display: inline-block; }
         .ai-input-wrapper .send-btn.loading .btn-text { display: none; }
-        
         @keyframes spin { to { transform: rotate(360deg); } }
-        
         .ai-input-wrapper .char-counter {
             font-size: 11px;
             color: rgba(255,255,255,0.15);
             text-align: left;
             margin-top: 4px;
+            transition: color 0.3s;
         }
-        
-        /* ===== QUICK ACTIONS ===== */
+        .ai-input-wrapper .char-counter.warn { color: #fbbf24; }
+        .ai-input-wrapper .char-counter.danger { color: #f87171; }
+
+        /* ===== LISTENING OVERLAY ===== */
+        .listening-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(248,113,113,0.08);
+            border: 1px solid rgba(248,113,113,0.2);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #fca5a5;
+        }
+        .listening-indicator.active { display: flex; }
+        .listening-indicator .wave {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+        .listening-indicator .wave span {
+            width: 3px;
+            height: 12px;
+            background: #f87171;
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+        .listening-indicator .wave span:nth-child(2) { animation-delay: 0.1s; }
+        .listening-indicator .wave span:nth-child(3) { animation-delay: 0.2s; }
+        .listening-indicator .wave span:nth-child(4) { animation-delay: 0.3s; }
+        .listening-indicator .wave span:nth-child(5) { animation-delay: 0.4s; }
+        @keyframes wave {
+            0%, 100% { height: 8px; opacity: 0.5; }
+            50% { height: 20px; opacity: 1; }
+        }
+
         .ai-quick-actions {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             padding: 8px 20px 4px;
         }
-        
         .ai-quick-actions .quick-btn {
             padding: 6px 14px;
             border-radius: 20px;
@@ -373,14 +465,107 @@
             transition: all 0.3s;
             font-family: 'Cairo', sans-serif;
         }
-        
         .ai-quick-actions .quick-btn:hover {
             background: rgba(255,255,255,0.04);
             color: #fff;
             border-color: rgba(66,133,244,0.2);
         }
-        
-        /* ===== RESPONSIVE ===== */
+        .ai-quick-actions .quick-btn.clear-btn {
+            margin-right: auto;
+            color: rgba(248,113,113,0.6);
+            border-color: rgba(248,113,113,0.15);
+        }
+        .ai-quick-actions .quick-btn.clear-btn:hover {
+            color: #f87171;
+            background: rgba(248,113,113,0.08);
+        }
+
+        /* ===== VOICE SETTINGS PANEL ===== */
+        .voice-panel {
+            display: none;
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            width: 320px;
+            background: linear-gradient(145deg, #111e3a, #0a1628);
+            border: 1px solid rgba(66,133,244,0.15);
+            border-radius: 14px;
+            padding: 16px;
+            z-index: 100;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: messageSlide 0.25s ease;
+        }
+        .voice-panel.open { display: block; }
+        .voice-panel h4 {
+            color: #60a5fa;
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .voice-panel h4 .close-panel {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .voice-panel .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+        }
+        .voice-panel .setting-row label {
+            cursor: pointer;
+        }
+        .voice-panel .setting-row input[type="range"] {
+            width: 150px;
+            accent-color: #4285f4;
+        }
+        .voice-panel .setting-row select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+        }
+        .voice-panel .setting-row select option {
+            background: #0a1628;
+        }
+        .voice-panel .setting-row .toggle-switch {
+            width: 40px;
+            height: 22px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .voice-panel .setting-row .toggle-switch.on {
+            background: #4285f4;
+        }
+        .voice-panel .setting-row .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 0.3s;
+        }
+        .voice-panel .setting-row .toggle-switch.on::after {
+            transform: translateX(-18px);
+        }
+
         @media (max-width: 768px) {
             .ai-container { height: calc(100vh - 150px); min-height: 400px; }
             .message { max-width: 95%; }
@@ -388,8 +573,8 @@
             .ai-input-wrapper .input-actions { width: 100%; }
             .ai-input-wrapper .send-btn { flex: 1; justify-content: center; }
             .ai-header .ai-brand .ai-subtitle { display: none; }
+            .voice-panel { width: calc(100vw - 40px); left: 20px; }
         }
-        
         @media (max-width: 480px) {
             .ai-container { height: calc(100vh - 120px); min-height: 350px; }
             .ai-header { padding: 10px 14px; }
@@ -398,85 +583,101 @@
             .message .bubble { font-size: 13px; padding: 10px 14px; }
             .ai-input-area { padding: 10px 14px; }
             .ai-input-wrapper textarea { font-size: 13px; padding: 10px 14px; min-height: 42px; }
+            .mic-btn { width: 42px; height: 42px; min-height: 42px; font-size: 16px; }
             .ai-input-wrapper .send-btn { padding: 10px 16px; min-height: 42px; font-size: 13px; }
             .api-status-bar { font-size: 12px; padding: 6px 14px; }
         }
     </style>
 
-    <!-- ============================================================
-    🤖 AI CONTAINER
-    ============================================================ -->
-    <div class="ai-container">
-        <!-- HEADER -->
+    <div class="ai-container" style="position:relative;">
         <div class="ai-header">
             <div class="ai-brand">
                 <div class="ai-icon">🧠</div>
                 <div>
                     <div class="ai-title">المساعد الذكي</div>
-                    <div class="ai-subtitle" id="aiSubtitle">بواسطة Google Gemini AI</div>
+                    <div class="ai-subtitle">مدعوم من Google Gemini AI</div>
                 </div>
             </div>
             <div class="ai-status">
                 <span class="status-dot online" id="aiStatusDot"></span>
                 <span id="aiStatusText">متصل</span>
                 <span style="margin:0 8px;color:rgba(255,255,255,0.1);">|</span>
-                <span id="aiModel">Gemini</span>
+                <button class="ai-voice-toggle" id="voiceToggleBtn" title="إعدادات الصوت">
+                    🎤 الصوت
+                </button>
             </div>
         </div>
 
-        <!-- API STATUS BAR -->
+        <!-- Voice Settings Panel -->
+        <div class="voice-panel" id="voicePanel">
+            <h4>
+                <span>🎤 إعدادات الصوت</span>
+                <button class="close-panel" onclick="aiToggleVoicePanel()">✕</button>
+            </h4>
+            <div class="setting-row">
+                <label>قراءة الردود تلقائياً</label>
+                <div class="toggle-switch" id="autoSpeakToggle" onclick="aiToggleAutoSpeak()"></div>
+            </div>
+            <div class="setting-row">
+                <label>سرعة القراءة</label>
+                <input type="range" id="voiceRate" min="0.5" max="2" step="0.1" value="1">
+            </div>
+            <div class="setting-row">
+                <label>نبرة الصوت</label>
+                <input type="range" id="voicePitch" min="0.5" max="1.5" step="0.1" value="1">
+            </div>
+            <div class="setting-row">
+                <label>الصوت</label>
+                <select id="voiceSelect"></select>
+            </div>
+            <div class="setting-row">
+                <label>لغة الإدخال الصوتي</label>
+                <select id="sttLang">
+                    <option value="ar-TN">🇹🇳 العربية (تونس)</option>
+                    <option value="ar-SA" selected>🇸🇦 العربية (فصحى)</option>
+                    <option value="ar-EG">🇪🇬 العربية (مصر)</option>
+                    <option value="fr-FR">🇫🇷 Français</option>
+                    <option value="en-US">🇺🇸 English</option>
+                </select>
+            </div>
+        </div>
+
         <div class="api-status-bar">
-            <span class="status-label">🔑 حالة المفتاح:</span>
+            <span class="status-label">🔑 حالة الخدمة:</span>
             <span class="status-value checking" id="apiKeyStatus">
                 <span id="apiKeyStatusText">جاري التحقق...</span>
-                <span class="model-name" id="apiModelName"></span>
             </span>
+            <span class="quota-info" id="quotaInfo"></span>
         </div>
 
-        <!-- QUICK ACTIONS -->
         <div class="ai-quick-actions">
-            <button class="quick-btn" onclick="sendQuickPrompt('عرض حالة الأسطول الحالية')">📊 حالة الأسطول</button>
-            <button class="quick-btn" onclick="sendQuickPrompt('المراكب المعطوبة')">⚠️ الأعطال</button>
-            <button class="quick-btn" onclick="sendQuickPrompt('تقرير الصيانة الشهري')">🛠️ الصيانة</button>
-            <button class="quick-btn" onclick="sendQuickPrompt('نسبة الجاهزية')">📈 الجاهزية</button>
-            <button class="quick-btn" onclick="sendQuickPrompt('ما هي عاصمة تونس؟')">🌍 سؤال عام</button>
-            <button class="quick-btn" onclick="sendQuickPrompt('أخبرني عن البحر الأبيض المتوسط')">🌊 جغرافيا</button>
+            <button class="quick-btn" onclick="aiSendQuick('عرض حالة الأسطول الحالية')">📊 حالة الأسطول</button>
+            <button class="quick-btn" onclick="aiSendQuick('المراكب المعطوبة')">⚠️ الأعطال</button>
+            <button class="quick-btn" onclick="aiSendQuick('تقرير الصيانة الشهري')">🛠️ الصيانة</button>
+            <button class="quick-btn" onclick="aiSendQuick('نسبة الجاهزية')">📈 الجاهزية</button>
+            <button class="quick-btn" onclick="aiSendQuick('ما هي عاصمة تونس؟')">🌍 سؤال عام</button>
+            <button class="quick-btn clear-btn" onclick="aiClearChat()">🗑️ مسح</button>
         </div>
 
-        <!-- MESSAGES -->
-        <div class="ai-messages" id="aiMessages">
-            <div class="message assistant">
-                <div class="avatar">🧠</div>
-                <div class="bubble">
-                    <div>مرحباً بك في المساعد الذكي! 👋</div>
-                    <div style="color:rgba(255,255,255,0.5); font-size:13px; margin-top:6px;">
-                        أنا مدعوم من <strong>Google Gemini AI</strong>. يمكنني الإجابة عن أي سؤال:
-                        <ul style="margin:6px 0 0 20px; color:rgba(255,255,255,0.4);">
-                            <li>⚓ شؤون الأسطول البحري</li>
-                            <li>🌍 معلومات عامة</li>
-                            <li>📊 تحليل البيانات</li>
-                            <li>💡 توصيات ذكية</li>
-                        </ul>
-                    </div>
-                    <div class="suggestions">
-                        <button class="suggestion-btn" onclick="sendQuickPrompt('عرض إحصائيات الأسطول')">📊 الإحصائيات</button>
-                        <button class="suggestion-btn" onclick="sendQuickPrompt('ما هي عاصمة تونس؟')">🌍 سؤال عام</button>
-                        <button class="suggestion-btn" onclick="sendQuickPrompt('المراكب المعطوبة')">⚠️ الأعطال</button>
-                    </div>
-                    <span class="message-time">الآن</span>
-                </div>
-            </div>
-        </div>
+        <div class="ai-messages" id="aiMessages"></div>
 
-        <!-- INPUT -->
         <div class="ai-input-area">
+            <div class="listening-indicator" id="listeningIndicator">
+                <div class="wave">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <span>🎙️ جاري الاستماع... تحدث الآن</span>
+            </div>
             <div class="ai-input-wrapper">
                 <div class="input-container">
-                    <textarea id="aiInput" rows="1" placeholder="اسأل عن أي شيء..." onkeydown="handleAIKey(event)"></textarea>
-                    <div class="char-counter" id="charCounter">0 / 2000</div>
+                    <textarea id="aiInput" rows="1" placeholder="اكتب سؤالك... (Enter للإرسال، Shift+Enter لسطر جديد)"></textarea>
+                    <div class="char-counter" id="charCounter">0 / 4000</div>
                 </div>
                 <div class="input-actions">
-                    <button class="send-btn" id="sendBtn" onclick="sendAIMessage()">
+                    <button class="mic-btn" id="micBtn" onclick="aiToggleMic()" title="اضغط للتحدث">
+                        🎙️
+                    </button>
+                    <button class="send-btn" id="aiSendBtn" onclick="aiSendMessage()">
                         <span class="btn-text">إرسال</span>
                         <span class="spinner"></span>
                     </button>
@@ -486,473 +687,710 @@
     </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- 📦 JAVASCRIPT - GEMINI AI ASSISTANT -->
-<!-- ============================================================ -->
 <script>
 // ============================================================
-// 🤖 GEMINI AI ASSISTANT - الكود الكامل
+// 🤖 AI ASSISTANT — v2.1 (Voice + Audio)
 // ============================================================
 
-// ============================================================
-// 1. CONFIGURATION
-// ============================================================
+(function() {
+    'use strict';
 
-const AI_CONFIG = {
-    API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/',
-    MODEL: 'gemini-2.0-flash',
-    MAX_TOKENS: 2048,
-    TEMPERATURE: 0.7,
-    SYSTEM_PROMPT: `أنت مساعد ذكي متخصص في الأسطول البحري التونسي، ولديك معرفة عامة واسعة.
-    
-    ⚓ الأسطول البحري التونسي:
-    - المنظومة: منظومة متابعة الوسائل البحرية
-    - المطور: أمان الله ناجي
-    - الإصدار: v7.0
-    
-    🌍 المعرفة العامة:
-    - أنت خبير في جميع المجالات: التاريخ، الجغرافيا، العلوم، الثقافة، السياسة، الاقتصاد، الرياضة، إلخ.
-    - تجيب باللغة العربية الفصحى أو بالعامية التونسية حسب سؤال المستخدم.
-    - كن دقيقاً ومفصلاً في إجاباتك.
-    - إذا لم تكن تعرف الإجابة، قل ذلك بصراحة.`
-};
+    console.log('🧠 AI Assistant v2.1 (Voice) loading...');
 
-// ============================================================
-// 2. STATE
-// ============================================================
+    // ===== الحالة =====
+    const state = {
+        history: [],
+        isProcessing: false,
+        maxLength: 4000,
+        lastMessage: null,
+        // Voice
+        recognition: null,
+        isListening: false,
+        speechSynthesis: window.speechSynthesis || null,
+        currentUtterance: null,
+        currentSpeakBtn: null,
+        autoSpeak: false,
+        voices: [],
+        preferredVoice: null
+    };
 
-let chatHistory = [];
-let isProcessing = false;
-let GEMINI_API_KEY = '';
-let vesselData = [];
+    // ============================================================
+    // HELPERS
+    // ============================================================
 
-// ============================================================
-// 3. LOAD DATA
-// ============================================================
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+        }[m]));
+    }
 
-function loadVesselData() {
-    try {
-        if (window.allVessels && Array.isArray(window.allVessels)) {
-            vesselData = window.allVessels;
-            console.log('✅ بيانات الأسطول محملة من التطبيق:', vesselData.length, 'مركب');
-        } else {
-            // بيانات تجريبية
-            vesselData = [
-                { name: 'البروق 1', num: 'B001', stat: 'صالح', reg: 'الشمال', len: 11, zone: 'تونس' },
-                { name: 'صقر 2', num: 'S002', stat: 'صالح', reg: 'الساحل', len: 10, zone: 'سوسة' },
-                { name: 'خافرة 3', num: 'K003', stat: 'معطب', reg: 'الوسط', len: 20, zone: 'صفاقس', break: 'عطل في المحرك' },
-                { name: 'طوافة 4', num: 'T004', stat: 'صيانة', reg: 'الجنوب', len: 35, zone: 'جرجيس', break: 'أعطال كهربائية' },
-                { name: 'زورق سريع 5', num: 'Z005', stat: 'صالح', reg: 'الشمال', len: 15, zone: 'بنزرت' },
-                { name: 'البروق 6', num: 'B006', stat: 'صيانة', reg: 'الساحل', len: 11, zone: 'المنستير', break: 'نظام ملاحة' },
-                { name: 'صقر 7', num: 'S007', stat: 'صالح', reg: 'الجنوب', len: 9, zone: 'جربة' },
-            ];
-            console.log('✅ بيانات الأسطول التجريبية محملة:', vesselData.length, 'مركب');
+    function safeFormat(text) {
+        return escapeHTML(text).replace(/\n/g, '<br>');
+    }
+
+    function stripHTML(html) {
+        if (!html) return '';
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
+    function toast(msg, type) {
+        if (typeof window.showToast === 'function') {
+            try { window.showToast(msg, type || 'info'); return; } catch (e) {}
         }
-    } catch(e) {
-        console.warn('⚠️ فشل تحميل بيانات الأسطول:', e);
+        console.log('[' + (type || 'info') + ']', msg);
     }
-}
 
-// ============================================================
-// 4. GET MARINE CONTEXT
-// ============================================================
+    const getInput = () => document.getElementById('aiInput');
+    const getMessages = () => document.getElementById('aiMessages');
+    const getSendBtn = () => document.getElementById('aiSendBtn');
+    const getMicBtn = () => document.getElementById('micBtn');
+    const getCharCounter = () => document.getElementById('charCounter');
 
-function getMarineContext() {
-    try {
-        const vessels = vesselData || [];
-        const total = vessels.length;
-        const active = vessels.filter(v => v.stat === 'صالح').length;
-        const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
-        const broken = vessels.filter(v => v.stat === 'معطب').length;
-        const efficiency = total ? ((active / total) * 100).toFixed(1) : 0;
-        
-        const regions = {};
-        vessels.forEach(v => {
-            if (!regions[v.reg]) regions[v.reg] = { total: 0, active: 0 };
-            regions[v.reg].total++;
-            if (v.stat === 'صالح') regions[v.reg].active++;
-        });
-        
-        let regionStats = '';
-        Object.entries(regions).forEach(([name, data]) => {
-            const eff = data.total ? ((data.active / data.total) * 100).toFixed(1) : 0;
-            regionStats += `- ${name}: ${data.active}/${data.total} صالح (${eff}%)\n`;
-        });
-        
-        const brokenList = vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
-        let brokenStats = '';
-        brokenList.forEach(v => {
-            brokenStats += `- ${v.name} (${v.num}): ${v.stat} - ${v.break || 'بدون تفاصيل'}\n`;
-        });
-        
-        return {
-            total, active, maintenance, broken, efficiency,
-            regionStats, brokenStats, brokenCount: brokenList.length,
-            vessels
-        };
-    } catch(e) { 
-        console.warn('⚠️ خطأ في جلب السياق:', e);
-        return null; 
+    function autoResize(el) {
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 150) + 'px';
     }
-}
 
-// ============================================================
-// 5. LOAD API KEY FROM SERVER
-// ============================================================
-
-async function loadApiKeys() {
-    try {
-        const response = await fetch('/api/config');
-        if (!response.ok) throw new Error('فشل تحميل المفاتيح');
-        const config = await response.json();
-        
-        GEMINI_API_KEY = config.GEMINI_API_KEY || '';
-        const modelName = config.GEMINI_MODEL || 'gemini-2.0-flash';
-        
-        console.log('🔑 Gemini API Key:', GEMINI_API_KEY ? '✅ موجود' : '❌ غير موجود');
-        console.log('📦 Model:', modelName);
-        
-        document.getElementById('aiModel').textContent = 'Gemini ' + modelName;
-        document.getElementById('apiModelName').textContent = modelName;
-        document.getElementById('aiSubtitle').textContent = 'بواسطة Google Gemini AI';
-        
-        if (GEMINI_API_KEY) {
-            updateApiStatus('valid', '✅ مفتاح صالح');
-            await testGeminiKey();
-        } else {
-            updateApiStatus('invalid', '⚠️ لم يتم إعداد المفتاح');
-        }
-    } catch(error) {
-        console.error('❌ فشل تحميل المفاتيح:', error);
-        updateApiStatus('invalid', '❌ خطأ في الاتصال بالخادم');
+    function updateCharCounter() {
+        const input = getInput();
+        const counter = getCharCounter();
+        if (!input || !counter) return;
+        const len = input.value.length;
+        counter.textContent = len + ' / ' + state.maxLength;
+        counter.classList.toggle('warn', len > state.maxLength * 0.8 && len <= state.maxLength);
+        counter.classList.toggle('danger', len > state.maxLength);
     }
-}
 
-function updateApiStatus(type, text) {
-    const el = document.getElementById('apiKeyStatus');
-    const textEl = document.getElementById('apiKeyStatusText');
-    el.className = 'status-value ' + type;
-    textEl.textContent = text;
-}
-
-async function testGeminiKey() {
-    if (!GEMINI_API_KEY) return;
-    
-    updateApiStatus('checking', '🔄 جاري التحقق...');
-    
-    try {
-        const response = await fetch(`${AI_CONFIG.API_URL}${AI_CONFIG.MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: 'Hello' }] }],
-                generationConfig: { maxOutputTokens: 5 }
-            })
-        });
-        
-        if (response.ok) {
-            updateApiStatus('valid', '✅ مفتاح صالح');
-        } else if (response.status === 403) {
-            updateApiStatus('invalid', '❌ مفتاح غير صالح');
-        } else if (response.status === 429) {
-            updateApiStatus('invalid', '⚠️ تم تجاوز الحد اليومي');
-        } else {
-            updateApiStatus('invalid', '⚠️ خطأ: ' + response.status);
-        }
-    } catch(e) {
-        updateApiStatus('invalid', '❌ فشل الاتصال');
+    function scrollToBottom() {
+        const box = getMessages();
+        if (box) box.scrollTop = box.scrollHeight;
     }
-}
 
-// ============================================================
-// 6. SEND TO GEMINI API
-// ============================================================
-
-async function sendToGemini(userMessage) {
-    if (!GEMINI_API_KEY) {
-        return '⚠️ مفتاح Gemini غير موجود. يرجى إعداده في متغيرات البيئة على الخادم. 🔑';
+    function getCurrentTime() {
+        try {
+            return new Date().toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
+        } catch (e) { return ''; }
     }
-    
-    const context = getMarineContext();
-    let contextText = '';
-    if (context) {
-        contextText = `
-📊 بيانات الأسطول الحالية:
-- إجمالي المراكب: ${context.total}
-- الصالح: ${context.active} (${context.efficiency}%)
-- تحت الصيانة: ${context.maintenance}
-- المعطوب: ${context.broken}
 
-📋 تفاصيل الأقاليم:
-${context.regionStats}
+    // ============================================================
+    // TEXT-TO-SPEECH (قراءة الردود)
+    // ============================================================
 
-⚠️ المراكب المعطوبة (${context.brokenCount}):
-${context.brokenStats || 'لا توجد مراكب معطوبة'}
+    function loadVoices() {
+        if (!state.speechSynthesis) return;
+        state.voices = state.speechSynthesis.getVoices() || [];
 
-📌 المراكب:
-${context.vessels.map(v => `- ${v.name} (${v.num}) - ${v.stat} - ${v.reg} - ${v.zone}`).join('\n')}
-`;
-    }
-    
-    try {
-        // ✅ بناء الرسالة كاملة
-        let fullPrompt = AI_CONFIG.SYSTEM_PROMPT + '\n\n';
-        fullPrompt += `هذه هي بيانات الأسطول الحالية (استخدمها فقط إذا سأل المستخدم عن الأسطول):\n${contextText}\n\n`;
-        if (chatHistory.length > 0) {
-            fullPrompt += `المحادثة السابقة:\n`;
-            chatHistory.slice(-8).forEach(msg => {
-                fullPrompt += `${msg.role}: ${msg.content}\n`;
+        // اختر صوت عربي إن وُجد
+        const arabicVoice = state.voices.find(v =>
+            v.lang && (v.lang.startsWith('ar') || v.lang.startsWith('ar-'))
+        );
+        state.preferredVoice = arabicVoice || state.voices[0] || null;
+
+        // املأ قائمة الأصوات
+        const select = document.getElementById('voiceSelect');
+        if (select) {
+            select.innerHTML = '';
+            state.voices.forEach((v, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = v.name + ' (' + v.lang + ')';
+                if (v === state.preferredVoice) opt.selected = true;
+                select.appendChild(opt);
             });
-            fullPrompt += `\n`;
         }
-        fullPrompt += `المستخدم: ${userMessage}`;
-        
-        // ✅ إرسال إلى Gemini API
-        const response = await fetch(`${AI_CONFIG.API_URL}${AI_CONFIG.MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: fullPrompt }]
-                }],
-                generationConfig: {
-                    temperature: AI_CONFIG.TEMPERATURE,
-                    maxOutputTokens: AI_CONFIG.MAX_TOKENS,
-                    topP: 0.95,
-                    topK: 40
+    }
+
+    if (state.speechSynthesis) {
+        state.speechSynthesis.onvoiceschanged = loadVoices;
+        setTimeout(loadVoices, 100);
+    }
+
+    function speakText(text, btnEl) {
+        if (!state.speechSynthesis) {
+            toast('⚠️ متصفحك لا يدعم قراءة النصوص', 'warning');
+            return;
+        }
+
+        // إن كان يتحدث بالفعل، أوقف
+        if (state.speechSynthesis.speaking) {
+            state.speechSynthesis.cancel();
+            if (state.currentSpeakBtn) {
+                state.currentSpeakBtn.classList.remove('speaking');
+                state.currentSpeakBtn.innerHTML = '🔊 استماع';
+                state.currentSpeakBtn = null;
+            }
+            // إن كان نفس الزر، توقف هنا
+            if (btnEl && btnEl === state.currentSpeakBtn) return;
+        }
+
+        const cleanText = stripHTML(text).trim();
+        if (!cleanText) return;
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+
+        // الإعدادات
+        const rateEl = document.getElementById('voiceRate');
+        const pitchEl = document.getElementById('voicePitch');
+        const voiceSelectEl = document.getElementById('voiceSelect');
+
+        utterance.rate = rateEl ? Number(rateEl.value) : 1;
+        utterance.pitch = pitchEl ? Number(pitchEl.value) : 1;
+        utterance.volume = 1;
+
+        // الصوت
+        if (voiceSelectEl && state.voices[Number(voiceSelectEl.value)]) {
+            utterance.voice = state.voices[Number(voiceSelectEl.value)];
+            utterance.lang = utterance.voice.lang;
+        } else if (state.preferredVoice) {
+            utterance.voice = state.preferredVoice;
+            utterance.lang = state.preferredVoice.lang;
+        } else {
+            utterance.lang = 'ar-SA';
+        }
+
+        // كشف اللغة تلقائياً (إن كان النص إنجليزي)
+        if (/^[A-Za-z\s\d\.,!?]+$/.test(cleanText.slice(0, 100))) {
+            utterance.lang = 'en-US';
+        }
+
+        // عند البدء
+        utterance.onstart = function() {
+            state.currentSpeakBtn = btnEl;
+            if (btnEl) {
+                btnEl.classList.add('speaking');
+                btnEl.innerHTML = '⏸️ إيقاف';
+            }
+        };
+
+        // عند الانتهاء
+        const cleanup = function() {
+            if (btnEl) {
+                btnEl.classList.remove('speaking');
+                btnEl.innerHTML = '🔊 استماع';
+            }
+            if (state.currentSpeakBtn === btnEl) {
+                state.currentSpeakBtn = null;
+            }
+        };
+
+        utterance.onend = cleanup;
+        utterance.onerror = cleanup;
+
+        state.currentUtterance = utterance;
+        state.speechSynthesis.speak(utterance);
+    }
+
+    function stopSpeaking() {
+        if (state.speechSynthesis && state.speechSynthesis.speaking) {
+            state.speechSynthesis.cancel();
+        }
+        if (state.currentSpeakBtn) {
+            state.currentSpeakBtn.classList.remove('speaking');
+            state.currentSpeakBtn.innerHTML = '🔊 استماع';
+            state.currentSpeakBtn = null;
+        }
+    }
+
+    function toggleAutoSpeak() {
+        state.autoSpeak = !state.autoSpeak;
+        const toggle = document.getElementById('autoSpeakToggle');
+        if (toggle) toggle.classList.toggle('on', state.autoSpeak);
+        toast(state.autoSpeak ? '🔊 القراءة التلقائية مُفعّلة' : '🔇 القراءة التلقائية مُعطّلة', 'info');
+    }
+
+    function toggleVoicePanel() {
+        const panel = document.getElementById('voicePanel');
+        if (panel) panel.classList.toggle('open');
+    }
+
+    // ============================================================
+    // SPEECH-TO-TEXT (الإدخال الصوتي)
+    // ============================================================
+
+    function initRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            console.warn('⚠️ Web Speech API غير مدعوم في هذا المتصفح');
+            return null;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        const langSelect = document.getElementById('sttLang');
+        recognition.lang = langSelect ? langSelect.value : 'ar-SA';
+
+        let finalTranscript = '';
+
+        recognition.onstart = function() {
+            state.isListening = true;
+            const micBtn = getMicBtn();
+            const indicator = document.getElementById('listeningIndicator');
+            if (micBtn) micBtn.classList.add('listening');
+            if (indicator) indicator.classList.add('active');
+            finalTranscript = '';
+        };
+
+        recognition.onresult = function(event) {
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interim += transcript;
                 }
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('❌ Gemini API Error:', errorData);
-            
-            if (response.status === 403) {
-                return '❌ مفتاح Gemini غير صالح أو منتهي الصلاحية. يرجى التحقق من الإعدادات. 🔑';
-            } else if (response.status === 429) {
-                return '⚠️ تم تجاوز الحد اليومي لمفتاح Gemini. يرجى المحاولة غداً. 📅';
-            } else {
-                return `❌ خطأ في الاتصال: ${response.status}`;
+            }
+
+            // اعرض النص المؤقت + النهائي في textarea
+            const input = getInput();
+            if (input) {
+                const text = (finalTranscript + interim).trim();
+                input.value = text;
+                autoResize(input);
+                updateCharCounter();
+            }
+        };
+
+        recognition.onerror = function(event) {
+            console.warn('⚠️ Speech recognition error:', event.error);
+            const errMap = {
+                'not-allowed': '🚫 لم يتم منح إذن الميكروفون',
+                'no-speech': '🎙️ لم يتم الكشف عن صوت',
+                'audio-capture': '🎤 لم يتم العثور على ميكروفون',
+                'network': '🌐 خطأ في الشبكة',
+                'aborted': '⏹️ تم الإيقاف'
+            };
+            const msg = errMap[event.error] || ('⚠️ خطأ: ' + event.error);
+            if (event.error !== 'aborted') {
+                toast(msg, 'warning');
+            }
+        };
+
+        recognition.onend = function() {
+            state.isListening = false;
+            const micBtn = getMicBtn();
+            const indicator = document.getElementById('listeningIndicator');
+            if (micBtn) micBtn.classList.remove('listening');
+            if (indicator) indicator.classList.remove('active');
+        };
+
+        return recognition;
+    }
+
+    function toggleMic() {
+        // إن كان المتصفح لا يدعم
+        if (!state.recognition) {
+            state.recognition = initRecognition();
+        }
+
+        if (!state.recognition) {
+            toast('❌ متصفحك لا يدعم الإدخال الصوتي. استخدم Chrome أو Edge.', 'error');
+            return;
+        }
+
+        // تحديث اللغة
+        const langSelect = document.getElementById('sttLang');
+        if (langSelect) state.recognition.lang = langSelect.value;
+
+        // إيقاف القراءة إن كانت تعمل
+        stopSpeaking();
+
+        if (state.isListening) {
+            try { state.recognition.stop(); } catch (e) {}
+        } else {
+            try {
+                state.recognition.start();
+            } catch (e) {
+                // في حال كان يعمل بالفعل
+                console.debug('Recognition start error:', e.message);
             }
         }
-        
-        const data = await response.json();
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'عذراً، لم أستطع معالجة طلبك.';
-        
-        chatHistory.push({ role: 'المستخدم', content: userMessage });
-        chatHistory.push({ role: 'المساعد', content: reply });
-        
-        return reply;
-        
-    } catch(error) {
-        console.error('❌ Gemini Error:', error);
-        return '❌ عذراً، حدث خطأ في الاتصال. يرجى المحاولة لاحقاً. 🔄';
     }
-}
 
-// ============================================================
-// 7. UI FUNCTIONS
-// ============================================================
+    // ============================================================
+    // عرض الرسائل
+    // ============================================================
 
-function addMessage(text, type = 'assistant', isHtml = false) {
-    const container = document.getElementById('aiMessages');
-    const time = new Date().toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-    const avatar = type === 'user' ? '👤' : '🧠';
-    const bubbleClass = type === 'user' ? 'user' : 'assistant';
-    
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${bubbleClass}`;
-    msgDiv.innerHTML = `
-        <div class="avatar">${avatar}</div>
-        <div class="bubble">
-            ${isHtml ? text : text.replace(/\n/g, '<br>')}
-            <span class="message-time">${time}</span>
-        </div>
-    `;
-    container.appendChild(msgDiv);
-    container.scrollTop = container.scrollHeight;
-}
+    function appendMessage(text, role, options) {
+        options = options || {};
+        const box = getMessages();
+        if (!box) return;
 
-function addTypingIndicator() {
-    const container = document.getElementById('aiMessages');
-    const time = new Date().toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'message assistant';
-    typingDiv.id = 'typingIndicator';
-    typingDiv.innerHTML = `
-        <div class="avatar">🧠</div>
-        <div class="bubble">
-            <div class="typing-indicator"><span></span><span></span><span></span></div>
-            <span class="message-time">${time}</span>
-        </div>
-    `;
-    container.appendChild(typingDiv);
-    container.scrollTop = container.scrollHeight;
-}
+        const div = document.createElement('div');
+        div.className = 'message ' + role + (options.isError ? ' error' : '');
 
-function removeTypingIndicator() {
-    const el = document.getElementById('typingIndicator');
-    if (el) el.remove();
-}
+        const avatar = role === 'user' ? '👤' : '🧠';
+        const html = options.isHtml ? text : safeFormat(text);
 
-function autoResizeTextarea(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 150) + 'px';
-}
+        let retryBtn = '';
+        if (options.isError && state.lastMessage) {
+            retryBtn = '<button class="retry-btn" onclick="aiRetry()">🔄 إعادة المحاولة</button>';
+        }
 
-// ============================================================
-// 8. MAIN FUNCTIONS
-// ============================================================
+        // زر الاستماع للردود فقط
+        let speakBtn = '';
+        if (role === 'assistant' && !options.isError) {
+            speakBtn = '<button class="speak-btn" onclick="aiSpeak(this)" title="استماع">🔊 استماع</button>';
+        }
 
-async function sendAIMessage() {
-    const input = document.getElementById('aiInput');
-    const text = input.value.trim();
-    const sendBtn = document.getElementById('sendBtn');
-    
-    if (!text || isProcessing) return;
-    if (text.length > 2000) {
-        showToast('⚠️ الرسالة طويلة جداً (حد أقصى 2000 حرف)', 'warning');
-        return;
+        div.innerHTML =
+            '<div class="avatar">' + avatar + '</div>' +
+            '<div class="bubble">' +
+                speakBtn +
+                '<div>' + html + '</div>' +
+                retryBtn +
+                '<span class="message-time">' + getCurrentTime() + '</span>' +
+            '</div>';
+
+        box.appendChild(div);
+
+        // احفظ النص الأصلي للاستماع
+        if (role === 'assistant') {
+            const bubble = div.querySelector('.bubble');
+            if (bubble) bubble.dataset.rawText = text;
+        }
+
+        scrollToBottom();
+
+        // القراءة التلقائية
+        if (role === 'assistant' && state.autoSpeak && !options.isError) {
+            const btn = div.querySelector('.speak-btn');
+            setTimeout(() => speakText(text, btn), 200);
+        }
     }
-    
-    addMessage(text, 'user');
-    input.value = '';
-    document.getElementById('charCounter').textContent = '0 / 2000';
-    autoResizeTextarea(input);
-    
-    isProcessing = true;
-    sendBtn.disabled = true;
-    sendBtn.classList.add('loading');
-    addTypingIndicator();
-    
-    try {
-        const reply = await sendToGemini(text);
-        removeTypingIndicator();
-        addMessage(reply, 'assistant', true);
-    } catch(error) {
-        removeTypingIndicator();
-        addMessage('❌ عذراً، حدث خطأ: ' + error.message, 'assistant');
+
+    function appendTyping() {
+        const box = getMessages();
+        if (!box) return;
+        const div = document.createElement('div');
+        div.className = 'message assistant';
+        div.id = 'aiTypingIndicator';
+        div.innerHTML =
+            '<div class="avatar">🧠</div>' +
+            '<div class="bubble">' +
+                '<div class="typing-indicator"><span></span><span></span><span></span></div>' +
+            '</div>';
+        box.appendChild(div);
+        scrollToBottom();
     }
-    
-    isProcessing = false;
-    sendBtn.disabled = false;
-    sendBtn.classList.remove('loading');
-}
 
-function sendQuickPrompt(text) {
-    document.getElementById('aiInput').value = text;
-    document.getElementById('charCounter').textContent = text.length + ' / 2000';
-    sendAIMessage();
-}
-
-function handleAIKey(event) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        sendAIMessage();
+    function removeTyping() {
+        const el = document.getElementById('aiTypingIndicator');
+        if (el) el.remove();
     }
-}
 
-function clearChat() {
-    if (!confirm('هل تريد مسح جميع الرسائل؟')) return;
-    const container = document.getElementById('aiMessages');
-    container.innerHTML = `
-        <div class="message assistant">
-            <div class="avatar">🧠</div>
-            <div class="bubble">
-                <div>مرحباً بك في المساعد الذكي! 👋</div>
-                <div style="color:rgba(255,255,255,0.5); font-size:13px; margin-top:6px;">
-                    أنا مدعوم من <strong>Google Gemini AI</strong>. يمكنني الإجابة عن أي سؤال.
-                </div>
-                <div class="suggestions">
-                    <button class="suggestion-btn" onclick="sendQuickPrompt('عرض إحصائيات الأسطول')">📊 الإحصائيات</button>
-                    <button class="suggestion-btn" onclick="sendQuickPrompt('ما هي عاصمة تونس؟')">🌍 سؤال عام</button>
-                </div>
-                <span class="message-time">الآن</span>
-            </div>
-        </div>
-    `;
-    chatHistory = [];
-    showToast('🗑️ تم مسح المحادثة', 'info');
-}
+    // ============================================================
+    // الترحيب
+    // ============================================================
 
-// ============================================================
-// 9. TOAST NOTIFICATION
-// ============================================================
+    function showWelcome() {
+        const box = getMessages();
+        if (!box) return;
+        box.innerHTML = '';
+        const welcome =
+            '<div>مرحباً بك في المساعد الذكي! 👋</div>' +
+            '<div style="color:rgba(255,255,255,0.5);font-size:13px;margin-top:6px;">' +
+                'أنا مدعوم من <strong>Google Gemini AI</strong>. يمكنني الإجابة عن أي سؤال:' +
+                '<ul style="margin:6px 0 0 20px;color:rgba(255,255,255,0.4);">' +
+                    '<li>⚓ شؤون الأسطول البحري</li>' +
+                    '<li>🌍 معلومات عامة</li>' +
+                    '<li>📊 تحليل البيانات</li>' +
+                    '<li>🎤 يمكنك التحدث معي بالضغط على الميكروفون</li>' +
+                '</ul>' +
+            '</div>' +
+            '<div class="suggestions">' +
+                '<button class="suggestion-btn" onclick="aiSendQuick(\'عرض إحصائيات الأسطول\')">📊 الإحصائيات</button>' +
+                '<button class="suggestion-btn" onclick="aiSendQuick(\'ما هي عاصمة تونس؟\')">🌍 سؤال عام</button>' +
+                '<button class="suggestion-btn" onclick="aiSendQuick(\'المراكب المعطوبة\')">⚠️ الأعطال</button>' +
+            '</div>' +
+            '<span class="message-time">' + getCurrentTime() + '</span>';
 
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    const colors = {
-        info: 'rgba(66,133,244,0.9)',
-        warning: 'rgba(251,191,36,0.9)',
-        error: 'rgba(248,113,113,0.9)',
-        success: 'rgba(74,222,128,0.9)'
-    };
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 10px 20px;
-        border-radius: 8px;
-        background: ${colors[type] || colors.info};
-        color: #fff;
-        font-size: 14px;
-        z-index: 9999;
-        animation: messageSlide 0.3s ease;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        font-family: 'Cairo', sans-serif;
-    `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
+        const div = document.createElement('div');
+        div.className = 'message assistant';
+        div.innerHTML = '<div class="avatar">🧠</div><div class="bubble">' + welcome + '</div>';
+        box.appendChild(div);
+    }
 
-// ============================================================
-// 10. INIT
-// ============================================================
+    // ============================================================
+    // حالة الخدمة
+    // ============================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🧠 Gemini AI Assistant loading...');
-    
-    // تحميل بيانات الأسطول
-    loadVesselData();
-    
-    // تحميل المفتاح من الخادم
-    loadApiKeys();
-    
-    // إعداد حقل الإدخال
-    const input = document.getElementById('aiInput');
-    if (input) {
-        input.addEventListener('input', function() {
-            document.getElementById('charCounter').textContent = this.value.length + ' / 2000';
-            autoResizeTextarea(this);
+    async function refreshStatus() {
+        const statusEl = document.getElementById('apiKeyStatus');
+        const textEl = document.getElementById('apiKeyStatusText');
+        const quotaEl = document.getElementById('quotaInfo');
+
+        if (!statusEl || !textEl) return;
+
+        statusEl.className = 'status-value checking';
+        textEl.textContent = 'جاري التحقق...';
+
+        try {
+            const fetcher = (typeof window.apiFetch === 'function') ? window.apiFetch : fetch;
+            const res = await fetcher('/api/ai/status', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!res.ok) {
+                statusEl.className = 'status-value invalid';
+                textEl.textContent = res.status === 401 ? 'يجب تسجيل الدخول' : 'تعذّر الاتصال';
+                return;
+            }
+
+            const data = await res.json();
+
+            if (data.configured) {
+                statusEl.className = 'status-value valid';
+                textEl.textContent = '✅ الخدمة متاحة';
+            } else {
+                statusEl.className = 'status-value invalid';
+                textEl.textContent = '⚠️ غير مُهيَّأ';
+            }
+
+            if (quotaEl) quotaEl.textContent = 'الرصيد: ' + (data.remaining ?? '—') + '/' + (data.dailyLimit || '—');
+
+        } catch (e) {
+            statusEl.className = 'status-value invalid';
+            textEl.textContent = '❌ خطأ في الاتصال';
+        }
+    }
+
+    // ============================================================
+    // الإرسال
+    // ============================================================
+
+    async function sendMessage(overrideText) {
+        const input = getInput();
+        const sendBtn = getSendBtn();
+
+        const text = (overrideText !== undefined ? overrideText : (input ? input.value : '')).trim();
+        if (!text || state.isProcessing) return;
+
+        if (text.length > state.maxLength) {
+            toast('⚠️ الرسالة طويلة جداً', 'warning');
+            return;
+        }
+
+        // أوقف القراءة الجارية
+        stopSpeaking();
+
+        // أوقف الاستماع إن كان يعمل
+        if (state.isListening && state.recognition) {
+            try { state.recognition.stop(); } catch (e) {}
+        }
+
+        state.lastMessage = text;
+        appendMessage(text, 'user');
+
+        if (input) {
+            input.value = '';
+            autoResize(input);
+            updateCharCounter();
+        }
+
+        state.isProcessing = true;
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.classList.add('loading');
+        }
+        appendTyping();
+
+        try {
+            const fetcher = (typeof window.apiFetch === 'function') ? window.apiFetch : fetch;
+
+            const res = await fetcher('/api/ai/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: text,
+                    history: state.history.slice(-10)
+                })
+            });
+
+            removeTyping();
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+                const errMsg = data.error || ('خطأ ' + res.status);
+
+                if (res.status === 429) {
+                    appendMessage('⚠️ ' + errMsg, 'assistant', { isError: true });
+                    toast('تم تجاوز الحد اليومي', 'warning');
+                } else if (res.status === 503) {
+                    appendMessage('🔧 المساعد الذكي غير مُهيَّأ.', 'assistant', { isError: true });
+                } else {
+                    appendMessage('❌ ' + errMsg, 'assistant', { isError: true });
+                }
+                return;
+            }
+
+            appendMessage(data.reply, 'assistant');
+
+            state.history.push({ role: 'user', content: text });
+            state.history.push({ role: 'assistant', content: data.reply });
+
+            if (state.history.length > 20) {
+                state.history = state.history.slice(-20);
+            }
+
+            if (data.remaining !== undefined) {
+                const quotaEl = document.getElementById('quotaInfo');
+                if (quotaEl) quotaEl.textContent = 'الرصيد: ' + data.remaining;
+            }
+
+        } catch (error) {
+            removeTyping();
+            console.error('❌ AI send error:', error);
+            appendMessage('❌ تعذّر الاتصال بالخادم.', 'assistant', { isError: true });
+        } finally {
+            state.isProcessing = false;
+            if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('loading');
+            }
+            if (input) input.focus();
+        }
+    }
+
+    function sendQuick(text) {
+        const input = getInput();
+        if (input) {
+            input.value = text;
+            updateCharCounter();
+            autoResize(input);
+        }
+        sendMessage();
+    }
+
+    function retry() {
+        if (state.lastMessage) sendMessage(state.lastMessage);
+    }
+
+    function clearChat() {
+        if (!confirm('هل تريد مسح جميع الرسائل؟')) return;
+        stopSpeaking();
+        state.history = [];
+        state.lastMessage = null;
+        showWelcome();
+        toast('🗑️ تم مسح المحادثة', 'info');
+    }
+
+    function handleKey(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    }
+
+    // ============================================================
+    // التهيئة
+    // ============================================================
+
+    function init() {
+        showWelcome();
+        refreshStatus();
+        loadVoices();
+
+        // textarea
+        const input = getInput();
+        if (input) {
+            input.addEventListener('input', function() {
+                updateCharCounter();
+                autoResize(this);
+            });
+            input.addEventListener('keydown', handleKey);
+        }
+
+        updateCharCounter();
+
+        // voice toggle button
+        const voiceBtn = document.getElementById('voiceToggleBtn');
+        if (voiceBtn) {
+            voiceBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleVoicePanel();
+            });
+        }
+
+        // close panel عند النقر خارجها
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('voicePanel');
+            const btn = document.getElementById('voiceToggleBtn');
+            if (!panel || !panel.classList.contains('open')) return;
+            if (panel.contains(e.target) || (btn && btn.contains(e.target))) return;
+            panel.classList.remove('open');
         });
+
+        // إغلاق عند Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const panel = document.getElementById('voicePanel');
+                if (panel) panel.classList.remove('open');
+                stopSpeaking();
+            }
+        });
+
+        // اختيار الصوت
+        const voiceSelect = document.getElementById('voiceSelect');
+        if (voiceSelect) {
+            voiceSelect.addEventListener('change', function() {
+                const idx = Number(this.value);
+                if (state.voices[idx]) state.preferredVoice = state.voices[idx];
+            });
+        }
+
+        // تغيير لغة الإدخال
+        const langSelect = document.getElementById('sttLang');
+        if (langSelect) {
+            langSelect.addEventListener('change', function() {
+                if (state.recognition) state.recognition.lang = this.value;
+                if (state.isListening) {
+                    try { state.recognition.stop(); } catch (e) {}
+                }
+            });
+        }
+
+        console.log('✅ AI Assistant v2.1 (Voice) ready');
     }
-    
-    // تحديث بيانات الأسطول من التطبيق الرئيسي
-    if (window.loadAllData) {
-        window.loadAllData();
+
+    // ============================================================
+    // تصدير عام
+    // ============================================================
+
+    window.aiSendMessage = sendMessage;
+    window.aiSendQuick = sendQuick;
+    window.aiRetry = retry;
+    window.aiClearChat = clearChat;
+    window.aiHandleKey = handleKey;
+    window.aiRefreshStatus = refreshStatus;
+    window.aiToggleMic = toggleMic;
+    window.aiSpeak = function(btn) {
+        const bubble = btn.closest('.bubble');
+        const rawText = bubble ? bubble.dataset.rawText : '';
+        speakText(rawText || bubble?.textContent || '', btn);
+    };
+    window.aiToggleAutoSpeak = toggleAutoSpeak;
+    window.aiToggleVoicePanel = toggleVoicePanel;
+    window.aiStopSpeaking = stopSpeaking;
+
+    // تشغيل
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
-    
-    console.log('✅ Gemini AI Assistant ready');
-});
-
-// ============================================================
-// 11. GLOBAL FUNCTIONS
-// ============================================================
-
-window.sendAIMessage = sendAIMessage;
-window.sendQuickPrompt = sendQuickPrompt;
-window.handleAIKey = handleAIKey;
-window.clearChat = clearChat;
-window.loadVesselData = loadVesselData;
-window.loadApiKeys = loadApiKeys;
-window.testGeminiKey = testGeminiKey;
-window.showToast = showToast;
-
-console.log('✅ AI Assistant loaded successfully');
+})();
 </script>
-</div>
