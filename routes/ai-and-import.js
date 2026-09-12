@@ -1,13 +1,16 @@
 // ============================================================
-// 🤖 AI ASSISTANT + 📥 SMART IMPORT — v1.1
+// 🤖 AI ASSISTANT + 📥 SMART IMPORT — v1.2
 // ملف مستقل يُدمج في server.js
 // ============================================================
 //
-// 📋 التعديلات v1.1:
+// 📋 التعديلات v1.2:
 //   - ✅ MODEL: gemini-3.6-flash (بدل gemini-2.0-flash الملغى)
 //   - ✅ إزالة temperature/topP/topK (ملغاة في Gemini 3.x)
 //   - ✅ كشف تلقائي لأسماء موديلات fallback
-//   - ✅ تحسين رسائل الأخطاء
+//   - ✅ 🆕 سياق شامل من كل بيانات التطبيق (أسطول + صيانة + مستخدمين + إحصائيات)
+//   - ✅ 🆕 كشف تلقائي لأسئلة المطوّر والحرس الوطني (رد فوري بدون Gemini)
+//   - ✅ 🆕 معلومات المطوّر: أمان الله ناجي — المفكر والمطوّر البرمجي
+//   - ✅ 🆕 إحصائيات تفصيلية: توزيع المناطق، الفئات، الأعطال، التكاليف
 // ============================================================
 
 'use strict';
@@ -23,14 +26,21 @@ const XLSX = require('xlsx');
 
 const AI_CONFIG = {
     API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/',
-    // ✅ الموديل الجديد — إن أردت تغييره استخدم GEMINI_MODEL في Render
     MODEL: process.env.GEMINI_MODEL || 'gemini-3.6-flash',
-    // 🔄 موديلات احتياطية تُجرَّب بالترتيب إذا فشل الأول
     FALLBACK_MODELS: ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'],
     MAX_TOKENS: 2048,
     TIMEOUT_MS: 30000,
     MAX_PROMPT_LENGTH: 4000,
     DAILY_LIMIT: 100
+};
+
+// 🆕 معلومات المطوّر (قابلة للتعديل من متغيرات البيئة)
+const DEVELOPER_INFO = {
+    name: process.env.DEVELOPER_NAME || 'أمان الله ناجي',
+    title: process.env.DEVELOPER_TITLE || 'المفكر والمطوّر البرمجي',
+    affiliation: process.env.DEVELOPER_AFFILIATION || 'الحرس الوطني التونسي',
+    systemName: 'منظومة الوسائل البحرية (Marine System)',
+    version: 'v9.17.1'
 };
 
 // استخدام يومي لكل مستخدم
@@ -51,7 +61,6 @@ function checkAIQuota(userId) {
     return { allowed: true, remaining: AI_CONFIG.DAILY_LIMIT - record.count, resetAt: record.resetAt };
 }
 
-// تنظيف دوري
 setInterval(() => {
     const now = Date.now();
     for (const [userId, record] of aiUsageByUser) {
@@ -62,7 +71,7 @@ setInterval(() => {
 }, 60 * 60 * 1000).unref();
 
 // ============================================================
-// 📤 Multer — إعداد رفع الملفات
+// 📤 Multer
 // ============================================================
 
 const upload = multer({
@@ -129,8 +138,10 @@ const IMPORT_PROMPT = `أنت محلل بيانات متخصص في الأسطو
 
 const CHAT_SYSTEM_PROMPT = `أنت مساعد ذكي متخصص في الأسطول البحري التونسي، ولديك معرفة عامة واسعة.
 - تجيب بالعربية الفصحى أو التونسية حسب سؤال المستخدم.
-- كن دقيقاً ومفصلاً.
-- إذا لم تكن تعرف الإجابة، قل ذلك بصراحة.`;
+- كن دقيقاً ومفصلاً ومنظماً.
+- إذا لم تكن تعرف الإجابة، قل ذلك بصراحة.
+- عند ذكر أرقام أو إحصائيات، استخدم البيانات الحية المرفقة في السياق فقط.
+- يمكنك استخدام التنسيق (قوائم، عناوين) لتسهيل القراءة.`;
 
 // ============================================================
 // 📄 استخراج النص من الملفات
@@ -174,13 +185,9 @@ async function extractTextFromFile(buffer, mimetype, originalname) {
 }
 
 // ============================================================
-// 🤖 استدعاء Gemini (مع كشف الموديل تلقائياً)
+// 🤖 استدعاء Gemini
 // ============================================================
 
-/**
- * يبني جسم الطلب لـ Gemini.
- * ملاحظة: temperature / topP / topK ملغاة في Gemini 3.x
- */
 function buildGeminiBody(contents, options) {
     options = options || {};
     const generationConfig = {
@@ -192,16 +199,11 @@ function buildGeminiBody(contents, options) {
     return { contents, generationConfig };
 }
 
-/**
- * استدعاء Gemini مع إعادة المحاولة على موديلات بديلة.
- * يرجع { ok, data, modelUsed, status, errorText }
- */
 async function callGemini(contents, options) {
     options = options || {};
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error('GEMINI_API_KEY غير مُعد في متغيرات البيئة');
 
-    // ابنِ قائمة الموديلات: الأولوية للموديل المحدد ثم الباقي
     const preferred = AI_CONFIG.MODEL;
     const modelsToTry = [preferred, ...AI_CONFIG.FALLBACK_MODELS.filter(m => m !== preferred)];
 
@@ -236,18 +238,15 @@ async function callGemini(contents, options) {
 
         const errText = await response.text();
 
-        // إن كان 404 (الموديل لم يعد موجوداً) → جرّب الموديل التالي
         if (response.status === 404) {
             console.warn(`⚠️ Model "${model}" not available (404), trying next...`);
             lastError = { status: 404, text: errText };
             continue;
         }
 
-        // أخطاء أخرى → أرجع فوراً
         return { ok: false, status: response.status, errorText: errText, modelUsed: model };
     }
 
-    // فشلت كل الموديلات
     return {
         ok: false,
         status: (lastError && lastError.status) || 502,
@@ -318,6 +317,201 @@ function normalizeStatus(raw) {
 }
 
 // ============================================================
+// 🆕 كشف أسئلة المطوّر / الحرس الوطني
+// ============================================================
+
+const DEVELOPER_KEYWORDS = [
+    'المطور', 'المطوّر', 'من طور', 'من طَوَّر', 'من صمم', 'من برمج',
+    'صاحب التطبيق', 'صاحب المنظومة', 'من صنع', 'من أنشأ', 'من ابتكر',
+    'developer', 'who made', 'who developed', 'who created', 'who built'
+];
+
+const GUARD_KEYWORDS = [
+    'الحرس الوطني', 'حرس وطني', 'الحرس', 'حرس',
+    'national guard', 'garde nationale', 'garde national'
+];
+
+function detectDeveloperOrGuardQuestion(message) {
+    const lower = message.toLowerCase();
+    const isDev = DEVELOPER_KEYWORDS.some(k => message.includes(k) || lower.includes(k.toLowerCase()));
+    const isGuard = GUARD_KEYWORDS.some(k => message.includes(k) || lower.includes(k.toLowerCase()));
+
+    if (!isDev && !isGuard) return null;
+
+    const dev = DEVELOPER_INFO;
+
+    if (isDev && isGuard) {
+        return `👨‍💻 **المطوّر**: ${dev.name} — ${dev.title} لـ${dev.systemName}.\n\n` +
+               `🛡️ **الانتماء**: ينتمي إلى **${dev.affiliation}**، وهذه المنظومة طُوّرت لخدمة الأسطول البحري التابع للحرس الوطني التونسي.\n\n` +
+               `📌 **اسم المنظومة**: ${dev.systemName}\n` +
+               `📌 **الإصدار**: ${dev.version}`;
+    }
+
+    if (isDev) {
+        return `👨‍💻 **المطوّر**: ${dev.name} — ${dev.title} لـ${dev.systemName}.\n\n` +
+               `🛡️ ينتمي إلى **${dev.affiliation}**.\n\n` +
+               `📌 **الإصدار الحالي**: ${dev.version}`;
+    }
+
+    return `🛡️ **${dev.affiliation}** هو المؤسسة الأمنية التي ينتمي إليها مطوّر هذه المنظومة (${dev.name} — ${dev.title}).\n\n` +
+           `🎯 **الهدف**: تسهيل إدارة الأسطول البحري التابع للحرس الوطني.\n\n` +
+           `📌 **اسم المنظومة**: ${dev.systemName}`;
+}
+
+// ============================================================
+// 🆕 بناء سياق شامل من بيانات التطبيق
+// ============================================================
+
+async function buildFullContext({ Vessel, Maintenance, User, Notification }) {
+    let ctx = '';
+
+    try {
+        const [
+            vessels,
+            maintenanceLogs,
+            totalUsers,
+            activeUsers,
+            totalNotes,
+            unreadNotifications
+        ] = await Promise.all([
+            Vessel.find().limit(500).lean(),
+            Maintenance.find().limit(500).lean(),
+            User.countDocuments(),
+            User.countDocuments({ isActive: true }),
+            Notification ? Notification.countDocuments().catch(() => 0) : Promise.resolve(0),
+            Notification ? Notification.countDocuments({ isRead: false }).catch(() => 0) : Promise.resolve(0)
+        ]);
+
+        // === إحصائيات الأسطول ===
+        const total = vessels.length;
+        const active = vessels.filter(v => v.status === 'صالح').length;
+        const maintenance = vessels.filter(v => v.status === 'صيانة').length;
+        const broken = vessels.filter(v => v.status === 'معطب').length;
+        const efficiency = total ? ((active / total) * 100).toFixed(1) : '0.0';
+
+        // === التوزيعات ===
+        const byRegion = {};
+        const byCategory = {};
+        const byBreakType = {};
+
+        vessels.forEach(v => {
+            const r = v.region || 'غير محدد';
+            byRegion[r] = (byRegion[r] || 0) + 1;
+
+            const c = v.cat || 'غير محدد';
+            byCategory[c] = (byCategory[c] || 0) + 1;
+
+            if (v.break && v.break.trim()) {
+                const b = v.break.trim();
+                byBreakType[b] = (byBreakType[b] || 0) + 1;
+            }
+        });
+
+        // === إحصائيات الصيانة ===
+        const maintTotal = maintenanceLogs.length;
+        const maintCompleted = maintenanceLogs.filter(m => m.status === 'مكتملة').length;
+        const maintInProgress = maintenanceLogs.filter(m => m.status === 'قيد التنفيذ').length;
+        const maintOverdue = maintenanceLogs.filter(m => m.status === 'متأخرة').length;
+        const maintPending = maintenanceLogs.filter(m =>
+            m.status === 'معلقة' || m.status === 'قيد الانتظار'
+        ).length;
+        const totalCost = maintenanceLogs.reduce((s, m) => s + (Number(m.cost) || 0), 0);
+
+        // === أعلى 5 تكلفة ===
+        const topCostly = [...vessels]
+            .map(v => {
+                const logs = maintenanceLogs.filter(m =>
+                    m.vesselId === v.id || m.vesselName === v.name
+                );
+                const cost = logs.reduce((s, m) => s + (Number(m.cost) || 0), 0);
+                return { name: v.name, num: v.num, cost, count: logs.length };
+            })
+            .filter(x => x.cost > 0)
+            .sort((a, b) => b.cost - a.cost)
+            .slice(0, 5);
+
+        // === قوائم مفصّلة ===
+        const brokenList = vessels
+            .filter(v => v.status === 'معطب')
+            .slice(0, 20)
+            .map(v => `  • ${v.name} (${v.num || '—'}) | عطل: ${v.break || 'غير محدد'} | منطقة: ${v.region || '—'} | وحدة الإصلاح: ${v.repairUnit || '—'}`)
+            .join('\n');
+
+        const maintList = vessels
+            .filter(v => v.status === 'صيانة')
+            .slice(0, 20)
+            .map(v => `  • ${v.name} (${v.num || '—'}) | نوع: ${v.break || 'صيانة دورية'} | وحدة الإصلاح: ${v.repairUnit || '—'}`)
+            .join('\n');
+
+        // === آخر 5 سجلات صيانة ===
+        const recentLogs = [...maintenanceLogs]
+            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+            .slice(0, 5)
+            .map(m => `  • ${m.vesselName || '—'} | ${m.type || '—'} | ${m.status || '—'} | ${Number(m.cost) || 0} د.ت`)
+            .join('\n');
+
+        // === بناء السياق ===
+        ctx = `
+📊 ==== إحصائيات الأسطول البحري الحية ====
+• إجمالي المراكب: ${total}
+• الصالح: ${active} (نسبة الجاهزية: ${efficiency}%)
+• تحت الصيانة: ${maintenance}
+• المعطوب: ${broken}
+
+📍 التوزيع حسب المنطقة:
+${Object.entries(byRegion).map(([r, c]) => `  • ${r}: ${c}`).join('\n') || '  لا توجد بيانات'}
+
+🚢 التوزيع حسب الفئة:
+${Object.entries(byCategory).map(([c, n]) => `  • ${c}: ${n}`).join('\n') || '  لا توجد بيانات'}
+
+⚠️ أنواع الأعطال:
+${Object.entries(byBreakType).map(([b, n]) => `  • ${b}: ${n}`).join('\n') || '  لا توجد أعطال مسجّلة'}
+
+🔧 ==== إحصائيات الصيانة ====
+• إجمالي سجلات الصيانة: ${maintTotal}
+• مكتملة: ${maintCompleted}
+• قيد التنفيذ: ${maintInProgress}
+• متأخرة: ${maintOverdue}
+• معلقة/قيد الانتظار: ${maintPending}
+• التكلفة الإجمالية: ${totalCost.toLocaleString('ar-TN')} دينار تونسي
+
+🕒 آخر 5 سجلات صيانة:
+${recentLogs || '  لا توجد سجلات'}
+
+💰 أعلى 5 مراكب من حيث التكلفة:
+${topCostly.map((v, i) => `  ${i + 1}. ${v.name} (${v.num || '—'}): ${v.cost.toLocaleString('ar-TN')} د.ت — ${v.count} عملية`).join('\n') || '  لا توجد بيانات'}
+
+🚨 قائمة المراكب المعطوبة (تفصيلية):
+${brokenList || '  ✅ لا يوجد أي مركب معطب حالياً'}
+
+🛠️ قائمة المراكب في الصيانة (تفصيلية):
+${maintList || '  ✅ لا يوجد أي مركب في الصيانة حالياً'}
+
+👥 ==== إحصائيات المستخدمين ====
+• إجمالي المستخدمين: ${totalUsers}
+• النشطون: ${activeUsers}
+• غير النشطين: ${totalUsers - activeUsers}
+
+📝 ==== إحصائيات أخرى ====
+• إجمالي الملاحظات (Note Verbale): ${totalNotes}
+• الإشعارات غير المقروءة: ${unreadNotifications}
+
+👨‍💻 ==== معلومات المطوّر ====
+• المطوّر: ${DEVELOPER_INFO.name} — ${DEVELOPER_INFO.title}
+• الانتماء: ${DEVELOPER_INFO.affiliation}
+• اسم المنظومة: ${DEVELOPER_INFO.systemName}
+• الإصدار: ${DEVELOPER_INFO.version}
+`;
+
+    } catch (e) {
+        console.warn('⚠️ Failed to build full context:', e.message);
+        ctx = '\n(تعذّر تحميل الإحصائيات الحية حالياً)\n';
+    }
+
+    return ctx;
+}
+
+// ============================================================
 // 🚀 الدالة الرئيسية للتصدير
 // ============================================================
 
@@ -343,6 +537,7 @@ module.exports = function registerAIAndImport(app, deps) {
     console.log('✅ Registering AI + Import routes...');
     console.log('   🤖 Model:', AI_CONFIG.MODEL);
     console.log('   🔄 Fallbacks:', AI_CONFIG.FALLBACK_MODELS.join(', '));
+    console.log('   👨‍💻 Developer:', DEVELOPER_INFO.name, '—', DEVELOPER_INFO.affiliation);
 
     // ========================================================
     // 🤖 AI ENDPOINTS
@@ -359,7 +554,12 @@ module.exports = function registerAIAndImport(app, deps) {
                 model: AI_CONFIG.MODEL,
                 fallbacks: AI_CONFIG.FALLBACK_MODELS,
                 dailyLimit: AI_CONFIG.DAILY_LIMIT,
-                remaining: quota.remaining
+                remaining: quota.remaining,
+                developer: {
+                    name: DEVELOPER_INFO.name,
+                    title: DEVELOPER_INFO.title,
+                    affiliation: DEVELOPER_INFO.affiliation
+                }
             });
         }
     );
@@ -400,31 +600,55 @@ module.exports = function registerAIAndImport(app, deps) {
                     });
                 }
 
-                // سياق الأسطول
-                let contextText = '';
-                try {
-                    const vessels = await Vessel.find().limit(100).lean();
-                    const total = vessels.length;
-                    const active = vessels.filter(v => v.status === 'صالح').length;
-                    const maintenance = vessels.filter(v => v.status === 'صيانة').length;
-                    const broken = vessels.filter(v => v.status === 'معطب').length;
-                    const efficiency = total ? ((active / total) * 100).toFixed(1) : 0;
+                // 🆕 1. كشف أسئلة المطوّر / الحرس الوطني (رد فوري بدون Gemini)
+                const directReply = detectDeveloperOrGuardQuestion(message);
+                if (directReply) {
+                    console.log('👨‍💻 Direct answer (developer/guard question)');
 
-                    contextText = `\n📊 بيانات الأسطول الحالية:
-- إجمالي المراكب: ${total}
-- الصالح: ${active} (${efficiency}%)
-- تحت الصيانة: ${maintenance}
-- المعطوب: ${broken}\n`;
-                } catch (e) {
-                    console.warn('⚠️ Failed to load vessel context:', e.message);
+                    if (addSystemLog) {
+                        addSystemLog({
+                            userId: req.user.id,
+                            userName: req.user.name || req.user.username,
+                            action: 'ai_chat_direct',
+                            resource: 'ai',
+                            status: 'success',
+                            ip: req.ip,
+                            requestId: req.requestId,
+                            details: { messageLength: message.length, type: 'developer-info' }
+                        }).catch(() => {});
+                    }
+
+                    return res.json({
+                        success: true,
+                        reply: directReply,
+                        remaining: quota.remaining,
+                        model: 'direct-answer',
+                        source: 'developer-info'
+                    });
                 }
 
-                // بناء Prompt
+                // 🆕 2. بناء سياق شامل من كل بيانات التطبيق
+                const contextText = await buildFullContext({ Vessel, Maintenance, User, Notification });
+
+                // 🆕 3. بناء Prompt النهائي
                 let fullPrompt = CHAT_SYSTEM_PROMPT + '\n\n';
-                fullPrompt += `بيانات الأسطول (استخدمها فقط إذا سُئلت):\n${contextText}\n\n`;
+                fullPrompt += `📌 معلومات أساسية يجب أن تعرفها دائماً:
+- مطوّر هذه المنظومة هو: ${DEVELOPER_INFO.name} (${DEVELOPER_INFO.title}).
+- ينتمي إلى: ${DEVELOPER_INFO.affiliation}.
+- اسم المنظومة: ${DEVELOPER_INFO.systemName} — الإصدار ${DEVELOPER_INFO.version}.
+- إذا سُئلت عن المطوّر أو الحرس الوطني، أجب بهذه المعلومات بوضوح.
+
+${contextText}
+
+⚠️ تعليمات مهمة:
+- استخدم الأرقام والبيانات أعلاه حصرياً عند الإجابة عن أسئلة تتعلق بالأسطول أو الصيانة أو المستخدمين.
+- إذا كان السؤال عاماً (جغرافيا، تاريخ، ثقافة، رياضيات...) أجب من معرفتك العامة دون خلط مع بيانات الأسطول.
+- كن دقيقاً، وإن لم تجد المعلومة في السياق، اعترف بذلك بصراحة.
+- نسّق إجاباتك بقوائم وعناوين لتسهيل القراءة.
+`;
 
                 if (Array.isArray(history) && history.length > 0) {
-                    fullPrompt += 'المحادثة السابقة:\n';
+                    fullPrompt += '\nالمحادثة السابقة:\n';
                     history.slice(-10).forEach(msg => {
                         if (msg && typeof msg.content === 'string') {
                             const role = msg.role === 'user' ? 'المستخدم' : 'المساعد';
@@ -435,7 +659,7 @@ module.exports = function registerAIAndImport(app, deps) {
                 }
                 fullPrompt += `المستخدم: ${message}`;
 
-                // استدعاء Gemini (مع fallback تلقائي)
+                // 4. استدعاء Gemini
                 const result = await callGemini(
                     [{ parts: [{ text: fullPrompt }] }],
                     { maxOutputTokens: AI_CONFIG.MAX_TOKENS, timeoutMs: AI_CONFIG.TIMEOUT_MS }
