@@ -1,13 +1,8 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v9.17.1
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
-// 📧 MAILJET HTTP API (Works on Render — no SMTP port blocking)
-// 🛡️ PRODUCTION HARDENED / ENTERPRISE GRADE
-// ============================================================
-// ✨ v9.17.1 fix vs v9.17:
-//    - ✅ FIXED: close ensureInitialData() properly (missing }} after catch)
-//    - ✅ No other changes
+// ⚙️ SETTINGS + 🖼️ LOGO (MongoDB-backed)
 // ============================================================
 
 'use strict';
@@ -18,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v9.17.1 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -70,7 +65,7 @@ function loadModels() {
 }
 
 let User, Vessel, Maintenance, Log, Ticket, Note, Notification;
-let UserSettings, SystemLogo;   // 🆕
+let UserSettings, SystemLogo;
 
 try {
     const models = loadModels();
@@ -81,18 +76,19 @@ try {
     Ticket       = models.Ticket;
     Note         = models.Note || null;
     Notification = models.Notification || null;
-    UserSettings = models.UserSettings || null;   // 🆕
-    SystemLogo   = models.SystemLogo || null;      // 🆕
+    UserSettings = models.UserSettings || null;
+    SystemLogo   = models.SystemLogo || null;
     console.log('📦 Optional models:',
         'Note=' + (Note ? '✅' : '❌'),
         'Notification=' + (Notification ? '✅' : '❌'),
-        'UserSettings=' + (UserSettings ? '✅' : '❌'),   // 🆕
-        'SystemLogo=' + (SystemLogo ? '✅' : '❌')         // 🆕
+        'UserSettings=' + (UserSettings ? '✅' : '❌'),
+        'SystemLogo=' + (SystemLogo ? '✅' : '❌')
     );
 } catch (e) {
     console.error('❌ Fatal model loading error:', e.message);
     process.exit(1);
 }
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -106,8 +102,10 @@ const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const compression = require('compression');
 const nodemailer = require('nodemailer');
+
 const aiAndImportRoutes = require('./routes/ai-and-import');
 const settingsRoutes = require('./routes/settings');
+
 let createDOMPurify = null;
 try {
     createDOMPurify = require('isomorphic-dompurify');
@@ -553,45 +551,29 @@ async function ensureAdminExists() {
         console.log('🔍 ================ ADMIN CHECK ================');
         console.log(`   Username: ${ADMIN_USERNAME}`);
         console.log(`   Password length: ${ADMIN_PASSWORD.length}`);
-        console.log(`   Password first 3: ${ADMIN_PASSWORD.substring(0, 3)}***`);
-        console.log(`   Password last 3: ***${ADMIN_PASSWORD.substring(ADMIN_PASSWORD.length - 3)}`);
         console.log(`   Auto reset: ${ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'}`);
         console.log('================================================');
         console.log('');
+
         const existingAdmin = await User.findOne({ username: ADMIN_USERNAME });
         if (existingAdmin) {
             console.log(`✅ Admin user "${ADMIN_USERNAME}" exists in DB`);
             const updateData = {};
-            if (existingAdmin.lockedUntil) {
-                console.log(`🔓 Unlocking admin (lockedUntil was set)`);
-                updateData.lockedUntil = null;
-            }
-            if (existingAdmin.loginAttempts && existingAdmin.loginAttempts > 0) {
-                console.log(`🔄 Resetting loginAttempts (was ${existingAdmin.loginAttempts})`);
-                updateData.loginAttempts = 0;
-            }
-            if (existingAdmin.isActive === false) {
-                console.log(`✅ Reactivating admin`);
-                updateData.isActive = true;
-            }
+            if (existingAdmin.lockedUntil) updateData.lockedUntil = null;
+            if (existingAdmin.loginAttempts && existingAdmin.loginAttempts > 0) updateData.loginAttempts = 0;
+            if (existingAdmin.isActive === false) updateData.isActive = true;
+
             const currentRole = String(existingAdmin.role || '').trim();
-            if (currentRole !== 'admin') {
-                console.log(`⚠️  Fixing admin role: "${currentRole}" → "admin"`);
-                updateData.role = 'admin';
-            }
+            if (currentRole !== 'admin') updateData.role = 'admin';
+
             if (ALLOW_ADMIN_RESET) {
                 let passwordMatches = false;
                 try {
                     passwordMatches = await bcrypt.compare(ADMIN_PASSWORD, existingAdmin.password);
                 } catch (e) { passwordMatches = false; }
                 if (!passwordMatches) {
-                    console.log('🔑 AUTO-RESET: Password mismatch detected, updating...');
                     updateData.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
                     updateData.tokenVersion = (existingAdmin.tokenVersion || 0) + 1;
-                    console.log(`   New tokenVersion: ${updateData.tokenVersion}`);
-                } else {
-                    console.log('✅ AUTO-RESET: Password already matches, skipping');
-                    console.log(`   (tokenVersion preserved: ${existingAdmin.tokenVersion || 0})`);
                 }
             }
             if (Object.keys(updateData).length > 0) {
@@ -603,6 +585,7 @@ async function ensureAdminExists() {
             }
             return;
         }
+
         console.log(`⚠️  Admin user "${ADMIN_USERNAME}" NOT FOUND - creating...`);
         const admin = await User.create({
             username: ADMIN_USERNAME,
@@ -616,11 +599,8 @@ async function ensureAdminExists() {
             lockedUntil: null
         });
         console.log('✅ Admin user CREATED:', admin.username);
-        console.log(`   Email: ${admin.email}`);
-        console.log(`   Role: ${admin.role}`);
     } catch (error) {
         console.error('❌ Failed to ensure admin:', error.message);
-        console.error(error.stack);
     }
 }
 
@@ -639,6 +619,7 @@ async function ensureInitialData() {
         ];
         await Vessel.insertMany(initialVessels);
         console.log(`✅ ${initialVessels.length} vessels created`);
+
         const initialLogs = [
             { id: randomId(8), vesselName: 'الوحدة 101', vesselNum: '101', type: 'صيانة دورية', status: 'مكتملة', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة تونس', cost: 500, notes: 'صيانة دورية', createdBy: 'system' },
             { id: randomId(8), vesselName: 'الوحدة 205', vesselNum: '205', type: 'إصلاح محرك', status: 'قيد التنفيذ', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة صفاقس', cost: 1200, notes: 'استبدال المحرك', createdBy: 'system' },
@@ -1000,7 +981,6 @@ function hasPermission(user, permission) {
 function requirePermission(permission) {
     return (req, res, next) => {
         if (!req.user || !hasPermission(req.user, permission)) {
-            console.warn(`🚫 Permission denied: user="${req.user?.username}" role="${req.user?.role}" needs="${permission}"`);
             return res.status(403).json({
                 success: false,
                 error: 'ليس لديك الصلاحية الكافية',
@@ -1014,9 +994,7 @@ function requirePermission(permission) {
 
 function requireOneOf(...permissions) {
     return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
+        if (!req.user) return res.status(401).json({ success: false, error: 'غير مصرح' });
         const hasAny = permissions.some(p => hasPermission(req.user, p));
         if (!hasAny) {
             return res.status(403).json({
@@ -1164,7 +1142,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '9.17.1', timestamp: new Date().toISOString(),
+            version: '10.0.0', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
@@ -1177,7 +1155,9 @@ function formatMaintenance(log) {
                 Log: !!Log,
                 Ticket: !!Ticket,
                 Note: !!Note,
-                Notification: !!Notification
+                Notification: !!Notification,
+                UserSettings: !!UserSettings,
+                SystemLogo: !!SystemLogo
             }
         });
     });
@@ -1195,36 +1175,29 @@ function formatMaintenance(log) {
                 return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
             }
 
-            console.log(`🔐 Login attempt: "${username}" from ${clientIP}`);
-
             const user = await User.findOne({ username: username.trim() });
 
             if (!user) {
-                console.log(`❌ User not found: "${username}"`);
                 await addSystemLog({ action: 'login', resource: 'user', status: 'error', ip: clientIP, requestId: req.requestId, details: { reason: 'user_not_found', username } });
                 return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
             }
 
             if (user.lockedUntil && Date.now() < user.lockedUntil.getTime()) {
                 const remainingMinutes = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
-                console.log(`🔒 Account locked for ${remainingMinutes} more minutes`);
                 return res.status(403).json({ success: false, error: `الحساب مقفل. حاول بعد ${remainingMinutes} دقيقة` });
             }
 
             if (user.lockedUntil && Date.now() >= user.lockedUntil.getTime()) {
-                console.log(`🔓 Lock expired, unlocking`);
                 user.lockedUntil = null;
                 user.loginAttempts = 0;
                 await user.save();
             }
 
             if (user.isActive === false) {
-                console.log(`❌ Account inactive`);
                 return res.status(403).json({ success: false, error: 'الحساب معطّل. تواصل مع المسؤول' });
             }
 
             const valid = await bcrypt.compare(password, user.password);
-            console.log(`🔐 Password check for "${username}":`, valid ? '✅ VALID' : '❌ INVALID');
 
             if (!valid) {
                 user.loginAttempts = (user.loginAttempts || 0) + 1;
@@ -1232,13 +1205,10 @@ function formatMaintenance(log) {
                 if (user.loginAttempts >= 5) {
                     user.lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
                     await user.save();
-                    console.log(`🔒 Account locked due to 5 failed attempts`);
-                    await addSystemLog({ userId: user.id, action: 'login', resource: 'user', status: 'error', ip: clientIP, requestId: req.requestId, details: { reason: 'account_locked' } });
                     return res.status(403).json({ success: false, error: 'الحساب مقفل لمدة 30 دقيقة' });
                 }
 
                 await user.save();
-                console.log(`❌ Failed attempt ${user.loginAttempts}/5`);
                 return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
             }
 
@@ -1246,8 +1216,6 @@ function formatMaintenance(log) {
             user.lockedUntil = null;
             user.lastLogin = new Date();
             await user.save();
-
-            console.log(`✅ Login SUCCESS: ${username} (${user.role})`);
 
             const sessionId = randomId(32);
             const accessToken = generateAccessToken(user, sessionId);
@@ -1365,19 +1333,15 @@ function formatMaintenance(log) {
             canCreateVessels:  hasPermission(req.user, 'vessels:create'),
             canUpdateVessels:  hasPermission(req.user, 'vessels:update'),
             canDeleteVessels:  hasPermission(req.user, 'vessels:delete'),
-
             canViewMaintenance:    hasPermission(req.user, 'maintenance:read'),
             canCreateMaintenance:  hasPermission(req.user, 'maintenance:create'),
             canUpdateMaintenance:  hasPermission(req.user, 'maintenance:update'),
             canDeleteMaintenance:  hasPermission(req.user, 'maintenance:delete'),
-
             canViewNotes:    hasPermission(req.user, 'notes:read'),
             canCreateNotes:  hasPermission(req.user, 'notes:create'),
             canUpdateNotes:  hasPermission(req.user, 'notes:update'),
             canDeleteNotes:  hasPermission(req.user, 'notes:delete'),
-
             canViewNotifications: true,
-
             canManageUsers: hasPermission(req.user, 'users:manage'),
             canViewMonitoring: hasPermission(req.user, 'monitoring:view'),
             canViewLogs: hasPermission(req.user, 'logs:read'),
@@ -1507,10 +1471,7 @@ function formatMaintenance(log) {
         try {
             if (!Note) return res.json([]);
 
-            const notes = await Note.find()
-                .sort({ createdAt: -1 })
-                .limit(500)
-                .lean();
+            const notes = await Note.find().sort({ createdAt: -1 }).limit(500).lean();
 
             return res.json(
                 notes.map(n => ({
@@ -1528,7 +1489,6 @@ function formatMaintenance(log) {
                 }))
             );
         } catch (error) {
-            console.error('❌ GET /api/notes error:', error.message);
             return res.status(500).json({ success: false, error: 'فشل تحميل الملاحظات' });
         }
     });
@@ -1568,17 +1528,12 @@ function formatMaintenance(log) {
 
             const { title, content, date, priority, type, weekNumber } = req.body;
 
-            if (typeof title !== 'string' || !title.trim()) {
-                return res.status(400).json({ success: false, error: 'العنوان مطلوب' });
-            }
-            if (typeof content !== 'string' || !content.trim()) {
-                return res.status(400).json({ success: false, error: 'المحتوى مطلوب' });
-            }
+            if (typeof title !== 'string' || !title.trim()) return res.status(400).json({ success: false, error: 'العنوان مطلوب' });
+            if (typeof content !== 'string' || !content.trim()) return res.status(400).json({ success: false, error: 'المحتوى مطلوب' });
 
             var noteType = type || 'عام';
             if (priority === 'عاجل') noteType = 'عاجلة';
             else if (priority === 'مهم') noteType = 'مهمة';
-            else if (type) noteType = type;
 
             var weekNum = weekNumber;
             if (!weekNum) {
@@ -1589,16 +1544,12 @@ function formatMaintenance(log) {
                     weekNum = Math.ceil((diff + start.getDay() + 1) / 7);
                     if (weekNum < 1) weekNum = 1;
                     if (weekNum > 53) weekNum = 53;
-                } catch (e) {
-                    weekNum = 1;
-                }
+                } catch (e) { weekNum = 1; }
             }
 
             var createdById;
             try {
-                createdById = mongoose.Types.ObjectId.isValid(req.user._id)
-                    ? req.user._id
-                    : new mongoose.Types.ObjectId();
+                createdById = mongoose.Types.ObjectId.isValid(req.user._id) ? req.user._id : new mongoose.Types.ObjectId();
             } catch (e) {
                 createdById = new mongoose.Types.ObjectId();
             }
@@ -1614,27 +1565,8 @@ function formatMaintenance(log) {
                 createdByName: req.user.name || req.user.username
             });
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'create',
-                resource: 'note',
-                resourceId: note._id.toString(),
-                resourceName: note.title,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'success',
-                category: 'system',
-                title: 'ملاحظة جديدة',
-                message: 'تم إضافة "' + note.title + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/notes.html',
-                icon: 'sticky-note',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'create', resource: 'note', resourceId: note._id.toString(), resourceName: note.title, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'success', category: 'system', title: 'ملاحظة جديدة', message: 'تم إضافة "' + note.title + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/notes.html', icon: 'sticky-note', actorName: req.user.name || req.user.username });
 
             return res.status(201).json({
                 success: true,
@@ -1650,7 +1582,6 @@ function formatMaintenance(log) {
                 }
             });
         } catch (error) {
-            console.error('❌ POST /api/notes error:', error.message);
             return res.status(500).json({ success: false, error: 'فشل إضافة الملاحظة', details: error.message });
         }
     });
@@ -1660,7 +1591,6 @@ function formatMaintenance(log) {
             if (!Note) return res.status(500).json({ success: false, error: 'موديل الملاحظات غير متاح' });
 
             const { title, content, priority, type } = req.body;
-
             const idQuery = buildIdQuery(req.params.id);
             const note = await Note.findOne(idQuery);
             if (!note) return res.status(404).json({ success: false, error: 'الملاحظة غير موجودة' });
@@ -1678,42 +1608,15 @@ function formatMaintenance(log) {
 
             await note.save();
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'update',
-                resource: 'note',
-                resourceId: note._id.toString(),
-                resourceName: note.title,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'info',
-                category: 'system',
-                title: 'تعديل ملاحظة',
-                message: 'تم تعديل "' + note.title + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/notes.html',
-                icon: 'edit',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'update', resource: 'note', resourceId: note._id.toString(), resourceName: note.title, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'info', category: 'system', title: 'تعديل ملاحظة', message: 'تم تعديل "' + note.title + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/notes.html', icon: 'edit', actorName: req.user.name || req.user.username });
 
             return res.json({
                 success: true,
                 message: 'تم تحديث الملاحظة',
-                note: {
-                    id: note._id.toString(),
-                    title: note.title,
-                    content: note.content,
-                    type: note.type,
-                    status: note.status,
-                    createdAt: note.createdAt
-                }
+                note: { id: note._id.toString(), title: note.title, content: note.content, type: note.type, status: note.status, createdAt: note.createdAt }
             });
         } catch (error) {
-            console.error('❌ PUT /api/notes error:', error.message);
             return res.status(500).json({ success: false, error: 'فشل تحديث الملاحظة', details: error.message });
         }
     });
@@ -1731,31 +1634,11 @@ function formatMaintenance(log) {
 
             await Note.deleteOne({ _id: note._id });
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'delete',
-                resource: 'note',
-                resourceId: noteId,
-                resourceName: title,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'warning',
-                category: 'system',
-                title: 'حذف ملاحظة',
-                message: 'تم حذف "' + title + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/notes.html',
-                icon: 'trash',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'delete', resource: 'note', resourceId: noteId, resourceName: title, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'warning', category: 'system', title: 'حذف ملاحظة', message: 'تم حذف "' + title + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/notes.html', icon: 'trash', actorName: req.user.name || req.user.username });
 
             return res.json({ success: true, message: 'تم حذف الملاحظة' });
         } catch (error) {
-            console.error('❌ DELETE /api/notes error:', error.message);
             return res.status(500).json({ success: false, error: 'فشل حذف الملاحظة', details: error.message });
         }
     });
@@ -1766,19 +1649,14 @@ function formatMaintenance(log) {
 
     app.get('/api/notifications', authenticateAccessToken, async (req, res) => {
         try {
-            if (!Notification) {
-                return res.json({ success: true, notifications: [], unreadCount: 0, total: 0 });
-            }
+            if (!Notification) return res.json({ success: true, notifications: [], unreadCount: 0, total: 0 });
 
             const limit = Math.min(parseInt(req.query.limit) || 20, 100);
             const userId = req.user.id;
 
             const notifications = await Notification.find({
                 $or: [{ userId: userId }, { userId: null }]
-            })
-            .sort({ createdAt: -1 })
-            .limit(limit)
-            .lean();
+            }).sort({ createdAt: -1 }).limit(limit).lean();
 
             const unreadCount = await Notification.countDocuments({
                 $or: [{ userId: userId }, { userId: null }],
@@ -1803,17 +1681,13 @@ function formatMaintenance(log) {
                 total: notifications.length
             });
         } catch (error) {
-            console.error('❌ GET /api/notifications error:', error.message);
             return res.status(500).json({ success: false, error: 'فشل تحميل الإشعارات' });
         }
     });
 
     app.get('/api/notifications/unread-count', authenticateAccessToken, async (req, res) => {
         try {
-            if (!Notification) {
-                return res.json({ success: true, unreadCount: 0 });
-            }
-
+            if (!Notification) return res.json({ success: true, unreadCount: 0 });
             const unreadCount = await Notification.countDocuments({
                 $or: [{ userId: req.user.id }, { userId: null }],
                 isRead: false
@@ -1827,12 +1701,8 @@ function formatMaintenance(log) {
     app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Notification) return res.json({ success: true, updated: 0 });
-
             const idQuery = buildIdQuery(req.params.id);
-            const result = await Notification.updateOne(
-                idQuery,
-                { $set: { isRead: true } }
-            );
+            const result = await Notification.updateOne(idQuery, { $set: { isRead: true } });
             return res.json({ success: true, updated: result.modifiedCount });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'فشل التحديث' });
@@ -1842,12 +1712,8 @@ function formatMaintenance(log) {
     app.put('/api/notifications/read-all', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Notification) return res.json({ success: true, updated: 0 });
-
             const result = await Notification.updateMany(
-                {
-                    $or: [{ userId: req.user.id }, { userId: null }],
-                    isRead: false
-                },
+                { $or: [{ userId: req.user.id }, { userId: null }], isRead: false },
                 { $set: { isRead: true } }
             );
             return res.json({ success: true, updated: result.modifiedCount });
@@ -1859,7 +1725,6 @@ function formatMaintenance(log) {
     app.delete('/api/notifications/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Notification) return res.json({ success: true });
-
             const idQuery = buildIdQuery(req.params.id);
             await Notification.deleteOne(idQuery);
             return res.json({ success: true });
@@ -1871,15 +1736,16 @@ function formatMaintenance(log) {
     app.delete('/api/notifications', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Notification) return res.json({ success: true, deleted: 0 });
-
-            const result = await Notification.deleteMany({
-                $or: [{ userId: req.user.id }, { userId: null }]
-            });
+            const result = await Notification.deleteMany({ $or: [{ userId: req.user.id }, { userId: null }] });
             return res.json({ success: true, deleted: result.deletedCount });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'فشل الحذف' });
         }
     });
+
+    // ========================================================
+    // MONITORING (admin only)
+    // ========================================================
 
     app.get('/api/monitoring/users', authenticateAccessToken, requirePermission('monitoring:view'), async (req, res) => {
         try {
@@ -2030,31 +1896,11 @@ function formatMaintenance(log) {
                 });
             }
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'create',
-                resource: 'vessel',
-                resourceId: newVessel.id,
-                resourceName: newVessel.name,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'success',
-                category: 'vessel',
-                title: 'مركب جديد',
-                message: 'تم إضافة "' + newVessel.name + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/fleet.html',
-                icon: 'ship',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'create', resource: 'vessel', resourceId: newVessel.id, resourceName: newVessel.name, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'success', category: 'vessel', title: 'مركب جديد', message: 'تم إضافة "' + newVessel.name + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/fleet.html', icon: 'ship', actorName: req.user.name || req.user.username });
 
             return res.status(201).json({ success: true, message: 'تم إضافة المركب بنجاح', vessel: formatVessel(newVessel) });
         } catch (error) {
-            console.error('❌ POST /api/vessels error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في إضافة المركب' });
         }
     });
@@ -2101,31 +1947,11 @@ function formatMaintenance(log) {
                 });
             }
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'update',
-                resource: 'vessel',
-                resourceId: vessel.id,
-                resourceName: vessel.name,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'info',
-                category: 'vessel',
-                title: 'تعديل مركب',
-                message: 'تم تعديل "' + vessel.name + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/fleet.html',
-                icon: 'edit',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'update', resource: 'vessel', resourceId: vessel.id, resourceName: vessel.name, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'info', category: 'vessel', title: 'تعديل مركب', message: 'تم تعديل "' + vessel.name + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/fleet.html', icon: 'edit', actorName: req.user.name || req.user.username });
 
             return res.json({ success: true, message: 'تم تحديث المركب بنجاح', vessel: formatVessel(vessel) });
         } catch (error) {
-            console.error('❌ PUT /api/vessels error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في تحديث المركب' });
         }
     });
@@ -2143,35 +1969,15 @@ function formatMaintenance(log) {
 
             await Vessel.deleteOne({ _id: vessel._id });
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'delete',
-                resource: 'vessel',
-                resourceId: vesselId,
-                resourceName: vesselName,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'warning',
-                category: 'vessel',
-                title: 'حذف مركب',
-                message: 'تم حذف "' + vesselName + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/fleet.html',
-                icon: 'trash',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'delete', resource: 'vessel', resourceId: vesselId, resourceName: vesselName, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'warning', category: 'vessel', title: 'حذف مركب', message: 'تم حذف "' + vesselName + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/fleet.html', icon: 'trash', actorName: req.user.name || req.user.username });
 
             return res.json({ success: true, message: 'تم حذف المركب بنجاح' });
         } catch (error) {
-            console.error('❌ DELETE /api/vessels error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في حذف المركب' });
         }
     });
-    
+
     // ========================================================
     // MAINTENANCE
     // ========================================================
@@ -2218,31 +2024,11 @@ function formatMaintenance(log) {
                 notes: notes || '', createdBy: req.user.id
             });
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'create',
-                resource: 'maintenance',
-                resourceId: logEntry.id,
-                resourceName: logEntry.vesselName,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'info',
-                category: 'maintenance',
-                title: 'مهمة صيانة جديدة',
-                message: 'تم إضافة "' + logEntry.vesselName + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/maintenance.html',
-                icon: 'wrench',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'create', resource: 'maintenance', resourceId: logEntry.id, resourceName: logEntry.vesselName, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'info', category: 'maintenance', title: 'مهمة صيانة جديدة', message: 'تم إضافة "' + logEntry.vesselName + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/maintenance.html', icon: 'wrench', actorName: req.user.name || req.user.username });
 
             return res.status(201).json({ success: true, message: 'تم إضافة سجل الصيانة', log: formatMaintenance(logEntry) });
         } catch (error) {
-            console.error('❌ POST /api/maintenance-logs error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
         }
     });
@@ -2263,19 +2049,10 @@ function formatMaintenance(log) {
             log.updatedAt = new Date();
             await log.save();
 
-            await notify({
-                type: 'info',
-                category: 'maintenance',
-                title: 'تعديل صيانة',
-                message: 'تم تعديل "' + log.vesselName + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/maintenance.html',
-                icon: 'edit',
-                actorName: req.user.name || req.user.username
-            });
+            await notify({ type: 'info', category: 'maintenance', title: 'تعديل صيانة', message: 'تم تعديل "' + log.vesselName + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/maintenance.html', icon: 'edit', actorName: req.user.name || req.user.username });
 
             return res.json({ success: true, message: 'تم تحديث سجل الصيانة', log: formatMaintenance(log) });
         } catch (error) {
-            console.error('❌ PUT /api/maintenance-logs error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في تحديث السجل' });
         }
     });
@@ -2293,31 +2070,11 @@ function formatMaintenance(log) {
 
             await Maintenance.deleteOne({ _id: log._id });
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'delete',
-                resource: 'maintenance',
-                resourceId: logId,
-                resourceName: vesselName,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'warning',
-                category: 'maintenance',
-                title: 'حذف صيانة',
-                message: 'تم حذف "' + vesselName + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/maintenance.html',
-                icon: 'trash',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'delete', resource: 'maintenance', resourceId: logId, resourceName: vesselName, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'warning', category: 'maintenance', title: 'حذف صيانة', message: 'تم حذف "' + vesselName + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/maintenance.html', icon: 'trash', actorName: req.user.name || req.user.username });
 
             return res.json({ success: true, message: 'تم حذف سجل الصيانة' });
         } catch (error) {
-            console.error('❌ DELETE /api/maintenance-logs error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
         }
     });
@@ -2346,11 +2103,7 @@ function formatMaintenance(log) {
             const existing = await User.findOne({ username: cleanUsername });
             if (existing) return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
 
-            const allowedRoles = [
-                'admin', 'manager', 'editor', 'maintenance_unit', 'viewer',
-                'مسؤول', 'مدير', 'مشغل', 'مشاهد',
-                'operator', 'super_admin'
-            ];
+            const allowedRoles = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد', 'operator', 'super_admin'];
             const finalRole = allowedRoles.includes(role) ? normalizeRole(role) : 'viewer';
 
             const cleanEmail = typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : `${cleanUsername.toLowerCase()}@marine.com`;
@@ -2364,31 +2117,11 @@ function formatMaintenance(log) {
                 tokenVersion: 0
             });
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'create',
-                resource: 'user',
-                resourceId: newUser.id,
-                resourceName: newUser.username,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'success',
-                category: 'user',
-                title: 'مستخدم جديد',
-                message: 'تم إضافة "' + newUser.username + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/users.html',
-                icon: 'user-plus',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'create', resource: 'user', resourceId: newUser.id, resourceName: newUser.username, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'success', category: 'user', title: 'مستخدم جديد', message: 'تم إضافة "' + newUser.username + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/users.html', icon: 'user-plus', actorName: req.user.name || req.user.username });
 
             return res.status(201).json({ success: true, message: 'تم إضافة المستخدم بنجاح', user: formatUser(newUser) });
         } catch (error) {
-            console.error('❌ POST /api/users error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في إضافة المستخدم' });
         }
     });
@@ -2413,11 +2146,7 @@ function formatMaintenance(log) {
             if (email) targetUser.email = email.trim().toLowerCase();
 
             if (role) {
-                const allowedRoles = [
-                    'admin', 'manager', 'editor', 'maintenance_unit', 'viewer',
-                    'مسؤول', 'مدير', 'مشغل', 'مشاهد',
-                    'operator', 'super_admin'
-                ];
+                const allowedRoles = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد', 'operator', 'super_admin'];
                 if (!allowedRoles.includes(role)) return res.status(400).json({ success: false, error: 'صلاحية غير صالحة' });
                 targetUser.role = normalizeRole(role);
             }
@@ -2439,31 +2168,11 @@ function formatMaintenance(log) {
             targetUser.updatedAt = new Date();
             await targetUser.save();
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'update',
-                resource: 'user',
-                resourceId: targetUser.id,
-                resourceName: targetUser.username,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'info',
-                category: 'user',
-                title: 'تعديل مستخدم',
-                message: 'تم تعديل "' + targetUser.username + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/users.html',
-                icon: 'user-edit',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'update', resource: 'user', resourceId: targetUser.id, resourceName: targetUser.username, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'info', category: 'user', title: 'تعديل مستخدم', message: 'تم تعديل "' + targetUser.username + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/users.html', icon: 'user-edit', actorName: req.user.name || req.user.username });
 
             return res.json({ success: true, message: 'تم تحديث المستخدم بنجاح', user: formatUser(targetUser) });
         } catch (error) {
-            console.error('❌ PUT /api/users error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في تحديث المستخدم' });
         }
     });
@@ -2488,31 +2197,11 @@ function formatMaintenance(log) {
             await revokeAllUserSessions(targetUser.id);
             await User.deleteOne({ _id: targetUser._id });
 
-            await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'delete',
-                resource: 'user',
-                resourceId: deletedUserId,
-                resourceName: deletedUsername,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
-            });
-
-            await notify({
-                type: 'warning',
-                category: 'user',
-                title: 'حذف مستخدم',
-                message: 'تم حذف "' + deletedUsername + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/users.html',
-                icon: 'user-times',
-                actorName: req.user.name || req.user.username
-            });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'delete', resource: 'user', resourceId: deletedUserId, resourceName: deletedUsername, status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'warning', category: 'user', title: 'حذف مستخدم', message: 'تم حذف "' + deletedUsername + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/users.html', icon: 'user-times', actorName: req.user.name || req.user.username });
 
             return res.json({ success: true, message: 'تم حذف المستخدم بنجاح' });
         } catch (error) {
-            console.error('❌ DELETE /api/users error:', error.message);
             return res.status(500).json({ success: false, error: 'خطأ في حذف المستخدم' });
         }
     });
@@ -2562,7 +2251,7 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // LOGS (admin + manager)
+    // LOGS
     // ========================================================
 
     app.get('/api/logs', authenticateAccessToken, requirePermission('logs:read'), async (req, res) => {
@@ -2635,7 +2324,8 @@ function formatMaintenance(log) {
     // ========================================================
     // 🤖 AI + 📥 IMPORT ROUTES
     // ========================================================
-         aiAndImportRoutes(app, {
+
+    aiAndImportRoutes(app, {
         User,
         Vessel,
         Maintenance,
@@ -2650,7 +2340,7 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // ⚙️ SETTINGS + 🖼️ LOGO ROUTES (from routes/settings.js)
+    // ⚙️ SETTINGS + 🖼️ LOGO ROUTES
     // ========================================================
 
     if (UserSettings && SystemLogo) {
@@ -2671,16 +2361,11 @@ function formatMaintenance(log) {
         }
     } else {
         console.warn('⚠️ UserSettings or SystemLogo model missing — settings disabled');
-        console.warn('   UserSettings:', UserSettings ? '✅' : '❌');
-        console.warn('   SystemLogo  :', SystemLogo ? '✅' : '❌');
     }
 
     // ========================================================
     // STATIC FILES
     // ========================================================
-    
-
-    // 
 
     const pagesDir = path.join(__dirname, 'pages');
     const publicPagesDir = path.join(__dirname, 'public', 'pages');
@@ -2722,7 +2407,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v9.17.1</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.0</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2772,17 +2457,16 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v9.17.1');
+            console.log('🚢 MARINE SYSTEM v10.0');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
-            console.log('🤖 AI Assistant + Smart Import: ' + (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED (missing GEMINI_API_KEY)'));
+            console.log('🤖 AI Assistant + Smart Import: ' + (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'));
             console.log('📧 Email: ' + (
                 (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
                     ? 'MAILJET API ✅'
                     : (process.env.EMAIL_HOST ? 'SMTP' : '❌ NOT CONFIGURED')
             ));
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
-                        console.log('✅ Double-hash fix: APPLIED');
             console.log('✅ RBAC v4: 5 roles');
             console.log('✅ ID matching: _id OR id');
             console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
@@ -2790,12 +2474,21 @@ function formatMaintenance(log) {
             console.log('✅ Settings: ' + (UserSettings ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Logo: ' + (SystemLogo ? 'ENABLED' : 'DISABLED'));
             console.log('=========================================');
+            console.log(`📍 Port: ${PORT}`);
+            console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`👤 Admin: ${ADMIN_USERNAME}`);
+            console.log(`🍃 MongoDB: ${mongoConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
+            console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY'}`);
+            console.log('=========================================');
+        });
+    }
+})();
 
 module.exports = app;
 module.exports.csrfProtection = csrfProtection;
 module.exports.authenticateAccessToken = authenticateAccessToken;
 module.exports.requirePermission = requirePermission;
-module.exports.requireOneOf = requireOneOf;
+module.exports.requireOneOf = requirePermission;
 module.exports.requireAdmin = requireAdmin;
 module.exports.hasPermission = hasPermission;
 module.exports.normalizeRole = normalizeRole;
