@@ -1,9 +1,12 @@
 <!-- public/pages/notes.html -->
 <div id="page-notes">
     <style>
+        /* ✅ اللون المعتم على body */
+        body { background: #0a0e1a; }
+
         /* ============================================================
-           📝 NOTES PAGE (Note Verbale) - v9.12
-           5 Roles + apiFetch + Full CRUD
+           📝 NOTES PAGE (Note Verbale) - v9.13
+           5 Roles + apiFetch + Full CRUD + Dynamic Logo
            ============================================================ */
 
         #page-notes {
@@ -12,11 +15,12 @@
             padding: 20px;
             margin: 0;
             font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-            background: #0a0e1a;
+            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
+            background: transparent;
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         #page-notes *,
@@ -70,6 +74,7 @@
             gap: 14px;
         }
 
+        /* ✅ الشعار الديناميكي */
         .notes-header-left .header-icon {
             width: 44px;
             height: 44px;
@@ -81,6 +86,26 @@
             font-size: 20px;
             color: #0a1628;
             box-shadow: 0 0 40px rgba(230,179,30,0.15);
+            overflow: hidden;
+        }
+
+        /* ✅ دعم صورة الشعار */
+        .notes-header-left .header-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+        .notes-header-left .header-icon.has-logo img {
+            display: block;
+        }
+        .notes-header-left .header-icon.has-logo {
+            background: transparent;
+            box-shadow: 0 0 20px rgba(230,179,30,0.3);
+        }
+        .notes-header-left .header-icon.has-logo i {
+            display: none;
         }
 
         .notes-header-left h2 {
@@ -514,8 +539,10 @@
     <!-- ===== HEADER ===== -->
     <div class="notes-header">
         <div class="notes-header-left">
-            <div class="header-icon">
+            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
+            <div class="header-icon" id="notesHeaderIcon">
                 <i class="fas fa-sticky-note"></i>
+                <img id="globalLogo" src="" alt="شعار" style="display:none;">
             </div>
             <div>
                 <h2>Note Verbale</h2>
@@ -593,12 +620,12 @@
 
 <script>
     // ============================================================
-    // 📝 NOTES PAGE - v9.12
+    // 📝 NOTES PAGE - v9.13
     // ============================================================
     (function() {
         'use strict';
 
-        console.log('📝 Notes Page v9.12 - loading...');
+        console.log('📝 Notes Page v9.13 - loading...');
 
         // ============================================================
         // ✅ CLEANUP STATE
@@ -630,7 +657,7 @@
                 delete window.deleteNote;
             } catch (e) {}
 
-            console.log('🧹 Notes v9.12 cleanup done');
+            console.log('🧹 Notes v9.13 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -639,7 +666,55 @@
         window.addEventListener('pagehide', _notesCleanup);
 
         // ============================================================
-        // 🔐 RBAC v9.12
+        // 🎨 LOGO APPLY (Dynamic)
+        // ============================================================
+        function applyLogo() {
+            try {
+                var cachedLogo = localStorage.getItem('marine_logo');
+                if (!cachedLogo) return;
+
+                var iconDiv = document.getElementById('notesHeaderIcon');
+                var img = document.getElementById('globalLogo');
+                if (img) {
+                    img.src = cachedLogo;
+                    img.style.display = 'block';
+                }
+                if (iconDiv) {
+                    iconDiv.classList.add('has-logo');
+                }
+            } catch (e) {}
+        }
+
+        function syncLogoFromServer() {
+            var token = localStorage.getItem('marine_token') ||
+                        localStorage.getItem('token') ||
+                        localStorage.getItem('authToken') || null;
+            var headers = { 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch('/api/logo', { headers: headers, credentials: 'include' })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (data && data.success && data.logo && data.logo.dataUrl) {
+                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                        applyLogo();
+                    }
+                }).catch(function() {});
+        }
+
+        // ✅ شغّل فوراً
+        applyLogo();
+        syncLogoFromServer();
+
+        // ✅ استمع للتغييرات بين التبويبات
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'marine_logo' && e.newValue) {
+                applyLogo();
+            }
+        });
+
+        // ============================================================
+        // 🔐 RBAC v9.13
         // ============================================================
         var LEGACY_ROLE_MAP = {
             'super_admin': 'admin',
@@ -661,7 +736,6 @@
             return LEGACY_ROLE_MAP[r] || 'viewer';
         }
 
-        // ✅ يمكن الإنشاء/التعديل: كل من ليس viewer
         function canEdit() {
             var u = window.currentUser;
             if (!u) return false;
@@ -669,7 +743,6 @@
             return r !== 'viewer';
         }
 
-        // ✅ يمكن الحذف: admin + manager
         function canDelete() {
             var u = window.currentUser;
             if (!u) return false;
@@ -702,7 +775,6 @@
             _eventListeners.push({ el: el, type: type, fn: fn });
         }
 
-        // ✅ يستخدم apiFetch من index.html إن وُجد
         function fetcher(url, options) {
             if (typeof window.apiFetch === 'function') {
                 return window.apiFetch(url, options || {});
@@ -752,15 +824,9 @@
             } catch (_) { return String(d); }
         }
 
-        // ============================================================
-        // 📊 STATE
-        // ============================================================
         var notesData = [];
         var editingId = null;
 
-        // ============================================================
-        // 📥 LOAD NOTES
-        // ============================================================
         async function loadNotes() {
             if (_isDestroyed) return;
 
@@ -781,7 +847,6 @@
                         throw new Error('انتهت الجلسة — يرجى تسجيل الدخول');
                     }
                     if (response.status === 404) {
-                        // الملاحظات غير مدعومة في السيرفر بعد
                         notesData = [];
                         renderNotes();
                         return;
@@ -818,9 +883,6 @@
             }
         }
 
-        // ============================================================
-        // 🎨 RENDER NOTES
-        // ============================================================
         function renderNotes() {
             if (_isDestroyed) return;
 
@@ -893,9 +955,6 @@
             container.innerHTML = html;
         }
 
-        // ============================================================
-        // 💾 SAVE NOTE
-        // ============================================================
         async function saveNote() {
             if (_isDestroyed) return;
 
@@ -977,9 +1036,6 @@
             }
         }
 
-        // ============================================================
-        // ✏️ EDIT NOTE
-        // ============================================================
         function editNote(id) {
             if (_isDestroyed) return;
             if (!canEdit()) {
@@ -1028,15 +1084,11 @@
                 saveBtn.innerHTML = '<i class="fas fa-save"></i> تحديث';
             }
 
-            // رفع الصفحة للأعلى + focus
             var addCard = $('addNoteCard');
             if (addCard) addCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
             if (titleEl) setTimeout(function() { titleEl.focus(); }, 300);
         }
 
-        // ============================================================
-        // 🗑️ DELETE NOTE
-        // ============================================================
         async function deleteNote(id) {
             if (_isDestroyed) return;
             if (!canDelete()) {
@@ -1067,9 +1119,6 @@
             }
         }
 
-        // ============================================================
-        // 🧹 CLEAR FORM
-        // ============================================================
         function clearForm() {
             editingId = null;
 
@@ -1097,18 +1146,14 @@
             }
         }
 
-        // ============================================================
-        // 🚀 INIT
-        // ============================================================
         function init() {
             if (_isDestroyed) return;
 
-            console.log('🚀 Notes v9.12 initializing...');
+            console.log('🚀 Notes v9.13 initializing...');
             console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
             console.log('🔐 canEdit:', canEdit());
             console.log('🔐 canDelete:', canDelete());
 
-            // ✅ أزرار
             addSafeListener($('saveNoteBtn'), 'click', saveNote);
             addSafeListener($('cancelEditBtn'), 'click', function() {
                 clearForm();
@@ -1124,14 +1169,12 @@
                 if (t) setTimeout(function() { t.focus(); }, 300);
             });
 
-            // ✅ منع Enter من إرسال تلقائي
             addSafeListener($('addNoteCard'), 'keydown', function(e) {
                 if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
                     e.preventDefault();
                 }
             });
 
-            // ✅ تعيين تاريخ اليوم افتراضيًا
             var dateEl = $('noteDate');
             if (dateEl) {
                 try {
@@ -1139,7 +1182,6 @@
                 } catch (_) {}
             }
 
-            // ✅ إذا كان viewer — أخفِ زر الحفظ
             if (!canEdit()) {
                 var saveBtn = $('saveNoteBtn');
                 if (saveBtn) saveBtn.style.display = 'none';
@@ -1154,23 +1196,16 @@
                 });
             }
 
-            // ✅ تحميل أولي
             loadNotes();
 
-            console.log('✅ Notes v9.12 ready');
+            console.log('✅ Notes v9.13 ready');
         }
 
-        // ============================================================
-        // 🌐 EXPORT
-        // ============================================================
         window.saveNote = saveNote;
         window.loadNotes = loadNotes;
         window.editNote = editNote;
         window.deleteNote = deleteNote;
 
-        // ============================================================
-        // 🏁 BOOT
-        // ============================================================
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init, { once: true });
         } else {
