@@ -5,7 +5,7 @@
 //
 // 📋 الاستخدام في server.js:
 //   1. const settingsRoutes = require('./routes/settings');
-//   2. settingsRoutes(app, { User, UserSettings, SystemLogo, ... });
+//   2. settingsRoutes(app, { UserSettings, SystemLogo, ... });
 // ============================================================
 
 'use strict';
@@ -44,7 +44,7 @@ const DEFAULT_SETTINGS = {
 };
 
 // ============================================================
-// 🔧 DEEP MERGE HELPER
+// 🔧 HELPERS
 // ============================================================
 
 function deepMerge(defaults, saved) {
@@ -66,10 +66,6 @@ function deepMerge(defaults, saved) {
     }
     return result;
 }
-
-// ============================================================
-// ✅ VALIDATORS
-// ============================================================
 
 function sanitizeSettings(input) {
     const out = {};
@@ -185,7 +181,7 @@ module.exports = function registerSettingsRoutes(app, deps) {
     });
 
     // ========================================================
-    // ⚙️ GET /api/settings  — جلب إعدادات المستخدم
+    // ⚙️ GET /api/settings
     // ========================================================
     app.get('/api/settings',
         authenticateAccessToken,
@@ -211,7 +207,7 @@ module.exports = function registerSettingsRoutes(app, deps) {
     );
 
     // ========================================================
-    // ⚙️ PUT /api/settings  — حفظ إعدادات المستخدم
+    // ⚙️ PUT /api/settings
     // ========================================================
     app.put('/api/settings',
         authenticateAccessToken,
@@ -221,7 +217,6 @@ module.exports = function registerSettingsRoutes(app, deps) {
             try {
                 const incoming = sanitizeSettings(req.body || {});
 
-                // جلب الإعدادات الحالية ودمجها
                 const existing = await UserSettings.findOne({ userId: req.user.id }).lean();
                 const base = deepMerge(DEFAULT_SETTINGS, existing?.settings || {});
                 const merged = deepMerge(base, incoming);
@@ -236,15 +231,17 @@ module.exports = function registerSettingsRoutes(app, deps) {
                     { upsert: true, new: true, setDefaultsOnInsert: true }
                 );
 
-                await addSystemLog({
-                    userId: req.user.id,
-                    userName: req.user.name,
-                    action: 'update',
-                    resource: 'settings',
-                    status: 'success',
-                    ip: req.ip,
-                    requestId: req.requestId
-                });
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'update',
+                        resource: 'settings',
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId
+                    }).catch(() => {});
+                }
 
                 return res.json({
                     success: true,
@@ -263,7 +260,7 @@ module.exports = function registerSettingsRoutes(app, deps) {
     );
 
     // ========================================================
-    // ⚙️ POST /api/settings/reset  — استعادة الافتراضي
+    // ⚙️ POST /api/settings/reset
     // ========================================================
     app.post('/api/settings/reset',
         authenticateAccessToken,
@@ -273,15 +270,17 @@ module.exports = function registerSettingsRoutes(app, deps) {
             try {
                 await UserSettings.deleteOne({ userId: req.user.id });
 
-                await addSystemLog({
-                    userId: req.user.id,
-                    userName: req.user.name,
-                    action: 'reset',
-                    resource: 'settings',
-                    status: 'success',
-                    ip: req.ip,
-                    requestId: req.requestId
-                });
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'reset',
+                        resource: 'settings',
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId
+                    }).catch(() => {});
+                }
 
                 return res.json({
                     success: true,
@@ -299,7 +298,7 @@ module.exports = function registerSettingsRoutes(app, deps) {
     );
 
     // ========================================================
-    // 🖼️ GET /api/logo  — جلب الشعار (public)
+    // 🖼️ GET /api/logo  — public
     // ========================================================
     app.get('/api/logo', async (req, res) => {
         try {
@@ -326,7 +325,7 @@ module.exports = function registerSettingsRoutes(app, deps) {
     });
 
     // ========================================================
-    // 🖼️ POST /api/logo/upload  — رفع شعار (admin)
+    // 🖼️ POST /api/logo/upload
     // ========================================================
     app.post('/api/logo/upload',
         authenticateAccessToken,
@@ -366,20 +365,22 @@ module.exports = function registerSettingsRoutes(app, deps) {
                     { upsert: true, new: true, setDefaultsOnInsert: true }
                 );
 
-                await addSystemLog({
-                    userId: req.user.id,
-                    userName: req.user.name,
-                    action: 'upload',
-                    resource: 'logo',
-                    resourceName: req.file.originalname,
-                    status: 'success',
-                    ip: req.ip,
-                    requestId: req.requestId,
-                    details: { size: req.file.size, mimetype: req.file.mimetype }
-                });
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'upload',
+                        resource: 'logo',
+                        resourceName: req.file.originalname,
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId,
+                        details: { size: req.file.size, mimetype: req.file.mimetype }
+                    }).catch(() => {});
+                }
 
                 if (typeof notify === 'function') {
-                    await notify({
+                    notify({
                         type: 'success',
                         category: 'system',
                         title: 'تحديث الشعار',
@@ -387,7 +388,7 @@ module.exports = function registerSettingsRoutes(app, deps) {
                         link: '/pages/settings.html',
                         icon: 'image',
                         actorName: req.user.name || req.user.username
-                    });
+                    }).catch(() => {});
                 }
 
                 console.log('✅ Logo uploaded:', req.file.originalname, `(${req.file.size} bytes)`);
@@ -417,7 +418,7 @@ module.exports = function registerSettingsRoutes(app, deps) {
     );
 
     // ========================================================
-    // 🖼️ DELETE /api/logo  — حذف الشعار (admin)
+    // 🖼️ DELETE /api/logo
     // ========================================================
     app.delete('/api/logo',
         authenticateAccessToken,
@@ -427,15 +428,17 @@ module.exports = function registerSettingsRoutes(app, deps) {
             try {
                 const result = await SystemLogo.deleteOne({ key: 'system_logo' });
 
-                await addSystemLog({
-                    userId: req.user.id,
-                    userName: req.user.name,
-                    action: 'delete',
-                    resource: 'logo',
-                    status: 'success',
-                    ip: req.ip,
-                    requestId: req.requestId
-                });
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'delete',
+                        resource: 'logo',
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId
+                    }).catch(() => {});
+                }
 
                 return res.json({
                     success: true,
