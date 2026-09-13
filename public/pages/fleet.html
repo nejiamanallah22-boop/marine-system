@@ -1,8 +1,11 @@
 <!-- public/pages/fleet.html -->
 <div id="page-fleet">
     <style>
+        /* ✅ اللون المعتم على body */
+        body { background: #0a0e1a; }
+
         /* ============================================================
-           🚢 FLEET PAGE - GOLD EDITION v9.12
+           🚢 FLEET PAGE - GOLD EDITION v9.13
            ============================================================ */
 
         :root {
@@ -36,11 +39,12 @@
             padding: 0;
             margin: 0;
             font-family: var(--font);
-            background: #0a0e1a;
+            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
+            background: transparent;
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         #page-fleet::before {
@@ -90,6 +94,7 @@
             gap: 14px;
         }
 
+        /* ✅ الشعار الديناميكي */
         .fleet-header-left .header-icon {
             width: 44px;
             height: 44px;
@@ -102,6 +107,27 @@
             color: #0a1628;
             box-shadow: var(--shadow-gold);
             animation: pulseGold 2s ease-in-out infinite;
+            overflow: hidden;
+        }
+
+        /* ✅ دعم صورة الشعار */
+        .fleet-header-left .header-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+        .fleet-header-left .header-icon.has-logo img {
+            display: block;
+        }
+        .fleet-header-left .header-icon.has-logo {
+            animation: none;
+            background: transparent;
+            box-shadow: 0 0 20px rgba(230,179,30,0.3);
+        }
+        .fleet-header-left .header-icon.has-logo i {
+            display: none;
         }
 
         @keyframes pulseGold {
@@ -662,8 +688,10 @@
     ============================================================ -->
     <div class="fleet-header">
         <div class="fleet-header-left">
-            <div class="header-icon">
+            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
+            <div class="header-icon" id="fleetHeaderIcon">
                 <i class="fas fa-ship"></i>
+                <img id="globalLogo" src="" alt="شعار" style="display:none;">
             </div>
             <div>
                 <h2>السجل العام للأسطول</h2>
@@ -822,8 +850,8 @@
 
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - GOLD EDITION v9.12
-    // ✨ 5 Roles + normalizeRole + apiFetch + Cleanup
+    // 🚢 FLEET PAGE - GOLD EDITION v9.13
+    // ✨ 5 Roles + normalizeRole + apiFetch + Cleanup + Dynamic Logo
     // ============================================================
     (function() {
         'use strict';
@@ -848,7 +876,7 @@
                 delete window.refreshFleet;
             } catch (e) {}
 
-            console.log('🧹 Fleet v9.12 cleanup done');
+            console.log('🧹 Fleet v9.13 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -858,9 +886,56 @@
         window.addEventListener('pagehide', _fleetCleanup);
 
         // ============================================================
-        // 🔐 RBAC v9.12 — توحيد الأدوار
+        // 🎨 LOGO APPLY (Dynamic)
         // ============================================================
-        // مطابق تمامًا لـ LEGACY_ROLE_MAP في server.js
+        function applyLogo() {
+            try {
+                var cachedLogo = localStorage.getItem('marine_logo');
+                if (!cachedLogo) return;
+
+                var iconDiv = document.getElementById('fleetHeaderIcon');
+                var img = document.getElementById('globalLogo');
+                if (img) {
+                    img.src = cachedLogo;
+                    img.style.display = 'block';
+                }
+                if (iconDiv) {
+                    iconDiv.classList.add('has-logo');
+                }
+            } catch (e) {}
+        }
+
+        function syncLogoFromServer() {
+            var token = localStorage.getItem('marine_token') ||
+                        localStorage.getItem('token') ||
+                        localStorage.getItem('authToken') || null;
+            var headers = { 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch('/api/logo', { headers: headers, credentials: 'include' })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (data && data.success && data.logo && data.logo.dataUrl) {
+                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                        applyLogo();
+                    }
+                }).catch(function() {});
+        }
+
+        // ✅ شغّل فوراً
+        applyLogo();
+        syncLogoFromServer();
+
+        // ✅ استمع للتغييرات بين التبويبات
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'marine_logo' && e.newValue) {
+                applyLogo();
+            }
+        });
+
+        // ============================================================
+        // 🔐 RBAC v9.13 — توحيد الأدوار
+        // ============================================================
 
         var LEGACY_ROLE_MAP = {
             'super_admin': 'admin',
@@ -919,12 +994,10 @@
                    null;
         }
 
-        // ✅ استخدم apiFetch إن وُجد (من index.html v9.12)
         function fetcher(url, options) {
             if (typeof window.apiFetch === 'function') {
                 return window.apiFetch(url, options || {});
             }
-            // fallback
             var headers = Object.assign({}, (options && options.headers) || {});
             var token = getToken();
             if (token) headers['Authorization'] = 'Bearer ' + token;
@@ -933,16 +1006,13 @@
         }
 
         // ============================================================
-        // 3. PERMISSIONS — v9.12
+        // 3. PERMISSIONS
         // ============================================================
-        // ✅ يستخدم window.capabilities أولاً (المصدر الرسمي)
-        // ✅ وإلا يعتمد على role مع normalizeRole
 
         function getUser() {
             return window.currentUser || null;
         }
 
-        // ✅ إضافة / تعديل مركب: admin + manager + editor + maintenance_unit
         function canEdit() {
             if (window.capabilities && typeof window.capabilities.canCreateVessels === 'boolean') {
                 return window.capabilities.canCreateVessels || window.capabilities.canUpdateVessels;
@@ -954,7 +1024,6 @@
             return ['admin', 'manager', 'editor', 'maintenance_unit'].indexOf(role) !== -1;
         }
 
-        // ✅ حذف مركب: admin فقط
         function canDelete() {
             if (window.capabilities && typeof window.capabilities.canDeleteVessels === 'boolean') {
                 return window.capabilities.canDeleteVessels;
@@ -1418,7 +1487,7 @@
 
         document.addEventListener('DOMContentLoaded', async function() {
             if (_isDestroyed) return;
-            console.log('🚀 تحميل صفحة السجل العام - Gold Edition v9.12...');
+            console.log('🚀 تحميل صفحة السجل العام - Gold Edition v9.13...');
 
             var token = getToken();
             if (!token) {
@@ -1463,7 +1532,7 @@
             updateZones();
             await renderMain();
 
-            console.log('✅ صفحة السجل العام - Gold Edition v9.12 جاهزة');
+            console.log('✅ صفحة السجل العام - Gold Edition v9.13 جاهزة');
         });
 
         // ============================================================
