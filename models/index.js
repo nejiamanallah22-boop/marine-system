@@ -1,5 +1,5 @@
 // ============================================================
-// 📦 models/index.js - v2.4 (Production)
+// 📦 models/index.js - v2.5 (Production + Settings + Logo)
 // ============================================================
 
 console.log('');
@@ -7,18 +7,24 @@ console.log('📦 ============================================');
 console.log('📦 [MODELS] تحميل الموديلات...');
 console.log('📦 ============================================');
 
-function tryLoad(name, path) {
+function tryLoad(name, path, required = true) {
     try {
         const mod = require(path);
         console.log(`✅ [MODELS] ${name} (${typeof mod})`);
         return mod;
     } catch (err) {
-        console.error(`❌ [MODELS] فشل تحميل ${name}: ${err.message}`);
-        throw err;
+        if (required) {
+            console.error(`❌ [MODELS] فشل تحميل ${name}: ${err.message}`);
+            throw err;
+        } else {
+            console.warn(`⚠️ [MODELS] ${name} غير موجود — سيتم تجاهله`);
+            return null;
+        }
     }
 }
 
 let Vessel, User, Ticket, Log, Maintenance, Note, Notification;
+let UserSettings, SystemLogo;   // 🆕
 
 try {
     Vessel      = tryLoad('Vessel', './Vessel');
@@ -28,13 +34,10 @@ try {
     Maintenance = tryLoad('Maintenance', './Maintenance');
     Note        = tryLoad('Note', './Note');
 
-    // ✅ Notification اختياري
-    try {
-        Notification = tryLoad('Notification', './Notification');
-    } catch (e) {
-        console.warn('⚠️ [MODELS] Notification غير موجود — سيتم تجاهله');
-        Notification = null;
-    }
+    // ✅ موديلات اختيارية
+    Notification = tryLoad('Notification', './Notification', false);
+    UserSettings = tryLoad('UserSettings', './UserSettings', false);   // 🆕
+    SystemLogo   = tryLoad('SystemLogo', './SystemLogo', false);        // 🆕
 
     console.log('📦 [MODELS] ✅ جميع الموديلات تم تحميلها بنجاح');
     console.log('📦 ============================================');
@@ -59,6 +62,10 @@ if (!Maintenance) throw new Error('❌ Model "Maintenance" is not loaded');
 if (!Note) throw new Error('❌ Model "Note" is not loaded');
 
 console.log('✅ [MODELS] جميع الموديلات المطلوبة جاهزة للاستخدام');
+console.log(`   📝 Note: ${Note ? '✅' : '❌'}`);
+console.log(`   🔔 Notification: ${Notification ? '✅' : '❌'}`);
+console.log(`   ⚙️  UserSettings: ${UserSettings ? '✅' : '❌'}`);
+console.log(`   🖼️  SystemLogo: ${SystemLogo ? '✅' : '❌'}`);
 console.log('');
 
 module.exports = {
@@ -68,5 +75,7 @@ module.exports = {
     Log,
     Maintenance,
     Note,
-    Notification
+    Notification,
+    UserSettings,   // 🆕
+    SystemLogo      // 🆕
 };
