@@ -1,8 +1,11 @@
 <!-- public/pages/monitoring.html -->
 <div id="page-monitoring">
     <style>
+        /* ✅ اللون المعتم على body */
+        body { background: #0a0e1a; }
+
         /* ============================================================
-           📊 MONITORING PAGE - WITH REAL MAP (FIXED v9.1)
+           📊 MONITORING PAGE - WITH REAL MAP (FIXED v9.2)
            ============================================================ */
 
         #page-monitoring {
@@ -11,11 +14,12 @@
             padding: 0;
             margin: 0;
             font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-            background: #0a0e1a;
+            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
+            background: transparent;
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         #page-monitoring::before {
@@ -64,6 +68,7 @@
             gap: 14px;
         }
 
+        /* ✅ الشعار الديناميكي */
         .mon-header-left .icon {
             width: 44px;
             height: 44px;
@@ -75,6 +80,27 @@
             font-size: 20px;
             color: #0a1628;
             animation: pulseGold 2s ease-in-out infinite;
+            overflow: hidden;
+        }
+
+        /* ✅ دعم صورة الشعار */
+        .mon-header-left .icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+        .mon-header-left .icon.has-logo img {
+            display: block;
+        }
+        .mon-header-left .icon.has-logo {
+            animation: none;
+            background: transparent;
+            box-shadow: 0 0 20px rgba(230,179,30,0.3);
+        }
+        .mon-header-left .icon.has-logo i {
+            display: none;
         }
 
         @keyframes pulseGold {
@@ -699,7 +725,11 @@
     <!-- ===== HEADER ===== -->
     <div class="mon-header">
         <div class="mon-header-left">
-            <div class="icon"><i class="fas fa-eye"></i></div>
+            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
+            <div class="icon" id="monHeaderIcon">
+                <i class="fas fa-eye"></i>
+                <img id="globalLogo" src="" alt="شعار" style="display:none;">
+            </div>
             <div>
                 <h2>المراقبة الشاملة</h2>
                 <p>تتبع المستخدمين + جلسات النشاط - خريطة قمر صناعي حقيقية</p>
@@ -783,7 +813,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT (v9.1 - Safe + Cleanup)
+    JAVASCRIPT (v9.2 - Safe + Cleanup + Dynamic Logo)
     ============================================================ -->
     <script>
         (function() {
@@ -792,7 +822,7 @@
             console.log('🔄 monitoring.html - loading with REAL MAP...');
 
             // ============================================================
-            // ✅ v9.1: تنظيف تلقائي عند مغادرة الصفحة
+            // ✅ v9.2: تنظيف تلقائي عند مغادرة الصفحة
             // ============================================================
             var _isDestroyed = false;
             var _map = null;
@@ -807,7 +837,6 @@
                 if (_isDestroyed) return;
                 _isDestroyed = true;
 
-                // ✅ إلغاء كل المؤقتات
                 _pageIntervals.forEach(function(id) {
                     try { clearInterval(id); } catch (e) {}
                 });
@@ -818,13 +847,11 @@
                 });
                 _pageTimeouts = [];
 
-                // ✅ إلغاء resize timer
                 if (_resizeTimer) {
                     try { clearTimeout(_resizeTimer); } catch (e) {}
                     _resizeTimer = null;
                 }
 
-                // ✅ إزالة resize listener
                 if (_resizeHandler) {
                     try {
                         window.removeEventListener('resize', _resizeHandler);
@@ -832,7 +859,6 @@
                     _resizeHandler = null;
                 }
 
-                // ✅ تدمير خريطة Leaflet (الأهم!)
                 if (_map) {
                     try {
                         _markers.forEach(function(m) {
@@ -847,7 +873,6 @@
                     _map = null;
                 }
 
-                // ✅ إزالة السكربتات الديناميكية التي حمّلناها
                 _dynamicScripts.forEach(function(node) {
                     try {
                         if (node && node.parentNode) {
@@ -857,7 +882,6 @@
                 });
                 _dynamicScripts = [];
 
-                // ✅ إزالة الـ globals
                 try {
                     delete window.refreshAll;
                     delete window.terminateAll;
@@ -874,6 +898,54 @@
 
             window.addEventListener('beforeunload', _monitoringCleanup);
             window.addEventListener('pagehide', _monitoringCleanup);
+
+            // ============================================================
+            // 🎨 LOGO APPLY (Dynamic)
+            // ============================================================
+            function applyLogo() {
+                try {
+                    var cachedLogo = localStorage.getItem('marine_logo');
+                    if (!cachedLogo) return;
+
+                    var iconDiv = document.getElementById('monHeaderIcon');
+                    var img = document.getElementById('globalLogo');
+                    if (img) {
+                        img.src = cachedLogo;
+                        img.style.display = 'block';
+                    }
+                    if (iconDiv) {
+                        iconDiv.classList.add('has-logo');
+                    }
+                } catch (e) {}
+            }
+
+            function syncLogoFromServer() {
+                var token = localStorage.getItem('marine_token') ||
+                            localStorage.getItem('token') ||
+                            localStorage.getItem('authToken') || null;
+                var headers = { 'Accept': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/logo', { headers: headers, credentials: 'include' })
+                    .then(function(r) { return r.ok ? r.json() : null; })
+                    .then(function(data) {
+                        if (data && data.success && data.logo && data.logo.dataUrl) {
+                            try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                            applyLogo();
+                        }
+                    }).catch(function() {});
+            }
+
+            // ✅ شغّل فوراً
+            applyLogo();
+            syncLogoFromServer();
+
+            // ✅ استمع للتغييرات بين التبويبات
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'marine_logo' && e.newValue) {
+                    applyLogo();
+                }
+            });
 
             // ============================================================
             // HELPERS
@@ -957,15 +1029,9 @@
                     duration: '2 ساعات 20 دقيقة', status: 'نشطة' }
             ];
 
-            // ============================================================
-            // STATE
-            // ============================================================
             var currentMapType = 'satellite';
             var mapInitialized = false;
 
-            // ============================================================
-            // HELPERS
-            // ============================================================
             function getInitials(name) {
                 if (!name) return '👤';
                 var parts = name.split(' ');
@@ -1013,9 +1079,6 @@
                 return colors[region] || '#6b7280';
             }
 
-            // ============================================================
-            // TOAST - ✅ SAFE
-            // ============================================================
             function showToast(msg, type) {
                 if (_isDestroyed) return;
                 var old = document.querySelector('.toast');
@@ -1034,9 +1097,6 @@
                 _pageTimeouts.push(id);
             }
 
-            // ============================================================
-            // STATS - ✅ SAFE
-            // ============================================================
             function updateStats() {
                 if (_isDestroyed) return;
 
@@ -1068,9 +1128,6 @@
                 }
             }
 
-            // ============================================================
-            // ✅ INIT MAP - WITH CLEANUP
-            // ============================================================
             function initMap() {
                 if (_isDestroyed) return;
                 console.log('🗺️ Initializing map...');
@@ -1085,7 +1142,6 @@
                     return;
                 }
 
-                // ✅ إذا كانت الخريطة موجودة، دمرها أولاً
                 if (_map) {
                     try {
                         _markers.forEach(function(m) { try { _map.removeLayer(m); } catch (e) {} });
@@ -1096,7 +1152,6 @@
                     _map = null;
                 }
 
-                // ✅ إذا لم يكن Leaflet محمّلاً، حمّله ديناميكياً
                 if (typeof L === 'undefined') {
                     console.warn('⚠️ Leaflet not loaded, loading now...');
                     var script = document.createElement('script');
@@ -1123,7 +1178,6 @@
                     return;
                 }
 
-                // ✅ إنشاء الخريطة
                 try {
                     _map = L.map('realMap').setView([34.5, 9.5], 7);
 
@@ -1168,9 +1222,6 @@
                 }
             }
 
-            // ============================================================
-            // ✅ ADD MARKERS - WITH ESCAPE
-            // ============================================================
             function addMarkers() {
                 if (_isDestroyed) return;
                 if (!_map) return;
@@ -1204,7 +1255,6 @@
                             '<span class="popup-readiness busy">🔴 مشغول</span>' :
                             '<span class="popup-readiness offline">⚫ غير جاهز</span>');
 
-                    // ✅ escapeHtml لكل البيانات
                     var popupContent =
                         '<div style="text-align:right;font-family:Cairo,sans-serif;">' +
                         '<div class="popup-user-name">' + escapeHtml(user.name) + '</div>' +
@@ -1229,16 +1279,10 @@
                 });
             }
 
-            // ============================================================
-            // UPDATE MARKERS
-            // ============================================================
             function updateMarkers() {
                 addMarkers();
             }
 
-            // ============================================================
-            // SWITCH MAP TYPE - ✅ SAFE
-            // ============================================================
             function switchMapType(type) {
                 if (_isDestroyed) return;
                 if (!_map || !_map._tileLayers) return;
@@ -1266,9 +1310,6 @@
                 showToast('🗺️ تم التبديل إلى ' + labels[type], 'info');
             }
 
-            // ============================================================
-            // SESSIONS TABLE - ✅ SAFE
-            // ============================================================
             function renderSessions() {
                 if (_isDestroyed) return;
 
@@ -1299,9 +1340,6 @@
                 tbody.innerHTML = html;
             }
 
-            // ============================================================
-            // USER PANEL
-            // ============================================================
             function showPanel(user) {
                 if (_isDestroyed) return;
 
@@ -1345,9 +1383,6 @@
                 if (panel) panel.classList.remove('visible');
             }
 
-            // ============================================================
-            // REFRESH - ✅ SAFE
-            // ============================================================
             function refreshAll() {
                 if (_isDestroyed) return;
 
@@ -1370,9 +1405,6 @@
                 _pageTimeouts.push(id);
             }
 
-            // ============================================================
-            // TERMINATE ALL - ✅ SAFE
-            // ============================================================
             function terminateAll() {
                 if (_isDestroyed) return;
                 if (!confirm('⚠️ إنهاء جميع الجلسات النشطة؟')) return;
@@ -1384,9 +1416,6 @@
                 showToast('✅ تم إنهاء ' + active.length + ' جلسات', 'success');
             }
 
-            // ============================================================
-            // RESIZE - ✅ TRACKED
-            // ============================================================
             _resizeHandler = function() {
                 if (_isDestroyed) return;
                 if (_resizeTimer) clearTimeout(_resizeTimer);
@@ -1398,9 +1427,6 @@
                 }, 300);
             };
 
-            // ============================================================
-            // INIT
-            // ============================================================
             function init() {
                 if (_isDestroyed) return;
                 console.log('🚀 Initializing monitoring page...');
@@ -1408,13 +1434,11 @@
                 updateStats();
                 renderSessions();
 
-                // ✅ بدء تهيئة الخريطة
                 var id = setTimeout(function() {
                     if (!_isDestroyed) initMap();
                 }, 300);
                 _pageTimeouts.push(id);
 
-                // ✅ Event listeners
                 var refreshBtn = document.getElementById('refreshBtn');
                 if (refreshBtn) refreshBtn.addEventListener('click', refreshAll);
 
@@ -1442,18 +1466,12 @@
                 console.log('🗺️ Map types: Satellite (real), Standard, Terrain');
             }
 
-            // ============================================================
-            // START
-            // ============================================================
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', init);
             } else {
                 init();
             }
 
-            // ============================================================
-            // EXPOSE GLOBALS
-            // ============================================================
             window.refreshAll = refreshAll;
             window.terminateAll = terminateAll;
             window.switchMapType = switchMapType;
