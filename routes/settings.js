@@ -1,5 +1,5 @@
 // ============================================================
-// ⚙️ SETTINGS + 🖼️ LOGO + 🎨 BACKGROUND ROUTES — v2.0
+// ⚙️ SETTINGS + 🖼️ LOGO + 🎨 BACKGROUND + AUTO-INJECT — v3.0
 // ملف مستقل يُدمج في server.js
 // ⚠️ ملف JavaScript فقط — لا يحتوي على HTML
 // ============================================================
@@ -7,6 +7,8 @@
 'use strict';
 
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 
 // ============================================================
 // 📋 DEFAULT SETTINGS
@@ -134,6 +136,95 @@ function sanitizeSettings(input) {
 }
 
 // ============================================================
+// 🎨 DYNAMIC INJECT SCRIPT (Logo + Background)
+// ============================================================
+
+const DYNAMIC_INJECT_SCRIPT = `
+<script>
+(function() {
+    'use strict';
+    function applyCachedBackground() {
+        try {
+            var bgConfig = localStorage.getItem('marine_background_config');
+            if (!bgConfig) return;
+            var cfg = JSON.parse(bgConfig);
+            if (!cfg.dataUrl) return;
+            var existing = document.getElementById('marine-dynamic-bg');
+            if (existing) existing.remove();
+            var bg = document.createElement('div');
+            bg.id = 'marine-dynamic-bg';
+            bg.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
+                'background-image:url(' + cfg.dataUrl + ');' +
+                'background-size:cover;background-position:center;' +
+                'background-repeat:no-repeat;' +
+                'opacity:' + (cfg.opacity || 0.15) + ';' +
+                'filter:' + (cfg.blur > 0 ? 'blur(' + cfg.blur + 'px)' : 'none') + ';' +
+                'pointer-events:none;z-index:-1;';
+            document.body.appendChild(bg);
+        } catch (e) {}
+    }
+    function updateLogoImages(dataUrl) {
+        var selectors = ['.app-logo img','.navbar-logo img','#globalLogo','.sidebar-logo img','.brand-logo img','[data-marine-logo]','header .logo img','.logo img'];
+        selectors.forEach(function(sel) {
+            try {
+                document.querySelectorAll(sel).forEach(function(img) {
+                    if (img.tagName === 'IMG') img.src = dataUrl;
+                });
+            } catch (e) {}
+        });
+    }
+    function applyCachedLogo() {
+        try {
+            var cachedLogo = localStorage.getItem('marine_logo');
+            if (cachedLogo) updateLogoImages(cachedLogo);
+        } catch (e) {}
+    }
+    function syncFromServer() {
+        var token = localStorage.getItem('marine_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || null;
+        var headers = { 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        fetch('/api/logo', { headers: headers, credentials: 'include' })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (data && data.success && data.logo && data.logo.dataUrl) {
+                    try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                    updateLogoImages(data.logo.dataUrl);
+                }
+            }).catch(function() {});
+        fetch('/api/background', { headers: headers, credentials: 'include' })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (data && data.success && data.background && data.background.dataUrl) {
+                    var cfg = {
+                        dataUrl: data.background.dataUrl,
+                        opacity: data.background.opacity || 0.15,
+                        blur: data.background.blur || 0
+                    };
+                    try { localStorage.setItem('marine_background_config', JSON.stringify(cfg)); } catch (e) {}
+                    applyCachedBackground();
+                }
+            }).catch(function() {});
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            applyCachedBackground();
+            applyCachedLogo();
+            syncFromServer();
+        });
+    } else {
+        applyCachedBackground();
+        applyCachedLogo();
+        syncFromServer();
+    }
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'marine_background_config') applyCachedBackground();
+        if (e.key === 'marine_logo' && e.newValue) updateLogoImages(e.newValue);
+    });
+})();
+</script>
+`;
+
+// ============================================================
 // 🚀 MAIN EXPORT
 // ============================================================
 
@@ -154,6 +245,47 @@ module.exports = function registerSettingsRoutes(app, deps) {
     }
 
     console.log('✅ Registering Settings + Logo + Background routes...');
+
+    // ========================================================
+    // 🎨 AUTO-INJECT MIDDLEWARE
+    // ========================================================
+
+    app.use((req, res, next) => {
+        // تجاهل API
+        if (req.path.startsWith('/api')) return next();
+        // تجاهل الملفات الثابتة
+        if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|json|map|xml|txt|webp|pdf)$/i)) {
+            return next();
+        }
+
+        const originalSend = res.send.bind(res);
+
+        res.send = function(body) {
+            try {
+                const contentType = res.getHeader('Content-Type') || '';
+                const isHtml = typeof body === 'string' &&
+                    (String(contentType).indexOf('text/html') !== -1 || body.trim().startsWith('<!') || body.trim().startsWith('<html') || body.trim().startsWith('<div'));
+
+                if (!isHtml) return originalSend(body);
+                if (body.indexOf('marine-dynamic-bg') !== -1) return originalSend(body);
+
+                if (body.indexOf('</body>') !== -1) {
+                    body = body.replace('</body>', DYNAMIC_INJECT_SCRIPT + '</body>');
+                } else if (body.indexOf('</html>') !== -1) {
+                    body = body.replace('</html>', DYNAMIC_INJECT_SCRIPT + '</html>');
+                } else {
+                    body += DYNAMIC_INJECT_SCRIPT;
+                }
+            } catch (e) {
+                console.error('⚠️ Inject error:', e.message);
+            }
+            return originalSend(body);
+        };
+
+        next();
+    });
+
+    console.log('✅ Dynamic injection middleware registered');
 
     // ========================================================
     // 📤 MULTER
@@ -439,7 +571,7 @@ module.exports = function registerSettingsRoutes(app, deps) {
     );
 
     // ========================================================
-    // 🎨 BACKGROUND IMAGE
+    // 🎨 BACKGROUND
     // ========================================================
 
     app.get('/api/background', async (req, res) => {
@@ -645,4 +777,5 @@ module.exports = function registerSettingsRoutes(app, deps) {
     console.log('   ⚙️  /api/settings   (GET, PUT, POST reset)');
     console.log('   🖼️  /api/logo       (GET, POST upload, DELETE)');
     console.log('   🎨  /api/background (GET, POST upload, PUT settings, DELETE)');
+    console.log('   🎨  Auto-inject middleware active');
 };
