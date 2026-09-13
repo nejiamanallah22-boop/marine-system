@@ -1,724 +1,648 @@
-    /**
-     * ============================================================
-     * 🚢 MARINE SYSTEM SETTINGS v10.0
-     * ============================================================
-     */
+// ============================================================
+// ⚙️ SETTINGS + 🖼️ LOGO + 🎨 BACKGROUND ROUTES — v2.0
+// ملف مستقل يُدمج في server.js
+// ⚠️ ملف JavaScript فقط — لا يحتوي على HTML
+// ============================================================
 
-    (function() {
-        'use strict';
+'use strict';
 
-        // ============================================================
-        // 🛡️ CLEANUP STATE
-        // ============================================================
-        var _isDestroyed = false;
-        var _pageIntervals = [];
-        var _pageTimeouts = [];
-        var _eventListeners = [];
+const multer = require('multer');
 
-        function _settingsCleanup() {
-            if (_isDestroyed) return;
-            _isDestroyed = true;
+// ============================================================
+// 📋 DEFAULT SETTINGS
+// ============================================================
 
-            _pageIntervals.forEach(function(id) {
-                try { clearInterval(id); } catch (e) {}
-            });
-            _pageIntervals = [];
+const DEFAULT_SETTINGS = {
+    theme: {
+        primary: '#0a1628',
+        secondary: '#1a2a4a',
+        gold: '#e6b31e'
+    },
+    layout: {
+        darkMode: true,
+        fontSize: 'medium',
+        sidebarPosition: 'right',
+        showStats: true
+    },
+    security: {
+        emailNotifications: true,
+        smsNotifications: false,
+        sessionTimeout: 60
+    },
+    notifications: {
+        emergencyAlerts: true,
+        maintenanceAlerts: true,
+        performanceReports: 'weekly'
+    },
+    branding: {
+        logoSize: 'medium'
+    }
+};
 
-            _pageTimeouts.forEach(function(id) {
-                try { clearTimeout(id); } catch (e) {}
-            });
-            _pageTimeouts = [];
+// ============================================================
+// 🔧 HELPERS
+// ============================================================
 
-            _eventListeners.forEach(function(item) {
-                try {
-                    if (item.el && item.fn) {
-                        item.el.removeEventListener(item.type, item.fn);
-                    }
-                } catch (e) {}
-            });
-            _eventListeners = [];
+function deepMerge(defaults, saved) {
+    const result = JSON.parse(JSON.stringify(defaults));
+    if (!saved || typeof saved !== 'object') return result;
 
-            try {
-                delete window.loadSettings;
-                delete window.getToken;
-                delete window.showToast;
-                delete window._deleteLogo;
-            } catch (e) {}
-
-            console.log('🧹 Settings v10.0 cleanup done');
+    for (const key of Object.keys(saved)) {
+        if (
+            saved[key] &&
+            typeof saved[key] === 'object' &&
+            !Array.isArray(saved[key]) &&
+            defaults[key] &&
+            typeof defaults[key] === 'object'
+        ) {
+            result[key] = { ...defaults[key], ...saved[key] };
+        } else if (saved[key] !== undefined && saved[key] !== null) {
+            result[key] = saved[key];
         }
+    }
+    return result;
+}
 
-        window._pageCleanup = window._pageCleanup || [];
-        window._pageCleanup.push(_settingsCleanup);
+function sanitizeSettings(input) {
+    const out = {};
 
-        window.addEventListener('beforeunload', _settingsCleanup);
-        window.addEventListener('pagehide', _settingsCleanup);
-
-        // ============================================================
-        // 🔐 RBAC
-        // ============================================================
-        var LEGACY_ROLE_MAP = {
-            'super_admin': 'admin',
-            'مسؤول': 'admin',
-            'مدير': 'manager',
-            'محرر': 'editor',
-            'مشغل': 'maintenance_unit',
-            'operator': 'maintenance_unit',
-            'user': 'viewer',
-            'مشاهد': 'viewer'
-        };
-
-        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-
-        function normalizeRole(role) {
-            if (!role) return 'viewer';
-            var r = String(role).trim();
-            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
-            return LEGACY_ROLE_MAP[r] || 'viewer';
+    if (input.theme) {
+        out.theme = {};
+        const hexRegex = /^#[0-9a-fA-F]{3,8}$/;
+        if (typeof input.theme.primary === 'string' && hexRegex.test(input.theme.primary)) {
+            out.theme.primary = input.theme.primary;
         }
-
-        function isAdmin() {
-            var u = window.currentUser;
-            if (!u) return false;
-            return normalizeRole(u.role) === 'admin';
+        if (typeof input.theme.secondary === 'string' && hexRegex.test(input.theme.secondary)) {
+            out.theme.secondary = input.theme.secondary;
         }
-
-        // ============================================================
-        // 🔧 HELPERS
-        // ============================================================
-        function $(id) { return document.getElementById(id); }
-
-        function getToken() {
-            return localStorage.getItem('marine_token') ||
-                   localStorage.getItem('token') ||
-                   localStorage.getItem('authToken') ||
-                   null;
+        if (typeof input.theme.gold === 'string' && hexRegex.test(input.theme.gold)) {
+            out.theme.gold = input.theme.gold;
         }
+    }
 
-        function fetcher(url, options) {
-            if (typeof window.apiFetch === 'function') {
-                return window.apiFetch(url, options || {});
-            }
-            var token = getToken();
-            var headers = Object.assign({
-                'Accept': 'application/json'
-            }, (options && options.headers) || {});
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            return fetch(url, Object.assign({}, options || {}, {
-                headers: headers,
-                credentials: 'include'
-            }));
+    if (input.layout) {
+        out.layout = {};
+        if (typeof input.layout.darkMode === 'boolean') {
+            out.layout.darkMode = input.layout.darkMode;
         }
-
-        function addSafeListener(el, type, fn) {
-            if (!el) return;
-            el.addEventListener(type, fn);
-            _eventListeners.push({ el: el, type: type, fn: fn });
+        if (['small', 'medium', 'large'].includes(input.layout.fontSize)) {
+            out.layout.fontSize = input.layout.fontSize;
         }
-
-        // ============================================================
-        // 🍞 TOAST
-        // ============================================================
-        function showToast(message, type, duration) {
-            if (_isDestroyed) return;
-            type = type || 'info';
-            duration = duration || 3500;
-
-            var existing = document.querySelector('.settings-toast');
-            if (existing) existing.remove();
-
-            var toast = document.createElement('div');
-            toast.className = 'settings-toast ' + type;
-
-            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-
-            var icon = document.createElement('span');
-            icon.textContent = icons[type] || icons.info;
-
-            var text = document.createElement('span');
-            text.textContent = String(message || '');
-
-            toast.appendChild(icon);
-            toast.appendChild(text);
-            document.body.appendChild(toast);
-
-            var id = setTimeout(function() {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(10px)';
-                toast.style.transition = 'all .25s ease';
-                var id2 = setTimeout(function() {
-                    if (toast.parentNode) toast.remove();
-                }, 250);
-                _pageTimeouts.push(id2);
-            }, duration);
-            _pageTimeouts.push(id);
+        if (['right', 'left'].includes(input.layout.sidebarPosition)) {
+            out.layout.sidebarPosition = input.layout.sidebarPosition;
         }
-
-        // ============================================================
-        // 🎛️ APPLY CARD VISIBILITY
-        // ============================================================
-        function applyCardVisibility() {
-            if (_isDestroyed) return;
-
-            if (!isAdmin()) {
-                document.querySelectorAll('.settings-card').forEach(function(card) {
-                    card.classList.add('hidden');
-                });
-
-                var aboutCard = $('aboutCard');
-                if (aboutCard) aboutCard.classList.remove('hidden');
-
-                var saveAllBtn = $('saveAllBtn');
-                var resetBtn = $('resetDefaultsBtn');
-                if (saveAllBtn) {
-                    saveAllBtn.disabled = true;
-                    saveAllBtn.title = 'متاح للمسؤول فقط';
-                }
-                if (resetBtn) {
-                    resetBtn.disabled = true;
-                    resetBtn.title = 'متاح للمسؤول فقط';
-                }
-
-                console.log('🔐 Non-admin: cards hidden');
-                return;
-            }
-
-            console.log('👑 Admin: all cards visible');
+        if (typeof input.layout.showStats === 'boolean') {
+            out.layout.showStats = input.layout.showStats;
         }
+    }
 
-        // ============================================================
-        // 🎨 APPLY THEME GLOBALLY (يفعّل الألوان في كل الصفحات)
-        // ============================================================
-        function applyThemeGlobally(theme) {
-            if (!theme) return;
-
-            try {
-                localStorage.setItem('marine_theme', JSON.stringify({
-                    primary: theme.primary,
-                    secondary: theme.secondary,
-                    gold: theme.gold
-                }));
-            } catch (e) {}
-
-            if (theme.primary) {
-                document.documentElement.style.setProperty('--primary-dark', theme.primary);
-            }
-            if (theme.secondary) {
-                document.documentElement.style.setProperty('--secondary', theme.secondary);
-            }
-            if (theme.gold) {
-                document.documentElement.style.setProperty('--gold', theme.gold);
-                document.documentElement.style.setProperty('--gold-light', theme.gold);
-            }
+    if (input.security) {
+        out.security = {};
+        if (typeof input.security.emailNotifications === 'boolean') {
+            out.security.emailNotifications = input.security.emailNotifications;
         }
+        if (typeof input.security.smsNotifications === 'boolean') {
+            out.security.smsNotifications = input.security.smsNotifications;
+        }
+        if (input.security.sessionTimeout !== undefined) {
+            const t = Number(input.security.sessionTimeout);
+            out.security.sessionTimeout = (!Number.isFinite(t) || t < 5 || t > 480) ? 60 : t;
+        }
+    }
 
-        // ============================================================
-        // 🖼️ LOGO FUNCTIONS
-        // ============================================================
-        function setLogoPreview(dataUrl, fileName) {
-            var placeholder = $('logoPlaceholder');
-            var preview = $('logoPreview');
-            var img = $('logoPreviewImg');
-            var nameEl = $('logoName');
-            var appImg = $('appLogoImg');
-            var appFallback = $('appLogoFallback');
+    if (input.notifications) {
+        out.notifications = {};
+        if (typeof input.notifications.emergencyAlerts === 'boolean') {
+            out.notifications.emergencyAlerts = input.notifications.emergencyAlerts;
+        }
+        if (typeof input.notifications.maintenanceAlerts === 'boolean') {
+            out.notifications.maintenanceAlerts = input.notifications.maintenanceAlerts;
+        }
+        if (['daily', 'weekly', 'monthly', 'never'].includes(input.notifications.performanceReports)) {
+            out.notifications.performanceReports = input.notifications.performanceReports;
+        }
+    }
 
-            if (dataUrl) {
-                if (placeholder) placeholder.style.display = 'none';
-                if (preview) preview.style.display = 'flex';
-                if (img) img.src = dataUrl;
-                if (nameEl && fileName) nameEl.textContent = fileName;
+    if (input.branding) {
+        out.branding = {};
+        if (['small', 'medium', 'large'].includes(input.branding.logoSize)) {
+            out.branding.logoSize = input.branding.logoSize;
+        }
+    }
 
-                if (appImg) { appImg.src = dataUrl; appImg.style.display = 'block'; }
-                if (appFallback) appFallback.style.display = 'none';
+    return out;
+}
 
-                try { localStorage.setItem('marine_logo', dataUrl); } catch (e) {}
+// ============================================================
+// 🚀 MAIN EXPORT
+// ============================================================
+
+module.exports = function registerSettingsRoutes(app, deps) {
+    const {
+        UserSettings,
+        SystemLogo,
+        authenticateAccessToken,
+        requireAdmin,
+        requirePermission,
+        csrfProtection,
+        addSystemLog,
+        notify
+    } = deps;
+
+    if (!authenticateAccessToken || !requireAdmin || !UserSettings || !SystemLogo) {
+        throw new Error('registerSettingsRoutes: missing required dependencies');
+    }
+
+    console.log('✅ Registering Settings + Logo + Background routes...');
+
+    // ========================================================
+    // 📤 MULTER
+    // ========================================================
+
+    const logoUpload = multer({
+        storage: multer.memoryStorage(),
+        limits: { fileSize: 2 * 1024 * 1024, files: 1 },
+        fileFilter: (req, file, cb) => {
+            const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
+            if (allowed.includes(file.mimetype)) {
+                cb(null, true);
             } else {
-                if (placeholder) placeholder.style.display = 'flex';
-                if (preview) preview.style.display = 'none';
-                if (img) img.src = '';
-
-                if (appImg) { appImg.src = ''; appImg.style.display = 'none'; }
-                if (appFallback) appFallback.style.display = 'inline';
-
-                try { localStorage.removeItem('marine_logo'); } catch (e) {}
+                cb(new Error('نوع الصورة غير مدعوم. استخدم PNG, JPG, SVG, أو WebP.'));
             }
         }
+    });
 
-        async function loadLogo() {
-            try {
-                var response = await fetcher('/api/logo', { method: 'GET' });
-                if (!response.ok) return;
-
-                var data = await response.json();
-                if (data.success && data.logo && data.logo.dataUrl) {
-                    setLogoPreview(data.logo.dataUrl, '');
-                } else {
-                    try {
-                        var cached = localStorage.getItem('marine_logo');
-                        if (cached) setLogoPreview(cached, '');
-                    } catch (e) {}
-                }
-            } catch (e) {
-                console.warn('⚠️ Load logo error:', e.message);
-                try {
-                    var cached2 = localStorage.getItem('marine_logo');
-                    if (cached2) setLogoPreview(cached2, '');
-                } catch (e2) {}
+    const bgUpload = multer({
+        storage: multer.memoryStorage(),
+        limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+        fileFilter: (req, file, cb) => {
+            const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+            if (allowed.includes(file.mimetype)) {
+                cb(null, true);
+            } else {
+                cb(new Error('نوع الصورة غير مدعوم. استخدم PNG, JPG, أو WebP.'));
             }
         }
+    });
 
-        async function uploadLogo(file) {
-            if (!file) return;
+    // ========================================================
+    // ⚙️ SETTINGS
+    // ========================================================
 
-            if (file.size > 2 * 1024 * 1024) {
-                showToast('❌ الصورة أكبر من 2 MB', 'error');
-                return;
-            }
-
-            var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
-            if (allowed.indexOf(file.type) === -1) {
-                showToast('❌ نوع الصورة غير مدعوم. استخدم PNG, JPG, SVG, أو WebP.', 'error');
-                return;
-            }
-
-            showToast('⏳ جاري رفع الشعار...', 'info');
-
+    app.get('/api/settings',
+        authenticateAccessToken,
+        requirePermission('settings:manage'),
+        async (req, res) => {
             try {
-                var formData = new FormData();
-                formData.append('logo', file);
+                const doc = await UserSettings.findOne({ userId: req.user.id }).lean();
+                const settings = deepMerge(DEFAULT_SETTINGS, doc?.settings || {});
 
-                var token = getToken();
-                var headers = {};
-                if (token) headers['Authorization'] = 'Bearer ' + token;
-
-                var csrfMatch = document.cookie.match(/marine_csrf=([^;]+)/);
-                if (csrfMatch) headers['X-CSRF-Token'] = csrfMatch[1];
-
-                var response = await fetch('/api/logo/upload', {
-                    method: 'POST',
-                    headers: headers,
-                    credentials: 'include',
-                    body: formData
+                return res.json({
+                    success: true,
+                    settings,
+                    updatedAt: doc?.updatedAt || null
                 });
-
-                var data = await response.json().catch(function() { return {}; });
-
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || ('خطأ ' + response.status));
-                }
-
-                setLogoPreview(data.logo.dataUrl, file.name);
-                showToast('✅ تم رفع الشعار بنجاح', 'success');
-
             } catch (error) {
-                console.error('❌ Upload logo error:', error);
-                showToast('❌ ' + error.message, 'error');
-            }
-        }
-
-        async function deleteLogo(event) {
-            if (event) { event.preventDefault(); event.stopPropagation(); }
-
-            if (!confirm('هل تريد حذف الشعار الحالي؟')) return;
-
-            try {
-                var response = await fetcher('/api/logo', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
+                console.error('❌ GET /api/settings error:', error.message);
+                return res.status(500).json({
+                    success: false,
+                    error: 'فشل تحميل الإعدادات'
                 });
-
-                if (!response.ok) {
-                    var err = await response.json().catch(function() { return {}; });
-                    throw new Error(err.error || 'فشل الحذف');
-                }
-
-                setLogoPreview(null, null);
-                showToast('✅ تم حذف الشعار', 'success');
-
-            } catch (error) {
-                console.error('❌ Delete logo error:', error);
-                showToast('❌ ' + error.message, 'error');
             }
         }
+    );
 
-        window._deleteLogo = deleteLogo;
-
-        // ============================================================
-        // 📊 LOAD SETTINGS
-        // ============================================================
-        async function loadSettings() {
-            if (_isDestroyed) return;
-
-            var token = getToken();
-            if (!token) {
-                console.warn('⚠️ No token');
-                showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-                return;
-            }
-
-            if (!isAdmin()) {
-                console.log('ℹ️ Non-admin: skip settings load');
-                return;
-            }
-
-            console.log('📡 Loading settings...');
-
+    app.put('/api/settings',
+        authenticateAccessToken,
+        requirePermission('settings:manage'),
+        csrfProtection,
+        async (req, res) => {
             try {
-                var response = await fetcher('/api/settings', { method: 'GET' });
+                const incoming = sanitizeSettings(req.body || {});
 
-                if (!response.ok) {
-                    if (response.status === 403) {
-                        throw new Error('ليس لديك صلاحية الوصول للإعدادات');
-                    }
-                    throw new Error('فشل تحميل الإعدادات: ' + response.status);
+                const existing = await UserSettings.findOne({ userId: req.user.id }).lean();
+                const base = deepMerge(DEFAULT_SETTINGS, existing?.settings || {});
+                const merged = deepMerge(base, incoming);
+
+                const doc = await UserSettings.findOneAndUpdate(
+                    { userId: req.user.id },
+                    {
+                        userId: req.user.id,
+                        settings: merged,
+                        updatedAt: new Date()
+                    },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
+                );
+
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'update',
+                        resource: 'settings',
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId
+                    }).catch(() => {});
                 }
 
-                var data = await response.json();
-
-                if (data && data.settings) {
-                    applySettings(data.settings);
-                }
-
-            } catch (error) {
-                console.error('❌ Load settings error:', error);
-                if (_isDestroyed) return;
-                showToast('❌ ' + error.message, 'error');
-            }
-        }
-
-        // ============================================================
-        // 🎨 APPLY SETTINGS TO UI
-        // ============================================================
-        function applySettings(settings) {
-            if (_isDestroyed) return;
-            if (!settings) return;
-
-            if (settings.theme) {
-                var t = settings.theme;
-                if (t.primary) document.documentElement.style.setProperty('--primary-dark', t.primary);
-                if (t.secondary) document.documentElement.style.setProperty('--secondary', t.secondary);
-                if (t.gold) {
-                    document.documentElement.style.setProperty('--gold', t.gold);
-                    document.documentElement.style.setProperty('--gold-light', t.gold);
-                }
-                applyThemeGlobally(t);
-            }
-
-            if (settings.layout) {
-                var el;
-                el = $('darkMode'); if (el) el.checked = settings.layout.darkMode !== false;
-                el = $('fontSize'); if (el) el.value = settings.layout.fontSize || 'medium';
-                el = $('sidebarPosition'); if (el) el.value = settings.layout.sidebarPosition || 'right';
-                el = $('showStats'); if (el) el.checked = settings.layout.showStats !== false;
-            }
-
-            if (settings.security) {
-                var el2;
-                el2 = $('emailNotifications'); if (el2) el2.checked = settings.security.emailNotifications !== false;
-                el2 = $('smsNotifications'); if (el2) el2.checked = settings.security.smsNotifications === true;
-                el2 = $('sessionTimeout');
-                if (el2) {
-                    var t2 = settings.security.sessionTimeout || 60;
-                    el2.value = Math.min(Math.max(t2, 5), 480);
-                }
-            }
-
-            if (settings.notifications) {
-                var el3;
-                el3 = $('emergencyAlerts'); if (el3) el3.checked = settings.notifications.emergencyAlerts !== false;
-                el3 = $('maintenanceAlerts'); if (el3) el3.checked = settings.notifications.maintenanceAlerts !== false;
-                el3 = $('performanceReports'); if (el3) el3.value = settings.notifications.performanceReports || 'weekly';
-            }
-
-            if (settings.branding) {
-                var el4 = $('logoSize');
-                if (el4) el4.value = settings.branding.logoSize || 'medium';
-            }
-        }
-
-        // ============================================================
-        // 💾 COLLECT SETTINGS
-        // ============================================================
-        function collectSettings() {
-            var settings = {};
-
-            var activeTheme = document.querySelector('#colorPicker .color-option.active');
-            var activeGold = document.querySelector('#goldColorPicker .color-option.active');
-
-            settings.theme = {
-                primary: activeTheme ? activeTheme.dataset.primary : '#0a1628',
-                secondary: activeTheme ? activeTheme.dataset.secondary : '#1a2a4a',
-                gold: activeGold ? activeGold.dataset.gold : '#e6b31e'
-            };
-
-            settings.layout = {
-                darkMode: $('darkMode') ? $('darkMode').checked : true,
-                fontSize: $('fontSize') ? $('fontSize').value : 'medium',
-                sidebarPosition: $('sidebarPosition') ? $('sidebarPosition').value : 'right',
-                showStats: $('showStats') ? $('showStats').checked : true
-            };
-
-            settings.security = {
-                emailNotifications: $('emailNotifications') ? $('emailNotifications').checked : true,
-                smsNotifications: $('smsNotifications') ? $('smsNotifications').checked : false,
-                sessionTimeout: $('sessionTimeout') ? Math.min(Math.max(parseInt($('sessionTimeout').value) || 60, 5), 480) : 60
-            };
-
-            settings.notifications = {
-                emergencyAlerts: $('emergencyAlerts') ? $('emergencyAlerts').checked : true,
-                maintenanceAlerts: $('maintenanceAlerts') ? $('maintenanceAlerts').checked : true,
-                performanceReports: $('performanceReports') ? $('performanceReports').value : 'weekly'
-            };
-
-            settings.branding = {
-                logoSize: $('logoSize') ? $('logoSize').value : 'medium'
-            };
-
-            return settings;
-        }
-
-        // ============================================================
-        // 💾 SAVE SETTINGS
-        // ============================================================
-        async function saveSettings() {
-            if (_isDestroyed) return;
-
-            if (!isAdmin()) {
-                showToast('⚠️ ليس لديك صلاحية الحفظ', 'error');
-                return;
-            }
-
-            var settings = collectSettings();
-
-            try {
-                var response = await fetcher('/api/settings', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(settings)
+                return res.json({
+                    success: true,
+                    message: 'تم حفظ الإعدادات',
+                    settings: doc.settings,
+                    updatedAt: doc.updatedAt
                 });
+            } catch (error) {
+                console.error('❌ PUT /api/settings error:', error.message);
+                return res.status(500).json({
+                    success: false,
+                    error: 'فشل حفظ الإعدادات'
+                });
+            }
+        }
+    );
 
-                if (!response.ok) {
-                    var errData = null;
-                    try { errData = await response.json(); } catch (_) {}
-                    throw new Error(
-                        (errData && (errData.error || errData.message)) ||
-                        'فشل الحفظ'
-                    );
+    app.post('/api/settings/reset',
+        authenticateAccessToken,
+        requirePermission('settings:manage'),
+        csrfProtection,
+        async (req, res) => {
+            try {
+                await UserSettings.deleteOne({ userId: req.user.id });
+
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'reset',
+                        resource: 'settings',
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId
+                    }).catch(() => {});
                 }
 
-                showToast('✅ تم حفظ الإعدادات', 'success');
-
-                applySettings(settings);
-                applyThemeGlobally(settings.theme);
-
+                return res.json({
+                    success: true,
+                    message: 'تم استعادة الإعدادات الافتراضية',
+                    settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
+                });
             } catch (error) {
-                console.error('❌ Save error:', error);
-                showToast('❌ ' + error.message, 'error');
+                console.error('❌ POST /api/settings/reset error:', error.message);
+                return res.status(500).json({
+                    success: false,
+                    error: 'فشل استعادة الإعدادات'
+                });
             }
         }
+    );
 
-        // ============================================================
-        // 🖼️ PREVIEW THEME
-        // ============================================================
-        function updatePreview() {
-            var activeTheme = document.querySelector('#colorPicker .color-option.active');
-            var activeGold = document.querySelector('#goldColorPicker .color-option.active');
+    // ========================================================
+    // 🖼️ LOGO
+    // ========================================================
 
-            var pv = $('previewPrimary');
-            var sv = $('previewSecondary');
-            var gv = $('previewGold');
-            var cv = $('previewColors');
-
-            if (activeTheme && pv) pv.style.background = activeTheme.dataset.primary;
-            if (activeTheme && sv) sv.style.background = activeTheme.dataset.secondary;
-            if (activeGold && gv) gv.style.background = activeGold.dataset.gold;
-            if (activeTheme && activeGold && cv) {
-                cv.textContent = (activeTheme.dataset.primary || '') + ' • ' +
-                                 (activeTheme.dataset.secondary || '') + ' • ' +
-                                 (activeGold.dataset.gold || '');
+    app.get('/api/logo', async (req, res) => {
+        try {
+            const logo = await SystemLogo.findOne({ key: 'system_logo' }).lean();
+            if (!logo) {
+                return res.json({ success: true, logo: null });
             }
+            return res.json({
+                success: true,
+                logo: {
+                    dataUrl: logo.dataUrl,
+                    mimetype: logo.mimetype,
+                    size: logo.size,
+                    uploadedAt: logo.uploadedAt
+                }
+            });
+        } catch (error) {
+            console.error('❌ GET /api/logo error:', error.message);
+            return res.status(500).json({
+                success: false,
+                error: 'فشل تحميل الشعار'
+            });
         }
+    });
 
-        // ============================================================
-        // 🚀 INIT
-        // ============================================================
-        function init() {
-            if (_isDestroyed) return;
-
-            console.log('🚀 Settings v10.0 initializing...');
-            console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
-            console.log('👑 isAdmin:', isAdmin());
-
-            applyCardVisibility();
-
-            if (isAdmin()) {
-                loadSettings();
-            }
-
-            // ✅ Color pickers
-            document.querySelectorAll('#colorPicker .color-option').forEach(function(btn) {
-                addSafeListener(btn, 'click', function() {
-                    document.querySelectorAll('#colorPicker .color-option').forEach(function(b) {
-                        b.classList.remove('active');
-                        b.setAttribute('aria-pressed', 'false');
+    app.post('/api/logo/upload',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        logoUpload.single('logo'),
+        async (req, res) => {
+            try {
+                if (!req.file) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'لم يتم رفع أي صورة'
                     });
-                    this.classList.add('active');
-                    this.setAttribute('aria-pressed', 'true');
-                    updatePreview();
-                });
-            });
+                }
 
-            document.querySelectorAll('#goldColorPicker .color-option').forEach(function(btn) {
-                addSafeListener(btn, 'click', function() {
-                    document.querySelectorAll('#goldColorPicker .color-option').forEach(function(b) {
-                        b.classList.remove('active');
-                        b.setAttribute('aria-pressed', 'false');
+                const base64 = req.file.buffer.toString('base64');
+                const dataUrl = `data:${req.file.mimetype};base64,${base64}`;
+
+                if (dataUrl.length > 2.8 * 1024 * 1024) {
+                    return res.status(413).json({
+                        success: false,
+                        error: 'الصورة كبيرة جدًا. الحد الأقصى 2 MB.'
                     });
-                    this.classList.add('active');
-                    this.setAttribute('aria-pressed', 'true');
-                    updatePreview();
-                });
-            });
+                }
 
-            updatePreview();
+                const logo = await SystemLogo.findOneAndUpdate(
+                    { key: 'system_logo' },
+                    {
+                        key: 'system_logo',
+                        dataUrl,
+                        mimetype: req.file.mimetype,
+                        size: req.file.size,
+                        originalName: req.file.originalname,
+                        uploadedBy: req.user.username,
+                        uploadedAt: new Date()
+                    },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
+                );
 
-            // ✅ Save buttons
-            addSafeListener($('saveAllBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'upload',
+                        resource: 'logo',
+                        resourceName: req.file.originalname,
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId,
+                        details: { size: req.file.size, mimetype: req.file.mimetype }
+                    }).catch(() => {});
+                }
 
-            addSafeListener($('saveThemeBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
+                console.log('✅ Logo uploaded:', req.file.originalname, `(${req.file.size} bytes)`);
 
-            addSafeListener($('saveLayoutBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            addSafeListener($('saveSecurityBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            addSafeListener($('saveNotificationsBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            addSafeListener($('saveLogoBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            // ✅ Refresh
-            addSafeListener($('refreshBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                showToast('🔄 جاري التحديث...', 'info');
-                loadSettings();
-                loadLogo();
-            });
-
-            // ✅ Reset
-            addSafeListener($('resetDefaultsBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                if (!confirm('⚠️ هل أنت متأكد من استعادة الإعدادات الافتراضية؟')) return;
-
-                fetcher('/api/settings/reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                })
-                .then(function(r) {
-                    if (!r.ok) throw new Error('فشل الاستعادة');
-                    return r.json();
-                })
-                .then(function() {
-                    showToast('✅ تم استعادة الإعدادات الافتراضية', 'success');
-                    setTimeout(function() { loadSettings(); }, 500);
-                })
-                .catch(function(err) {
-                    showToast('❌ ' + err.message, 'error');
-                });
-            });
-
-            // ========================================================
-            // 🖼️ LOGO INIT — ربط رفع الشعار
-            // ========================================================
-            var logoFileInput = $('logoFileInput');
-            var logoDropZone = $('logoDropZone');
-
-            if (logoFileInput) {
-                addSafeListener(logoFileInput, 'change', function() {
-                    if (this.files && this.files[0]) {
-                        uploadLogo(this.files[0]);
-                        this.value = '';
+                return res.json({
+                    success: true,
+                    message: 'تم رفع الشعار بنجاح',
+                    logo: {
+                        dataUrl,
+                        mimetype: req.file.mimetype,
+                        size: req.file.size,
+                        uploadedAt: logo.uploadedAt
                     }
                 });
+
+            } catch (error) {
+                console.error('❌ POST /api/logo/upload error:', error.message);
+                if (error.message && error.message.includes('نوع الصورة')) {
+                    return res.status(400).json({ success: false, error: error.message });
+                }
+                return res.status(500).json({
+                    success: false,
+                    error: 'فشل رفع الشعار'
+                });
             }
+        }
+    );
 
-            if (logoDropZone) {
-                addSafeListener(logoDropZone, 'click', function(e) {
-                    if (e.target.closest('.logo-actions')) return;
-                    if (logoFileInput) logoFileInput.click();
+    app.delete('/api/logo',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        async (req, res) => {
+            try {
+                const result = await SystemLogo.deleteOne({ key: 'system_logo' });
+
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'delete',
+                        resource: 'logo',
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId
+                    }).catch(() => {});
+                }
+
+                return res.json({
+                    success: true,
+                    message: 'تم حذف الشعار',
+                    deleted: result.deletedCount
                 });
+            } catch (error) {
+                console.error('❌ DELETE /api/logo error:', error.message);
+                return res.status(500).json({
+                    success: false,
+                    error: 'فشل حذف الشعار'
+                });
+            }
+        }
+    );
 
-                ['dragenter', 'dragover'].forEach(function(evt) {
-                    addSafeListener(logoDropZone, evt, function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        logoDropZone.classList.add('dragover');
+    // ========================================================
+    // 🎨 BACKGROUND IMAGE
+    // ========================================================
+
+    app.get('/api/background', async (req, res) => {
+        try {
+            const bg = await SystemLogo.findOne({ key: 'system_background' }).lean();
+            if (!bg) {
+                return res.json({ success: true, background: null });
+            }
+            return res.json({
+                success: true,
+                background: {
+                    dataUrl: bg.dataUrl,
+                    mimetype: bg.mimetype,
+                    size: bg.size,
+                    opacity: typeof bg.opacity === 'number' ? bg.opacity : 0.15,
+                    blur: typeof bg.blur === 'number' ? bg.blur : 0,
+                    uploadedAt: bg.uploadedAt
+                }
+            });
+        } catch (error) {
+            console.error('❌ GET /api/background error:', error.message);
+            return res.status(500).json({
+                success: false,
+                error: 'فشل تحميل الخلفية'
+            });
+        }
+    });
+
+    app.post('/api/background/upload',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        bgUpload.single('background'),
+        async (req, res) => {
+            try {
+                if (!req.file) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'لم يتم رفع أي صورة'
                     });
-                });
+                }
 
-                ['dragleave', 'drop'].forEach(function(evt) {
-                    addSafeListener(logoDropZone, evt, function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        logoDropZone.classList.remove('dragover');
+                const base64 = req.file.buffer.toString('base64');
+                const dataUrl = `data:${req.file.mimetype};base64,${base64}`;
+
+                if (dataUrl.length > 6.5 * 1024 * 1024) {
+                    return res.status(413).json({
+                        success: false,
+                        error: 'الصورة كبيرة جدًا. الحد الأقصى 5 MB.'
                     });
-                });
+                }
 
-                addSafeListener(logoDropZone, 'drop', function(e) {
-                    var files = e.dataTransfer && e.dataTransfer.files;
-                    if (files && files[0]) {
-                        uploadLogo(files[0]);
+                const opacityInput = Number(req.body.opacity);
+                const blurInput = Number(req.body.blur);
+
+                const opacity = Number.isFinite(opacityInput)
+                    ? Math.min(Math.max(opacityInput, 0.05), 0.8)
+                    : 0.15;
+                const blur = Number.isFinite(blurInput)
+                    ? Math.min(Math.max(blurInput, 0), 20)
+                    : 0;
+
+                const bg = await SystemLogo.findOneAndUpdate(
+                    { key: 'system_background' },
+                    {
+                        key: 'system_background',
+                        dataUrl,
+                        mimetype: req.file.mimetype,
+                        size: req.file.size,
+                        originalName: req.file.originalname,
+                        opacity,
+                        blur,
+                        uploadedBy: req.user.username,
+                        uploadedAt: new Date()
+                    },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
+                );
+
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'upload',
+                        resource: 'background',
+                        resourceName: req.file.originalname,
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId,
+                        details: { size: req.file.size, opacity, blur }
+                    }).catch(() => {});
+                }
+
+                console.log('✅ Background uploaded:', req.file.originalname, `(${req.file.size} bytes)`);
+
+                return res.json({
+                    success: true,
+                    message: 'تم رفع صورة الخلفية بنجاح',
+                    background: {
+                        dataUrl,
+                        mimetype: req.file.mimetype,
+                        size: req.file.size,
+                        opacity: bg.opacity,
+                        blur: bg.blur,
+                        uploadedAt: bg.uploadedAt
                     }
                 });
+
+            } catch (error) {
+                console.error('❌ POST /api/background/upload error:', error.message);
+                if (error.message && error.message.includes('نوع الصورة')) {
+                    return res.status(400).json({ success: false, error: error.message });
+                }
+                return res.status(500).json({
+                    success: false,
+                    error: 'فشل رفع الخلفية'
+                });
             }
-
-            // ✅ تحميل الشعار عند البدء
-            loadLogo();
-
-            console.log('✅ Settings v10.0 ready');
         }
+    );
 
-        // ============================================================
-        // 🏁 BOOT
-        // ============================================================
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                var id = setTimeout(function() {
-                    if (!_isDestroyed) init();
-                }, 50);
-                _pageTimeouts.push(id);
-            }, { once: true });
-        } else {
-            var id0 = setTimeout(function() {
-                if (!_isDestroyed) init();
-            }, 50);
-            _pageTimeouts.push(id0);
+    app.put('/api/background/settings',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        async (req, res) => {
+            try {
+                const { opacity, blur } = req.body || {};
+
+                const op = Number.isFinite(Number(opacity))
+                    ? Math.min(Math.max(Number(opacity), 0.05), 0.8)
+                    : 0.15;
+                const bl = Number.isFinite(Number(blur))
+                    ? Math.min(Math.max(Number(blur), 0), 20)
+                    : 0;
+
+                const bg = await SystemLogo.findOneAndUpdate(
+                    { key: 'system_background' },
+                    { $set: { opacity: op, blur: bl } },
+                    { new: true }
+                );
+
+                if (!bg) {
+                    return res.status(404).json({
+                        success: false,
+                        error: 'لا توجد صورة خلفية محفوظة'
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    message: 'تم تحديث إعدادات الخلفية',
+                    background: {
+                        opacity: bg.opacity,
+                        blur: bg.blur
+                    }
+                });
+            } catch (error) {
+                console.error('❌ PUT /api/background/settings error:', error.message);
+                return res.status(500).json({
+                    success: false,
+                    error: 'فشل تحديث الإعدادات'
+                });
+            }
         }
+    );
 
-        // ============================================================
-        // 🌐 EXPOSE
-        // ============================================================
-        window.loadSettings = loadSettings;
-        window.getToken = getToken;
-        window.showToast = showToast;
+    app.delete('/api/background',
+        authenticateAccessToken,
+        requireAdmin,
+        csrfProtection,
+        async (req, res) => {
+            try {
+                const result = await SystemLogo.deleteOne({ key: 'system_background' });
 
-    })();
-    </script>
-</div>
+                if (typeof addSystemLog === 'function') {
+                    addSystemLog({
+                        userId: req.user.id,
+                        userName: req.user.name,
+                        action: 'delete',
+                        resource: 'background',
+                        status: 'success',
+                        ip: req.ip,
+                        requestId: req.requestId
+                    }).catch(() => {});
+                }
+
+                return res.json({
+                    success: true,
+                    message: 'تم حذف صورة الخلفية',
+                    deleted: result.deletedCount
+                });
+            } catch (error) {
+                console.error('❌ DELETE /api/background error:', error.message);
+                return res.status(500).json({
+                    success: false,
+                    error: 'فشل حذف الخلفية'
+                });
+            }
+        }
+    );
+
+    console.log('✅ Settings + Logo + Background routes registered');
+    console.log('   ⚙️  /api/settings   (GET, PUT, POST reset)');
+    console.log('   🖼️  /api/logo       (GET, POST upload, DELETE)');
+    console.log('   🎨  /api/background (GET, POST upload, PUT settings, DELETE)');
+};
