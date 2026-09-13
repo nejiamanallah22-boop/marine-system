@@ -1,6 +1,9 @@
 <!-- public/pages/efficiency.html -->
 <div id="page-efficiency">
     <style>
+        /* ✅ اللون المعتم على body */
+        body { background: #0a0e1a; }
+
         /* ============================================================
            📊 EFFICIENCY PAGE - ENTERPRISE PRO VERSION
            ============================================================ */
@@ -35,11 +38,12 @@
             padding: 0;
             margin: 0;
             font-family: var(--font);
-            background: #0a0e1a;
+            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
+            background: transparent;
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         /* ===== BACKGROUND EFFECT ===== */
@@ -94,6 +98,7 @@
             gap: 14px;
         }
 
+        /* ✅ الشعار الديناميكي */
         .eff-header-left .header-icon {
             width: 44px;
             height: 44px;
@@ -106,6 +111,27 @@
             color: #0a1628;
             box-shadow: var(--shadow-gold);
             animation: pulseGold 2s ease-in-out infinite;
+            overflow: hidden;
+        }
+
+        /* ✅ دعم صورة الشعار */
+        .eff-header-left .header-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+        .eff-header-left .header-icon.has-logo img {
+            display: block;
+        }
+        .eff-header-left .header-icon.has-logo {
+            animation: none;
+            background: transparent;
+            box-shadow: 0 0 20px rgba(230,179,30,0.3);
+        }
+        .eff-header-left .header-icon.has-logo i {
+            display: none;
         }
 
         @keyframes pulseGold {
@@ -827,8 +853,10 @@
     ============================================================ -->
     <div class="eff-header">
         <div class="eff-header-left">
-            <div class="header-icon">
+            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
+            <div class="header-icon" id="effHeaderIcon">
                 <i class="fas fa-chart-line"></i>
+                <img id="globalLogo" src="" alt="شعار" style="display:none;">
             </div>
             <div>
                 <h2>جاهزية الأسطول</h2>
@@ -1641,6 +1669,54 @@
     JAVASCRIPT
     ============================================================ -->
     <script>
+        // ============================================================
+        // ✅ DYNAMIC LOGO APPLY
+        // ============================================================
+        function applyLogo() {
+            try {
+                var cachedLogo = localStorage.getItem('marine_logo');
+                if (!cachedLogo) return;
+
+                var iconDiv = document.getElementById('effHeaderIcon');
+                var img = document.getElementById('globalLogo');
+                if (img) {
+                    img.src = cachedLogo;
+                    img.style.display = 'block';
+                }
+                if (iconDiv) {
+                    iconDiv.classList.add('has-logo');
+                }
+            } catch (e) {}
+        }
+
+        function syncLogoFromServer() {
+            var token = localStorage.getItem('marine_token') ||
+                        localStorage.getItem('token') ||
+                        localStorage.getItem('authToken') || null;
+            var headers = { 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch('/api/logo', { headers: headers, credentials: 'include' })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (data && data.success && data.logo && data.logo.dataUrl) {
+                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                        applyLogo();
+                    }
+                }).catch(function() {});
+        }
+
+        // ✅ شغّل فوراً
+        applyLogo();
+        syncLogoFromServer();
+
+        // ✅ استمع للتغييرات بين التبويبات
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'marine_logo' && e.newValue) {
+                applyLogo();
+            }
+        });
+
         // ============================================================
         // DATA
         // ============================================================
