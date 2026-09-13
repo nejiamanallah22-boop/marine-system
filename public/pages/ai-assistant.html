@@ -1,10 +1,18 @@
 <!-- public/pages/ai-assistant.html -->
-<div id="page-ai-assistant">
+<div id="page-ai-assistant" style="position:relative; z-index:2; background:transparent;">
     <style>
+        /* ✅ اللون المعتم على body */
+        body { background: #0a0e1a; }
+
         /* ============================================================
-           🤖 AI ASSISTANT STYLES v2.4
-           (Auto Voice + Smart Import + Persistent Speak Buttons)
+           🤖 AI ASSISTANT STYLES v2.5
+           (Auto Voice + Smart Import + Dynamic Logo Support)
            ============================================================ */
+        #page-ai-assistant {
+            background: transparent;
+            position: relative;
+            z-index: 2;
+        }
         .ai-container {
             display: flex;
             flex-direction: column;
@@ -41,7 +49,26 @@
             font-size: 20px;
             color: #fff;
             animation: pulseGlow 2s ease-in-out infinite;
+            overflow: hidden;
         }
+
+        /* ✅ دعم صورة الشعار الديناميكي داخل الأيقونة */
+        .ai-header .ai-brand .ai-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+        .ai-header .ai-brand .ai-icon.has-logo img {
+            display: block;
+        }
+        .ai-header .ai-brand .ai-icon.has-logo {
+            animation: none;
+            background: transparent;
+            box-shadow: 0 0 20px rgba(66,133,244,0.3);
+        }
+
         @keyframes pulseGlow {
             0%, 100% { box-shadow: 0 0 20px rgba(66,133,244,0.1); }
             50% { box-shadow: 0 0 40px rgba(66,133,244,0.25); }
@@ -983,7 +1010,11 @@
     <div class="ai-container" style="position:relative;">
         <div class="ai-header">
             <div class="ai-brand">
-                <div class="ai-icon">🧠</div>
+                <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
+                <div class="ai-icon" id="aiHeaderIcon">
+                    🧠
+                    <img id="globalLogo" src="" alt="شعار" style="display:none;">
+                </div>
                 <div>
                     <div class="ai-title">المساعد الذكي</div>
                     <div class="ai-subtitle">مدعوم من Google Gemini AI</div>
@@ -1087,14 +1118,14 @@
 
 <script>
 // ============================================================
-// 🤖 AI ASSISTANT — v2.4
-// (Auto Voice + Smart Import + Persistent Speak Buttons)
+// 🤖 AI ASSISTANT — v2.5
+// (Auto Voice + Smart Import + Persistent Speak Buttons + Dynamic Logo)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('🧠 AI Assistant v2.4 loading...');
+    console.log('🧠 AI Assistant v2.5 loading...');
 
     // ===== الحالة =====
     const state = {
@@ -1124,6 +1155,54 @@
         isAnalyzing: false,
         isSaving: false
     };
+
+    // ============================================================
+    // 🎨 LOGO APPLY (Dynamic)
+    // ============================================================
+    function applyLogo() {
+        try {
+            const cachedLogo = localStorage.getItem('marine_logo');
+            if (!cachedLogo) return;
+
+            const iconDiv = document.getElementById('aiHeaderIcon');
+            const img = document.getElementById('globalLogo');
+            if (img) {
+                img.src = cachedLogo;
+                img.style.display = 'block';
+            }
+            if (iconDiv) {
+                iconDiv.classList.add('has-logo');
+            }
+        } catch (e) {}
+    }
+
+    function syncLogoFromServer() {
+        const token = localStorage.getItem('marine_token') ||
+                      localStorage.getItem('token') ||
+                      localStorage.getItem('authToken') || null;
+        const headers = { 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        fetch('/api/logo', { headers: headers, credentials: 'include' })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data && data.success && data.logo && data.logo.dataUrl) {
+                    try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                    applyLogo();
+                }
+            }).catch(() => {});
+    }
+
+    // ✅ شغّل فوراً
+    applyLogo();
+    syncLogoFromServer();
+
+    // ✅ استمع للتغييرات بين التبويبات
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'marine_logo' && e.newValue) {
+            applyLogo();
+        }
+    });
 
     // ============================================================
     // HELPERS
@@ -1344,7 +1423,6 @@
             return;
         }
 
-        // إن كان يتحدث بالفعل، أوقف
         if (state.speechSynthesis && state.speechSynthesis.speaking) {
             stopSpeaking();
             return;
@@ -2063,7 +2141,6 @@
             });
         }
 
-        // ✅ ربط زر "إعادة"
         const replayBtn = document.getElementById('replayBtn');
         if (replayBtn) {
             replayBtn.addEventListener('click', function(e) {
@@ -2106,7 +2183,7 @@
             });
         }
 
-        console.log('✅ AI Assistant v2.4 ready — autoSpeak:', state.autoSpeak);
+        console.log('✅ AI Assistant v2.5 ready — autoSpeak:', state.autoSpeak);
     }
 
     // ============================================================
@@ -2130,7 +2207,6 @@
     window.aiToggleVoicePanel = toggleVoicePanel;
     window.aiStopSpeaking = stopSpeaking;
 
-    // Import functions
     window.importToggle = importToggle;
     window.importReset = importReset;
     window.importConfirm = importConfirm;
