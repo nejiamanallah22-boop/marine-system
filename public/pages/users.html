@@ -522,6 +522,53 @@
                 justify-content:center;
             }
         }
+
+        /* ============================================================
+           🖼️ GLOBAL LOGO SUPPORT — v9.12 (ADDED)
+           ============================================================ */
+
+        #page-users .icon {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(230,179,30,.08);
+            border: 1px solid rgba(230,179,30,.12);
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: all .3s;
+        }
+
+        #page-users .icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: inherit;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        #page-users .icon:not(.has-logo) img {
+            display: none;
+        }
+
+        #page-users .icon.has-logo > :not(img) {
+            display: none !important;
+        }
+
+        #page-users .icon.has-logo {
+            background: transparent !important;
+            border-color: transparent !important;
+        }
+
+        #page-users .icon:not(.has-logo)::before {
+            content: '👥';
+            font-size: 20px;
+            line-height: 1;
+        }
     </style>
 
     <div class="users-container">
@@ -531,6 +578,9 @@
              ============================================================ -->
         <div class="users-header">
             <h2>
+                <div class="icon">
+                    <img id="globalLogo" alt="logo" />
+                </div>
                 👥 إدارة المستخدمين
                 <span class="badge">v9.12 🔐 5 Roles</span>
             </h2>
@@ -710,6 +760,11 @@
             });
             _eventListeners = [];
 
+            // 🖼️ إزالة مستمع storage للشعار
+            try {
+                window.removeEventListener('storage', _handleLogoStorageEvent);
+            } catch (e) {}
+
             try {
                 delete window.usersData;
                 delete window.loadUsersData;
@@ -721,6 +776,8 @@
                 delete window.toggleUserStatus;
                 delete window.deleteUser;
                 delete window.cleanupUsersPage;
+                delete window.applyLogo;
+                delete window.syncLogoFromServer;
             } catch (e) {}
 
             console.log('🧹 Users v9.12 cleanup done');
@@ -746,9 +803,93 @@
         var currentAbortController = null;
 
         // ============================================================
-        // 🔐 ROLE NORMALIZATION — v9.12
+        // 🖼️ GLOBAL LOGO — v9.12 (ADDED)
         // ============================================================
-        // ✅ مطابق تمامًا لـ LEGACY_ROLE_MAP في server.js v9.12
+
+        var LOGO_STORAGE_KEY = 'globalLogo';
+        var LOGO_SERVER_KEY  = 'globalLogo';
+        var LOGO_API_ENDPOINT = '/api/settings/logo';
+
+        /**
+         * تطبيق الشعار على #globalLogo داخل صفحة المستخدمين فقط
+         */
+        function applyLogo(dataUrl) {
+            if (_isDestroyed) return;
+
+            var iconEl = document.querySelector('#page-users .icon');
+            var imgEl  = document.getElementById('globalLogo');
+
+            if (!imgEl) return;
+
+            if (dataUrl && typeof dataUrl === 'string' && dataUrl.trim() !== '') {
+                imgEl.src = dataUrl;
+                if (iconEl) iconEl.classList.add('has-logo');
+
+                imgEl.onerror = function() {
+                    if (iconEl) iconEl.classList.remove('has-logo');
+                    imgEl.removeAttribute('src');
+                };
+            } else {
+                imgEl.removeAttribute('src');
+                if (iconEl) iconEl.classList.remove('has-logo');
+            }
+        }
+
+        /**
+         * مزامنة الشعار من السيرفر (مع localStorage كبديل فوري)
+         */
+        async function syncLogoFromServer() {
+            if (_isDestroyed) return;
+
+            // 1) قراءة سريعة من localStorage
+            try {
+                var local = localStorage.getItem(LOGO_STORAGE_KEY);
+                if (local) applyLogo(local);
+            } catch (e) {
+                console.warn('[LOGO] localStorage unavailable');
+            }
+
+            // 2) محاولة الجلب من السيرفر
+            try {
+                var res = await fetch(LOGO_API_ENDPOINT, {
+                    cache: 'no-store',
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                });
+
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                var data = await safeJson(res);
+                var serverLogo = (data && (data.logo || data[LOGO_SERVER_KEY])) || null;
+
+                if (_isDestroyed) return;
+
+                applyLogo(serverLogo);
+
+                if (serverLogo) {
+                    try { localStorage.setItem(LOGO_STORAGE_KEY, serverLogo); } catch (e) {}
+                } else {
+                    try { localStorage.removeItem(LOGO_STORAGE_KEY); } catch (e) {}
+                }
+
+            } catch (err) {
+                console.warn('[LOGO] تعذّر الجلب من السيرفر، الاعتماد على localStorage:', err);
+            }
+        }
+
+        /**
+         * مستمع تغيير الشعار من تبويب آخر
+         */
+        function _handleLogoStorageEvent(e) {
+            if (e && e.key === LOGO_STORAGE_KEY) {
+                applyLogo(e.newValue || null);
+            }
+        }
+
+        window.addEventListener('storage', _handleLogoStorageEvent);
+
+        // ============================================================
+        // 🔐 ROLE NORMALIZATION — v9.12
         // ============================================================
 
         var LEGACY_ROLE_MAP = {
@@ -1180,7 +1321,6 @@
                 return;
             }
 
-            // ✅ v9.12: خريطة الأدوار الخمسة
             var roleMap = {
                 admin:            '<span class="role-badge admin">👑 مسؤول النظام</span>',
                 manager:          '<span class="role-badge manager">📋 مدير الأسطول</span>',
@@ -1233,7 +1373,6 @@
                 var username = user.name || user.username || '-';
                 var email = user.email || '-';
 
-                // ✅ v9.12: استخدم normalizeRole قبل البحث في الخريطة
                 var normalizedRole = normalizeRole(user.role);
                 var role = roleMap[normalizedRole] || escapeHtml(normalizedRole || '-');
 
@@ -1416,7 +1555,6 @@
             el = $('userPassword');
             if (el) el.value = '';
 
-            // ✅ v9.12: normalizeRole قبل التعيين
             el = $('userRole');
             if (el) el.value = normalizeRole(user.role);
 
@@ -1502,7 +1640,6 @@
                 return;
             }
 
-            // ✅ v9.12: الأدوار الخمسة المسموحة
             var allowedRoles = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
 
             if (allowedRoles.indexOf(role) === -1) {
@@ -1736,6 +1873,9 @@
 
             console.log('👥 Users v9.12 initializing...');
 
+            // 🖼️ مزامنة الشعار العام (ADDED)
+            syncLogoFromServer();
+
             addSafeListener($('addUserBtn'), 'click', toggleUserForm);
 
             addSafeListener($('refreshUsersBtn'), 'click', async function() {
@@ -1776,6 +1916,10 @@
         window.getToken = getToken;
         window.normalizeRole = normalizeRole;
         window.cleanupUsersPage = _usersCleanup;
+
+        // 🖼️ تصدير دوال الشعار (ADDED)
+        window.applyLogo = applyLogo;
+        window.syncLogoFromServer = syncLogoFromServer;
 
         // ============================================================
         // 🏁 BOOT
