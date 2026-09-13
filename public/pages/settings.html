@@ -2,8 +2,7 @@
 <div id="page-settings">
     <style>
         /* ============================================================
-           ⚙️ MARINE SYSTEM SETTINGS v9.12
-           Military-Grade Hardened + RBAC v9.12
+           ⚙️ MARINE SYSTEM SETTINGS v10.0
            ============================================================ */
 
         :root {
@@ -146,12 +145,6 @@
             font-weight:700;
             cursor:pointer;
             transition:all var(--transition);
-        }
-
-        .btn-action:focus-visible,
-        .btn-save:focus-visible {
-            outline:2px solid var(--gold);
-            outline-offset:3px;
         }
 
         .btn-action.primary {
@@ -358,11 +351,6 @@
             background:#fff;
         }
 
-        .toggle-switch input:focus-visible + .toggle-track {
-            outline:2px solid var(--gold);
-            outline-offset:3px;
-        }
-
         .toggle-label {
             color:rgba(255,255,255,.55);
             font-size:13px;
@@ -393,11 +381,6 @@
             box-shadow:0 8px 30px rgba(230,179,30,.25);
         }
 
-        .btn-save.danger {
-            background:linear-gradient(135deg, #ef4444, #f87171);
-            color:#fff;
-        }
-
         .theme-preview {
             display:flex;
             align-items:center;
@@ -426,6 +409,7 @@
         .preview-text strong { color:#fff; }
         .preview-text span { color:var(--gold); }
 
+        /* ===== LOGO UPLOAD ===== */
         .logo-upload-area {
             position:relative;
             padding:20px;
@@ -436,9 +420,10 @@
             transition:all var(--transition);
         }
 
-        .logo-upload-area:hover {
-            border-color:rgba(230,179,30,.25);
-            background:rgba(255,255,255,.02);
+        .logo-upload-area:hover,
+        .logo-upload-area.dragover {
+            border-color:rgba(230,179,30,.5);
+            background:rgba(230,179,30,.05);
         }
 
         .logo-preview {
@@ -502,7 +487,7 @@
         }
 
         .placeholder-icon {
-            color:rgba(255,255,255,.08);
+            color:rgba(255,255,255,.15);
             font-size:40px;
         }
 
@@ -514,31 +499,6 @@
         .placeholder-hint {
             color:rgba(255,255,255,.15);
             font-size:11px;
-        }
-
-        .security-status {
-            display:flex;
-            align-items:center;
-            gap:8px;
-            margin-top:8px;
-            padding:9px 12px;
-            border-radius:8px;
-            background:rgba(255,255,255,.025);
-            border:1px solid rgba(255,255,255,.04);
-            color:rgba(255,255,255,.35);
-            font-size:11px;
-        }
-
-        .security-status.ok {
-            color:#55efc4;
-            border-color:rgba(0,184,148,.15);
-            background:rgba(0,184,148,.05);
-        }
-
-        .security-status.warning {
-            color:#fdcb6e;
-            border-color:rgba(253,203,110,.15);
-            background:rgba(253,203,110,.05);
         }
 
         .about-grid {
@@ -607,40 +567,23 @@
             .btn-action { flex:1; }
             .settings-card { padding:16px; }
         }
-
-        @media (max-width:480px) {
-            .settings-header-left .icon { width:36px; height:36px; flex-basis:36px; font-size:16px; }
-            .settings-header-left h2 { font-size:15px; }
-            .settings-card { padding:13px; }
-            .settings-header-actions { display:grid; grid-template-columns:1fr; }
-            .theme-preview { flex-direction:column; align-items:flex-start; }
-        }
-
-        @media (prefers-reduced-motion:reduce) {
-            *, *::before, *::after {
-                animation-duration:.01ms !important;
-                animation-iteration-count:1 !important;
-                transition-duration:.01ms !important;
-            }
-        }
     </style>
-
-    <!-- ============================================================
+        <!-- ============================================================
          HEADER
          ============================================================ -->
 
     <div class="settings-header">
         <div class="settings-header-left">
-            <div class="icon" aria-hidden="true"><i class="fas fa-cog"></i></div>
+            <div class="icon" aria-hidden="true">⚙️</div>
             <div>
                 <h2>الإعدادات المتقدمة</h2>
                 <p id="settingsSubtitle">تخصيص النظام وإدارة الإعدادات</p>
             </div>
         </div>
         <div class="settings-header-actions">
-            <button type="button" class="btn-action primary" id="saveAllBtn"><i class="fas fa-save"></i> حفظ الكل</button>
-            <button type="button" class="btn-action secondary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
-            <button type="button" class="btn-action danger" id="resetDefaultsBtn"><i class="fas fa-undo"></i> استعادة الافتراضي</button>
+            <button type="button" class="btn-action primary" id="saveAllBtn">💾 حفظ الكل</button>
+            <button type="button" class="btn-action secondary" id="refreshBtn">🔄 تحديث</button>
+            <button type="button" class="btn-action danger" id="resetDefaultsBtn">↩️ استعادة الافتراضي</button>
         </div>
     </div>
 
@@ -652,7 +595,7 @@
 
         <!-- THEME -->
         <section class="settings-card" id="themeCard">
-            <div class="card-title"><i class="fas fa-palette"></i> مظهر التطبيق</div>
+            <div class="card-title">🎨 مظهر التطبيق</div>
             <div class="card-subtitle">تغيير ألوان واجهة التطبيق</div>
 
             <div class="form-group">
@@ -688,12 +631,12 @@
                 </div>
             </div>
 
-            <button type="button" class="btn-save" id="saveThemeBtn"><i class="fas fa-palette"></i> تطبيق المظهر</button>
+            <button type="button" class="btn-save" id="saveThemeBtn">🎨 تطبيق المظهر</button>
         </section>
 
         <!-- LOGO -->
         <section class="settings-card" id="logoCard">
-            <div class="card-title"><i class="fas fa-image"></i> شعار التطبيق</div>
+            <div class="card-title">🖼️ شعار التطبيق</div>
             <div class="card-subtitle">إدارة شعار النظام وحجمه</div>
 
             <div class="form-group">
@@ -705,18 +648,43 @@
                 </select>
             </div>
 
+            <div class="form-group">
+                <label>🖼️ صورة الشعار</label>
+                <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp" style="display:none;">
+
+                <div class="logo-upload-area" id="logoDropZone">
+                    <div class="logo-placeholder" id="logoPlaceholder">
+                        <div class="placeholder-icon">🖼️</div>
+                        <div class="placeholder-text">اضغط لاختيار صورة</div>
+                        <div class="placeholder-hint">PNG · JPG · SVG · WebP · حتى 2 MB</div>
+                    </div>
+
+                    <div class="logo-preview" id="logoPreview" style="display:none;">
+                        <img id="logoPreviewImg" src="" alt="شعار التطبيق">
+                        <div class="logo-name" id="logoName"></div>
+                        <div class="logo-actions">
+                            <button type="button" class="btn-sm upload" onclick="event.stopPropagation();document.getElementById('logoFileInput').click()">🔄 تغيير</button>
+                            <button type="button" class="btn-sm delete" onclick="event.stopPropagation();window._deleteLogo(event)">🗑️ حذف</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div style="margin-bottom:14px;padding:16px;text-align:center;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;">
-                <div style="margin-bottom:8px;color:rgba(255,255,255,.3);font-size:12px;">معاينة الشعار</div>
-                <div id="appLogoPreview" style="font-size:32px;color:var(--gold);">⚓</div>
+                <div style="margin-bottom:8px;color:rgba(255,255,255,.3);font-size:12px;">معاينة كاملة</div>
+                <div id="appLogoPreview" style="font-size:32px;color:var(--gold);">
+                    <img id="appLogoImg" src="" alt="" style="display:none;max-width:80px;max-height:60px;object-fit:contain;margin:0 auto;">
+                    <span id="appLogoFallback">⚓</span>
+                </div>
                 <div id="appLogoNamePreview" style="margin-top:4px;color:#fff;font-size:18px;font-weight:700;">منظومة الوسائل البحرية</div>
             </div>
 
-            <button type="button" class="btn-save" id="saveLogoBtn"><i class="fas fa-image"></i> حفظ إعدادات الشعار</button>
+            <button type="button" class="btn-save" id="saveLogoBtn">💾 حفظ حجم الشعار</button>
         </section>
 
         <!-- LAYOUT -->
         <section class="settings-card" id="layoutCard">
-            <div class="card-title"><i class="fas fa-layer-group"></i> التخطيط والعرض</div>
+            <div class="card-title">📐 التخطيط والعرض</div>
             <div class="card-subtitle">تخصيص طريقة عرض التطبيق</div>
 
             <div class="form-group">
@@ -754,12 +722,12 @@
                 </div>
             </div>
 
-            <button type="button" class="btn-save" id="saveLayoutBtn"><i class="fas fa-save"></i> حفظ التخطيط</button>
+            <button type="button" class="btn-save" id="saveLayoutBtn">💾 حفظ التخطيط</button>
         </section>
 
         <!-- SECURITY -->
         <section class="settings-card" id="securityCard">
-            <div class="card-title"><i class="fas fa-shield-alt"></i> الأمان والخصوصية</div>
+            <div class="card-title">🛡️ الأمان والخصوصية</div>
             <div class="card-subtitle">إعدادات الحماية والجلسات</div>
 
             <div class="form-group">
@@ -786,12 +754,12 @@
                 <div class="form-hint">المسموح من 5 إلى 480 دقيقة.</div>
             </div>
 
-            <button type="button" class="btn-save" id="saveSecurityBtn"><i class="fas fa-shield-alt"></i> حفظ إعدادات الأمان</button>
+            <button type="button" class="btn-save" id="saveSecurityBtn">🛡️ حفظ إعدادات الأمان</button>
         </section>
 
         <!-- NOTIFICATIONS -->
         <section class="settings-card" id="notificationsCard">
-            <div class="card-title"><i class="fas fa-bell"></i> الإشعارات والتنبيهات</div>
+            <div class="card-title">🔔 الإشعارات والتنبيهات</div>
             <div class="card-subtitle">تخصيص التنبيهات والتقارير</div>
 
             <div class="form-group">
@@ -822,17 +790,17 @@
                 </select>
             </div>
 
-            <button type="button" class="btn-save" id="saveNotificationsBtn"><i class="fas fa-bell"></i> حفظ الإشعارات</button>
+            <button type="button" class="btn-save" id="saveNotificationsBtn">🔔 حفظ الإشعارات</button>
         </section>
 
         <!-- ABOUT -->
         <section class="settings-card" id="aboutCard">
-            <div class="card-title"><i class="fas fa-info-circle"></i> حول التطبيق</div>
+            <div class="card-title">ℹ️ حول التطبيق</div>
             <div class="card-subtitle">معلومات النظام والإصدار</div>
 
             <div class="about-grid">
                 <div><strong>📦 اسم النظام:</strong> منظومة الوسائل البحرية</div>
-                <div><strong>📌 الإصدار:</strong> v9.12 Military-Grade</div>
+                <div><strong>📌 الإصدار:</strong> v10.0 Military-Grade</div>
                 <div><strong>👨‍💻 المطور:</strong> أمان الله ناجي</div>
                 <div><strong>📧 البريد:</strong> nejiamanallah22@gmail.com</div>
                 <div><strong>📱 الهاتف:</strong> +216 29 659 945</div>
@@ -841,27 +809,20 @@
             </div>
 
             <div style="margin-top:14px;padding:12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid rgba(255,255,255,.04);">
-                <div style="color:rgba(255,255,255,.3);font-size:12px;"><i class="fas fa-copyright"></i> جميع الحقوق محفوظة - 2026</div>
+                <div style="color:rgba(255,255,255,.3);font-size:12px;">© جميع الحقوق محفوظة - 2026</div>
             </div>
         </section>
 
     </div>
 
     <!-- ============================================================
-         JAVASCRIPT — v9.12
+         JAVASCRIPT — v10.0
          ============================================================ -->
 
     <script>
-    /**
+            /**
      * ============================================================
-     * 🚢 MARINE SYSTEM SETTINGS v9.12
-     * ============================================================
-     * ✨ v9.12 Features:
-     * - RBAC v9.12 (5 roles)
-     * - normalizeRole + LEGACY_ROLE_MAP
-     * - apiFetch integration (from index.html)
-     * - Card visibility per role
-     * - Full cleanup (v9.1)
+     * 🚢 MARINE SYSTEM SETTINGS v10.0
      * ============================================================
      */
 
@@ -903,9 +864,10 @@
                 delete window.loadSettings;
                 delete window.getToken;
                 delete window.showToast;
+                delete window._deleteLogo;
             } catch (e) {}
 
-            console.log('🧹 Settings v9.12 cleanup done');
+            console.log('🧹 Settings v10.0 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -915,7 +877,7 @@
         window.addEventListener('pagehide', _settingsCleanup);
 
         // ============================================================
-        // 🔐 RBAC v9.12
+        // 🔐 RBAC
         // ============================================================
         var LEGACY_ROLE_MAP = {
             'super_admin': 'admin',
@@ -937,20 +899,11 @@
             return LEGACY_ROLE_MAP[r] || 'viewer';
         }
 
-        // ✅ هذه الصفحة admin فقط
         function isAdmin() {
             var u = window.currentUser;
             if (!u) return false;
             return normalizeRole(u.role) === 'admin';
         }
-
-        // ============================================================
-        // 📦 CONFIGURATION
-        // ============================================================
-        var CONFIG = {
-            API_BASE: '/api',
-            REQUEST_TIMEOUT: 15000
-        };
 
         // ============================================================
         // 🔧 HELPERS
@@ -964,7 +917,6 @@
                    null;
         }
 
-        // ✅ v9.12: يستخدم apiFetch إن وُجد
         function fetcher(url, options) {
             if (typeof window.apiFetch === 'function') {
                 return window.apiFetch(url, options || {});
@@ -1025,23 +977,19 @@
         }
 
         // ============================================================
-        // 🎛️ APPLY CARD VISIBILITY PER ROLE
+        // 🎛️ APPLY CARD VISIBILITY
         // ============================================================
         function applyCardVisibility() {
             if (_isDestroyed) return;
 
-            // ✅ في v9.12: settings = admin فقط
-            //            إذا لم يكن admin → نخفي كل البطاقات ونظهر رسالة
             if (!isAdmin()) {
                 document.querySelectorAll('.settings-card').forEach(function(card) {
                     card.classList.add('hidden');
                 });
 
-                // ✅ أظهر بطاقة "حول التطبيق" فقط
                 var aboutCard = $('aboutCard');
                 if (aboutCard) aboutCard.classList.remove('hidden');
 
-                // ✅ عطّل الأزرار في الأعلى
                 var saveAllBtn = $('saveAllBtn');
                 var resetBtn = $('resetDefaultsBtn');
                 if (saveAllBtn) {
@@ -1057,9 +1005,166 @@
                 return;
             }
 
-            // ✅ admin: كل شيء ظاهر
             console.log('👑 Admin: all cards visible');
         }
+
+        // ============================================================
+        // 🎨 APPLY THEME GLOBALLY (يفعّل الألوان في كل الصفحات)
+        // ============================================================
+        function applyThemeGlobally(theme) {
+            if (!theme) return;
+
+            try {
+                localStorage.setItem('marine_theme', JSON.stringify({
+                    primary: theme.primary,
+                    secondary: theme.secondary,
+                    gold: theme.gold
+                }));
+            } catch (e) {}
+
+            if (theme.primary) {
+                document.documentElement.style.setProperty('--primary-dark', theme.primary);
+            }
+            if (theme.secondary) {
+                document.documentElement.style.setProperty('--secondary', theme.secondary);
+            }
+            if (theme.gold) {
+                document.documentElement.style.setProperty('--gold', theme.gold);
+                document.documentElement.style.setProperty('--gold-light', theme.gold);
+            }
+        }
+
+        // ============================================================
+        // 🖼️ LOGO FUNCTIONS
+        // ============================================================
+        function setLogoPreview(dataUrl, fileName) {
+            var placeholder = $('logoPlaceholder');
+            var preview = $('logoPreview');
+            var img = $('logoPreviewImg');
+            var nameEl = $('logoName');
+            var appImg = $('appLogoImg');
+            var appFallback = $('appLogoFallback');
+
+            if (dataUrl) {
+                if (placeholder) placeholder.style.display = 'none';
+                if (preview) preview.style.display = 'flex';
+                if (img) img.src = dataUrl;
+                if (nameEl && fileName) nameEl.textContent = fileName;
+
+                if (appImg) { appImg.src = dataUrl; appImg.style.display = 'block'; }
+                if (appFallback) appFallback.style.display = 'none';
+
+                try { localStorage.setItem('marine_logo', dataUrl); } catch (e) {}
+            } else {
+                if (placeholder) placeholder.style.display = 'flex';
+                if (preview) preview.style.display = 'none';
+                if (img) img.src = '';
+
+                if (appImg) { appImg.src = ''; appImg.style.display = 'none'; }
+                if (appFallback) appFallback.style.display = 'inline';
+
+                try { localStorage.removeItem('marine_logo'); } catch (e) {}
+            }
+        }
+
+        async function loadLogo() {
+            try {
+                var response = await fetcher('/api/logo', { method: 'GET' });
+                if (!response.ok) return;
+
+                var data = await response.json();
+                if (data.success && data.logo && data.logo.dataUrl) {
+                    setLogoPreview(data.logo.dataUrl, '');
+                } else {
+                    try {
+                        var cached = localStorage.getItem('marine_logo');
+                        if (cached) setLogoPreview(cached, '');
+                    } catch (e) {}
+                }
+            } catch (e) {
+                console.warn('⚠️ Load logo error:', e.message);
+                try {
+                    var cached2 = localStorage.getItem('marine_logo');
+                    if (cached2) setLogoPreview(cached2, '');
+                } catch (e2) {}
+            }
+        }
+
+        async function uploadLogo(file) {
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('❌ الصورة أكبر من 2 MB', 'error');
+                return;
+            }
+
+            var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
+            if (allowed.indexOf(file.type) === -1) {
+                showToast('❌ نوع الصورة غير مدعوم. استخدم PNG, JPG, SVG, أو WebP.', 'error');
+                return;
+            }
+
+            showToast('⏳ جاري رفع الشعار...', 'info');
+
+            try {
+                var formData = new FormData();
+                formData.append('logo', file);
+
+                var token = getToken();
+                var headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                var csrfMatch = document.cookie.match(/marine_csrf=([^;]+)/);
+                if (csrfMatch) headers['X-CSRF-Token'] = csrfMatch[1];
+
+                var response = await fetch('/api/logo/upload', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: formData
+                });
+
+                var data = await response.json().catch(function() { return {}; });
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || ('خطأ ' + response.status));
+                }
+
+                setLogoPreview(data.logo.dataUrl, file.name);
+                showToast('✅ تم رفع الشعار بنجاح', 'success');
+
+            } catch (error) {
+                console.error('❌ Upload logo error:', error);
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        async function deleteLogo(event) {
+            if (event) { event.preventDefault(); event.stopPropagation(); }
+
+            if (!confirm('هل تريد حذف الشعار الحالي؟')) return;
+
+            try {
+                var response = await fetcher('/api/logo', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    var err = await response.json().catch(function() { return {}; });
+                    throw new Error(err.error || 'فشل الحذف');
+                }
+
+                setLogoPreview(null, null);
+                showToast('✅ تم حذف الشعار', 'success');
+
+            } catch (error) {
+                console.error('❌ Delete logo error:', error);
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        window._deleteLogo = deleteLogo;
 
         // ============================================================
         // 📊 LOAD SETTINGS
@@ -1092,7 +1197,6 @@
                 }
 
                 var data = await response.json();
-                console.log('✅ Settings loaded:', data);
 
                 if (data && data.settings) {
                     applySettings(data.settings);
@@ -1112,7 +1216,6 @@
             if (_isDestroyed) return;
             if (!settings) return;
 
-            // Theme
             if (settings.theme) {
                 var t = settings.theme;
                 if (t.primary) document.documentElement.style.setProperty('--primary-dark', t.primary);
@@ -1121,9 +1224,9 @@
                     document.documentElement.style.setProperty('--gold', t.gold);
                     document.documentElement.style.setProperty('--gold-light', t.gold);
                 }
+                applyThemeGlobally(t);
             }
 
-            // Layout
             if (settings.layout) {
                 var el;
                 el = $('darkMode'); if (el) el.checked = settings.layout.darkMode !== false;
@@ -1132,7 +1235,6 @@
                 el = $('showStats'); if (el) el.checked = settings.layout.showStats !== false;
             }
 
-            // Security
             if (settings.security) {
                 var el2;
                 el2 = $('emailNotifications'); if (el2) el2.checked = settings.security.emailNotifications !== false;
@@ -1144,7 +1246,6 @@
                 }
             }
 
-            // Notifications
             if (settings.notifications) {
                 var el3;
                 el3 = $('emergencyAlerts'); if (el3) el3.checked = settings.notifications.emergencyAlerts !== false;
@@ -1152,7 +1253,6 @@
                 el3 = $('performanceReports'); if (el3) el3.value = settings.notifications.performanceReports || 'weekly';
             }
 
-            // Branding
             if (settings.branding) {
                 var el4 = $('logoSize');
                 if (el4) el4.value = settings.branding.logoSize || 'medium';
@@ -1160,12 +1260,11 @@
         }
 
         // ============================================================
-        // 💾 COLLECT SETTINGS FROM UI
+        // 💾 COLLECT SETTINGS
         // ============================================================
         function collectSettings() {
             var settings = {};
 
-            // Theme
             var activeTheme = document.querySelector('#colorPicker .color-option.active');
             var activeGold = document.querySelector('#goldColorPicker .color-option.active');
 
@@ -1175,7 +1274,6 @@
                 gold: activeGold ? activeGold.dataset.gold : '#e6b31e'
             };
 
-            // Layout
             settings.layout = {
                 darkMode: $('darkMode') ? $('darkMode').checked : true,
                 fontSize: $('fontSize') ? $('fontSize').value : 'medium',
@@ -1183,21 +1281,18 @@
                 showStats: $('showStats') ? $('showStats').checked : true
             };
 
-            // Security
             settings.security = {
                 emailNotifications: $('emailNotifications') ? $('emailNotifications').checked : true,
                 smsNotifications: $('smsNotifications') ? $('smsNotifications').checked : false,
                 sessionTimeout: $('sessionTimeout') ? Math.min(Math.max(parseInt($('sessionTimeout').value) || 60, 5), 480) : 60
             };
 
-            // Notifications
             settings.notifications = {
                 emergencyAlerts: $('emergencyAlerts') ? $('emergencyAlerts').checked : true,
                 maintenanceAlerts: $('maintenanceAlerts') ? $('maintenanceAlerts').checked : true,
                 performanceReports: $('performanceReports') ? $('performanceReports').value : 'weekly'
             };
 
-            // Branding
             settings.branding = {
                 logoSize: $('logoSize') ? $('logoSize').value : 'medium'
             };
@@ -1236,8 +1331,8 @@
 
                 showToast('✅ تم حفظ الإعدادات', 'success');
 
-                // ✅ تطبيق فوري على DOM
                 applySettings(settings);
+                applyThemeGlobally(settings.theme);
 
             } catch (error) {
                 console.error('❌ Save error:', error);
@@ -1273,14 +1368,12 @@
         function init() {
             if (_isDestroyed) return;
 
-            console.log('🚀 Settings v9.12 initializing...');
+            console.log('🚀 Settings v10.0 initializing...');
             console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
             console.log('👑 isAdmin:', isAdmin());
 
-            // ✅ تطبيق رؤية البطاقات أولاً
             applyCardVisibility();
 
-            // ✅ تحميل الإعدادات إن كان admin
             if (isAdmin()) {
                 loadSettings();
             }
@@ -1310,74 +1403,50 @@
                 });
             });
 
-            // ✅ Preview initial
             updatePreview();
 
-            // ✅ أزرار الحفظ
+            // ✅ Save buttons
             addSafeListener($('saveAllBtn'), 'click', function() {
-                if (!isAdmin()) {
-                    showToast('⚠️ متاح للمسؤول فقط', 'error');
-                    return;
-                }
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 saveSettings();
             });
 
             addSafeListener($('saveThemeBtn'), 'click', function() {
-                if (!isAdmin()) {
-                    showToast('⚠️ متاح للمسؤول فقط', 'error');
-                    return;
-                }
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 saveSettings();
             });
 
             addSafeListener($('saveLayoutBtn'), 'click', function() {
-                if (!isAdmin()) {
-                    showToast('⚠️ متاح للمسؤول فقط', 'error');
-                    return;
-                }
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 saveSettings();
             });
 
             addSafeListener($('saveSecurityBtn'), 'click', function() {
-                if (!isAdmin()) {
-                    showToast('⚠️ متاح للمسؤول فقط', 'error');
-                    return;
-                }
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 saveSettings();
             });
 
             addSafeListener($('saveNotificationsBtn'), 'click', function() {
-                if (!isAdmin()) {
-                    showToast('⚠️ متاح للمسؤول فقط', 'error');
-                    return;
-                }
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 saveSettings();
             });
 
             addSafeListener($('saveLogoBtn'), 'click', function() {
-                if (!isAdmin()) {
-                    showToast('⚠️ متاح للمسؤول فقط', 'error');
-                    return;
-                }
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 saveSettings();
             });
 
-            // ✅ زر التحديث
+            // ✅ Refresh
             addSafeListener($('refreshBtn'), 'click', function() {
-                if (!isAdmin()) {
-                    showToast('⚠️ متاح للمسؤول فقط', 'error');
-                    return;
-                }
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 showToast('🔄 جاري التحديث...', 'info');
                 loadSettings();
+                loadLogo();
             });
 
-            // ✅ استعادة الافتراضي
+            // ✅ Reset
             addSafeListener($('resetDefaultsBtn'), 'click', function() {
-                if (!isAdmin()) {
-                    showToast('⚠️ متاح للمسؤول فقط', 'error');
-                    return;
-                }
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
                 if (!confirm('⚠️ هل أنت متأكد من استعادة الإعدادات الافتراضية؟')) return;
 
                 fetcher('/api/settings/reset', {
@@ -1397,7 +1466,55 @@
                 });
             });
 
-            console.log('✅ Settings v9.12 ready');
+            // ========================================================
+            // 🖼️ LOGO INIT — ربط رفع الشعار
+            // ========================================================
+            var logoFileInput = $('logoFileInput');
+            var logoDropZone = $('logoDropZone');
+
+            if (logoFileInput) {
+                addSafeListener(logoFileInput, 'change', function() {
+                    if (this.files && this.files[0]) {
+                        uploadLogo(this.files[0]);
+                        this.value = '';
+                    }
+                });
+            }
+
+            if (logoDropZone) {
+                addSafeListener(logoDropZone, 'click', function(e) {
+                    if (e.target.closest('.logo-actions')) return;
+                    if (logoFileInput) logoFileInput.click();
+                });
+
+                ['dragenter', 'dragover'].forEach(function(evt) {
+                    addSafeListener(logoDropZone, evt, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        logoDropZone.classList.add('dragover');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach(function(evt) {
+                    addSafeListener(logoDropZone, evt, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        logoDropZone.classList.remove('dragover');
+                    });
+                });
+
+                addSafeListener(logoDropZone, 'drop', function(e) {
+                    var files = e.dataTransfer && e.dataTransfer.files;
+                    if (files && files[0]) {
+                        uploadLogo(files[0]);
+                    }
+                });
+            }
+
+            // ✅ تحميل الشعار عند البدء
+            loadLogo();
+
+            console.log('✅ Settings v10.0 ready');
         }
 
         // ============================================================
