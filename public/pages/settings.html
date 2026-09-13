@@ -3,6 +3,7 @@
     <style>
         /* ============================================================
            ⚙️ MARINE SYSTEM SETTINGS v10.0
+           Logo + Background + Live Theme
            ============================================================ */
 
         :root {
@@ -224,8 +225,6 @@
             font-size:16px;
             font-weight:800;
         }
-
-        .card-title i { color:var(--gold); }
 
         .card-subtitle {
             margin-bottom:18px;
@@ -501,6 +500,45 @@
             font-size:11px;
         }
 
+        /* ===== RANGE SLIDERS ===== */
+        #page-settings input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,.08);
+            border-radius: 3px;
+            outline: none;
+            padding: 0;
+            min-height: 0;
+        }
+
+        #page-settings input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gold);
+            cursor: pointer;
+            box-shadow: 0 0 0 3px rgba(230,179,30,.2);
+            transition: all .2s;
+        }
+
+        #page-settings input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 5px rgba(230,179,30,.25);
+        }
+
+        #page-settings input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gold);
+            cursor: pointer;
+            border: 0;
+        }
+
         .about-grid {
             display:grid;
             gap:7px;
@@ -530,25 +568,10 @@
             animation:toastIn .25s ease-out;
         }
 
-        .settings-toast.success {
-            background:rgba(34,197,94,.14);
-            border:1px solid rgba(34,197,94,.2);
-        }
-
-        .settings-toast.error {
-            background:rgba(239,68,68,.14);
-            border:1px solid rgba(239,68,68,.2);
-        }
-
-        .settings-toast.warning {
-            background:rgba(245,200,66,.14);
-            border:1px solid rgba(245,200,66,.2);
-        }
-
-        .settings-toast.info {
-            background:rgba(96,165,250,.14);
-            border:1px solid rgba(96,165,250,.2);
-        }
+        .settings-toast.success { background:rgba(34,197,94,.14); border:1px solid rgba(34,197,94,.2); }
+        .settings-toast.error   { background:rgba(239,68,68,.14); border:1px solid rgba(239,68,68,.2); }
+        .settings-toast.warning { background:rgba(245,200,66,.14); border:1px solid rgba(245,200,66,.2); }
+        .settings-toast.info    { background:rgba(96,165,250,.14); border:1px solid rgba(96,165,250,.2); }
 
         @keyframes toastIn {
             from { opacity:0; transform:translateY(15px); }
@@ -566,6 +589,22 @@
             .settings-header-actions { width:100%; }
             .btn-action { flex:1; }
             .settings-card { padding:16px; }
+        }
+
+        @media (max-width:480px) {
+            .settings-header-left .icon { width:36px; height:36px; flex-basis:36px; font-size:16px; }
+            .settings-header-left h2 { font-size:15px; }
+            .settings-card { padding:13px; }
+            .settings-header-actions { display:grid; grid-template-columns:1fr; }
+            .theme-preview { flex-direction:column; align-items:flex-start; }
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            *, *::before, *::after {
+                animation-duration:.01ms !important;
+                animation-iteration-count:1 !important;
+                transition-duration:.01ms !important;
+            }
         }
     </style>
         <!-- ============================================================
@@ -680,6 +719,50 @@
             </div>
 
             <button type="button" class="btn-save" id="saveLogoBtn">💾 حفظ حجم الشعار</button>
+        </section>
+
+        <!-- BACKGROUND IMAGE -->
+        <section class="settings-card" id="backgroundCard">
+            <div class="card-title">🎨 صورة الخلفية</div>
+            <div class="card-subtitle">صورة شفافة تظهر خلف المحتوى في كل الصفحات</div>
+
+            <div class="form-group">
+                <label>🖼️ الصورة</label>
+                <input type="file" id="bgFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;">
+
+                <div class="logo-upload-area" id="bgDropZone">
+                    <div class="logo-placeholder" id="bgPlaceholder">
+                        <div class="placeholder-icon">🎨</div>
+                        <div class="placeholder-text">اضغط لاختيار صورة خلفية</div>
+                        <div class="placeholder-hint">PNG · JPG · WebP · حتى 5 MB</div>
+                    </div>
+
+                    <div class="logo-preview" id="bgPreview" style="display:none;">
+                        <img id="bgPreviewImg" src="" alt="خلفية" style="max-width:200px;max-height:120px;">
+                        <div class="logo-name" id="bgName"></div>
+                        <div class="logo-actions">
+                            <button type="button" class="btn-sm upload" onclick="event.stopPropagation();document.getElementById('bgFileInput').click()">🔄 تغيير</button>
+                            <button type="button" class="btn-sm delete" onclick="event.stopPropagation();window._deleteBg(event)">🗑️ حذف</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>💧 مستوى الشفافية (Opacity): <span id="bgOpacityVal" style="color:var(--gold);">15%</span></label>
+                <input type="range" id="bgOpacity" min="5" max="80" value="15" step="5">
+                <div class="form-hint">كلما قلّت القيمة، كانت الصورة أكثر شفافية</div>
+            </div>
+
+            <div class="form-group">
+                <label>🌫️ التمويه (Blur): <span id="bgBlurVal" style="color:var(--gold);">0px</span></label>
+                <input type="range" id="bgBlur" min="0" max="20" value="0" step="1">
+            </div>
+
+            <div style="display:flex;gap:8px;">
+                <button type="button" class="btn-save" id="saveBgBtn" style="flex:1;">💾 حفظ الخلفية</button>
+                <button type="button" class="btn-save" id="previewBgBtn" style="flex:1;background:linear-gradient(135deg, rgba(96,165,250,.25), rgba(96,165,250,.15));color:#60a5fa;">👁️ معاينة</button>
+            </div>
         </section>
 
         <!-- LAYOUT -->
@@ -820,727 +903,125 @@
          ============================================================ -->
 
     <script>
-            /**
-     * ============================================================
-     * 🚢 MARINE SYSTEM SETTINGS v10.0
-     * ============================================================
-     */
+        <!-- ============================================================
+     🎨 MARINE SYSTEM - Dynamic Logo + Background
+     يُحمّل الشعار والخلفية تلقائياً في كل الصفحات
+     ============================================================ -->
+<script>
+(function() {
+    'use strict';
 
-    (function() {
-        'use strict';
+    // ✅ 1. تطبيق الخلفية فوراً من localStorage (بدون انتظار)
+    function applyCachedBackground() {
+        try {
+            var bgConfig = localStorage.getItem('marine_background_config');
+            if (!bgConfig) return;
+            var cfg = JSON.parse(bgConfig);
+            if (!cfg.dataUrl) return;
 
-        // ============================================================
-        // 🛡️ CLEANUP STATE
-        // ============================================================
-        var _isDestroyed = false;
-        var _pageIntervals = [];
-        var _pageTimeouts = [];
-        var _eventListeners = [];
-
-        function _settingsCleanup() {
-            if (_isDestroyed) return;
-            _isDestroyed = true;
-
-            _pageIntervals.forEach(function(id) {
-                try { clearInterval(id); } catch (e) {}
-            });
-            _pageIntervals = [];
-
-            _pageTimeouts.forEach(function(id) {
-                try { clearTimeout(id); } catch (e) {}
-            });
-            _pageTimeouts = [];
-
-            _eventListeners.forEach(function(item) {
-                try {
-                    if (item.el && item.fn) {
-                        item.el.removeEventListener(item.type, item.fn);
-                    }
-                } catch (e) {}
-            });
-            _eventListeners = [];
-
-            try {
-                delete window.loadSettings;
-                delete window.getToken;
-                delete window.showToast;
-                delete window._deleteLogo;
-            } catch (e) {}
-
-            console.log('🧹 Settings v10.0 cleanup done');
-        }
-
-        window._pageCleanup = window._pageCleanup || [];
-        window._pageCleanup.push(_settingsCleanup);
-
-        window.addEventListener('beforeunload', _settingsCleanup);
-        window.addEventListener('pagehide', _settingsCleanup);
-
-        // ============================================================
-        // 🔐 RBAC
-        // ============================================================
-        var LEGACY_ROLE_MAP = {
-            'super_admin': 'admin',
-            'مسؤول': 'admin',
-            'مدير': 'manager',
-            'محرر': 'editor',
-            'مشغل': 'maintenance_unit',
-            'operator': 'maintenance_unit',
-            'user': 'viewer',
-            'مشاهد': 'viewer'
-        };
-
-        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-
-        function normalizeRole(role) {
-            if (!role) return 'viewer';
-            var r = String(role).trim();
-            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
-            return LEGACY_ROLE_MAP[r] || 'viewer';
-        }
-
-        function isAdmin() {
-            var u = window.currentUser;
-            if (!u) return false;
-            return normalizeRole(u.role) === 'admin';
-        }
-
-        // ============================================================
-        // 🔧 HELPERS
-        // ============================================================
-        function $(id) { return document.getElementById(id); }
-
-        function getToken() {
-            return localStorage.getItem('marine_token') ||
-                   localStorage.getItem('token') ||
-                   localStorage.getItem('authToken') ||
-                   null;
-        }
-
-        function fetcher(url, options) {
-            if (typeof window.apiFetch === 'function') {
-                return window.apiFetch(url, options || {});
-            }
-            var token = getToken();
-            var headers = Object.assign({
-                'Accept': 'application/json'
-            }, (options && options.headers) || {});
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            return fetch(url, Object.assign({}, options || {}, {
-                headers: headers,
-                credentials: 'include'
-            }));
-        }
-
-        function addSafeListener(el, type, fn) {
-            if (!el) return;
-            el.addEventListener(type, fn);
-            _eventListeners.push({ el: el, type: type, fn: fn });
-        }
-
-        // ============================================================
-        // 🍞 TOAST
-        // ============================================================
-        function showToast(message, type, duration) {
-            if (_isDestroyed) return;
-            type = type || 'info';
-            duration = duration || 3500;
-
-            var existing = document.querySelector('.settings-toast');
+            var existing = document.getElementById('marine-dynamic-bg');
             if (existing) existing.remove();
 
-            var toast = document.createElement('div');
-            toast.className = 'settings-toast ' + type;
+            var bg = document.createElement('div');
+            bg.id = 'marine-dynamic-bg';
+            bg.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
+                'background-image:url(' + cfg.dataUrl + ');' +
+                'background-size:cover;background-position:center;' +
+                'background-repeat:no-repeat;' +
+                'opacity:' + (cfg.opacity || 0.15) + ';' +
+                'filter:' + (cfg.blur > 0 ? 'blur(' + cfg.blur + 'px)' : 'none') + ';' +
+                'pointer-events:none;z-index:-1;';
+            document.body.appendChild(bg);
+        } catch (e) {}
+    }
 
-            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    // ✅ 2. تطبيق الشعار من localStorage فوراً
+    function applyCachedLogo() {
+        try {
+            var cachedLogo = localStorage.getItem('marine_logo');
+            if (!cachedLogo) return;
+            updateLogoImages(cachedLogo);
+        } catch (e) {}
+    }
 
-            var icon = document.createElement('span');
-            icon.textContent = icons[type] || icons.info;
-
-            var text = document.createElement('span');
-            text.textContent = String(message || '');
-
-            toast.appendChild(icon);
-            toast.appendChild(text);
-            document.body.appendChild(toast);
-
-            var id = setTimeout(function() {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(10px)';
-                toast.style.transition = 'all .25s ease';
-                var id2 = setTimeout(function() {
-                    if (toast.parentNode) toast.remove();
-                }, 250);
-                _pageTimeouts.push(id2);
-            }, duration);
-            _pageTimeouts.push(id);
-        }
-
-        // ============================================================
-        // 🎛️ APPLY CARD VISIBILITY
-        // ============================================================
-        function applyCardVisibility() {
-            if (_isDestroyed) return;
-
-            if (!isAdmin()) {
-                document.querySelectorAll('.settings-card').forEach(function(card) {
-                    card.classList.add('hidden');
-                });
-
-                var aboutCard = $('aboutCard');
-                if (aboutCard) aboutCard.classList.remove('hidden');
-
-                var saveAllBtn = $('saveAllBtn');
-                var resetBtn = $('resetDefaultsBtn');
-                if (saveAllBtn) {
-                    saveAllBtn.disabled = true;
-                    saveAllBtn.title = 'متاح للمسؤول فقط';
-                }
-                if (resetBtn) {
-                    resetBtn.disabled = true;
-                    resetBtn.title = 'متاح للمسؤول فقط';
-                }
-
-                console.log('🔐 Non-admin: cards hidden');
-                return;
-            }
-
-            console.log('👑 Admin: all cards visible');
-        }
-
-        // ============================================================
-        // 🎨 APPLY THEME GLOBALLY (يفعّل الألوان في كل الصفحات)
-        // ============================================================
-        function applyThemeGlobally(theme) {
-            if (!theme) return;
-
+    function updateLogoImages(dataUrl) {
+        var selectors = [
+            '.app-logo img',
+            '.navbar-logo img',
+            '#globalLogo',
+            '.sidebar-logo img',
+            '.brand-logo img',
+            '[data-marine-logo]',
+            'header .logo img'
+        ];
+        selectors.forEach(function(sel) {
             try {
-                localStorage.setItem('marine_theme', JSON.stringify({
-                    primary: theme.primary,
-                    secondary: theme.secondary,
-                    gold: theme.gold
-                }));
+                document.querySelectorAll(sel).forEach(function(img) {
+                    if (img.tagName === 'IMG') img.src = dataUrl;
+                });
             } catch (e) {}
+        });
+    }
 
-            if (theme.primary) {
-                document.documentElement.style.setProperty('--primary-dark', theme.primary);
-            }
-            if (theme.secondary) {
-                document.documentElement.style.setProperty('--secondary', theme.secondary);
-            }
-            if (theme.gold) {
-                document.documentElement.style.setProperty('--gold', theme.gold);
-                document.documentElement.style.setProperty('--gold-light', theme.gold);
-            }
-        }
+    // ✅ 3. مزامنة مع الخادم (للتحديثات على الأجهزة الأخرى)
+    function syncFromServer() {
+        var token = localStorage.getItem('marine_token') ||
+                    localStorage.getItem('token') ||
+                    localStorage.getItem('authToken') || null;
 
-        // ============================================================
-        // 🖼️ LOGO FUNCTIONS
-        // ============================================================
-        function setLogoPreview(dataUrl, fileName) {
-            var placeholder = $('logoPlaceholder');
-            var preview = $('logoPreview');
-            var img = $('logoPreviewImg');
-            var nameEl = $('logoName');
-            var appImg = $('appLogoImg');
-            var appFallback = $('appLogoFallback');
+        var headers = { 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
 
-            if (dataUrl) {
-                if (placeholder) placeholder.style.display = 'none';
-                if (preview) preview.style.display = 'flex';
-                if (img) img.src = dataUrl;
-                if (nameEl && fileName) nameEl.textContent = fileName;
-
-                if (appImg) { appImg.src = dataUrl; appImg.style.display = 'block'; }
-                if (appFallback) appFallback.style.display = 'none';
-
-                try { localStorage.setItem('marine_logo', dataUrl); } catch (e) {}
-            } else {
-                if (placeholder) placeholder.style.display = 'flex';
-                if (preview) preview.style.display = 'none';
-                if (img) img.src = '';
-
-                if (appImg) { appImg.src = ''; appImg.style.display = 'none'; }
-                if (appFallback) appFallback.style.display = 'inline';
-
-                try { localStorage.removeItem('marine_logo'); } catch (e) {}
-            }
-        }
-
-        async function loadLogo() {
-            try {
-                var response = await fetcher('/api/logo', { method: 'GET' });
-                if (!response.ok) return;
-
-                var data = await response.json();
-                if (data.success && data.logo && data.logo.dataUrl) {
-                    setLogoPreview(data.logo.dataUrl, '');
-                } else {
-                    try {
-                        var cached = localStorage.getItem('marine_logo');
-                        if (cached) setLogoPreview(cached, '');
-                    } catch (e) {}
+        // مزامنة الشعار
+        fetch('/api/logo', { headers: headers, credentials: 'include' })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (data && data.success && data.logo && data.logo.dataUrl) {
+                    try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                    updateLogoImages(data.logo.dataUrl);
                 }
-            } catch (e) {
-                console.warn('⚠️ Load logo error:', e.message);
-                try {
-                    var cached2 = localStorage.getItem('marine_logo');
-                    if (cached2) setLogoPreview(cached2, '');
-                } catch (e2) {}
-            }
-        }
+            })
+            .catch(function() {});
 
-        async function uploadLogo(file) {
-            if (!file) return;
-
-            if (file.size > 2 * 1024 * 1024) {
-                showToast('❌ الصورة أكبر من 2 MB', 'error');
-                return;
-            }
-
-            var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
-            if (allowed.indexOf(file.type) === -1) {
-                showToast('❌ نوع الصورة غير مدعوم. استخدم PNG, JPG, SVG, أو WebP.', 'error');
-                return;
-            }
-
-            showToast('⏳ جاري رفع الشعار...', 'info');
-
-            try {
-                var formData = new FormData();
-                formData.append('logo', file);
-
-                var token = getToken();
-                var headers = {};
-                if (token) headers['Authorization'] = 'Bearer ' + token;
-
-                var csrfMatch = document.cookie.match(/marine_csrf=([^;]+)/);
-                if (csrfMatch) headers['X-CSRF-Token'] = csrfMatch[1];
-
-                var response = await fetch('/api/logo/upload', {
-                    method: 'POST',
-                    headers: headers,
-                    credentials: 'include',
-                    body: formData
-                });
-
-                var data = await response.json().catch(function() { return {}; });
-
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || ('خطأ ' + response.status));
+        // مزامنة الخلفية
+        fetch('/api/background', { headers: headers, credentials: 'include' })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (data && data.success && data.background && data.background.dataUrl) {
+                    var cfg = {
+                        dataUrl: data.background.dataUrl,
+                        opacity: data.background.opacity || 0.15,
+                        blur: data.background.blur || 0
+                    };
+                    try { localStorage.setItem('marine_background_config', JSON.stringify(cfg)); } catch (e) {}
+                    applyCachedBackground();
                 }
+            })
+            .catch(function() {});
+    }
 
-                setLogoPreview(data.logo.dataUrl, file.name);
-                showToast('✅ تم رفع الشعار بنجاح', 'success');
+    // ✅ التنفيذ
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            applyCachedBackground();
+            applyCachedLogo();
+            syncFromServer();
+        });
+    } else {
+        applyCachedBackground();
+        applyCachedLogo();
+        syncFromServer();
+    }
 
-            } catch (error) {
-                console.error('❌ Upload logo error:', error);
-                showToast('❌ ' + error.message, 'error');
-            }
+    // ✅ مراقبة تغييرات localStorage (مزامنة فورية بين التبويبات)
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'marine_background_config') {
+            applyCachedBackground();
         }
-
-        async function deleteLogo(event) {
-            if (event) { event.preventDefault(); event.stopPropagation(); }
-
-            if (!confirm('هل تريد حذف الشعار الحالي؟')) return;
-
-            try {
-                var response = await fetcher('/api/logo', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                if (!response.ok) {
-                    var err = await response.json().catch(function() { return {}; });
-                    throw new Error(err.error || 'فشل الحذف');
-                }
-
-                setLogoPreview(null, null);
-                showToast('✅ تم حذف الشعار', 'success');
-
-            } catch (error) {
-                console.error('❌ Delete logo error:', error);
-                showToast('❌ ' + error.message, 'error');
-            }
+        if (e.key === 'marine_logo' && e.newValue) {
+            updateLogoImages(e.newValue);
         }
+    });
 
-        window._deleteLogo = deleteLogo;
-
-        // ============================================================
-        // 📊 LOAD SETTINGS
-        // ============================================================
-        async function loadSettings() {
-            if (_isDestroyed) return;
-
-            var token = getToken();
-            if (!token) {
-                console.warn('⚠️ No token');
-                showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-                return;
-            }
-
-            if (!isAdmin()) {
-                console.log('ℹ️ Non-admin: skip settings load');
-                return;
-            }
-
-            console.log('📡 Loading settings...');
-
-            try {
-                var response = await fetcher('/api/settings', { method: 'GET' });
-
-                if (!response.ok) {
-                    if (response.status === 403) {
-                        throw new Error('ليس لديك صلاحية الوصول للإعدادات');
-                    }
-                    throw new Error('فشل تحميل الإعدادات: ' + response.status);
-                }
-
-                var data = await response.json();
-
-                if (data && data.settings) {
-                    applySettings(data.settings);
-                }
-
-            } catch (error) {
-                console.error('❌ Load settings error:', error);
-                if (_isDestroyed) return;
-                showToast('❌ ' + error.message, 'error');
-            }
-        }
-
-        // ============================================================
-        // 🎨 APPLY SETTINGS TO UI
-        // ============================================================
-        function applySettings(settings) {
-            if (_isDestroyed) return;
-            if (!settings) return;
-
-            if (settings.theme) {
-                var t = settings.theme;
-                if (t.primary) document.documentElement.style.setProperty('--primary-dark', t.primary);
-                if (t.secondary) document.documentElement.style.setProperty('--secondary', t.secondary);
-                if (t.gold) {
-                    document.documentElement.style.setProperty('--gold', t.gold);
-                    document.documentElement.style.setProperty('--gold-light', t.gold);
-                }
-                applyThemeGlobally(t);
-            }
-
-            if (settings.layout) {
-                var el;
-                el = $('darkMode'); if (el) el.checked = settings.layout.darkMode !== false;
-                el = $('fontSize'); if (el) el.value = settings.layout.fontSize || 'medium';
-                el = $('sidebarPosition'); if (el) el.value = settings.layout.sidebarPosition || 'right';
-                el = $('showStats'); if (el) el.checked = settings.layout.showStats !== false;
-            }
-
-            if (settings.security) {
-                var el2;
-                el2 = $('emailNotifications'); if (el2) el2.checked = settings.security.emailNotifications !== false;
-                el2 = $('smsNotifications'); if (el2) el2.checked = settings.security.smsNotifications === true;
-                el2 = $('sessionTimeout');
-                if (el2) {
-                    var t2 = settings.security.sessionTimeout || 60;
-                    el2.value = Math.min(Math.max(t2, 5), 480);
-                }
-            }
-
-            if (settings.notifications) {
-                var el3;
-                el3 = $('emergencyAlerts'); if (el3) el3.checked = settings.notifications.emergencyAlerts !== false;
-                el3 = $('maintenanceAlerts'); if (el3) el3.checked = settings.notifications.maintenanceAlerts !== false;
-                el3 = $('performanceReports'); if (el3) el3.value = settings.notifications.performanceReports || 'weekly';
-            }
-
-            if (settings.branding) {
-                var el4 = $('logoSize');
-                if (el4) el4.value = settings.branding.logoSize || 'medium';
-            }
-        }
-
-        // ============================================================
-        // 💾 COLLECT SETTINGS
-        // ============================================================
-        function collectSettings() {
-            var settings = {};
-
-            var activeTheme = document.querySelector('#colorPicker .color-option.active');
-            var activeGold = document.querySelector('#goldColorPicker .color-option.active');
-
-            settings.theme = {
-                primary: activeTheme ? activeTheme.dataset.primary : '#0a1628',
-                secondary: activeTheme ? activeTheme.dataset.secondary : '#1a2a4a',
-                gold: activeGold ? activeGold.dataset.gold : '#e6b31e'
-            };
-
-            settings.layout = {
-                darkMode: $('darkMode') ? $('darkMode').checked : true,
-                fontSize: $('fontSize') ? $('fontSize').value : 'medium',
-                sidebarPosition: $('sidebarPosition') ? $('sidebarPosition').value : 'right',
-                showStats: $('showStats') ? $('showStats').checked : true
-            };
-
-            settings.security = {
-                emailNotifications: $('emailNotifications') ? $('emailNotifications').checked : true,
-                smsNotifications: $('smsNotifications') ? $('smsNotifications').checked : false,
-                sessionTimeout: $('sessionTimeout') ? Math.min(Math.max(parseInt($('sessionTimeout').value) || 60, 5), 480) : 60
-            };
-
-            settings.notifications = {
-                emergencyAlerts: $('emergencyAlerts') ? $('emergencyAlerts').checked : true,
-                maintenanceAlerts: $('maintenanceAlerts') ? $('maintenanceAlerts').checked : true,
-                performanceReports: $('performanceReports') ? $('performanceReports').value : 'weekly'
-            };
-
-            settings.branding = {
-                logoSize: $('logoSize') ? $('logoSize').value : 'medium'
-            };
-
-            return settings;
-        }
-
-        // ============================================================
-        // 💾 SAVE SETTINGS
-        // ============================================================
-        async function saveSettings() {
-            if (_isDestroyed) return;
-
-            if (!isAdmin()) {
-                showToast('⚠️ ليس لديك صلاحية الحفظ', 'error');
-                return;
-            }
-
-            var settings = collectSettings();
-
-            try {
-                var response = await fetcher('/api/settings', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(settings)
-                });
-
-                if (!response.ok) {
-                    var errData = null;
-                    try { errData = await response.json(); } catch (_) {}
-                    throw new Error(
-                        (errData && (errData.error || errData.message)) ||
-                        'فشل الحفظ'
-                    );
-                }
-
-                showToast('✅ تم حفظ الإعدادات', 'success');
-
-                applySettings(settings);
-                applyThemeGlobally(settings.theme);
-
-            } catch (error) {
-                console.error('❌ Save error:', error);
-                showToast('❌ ' + error.message, 'error');
-            }
-        }
-
-        // ============================================================
-        // 🖼️ PREVIEW THEME
-        // ============================================================
-        function updatePreview() {
-            var activeTheme = document.querySelector('#colorPicker .color-option.active');
-            var activeGold = document.querySelector('#goldColorPicker .color-option.active');
-
-            var pv = $('previewPrimary');
-            var sv = $('previewSecondary');
-            var gv = $('previewGold');
-            var cv = $('previewColors');
-
-            if (activeTheme && pv) pv.style.background = activeTheme.dataset.primary;
-            if (activeTheme && sv) sv.style.background = activeTheme.dataset.secondary;
-            if (activeGold && gv) gv.style.background = activeGold.dataset.gold;
-            if (activeTheme && activeGold && cv) {
-                cv.textContent = (activeTheme.dataset.primary || '') + ' • ' +
-                                 (activeTheme.dataset.secondary || '') + ' • ' +
-                                 (activeGold.dataset.gold || '');
-            }
-        }
-
-        // ============================================================
-        // 🚀 INIT
-        // ============================================================
-        function init() {
-            if (_isDestroyed) return;
-
-            console.log('🚀 Settings v10.0 initializing...');
-            console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
-            console.log('👑 isAdmin:', isAdmin());
-
-            applyCardVisibility();
-
-            if (isAdmin()) {
-                loadSettings();
-            }
-
-            // ✅ Color pickers
-            document.querySelectorAll('#colorPicker .color-option').forEach(function(btn) {
-                addSafeListener(btn, 'click', function() {
-                    document.querySelectorAll('#colorPicker .color-option').forEach(function(b) {
-                        b.classList.remove('active');
-                        b.setAttribute('aria-pressed', 'false');
-                    });
-                    this.classList.add('active');
-                    this.setAttribute('aria-pressed', 'true');
-                    updatePreview();
-                });
-            });
-
-            document.querySelectorAll('#goldColorPicker .color-option').forEach(function(btn) {
-                addSafeListener(btn, 'click', function() {
-                    document.querySelectorAll('#goldColorPicker .color-option').forEach(function(b) {
-                        b.classList.remove('active');
-                        b.setAttribute('aria-pressed', 'false');
-                    });
-                    this.classList.add('active');
-                    this.setAttribute('aria-pressed', 'true');
-                    updatePreview();
-                });
-            });
-
-            updatePreview();
-
-            // ✅ Save buttons
-            addSafeListener($('saveAllBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            addSafeListener($('saveThemeBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            addSafeListener($('saveLayoutBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            addSafeListener($('saveSecurityBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            addSafeListener($('saveNotificationsBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            addSafeListener($('saveLogoBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                saveSettings();
-            });
-
-            // ✅ Refresh
-            addSafeListener($('refreshBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                showToast('🔄 جاري التحديث...', 'info');
-                loadSettings();
-                loadLogo();
-            });
-
-            // ✅ Reset
-            addSafeListener($('resetDefaultsBtn'), 'click', function() {
-                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
-                if (!confirm('⚠️ هل أنت متأكد من استعادة الإعدادات الافتراضية؟')) return;
-
-                fetcher('/api/settings/reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                })
-                .then(function(r) {
-                    if (!r.ok) throw new Error('فشل الاستعادة');
-                    return r.json();
-                })
-                .then(function() {
-                    showToast('✅ تم استعادة الإعدادات الافتراضية', 'success');
-                    setTimeout(function() { loadSettings(); }, 500);
-                })
-                .catch(function(err) {
-                    showToast('❌ ' + err.message, 'error');
-                });
-            });
-
-            // ========================================================
-            // 🖼️ LOGO INIT — ربط رفع الشعار
-            // ========================================================
-            var logoFileInput = $('logoFileInput');
-            var logoDropZone = $('logoDropZone');
-
-            if (logoFileInput) {
-                addSafeListener(logoFileInput, 'change', function() {
-                    if (this.files && this.files[0]) {
-                        uploadLogo(this.files[0]);
-                        this.value = '';
-                    }
-                });
-            }
-
-            if (logoDropZone) {
-                addSafeListener(logoDropZone, 'click', function(e) {
-                    if (e.target.closest('.logo-actions')) return;
-                    if (logoFileInput) logoFileInput.click();
-                });
-
-                ['dragenter', 'dragover'].forEach(function(evt) {
-                    addSafeListener(logoDropZone, evt, function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        logoDropZone.classList.add('dragover');
-                    });
-                });
-
-                ['dragleave', 'drop'].forEach(function(evt) {
-                    addSafeListener(logoDropZone, evt, function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        logoDropZone.classList.remove('dragover');
-                    });
-                });
-
-                addSafeListener(logoDropZone, 'drop', function(e) {
-                    var files = e.dataTransfer && e.dataTransfer.files;
-                    if (files && files[0]) {
-                        uploadLogo(files[0]);
-                    }
-                });
-            }
-
-            // ✅ تحميل الشعار عند البدء
-            loadLogo();
-
-            console.log('✅ Settings v10.0 ready');
-        }
-
-        // ============================================================
-        // 🏁 BOOT
-        // ============================================================
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                var id = setTimeout(function() {
-                    if (!_isDestroyed) init();
-                }, 50);
-                _pageTimeouts.push(id);
-            }, { once: true });
-        } else {
-            var id0 = setTimeout(function() {
-                if (!_isDestroyed) init();
-            }, 50);
-            _pageTimeouts.push(id0);
-        }
-
-        // ============================================================
-        // 🌐 EXPOSE
-        // ============================================================
-        window.loadSettings = loadSettings;
-        window.getToken = getToken;
-        window.showToast = showToast;
-
-    })();
-    </script>
-</div>
+})();
+</script>
