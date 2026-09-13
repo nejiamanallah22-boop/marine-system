@@ -1,5 +1,5 @@
 // ============================================================
-// ⚙️ SETTINGS + 🖼️ LOGO + 🎨 BACKGROUND + AUTO-INJECT — v3.0
+// ⚙️ SETTINGS + 🖼️ LOGO + 🎨 BACKGROUND + AUTO-INJECT — v3.1
 // ملف مستقل يُدمج في server.js
 // ⚠️ ملف JavaScript فقط — لا يحتوي على HTML
 // ============================================================
@@ -137,34 +137,61 @@ function sanitizeSettings(input) {
 
 // ============================================================
 // 🎨 DYNAMIC INJECT SCRIPT (Logo + Background)
+// يُحقن في كل صفحات HTML تلقائياً
 // ============================================================
 
 const DYNAMIC_INJECT_SCRIPT = `
 <script>
 (function() {
     'use strict';
+
+    // ✅ تطبيق الخلفية فوراً من localStorage
     function applyCachedBackground() {
         try {
             var bgConfig = localStorage.getItem('marine_background_config');
             if (!bgConfig) return;
+
             var cfg = JSON.parse(bgConfig);
-            if (!cfg.dataUrl) return;
+            if (!cfg || !cfg.dataUrl) return;
+
             var existing = document.getElementById('marine-dynamic-bg');
             if (existing) existing.remove();
+
             var bg = document.createElement('div');
             bg.id = 'marine-dynamic-bg';
-            bg.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
-                'background-image:url(' + cfg.dataUrl + ');' +
-                'background-size:cover;background-position:center;' +
-                'background-repeat:no-repeat;' +
-                'opacity:' + (cfg.opacity || 0.15) + ';' +
-                'filter:' + (cfg.blur > 0 ? 'blur(' + cfg.blur + 'px)' : 'none') + ';' +
-                'pointer-events:none;z-index:-1;';
-            document.body.appendChild(bg);
+            bg.style.cssText = 'position:fixed !important;top:0 !important;left:0 !important;' +
+                'width:100vw !important;height:100vh !important;' +
+                'background-image:url(' + cfg.dataUrl + ') !important;' +
+                'background-size:cover !important;background-position:center !important;' +
+                'background-repeat:no-repeat !important;' +
+                'opacity:' + (cfg.opacity || 0.15) + ' !important;' +
+                'filter:' + (cfg.blur > 0 ? 'blur(' + cfg.blur + 'px)' : 'none') + ' !important;' +
+                'pointer-events:none !important;' +
+                'z-index:0 !important;' +
+                'transition:none !important;';
+
+            if (document.body.firstChild) {
+                document.body.insertBefore(bg, document.body.firstChild);
+            } else {
+                document.body.appendChild(bg);
+            }
         } catch (e) {}
     }
+
     function updateLogoImages(dataUrl) {
-        var selectors = ['.app-logo img','.navbar-logo img','#globalLogo','.sidebar-logo img','.brand-logo img','[data-marine-logo]','header .logo img','.logo img'];
+        if (!dataUrl) return;
+        var selectors = [
+            '.app-logo img',
+            '.navbar-logo img',
+            '#globalLogo',
+            '.sidebar-logo img',
+            '.brand-logo img',
+            '[data-marine-logo]',
+            'header .logo img',
+            '.logo img',
+            '#appLogoImg',
+            '#logoPreviewImg'
+        ];
         selectors.forEach(function(sel) {
             try {
                 document.querySelectorAll(sel).forEach(function(img) {
@@ -173,16 +200,21 @@ const DYNAMIC_INJECT_SCRIPT = `
             } catch (e) {}
         });
     }
+
     function applyCachedLogo() {
         try {
             var cachedLogo = localStorage.getItem('marine_logo');
             if (cachedLogo) updateLogoImages(cachedLogo);
         } catch (e) {}
     }
+
     function syncFromServer() {
-        var token = localStorage.getItem('marine_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || null;
+        var token = localStorage.getItem('marine_token') ||
+                    localStorage.getItem('token') ||
+                    localStorage.getItem('authToken') || null;
         var headers = { 'Accept': 'application/json' };
         if (token) headers['Authorization'] = 'Bearer ' + token;
+
         fetch('/api/logo', { headers: headers, credentials: 'include' })
             .then(function(r) { return r.ok ? r.json() : null; })
             .then(function(data) {
@@ -191,6 +223,7 @@ const DYNAMIC_INJECT_SCRIPT = `
                     updateLogoImages(data.logo.dataUrl);
                 }
             }).catch(function() {});
+
         fetch('/api/background', { headers: headers, credentials: 'include' })
             .then(function(r) { return r.ok ? r.json() : null; })
             .then(function(data) {
@@ -205,7 +238,9 @@ const DYNAMIC_INJECT_SCRIPT = `
                 }
             }).catch(function() {});
     }
+
     if (document.readyState === 'loading') {
+        applyCachedBackground();
         document.addEventListener('DOMContentLoaded', function() {
             applyCachedBackground();
             applyCachedLogo();
@@ -216,10 +251,24 @@ const DYNAMIC_INJECT_SCRIPT = `
         applyCachedLogo();
         syncFromServer();
     }
+
     window.addEventListener('storage', function(e) {
-        if (e.key === 'marine_background_config') applyCachedBackground();
-        if (e.key === 'marine_logo' && e.newValue) updateLogoImages(e.newValue);
+        if (e.key === 'marine_background_config') {
+            applyCachedBackground();
+        }
+        if (e.key === 'marine_logo' && e.newValue) {
+            updateLogoImages(e.newValue);
+        }
     });
+
+    // ✅ إعادة تطبيق الخلفية إذا حُذفت
+    setInterval(function() {
+        var bg = document.getElementById('marine-dynamic-bg');
+        if (!bg) {
+            applyCachedBackground();
+        }
+    }, 3000);
+
 })();
 </script>
 `;
@@ -251,9 +300,7 @@ module.exports = function registerSettingsRoutes(app, deps) {
     // ========================================================
 
     app.use((req, res, next) => {
-        // تجاهل API
         if (req.path.startsWith('/api')) return next();
-        // تجاهل الملفات الثابتة
         if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|json|map|xml|txt|webp|pdf)$/i)) {
             return next();
         }
@@ -264,7 +311,10 @@ module.exports = function registerSettingsRoutes(app, deps) {
             try {
                 const contentType = res.getHeader('Content-Type') || '';
                 const isHtml = typeof body === 'string' &&
-                    (String(contentType).indexOf('text/html') !== -1 || body.trim().startsWith('<!') || body.trim().startsWith('<html') || body.trim().startsWith('<div'));
+                    (String(contentType).indexOf('text/html') !== -1 ||
+                     body.trim().startsWith('<!') ||
+                     body.trim().startsWith('<html') ||
+                     body.trim().startsWith('<div'));
 
                 if (!isHtml) return originalSend(body);
                 if (body.indexOf('marine-dynamic-bg') !== -1) return originalSend(body);
