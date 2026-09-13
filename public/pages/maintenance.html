@@ -1,8 +1,11 @@
 <!-- public/pages/maintenance.html -->
 <div id="page-maintenance">
     <style>
+        /* ✅ اللون المعتم على body */
+        body { background: #0a0e1a; }
+
         /* ============================================================
-           🔧 MAINTENANCE - ENTERPRISE PRO v9.15 (Year Checkboxes)
+           🔧 MAINTENANCE - ENTERPRISE PRO v9.16 (Year Checkboxes + Dynamic Logo)
            ============================================================ */
 
         :root {
@@ -36,11 +39,12 @@
             padding: 20px;
             margin: 0;
             font-family: var(--font);
-            background: #0a0e1a;
+            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
+            background: transparent;
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         #page-maintenance::before {
@@ -86,6 +90,7 @@
 
         .maint-header-left { display: flex; align-items: center; gap: 14px; }
 
+        /* ✅ الشعار الديناميكي */
         .maint-header-left .header-icon {
             width: 44px; height: 44px;
             border-radius: 50%;
@@ -93,6 +98,27 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 20px; color: #0a1628;
             animation: pulseIcon 2s ease-in-out infinite;
+            overflow: hidden;
+        }
+
+        /* ✅ دعم صورة الشعار */
+        .maint-header-left .header-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+        .maint-header-left .header-icon.has-logo img {
+            display: block;
+        }
+        .maint-header-left .header-icon.has-logo {
+            animation: none;
+            background: transparent;
+            box-shadow: 0 0 20px rgba(233,69,96,0.3);
+        }
+        .maint-header-left .header-icon.has-logo i {
+            display: none;
         }
 
         @keyframes pulseIcon {
@@ -356,7 +382,6 @@
         .filter-bar input::placeholder { color: rgba(255, 255, 255, 0.15); }
         .filter-bar select option { background: #0a1628; color: #e2e8f0; }
 
-        /* ===== YEAR CHECKBOXES ===== */
         .year-checkbox-group {
             display: flex;
             flex-wrap: wrap;
@@ -760,10 +785,15 @@
             .year-check { flex-shrink: 0; }
         }
     </style>
-        <!-- HEADER -->
+
+    <!-- HEADER -->
     <div class="maint-header">
         <div class="maint-header-left">
-            <div class="header-icon"><i class="fas fa-tools"></i></div>
+            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
+            <div class="header-icon" id="maintHeaderIcon">
+                <i class="fas fa-tools"></i>
+                <img id="globalLogo" src="" alt="شعار" style="display:none;">
+            </div>
             <div>
                 <h2>سجلات الصيانة</h2>
                 <p>متابعة وإدارة مهام الصيانة للمراكب البحرية</p>
@@ -965,7 +995,7 @@
         (function() {
             'use strict';
 
-            console.log('🔧 Maintenance Page v9.15 - loading...');
+            console.log('🔧 Maintenance Page v9.16 - loading...');
 
             // ============================================================
             // ✅ CLEANUP STATE
@@ -988,13 +1018,61 @@
                     delete window.toggleYearFilter;
                     delete window.onYearCheckChange;
                 } catch (e) {}
-                console.log('🧹 Maintenance v9.15 cleanup done');
+                console.log('🧹 Maintenance v9.16 cleanup done');
             }
 
             window._pageCleanup = window._pageCleanup || [];
             window._pageCleanup.push(_maintenanceCleanup);
             window.addEventListener('beforeunload', _maintenanceCleanup);
             window.addEventListener('pagehide', _maintenanceCleanup);
+
+            // ============================================================
+            // 🎨 LOGO APPLY (Dynamic)
+            // ============================================================
+            function applyLogo() {
+                try {
+                    var cachedLogo = localStorage.getItem('marine_logo');
+                    if (!cachedLogo) return;
+
+                    var iconDiv = document.getElementById('maintHeaderIcon');
+                    var img = document.getElementById('globalLogo');
+                    if (img) {
+                        img.src = cachedLogo;
+                        img.style.display = 'block';
+                    }
+                    if (iconDiv) {
+                        iconDiv.classList.add('has-logo');
+                    }
+                } catch (e) {}
+            }
+
+            function syncLogoFromServer() {
+                var token = localStorage.getItem('marine_token') ||
+                            localStorage.getItem('token') ||
+                            localStorage.getItem('authToken') || null;
+                var headers = { 'Accept': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/logo', { headers: headers, credentials: 'include' })
+                    .then(function(r) { return r.ok ? r.json() : null; })
+                    .then(function(data) {
+                        if (data && data.success && data.logo && data.logo.dataUrl) {
+                            try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                            applyLogo();
+                        }
+                    }).catch(function() {});
+            }
+
+            // ✅ شغّل فوراً
+            applyLogo();
+            syncLogoFromServer();
+
+            // ✅ استمع للتغييرات بين التبويبات
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'marine_logo' && e.newValue) {
+                    applyLogo();
+                }
+            });
 
             // ============================================================
             // 🔐 RBAC
@@ -1038,9 +1116,6 @@
                 return ['admin', 'manager'].indexOf(r) !== -1;
             }
 
-            // ============================================================
-            // 🔥 STATUS NORMALIZATION
-            // ============================================================
             function normalizeStatusForServer(status) {
                 if (!status) return 'قيد التنفيذ';
                 var s = String(status).trim();
@@ -1062,16 +1137,10 @@
                 return MAP[s] || 'قيد التنفيذ';
             }
 
-            // ============================================================
-            // 📦 DATA
-            // ============================================================
             var maintenanceData = [];
             var currentEditId = null;
             var allVessels = [];
 
-            // ============================================================
-            // 🔑 TOKEN
-            // ============================================================
             function getToken() {
                 return localStorage.getItem('marine_token') ||
                     localStorage.getItem('token') ||
@@ -1110,9 +1179,6 @@
                 }));
             }
 
-            // ============================================================
-            // 🔧 HELPERS
-            // ============================================================
             function escapeHtml(str) {
                 if (!str) return '';
                 return String(str).replace(/[&<>"']/g, function(m) {
@@ -1161,9 +1227,6 @@
                 }, 3000);
             }
 
-            // ============================================================
-            // 📅 YEAR FILTER — CHECKBOXES
-            // ============================================================
             function getSelectedYears() {
                 var checkboxes = document.querySelectorAll('#yearFilterGroup input[type="checkbox"]:checked');
                 return Array.from(checkboxes).map(function(cb) { return cb.value; });
@@ -1186,9 +1249,6 @@
                 onYearCheckChange();
             }
 
-            // ============================================================
-            // 📥 LOAD VESSELS
-            // ============================================================
             async function loadVessels() {
                 try {
                     var token = getToken();
@@ -1204,9 +1264,6 @@
                 }
             }
 
-            // ============================================================
-            // 📥 LOAD MAINTENANCE
-            // ============================================================
             async function loadMaintenance() {
                 try {
                     var token = getToken();
@@ -1267,9 +1324,6 @@
                 }
             }
 
-            // ============================================================
-            // 📊 UPDATE STATS
-            // ============================================================
             function updateStats() {
                 var total = maintenanceData.length;
                 var active = maintenanceData.filter(function(r) { return r.status === 'قيد الإنجاز'; }).length;
@@ -1308,9 +1362,6 @@
                 if (badge2) badge2.textContent = (damagedVessels || damaged) + ' مركب معطب';
             }
 
-            // ============================================================
-            // 🚨 RENDER DAMAGED
-            // ============================================================
             function renderDamagedVessels() {
                 var damagedVessels = maintenanceData.filter(function(r) {
                     return r.status === 'معطب';
@@ -1357,9 +1408,7 @@
 
                 tbody.innerHTML = html;
             }
-                                // ============================================================
-            // 📋 RENDER TABLE
-            // ============================================================
+
             function renderTable() {
                 var searchEl = document.getElementById('searchMaint');
                 var statusEl = document.getElementById('statusFilter');
@@ -1436,9 +1485,6 @@
                 tbody.innerHTML = html;
             }
 
-            // ============================================================
-            // 🔄 REFRESH
-            // ============================================================
             async function refreshMaintenance() {
                 var btn = document.getElementById('refreshBtn');
                 var orig = btn ? btn.innerHTML : '';
@@ -1496,14 +1542,10 @@
                 }
             }
 
-            // ============================================================
-            // 🔄 RESET FILTERS
-            // ============================================================
             function resetFilters() {
                 var s = document.getElementById('searchMaint'); if (s) s.value = '';
                 var st = document.getElementById('statusFilter'); if (st) st.value = 'الكل';
 
-                // إلغاء كل checkboxes السنوات
                 document.querySelectorAll('#yearFilterGroup input[type="checkbox"]').forEach(function(cb) {
                     cb.checked = false;
                 });
@@ -1512,9 +1554,6 @@
                 showToast('✅ تم إلغاء جميع الفلاتر', 'success');
             }
 
-            // ============================================================
-            // ➕ OPEN ADD MODAL
-            // ============================================================
             function openAddMaintenance() {
                 if (!canCreateMaintenance()) {
                     showToast('⚠️ ليس لديك صلاحية لإضافة صيانة', 'error');
@@ -1570,9 +1609,6 @@
                 if (modal) modal.classList.add('active');
             }
 
-            // ============================================================
-            // ✏️ OPEN EDIT MODAL
-            // ============================================================
             function openEditModal(id) {
                 var record = maintenanceData.find(function(r) { return r.id == id; });
                 if (!record) { showToast('❌ المهمة غير موجودة', 'error'); return; }
@@ -1637,9 +1673,6 @@
                 if (modal) modal.classList.add('active');
             }
 
-            // ============================================================
-            // 💾 SAVE MAINTENANCE
-            // ============================================================
             function saveMaintenance() {
                 if (!canCreateMaintenance()) {
                     showToast('⚠️ ليس لديك صلاحية', 'error');
@@ -1722,9 +1755,6 @@
                 });
             }
 
-            // ============================================================
-            // ✅ COMPLETE MAINTENANCE
-            // ============================================================
             function completeMaintenance(id) {
                 if (!confirm('✅ هل تريد إكمال هذه المهمة؟')) return;
 
@@ -1756,9 +1786,6 @@
                 });
             }
 
-            // ============================================================
-            // 🗑️ DELETE MAINTENANCE
-            // ============================================================
             function deleteMaintenance(id) {
                 if (!canDeleteMaintenance()) {
                     showToast('⚠️ ليس لديك صلاحية الحذف', 'error');
@@ -1793,9 +1820,6 @@
                 });
             }
 
-            // ============================================================
-            // 📜 SHOW HISTORY
-            // ============================================================
             function showHistory(id) {
                 var record = maintenanceData.find(function(r) { return r.id == id; });
                 if (!record) { showToast('❌ المهمة غير موجودة', 'error'); return; }
@@ -1844,21 +1868,15 @@
                 if (modal) modal.classList.add('active');
             }
 
-            // ============================================================
-            // ❌ CLOSE MODAL
-            // ============================================================
             function closeModal() {
                 var modal = document.getElementById('maintenanceModal');
                 if (modal) modal.classList.remove('active');
                 currentEditId = null;
             }
 
-            // ============================================================
-            // 🚀 INIT
-            // ============================================================
             async function init() {
                 if (_isDestroyed) return;
-                console.log('🚀 Initializing Maintenance v9.15...');
+                console.log('🚀 Initializing Maintenance v9.16...');
                 console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
                 console.log('🔐 canCreate:', canCreateMaintenance());
                 console.log('🔐 canDelete:', canDeleteMaintenance());
@@ -1898,7 +1916,6 @@
                     renderDamagedVessels();
                     renderTable();
 
-                    // Events
                     var rb = document.getElementById('refreshBtn');
                     if (rb) rb.addEventListener('click', refreshMaintenance);
 
@@ -1925,7 +1942,7 @@
                         if (e.target === this) closeModal();
                     });
 
-                    console.log('✅ Maintenance v9.15 ready');
+                    console.log('✅ Maintenance v9.16 ready');
                     console.log('🔧 ' + maintenanceData.length + ' tasks');
                     console.log('🚨 ' + damagedVessels.length + ' damaged vessels');
 
@@ -1941,9 +1958,6 @@
                 init();
             }
 
-            // ============================================================
-            // 🌐 EXPOSE GLOBALS
-            // ============================================================
             window.openAddMaintenance = openAddMaintenance;
             window.openEditModal = openEditModal;
             window.saveMaintenance = saveMaintenance;
