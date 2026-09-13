@@ -72,12 +72,33 @@
 
         .settings-header-left { display:flex; align-items:center; gap:14px; min-width:0; }
 
+        /* ✅ الشعار الديناميكي */
         .settings-header-left .icon {
             width:44px; height:44px; flex:0 0 44px;
             display:flex; align-items:center; justify-content:center;
             border-radius:50%;
             background:linear-gradient(135deg, var(--gold), #60a5fa);
             color:#0a1628; font-size:20px; box-shadow:var(--shadow-gold);
+            overflow: hidden;
+        }
+
+        /* ✅ دعم صورة الشعار */
+        .settings-header-left .icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+        .settings-header-left .icon.has-logo img {
+            display: block;
+        }
+        .settings-header-left .icon.has-logo {
+            background: transparent;
+            box-shadow: 0 0 20px rgba(230,179,30,0.3);
+        }
+        .settings-header-left .icon.has-logo span {
+            display: none;
         }
 
         .settings-header-left h2 {
@@ -401,7 +422,11 @@
 
     <div class="settings-header">
         <div class="settings-header-left">
-            <div class="icon" aria-hidden="true">⚙️</div>
+            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
+            <div class="icon" id="settingsHeaderIcon">
+                <span>⚙️</span>
+                <img id="globalLogo" src="" alt="شعار" style="display:none;">
+            </div>
             <div>
                 <h2>الإعدادات المتقدمة</h2>
                 <p id="settingsSubtitle">تخصيص النظام وإدارة الإعدادات</p>
@@ -699,6 +724,54 @@
         window.addEventListener('beforeunload', _settingsCleanup);
         window.addEventListener('pagehide', _settingsCleanup);
 
+        // ============================================================
+        // 🎨 LOGO APPLY (Dynamic)
+        // ============================================================
+        function applyLogo() {
+            try {
+                var cachedLogo = localStorage.getItem('marine_logo');
+                if (!cachedLogo) return;
+
+                var iconDiv = document.getElementById('settingsHeaderIcon');
+                var img = document.getElementById('globalLogo');
+                if (img) {
+                    img.src = cachedLogo;
+                    img.style.display = 'block';
+                }
+                if (iconDiv) {
+                    iconDiv.classList.add('has-logo');
+                }
+            } catch (e) {}
+        }
+
+        function syncLogoFromServer() {
+            var token = localStorage.getItem('marine_token') ||
+                        localStorage.getItem('token') ||
+                        localStorage.getItem('authToken') || null;
+            var headers = { 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch('/api/logo', { headers: headers, credentials: 'include' })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (data && data.success && data.logo && data.logo.dataUrl) {
+                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                        applyLogo();
+                    }
+                }).catch(function() {});
+        }
+
+        // ✅ شغّل فوراً
+        applyLogo();
+        syncLogoFromServer();
+
+        // ✅ استمع للتغييرات بين التبويبات
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'marine_logo' && e.newValue) {
+                applyLogo();
+            }
+        });
+
         var LEGACY_ROLE_MAP = {
             'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
             'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit',
@@ -813,6 +886,9 @@
                 if (appImg) { appImg.src = dataUrl; appImg.style.display = 'block'; }
                 if (appFallback) appFallback.style.display = 'none';
                 try { localStorage.setItem('marine_logo', dataUrl); } catch (e) {}
+
+                // ✅ تحديث الأيقونة في الهيدر مباشرة
+                applyLogo();
             } else {
                 if (placeholder) placeholder.style.display = 'flex';
                 if (preview) preview.style.display = 'none';
@@ -820,6 +896,12 @@
                 if (appImg) { appImg.src = ''; appImg.style.display = 'none'; }
                 if (appFallback) appFallback.style.display = 'inline';
                 try { localStorage.removeItem('marine_logo'); } catch (e) {}
+
+                // ✅ إزالة الشعار من الأيقونة
+                var iconDiv = $('settingsHeaderIcon');
+                var globalImg = $('globalLogo');
+                if (iconDiv) iconDiv.classList.remove('has-logo');
+                if (globalImg) { globalImg.src = ''; globalImg.style.display = 'none'; }
             }
         }
 
