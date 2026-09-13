@@ -1,11 +1,6 @@
 <!-- public/pages/settings.html -->
 <div id="page-settings">
     <style>
-        /* ============================================================
-           ⚙️ MARINE SYSTEM SETTINGS v10.0
-           Logo + Background + Live Theme
-           ============================================================ */
-
         :root {
             --app-bg: #0a0e1a;
             --primary-dark: #0a1628;
@@ -31,37 +26,24 @@
         }
 
         #page-settings {
-            width:100%;
-            max-width:100%;
-            min-height:100vh;
-            padding:20px;
-            margin:0;
-            box-sizing:border-box;
-            position:relative;
-            z-index:1;
-            font-family:var(--font);
-            color:#e8edf5;
-            background:var(--app-bg);
-            overflow-x:hidden;
+            width:100%; max-width:100%; min-height:100vh;
+            padding:20px; margin:0; box-sizing:border-box;
+            position:relative; z-index:1;
+            font-family:var(--font); color:#e8edf5;
+            background:var(--app-bg); overflow-x:hidden;
         }
 
-        #page-settings *,
-        #page-settings *::before,
-        #page-settings *::after {
+        #page-settings *, #page-settings *::before, #page-settings *::after {
             box-sizing:border-box;
         }
 
         #page-settings::before {
-            content:"";
-            position:fixed;
-            inset:-50%;
-            width:200%;
-            height:200%;
+            content:""; position:fixed; inset:-50%;
+            width:200%; height:200%;
             background:
                 radial-gradient(ellipse at 20% 50%, rgba(230,179,30,.04) 0%, transparent 60%),
                 radial-gradient(ellipse at 80% 50%, rgba(96,165,250,.03) 0%, transparent 60%);
-            z-index:-1;
-            pointer-events:none;
+            z-index:-1; pointer-events:none;
             animation:settingsBgPulse 18s ease-in-out infinite;
         }
 
@@ -75,77 +57,48 @@
         #page-settings ::-webkit-scrollbar-thumb { background:var(--gold); border-radius:10px; }
 
         .settings-header {
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:14px;
-            padding:16px 24px;
-            margin-bottom:20px;
-            background:var(--glass-bg);
-            border:1px solid var(--glass-border);
+            display:flex; align-items:center; justify-content:space-between;
+            gap:14px; padding:16px 24px; margin-bottom:20px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
             border-radius:var(--radius);
-            backdrop-filter:blur(16px);
-            -webkit-backdrop-filter:blur(16px);
+            backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
             box-shadow:var(--shadow-card);
         }
 
         .settings-header-left {
-            display:flex;
-            align-items:center;
-            gap:14px;
-            min-width:0;
+            display:flex; align-items:center; gap:14px; min-width:0;
         }
 
         .settings-header-left .icon {
-            width:44px;
-            height:44px;
-            flex:0 0 44px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
+            width:44px; height:44px; flex:0 0 44px;
+            display:flex; align-items:center; justify-content:center;
             border-radius:50%;
             background:linear-gradient(135deg, var(--gold), #60a5fa);
-            color:#0a1628;
-            font-size:20px;
-            box-shadow:var(--shadow-gold);
+            color:#0a1628; font-size:20px; box-shadow:var(--shadow-gold);
         }
 
         .settings-header-left h2 {
-            margin:0;
-            font-size:22px;
-            font-weight:800;
+            margin:0; font-size:22px; font-weight:800;
             background:linear-gradient(135deg, var(--gold-light), #60a5fa, #fff);
-            -webkit-background-clip:text;
-            background-clip:text;
+            -webkit-background-clip:text; background-clip:text;
             -webkit-text-fill-color:transparent;
         }
 
         .settings-header-left p {
-            margin:2px 0 0;
-            font-size:12px;
-            color:rgba(255,255,255,.38);
+            margin:2px 0 0; font-size:12px; color:rgba(255,255,255,.38);
         }
 
         .settings-header-actions {
-            display:flex;
-            flex-wrap:wrap;
-            gap:8px;
+            display:flex; flex-wrap:wrap; gap:8px;
         }
 
         .btn-action {
-            min-height:38px;
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            gap:8px;
-            padding:8px 16px;
-            border-radius:30px;
+            min-height:38px; display:inline-flex;
+            align-items:center; justify-content:center; gap:8px;
+            padding:8px 16px; border-radius:30px;
             border:1px solid transparent;
-            font-family:var(--font);
-            font-size:.8rem;
-            font-weight:700;
-            cursor:pointer;
-            transition:all var(--transition);
+            font-family:var(--font); font-size:.8rem; font-weight:700;
+            cursor:pointer; transition:all var(--transition);
         }
 
         .btn-action.primary {
@@ -159,143 +112,95 @@
         }
 
         .btn-action.secondary {
-            background:var(--glass-bg);
-            border-color:var(--glass-border);
+            background:var(--glass-bg); border-color:var(--glass-border);
             color:rgba(255,255,255,.65);
         }
 
         .btn-action.secondary:hover:not(:disabled) {
-            background:rgba(255,255,255,.07);
-            color:#fff;
+            background:rgba(255,255,255,.07); color:#fff;
             transform:translateY(-2px);
         }
 
         .btn-action.danger {
             background:rgba(239,68,68,.12);
-            border-color:rgba(239,68,68,.12);
-            color:#f87171;
+            border-color:rgba(239,68,68,.12); color:#f87171;
         }
 
         .btn-action.danger:hover:not(:disabled) {
-            background:rgba(239,68,68,.22);
-            transform:translateY(-2px);
+            background:rgba(239,68,68,.22); transform:translateY(-2px);
         }
 
-        button:disabled,
-        input:disabled,
-        select:disabled {
-            opacity:.45;
-            cursor:not-allowed !important;
+        button:disabled, input:disabled, select:disabled {
+            opacity:.45; cursor:not-allowed !important;
         }
 
         .settings-grid {
-            display:grid;
-            grid-template-columns:repeat(2,minmax(0,1fr));
-            gap:20px;
+            display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px;
         }
 
         .settings-card {
-            position:relative;
-            min-width:0;
-            padding:20px 24px;
-            background:var(--glass-bg);
-            border:1px solid var(--glass-border);
+            position:relative; min-width:0; padding:20px 24px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
             border-radius:var(--radius);
-            backdrop-filter:blur(12px);
-            -webkit-backdrop-filter:blur(12px);
-            box-shadow:var(--shadow-card);
-            transition:all var(--transition);
+            backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+            box-shadow:var(--shadow-card); transition:all var(--transition);
         }
 
         .settings-card:hover {
-            border-color:rgba(230,179,30,.12);
-            box-shadow:var(--shadow-hover);
+            border-color:rgba(230,179,30,.12); box-shadow:var(--shadow-hover);
         }
 
-        .settings-card.hidden {
-            display: none !important;
-        }
+        .settings-card.hidden { display: none !important; }
 
         .card-title {
-            display:flex;
-            align-items:center;
-            gap:10px;
-            margin-bottom:4px;
-            color:#fff;
-            font-size:16px;
-            font-weight:800;
+            display:flex; align-items:center; gap:10px;
+            margin-bottom:4px; color:#fff; font-size:16px; font-weight:800;
         }
 
         .card-subtitle {
-            margin-bottom:18px;
-            color:rgba(255,255,255,.34);
-            font-size:12px;
-            line-height:1.6;
+            margin-bottom:18px; color:rgba(255,255,255,.34);
+            font-size:12px; line-height:1.6;
         }
 
-        .form-group {
-            margin-bottom:15px;
-        }
+        .form-group { margin-bottom:15px; }
 
         .form-group > label {
-            display:block;
-            margin-bottom:5px;
-            color:rgba(255,255,255,.45);
-            font-size:12px;
-            font-weight:700;
+            display:block; margin-bottom:5px;
+            color:rgba(255,255,255,.45); font-size:12px; font-weight:700;
         }
 
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group select,
         .form-group textarea {
-            width:100%;
-            min-height:42px;
-            padding:9px 13px;
-            border:1px solid var(--glass-border);
-            border-radius:10px;
-            background:rgba(255,255,255,.03);
-            color:#e2e8f0;
-            font-family:var(--font);
-            font-size:14px;
+            width:100%; min-height:42px; padding:9px 13px;
+            border:1px solid var(--glass-border); border-radius:10px;
+            background:rgba(255,255,255,.03); color:#e2e8f0;
+            font-family:var(--font); font-size:14px;
             transition:all var(--transition);
         }
 
-        .form-group select option {
-            background:#151b2b;
-            color:#fff;
-        }
+        .form-group select option { background:#151b2b; color:#fff; }
 
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
-            outline:none;
-            border-color:var(--gold);
+            outline:none; border-color:var(--gold);
             background:rgba(255,255,255,.06);
             box-shadow:0 0 0 4px rgba(230,179,30,.06);
         }
 
         .form-hint {
-            margin-top:5px;
-            color:rgba(255,255,255,.22);
-            font-size:11px;
-            line-height:1.5;
+            margin-top:5px; color:rgba(255,255,255,.22);
+            font-size:11px; line-height:1.5;
         }
 
-        .color-picker {
-            display:flex;
-            flex-wrap:wrap;
-            gap:10px;
-        }
+        .color-picker { display:flex; flex-wrap:wrap; gap:10px; }
 
         .color-option {
-            width:36px;
-            height:36px;
-            flex:0 0 36px;
-            border:3px solid transparent;
-            border-radius:50%;
-            cursor:pointer;
-            transition:all var(--transition);
+            width:36px; height:36px; flex:0 0 36px;
+            border:3px solid transparent; border-radius:50%;
+            cursor:pointer; transition:all var(--transition);
         }
 
         .color-option:hover { transform:scale(1.1); }
@@ -306,38 +211,24 @@
         }
 
         .toggle-switch {
-            display:flex;
-            align-items:center;
-            gap:12px;
-            min-height:32px;
+            display:flex; align-items:center; gap:12px; min-height:32px;
         }
 
         .toggle-switch input {
-            position:absolute;
-            opacity:0;
-            pointer-events:none;
+            position:absolute; opacity:0; pointer-events:none;
         }
 
         .toggle-switch .toggle-track {
-            position:relative;
-            width:48px;
-            height:26px;
-            flex:0 0 48px;
-            border-radius:13px;
+            position:relative; width:48px; height:26px;
+            flex:0 0 48px; border-radius:13px;
             background:rgba(255,255,255,.08);
-            cursor:pointer;
-            transition:all var(--transition);
+            cursor:pointer; transition:all var(--transition);
         }
 
         .toggle-switch .toggle-track::after {
-            content:"";
-            position:absolute;
-            top:3px;
-            right:3px;
-            width:20px;
-            height:20px;
-            border-radius:50%;
-            background:rgba(255,255,255,.25);
+            content:""; position:absolute;
+            top:3px; right:3px; width:20px; height:20px;
+            border-radius:50%; background:rgba(255,255,255,.25);
             transition:all var(--transition);
         }
 
@@ -346,33 +237,20 @@
         }
 
         .toggle-switch input:checked + .toggle-track::after {
-            right:25px;
-            background:#fff;
+            right:25px; background:#fff;
         }
 
-        .toggle-label {
-            color:rgba(255,255,255,.55);
-            font-size:13px;
-        }
+        .toggle-label { color:rgba(255,255,255,.55); font-size:13px; }
 
         .btn-save {
-            width:100%;
-            min-height:44px;
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            gap:8px;
-            margin-top:4px;
-            padding:10px 24px;
-            border:0;
-            border-radius:10px;
+            width:100%; min-height:44px;
+            display:inline-flex; align-items:center; justify-content:center;
+            gap:8px; margin-top:4px; padding:10px 24px;
+            border:0; border-radius:10px;
             background:linear-gradient(135deg, var(--gold), var(--gold-light));
-            color:#0a1628;
-            font-family:var(--font);
-            font-size:14px;
-            font-weight:800;
-            cursor:pointer;
-            transition:all var(--transition);
+            color:#0a1628; font-family:var(--font);
+            font-size:14px; font-weight:800;
+            cursor:pointer; transition:all var(--transition);
         }
 
         .btn-save:hover:not(:disabled) {
@@ -381,146 +259,83 @@
         }
 
         .theme-preview {
-            display:flex;
-            align-items:center;
-            flex-wrap:wrap;
-            gap:12px;
-            margin-top:10px;
-            margin-bottom:14px;
-            padding:16px;
-            background:rgba(255,255,255,.02);
+            display:flex; align-items:center; flex-wrap:wrap;
+            gap:12px; margin-top:10px; margin-bottom:14px;
+            padding:16px; background:rgba(255,255,255,.02);
             border:1px solid rgba(255,255,255,.04);
             border-radius:10px;
         }
 
         .preview-color {
-            width:40px;
-            height:40px;
+            width:40px; height:40px;
             border:2px solid rgba(255,255,255,.1);
             border-radius:8px;
         }
 
-        .preview-text {
-            color:rgba(255,255,255,.35);
-            font-size:12px;
-        }
-
+        .preview-text { color:rgba(255,255,255,.35); font-size:12px; }
         .preview-text strong { color:#fff; }
         .preview-text span { color:var(--gold); }
 
-        /* ===== LOGO UPLOAD ===== */
         .logo-upload-area {
-            position:relative;
-            padding:20px;
+            position:relative; padding:20px;
             border:2px dashed rgba(255,255,255,.08);
-            border-radius:12px;
-            text-align:center;
-            cursor:pointer;
-            transition:all var(--transition);
+            border-radius:12px; text-align:center;
+            cursor:pointer; transition:all var(--transition);
         }
 
         .logo-upload-area:hover,
         .logo-upload-area.dragover {
-            border-color:rgba(230,179,30,.5);
-            background:rgba(230,179,30,.05);
+            border-color:rgba(230,179,30,.5); background:rgba(230,179,30,.05);
         }
 
         .logo-preview {
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            gap:10px;
+            display:flex; flex-direction:column; align-items:center; gap:10px;
         }
 
         .logo-preview img {
-            max-width:120px;
-            max-height:60px;
-            object-fit:contain;
-            border-radius:8px;
+            max-width:120px; max-height:60px;
+            object-fit:contain; border-radius:8px;
         }
 
         .logo-name {
-            max-width:100%;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
-            color:rgba(255,255,255,.25);
-            font-size:12px;
+            max-width:100%; overflow:hidden;
+            text-overflow:ellipsis; white-space:nowrap;
+            color:rgba(255,255,255,.25); font-size:12px;
         }
 
-        .logo-actions {
-            display:flex;
-            gap:8px;
-            margin-top:5px;
-        }
+        .logo-actions { display:flex; gap:8px; margin-top:5px; }
 
         .btn-sm {
-            padding:5px 12px;
-            border:0;
-            border-radius:6px;
-            font-family:var(--font);
-            font-size:11px;
-            font-weight:700;
-            cursor:pointer;
-            transition:all var(--transition);
+            padding:5px 12px; border:0; border-radius:6px;
+            font-family:var(--font); font-size:11px; font-weight:700;
+            cursor:pointer; transition:all var(--transition);
         }
 
-        .btn-sm.upload {
-            background:rgba(230,179,30,.12);
-            color:var(--gold-light);
-        }
-
-        .btn-sm.delete {
-            background:rgba(239,68,68,.12);
-            color:#f87171;
-        }
-
+        .btn-sm.upload { background:rgba(230,179,30,.12); color:var(--gold-light); }
+        .btn-sm.delete { background:rgba(239,68,68,.12); color:#f87171; }
         .btn-sm:hover { transform:translateY(-1px); }
 
         .logo-placeholder {
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            gap:8px;
-            padding:20px 0;
+            display:flex; flex-direction:column;
+            align-items:center; gap:8px; padding:20px 0;
         }
 
-        .placeholder-icon {
-            color:rgba(255,255,255,.15);
-            font-size:40px;
-        }
+        .placeholder-icon { color:rgba(255,255,255,.15); font-size:40px; }
+        .placeholder-text { color:rgba(255,255,255,.3); font-size:13px; }
+        .placeholder-hint { color:rgba(255,255,255,.15); font-size:11px; }
 
-        .placeholder-text {
-            color:rgba(255,255,255,.3);
-            font-size:13px;
-        }
-
-        .placeholder-hint {
-            color:rgba(255,255,255,.15);
-            font-size:11px;
-        }
-
-        /* ===== RANGE SLIDERS ===== */
         #page-settings input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 6px;
+            -webkit-appearance: none; appearance: none;
+            width: 100%; height: 6px;
             background: rgba(255,255,255,.08);
-            border-radius: 3px;
-            outline: none;
-            padding: 0;
-            min-height: 0;
+            border-radius: 3px; outline: none;
+            padding: 0; min-height: 0;
         }
 
         #page-settings input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--gold);
-            cursor: pointer;
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--gold); cursor: pointer;
             box-shadow: 0 0 0 3px rgba(230,179,30,.2);
             transition: all .2s;
         }
@@ -531,39 +346,24 @@
         }
 
         #page-settings input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--gold);
-            cursor: pointer;
-            border: 0;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--gold); cursor: pointer; border: 0;
         }
 
         .about-grid {
-            display:grid;
-            gap:7px;
-            color:rgba(255,255,255,.5);
-            font-size:14px;
+            display:grid; gap:7px;
+            color:rgba(255,255,255,.5); font-size:14px;
         }
 
         .about-grid strong { color:#fff; }
 
         .settings-toast {
-            position:fixed;
-            right:24px;
-            bottom:24px;
-            z-index:200000;
-            max-width:360px;
-            display:flex;
-            align-items:center;
-            gap:10px;
-            padding:12px 18px;
-            border-radius:12px;
-            color:#fff;
-            font-family:var(--font);
-            font-size:13px;
-            backdrop-filter:blur(12px);
-            -webkit-backdrop-filter:blur(12px);
+            position:fixed; right:24px; bottom:24px;
+            z-index:200000; max-width:360px;
+            display:flex; align-items:center; gap:10px;
+            padding:12px 18px; border-radius:12px;
+            color:#fff; font-family:var(--font); font-size:13px;
+            backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
             box-shadow:0 8px 32px rgba(0,0,0,.35);
             animation:toastIn .25s ease-out;
         }
@@ -578,9 +378,7 @@
             to { opacity:1; transform:translateY(0); }
         }
 
-        @media (max-width:992px) {
-            .settings-grid { grid-template-columns:1fr; }
-        }
+        @media (max-width:992px) { .settings-grid { grid-template-columns:1fr; } }
 
         @media (max-width:768px) {
             #page-settings { padding:12px; }
@@ -607,9 +405,6 @@
             }
         }
     </style>
-        <!-- ============================================================
-         HEADER
-         ============================================================ -->
 
     <div class="settings-header">
         <div class="settings-header-left">
@@ -626,37 +421,32 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         SETTINGS GRID
-         ============================================================ -->
-
     <div class="settings-grid">
 
-        <!-- THEME -->
         <section class="settings-card" id="themeCard">
             <div class="card-title">🎨 مظهر التطبيق</div>
             <div class="card-subtitle">تغيير ألوان واجهة التطبيق</div>
 
             <div class="form-group">
                 <label>🎨 الألوان الأساسية</label>
-                <div class="color-picker" id="colorPicker" role="radiogroup" aria-label="الألوان الأساسية">
-                    <button type="button" class="color-option active" aria-label="الأزرق الداكن" aria-pressed="true" style="background:linear-gradient(135deg,#0a1628,#1a2a4a)" data-primary="#0a1628" data-secondary="#1a2a4a"></button>
-                    <button type="button" class="color-option" aria-label="البنفسجي الداكن" aria-pressed="false" style="background:linear-gradient(135deg,#1a0a28,#2a1a4a)" data-primary="#1a0a28" data-secondary="#2a1a4a"></button>
-                    <button type="button" class="color-option" aria-label="الأزرق البحري" aria-pressed="false" style="background:linear-gradient(135deg,#001a2a,#002a4a)" data-primary="#001a2a" data-secondary="#002a4a"></button>
-                    <button type="button" class="color-option" aria-label="البني الداكن" aria-pressed="false" style="background:linear-gradient(135deg,#2a1a0a,#4a2a1a)" data-primary="#2a1a0a" data-secondary="#4a2a1a"></button>
-                    <button type="button" class="color-option" aria-label="الأخضر الداكن" aria-pressed="false" style="background:linear-gradient(135deg,#0a2a1a,#1a4a2a)" data-primary="#0a2a1a" data-secondary="#1a4a2a"></button>
+                <div class="color-picker" id="colorPicker">
+                    <button type="button" class="color-option active" style="background:linear-gradient(135deg,#0a1628,#1a2a4a)" data-primary="#0a1628" data-secondary="#1a2a4a"></button>
+                    <button type="button" class="color-option" style="background:linear-gradient(135deg,#1a0a28,#2a1a4a)" data-primary="#1a0a28" data-secondary="#2a1a4a"></button>
+                    <button type="button" class="color-option" style="background:linear-gradient(135deg,#001a2a,#002a4a)" data-primary="#001a2a" data-secondary="#002a4a"></button>
+                    <button type="button" class="color-option" style="background:linear-gradient(135deg,#2a1a0a,#4a2a1a)" data-primary="#2a1a0a" data-secondary="#4a2a1a"></button>
+                    <button type="button" class="color-option" style="background:linear-gradient(135deg,#0a2a1a,#1a4a2a)" data-primary="#0a2a1a" data-secondary="#1a4a2a"></button>
                 </div>
             </div>
 
             <div class="form-group">
                 <label>🌟 اللون الرئيسي</label>
-                <div class="color-picker" id="goldColorPicker" role="radiogroup" aria-label="اللون الرئيسي">
-                    <button type="button" class="color-option active" aria-label="ذهبي" aria-pressed="true" style="background:#e6b31e" data-gold="#e6b31e"></button>
-                    <button type="button" class="color-option" aria-label="ذهبي فاتح" aria-pressed="false" style="background:#f5d76e" data-gold="#f5d76e"></button>
-                    <button type="button" class="color-option" aria-label="ذهبي داكن" aria-pressed="false" style="background:#c99a0e" data-gold="#c99a0e"></button>
-                    <button type="button" class="color-option" aria-label="أحمر" aria-pressed="false" style="background:#ff6b6b" data-gold="#ff6b6b"></button>
-                    <button type="button" class="color-option" aria-label="أخضر" aria-pressed="false" style="background:#00b894" data-gold="#00b894"></button>
-                    <button type="button" class="color-option" aria-label="بنفسجي" aria-pressed="false" style="background:#6c5ce7" data-gold="#6c5ce7"></button>
+                <div class="color-picker" id="goldColorPicker">
+                    <button type="button" class="color-option active" style="background:#e6b31e" data-gold="#e6b31e"></button>
+                    <button type="button" class="color-option" style="background:#f5d76e" data-gold="#f5d76e"></button>
+                    <button type="button" class="color-option" style="background:#c99a0e" data-gold="#c99a0e"></button>
+                    <button type="button" class="color-option" style="background:#ff6b6b" data-gold="#ff6b6b"></button>
+                    <button type="button" class="color-option" style="background:#00b894" data-gold="#00b894"></button>
+                    <button type="button" class="color-option" style="background:#6c5ce7" data-gold="#6c5ce7"></button>
                 </div>
             </div>
 
@@ -673,7 +463,6 @@
             <button type="button" class="btn-save" id="saveThemeBtn">🎨 تطبيق المظهر</button>
         </section>
 
-        <!-- LOGO -->
         <section class="settings-card" id="logoCard">
             <div class="card-title">🖼️ شعار التطبيق</div>
             <div class="card-subtitle">إدارة شعار النظام وحجمه</div>
@@ -721,7 +510,6 @@
             <button type="button" class="btn-save" id="saveLogoBtn">💾 حفظ حجم الشعار</button>
         </section>
 
-        <!-- BACKGROUND IMAGE -->
         <section class="settings-card" id="backgroundCard">
             <div class="card-title">🎨 صورة الخلفية</div>
             <div class="card-subtitle">صورة شفافة تظهر خلف المحتوى في كل الصفحات</div>
@@ -765,7 +553,6 @@
             </div>
         </section>
 
-        <!-- LAYOUT -->
         <section class="settings-card" id="layoutCard">
             <div class="card-title">📐 التخطيط والعرض</div>
             <div class="card-subtitle">تخصيص طريقة عرض التطبيق</div>
@@ -808,7 +595,6 @@
             <button type="button" class="btn-save" id="saveLayoutBtn">💾 حفظ التخطيط</button>
         </section>
 
-        <!-- SECURITY -->
         <section class="settings-card" id="securityCard">
             <div class="card-title">🛡️ الأمان والخصوصية</div>
             <div class="card-subtitle">إعدادات الحماية والجلسات</div>
@@ -840,7 +626,6 @@
             <button type="button" class="btn-save" id="saveSecurityBtn">🛡️ حفظ إعدادات الأمان</button>
         </section>
 
-        <!-- NOTIFICATIONS -->
         <section class="settings-card" id="notificationsCard">
             <div class="card-title">🔔 الإشعارات والتنبيهات</div>
             <div class="card-subtitle">تخصيص التنبيهات والتقارير</div>
@@ -876,7 +661,6 @@
             <button type="button" class="btn-save" id="saveNotificationsBtn">🔔 حفظ الإشعارات</button>
         </section>
 
-        <!-- ABOUT -->
         <section class="settings-card" id="aboutCard">
             <div class="card-title">ℹ️ حول التطبيق</div>
             <div class="card-subtitle">معلومات النظام والإصدار</div>
@@ -898,130 +682,656 @@
 
     </div>
 
-    <!-- ============================================================
-         JAVASCRIPT — v10.0
-         ============================================================ -->
-
     <script>
-        <!-- ============================================================
-     🎨 MARINE SYSTEM - Dynamic Logo + Background
-     يُحمّل الشعار والخلفية تلقائياً في كل الصفحات
-     ============================================================ -->
-<script>
-(function() {
-    'use strict';
+    (function() {
+        'use strict';
 
-    // ✅ 1. تطبيق الخلفية فوراً من localStorage (بدون انتظار)
-    function applyCachedBackground() {
-        try {
-            var bgConfig = localStorage.getItem('marine_background_config');
-            if (!bgConfig) return;
-            var cfg = JSON.parse(bgConfig);
-            if (!cfg.dataUrl) return;
+        var _isDestroyed = false;
+        var _pageTimeouts = [];
+        var _eventListeners = [];
 
+        function _settingsCleanup() {
+            if (_isDestroyed) return;
+            _isDestroyed = true;
+            _pageTimeouts.forEach(function(id) { try { clearTimeout(id); } catch (e) {} });
+            _pageTimeouts = [];
+            _eventListeners.forEach(function(item) {
+                try { if (item.el && item.fn) item.el.removeEventListener(item.type, item.fn); } catch (e) {}
+            });
+            _eventListeners = [];
+        }
+
+        window._pageCleanup = window._pageCleanup || [];
+        window._pageCleanup.push(_settingsCleanup);
+        window.addEventListener('beforeunload', _settingsCleanup);
+        window.addEventListener('pagehide', _settingsCleanup);
+
+        var LEGACY_ROLE_MAP = {
+            'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
+            'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit',
+            'user': 'viewer', 'مشاهد': 'viewer'
+        };
+        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
+
+        function normalizeRole(role) {
+            if (!role) return 'viewer';
+            var r = String(role).trim();
+            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
+            return LEGACY_ROLE_MAP[r] || 'viewer';
+        }
+
+        function isAdmin() {
+            var u = window.currentUser;
+            if (!u) return false;
+            return normalizeRole(u.role) === 'admin';
+        }
+
+        function $(id) { return document.getElementById(id); }
+
+        function getToken() {
+            return localStorage.getItem('marine_token') ||
+                   localStorage.getItem('token') ||
+                   localStorage.getItem('authToken') || null;
+        }
+
+        function fetcher(url, options) {
+            if (typeof window.apiFetch === 'function') {
+                return window.apiFetch(url, options || {});
+            }
+            var token = getToken();
+            var headers = Object.assign({ 'Accept': 'application/json' }, (options && options.headers) || {});
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            return fetch(url, Object.assign({}, options || {}, {
+                headers: headers, credentials: 'include'
+            }));
+        }
+
+        function addSafeListener(el, type, fn) {
+            if (!el) return;
+            el.addEventListener(type, fn);
+            _eventListeners.push({ el: el, type: type, fn: fn });
+        }
+
+        function showToast(message, type, duration) {
+            if (_isDestroyed) return;
+            type = type || 'info';
+            duration = duration || 3500;
+            var existing = document.querySelector('.settings-toast');
+            if (existing) existing.remove();
+            var toast = document.createElement('div');
+            toast.className = 'settings-toast ' + type;
+            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            toast.innerHTML = '<span>' + (icons[type] || icons.info) + '</span><span>' + String(message || '') + '</span>';
+            document.body.appendChild(toast);
+            var id = setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all .25s ease';
+                var id2 = setTimeout(function() { if (toast.parentNode) toast.remove(); }, 250);
+                _pageTimeouts.push(id2);
+            }, duration);
+            _pageTimeouts.push(id);
+        }
+
+        function applyCardVisibility() {
+            if (_isDestroyed) return;
+            if (!isAdmin()) {
+                document.querySelectorAll('.settings-card').forEach(function(card) {
+                    card.classList.add('hidden');
+                });
+                var aboutCard = $('aboutCard');
+                if (aboutCard) aboutCard.classList.remove('hidden');
+                var saveAllBtn = $('saveAllBtn');
+                var resetBtn = $('resetDefaultsBtn');
+                if (saveAllBtn) { saveAllBtn.disabled = true; }
+                if (resetBtn) { resetBtn.disabled = true; }
+            }
+        }
+
+        function applyThemeGlobally(theme) {
+            if (!theme) return;
+            try {
+                localStorage.setItem('marine_theme', JSON.stringify({
+                    primary: theme.primary, secondary: theme.secondary, gold: theme.gold
+                }));
+            } catch (e) {}
+            if (theme.primary) document.documentElement.style.setProperty('--primary-dark', theme.primary);
+            if (theme.secondary) document.documentElement.style.setProperty('--secondary', theme.secondary);
+            if (theme.gold) {
+                document.documentElement.style.setProperty('--gold', theme.gold);
+                document.documentElement.style.setProperty('--gold-light', theme.gold);
+            }
+        }
+
+        function setLogoPreview(dataUrl, fileName) {
+            var placeholder = $('logoPlaceholder');
+            var preview = $('logoPreview');
+            var img = $('logoPreviewImg');
+            var nameEl = $('logoName');
+            var appImg = $('appLogoImg');
+            var appFallback = $('appLogoFallback');
+
+            if (dataUrl) {
+                if (placeholder) placeholder.style.display = 'none';
+                if (preview) preview.style.display = 'flex';
+                if (img) img.src = dataUrl;
+                if (nameEl && fileName) nameEl.textContent = fileName;
+                if (appImg) { appImg.src = dataUrl; appImg.style.display = 'block'; }
+                if (appFallback) appFallback.style.display = 'none';
+                try { localStorage.setItem('marine_logo', dataUrl); } catch (e) {}
+            } else {
+                if (placeholder) placeholder.style.display = 'flex';
+                if (preview) preview.style.display = 'none';
+                if (img) img.src = '';
+                if (appImg) { appImg.src = ''; appImg.style.display = 'none'; }
+                if (appFallback) appFallback.style.display = 'inline';
+                try { localStorage.removeItem('marine_logo'); } catch (e) {}
+            }
+        }
+
+        async function loadLogo() {
+            try {
+                var response = await fetcher('/api/logo', { method: 'GET' });
+                if (!response.ok) return;
+                var data = await response.json();
+                if (data.success && data.logo && data.logo.dataUrl) {
+                    setLogoPreview(data.logo.dataUrl, '');
+                } else {
+                    try {
+                        var cached = localStorage.getItem('marine_logo');
+                        if (cached) setLogoPreview(cached, '');
+                    } catch (e) {}
+                }
+            } catch (e) {}
+        }
+
+        async function uploadLogo(file) {
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { showToast('❌ الصورة أكبر من 2 MB', 'error'); return; }
+            var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
+            if (allowed.indexOf(file.type) === -1) { showToast('❌ نوع الصورة غير مدعوم', 'error'); return; }
+            showToast('⏳ جاري رفع الشعار...', 'info');
+            try {
+                var formData = new FormData();
+                formData.append('logo', file);
+                var token = getToken();
+                var headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                var csrfMatch = document.cookie.match(/marine_csrf=([^;]+)/);
+                if (csrfMatch) headers['X-CSRF-Token'] = csrfMatch[1];
+                var response = await fetch('/api/logo/upload', {
+                    method: 'POST', headers: headers, credentials: 'include', body: formData
+                });
+                var data = await response.json().catch(function() { return {}; });
+                if (!response.ok || !data.success) throw new Error(data.error || ('خطأ ' + response.status));
+                setLogoPreview(data.logo.dataUrl, file.name);
+                showToast('✅ تم رفع الشعار بنجاح', 'success');
+            } catch (error) {
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        async function deleteLogo(event) {
+            if (event) { event.preventDefault(); event.stopPropagation(); }
+            if (!confirm('هل تريد حذف الشعار الحالي؟')) return;
+            try {
+                var response = await fetcher('/api/logo', { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+                if (!response.ok) {
+                    var err = await response.json().catch(function() { return {}; });
+                    throw new Error(err.error || 'فشل الحذف');
+                }
+                setLogoPreview(null, null);
+                showToast('✅ تم حذف الشعار', 'success');
+            } catch (error) {
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+        window._deleteLogo = deleteLogo;
+
+        function setBgPreview(dataUrl, fileName, opacity, blur) {
+            var placeholder = $('bgPlaceholder');
+            var preview = $('bgPreview');
+            var img = $('bgPreviewImg');
+            var nameEl = $('bgName');
+
+            if (dataUrl) {
+                if (placeholder) placeholder.style.display = 'none';
+                if (preview) preview.style.display = 'flex';
+                if (img) img.src = dataUrl;
+                if (nameEl && fileName) nameEl.textContent = fileName;
+                try { localStorage.setItem('marine_background', dataUrl); } catch (e) {}
+            } else {
+                if (placeholder) placeholder.style.display = 'flex';
+                if (preview) preview.style.display = 'none';
+                if (img) img.src = '';
+                try { localStorage.removeItem('marine_background'); } catch (e) {}
+            }
+
+            if (typeof opacity === 'number') {
+                var opEl = $('bgOpacity');
+                if (opEl) opEl.value = Math.round(opacity * 100);
+                var opVal = $('bgOpacityVal');
+                if (opVal) opVal.textContent = Math.round(opacity * 100) + '%';
+            }
+            if (typeof blur === 'number') {
+                var blEl = $('bgBlur');
+                if (blEl) blEl.value = blur;
+                var blVal = $('bgBlurVal');
+                if (blVal) blVal.textContent = blur + 'px';
+            }
+            applyBackground(dataUrl, opacity, blur);
+        }
+
+        function applyBackground(dataUrl, opacity, blur) {
             var existing = document.getElementById('marine-dynamic-bg');
             if (existing) existing.remove();
-
+            if (!dataUrl) {
+                try { localStorage.removeItem('marine_background_config'); } catch (e) {}
+                return;
+            }
+            opacity = typeof opacity === 'number' ? opacity : 0.15;
+            blur = typeof blur === 'number' ? blur : 0;
+            try {
+                localStorage.setItem('marine_background_config', JSON.stringify({
+                    dataUrl: dataUrl, opacity: opacity, blur: blur
+                }));
+            } catch (e) {}
             var bg = document.createElement('div');
             bg.id = 'marine-dynamic-bg';
             bg.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
-                'background-image:url(' + cfg.dataUrl + ');' +
+                'background-image:url(' + dataUrl + ');' +
                 'background-size:cover;background-position:center;' +
                 'background-repeat:no-repeat;' +
-                'opacity:' + (cfg.opacity || 0.15) + ';' +
-                'filter:' + (cfg.blur > 0 ? 'blur(' + cfg.blur + 'px)' : 'none') + ';' +
+                'opacity:' + opacity + ';' +
+                'filter:' + (blur > 0 ? 'blur(' + blur + 'px)' : 'none') + ';' +
                 'pointer-events:none;z-index:-1;';
             document.body.appendChild(bg);
-        } catch (e) {}
-    }
+        }
 
-    // ✅ 2. تطبيق الشعار من localStorage فوراً
-    function applyCachedLogo() {
-        try {
-            var cachedLogo = localStorage.getItem('marine_logo');
-            if (!cachedLogo) return;
-            updateLogoImages(cachedLogo);
-        } catch (e) {}
-    }
-
-    function updateLogoImages(dataUrl) {
-        var selectors = [
-            '.app-logo img',
-            '.navbar-logo img',
-            '#globalLogo',
-            '.sidebar-logo img',
-            '.brand-logo img',
-            '[data-marine-logo]',
-            'header .logo img'
-        ];
-        selectors.forEach(function(sel) {
+        async function loadBackground() {
             try {
-                document.querySelectorAll(sel).forEach(function(img) {
-                    if (img.tagName === 'IMG') img.src = dataUrl;
-                });
+                var response = await fetcher('/api/background', { method: 'GET' });
+                if (!response.ok) return;
+                var data = await response.json();
+                if (data.success && data.background && data.background.dataUrl) {
+                    setBgPreview(data.background.dataUrl, '', data.background.opacity, data.background.blur);
+                } else {
+                    try {
+                        var cached = localStorage.getItem('marine_background');
+                        if (cached) setBgPreview(cached, '', 0.15, 0);
+                    } catch (e) {}
+                }
             } catch (e) {}
-        });
-    }
-
-    // ✅ 3. مزامنة مع الخادم (للتحديثات على الأجهزة الأخرى)
-    function syncFromServer() {
-        var token = localStorage.getItem('marine_token') ||
-                    localStorage.getItem('token') ||
-                    localStorage.getItem('authToken') || null;
-
-        var headers = { 'Accept': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-
-        // مزامنة الشعار
-        fetch('/api/logo', { headers: headers, credentials: 'include' })
-            .then(function(r) { return r.ok ? r.json() : null; })
-            .then(function(data) {
-                if (data && data.success && data.logo && data.logo.dataUrl) {
-                    try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
-                    updateLogoImages(data.logo.dataUrl);
-                }
-            })
-            .catch(function() {});
-
-        // مزامنة الخلفية
-        fetch('/api/background', { headers: headers, credentials: 'include' })
-            .then(function(r) { return r.ok ? r.json() : null; })
-            .then(function(data) {
-                if (data && data.success && data.background && data.background.dataUrl) {
-                    var cfg = {
-                        dataUrl: data.background.dataUrl,
-                        opacity: data.background.opacity || 0.15,
-                        blur: data.background.blur || 0
-                    };
-                    try { localStorage.setItem('marine_background_config', JSON.stringify(cfg)); } catch (e) {}
-                    applyCachedBackground();
-                }
-            })
-            .catch(function() {});
-    }
-
-    // ✅ التنفيذ
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            applyCachedBackground();
-            applyCachedLogo();
-            syncFromServer();
-        });
-    } else {
-        applyCachedBackground();
-        applyCachedLogo();
-        syncFromServer();
-    }
-
-    // ✅ مراقبة تغييرات localStorage (مزامنة فورية بين التبويبات)
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'marine_background_config') {
-            applyCachedBackground();
         }
-        if (e.key === 'marine_logo' && e.newValue) {
-            updateLogoImages(e.newValue);
-        }
-    });
 
-})();
-</script>
+        async function uploadBackground(file) {
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { showToast('❌ الصورة أكبر من 5 MB', 'error'); return; }
+            var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+            if (allowed.indexOf(file.type) === -1) { showToast('❌ نوع الصورة غير مدعوم', 'error'); return; }
+            showToast('⏳ جاري رفع الخلفية...', 'info');
+            try {
+                var formData = new FormData();
+                formData.append('background', file);
+                var opEl = $('bgOpacity');
+                var blEl = $('bgBlur');
+                formData.append('opacity', opEl ? (opEl.value / 100) : 0.15);
+                formData.append('blur', blEl ? blEl.value : 0);
+                var token = getToken();
+                var headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                var csrfMatch = document.cookie.match(/marine_csrf=([^;]+)/);
+                if (csrfMatch) headers['X-CSRF-Token'] = csrfMatch[1];
+                var response = await fetch('/api/background/upload', {
+                    method: 'POST', headers: headers, credentials: 'include', body: formData
+                });
+                var data = await response.json().catch(function() { return {}; });
+                if (!response.ok || !data.success) throw new Error(data.error || ('خطأ ' + response.status));
+                setBgPreview(data.background.dataUrl, file.name, data.background.opacity, data.background.blur);
+                showToast('✅ تم رفع الخلفية بنجاح', 'success');
+            } catch (error) {
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        async function saveBackgroundSettings() {
+            var opEl = $('bgOpacity');
+            var blEl = $('bgBlur');
+            var opacity = opEl ? (opEl.value / 100) : 0.15;
+            var blur = blEl ? Number(blEl.value) : 0;
+            try {
+                var cached = localStorage.getItem('marine_background');
+                if (!cached) { showToast('⚠️ لم يتم رفع صورة بعد', 'warning'); return; }
+                applyBackground(cached, opacity, blur);
+                try {
+                    var response = await fetcher('/api/background/settings', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ opacity: opacity, blur: blur })
+                    });
+                    if (response.ok) showToast('✅ تم حفظ إعدادات الخلفية', 'success');
+                    else showToast('✅ تم الحفظ محلياً', 'info');
+                } catch (e) {
+                    showToast('✅ تم الحفظ محلياً', 'info');
+                }
+            } catch (e) {
+                showToast('❌ فشل الحفظ', 'error');
+            }
+        }
+
+        async function deleteBackground(event) {
+            if (event) { event.preventDefault(); event.stopPropagation(); }
+            if (!confirm('هل تريد حذف صورة الخلفية؟')) return;
+            try {
+                var response = await fetcher('/api/background', { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+                if (!response.ok) {
+                    var err = await response.json().catch(function() { return {}; });
+                    throw new Error(err.error || 'فشل الحذف');
+                }
+                setBgPreview(null, null);
+                var existing = document.getElementById('marine-dynamic-bg');
+                if (existing) existing.remove();
+                try { localStorage.removeItem('marine_background_config'); } catch (e) {}
+                showToast('✅ تم حذف الخلفية', 'success');
+            } catch (error) {
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+        window._deleteBg = deleteBackground;
+
+        async function loadSettings() {
+            if (_isDestroyed) return;
+            var token = getToken();
+            if (!token) { showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning'); return; }
+            if (!isAdmin()) return;
+            try {
+                var response = await fetcher('/api/settings', { method: 'GET' });
+                if (!response.ok) throw new Error('فشل تحميل الإعدادات: ' + response.status);
+                var data = await response.json();
+                if (data && data.settings) applySettings(data.settings);
+            } catch (error) {
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        function applySettings(settings) {
+            if (_isDestroyed || !settings) return;
+            if (settings.theme) {
+                var t = settings.theme;
+                if (t.primary) document.documentElement.style.setProperty('--primary-dark', t.primary);
+                if (t.secondary) document.documentElement.style.setProperty('--secondary', t.secondary);
+                if (t.gold) {
+                    document.documentElement.style.setProperty('--gold', t.gold);
+                    document.documentElement.style.setProperty('--gold-light', t.gold);
+                }
+                applyThemeGlobally(t);
+            }
+            if (settings.layout) {
+                var el;
+                el = $('darkMode'); if (el) el.checked = settings.layout.darkMode !== false;
+                el = $('fontSize'); if (el) el.value = settings.layout.fontSize || 'medium';
+                el = $('sidebarPosition'); if (el) el.value = settings.layout.sidebarPosition || 'right';
+                el = $('showStats'); if (el) el.checked = settings.layout.showStats !== false;
+            }
+            if (settings.security) {
+                var el2;
+                el2 = $('emailNotifications'); if (el2) el2.checked = settings.security.emailNotifications !== false;
+                el2 = $('smsNotifications'); if (el2) el2.checked = settings.security.smsNotifications === true;
+                el2 = $('sessionTimeout');
+                if (el2) { var t2 = settings.security.sessionTimeout || 60; el2.value = Math.min(Math.max(t2, 5), 480); }
+            }
+            if (settings.notifications) {
+                var el3;
+                el3 = $('emergencyAlerts'); if (el3) el3.checked = settings.notifications.emergencyAlerts !== false;
+                el3 = $('maintenanceAlerts'); if (el3) el3.checked = settings.notifications.maintenanceAlerts !== false;
+                el3 = $('performanceReports'); if (el3) el3.value = settings.notifications.performanceReports || 'weekly';
+            }
+            if (settings.branding) {
+                var el4 = $('logoSize');
+                if (el4) el4.value = settings.branding.logoSize || 'medium';
+            }
+        }
+
+        function collectSettings() {
+            var settings = {};
+            var activeTheme = document.querySelector('#colorPicker .color-option.active');
+            var activeGold = document.querySelector('#goldColorPicker .color-option.active');
+            settings.theme = {
+                primary: activeTheme ? activeTheme.dataset.primary : '#0a1628',
+                secondary: activeTheme ? activeTheme.dataset.secondary : '#1a2a4a',
+                gold: activeGold ? activeGold.dataset.gold : '#e6b31e'
+            };
+            settings.layout = {
+                darkMode: $('darkMode') ? $('darkMode').checked : true,
+                fontSize: $('fontSize') ? $('fontSize').value : 'medium',
+                sidebarPosition: $('sidebarPosition') ? $('sidebarPosition').value : 'right',
+                showStats: $('showStats') ? $('showStats').checked : true
+            };
+            settings.security = {
+                emailNotifications: $('emailNotifications') ? $('emailNotifications').checked : true,
+                smsNotifications: $('smsNotifications') ? $('smsNotifications').checked : false,
+                sessionTimeout: $('sessionTimeout') ? Math.min(Math.max(parseInt($('sessionTimeout').value) || 60, 5), 480) : 60
+            };
+            settings.notifications = {
+                emergencyAlerts: $('emergencyAlerts') ? $('emergencyAlerts').checked : true,
+                maintenanceAlerts: $('maintenanceAlerts') ? $('maintenanceAlerts').checked : true,
+                performanceReports: $('performanceReports') ? $('performanceReports').value : 'weekly'
+            };
+            settings.branding = {
+                logoSize: $('logoSize') ? $('logoSize').value : 'medium'
+            };
+            return settings;
+        }
+
+        async function saveSettings() {
+            if (_isDestroyed) return;
+            if (!isAdmin()) { showToast('⚠️ ليس لديك صلاحية الحفظ', 'error'); return; }
+            var settings = collectSettings();
+            try {
+                var response = await fetcher('/api/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                if (!response.ok) {
+                    var errData = null;
+                    try { errData = await response.json(); } catch (_) {}
+                    throw new Error((errData && (errData.error || errData.message)) || 'فشل الحفظ');
+                }
+                showToast('✅ تم حفظ الإعدادات', 'success');
+                applySettings(settings);
+                applyThemeGlobally(settings.theme);
+            } catch (error) {
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        function updatePreview() {
+            var activeTheme = document.querySelector('#colorPicker .color-option.active');
+            var activeGold = document.querySelector('#goldColorPicker .color-option.active');
+            var pv = $('previewPrimary');
+            var sv = $('previewSecondary');
+            var gv = $('previewGold');
+            var cv = $('previewColors');
+            if (activeTheme && pv) pv.style.background = activeTheme.dataset.primary;
+            if (activeTheme && sv) sv.style.background = activeTheme.dataset.secondary;
+            if (activeGold && gv) gv.style.background = activeGold.dataset.gold;
+            if (activeTheme && activeGold && cv) {
+                cv.textContent = (activeTheme.dataset.primary || '') + ' • ' +
+                                 (activeTheme.dataset.secondary || '') + ' • ' +
+                                 (activeGold.dataset.gold || '');
+            }
+        }
+
+        function init() {
+            if (_isDestroyed) return;
+            applyCardVisibility();
+            if (isAdmin()) loadSettings();
+
+            document.querySelectorAll('#colorPicker .color-option').forEach(function(btn) {
+                addSafeListener(btn, 'click', function() {
+                    document.querySelectorAll('#colorPicker .color-option').forEach(function(b) {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    updatePreview();
+                });
+            });
+            document.querySelectorAll('#goldColorPicker .color-option').forEach(function(btn) {
+                addSafeListener(btn, 'click', function() {
+                    document.querySelectorAll('#goldColorPicker .color-option').forEach(function(b) {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    updatePreview();
+                });
+            });
+            updatePreview();
+
+            ['saveAllBtn', 'saveThemeBtn', 'saveLayoutBtn', 'saveSecurityBtn', 'saveNotificationsBtn', 'saveLogoBtn'].forEach(function(id) {
+                addSafeListener($(id), 'click', function() {
+                    if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
+                    saveSettings();
+                });
+            });
+
+            addSafeListener($('refreshBtn'), 'click', function() {
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
+                showToast('🔄 جاري التحديث...', 'info');
+                loadSettings();
+                loadLogo();
+                loadBackground();
+            });
+
+            addSafeListener($('resetDefaultsBtn'), 'click', function() {
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
+                if (!confirm('⚠️ هل أنت متأكد من استعادة الإعدادات الافتراضية؟')) return;
+                fetcher('/api/settings/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+                    .then(function(r) { if (!r.ok) throw new Error('فشل الاستعادة'); return r.json(); })
+                    .then(function() {
+                        showToast('✅ تم استعادة الإعدادات الافتراضية', 'success');
+                        setTimeout(function() { loadSettings(); }, 500);
+                    })
+                    .catch(function(err) { showToast('❌ ' + err.message, 'error'); });
+            });
+
+            var logoFileInput = $('logoFileInput');
+            var logoDropZone = $('logoDropZone');
+            if (logoFileInput) {
+                addSafeListener(logoFileInput, 'change', function() {
+                    if (this.files && this.files[0]) { uploadLogo(this.files[0]); this.value = ''; }
+                });
+            }
+            if (logoDropZone) {
+                addSafeListener(logoDropZone, 'click', function(e) {
+                    if (e.target.closest('.logo-actions')) return;
+                    if (logoFileInput) logoFileInput.click();
+                });
+                ['dragenter', 'dragover'].forEach(function(evt) {
+                    addSafeListener(logoDropZone, evt, function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        logoDropZone.classList.add('dragover');
+                    });
+                });
+                ['dragleave', 'drop'].forEach(function(evt) {
+                    addSafeListener(logoDropZone, evt, function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        logoDropZone.classList.remove('dragover');
+                    });
+                });
+                addSafeListener(logoDropZone, 'drop', function(e) {
+                    var files = e.dataTransfer && e.dataTransfer.files;
+                    if (files && files[0]) uploadLogo(files[0]);
+                });
+            }
+
+            var bgFileInput = $('bgFileInput');
+            var bgDropZone = $('bgDropZone');
+            var bgOpacity = $('bgOpacity');
+            var bgBlur = $('bgBlur');
+            if (bgFileInput) {
+                addSafeListener(bgFileInput, 'change', function() {
+                    if (this.files && this.files[0]) { uploadBackground(this.files[0]); this.value = ''; }
+                });
+            }
+            if (bgDropZone) {
+                addSafeListener(bgDropZone, 'click', function(e) {
+                    if (e.target.closest('.logo-actions')) return;
+                    if (bgFileInput) bgFileInput.click();
+                });
+                ['dragenter', 'dragover'].forEach(function(evt) {
+                    addSafeListener(bgDropZone, evt, function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        bgDropZone.classList.add('dragover');
+                    });
+                });
+                ['dragleave', 'drop'].forEach(function(evt) {
+                    addSafeListener(bgDropZone, evt, function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        bgDropZone.classList.remove('dragover');
+                    });
+                });
+                addSafeListener(bgDropZone, 'drop', function(e) {
+                    var files = e.dataTransfer && e.dataTransfer.files;
+                    if (files && files[0]) uploadBackground(files[0]);
+                });
+            }
+            if (bgOpacity) {
+                addSafeListener(bgOpacity, 'input', function() {
+                    var v = $('bgOpacityVal');
+                    if (v) v.textContent = this.value + '%';
+                });
+                addSafeListener(bgOpacity, 'change', function() {
+                    try {
+                        var cached = localStorage.getItem('marine_background');
+                        if (cached) applyBackground(cached, this.value / 100, Number($('bgBlur').value));
+                    } catch (e) {}
+                });
+            }
+            if (bgBlur) {
+                addSafeListener(bgBlur, 'input', function() {
+                    var v = $('bgBlurVal');
+                    if (v) v.textContent = this.value + 'px';
+                });
+                addSafeListener(bgBlur, 'change', function() {
+                    try {
+                        var cached = localStorage.getItem('marine_background');
+                        if (cached) applyBackground(cached, $('bgOpacity').value / 100, Number(this.value));
+                    } catch (e) {}
+                });
+            }
+
+            addSafeListener($('saveBgBtn'), 'click', function() {
+                if (!isAdmin()) { showToast('⚠️ متاح للمسؤول فقط', 'error'); return; }
+                saveBackgroundSettings();
+            });
+            addSafeListener($('previewBgBtn'), 'click', function() {
+                try {
+                    var cached = localStorage.getItem('marine_background');
+                    if (!cached) { showToast('⚠️ ارفع صورة أولاً', 'warning'); return; }
+                    applyBackground(cached, $('bgOpacity').value / 100, Number($('bgBlur').value));
+                    showToast('👁️ معاينة الخلفية مطبّقة', 'info');
+                } catch (e) {}
+            });
+
+            loadLogo();
+            loadBackground();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+                _pageTimeouts.push(id);
+            }, { once: true });
+        } else {
+            var id0 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+            _pageTimeouts.push(id0);
+        }
+
+        window.loadSettings = loadSettings;
+        window.getToken = getToken;
+        window.showToast = showToast;
+
+    })();
+    </script>
+</div>
