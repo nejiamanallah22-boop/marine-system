@@ -1,5 +1,5 @@
 // ============================================================
-// ⚙️ SETTINGS + 🖼️ LOGO + 🎨 BACKGROUND + AUTO-INJECT — v3.1
+// ⚙️ SETTINGS + 🖼️ LOGO + 🎨 BACKGROUND + AUTO-INJECT — v3.2
 // ملف مستقل يُدمج في server.js
 // ⚠️ ملف JavaScript فقط — لا يحتوي على HTML
 // ============================================================
@@ -7,8 +7,6 @@
 'use strict';
 
 const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
 
 // ============================================================
 // 📋 DEFAULT SETTINGS
@@ -136,8 +134,7 @@ function sanitizeSettings(input) {
 }
 
 // ============================================================
-// 🎨 DYNAMIC INJECT SCRIPT (Logo + Background)
-// يُحقن في كل صفحات HTML تلقائياً
+// 🎨 DYNAMIC INJECT SCRIPT
 // ============================================================
 
 const DYNAMIC_INJECT_SCRIPT = `
@@ -178,6 +175,27 @@ const DYNAMIC_INJECT_SCRIPT = `
         } catch (e) {}
     }
 
+    // ✅ رفع كل الصفحات فوق الخلفية تلقائياً
+    function raiseAllContentAboveBg() {
+        var containers = [
+            'page-dashboard', 'page-fleet', 'page-maintenance', 'page-users',
+            'page-notes', 'page-support', 'page-monitoring', 'page-settings',
+            'page-logs', 'page-ready', 'page-locations', 'page-reset-password',
+            'page-login', 'app', 'root', 'main'
+        ];
+        containers.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                var st = window.getComputedStyle(el);
+                if (st.position === 'static' || st.position === '') {
+                    el.style.position = 'relative';
+                }
+                var zi = parseInt(st.zIndex) || 0;
+                if (zi < 2) el.style.zIndex = '2';
+            }
+        });
+    }
+
     function updateLogoImages(dataUrl) {
         if (!dataUrl) return;
         var selectors = [
@@ -190,7 +208,9 @@ const DYNAMIC_INJECT_SCRIPT = `
             'header .logo img',
             '.logo img',
             '#appLogoImg',
-            '#logoPreviewImg'
+            '#logoPreviewImg',
+            '.dash-header-left .header-icon img',
+            '.dash-header-logo img'
         ];
         selectors.forEach(function(sel) {
             try {
@@ -239,16 +259,19 @@ const DYNAMIC_INJECT_SCRIPT = `
             }).catch(function() {});
     }
 
+    // ✅ التنفيذ الفوري
     if (document.readyState === 'loading') {
         applyCachedBackground();
         document.addEventListener('DOMContentLoaded', function() {
             applyCachedBackground();
             applyCachedLogo();
+            raiseAllContentAboveBg();
             syncFromServer();
         });
     } else {
         applyCachedBackground();
         applyCachedLogo();
+        raiseAllContentAboveBg();
         syncFromServer();
     }
 
@@ -261,13 +284,14 @@ const DYNAMIC_INJECT_SCRIPT = `
         }
     });
 
-    // ✅ إعادة تطبيق الخلفية إذا حُذفت
+    // ✅ إعادة تطبيق الخلفية كل 2 ثانية (احتياطي)
     setInterval(function() {
         var bg = document.getElementById('marine-dynamic-bg');
         if (!bg) {
             applyCachedBackground();
         }
-    }, 3000);
+        raiseAllContentAboveBg();
+    }, 2000);
 
 })();
 </script>
