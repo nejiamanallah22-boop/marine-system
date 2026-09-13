@@ -2782,23 +2782,14 @@ function formatMaintenance(log) {
                     : (process.env.EMAIL_HOST ? 'SMTP' : '❌ NOT CONFIGURED')
             ));
             console.log('✨ Auto-Reset Admin: ' + (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
-            console.log('✅ Double-hash fix: APPLIED');
+                        console.log('✅ Double-hash fix: APPLIED');
             console.log('✅ RBAC v4: 5 roles');
             console.log('✅ ID matching: _id OR id');
-            console.log('✅ console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Notes: ' + (Note ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Settings: ' + (UserSettings ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Logo: ' + (SystemLogo ? 'ENABLED' : 'DISABLED'));
             console.log('=========================================');
-            console.log(`📍 Port: ${PORT}`);
-            console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`👤 Admin: ${ADMIN_USERNAME}`);
-            console.log(`🍃 MongoDB: ${mongoConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
-            console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY'}`);
-            console.log('=========================================');
-        });
-    }
-})();
 
 module.exports = app;
 module.exports.csrfProtection = csrfProtection;
