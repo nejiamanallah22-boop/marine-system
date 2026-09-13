@@ -102,9 +102,8 @@ const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const compression = require('compression');
 const nodemailer = require('nodemailer');
-
 const aiAndImportRoutes = require('./routes/ai-and-import');
-
+const settingsRoutes = require('./routes/settings');
 let createDOMPurify = null;
 try {
     createDOMPurify = require('isomorphic-dompurify');
