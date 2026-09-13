@@ -25,12 +25,17 @@
             --font: 'Cairo','Segoe UI',system-ui,sans-serif;
         }
 
+        /* ✅ body يحمل اللون المعتم الأساسي */
+        body { background: var(--app-bg); }
+
         #page-settings {
             width:100%; max-width:100%; min-height:100vh;
             padding:20px; margin:0; box-sizing:border-box;
-            position:relative; z-index:1;
+            position:relative; z-index:2;
             font-family:var(--font); color:#e8edf5;
-            background:var(--app-bg); overflow-x:hidden;
+            /* ✅ شفاف ليظهر خلفه الـ div الديناميكي */
+            background: transparent;
+            overflow-x:hidden;
         }
 
         #page-settings *, #page-settings *::before, #page-settings *::after {
@@ -65,9 +70,7 @@
             box-shadow:var(--shadow-card);
         }
 
-        .settings-header-left {
-            display:flex; align-items:center; gap:14px; min-width:0;
-        }
+        .settings-header-left { display:flex; align-items:center; gap:14px; min-width:0; }
 
         .settings-header-left .icon {
             width:44px; height:44px; flex:0 0 44px;
@@ -84,13 +87,9 @@
             -webkit-text-fill-color:transparent;
         }
 
-        .settings-header-left p {
-            margin:2px 0 0; font-size:12px; color:rgba(255,255,255,.38);
-        }
+        .settings-header-left p { margin:2px 0 0; font-size:12px; color:rgba(255,255,255,.38); }
 
-        .settings-header-actions {
-            display:flex; flex-wrap:wrap; gap:8px;
-        }
+        .settings-header-actions { display:flex; flex-wrap:wrap; gap:8px; }
 
         .btn-action {
             min-height:38px; display:inline-flex;
@@ -210,13 +209,9 @@
             box-shadow:0 0 0 2px rgba(230,179,30,.3), 0 0 20px rgba(255,255,255,.15);
         }
 
-        .toggle-switch {
-            display:flex; align-items:center; gap:12px; min-height:32px;
-        }
+        .toggle-switch { display:flex; align-items:center; gap:12px; min-height:32px; }
 
-        .toggle-switch input {
-            position:absolute; opacity:0; pointer-events:none;
-        }
+        .toggle-switch input { position:absolute; opacity:0; pointer-events:none; }
 
         .toggle-switch .toggle-track {
             position:relative; width:48px; height:26px;
@@ -288,9 +283,7 @@
             border-color:rgba(230,179,30,.5); background:rgba(230,179,30,.05);
         }
 
-        .logo-preview {
-            display:flex; flex-direction:column; align-items:center; gap:10px;
-        }
+        .logo-preview { display:flex; flex-direction:column; align-items:center; gap:10px; }
 
         .logo-preview img {
             max-width:120px; max-height:60px;
@@ -803,6 +796,7 @@
             }
         }
 
+        // ============ LOGO ============
         function setLogoPreview(dataUrl, fileName) {
             var placeholder = $('logoPlaceholder');
             var preview = $('logoPreview');
@@ -888,6 +882,7 @@
         }
         window._deleteLogo = deleteLogo;
 
+        // ============ BACKGROUND ============
         function setBgPreview(dataUrl, fileName, opacity, blur) {
             var placeholder = $('bgPlaceholder');
             var preview = $('bgPreview');
@@ -922,6 +917,7 @@
             applyBackground(dataUrl, opacity, blur);
         }
 
+        // ✅ نسخة مصححة: z-index:0 (فوق body، تحت #page-settings)
         function applyBackground(dataUrl, opacity, blur) {
             var existing = document.getElementById('marine-dynamic-bg');
             if (existing) existing.remove();
@@ -936,16 +932,26 @@
                     dataUrl: dataUrl, opacity: opacity, blur: blur
                 }));
             } catch (e) {}
+
             var bg = document.createElement('div');
             bg.id = 'marine-dynamic-bg';
-            bg.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
-                'background-image:url(' + dataUrl + ');' +
-                'background-size:cover;background-position:center;' +
-                'background-repeat:no-repeat;' +
-                'opacity:' + opacity + ';' +
-                'filter:' + (blur > 0 ? 'blur(' + blur + 'px)' : 'none') + ';' +
-                'pointer-events:none;z-index:-1;';
-            document.body.appendChild(bg);
+            bg.style.cssText = 'position:fixed !important;' +
+                'top:0 !important;left:0 !important;' +
+                'width:100vw !important;height:100vh !important;' +
+                'background-image:url(' + dataUrl + ') !important;' +
+                'background-size:cover !important;' +
+                'background-position:center !important;' +
+                'background-repeat:no-repeat !important;' +
+                'opacity:' + opacity + ' !important;' +
+                'filter:' + (blur > 0 ? 'blur(' + blur + 'px)' : 'none') + ' !important;' +
+                'pointer-events:none !important;' +
+                'z-index:0 !important;';  // ✅ فوق body, تحت #page-settings (z-index:2)
+
+            if (document.body.firstChild) {
+                document.body.insertBefore(bg, document.body.firstChild);
+            } else {
+                document.body.appendChild(bg);
+            }
         }
 
         async function loadBackground() {
@@ -1039,6 +1045,7 @@
         }
         window._deleteBg = deleteBackground;
 
+        // ============ SETTINGS ============
         async function loadSettings() {
             if (_isDestroyed) return;
             var token = getToken();
