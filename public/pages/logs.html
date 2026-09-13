@@ -1,9 +1,12 @@
 <!-- public/pages/logs.html -->
 <div id="page-logs">
     <style>
+        /* ✅ اللون المعتم على body */
+        body { background: #0a0e1a; }
+
         /* ============================================================
-           📋 LOGS PAGE - v9.12
-           5 Roles + normalizeRole + apiFetch + Cleanup
+           📋 LOGS PAGE - v9.13
+           5 Roles + normalizeRole + apiFetch + Cleanup + Dynamic Logo
            ============================================================ */
 
         #page-logs {
@@ -12,11 +15,12 @@
             padding: 0;
             margin: 0;
             font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-            background: #0a0e1a;
+            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
+            background: transparent;
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         #page-logs *,
@@ -48,6 +52,7 @@
             gap: 14px;
         }
 
+        /* ✅ الشعار الديناميكي */
         .logs-header-left .header-icon {
             width: 44px;
             height: 44px;
@@ -58,6 +63,26 @@
             justify-content: center;
             font-size: 20px;
             color: #0a1628;
+            overflow: hidden;
+        }
+
+        /* ✅ دعم صورة الشعار */
+        .logs-header-left .header-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+        .logs-header-left .header-icon.has-logo img {
+            display: block;
+        }
+        .logs-header-left .header-icon.has-logo {
+            background: transparent;
+            box-shadow: 0 0 20px rgba(230,179,30,0.3);
+        }
+        .logs-header-left .header-icon.has-logo i {
+            display: none;
         }
 
         .logs-header-left h2 {
@@ -580,7 +605,11 @@
     <!-- ===== HEADER ===== -->
     <div class="logs-header">
         <div class="logs-header-left">
-            <div class="header-icon"><i class="fas fa-clipboard-list"></i></div>
+            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
+            <div class="header-icon" id="logsHeaderIcon">
+                <i class="fas fa-clipboard-list"></i>
+                <img id="globalLogo" src="" alt="شعار" style="display:none;">
+            </div>
             <div>
                 <h2> الصيانة</h2>
                 <p>سجل كامل لعمليات الصيانة والتدخلات الفنية</p>
@@ -679,13 +708,13 @@
     </div>
 
     <!-- ============================================================
-         JAVASCRIPT - v9.12
+         JAVASCRIPT - v9.13
          ============================================================ -->
     <script>
     (function() {
         'use strict';
 
-        console.log('📋 Logs Page v9.12 - loading...');
+        console.log('📋 Logs Page v9.13 - loading...');
 
         // ============================================================
         // ✅ CLEANUP STATE
@@ -727,7 +756,7 @@
                 delete window.exportLogs;
             } catch (e) {}
 
-            console.log('🧹 Logs v9.12 cleanup done');
+            console.log('🧹 Logs v9.13 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -737,7 +766,55 @@
         window.addEventListener('pagehide', _logsCleanup);
 
         // ============================================================
-        // 🔐 RBAC v9.12 — توحيد الأدوار
+        // 🎨 LOGO APPLY (Dynamic)
+        // ============================================================
+        function applyLogo() {
+            try {
+                var cachedLogo = localStorage.getItem('marine_logo');
+                if (!cachedLogo) return;
+
+                var iconDiv = document.getElementById('logsHeaderIcon');
+                var img = document.getElementById('globalLogo');
+                if (img) {
+                    img.src = cachedLogo;
+                    img.style.display = 'block';
+                }
+                if (iconDiv) {
+                    iconDiv.classList.add('has-logo');
+                }
+            } catch (e) {}
+        }
+
+        function syncLogoFromServer() {
+            var token = localStorage.getItem('marine_token') ||
+                        localStorage.getItem('token') ||
+                        localStorage.getItem('authToken') || null;
+            var headers = { 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch('/api/logo', { headers: headers, credentials: 'include' })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (data && data.success && data.logo && data.logo.dataUrl) {
+                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                        applyLogo();
+                    }
+                }).catch(function() {});
+        }
+
+        // ✅ شغّل فوراً
+        applyLogo();
+        syncLogoFromServer();
+
+        // ✅ استمع للتغييرات بين التبويبات
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'marine_logo' && e.newValue) {
+                applyLogo();
+            }
+        });
+
+        // ============================================================
+        // 🔐 RBAC v9.13 — توحيد الأدوار
         // ============================================================
         var LEGACY_ROLE_MAP = {
             'super_admin': 'admin',
@@ -759,7 +836,6 @@
             return LEGACY_ROLE_MAP[r] || 'viewer';
         }
 
-        // ✅ يمكن الحذف: admin + manager فقط
         function canDeleteLog() {
             if (window.capabilities && typeof window.capabilities.canDeleteMaintenance === 'boolean') {
                 return window.capabilities.canDeleteMaintenance;
@@ -802,12 +878,10 @@
             );
         }
 
-        // ✅ v9.12: يستخدم apiFetch إن وُجد (تجديد تلقائي + CSRF من الخادم)
         function fetcher(url, options) {
             if (typeof window.apiFetch === 'function') {
                 return window.apiFetch(url, options || {});
             }
-            // fallback
             var token = getToken();
             var headers = Object.assign({
                 'Accept': 'application/json'
@@ -874,9 +948,6 @@
         var allLogs = [];
         var filteredLogs = [];
 
-        // ============================================================
-        // ✅ normalizeLog — يقبل كل الأسماء
-        // ============================================================
         function normalizeLog(log) {
             if (!log || typeof log !== 'object') return null;
 
@@ -942,7 +1013,7 @@
         }
 
         // ============================================================
-        // 📊 LOAD LOGS — v9.12
+        // 📊 LOAD LOGS
         // ============================================================
         async function loadMaintenanceLogs() {
             if (_isDestroyed) return;
@@ -974,7 +1045,6 @@
                     return;
                 }
 
-                // ✅ v9.12: عبر fetcher (apiFetch يوفر CSRF والتجديد التلقائي)
                 var response = await fetcher('/api/maintenance-logs', { method: 'GET' });
 
                 if (!response.ok) {
@@ -1323,7 +1393,7 @@
         function init() {
             if (_isDestroyed) return;
 
-            console.log('🚀 Initializing Logs page v9.12...');
+            console.log('🚀 Initializing Logs page v9.13...');
             console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
             console.log('🔐 canDeleteLog:', canDeleteLog());
 
@@ -1361,7 +1431,7 @@
 
             loadMaintenanceLogs();
 
-            console.log('✅ Logs v9.12 ready');
+            console.log('✅ Logs v9.13 ready');
         }
 
         // ============================================================
