@@ -1881,80 +1881,6 @@ function formatMaintenance(log) {
         }
     });
 
-    // ========================================================
-    // SETTINGS (admin only)
-    // ========================================================
-
-    const userSettings = new Map();
-    const DEFAULT_SETTINGS = {
-        theme: { primary: '#0a1628', secondary: '#1a2a4a', gold: '#e6b31e' },
-        layout: { darkMode: true, fontSize: 'medium', sidebarPosition: 'right', showStats: true },
-        security: { twoFactorAuth: false, emailNotifications: true, smsNotifications: false, sessionTimeout: 60 },
-        notifications: { emergencyAlerts: true, maintenanceAlerts: true, performanceReports: 'weekly' },
-        branding: { logoSize: 'medium' }
-    };
-
-    function mergeSettings(defaults, saved) {
-        const result = { ...defaults };
-        if (!saved || typeof saved !== 'object') return result;
-        for (const key of Object.keys(saved)) {
-            if (saved[key] && typeof saved[key] === 'object' && !Array.isArray(saved[key]) && defaults[key] && typeof defaults[key] === 'object') {
-                result[key] = { ...defaults[key], ...saved[key] };
-            } else result[key] = saved[key];
-        }
-        return result;
-    }
-
-    app.get('/api/settings', authenticateAccessToken, requirePermission('settings:manage'), (req, res) => {
-        try {
-            const saved = userSettings.get(req.user.id) || {};
-            const settings = mergeSettings(DEFAULT_SETTINGS, saved);
-            return res.json({ success: true, settings, updatedAt: saved._updatedAt || null });
-        } catch (error) {
-            return res.status(500).json({ success: false, error: 'فشل تحميل الإعدادات' });
-        }
-    });
-
-    app.put('/api/settings', authenticateAccessToken, requirePermission('settings:manage'), csrfProtection, (req, res) => {
-        try {
-            const userId = req.user.id;
-            const current = userSettings.get(userId) || {};
-            const merged = mergeSettings(current, req.body || {});
-
-            if (merged.security) {
-                const timeout = Number(merged.security.sessionTimeout);
-                merged.security.sessionTimeout = (!Number.isFinite(timeout) || timeout < 5 || timeout > 480) ? 60 : timeout;
-            }
-            if (merged.layout) {
-                if (!['small', 'medium', 'large'].includes(merged.layout.fontSize)) merged.layout.fontSize = 'medium';
-                if (!['right', 'left'].includes(merged.layout.sidebarPosition)) merged.layout.sidebarPosition = 'right';
-            }
-            if (merged.notifications) {
-                if (!['daily', 'weekly', 'monthly', 'never'].includes(merged.notifications.performanceReports)) merged.notifications.performanceReports = 'weekly';
-            }
-
-            merged._updatedAt = new Date().toISOString();
-            userSettings.set(userId, merged);
-
-            return res.json({ success: true, message: 'تم حفظ الإعدادات', settings: merged, updatedAt: merged._updatedAt });
-        } catch (error) {
-            return res.status(500).json({ success: false, error: 'فشل حفظ الإعدادات' });
-        }
-    });
-
-    app.post('/api/settings/reset', authenticateAccessToken, requirePermission('settings:manage'), csrfProtection, (req, res) => {
-        try {
-            userSettings.delete(req.user.id);
-            return res.json({ success: true, message: 'تم استعادة الإعدادات الافتراضية', settings: { ...DEFAULT_SETTINGS } });
-        } catch (error) {
-            return res.status(500).json({ success: false, error: 'فشل استعادة الإعدادات' });
-        }
-    });
-
-    // ========================================================
-    // MONITORING (admin only)
-    // ========================================================
-
     app.get('/api/monitoring/users', authenticateAccessToken, requirePermission('monitoring:view'), async (req, res) => {
         try {
             const users = await User.find().sort({ createdAt: -1 }).limit(500);
@@ -2709,8 +2635,7 @@ function formatMaintenance(log) {
     // ========================================================
     // 🤖 AI + 📥 IMPORT ROUTES
     // ========================================================
-
-    aiAndImportRoutes(app, {
+         aiAndImportRoutes(app, {
         User,
         Vessel,
         Maintenance,
@@ -2725,8 +2650,37 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
+    // ⚙️ SETTINGS + 🖼️ LOGO ROUTES (from routes/settings.js)
+    // ========================================================
+
+    if (UserSettings && SystemLogo) {
+        try {
+            settingsRoutes(app, {
+                UserSettings,
+                SystemLogo,
+                authenticateAccessToken,
+                requireAdmin,
+                requirePermission,
+                csrfProtection,
+                addSystemLog,
+                notify
+            });
+        } catch (e) {
+            console.error('❌ Failed to register settings routes:', e.message);
+            console.error(e.stack);
+        }
+    } else {
+        console.warn('⚠️ UserSettings or SystemLogo model missing — settings disabled');
+        console.warn('   UserSettings:', UserSettings ? '✅' : '❌');
+        console.warn('   SystemLogo  :', SystemLogo ? '✅' : '❌');
+    }
+
+    // ========================================================
     // STATIC FILES
     // ========================================================
+    
+
+    // 
 
     const pagesDir = path.join(__dirname, 'pages');
     const publicPagesDir = path.join(__dirname, 'public', 'pages');
@@ -2831,8 +2785,10 @@ function formatMaintenance(log) {
             console.log('✅ Double-hash fix: APPLIED');
             console.log('✅ RBAC v4: 5 roles');
             console.log('✅ ID matching: _id OR id');
-            console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
             console.log('✅ Notes: ' + (Note ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Settings: ' + (UserSettings ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Logo: ' + (SystemLogo ? 'ENABLED' : 'DISABLED'));
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
