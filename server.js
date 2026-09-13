@@ -470,13 +470,11 @@ const forgotPasswordLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 app.use('/api/auth/login', authLimiter);
-
 app.use(compression());
-app.use(express.json({ limit: '20kb' }));
-app.use(express.urlencoded({ extended: false, limit: '20kb' }));
+// ⚠️ زيادة الحد لاستيعاب الشعار Base64 (حتى ~2.8 MB)
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: false, limit: '5mb' }));
 app.use(cookieParser());
-app.use(xssSanitizer);
-app.use(hpp());
 
 app.use((req, res, next) => {
     req.requestId = randomId(16).substring(0, 32);
