@@ -70,6 +70,7 @@ function loadModels() {
 }
 
 let User, Vessel, Maintenance, Log, Ticket, Note, Notification;
+let UserSettings, SystemLogo;   // 🆕
 
 try {
     const models = loadModels();
@@ -80,15 +81,18 @@ try {
     Ticket       = models.Ticket;
     Note         = models.Note || null;
     Notification = models.Notification || null;
+    UserSettings = models.UserSettings || null;   // 🆕
+    SystemLogo   = models.SystemLogo || null;      // 🆕
     console.log('📦 Optional models:',
         'Note=' + (Note ? '✅' : '❌'),
-        'Notification=' + (Notification ? '✅' : '❌')
+        'Notification=' + (Notification ? '✅' : '❌'),
+        'UserSettings=' + (UserSettings ? '✅' : '❌'),   // 🆕
+        'SystemLogo=' + (SystemLogo ? '✅' : '❌')         // 🆕
     );
 } catch (e) {
     console.error('❌ Fatal model loading error:', e.message);
     process.exit(1);
 }
-
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
