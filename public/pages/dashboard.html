@@ -5,6 +5,9 @@
            🚀 DASHBOARD - ENTERPRISE PRO VERSION
            ============================================================ */
 
+        /* ✅ اللون المعتم الأساسي على body */
+        body { background: #0a0e1a; }
+
         /* ===== CSS VARIABLES ===== */
         :root {
             --primary: #0a1628;
@@ -38,11 +41,12 @@
             padding: 0;
             margin: 0;
             font-family: var(--font);
-            background: #0a0e1a;
+            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
+            background: transparent;
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
-            z-index: 1;
+            z-index: 2; /* ✅ فوق الخلفية (z-index: 0) */
         }
 
         /* ===== ANIMATED BACKGROUND ===== */
@@ -99,6 +103,7 @@
             gap: 14px;
         }
 
+        /* ✅ الشعار الديناميكي (يدعم صورة أو أيقونة) */
         .dash-header-left .header-icon {
             width: 44px;
             height: 44px;
@@ -111,6 +116,24 @@
             color: #0a1628;
             box-shadow: 0 0 40px rgba(230,179,30,0.15);
             animation: pulseIcon 2s ease-in-out infinite;
+            overflow: hidden;
+        }
+
+        /* ✅ صورة الشعار داخل الأيقونة (إن وُجدت) */
+        .dash-header-left .header-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none; /* يظهر فقط عند وجود صورة */
+        }
+
+        .dash-header-left .header-icon.has-logo img {
+            display: block;
+        }
+
+        .dash-header-left .header-icon.has-logo i {
+            display: none;
         }
 
         @keyframes pulseIcon {
@@ -647,7 +670,11 @@
     ============================================================ -->
     <div class="dash-header">
         <div class="dash-header-left">
-            <div class="header-icon"><i class="fas fa-chart-pie"></i></div>
+            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
+            <div class="header-icon" id="dashHeaderIcon">
+                <i class="fas fa-chart-pie"></i>
+                <img id="globalLogo" src="" alt="شعار" style="display:none;">
+            </div>
             <div>
                 <h2>لوحة القيادة</h2>
                 <p>نظرة شاملة على أداء الأسطول</p>
@@ -857,7 +884,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT (v9.1 - Safe updateDateTime + Cleanup)
+    JAVASCRIPT (v9.2 - Safe + Logo Support)
     ============================================================ -->
     <script>
         (function() {
@@ -865,13 +892,10 @@
 
             console.log('📊 Dashboard - loading...');
 
-            // ✅ v9.1: تسجيل كل الـ intervals الخاصة بهذه الصفحة
-            //    ليتم إلغاؤها عند مغادرة الصفحة
             var _dashboardIntervals = [];
             var _dashboardTimeouts = [];
             var _isDestroyed = false;
 
-            // ✅ v9.1: دالة تنظيف شاملة
             function _dashboardCleanup() {
                 if (_isDestroyed) return;
                 _isDestroyed = true;
@@ -886,7 +910,6 @@
                 });
                 _dashboardTimeouts = [];
 
-                // ✅ إزالة الرسوم البيانية
                 try {
                     if (window._perfChart) {
                         window._perfChart.destroy();
@@ -901,21 +924,66 @@
                 console.log('🧹 Dashboard cleanup done');
             }
 
-            // ✅ v9.1: تسجيل دوال التنظيف عالمياً
-            //    لتنفذها loadPage قبل تحميل صفحة جديدة
             window._pageCleanup = window._pageCleanup || [];
             window._pageCleanup.push(_dashboardCleanup);
 
-            // ✅ v9.1: تنظيف عند مغادرة الصفحة (احتياطي)
             window.addEventListener('beforeunload', _dashboardCleanup);
             window.addEventListener('pagehide', _dashboardCleanup);
 
             // ============================================================
-            // ⏰ DATE & TIME - SAFE VERSION (v9.1)
+            // ✅ LOGO APPLY (Dynamic)
+            // ============================================================
+            function applyLogo() {
+                try {
+                    var cachedLogo = localStorage.getItem('marine_logo');
+                    if (!cachedLogo) return;
+
+                    var iconDiv = document.getElementById('dashHeaderIcon');
+                    var img = document.getElementById('globalLogo');
+                    if (img) {
+                        img.src = cachedLogo;
+                        img.style.display = 'block';
+                    }
+                    if (iconDiv) {
+                        iconDiv.classList.add('has-logo');
+                    }
+                } catch (e) {}
+            }
+
+            // ✅ مزامنة الشعار من الخادم
+            function syncLogoFromServer() {
+                var token = localStorage.getItem('marine_token') ||
+                            localStorage.getItem('token') ||
+                            localStorage.getItem('authToken') || null;
+                var headers = { 'Accept': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/logo', { headers: headers, credentials: 'include' })
+                    .then(function(r) { return r.ok ? r.json() : null; })
+                    .then(function(data) {
+                        if (data && data.success && data.logo && data.logo.dataUrl) {
+                            try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                            applyLogo();
+                        }
+                    }).catch(function() {});
+            }
+
+            // ✅ شغّل عند التحميل
+            applyLogo();
+            syncLogoFromServer();
+
+            // ✅ استمع للتغييرات بين التبويبات
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'marine_logo' && e.newValue) {
+                    applyLogo();
+                }
+            });
+
+            // ============================================================
+            // ⏰ DATE & TIME
             // ============================================================
             function updateDateTime() {
                 try {
-                    // ✅ v9.1: لا نعمل إذا تم تدمير الصفحة
                     if (_isDestroyed) return;
 
                     var now = new Date();
@@ -931,26 +999,17 @@
                         second: '2-digit'
                     });
 
-                    // ✅ v9.1: فحص وجود العناصر قبل الكتابة
                     var dateEl = document.getElementById('currentDate');
                     var timeEl = document.getElementById('currentTime');
 
-                    if (dateEl) {
-                        dateEl.textContent = date;
-                    }
-                    if (timeEl) {
-                        timeEl.textContent = time;
-                    }
+                    if (dateEl) dateEl.textContent = date;
+                    if (timeEl) timeEl.textContent = time;
                 } catch (e) {
-                    // ✅ تجاهل صامت — لا نكسر الصفحة
                     console.debug('⏰ updateDateTime (safe):', e.message);
                 }
             }
 
-            // ✅ استدعاء أولي
             updateDateTime();
-
-            // ✅ v9.1: تخزين الـ interval لتسهيل تنظيفه
             var _dateTimeIntervalId = setInterval(updateDateTime, 1000);
             _dashboardIntervals.push(_dateTimeIntervalId);
 
@@ -992,7 +1051,6 @@
             function initCharts() {
                 if (_isDestroyed) return;
 
-                // Performance Chart
                 var perfCtx = document.getElementById('performanceChart');
                 if (perfCtx && typeof Chart !== 'undefined') {
                     try {
@@ -1038,13 +1096,11 @@
                                 scales: {
                                     x: {
                                         grid: { color: 'rgba(255,255,255,0.04)' },
-                                        ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif',
-                                                size: 10 } }
+                                        ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif', size: 10 } }
                                     },
                                     y: {
                                         grid: { color: 'rgba(255,255,255,0.04)' },
-                                        ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif',
-                                                size: 10 } },
+                                        ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif', size: 10 } },
                                         beginAtZero: true
                                     }
                                 }
@@ -1056,7 +1112,6 @@
                     }
                 }
 
-                // Distribution Chart (Pie)
                 var distCtx = document.getElementById('distributionChart');
                 if (distCtx && typeof Chart !== 'undefined') {
                     try {
@@ -1175,7 +1230,6 @@
                 if (_isDestroyed) return;
                 console.log('🚀 Initializing Dashboard...');
 
-                // Load Chart.js
                 if (typeof Chart === 'undefined') {
                     var script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
@@ -1196,9 +1250,6 @@
                 init();
             }
 
-            // ============================================================
-            // EXPOSE
-            // ============================================================
             window.updateStats = updateStats;
             window.initCharts = initCharts;
 
