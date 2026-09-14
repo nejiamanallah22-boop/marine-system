@@ -2,8 +2,8 @@
 <div id="page-maintenance">
     <style>
         /* ============================================================
-           🔧 MAINTENANCE — ENTERPRISE PRO v10.0
-           (Event Delegation + Virtual Records + Dynamic Years + Print Footer)
+           🔧 MAINTENANCE — ENTERPRISE PRO v10.1
+           (Flexible Damaged Detection + Enhanced Print)
            ============================================================ */
 
         body { background: #0a0e1a; }
@@ -17,18 +17,13 @@
             --accent-4: #6c5ce7;
             --accent-5: #0984e3;
             --gold: #e6b31e;
-            --gold-light: #f5d76e;
             --success: #00b894;
-            --success-light: #55efc4;
             --danger: #e17055;
             --warning: #fdcb6e;
-            --info: #0984e3;
             --glass-bg: rgba(255,255,255,0.04);
             --glass-border: rgba(255,255,255,0.06);
-            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
             --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
             --radius: 14px;
-            --radius-sm: 8px;
             --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
             --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
         }
@@ -40,20 +35,16 @@
             background: transparent;
             color: #e8edf5;
             min-height: 100vh;
-            position: relative;
-            z-index: 2;
+            position: relative; z-index: 2;
         }
-
         #page-maintenance::before {
             content: '';
-            position: fixed;
-            top: -50%; left: -50%;
+            position: fixed; top: -50%; left: -50%;
             width: 200%; height: 200%;
             background:
                 radial-gradient(ellipse at 80% 20%, rgba(233,69,96,0.05) 0%, transparent 50%),
                 radial-gradient(ellipse at 20% 80%, rgba(108,92,231,0.04) 0%, transparent 50%);
-            z-index: -1;
-            pointer-events: none;
+            z-index: -1; pointer-events: none;
             animation: bgFloat 20s ease-in-out infinite;
         }
         @keyframes bgFloat {
@@ -79,7 +70,6 @@
             margin-bottom: 20px;
         }
         .maint-header-left { display: flex; align-items: center; gap: 14px; }
-
         .maint-header-left .header-icon {
             width: 44px; height: 44px; border-radius: 50%;
             background: linear-gradient(135deg, #e94560, #6c5ce7);
@@ -99,12 +89,10 @@
             box-shadow: 0 0 20px rgba(233,69,96,0.3);
         }
         .maint-header-left .header-icon.has-logo i { display: none; }
-
         @keyframes pulseIcon {
             0%, 100% { box-shadow: 0 0 20px rgba(233,69,96,0.2); }
             50%      { box-shadow: 0 0 50px rgba(233,69,96,0.4); }
         }
-
         .maint-header-left h2 {
             font-size: 22px; font-weight: 800; margin: 0;
             background: linear-gradient(135deg, #e94560, #f5c842, #6c5ce7);
@@ -640,7 +628,8 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== PRINT FOOTER ===== */
+        /* ===== PRINT HEADER (hidden on screen) ===== */
+        .print-header { display: none; }
         .print-footer { display: none; }
 
         /* ===== RESPONSIVE ===== */
@@ -678,11 +667,17 @@
         }
 
         /* ============================================================
-           🖨️ PRINT STYLES
+           🖨️ ENHANCED PRINT STYLES v2.0
+           A4 Landscape | Colored | Repeated Headers | Numbered Pages
            ============================================================ */
         @media print {
-            @page { size: A4 landscape; margin: 12mm 10mm; }
-            @page :first { margin-top: 8mm; }
+            @page {
+                size: A4 landscape;
+                margin: 14mm 10mm 18mm 10mm;
+            }
+            @page :first {
+                margin-top: 10mm;
+            }
 
             html, body {
                 background: #ffffff !important;
@@ -693,95 +688,112 @@
                 print-color-adjust: exact !important;
             }
 
+            /* إخفاء عناصر التفاعل */
             button, .btn-action, .btn-filter, .action-btn, .btn-submit,
             .retry-btn, .modal-close, .maint-header-actions, .filter-bar,
             .year-checkbox-group, .toast, .toast-container, #toastContainer,
             nav, .sidebar, .navbar, .no-print, .maint-modal, #maintenanceModal,
-            #confirmModal {
+            #confirmModal, .stat-change, .badge {
                 display: none !important;
             }
 
-            .maint-header {
+            /* ===== PRINT HEADER ===== */
+            .print-header {
                 display: flex !important;
+                justify-content: space-between;
+                align-items: center;
+                padding: 6mm 8mm;
+                margin: 0 0 5mm 0;
+                border: 2px solid #0a0e1a;
+                border-radius: 4px;
                 background: linear-gradient(135deg, #0a0e1a 0%, #111e3a 100%) !important;
-                color: #ffffff !important;
-                padding: 12mm 8mm 6mm !important;
-                margin: 0 0 6mm !important;
-                border-radius: 8px !important;
-                border: 2px solid #e94560 !important;
-                position: relative !important;
-                page-break-inside: avoid; page-break-after: avoid;
-            }
-            .maint-header-left h2 {
                 color: #f5c842 !important;
-                font-size: 16pt !important;
-                font-weight: 800 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                page-break-inside: avoid;
+            }
+            .print-header .ph-left { display: flex; align-items: center; gap: 5mm; }
+            .print-header .ph-logo {
+                width: 18mm; height: 18mm;
+                border: 2px solid #e94560;
+                border-radius: 50%;
+                background: #ffffff;
+                display: flex; align-items: center; justify-content: center;
+                overflow: hidden;
+                flex-shrink: 0;
+            }
+            .print-header .ph-logo img {
+                width: 100%; height: 100%;
+                object-fit: contain;
+            }
+            .print-header .ph-logo i {
+                font-size: 20pt; color: #e94560;
+            }
+            .print-header .ph-title {
+                display: flex; flex-direction: column;
+            }
+            .print-header .ph-title h1 {
+                font-size: 16pt; font-weight: 800;
+                color: #f5c842 !important;
+                margin: 0 0 1mm 0;
                 -webkit-text-fill-color: #f5c842 !important;
-                background: none !important;
-                margin: 0 0 4pt 0 !important;
             }
-            .maint-header-left p {
-                color: rgba(255,255,255,0.75) !important;
-                font-size: 10pt !important;
-                -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
+            .print-header .ph-title p {
+                font-size: 10pt;
+                color: rgba(255,255,255,0.85) !important;
+                margin: 0;
             }
-            .header-icon, #maintHeaderIcon {
-                width: 48px !important; height: 48px !important;
-                border: 2px solid #e94560 !important;
-                background: #0a0e1a !important;
-                box-shadow: none !important;
-                animation: none !important;
-                overflow: hidden !important;
-            }
-            .header-icon img, #globalLogo {
-                display: block !important;
-                width: 100% !important; height: 100% !important;
-                object-fit: contain !important;
-            }
-            .header-icon i { color: #e94560 !important; }
-            .maint-header::after {
-                content: "طُبع بتاريخ: " attr(data-print-date);
-                position: absolute;
-                bottom: 4mm; left: 8mm;
+            .print-header .ph-right {
+                text-align: left;
                 font-size: 9pt;
-                color: rgba(255,255,255,0.7) !important;
-                direction: rtl;
+                line-height: 1.5;
+                color: rgba(255,255,255,0.9) !important;
+            }
+            .print-header .ph-right strong {
+                color: #e94560 !important;
+                font-weight: 800;
             }
 
+            /* إخفاء الهيدر التفاعلي الأصلي */
+            .maint-header { display: none !important; }
+
+            /* ===== STATS ===== */
             .stats-grid {
                 display: grid !important;
                 grid-template-columns: repeat(5, 1fr) !important;
-                gap: 4mm !important;
-                margin: 0 0 5mm !important; padding: 0 !important;
+                gap: 3mm !important;
+                margin: 0 0 5mm !important;
+                padding: 0 !important;
                 page-break-inside: avoid;
             }
             .stat-card {
                 background: #f8f9fc !important;
-                border: 2px solid #e94560 !important;
-                border-radius: 6px !important;
-                padding: 4mm 3mm !important;
+                border: 1.5px solid #e94560 !important;
+                border-radius: 4px !important;
+                padding: 3mm 2mm !important;
                 text-align: center !important;
                 box-shadow: none !important;
                 backdrop-filter: none !important;
-                position: relative !important; overflow: visible !important;
+                position: relative !important;
+                overflow: visible !important;
+                page-break-inside: avoid;
             }
             .stat-card::before { display: none !important; }
-            .stat-card .stat-top { justify-content: center !important; margin-bottom: 2mm !important; }
+            .stat-card .stat-top { justify-content: center !important; margin-bottom: 1mm !important; }
             .stat-card .stat-icon {
-                width: 30px !important; height: 30px !important;
+                width: 8mm !important; height: 8mm !important;
                 border-radius: 50% !important;
                 border: 1px solid #e94560 !important;
                 background: #ffffff !important;
                 color: #0a0e1a !important;
-                font-size: 12pt !important;
+                font-size: 11pt !important;
             }
-            .stat-card .stat-change { display: none !important; }
             .stat-card .number {
                 color: #0a0e1a !important;
-                font-size: 18pt !important;
+                font-size: 15pt !important;
                 font-weight: 800 !important;
                 line-height: 1 !important;
-                margin: 2mm 0 !important;
+                margin: 1.5mm 0 !important;
                 background: none !important;
                 -webkit-text-fill-color: #0a0e1a !important;
             }
@@ -791,39 +803,58 @@
             .stat-card .number.purple { color: #6d28d9 !important; -webkit-text-fill-color: #6d28d9 !important; }
             .stat-card .number.blue   { color: #1d4ed8 !important; -webkit-text-fill-color: #1d4ed8 !important; }
             .stat-card .number.red    { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
-            .stat-card .label { color: #4b5563 !important; font-size: 9pt !important; font-weight: 700 !important; }
-            .stat-card .stat-bottom { margin-top: 2mm !important; padding-top: 2mm !important; border-top: 1px solid #e5e7eb !important; }
-            .stat-card .sub-label, .stat-card .sub-label span { color: #6b7280 !important; font-size: 8pt !important; }
+            .stat-card .label {
+                color: #374151 !important;
+                font-size: 8pt !important;
+                font-weight: 700 !important;
+            }
+            .stat-card .stat-bottom {
+                margin-top: 1.5mm !important;
+                padding-top: 1.5mm !important;
+                border-top: 1px solid #d1d5db !important;
+            }
+            .stat-card .sub-label, .stat-card .sub-label span {
+                color: #6b7280 !important;
+                font-size: 7pt !important;
+            }
 
+            /* ===== DAMAGED SECTION ===== */
             .damaged-section {
                 background: #fef2f2 !important;
                 border: 2px solid #b91c1c !important;
-                border-radius: 6px !important;
-                padding: 4mm !important;
+                border-radius: 4px !important;
+                padding: 3mm 4mm !important;
                 margin: 0 0 5mm !important;
                 page-break-inside: avoid;
                 backdrop-filter: none !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             .damaged-section::before { display: none !important; }
-            .damaged-header h3 { color: #b91c1c !important; font-size: 12pt !important; font-weight: 800 !important; }
+            .damaged-header h3 {
+                color: #b91c1c !important;
+                font-size: 11pt !important;
+                font-weight: 800 !important;
+            }
             .damaged-header h3 i { animation: none !important; }
             .damaged-header .damaged-count {
                 background: #fef2f2 !important;
                 color: #b91c1c !important;
-                border: 1px solid #b91c1c !important;
+                border: 1.5px solid #b91c1c !important;
                 font-size: 9pt !important;
+                padding: 1mm 3mm !important;
             }
             .damaged-table {
                 width: 100% !important;
                 font-size: 8.5pt !important;
                 min-width: 0 !important;
-                border: 2px solid #0a0e1a !important;
+                border: 1.5px solid #0a0e1a !important;
                 border-collapse: collapse !important;
             }
             .damaged-table thead, .damaged-table thead th {
                 background: #0a0e1a !important;
                 color: #f5c842 !important;
-                padding: 3mm 2mm !important;
+                padding: 2.5mm 2mm !important;
                 font-size: 9pt !important;
                 font-weight: 800 !important;
                 border: 1px solid #111e3a !important;
@@ -831,53 +862,62 @@
                 print-color-adjust: exact !important;
             }
             .damaged-table tbody td {
-                padding: 2.5mm 2mm !important;
+                padding: 2mm 2mm !important;
                 border: 1px solid #e5e7eb !important;
                 color: #1f2937 !important;
                 font-size: 8.5pt !important;
                 background: #ffffff !important;
             }
-            .damaged-table tbody tr.critical { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
-            .damaged-table tbody tr.warning  { background: #fffbeb !important; border-right: 3px solid #b45309 !important; }
+            .damaged-table tbody tr.critical {
+                background: #fef2f2 !important;
+                border-right: 3px solid #b91c1c !important;
+            }
+            .damaged-table tbody tr.warning {
+                background: #fffbeb !important;
+                border-right: 3px solid #b45309 !important;
+            }
             .damaged-table .vessel-name-damaged { color: #b91c1c !important; font-weight: 800 !important; }
             .damaged-table .damage-type { color: #b45309 !important; font-weight: 700 !important; }
             .damaged-table .damage-date { color: #6b7280 !important; }
             .damaged-table .urgency-badge {
-                padding: 1mm 3mm !important;
-                border-radius: 10px !important;
+                padding: 0.8mm 2.5mm !important;
+                border-radius: 8px !important;
                 font-size: 7pt !important;
                 font-weight: 700 !important;
                 border: 1px solid currentColor !important;
                 background: #ffffff !important;
                 animation: none !important;
             }
-            .damaged-table .urgency-badge.critical { color: #b91c1c !important; }
-            .damaged-table .urgency-badge.warning  { color: #b45309 !important; }
-            .damaged-table .urgency-badge.normal   { color: #4b5563 !important; }
+            .damaged-table .urgency-badge.critical { color: #b91c1c !important; background: #fee2e2 !important; }
+            .damaged-table .urgency-badge.warning  { color: #b45309 !important; background: #fef3c7 !important; }
+            .damaged-table .urgency-badge.normal   { color: #4b5563 !important; background: #f3f4f6 !important; }
 
+            .damaged-empty { padding: 8mm !important; }
+            .damaged-empty h4 { color: #047857 !important; font-size: 11pt !important; }
+            .damaged-empty p { color: #6b7280 !important; }
+
+            /* ===== MAIN TABLE ===== */
             .table-wrapper {
                 background: #ffffff !important;
-                border: 2px solid #0a0e1a !important;
-                border-radius: 6px !important;
-                page-break-inside: auto; overflow: visible !important;
+                border: 1.5px solid #0a0e1a !important;
+                border-radius: 4px !important;
+                page-break-inside: auto;
+                overflow: visible !important;
             }
             .table-header {
-                background: #f3f4f6 !important;
+                background: #0a0e1a !important;
                 border-bottom: 2px solid #e94560 !important;
                 padding: 3mm 4mm !important;
                 page-break-after: avoid;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
-            .table-header h3 { color: #0a0e1a !important; font-size: 11pt !important; font-weight: 800 !important; }
+            .table-header h3 {
+                color: #f5c842 !important;
+                font-size: 11pt !important;
+                font-weight: 800 !important;
+            }
             .table-header h3 i { color: #e94560 !important; }
-            .table-header .badge {
-                border: 1px solid currentColor !important;
-                background: #ffffff !important;
-                font-size: 8pt !important;
-                padding: 1mm 3mm !important;
-            }
-            .table-header .badge.pink  { color: #b91c1c !important; }
-            .table-header .badge.gold  { color: #b45309 !important; }
-            .table-header .badge.green { color: #047857 !important; }
 
             .table-scroll { overflow: visible !important; padding: 0 !important; }
             table {
@@ -895,8 +935,8 @@
             thead th {
                 background: #0a0e1a !important;
                 color: #f5c842 !important;
-                padding: 3mm 2mm !important;
-                font-size: 9pt !important;
+                padding: 2.5mm 2mm !important;
+                font-size: 8.5pt !important;
                 font-weight: 800 !important;
                 text-align: center !important;
                 border: 1px solid #111e3a !important;
@@ -904,10 +944,14 @@
                 print-color-adjust: exact !important;
             }
             thead th i { display: none !important; }
-            tbody tr { page-break-inside: avoid; background: #ffffff !important; }
+
+            tbody tr {
+                page-break-inside: avoid;
+                background: #ffffff !important;
+            }
             tbody tr:nth-child(even) { background: #f9fafb !important; }
             tbody td {
-                padding: 2.5mm 2mm !important;
+                padding: 2mm 2mm !important;
                 border: 1px solid #e5e7eb !important;
                 color: #1f2937 !important;
                 font-size: 8.5pt !important;
@@ -915,41 +959,65 @@
                 vertical-align: middle !important;
                 background: transparent !important;
             }
-            tbody tr.damaged { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
+            tbody tr.damaged {
+                background: #fef2f2 !important;
+                border-right: 3px solid #b91c1c !important;
+            }
             tbody tr.damaged td { color: #991b1b !important; }
-            tbody .vessel-name, tbody td strong { font-weight: 800 !important; color: #0a0e1a !important; }
             tbody tr.virtual { opacity: 1 !important; }
+            tbody .vessel-name, tbody td strong {
+                font-weight: 800 !important;
+                color: #0a0e1a !important;
+            }
 
             .status-badge {
                 display: inline-block !important;
-                padding: 1mm 3mm !important;
-                border-radius: 10px !important;
-                font-size: 8pt !important;
+                padding: 0.8mm 2.5mm !important;
+                border-radius: 8px !important;
+                font-size: 7.5pt !important;
                 font-weight: 700 !important;
                 border: 1px solid currentColor !important;
                 background: #ffffff !important;
                 animation: none !important;
             }
-            .status-badge.active    { color: #b45309 !important; }
-            .status-badge.completed { color: #047857 !important; }
-            .status-badge.cancelled { color: #b91c1c !important; }
-            .status-badge.damaged   { color: #b91c1c !important; }
-            .status-badge.pending   { color: #1d4ed8 !important; }
+            .status-badge.active    { color: #b45309 !important; background: #fef3c7 !important; }
+            .status-badge.completed { color: #047857 !important; background: #d1fae5 !important; }
+            .status-badge.cancelled { color: #b91c1c !important; background: #fee2e2 !important; }
+            .status-badge.damaged   { color: #b91c1c !important; background: #fee2e2 !important; }
+            .status-badge.pending   { color: #1d4ed8 !important; background: #dbeafe !important; }
 
-            .empty-state { padding: 15mm !important; color: #6b7280 !important; }
+            .empty-state { padding: 12mm !important; color: #6b7280 !important; }
             .empty-state .empty-icon { color: #d1d5db !important; }
             .empty-state h3 { color: #4b5563 !important; }
 
+            /* ===== PRINT FOOTER (ثابت أسفل كل صفحة) ===== */
             .print-footer {
                 display: block !important;
                 position: fixed;
-                bottom: 5mm; left: 0; right: 0;
+                bottom: 0; left: 0; right: 0;
+                padding: 2mm 10mm;
                 text-align: center;
                 font-size: 8pt;
                 color: #6b7280;
-                border-top: 2px solid #e94560;
-                padding-top: 3mm;
+                border-top: 1.5px solid #e94560;
                 background: #ffffff;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .print-footer strong { color: #0a0e1a; font-weight: 800; }
+
+            /* تفادي تكرار الفوتر */
+            .print-footer { display: none !important; }
+            @page {
+                @bottom-center {
+                    content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية | صفحة " counter(page) " / " counter(pages);
+                    font-family: 'Cairo', 'Segoe UI', sans-serif;
+                    font-size: 8pt;
+                    color: #6b7280;
+                    border-top: 1.5px solid #e94560;
+                    padding-top: 2mm;
+                    width: 100%;
+                }
             }
 
             h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
@@ -964,7 +1032,26 @@
         }
     </style>
 
-    <!-- HEADER -->
+    <!-- ============ PRINT HEADER (hidden on screen) ============ -->
+    <div class="print-header" aria-hidden="true">
+        <div class="ph-left">
+            <div class="ph-logo">
+                <img id="printLogo" src="" alt="" style="display:none;">
+                <i class="fas fa-tools" id="printLogoFallback"></i>
+            </div>
+            <div class="ph-title">
+                <h1>سجلات الصيانة</h1>
+                <p>متابعة وإدارة مهام الصيانة للمراكب البحرية</p>
+            </div>
+        </div>
+        <div class="ph-right">
+            <div><strong>تاريخ الطباعة:</strong> <span id="printDate">—</span></div>
+            <div><strong>الوقت:</strong> <span id="printTime">—</span></div>
+            <div><strong>عدد السجلات:</strong> <span id="printCount">0</span></div>
+        </div>
+    </div>
+
+    <!-- ============ HEADER ============ -->
     <div class="maint-header" id="maintHeader">
         <div class="maint-header-left">
             <div class="header-icon" id="maintHeaderIcon" aria-hidden="true">
@@ -986,10 +1073,13 @@
             <button type="button" class="btn-action secondary" id="printBtn">
                 <i class="fas fa-print"></i> طباعة
             </button>
+            <button type="button" class="btn-action secondary" id="debugBtn" title="تشخيص" aria-label="تشخيص">
+                <i class="fas fa-bug"></i>
+            </button>
         </div>
     </div>
 
-    <!-- STATS CARDS -->
+    <!-- ============ STATS ============ -->
     <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
             <div class="stat-top">
@@ -1052,7 +1142,7 @@
         </div>
     </div>
 
-    <!-- DAMAGED VESSELS -->
+    <!-- ============ DAMAGED VESSELS ============ -->
     <div class="damaged-section" id="damagedSection">
         <div class="damaged-header">
             <h3><i class="fas fa-exclamation-triangle"></i> 🚨 المراكب المعطبة - تحتاج صيانة عاجلة</h3>
@@ -1083,15 +1173,13 @@
         </div>
     </div>
 
-    <!-- FILTER BAR -->
+    <!-- ============ FILTER BAR ============ -->
     <div class="filter-bar">
         <label for="searchMaint"><i class="fas fa-search"></i> بحث</label>
         <input type="text" id="searchMaint" placeholder="المركب، العطب، الفني..." />
 
         <label><i class="fas fa-calendar"></i> السنة</label>
-        <div class="year-checkbox-group" id="yearFilterGroup">
-            <!-- dynamic -->
-        </div>
+        <div class="year-checkbox-group" id="yearFilterGroup"></div>
 
         <label for="statusFilter"><i class="fas fa-circle"></i> الحالة</label>
         <select id="statusFilter">
@@ -1111,7 +1199,7 @@
         </button>
     </div>
 
-    <!-- MAIN TABLE -->
+    <!-- ============ MAIN TABLE ============ -->
     <div class="table-wrapper">
         <div class="table-header">
             <h3><i class="fas fa-list-ul"></i> قائمة مهام الصيانة</h3>
@@ -1144,7 +1232,7 @@
         </div>
     </div>
 
-    <!-- MODAL -->
+    <!-- ============ MODAL ============ -->
     <div class="maint-modal" id="maintenanceModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-content">
             <div class="modal-header">
@@ -1155,7 +1243,7 @@
         </div>
     </div>
 
-    <!-- CONFIRM MODAL -->
+    <!-- ============ CONFIRM MODAL ============ -->
     <div class="maint-modal confirm-modal" id="confirmModal" role="alertdialog" aria-modal="true">
         <div class="modal-content">
             <div class="confirm-icon" id="confirmIcon">
@@ -1173,14 +1261,11 @@
         </div>
     </div>
 
-    <!-- PRINT FOOTER -->
-    <div class="print-footer" aria-hidden="true">🚢 منظومة الوسائل البحرية — وثيقة رسمية</div>
-
     <script>
         (function() {
             'use strict';
 
-            console.log('🔧 Maintenance Page v10.0 - loading...');
+            console.log('🔧 Maintenance Page v10.1 - loading...');
 
             // ============================================================
             // ✅ STATE
@@ -1201,7 +1286,7 @@
             }
 
             // ============================================================
-            // ✅ SAFE EVENT BINDING + CLEANUP
+            // ✅ SAFE BINDING + CLEANUP
             // ============================================================
             function bind(target, event, handler, options) {
                 if (!target) return;
@@ -1216,12 +1301,10 @@
             function cleanup() {
                 if (state.destroyed) return;
                 state.destroyed = true;
-
                 state.listeners.forEach(function(l) {
                     try { l.target.removeEventListener(l.event, l.handler, l.options); } catch (e) {}
                 });
                 state.listeners = [];
-
                 [
                     'openAddMaintenance','openEditModal','saveMaintenance','completeMaintenance',
                     'deleteMaintenance','showHistory','closeModal','refreshMaintenance',
@@ -1229,8 +1312,7 @@
                 ].forEach(function(name) {
                     try { delete window[name]; } catch (e) {}
                 });
-
-                console.log('🧹 Maintenance v10.0 cleanup done');
+                console.log('🧹 Maintenance v10.1 cleanup done');
             }
 
             window._pageCleanup = window._pageCleanup || [];
@@ -1247,16 +1329,18 @@
                     if (!cached) return;
                     var iconDiv = document.getElementById('maintHeaderIcon');
                     var img = document.getElementById('globalLogo');
+                    var printImg = document.getElementById('printLogo');
+                    var printFallback = document.getElementById('printLogoFallback');
                     if (img) { img.src = cached; img.style.display = 'block'; }
+                    if (printImg) { printImg.src = cached; printImg.style.display = 'block'; }
+                    if (printFallback) printFallback.style.display = 'none';
                     if (iconDiv) iconDiv.classList.add('has-logo');
                 } catch (e) {}
             }
-
             function syncLogoFromServer() {
                 var token = getToken();
                 var headers = { 'Accept': 'application/json' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
-
                 fetch('/api/logo', { headers: headers, credentials: 'include' })
                     .then(function(r) { return r.ok ? r.json() : null; })
                     .then(function(data) {
@@ -1266,7 +1350,6 @@
                         }
                     }).catch(function() {});
             }
-
             function onStorageChange(e) {
                 if (e.key === 'marine_logo' && e.newValue) applyLogo();
             }
@@ -1285,9 +1368,15 @@
                         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                     });
                     var timeStr = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-                    var full = dateStr + ' - ' + timeStr;
                     var h = document.getElementById('maintHeader');
-                    if (h) h.setAttribute('data-print-date', full);
+                    if (h) h.setAttribute('data-print-date', dateStr + ' - ' + timeStr);
+
+                    var printDateEl = document.getElementById('printDate');
+                    if (printDateEl) printDateEl.textContent = dateStr;
+                    var printTimeEl = document.getElementById('printTime');
+                    if (printTimeEl) printTimeEl.textContent = timeStr;
+                    var printCountEl = document.getElementById('printCount');
+                    if (printCountEl) printCountEl.textContent = state.data.length;
                 } catch (e) {}
             }
             updatePrintDate();
@@ -1347,7 +1436,6 @@
                        localStorage.getItem('token') ||
                        localStorage.getItem('authToken') || null;
             }
-
             function getAuthHeaders() {
                 var token = getToken();
                 var h = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
@@ -1360,7 +1448,6 @@
                 } catch (e) {}
                 return h;
             }
-
             function fetcher(url, options) {
                 if (typeof window.apiFetch === 'function') return window.apiFetch(url, options || {});
                 return fetch(url, Object.assign({}, options || {}, {
@@ -1379,10 +1466,7 @@
                 });
             }
             function escapeAttr(str) {
-                if (str === null || str === undefined) return '';
-                return String(str).replace(/[&<>"']/g, function(m) {
-                    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
-                });
+                return escapeHtml(str);
             }
 
             function formatDate(d) {
@@ -1439,7 +1523,7 @@
             }
 
             // ============================================================
-            // ❓ CONFIRM HELPER (بديل عن confirm())
+            // ❓ CONFIRM HELPER
             // ============================================================
             function confirmAction(opts) {
                 return new Promise(function(resolve) {
@@ -1476,6 +1560,62 @@
             }
 
             // ============================================================
+            // 🚨 DAMAGED DETECTION — FLEXIBLE
+            // ============================================================
+            var DAMAGED_VALUES = [
+                'معطب', 'معطبة', 'معطوب', 'معطوبة', 'عاطل', 'عاطلة',
+                'متوقف', 'متوقفة', 'خارج الخدمة', 'خارج الخدمه',
+                'damaged', 'broken', 'out-of-service', 'out_of_service',
+                'under-repair', 'needs-repair', 'down', 'unavailable'
+            ];
+
+            var STATUS_FIELDS = [
+                'stat', 'status', 'state', 'condition',
+                'vesselStatus', 'vessel_status',
+                'operationalStatus', 'operational_status',
+                'shipStatus', 'ship_status',
+                'currentStatus', 'maintenanceStatus',
+                'availabilityStatus', 'availability_status'
+            ];
+
+            function isVesselDamaged(v) {
+                if (!v) return false;
+
+                for (var i = 0; i < STATUS_FIELDS.length; i++) {
+                    var val = v[STATUS_FIELDS[i]];
+                    if (val === undefined || val === null) continue;
+                    if (typeof val === 'object') {
+                        // nested: { value, name, label }
+                        var nested = val.value || val.name || val.label || val.code;
+                        if (nested && DAMAGED_VALUES.indexOf(String(nested).trim().toLowerCase()) !== -1) return true;
+                        if (nested && DAMAGED_VALUES.indexOf(String(nested).trim()) !== -1) return true;
+                        continue;
+                    }
+                    var s = String(val).trim();
+                    if (DAMAGED_VALUES.indexOf(s) !== -1) return true;
+                    if (DAMAGED_VALUES.indexOf(s.toLowerCase()) !== -1) return true;
+                }
+
+                // حقل منطقي
+                if (v.isDamaged === true || v.damaged === true ||
+                    v.broken === true || v.isBroken === true ||
+                    v.outOfService === true || v.needsRepair === true) return true;
+
+                // حقل عطل موجود
+                if (v.break || v.breakdown || v.problem || v.issue) {
+                    // إذا كان هناك "عطل" مسجل، نعتبره معطبًا فقط إذا لم يكن هناك حالة معارضة
+                    var hasActiveStatus = false;
+                    for (var j = 0; j < STATUS_FIELDS.length; j++) {
+                        var sv = v[STATUS_FIELDS[j]];
+                        if (sv && typeof sv === 'string' && sv.trim()) { hasActiveStatus = true; break; }
+                    }
+                    if (!hasActiveStatus) return true;
+                }
+
+                return false;
+            }
+
+            // ============================================================
             // 📅 DYNAMIC YEAR FILTER
             // ============================================================
             function buildYearFilters() {
@@ -1492,10 +1632,7 @@
                 var currentYear = new Date().getFullYear();
                 years[currentYear] = true;
 
-                var list = Object.keys(years).map(Number).sort(function(a, b) { return b - a; });
-                // احتفظ فقط بـ 6 سنوات كحد أقصى
-                list = list.slice(0, 6);
-
+                var list = Object.keys(years).map(Number).sort(function(a, b) { return b - a; }).slice(0, 6);
                 var previous = getSelectedYears();
 
                 group.innerHTML = list.map(function(y) {
@@ -1526,17 +1663,39 @@
                 if (state.destroyed) return [];
                 var token = getToken();
                 if (!token) {
+                    console.warn('⚠️ [loadVessels] لا يوجد token');
                     state.vessels = [];
                     return [];
                 }
                 try {
                     var res = await fetcher('/api/vessels', { method: 'GET' });
-                    if (!res.ok) { state.vessels = []; return []; }
+                    if (!res.ok) {
+                        console.warn('⚠️ [loadVessels] HTTP', res.status);
+                        state.vessels = [];
+                        return [];
+                    }
                     var data = await res.json();
-                    state.vessels = Array.isArray(data) ? data : [];
+                    var list = [];
+                    if (Array.isArray(data)) list = data;
+                    else if (data && Array.isArray(data.vessels)) list = data.vessels;
+                    else if (data && Array.isArray(data.data)) list = data.data;
+                    else if (data && Array.isArray(data.records)) list = data.records;
+
+                    state.vessels = list;
+                    window.__debugVessels = list;
+
+                    console.log('🚢 [loadVessels] تم تحميل', list.length, 'مركب');
+                    if (list.length > 0) {
+                        console.log('🚢 [loadVessels] مفاتيح أول مركب:', Object.keys(list[0]));
+                        var dmg = list.filter(isVesselDamaged);
+                        console.log('🚨 [loadVessels] معطبة:', dmg.length);
+                        if (dmg.length === 0 && list.length > 0) {
+                            console.log('⚠️ [loadVessels] لم يتم كشف أي معطب. عيّنة:', list[0]);
+                        }
+                    }
                     return state.vessels;
                 } catch (e) {
-                    console.error('❌ loadVessels:', e);
+                    console.error('❌ [loadVessels]', e);
                     state.vessels = [];
                     return [];
                 }
@@ -1593,37 +1752,50 @@
             }
 
             // ============================================================
-            // 🚨 MERGE DAMAGED VESSELS (extracted)
+            // 🚨 MERGE DAMAGED VESSELS
             // ============================================================
             function mergeDamagedVessels() {
-                var damaged = state.vessels.filter(function(v) {
-                    return v.stat === 'معطب' || v.status === 'معطب';
-                });
-                var existingVesselIds = {};
+                var damagedVessels = state.vessels.filter(isVesselDamaged);
+
+                window.__debugVessels = state.vessels;
+                window.__debugData = state.data;
+                console.log('🔍 [MERGE] Vessels total:', state.vessels.length);
+                console.log('🔍 [MERGE] Damaged detected:', damagedVessels.length);
+
+                // فهرس: هل للمركب سجل وهمي مسبقًا؟
+                var virtualByVessel = {};
                 state.data.forEach(function(m) {
-                    if (m.vesselId) existingVesselIds[m.vesselId] = true;
+                    if (m.isVirtual && m.vesselId) virtualByVessel[m.vesselId] = true;
                 });
 
-                damaged.forEach(function(v) {
+                damagedVessels.forEach(function(v) {
                     var vid = v._id || v.id;
-                    if (!vid || existingVesselIds[vid]) return;
+                    if (!vid) return;
+                    if (virtualByVessel[vid]) return;
+
                     state.data.push({
                         id: VIRTUAL_PREFIX + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
                         vesselId: vid,
-                        vesselName: v.name || 'مركب غير معروف',
-                        damage: v.break || 'عطل غير محدد',
+                        vesselName: v.name || v.vesselName || v.title || 'مركب غير معروف',
+                        damage: v.break || v.damage || v.breakdown || v.problem || v.issue || 'عطل غير محدد',
                         technician: 'غير محدد',
-                        date: v.fDate || new Date().toISOString(),
+                        date: v.fDate || v.damagedAt || v.date || v.updatedAt || new Date().toISOString(),
                         status: 'معطب',
                         statusRaw: 'متأخرة',
                         cost: 0,
                         parts: [],
-                        history: [{ action: 'تم إضافة المركب تلقائياً', date: new Date().toISOString() }],
-                        description: v.break || '',
+                        history: [{
+                            action: 'تم إضافة المركب تلقائيًا من قائمة المراكب',
+                            date: new Date().toISOString()
+                        }],
+                        description: v.break || v.damage || '',
                         createdAt: new Date().toISOString(),
                         isVirtual: true
                     });
                 });
+
+                console.log('📊 [MERGE] After merge — total:', state.data.length,
+                            '| virtual:', state.data.filter(function(m) { return m.isVirtual; }).length);
             }
 
             // ============================================================
@@ -1632,14 +1804,10 @@
             function updateStatTrend(el, current, previous) {
                 if (!el) return;
                 if (previous === 0 && current === 0) {
-                    el.className = 'stat-change flat';
-                    el.textContent = '—';
-                    return;
+                    el.className = 'stat-change flat'; el.textContent = '—'; return;
                 }
                 if (previous === 0) {
-                    el.className = 'stat-change up';
-                    el.textContent = '↑ جديد';
-                    return;
+                    el.className = 'stat-change up'; el.textContent = '↑ جديد'; return;
                 }
                 var pct = Math.round(((current - previous) / previous) * 100);
                 if (pct > 0) { el.className = 'stat-change up'; el.textContent = '↑ ' + pct + '%'; }
@@ -1649,7 +1817,6 @@
 
             function updateStats() {
                 if (state.destroyed) return;
-
                 var data = state.data;
                 var total = data.length;
                 var active = data.filter(function(r) { return r.status === 'قيد الإنجاز'; }).length;
@@ -1658,7 +1825,6 @@
                 var pending = data.filter(function(r) { return r.status === 'قيد الانتظار'; }).length;
                 var totalCost = data.reduce(function(s, r) { return s + (r.cost || 0); }, 0);
 
-                // Month-over-month trends
                 var now = new Date();
                 var thisMonth = now.getMonth(), thisYear = now.getFullYear();
                 var prevMonth = thisMonth === 0 ? 11 : thisMonth - 1;
@@ -1710,9 +1876,11 @@
                         badge.className = 'badge green';
                     }
                 }
-
                 var badge2 = document.getElementById('damagedCountBadge');
                 if (badge2) badge2.textContent = damaged + ' مركب معطب';
+
+                var printCountEl = document.getElementById('printCount');
+                if (printCountEl) printCountEl.textContent = total;
             }
 
             // ============================================================
@@ -1726,10 +1894,15 @@
                 var years = getSelectedYears();
                 var damaged = state.data.filter(function(r) {
                     if (r.status !== 'معطب') return false;
+                    if (r.isVirtual) return true; // الوهمية تظهر دائمًا
                     if (years.length === 0) return true;
                     var y = r.date ? new Date(r.date).getFullYear().toString() : '';
                     return years.indexOf(y) !== -1;
-                }).sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+                }).sort(function(a, b) {
+                    if (a.isVirtual && !b.isVirtual) return -1;
+                    if (!a.isVirtual && b.isVirtual) return 1;
+                    return new Date(a.date) - new Date(b.date);
+                });
 
                 if (damaged.length === 0) {
                     tbody.innerHTML =
@@ -1800,6 +1973,16 @@
                 var years = getSelectedYears();
 
                 var filtered = state.data.filter(function(r) {
+                    if (r.isVirtual) {
+                        // الوهمية تظهر دائمًا إلا إذا كان فلتر الحالة يستبعد "معطب"
+                        if (statusFilter !== 'الكل' && statusFilter !== 'معطب') return false;
+                        // البحث يطبق عليها أيضًا لكن بمطابقة مرنة
+                        if (search) {
+                            var txt = (r.vesselName + ' ' + (r.damage || '')).toLowerCase();
+                            if (txt.indexOf(search) === -1) return false;
+                        }
+                        return true;
+                    }
                     var text = [r.vesselName, r.damage, r.technician, r.description]
                         .filter(Boolean).join(' ').toLowerCase();
                     var matchSearch = !search || text.indexOf(search) !== -1;
@@ -1907,6 +2090,8 @@
                     btn.disabled = true;
                 }
                 try {
+                    // نظّف السجلات الوهمية القديمة
+                    state.data = state.data.filter(function(m) { return !m.isVirtual; });
                     await loadVessels();
                     await loadMaintenance();
                     mergeDamagedVessels();
@@ -1957,7 +2142,7 @@
             }
 
             // ============================================================
-            // ➕ ADD / ✏️ EDIT
+            // ➕ ADD
             // ============================================================
             function openAddMaintenance(prefill) {
                 if (state.destroyed) return;
@@ -2017,13 +2202,15 @@
                 if (saveBtn) saveBtn.addEventListener('click', saveMaintenance);
                 if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
                 openModal();
-
                 setTimeout(function() {
                     var d = document.getElementById('mDamage');
                     if (d) d.focus();
                 }, 100);
             }
 
+            // ============================================================
+            // ✏️ EDIT
+            // ============================================================
             function openEditModal(id) {
                 if (state.destroyed) return;
                 var rec = state.data.find(function(r) { return r.id == id; });
@@ -2094,7 +2281,7 @@
             }
 
             // ============================================================
-            // ▶️ START MAINTENANCE (virtual record)
+            // ▶️ START (virtual → real)
             // ============================================================
             function startMaintenanceForVessel(id) {
                 var rec = state.data.find(function(r) { return r.id == id; });
@@ -2111,12 +2298,9 @@
             // ============================================================
             function saveMaintenance() {
                 if (state.destroyed) return;
-                if (!canCreate()) {
-                    showToast('⚠️ ليس لديك صلاحية', 'error');
-                    return;
-                }
+                if (!canCreate()) { showToast('⚠️ ليس لديك صلاحية', 'error'); return; }
                 if (state.editId && isVirtualId(state.editId)) {
-                    showToast('⚠️ لا يمكن تعديل سجل معطب وهمي', 'error');
+                    showToast('⚠️ لا يمكن تعديل سجل وهمي', 'error');
                     return;
                 }
 
@@ -2231,14 +2415,9 @@
             // ============================================================
             function deleteMaintenance(id) {
                 if (state.destroyed) return;
-                if (isVirtualId(id)) {
-                    showToast('⚠️ لا يمكن حذف سجل وهمي', 'error');
-                    return;
-                }
-                if (!canDelete()) {
-                    showToast('⚠️ ليس لديك صلاحية الحذف', 'error');
-                    return;
-                }
+                if (isVirtualId(id)) { showToast('⚠️ لا يمكن حذف سجل وهمي', 'error'); return; }
+                if (!canDelete()) { showToast('⚠️ ليس لديك صلاحية الحذف', 'error'); return; }
+
                 confirmAction({
                     message: '⚠️ هل أنت متأكد من حذف هذه المهمة؟\nلا يمكن التراجع عن هذا الإجراء.',
                     icon: 'fa-trash-alt',
@@ -2345,7 +2524,7 @@
             }
 
             // ============================================================
-            // 🖱️ EVENT DELEGATION (بديل onclick inline)
+            // 🖱️ EVENT DELEGATION
             // ============================================================
             function handleAction(e) {
                 var btn = e.target.closest('[data-action]');
@@ -2364,13 +2543,42 @@
             }
 
             // ============================================================
+            // 🐛 DEBUG
+            // ============================================================
+            function runDebug() {
+                console.group('🔍 Maintenance v10.1 Debug');
+                console.log('Vessels total:', state.vessels.length);
+                var damagedVessels = state.vessels.filter(isVesselDamaged);
+                console.log('Vessels damaged (detected):', damagedVessels.length);
+                console.log('Data total:', state.data.length);
+                console.log('Data virtual:', state.data.filter(function(m) { return m.isVirtual; }).length);
+                console.log('Data "معطب":', state.data.filter(function(m) { return m.status === 'معطب'; }).length);
+                console.log('--- Sample vessel keys ---');
+                if (state.vessels[0]) {
+                    console.log('Keys:', Object.keys(state.vessels[0]));
+                    console.log('Sample:', state.vessels[0]);
+                } else {
+                    console.warn('لا توجد مراكب محمّلة');
+                }
+                console.log('--- Sample damaged vessel ---');
+                console.log(damagedVessels[0] || 'لا يوجد');
+                console.groupEnd();
+
+                if (damagedVessels.length === 0 && state.vessels.length > 0) {
+                    showToast('⚠️ 0 معطب من ' + state.vessels.length + ' مركب. راجع Console.', 'error');
+                } else {
+                    showToast('🔍 راجع Console (' + damagedVessels.length + ' معطب)', 'info');
+                }
+            }
+
+            // ============================================================
             // 🚀 INIT
             // ============================================================
             async function init() {
                 if (state.destroyed || state.initialized) return;
                 state.initialized = true;
 
-                console.log('🚀 Maintenance v10.0 init...');
+                console.log('🚀 Maintenance v10.1 init...');
                 console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
 
                 try {
@@ -2380,7 +2588,7 @@
                     if (state.destroyed) return;
                     renderAll();
 
-                    // Header buttons
+                    // Header
                     var addBtn = document.getElementById('addBtn');
                     if (addBtn) addBtn.addEventListener('click', function() { openAddMaintenance(); });
 
@@ -2390,19 +2598,19 @@
                     var printBtn = document.getElementById('printBtn');
                     if (printBtn) printBtn.addEventListener('click', printMaintenance);
 
-                    // Filter buttons
+                    var debugBtn = document.getElementById('debugBtn');
+                    if (debugBtn) debugBtn.addEventListener('click', runDebug);
+
+                    // Filters
                     var filterBtn = document.getElementById('filterBtn');
                     if (filterBtn) filterBtn.addEventListener('click', function() {
-                        renderTable();
-                        renderDamagedVessels();
-                        updateStats();
+                        renderTable(); renderDamagedVessels(); updateStats();
                         showToast('✅ تم تطبيق الفلاتر', 'success');
                     });
-
                     var resetBtn = document.getElementById('resetBtn');
                     if (resetBtn) resetBtn.addEventListener('click', resetFilters);
 
-                    // Search
+                    // Search (debounced)
                     var search = document.getElementById('searchMaint');
                     if (search) {
                         var timer = null;
@@ -2412,19 +2620,16 @@
                         });
                     }
 
-                    // Status
                     var statusFilter = document.getElementById('statusFilter');
                     if (statusFilter) statusFilter.addEventListener('change', renderTable);
 
-                    // Years (event delegation)
                     var yearGroup = document.getElementById('yearFilterGroup');
                     if (yearGroup) yearGroup.addEventListener('change', onYearCheckChange);
 
-                    // Main table (event delegation)
+                    // Tables (delegation)
                     var maintBody = document.getElementById('maintenanceBody');
                     if (maintBody) maintBody.addEventListener('click', handleAction);
 
-                    // Damaged table (event delegation)
                     var dmgBody = document.getElementById('damagedBody');
                     if (dmgBody) dmgBody.addEventListener('click', handleAction);
 
@@ -2437,7 +2642,6 @@
                         if (e.target === modal) closeModal();
                     });
 
-                    // ESC closes modal
                     bindWin('keydown', function(e) {
                         if (e.key === 'Escape') {
                             var m = document.getElementById('maintenanceModal');
@@ -2445,7 +2649,7 @@
                         }
                     });
 
-                    console.log('✅ Maintenance v10.0 ready — ' + state.data.length + ' tasks');
+                    console.log('✅ Maintenance v10.1 ready — ' + state.data.length + ' tasks');
                 } catch (err) {
                     console.error('❌ Init error:', err);
                     showToast('❌ خطأ في تحميل الصفحة', 'error');
