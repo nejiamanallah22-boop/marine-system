@@ -41,12 +41,11 @@
             padding: 0;
             margin: 0;
             font-family: var(--font);
-            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
             background: transparent;
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
-            z-index: 2; /* ✅ فوق الخلفية (z-index: 0) */
+            z-index: 2;
         }
 
         /* ===== ANIMATED BACKGROUND ===== */
@@ -57,7 +56,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: 
+            background:
                 radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.05) 0%, transparent 50%),
                 radial-gradient(ellipse at 80% 30%, rgba(167,139,250,0.04) 0%, transparent 50%),
                 radial-gradient(ellipse at 50% 80%, rgba(9,132,227,0.03) 0%, transparent 50%);
@@ -103,7 +102,6 @@
             gap: 14px;
         }
 
-        /* ✅ الشعار الديناميكي (يدعم صورة أو أيقونة) */
         .dash-header-left .header-icon {
             width: 44px;
             height: 44px;
@@ -119,13 +117,12 @@
             overflow: hidden;
         }
 
-        /* ✅ صورة الشعار داخل الأيقونة (إن وُجدت) */
         .dash-header-left .header-icon img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             border-radius: 50%;
-            display: none; /* يظهر فقط عند وجود صورة */
+            display: none;
         }
 
         .dash-header-left .header-icon.has-logo img {
@@ -259,7 +256,7 @@
         }
 
         /* ============================================================
-           STATS CARDS - ENTERPRISE
+           STATS CARDS
            ============================================================ */
         .stats-grid {
             display: grid;
@@ -663,14 +660,423 @@
             .welcome-banner .greeting { font-size: 14px; }
             .chart-card canvas { max-height: 150px; }
         }
+
+        /* ============================================================
+           🖨️ PROFESSIONAL PRINT STYLES — v1.0 (ADDED)
+           نفس هوية التطبيق: ألوان ذهبية + تصميم داكن
+           ============================================================ */
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 12mm 10mm;
+            }
+
+            @page :first {
+                margin-top: 8mm;
+            }
+
+            /* 1) الخلفية والنص */
+            html, body {
+                background: #ffffff !important;
+                color: #1a1a1a !important;
+                font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+                font-size: 10pt !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* 2) إخفاء العناصر التفاعلية */
+            button,
+            .btn,
+            .btn-action,
+            .btn-sm,
+            .btn-filter,
+            .btn-save,
+            .btn-cancel,
+            .btn-close,
+            .dash-header-actions,
+            .header-actions,
+            .fleet-header-actions,
+            .users-header-actions,
+            .filter-bar,
+            .input-grid,
+            .action-btns,
+            .chart-actions,
+            .view-all,
+            .toast,
+            .toast-container,
+            #toastContainer,
+            nav,
+            .sidebar,
+            .navbar,
+            .no-print {
+                display: none !important;
+            }
+
+            /* 3) الهيدر — تصميم ذهبي داكن */
+            .dash-header,
+            .fleet-header,
+            .users-header {
+                display: flex !important;
+                background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
+                color: #ffffff !important;
+                padding: 12mm 8mm 6mm !important;
+                margin: 0 0 6mm !important;
+                border-radius: 8px !important;
+                border: 2px solid #e6b31e !important;
+                position: relative !important;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+            }
+
+            .dash-header-left h2,
+            .fleet-header h2,
+            .users-header h2 {
+                color: #e6b31e !important;
+                font-size: 16pt !important;
+                font-weight: 800 !important;
+                -webkit-text-fill-color: #e6b31e !important;
+                background: none !important;
+                margin: 0 0 4pt 0 !important;
+            }
+
+            .dash-header-left p,
+            .fleet-header p,
+            .users-header p {
+                color: rgba(255,255,255,0.75) !important;
+                font-size: 10pt !important;
+                -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
+            }
+
+            /* الشعار في الطباعة */
+            .header-icon,
+            #dashHeaderIcon,
+            #fleetHeaderIcon {
+                width: 48px !important;
+                height: 48px !important;
+                border: 2px solid #e6b31e !important;
+                background: #0a1628 !important;
+                box-shadow: none !important;
+                animation: none !important;
+                overflow: hidden !important;
+            }
+
+            .header-icon img,
+            #globalLogo {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
+            }
+
+            .header-icon i {
+                color: #e6b31e !important;
+            }
+
+            /* 4) عنوان الطباعة + التاريخ */
+            .dash-header::after,
+            .fleet-header::after,
+            .users-header::after {
+                content: "طُبع بتاريخ: " attr(data-print-date);
+                position: absolute;
+                bottom: 4mm;
+                left: 8mm;
+                font-size: 9pt;
+                color: rgba(255,255,255,0.7) !important;
+                direction: rtl;
+            }
+
+            /* 5) بطاقة الترحيب — طباعة أنيقة */
+            .welcome-banner {
+                background: #f8f9fc !important;
+                border: 2px solid #e6b31e !important;
+                color: #0a1628 !important;
+                padding: 5mm !important;
+                margin: 0 0 5mm !important;
+                border-radius: 6px !important;
+                backdrop-filter: none !important;
+                page-break-inside: avoid;
+            }
+
+            .welcome-banner .greeting {
+                color: #0a1628 !important;
+                font-size: 12pt !important;
+                font-weight: 800 !important;
+            }
+
+            .welcome-banner .greeting span {
+                color: #c99a0e !important;
+            }
+
+            .welcome-banner .date-time,
+            .welcome-banner .date-time span {
+                color: #4b5563 !important;
+                font-size: 9pt !important;
+            }
+
+            .welcome-banner .status-badge {
+                background: #ecfdf5 !important;
+                color: #047857 !important;
+                border: 1px solid #047857 !important;
+                font-size: 8pt !important;
+            }
+
+            /* 6) الإحصائيات — صناديق ذهبية */
+            .stats-grid {
+                display: grid !important;
+                grid-template-columns: repeat(5, 1fr) !important;
+                gap: 4mm !important;
+                margin: 0 0 5mm !important;
+                padding: 0 !important;
+                page-break-inside: avoid;
+            }
+
+            .stat-card {
+                background: #f8f9fc !important;
+                border: 2px solid #e6b31e !important;
+                border-radius: 6px !important;
+                padding: 4mm 3mm !important;
+                text-align: center !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+                position: relative !important;
+                overflow: visible !important;
+            }
+
+            .stat-card::before {
+                display: none !important;
+            }
+
+            .stat-card .stat-top {
+                justify-content: center !important;
+                margin-bottom: 2mm !important;
+            }
+
+            .stat-card .stat-icon {
+                width: 30px !important;
+                height: 30px !important;
+                border-radius: 50% !important;
+                border: 1px solid #e6b31e !important;
+                background: #ffffff !important;
+                color: #0a1628 !important;
+                font-size: 12pt !important;
+            }
+
+            .stat-card .stat-change {
+                display: none !important;
+            }
+
+            .stat-card .number {
+                color: #0a1628 !important;
+                font-size: 18pt !important;
+                font-weight: 800 !important;
+                line-height: 1 !important;
+                margin: 2mm 0 !important;
+                background: none !important;
+                -webkit-text-fill-color: #0a1628 !important;
+            }
+
+            .stat-card .number.gold { color: #c99a0e !important; -webkit-text-fill-color: #c99a0e !important; }
+            .stat-card .number.green { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
+            .stat-card .number.purple { color: #6d28d9 !important; -webkit-text-fill-color: #6d28d9 !important; }
+            .stat-card .number.blue { color: #1d4ed8 !important; -webkit-text-fill-color: #1d4ed8 !important; }
+            .stat-card .number.pink { color: #be185d !important; -webkit-text-fill-color: #be185d !important; }
+            .stat-card .number.red { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
+
+            .stat-card .label {
+                color: #4b5563 !important;
+                font-size: 9pt !important;
+                font-weight: 700 !important;
+            }
+
+            .stat-card .stat-bottom {
+                margin-top: 2mm !important;
+                padding-top: 2mm !important;
+                border-top: 1px solid #e5e7eb !important;
+            }
+
+            .stat-card .sub-label,
+            .stat-card .sub-label span {
+                color: #6b7280 !important;
+                font-size: 8pt !important;
+            }
+
+            /* 7) الرسوم البيانية */
+            .charts-grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 5mm !important;
+                page-break-inside: avoid;
+                margin: 0 0 5mm !important;
+                padding: 0 !important;
+            }
+
+            .chart-card,
+            .activity-card {
+                background: #f8f9fc !important;
+                border: 2px solid #e6b31e !important;
+                border-radius: 6px !important;
+                padding: 4mm !important;
+                page-break-inside: avoid;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+            }
+
+            .chart-card .chart-header {
+                border-bottom: 1px solid #e6b31e !important;
+                padding-bottom: 2mm !important;
+                margin-bottom: 3mm !important;
+            }
+
+            .chart-card .chart-header h4,
+            .activity-card .activity-header h4 {
+                color: #0a1628 !important;
+                font-size: 11pt !important;
+                font-weight: 800 !important;
+            }
+
+            .chart-card .chart-header h4 i,
+            .activity-card .activity-header h4 i {
+                color: #c99a0e !important;
+            }
+
+            .chart-card canvas {
+                max-height: 65mm !important;
+                width: 100% !important;
+            }
+
+            /* 8) النشاطات */
+            .activity-item {
+                page-break-inside: avoid;
+                border-bottom: 1px solid #e5e7eb !important;
+                padding: 2mm 0 !important;
+                gap: 3mm !important;
+            }
+
+            .activity-item .activity-icon {
+                width: 28px !important;
+                height: 28px !important;
+                border: 1px solid #e6b31e !important;
+                background: #ffffff !important;
+                color: #0a1628 !important;
+            }
+
+            .activity-item .activity-text {
+                color: #1f2937 !important;
+                font-size: 9pt !important;
+            }
+
+            .activity-item .activity-text strong {
+                color: #0a1628 !important;
+                font-weight: 800 !important;
+            }
+
+            .activity-item .activity-time {
+                color: #6b7280 !important;
+                font-size: 8pt !important;
+            }
+
+            .activity-item .activity-status {
+                border: 1px solid currentColor !important;
+                background: #ffffff !important;
+                font-size: 7pt !important;
+                padding: 1mm 2.5mm !important;
+            }
+
+            .activity-item .activity-status.success { color: #047857 !important; }
+            .activity-item .activity-status.warning { color: #b45309 !important; }
+            .activity-item .activity-status.danger { color: #b91c1c !important; }
+
+            /* 9) المؤشرات السريعة */
+            .bottom-grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 5mm !important;
+                padding: 0 !important;
+                page-break-inside: avoid;
+            }
+
+            .bottom-grid .chart-card > div[style*="grid"] {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 3mm !important;
+            }
+
+            .bottom-grid .chart-card > div[style*="grid"] > div {
+                background: #ffffff !important;
+                border: 1px solid #e6b31e !important;
+                border-radius: 4px !important;
+                padding: 3mm !important;
+            }
+
+            .bottom-grid .chart-card > div[style*="grid"] > div > div:first-child {
+                color: #0a1628 !important;
+                font-size: 14pt !important;
+                font-weight: 800 !important;
+            }
+
+            .bottom-grid .chart-card > div[style*="grid"] > div > div:last-child {
+                color: #4b5563 !important;
+                font-size: 8pt !important;
+            }
+
+            /* 10) Empty state */
+            .empty-state {
+                padding: 15mm !important;
+                color: #6b7280 !important;
+            }
+
+            .empty-state .spinner {
+                display: none !important;
+            }
+
+            /* 11) Footer */
+            #page-dashboard::after {
+                content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
+                display: block;
+                text-align: center;
+                font-size: 8pt;
+                color: #6b7280;
+                border-top: 2px solid #e6b31e;
+                padding-top: 3mm;
+                margin-top: 6mm;
+            }
+
+            /* 12) منع كسر العناصر */
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+                color: #0a1628 !important;
+            }
+
+            tr, img, .stat-card, .chart-card, .activity-item {
+                page-break-inside: avoid;
+            }
+
+            /* 13) إخفاء التأثيرات */
+            * {
+                box-shadow: none !important;
+                text-shadow: none !important;
+                animation: none !important;
+                transition: none !important;
+            }
+
+            #page-dashboard::before {
+                display: none !important;
+            }
+
+            /* 14) شارات النظام */
+            .dash-header .status-badge {
+                display: none !important;
+            }
+        }
     </style>
 
     <!-- ============================================================
     HEADER
     ============================================================ -->
-    <div class="dash-header">
+    <div class="dash-header" id="dashHeader">
         <div class="dash-header-left">
-            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
             <div class="header-icon" id="dashHeaderIcon">
                 <i class="fas fa-chart-pie"></i>
                 <img id="globalLogo" src="" alt="شعار" style="display:none;">
@@ -683,7 +1089,7 @@
         <div class="dash-header-actions">
             <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
             <button class="btn-action purple" onclick="exportDashboard()"><i class="fas fa-file-export"></i> تصدير</button>
-            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+            <button class="btn-action secondary" onclick="printDashboard()"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
@@ -777,7 +1183,6 @@
     CHARTS SECTION
     ============================================================ -->
     <div class="charts-grid">
-        <!-- Chart 1: Performance -->
         <div class="chart-card">
             <div class="chart-header">
                 <h4><i class="fas fa-chart-line"></i> أداء الأسطول</h4>
@@ -790,7 +1195,6 @@
             <canvas id="performanceChart"></canvas>
         </div>
 
-        <!-- Chart 2: Distribution -->
         <div class="chart-card">
             <div class="chart-header">
                 <h4><i class="fas fa-chart-pie"></i> توزيع المراكب</h4>
@@ -804,10 +1208,9 @@
     </div>
 
     <!-- ============================================================
-    BOTTOM GRID: Activity + Quick Stats
+    BOTTOM GRID
     ============================================================ -->
     <div class="bottom-grid">
-        <!-- Activity -->
         <div class="activity-card">
             <div class="activity-header">
                 <h4><i class="fas fa-bolt"></i> النشاطات الأخيرة</h4>
@@ -857,7 +1260,6 @@
             </div>
         </div>
 
-        <!-- Quick Stats -->
         <div class="chart-card">
             <div class="chart-header">
                 <h4><i class="fas fa-tachometer-alt"></i> مؤشرات سريعة</h4>
@@ -884,19 +1286,18 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT (v9.2.1 - Safe + Logo Support + Real Stats)
+    JAVASCRIPT (v9.2.2 - Safe + Logo Support + Real Stats + Print)
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
-            console.log('📊 Dashboard v9.2.1 - loading...');
+            console.log('📊 Dashboard v9.2.2 - loading...');
 
             var _dashboardIntervals = [];
             var _dashboardTimeouts = [];
             var _isDestroyed = false;
 
-            // ✅ حالة تحميل الإحصائيات (لمنع التداخل)
             var _statsLoading = false;
             var _statsAbort = null;
 
@@ -909,7 +1310,6 @@
                 });
                 _dashboardIntervals = [];
 
-                // ✅ إلغاء أي طلب إحصائيات معلّق
                 try {
                     if (_statsAbort) {
                         _statsAbort.abort();
@@ -962,7 +1362,6 @@
                 } catch (e) {}
             }
 
-            // ✅ مزامنة الشعار من الخادم
             function syncLogoFromServer() {
                 var token = localStorage.getItem('marine_token') ||
                             localStorage.getItem('token') ||
@@ -980,16 +1379,63 @@
                     }).catch(function() {});
             }
 
-            // ✅ شغّل عند التحميل
             applyLogo();
             syncLogoFromServer();
 
-            // ✅ استمع للتغييرات بين التبويبات
             window.addEventListener('storage', function(e) {
                 if (e.key === 'marine_logo' && e.newValue) {
                     applyLogo();
                 }
             });
+
+            // ============================================================
+            // 🖨️ PRINT DATE (ADDED v9.2.2)
+            // ============================================================
+            function updatePrintDate() {
+                try {
+                    var now = new Date();
+                    var dateStr = now.toLocaleDateString('ar-TN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    var timeStr = now.toLocaleTimeString('ar-TN', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    var fullDate = dateStr + ' - ' + timeStr;
+
+                    var header = document.getElementById('dashHeader');
+                    if (header) header.setAttribute('data-print-date', fullDate);
+                } catch (e) {
+                    console.debug('🖨️ updatePrintDate (safe):', e.message);
+                }
+            }
+
+            updatePrintDate();
+            window.addEventListener('beforeprint', updatePrintDate);
+
+            // ✅ زر الطباعة الاحترافي
+            window.printDashboard = function() {
+                try {
+                    updatePrintDate();
+
+                    var confirmed = confirm(
+                        '🖨️ قبل الطباعة تأكد من:\n\n' +
+                        '1. الاتجاه: أفقي (Landscape)\n' +
+                        '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
+                        '3. الوجهة: PDF (اختياري)\n\n' +
+                        'هل تريد المتابعة؟'
+                    );
+                    if (!confirmed) return;
+
+                    window.print();
+                } catch (e) {
+                    console.error('❌ printDashboard error:', e);
+                    window.print();
+                }
+            };
 
             // ============================================================
             // ⏰ DATE & TIME
@@ -1035,23 +1481,13 @@
             }
 
             // ============================================================
-            // STATS — v9.2.1 (Real Data + Safe Fallback)
+            // STATS
             // ============================================================
-            // ✅ يجلب بيانات حقيقية من API — ويعرض 0 عند عدم وجود بيانات
-            // ✅ لا يكسر الصفحة إذا فشل الاتصال
-            // ============================================================
-
-            /**
-             * تطبيق قيم الإحصائيات على DOM
-             * @param {Object} data - { totalVessels, activeVessels, ... }
-             */
             function applyStatsToDOM(data) {
-                // ✅ ضمان أن data كائن صالح
                 if (!data || typeof data !== 'object') {
                     data = {};
                 }
 
-                // ✅ القيم الافتراضية = 0
                 var safe = {
                     totalVessels:        Number(data.totalVessels) || 0,
                     activeVessels:       Number(data.activeVessels) || 0,
@@ -1072,16 +1508,12 @@
                 });
             }
 
-            /**
-             * حساب الإحصائيات من مصفوفة المراكب (fallback)
-             */
             function computeStatsFromVessels(vessels) {
                 if (!Array.isArray(vessels)) vessels = [];
                 vessels = vessels.filter(function(v) { return v && typeof v === 'object'; });
 
                 var total = vessels.length;
 
-                // ✅ "الصالح" = active !== false  &&  status !== 'maintenance'
                 var active = vessels.filter(function(v) {
                     if (v.active === false) return false;
                     if (v.status === 'maintenance' || v.status === 'repair') return false;
@@ -1107,22 +1539,17 @@
                 };
             }
 
-            /**
-             * جلب الإحصائيات من الـ API
-             */
             async function updateStats() {
                 if (_isDestroyed) return;
                 if (_statsLoading) return;
 
                 _statsLoading = true;
 
-                // ✅ إلغاء الطلب السابق إن وُجد
                 if (_statsAbort) {
                     try { _statsAbort.abort(); } catch (e) {}
                 }
                 _statsAbort = new AbortController();
 
-                // ⏱️ timeout 8 ثوانٍ
                 var timeoutId = setTimeout(function() {
                     if (_statsAbort) {
                         try { _statsAbort.abort(); } catch (e) {}
@@ -1130,7 +1557,6 @@
                 }, 8000);
 
                 try {
-                    // 🔐 headers
                     var token = localStorage.getItem('marine_token') ||
                                 localStorage.getItem('token') ||
                                 localStorage.getItem('authToken') || null;
@@ -1138,7 +1564,6 @@
                     var headers = { 'Accept': 'application/json' };
                     if (token) headers['Authorization'] = 'Bearer ' + token;
 
-                    // 🌐 محاولة جلب المراكب
                     var res = await fetch('/api/vessels', {
                         method: 'GET',
                         headers: headers,
@@ -1151,7 +1576,6 @@
 
                     if (_isDestroyed) return;
 
-                    // ⚠️ إذا فشل الطلب → أصفّر القيم
                     if (!res.ok) {
                         console.warn('[STATS] API returned', res.status, '→ showing 0');
                         applyStatsToDOM({});
@@ -1160,21 +1584,18 @@
 
                     var json = await res.json().catch(function() { return null; });
 
-                    // 📦 استخراج مصفوفة المراكب من أي شكل معتاد
                     var vessels = [];
                     if (Array.isArray(json)) vessels = json;
                     else if (json && Array.isArray(json.vessels)) vessels = json.vessels;
                     else if (json && Array.isArray(json.data)) vessels = json.data;
                     else if (json && json.data && Array.isArray(json.data.vessels)) vessels = json.data.vessels;
 
-                    // 🛑 إذا كان فارغاً → أصفّر
                     if (!vessels || vessels.length === 0) {
                         console.log('[STATS] No vessels → showing 0');
                         applyStatsToDOM({});
                         return;
                     }
 
-                    // 📊 حساب من المراكب
                     var stats = computeStatsFromVessels(vessels);
                     applyStatsToDOM(stats);
 
@@ -1190,8 +1611,6 @@
                     }
 
                     console.warn('[STATS] Fetch error → showing 0:', err && err.message);
-
-                    // ✅ في كل الحالات: أصفّر القيم بدل ترك الأرقام القديمة
                     applyStatsToDOM({});
 
                 } finally {
@@ -1200,7 +1619,6 @@
                 }
             }
 
-            // ✅ شغّل عند التحميل
             updateStats();
 
             // ============================================================
@@ -1344,7 +1762,6 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
 
-                // ✅ استدعاء الدالة async وانتظار اكتمالها
                 Promise.resolve(updateStats()).finally(function() {
                     if (btn) {
                         btn.innerHTML = orig;
@@ -1385,7 +1802,7 @@
             // ============================================================
             function init() {
                 if (_isDestroyed) return;
-                console.log('🚀 Initializing Dashboard v9.2.1...');
+                console.log('🚀 Initializing Dashboard v9.2.2...');
 
                 if (typeof Chart === 'undefined') {
                     var script = document.createElement('script');
