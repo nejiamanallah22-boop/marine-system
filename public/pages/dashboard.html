@@ -884,17 +884,21 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT (v9.2 - Safe + Logo Support)
+    JAVASCRIPT (v9.2.1 - Safe + Logo Support + Real Stats)
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
-            console.log('📊 Dashboard - loading...');
+            console.log('📊 Dashboard v9.2.1 - loading...');
 
             var _dashboardIntervals = [];
             var _dashboardTimeouts = [];
             var _isDestroyed = false;
+
+            // ✅ حالة تحميل الإحصائيات (لمنع التداخل)
+            var _statsLoading = false;
+            var _statsAbort = null;
 
             function _dashboardCleanup() {
                 if (_isDestroyed) return;
@@ -904,6 +908,14 @@
                     try { clearInterval(id); } catch (e) {}
                 });
                 _dashboardIntervals = [];
+
+                // ✅ إلغاء أي طلب إحصائيات معلّق
+                try {
+                    if (_statsAbort) {
+                        _statsAbort.abort();
+                        _statsAbort = null;
+                    }
+                } catch (e) {}
 
                 _dashboardTimeouts.forEach(function(id) {
                     try { clearTimeout(id); } catch (e) {}
@@ -1023,26 +1035,172 @@
             }
 
             // ============================================================
-            // STATS
+            // STATS — v9.2.1 (Real Data + Safe Fallback)
             // ============================================================
-            function updateStats() {
-                var ids = {
-                    totalVessels: 24,
-                    activeVessels: 18,
-                    maintenanceVessels: 4,
-                    efficiencyRate: '87%',
-                    totalUsers: 12,
-                    newUsers: 3,
-                    pendingMaintenance: 8,
-                    overdueMaintenance: 2,
-                    operationsToday: 15
+            // ✅ يجلب بيانات حقيقية من API — ويعرض 0 عند عدم وجود بيانات
+            // ✅ لا يكسر الصفحة إذا فشل الاتصال
+            // ============================================================
+
+            /**
+             * تطبيق قيم الإحصائيات على DOM
+             * @param {Object} data - { totalVessels, activeVessels, ... }
+             */
+            function applyStatsToDOM(data) {
+                // ✅ ضمان أن data كائن صالح
+                if (!data || typeof data !== 'object') {
+                    data = {};
+                }
+
+                // ✅ القيم الافتراضية = 0
+                var safe = {
+                    totalVessels:        Number(data.totalVessels) || 0,
+                    activeVessels:       Number(data.activeVessels) || 0,
+                    maintenanceVessels:  Number(data.maintenanceVessels) || 0,
+                    efficiencyRate:      (typeof data.efficiencyRate === 'string'
+                                            ? data.efficiencyRate
+                                            : (Number(data.efficiencyRate) || 0) + '%'),
+                    totalUsers:          Number(data.totalUsers) || 0,
+                    newUsers:            Number(data.newUsers) || 0,
+                    pendingMaintenance:  Number(data.pendingMaintenance) || 0,
+                    overdueMaintenance:  Number(data.overdueMaintenance) || 0,
+                    operationsToday:     Number(data.operationsToday) || 0
                 };
 
-                Object.keys(ids).forEach(function(id) {
+                Object.keys(safe).forEach(function(id) {
                     var el = document.getElementById(id);
-                    if (el) el.textContent = ids[id];
+                    if (el) el.textContent = safe[id];
                 });
             }
+
+            /**
+             * حساب الإحصائيات من مصفوفة المراكب (fallback)
+             */
+            function computeStatsFromVessels(vessels) {
+                if (!Array.isArray(vessels)) vessels = [];
+                vessels = vessels.filter(function(v) { return v && typeof v === 'object'; });
+
+                var total = vessels.length;
+
+                // ✅ "الصالح" = active !== false  &&  status !== 'maintenance'
+                var active = vessels.filter(function(v) {
+                    if (v.active === false) return false;
+                    if (v.status === 'maintenance' || v.status === 'repair') return false;
+                    return true;
+                }).length;
+
+                var maintenance = vessels.filter(function(v) {
+                    return v.status === 'maintenance' || v.status === 'repair';
+                }).length;
+
+                var efficiency = total > 0 ? Math.round((active / total) * 100) : 0;
+
+                return {
+                    totalVessels: total,
+                    activeVessels: active,
+                    maintenanceVessels: maintenance,
+                    efficiencyRate: efficiency + '%',
+                    totalUsers: 0,
+                    newUsers: 0,
+                    pendingMaintenance: maintenance,
+                    overdueMaintenance: 0,
+                    operationsToday: 0
+                };
+            }
+
+            /**
+             * جلب الإحصائيات من الـ API
+             */
+            async function updateStats() {
+                if (_isDestroyed) return;
+                if (_statsLoading) return;
+
+                _statsLoading = true;
+
+                // ✅ إلغاء الطلب السابق إن وُجد
+                if (_statsAbort) {
+                    try { _statsAbort.abort(); } catch (e) {}
+                }
+                _statsAbort = new AbortController();
+
+                // ⏱️ timeout 8 ثوانٍ
+                var timeoutId = setTimeout(function() {
+                    if (_statsAbort) {
+                        try { _statsAbort.abort(); } catch (e) {}
+                    }
+                }, 8000);
+
+                try {
+                    // 🔐 headers
+                    var token = localStorage.getItem('marine_token') ||
+                                localStorage.getItem('token') ||
+                                localStorage.getItem('authToken') || null;
+
+                    var headers = { 'Accept': 'application/json' };
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                    // 🌐 محاولة جلب المراكب
+                    var res = await fetch('/api/vessels', {
+                        method: 'GET',
+                        headers: headers,
+                        credentials: 'include',
+                        cache: 'no-store',
+                        signal: _statsAbort.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (_isDestroyed) return;
+
+                    // ⚠️ إذا فشل الطلب → أصفّر القيم
+                    if (!res.ok) {
+                        console.warn('[STATS] API returned', res.status, '→ showing 0');
+                        applyStatsToDOM({});
+                        return;
+                    }
+
+                    var json = await res.json().catch(function() { return null; });
+
+                    // 📦 استخراج مصفوفة المراكب من أي شكل معتاد
+                    var vessels = [];
+                    if (Array.isArray(json)) vessels = json;
+                    else if (json && Array.isArray(json.vessels)) vessels = json.vessels;
+                    else if (json && Array.isArray(json.data)) vessels = json.data;
+                    else if (json && json.data && Array.isArray(json.data.vessels)) vessels = json.data.vessels;
+
+                    // 🛑 إذا كان فارغاً → أصفّر
+                    if (!vessels || vessels.length === 0) {
+                        console.log('[STATS] No vessels → showing 0');
+                        applyStatsToDOM({});
+                        return;
+                    }
+
+                    // 📊 حساب من المراكب
+                    var stats = computeStatsFromVessels(vessels);
+                    applyStatsToDOM(stats);
+
+                    console.log('[STATS] Updated from', vessels.length, 'vessels →', stats);
+
+                } catch (err) {
+                    clearTimeout(timeoutId);
+
+                    if (_isDestroyed) return;
+                    if (err && err.name === 'AbortError') {
+                        console.debug('[STATS] Aborted (safe)');
+                        return;
+                    }
+
+                    console.warn('[STATS] Fetch error → showing 0:', err && err.message);
+
+                    // ✅ في كل الحالات: أصفّر القيم بدل ترك الأرقام القديمة
+                    applyStatsToDOM({});
+
+                } finally {
+                    _statsLoading = false;
+                    _statsAbort = null;
+                }
+            }
+
+            // ✅ شغّل عند التحميل
             updateStats();
 
             // ============================================================
@@ -1060,7 +1218,7 @@
                                 labels: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
                                 datasets: [{
                                     label: 'الجاهزية %',
-                                    data: [75, 80, 78, 85, 82, 88, 87],
+                                    data: [0, 0, 0, 0, 0, 0, 0],
                                     borderColor: '#e6b31e',
                                     backgroundColor: 'rgba(230,179,30,0.08)',
                                     fill: true,
@@ -1071,7 +1229,7 @@
                                     pointRadius: 4
                                 }, {
                                     label: 'الصيانة',
-                                    data: [8, 6, 9, 5, 7, 4, 4],
+                                    data: [0, 0, 0, 0, 0, 0, 0],
                                     borderColor: '#a78bfa',
                                     backgroundColor: 'rgba(167,139,250,0.08)',
                                     fill: true,
@@ -1118,10 +1276,10 @@
                         var distChart = new Chart(distCtx, {
                             type: 'doughnut',
                             data: {
-                                labels: ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'],
+                                labels: ['لا توجد بيانات'],
                                 datasets: [{
-                                    data: [18, 12, 8, 6, 4],
-                                    backgroundColor: ['#f5d76e', '#60a5fa', '#a78bfa', '#f472b6', '#4ade80'],
+                                    data: [1],
+                                    backgroundColor: ['rgba(255,255,255,0.06)'],
                                     borderColor: '#0a1628',
                                     borderWidth: 3
                                 }]
@@ -1186,15 +1344,14 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
 
-                var id = setTimeout(function() {
-                    updateStats();
+                // ✅ استدعاء الدالة async وانتظار اكتمالها
+                Promise.resolve(updateStats()).finally(function() {
                     if (btn) {
                         btn.innerHTML = orig;
                         btn.disabled = false;
                     }
                     showToast('✅ تم تحديث لوحة القيادة', 'success');
-                }, 600);
-                _dashboardTimeouts.push(id);
+                });
             };
 
             var refreshBtn = document.getElementById('refreshBtn');
@@ -1228,7 +1385,7 @@
             // ============================================================
             function init() {
                 if (_isDestroyed) return;
-                console.log('🚀 Initializing Dashboard...');
+                console.log('🚀 Initializing Dashboard v9.2.1...');
 
                 if (typeof Chart === 'undefined') {
                     var script = document.createElement('script');
