@@ -4,19 +4,28 @@
         /* ✅ اللون المعتم على body */
         body { background: #0a0e1a; }
 
-        /* ===== STYLES ===== */
+        /* ============================================================
+           📋 LOGS PAGE - v9.14
+           5 Roles + normalizeRole + apiFetch + Cleanup + Dynamic Logo + Print
+           ============================================================ */
+
         #page-logs {
             width: 100%;
             max-width: 100%;
             padding: 0;
             margin: 0;
             font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
             background: transparent;
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
             z-index: 2;
+        }
+
+        #page-logs *,
+        #page-logs *::before,
+        #page-logs *::after {
+            box-sizing: border-box;
         }
 
         .logs-header {
@@ -41,7 +50,6 @@
             gap: 14px;
         }
 
-        /* ✅ الشعار الديناميكي */
         .logs-header-left .header-icon {
             width: 44px;
             height: 44px;
@@ -55,7 +63,6 @@
             overflow: hidden;
         }
 
-        /* ✅ دعم صورة الشعار */
         .logs-header-left .header-icon img {
             width: 100%;
             height: 100%;
@@ -130,7 +137,6 @@
             color: #fff;
         }
 
-        /* ===== STATS ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -195,7 +201,6 @@
             pointer-events: none;
         }
 
-        /* ===== FILTER BAR ===== */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
@@ -308,7 +313,6 @@
             color: #fff;
         }
 
-        /* ===== TABLE ===== */
         .table-wrapper {
             overflow-x: auto;
             padding: 16px 24px 24px;
@@ -363,7 +367,6 @@
             color: #fff;
         }
 
-        /* ===== STATUS BADGES ===== */
         .status-badge {
             padding: 3px 12px;
             border-radius: 20px;
@@ -410,7 +413,108 @@
             color: rgba(255,255,255,0.3);
         }
 
-        /* ===== TOAST ===== */
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-icon {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-view {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+        }
+
+        .btn-view:hover {
+            background: rgba(96,165,250,0.25);
+            transform: scale(1.05);
+        }
+
+        .btn-delete {
+            background: rgba(248,113,113,0.12);
+            color: #f87171;
+        }
+
+        .btn-delete:hover {
+            background: rgba(248,113,113,0.25);
+            transform: scale(1.05);
+        }
+
+        .btn-icon:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            color: rgba(255,255,255,0.04);
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .empty-state .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255,255,255,0.04);
+            border-top-color: #e6b31e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.2);
+            margin-bottom: 4px;
+        }
+
+        .empty-state p {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.1);
+        }
+
+        .empty-state .retry-btn {
+            margin-top: 12px;
+            padding: 8px 24px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .empty-state .retry-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 24px rgba(230,179,30,0.2);
+        }
+
         .toast-container {
             position: fixed;
             bottom: 24px;
@@ -485,18 +589,287 @@
             .logs-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
             .logs-header-left h2 { font-size: 14px; }
         }
+
+        /* ============================================================
+           🖨️ PROFESSIONAL PRINT STYLES — v1.0
+           ============================================================ */
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 12mm 10mm;
+            }
+
+            @page :first {
+                margin-top: 8mm;
+            }
+
+            html, body {
+                background: #ffffff !important;
+                color: #1a1a1a !important;
+                font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+                font-size: 10pt !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            button,
+            .btn-action,
+            .btn-filter,
+            .btn-icon,
+            .action-btns,
+            .retry-btn,
+            .toast,
+            .toast-container,
+            #toastContainer,
+            .logs-header-actions,
+            .filter-bar,
+            nav,
+            .sidebar,
+            .navbar,
+            .no-print {
+                display: none !important;
+            }
+
+            .logs-header {
+                display: flex !important;
+                background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
+                color: #ffffff !important;
+                padding: 12mm 8mm 6mm !important;
+                margin: 0 0 6mm !important;
+                border-radius: 8px !important;
+                border: 2px solid #e6b31e !important;
+                position: relative !important;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+                border-bottom: 2px solid #e6b31e !important;
+            }
+
+            .logs-header-left h2 {
+                color: #e6b31e !important;
+                font-size: 16pt !important;
+                font-weight: 800 !important;
+                -webkit-text-fill-color: #e6b31e !important;
+                background: none !important;
+                margin: 0 0 4pt 0 !important;
+            }
+
+            .logs-header-left p {
+                color: rgba(255,255,255,0.75) !important;
+                font-size: 10pt !important;
+            }
+
+            .header-icon,
+            #logsHeaderIcon {
+                width: 48px !important;
+                height: 48px !important;
+                border: 2px solid #e6b31e !important;
+                background: #0a1628 !important;
+                box-shadow: none !important;
+                overflow: hidden !important;
+            }
+
+            .header-icon img,
+            #globalLogo {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
+            }
+
+            .header-icon i {
+                color: #e6b31e !important;
+            }
+
+            .logs-header::after {
+                content: "طُبع بتاريخ: " attr(data-print-date);
+                position: absolute;
+                bottom: 4mm;
+                left: 8mm;
+                font-size: 9pt;
+                color: rgba(255,255,255,0.7) !important;
+                direction: rtl;
+            }
+
+            .stats-grid {
+                display: grid !important;
+                grid-template-columns: repeat(5, 1fr) !important;
+                gap: 4mm !important;
+                margin: 0 0 5mm !important;
+                padding: 0 !important;
+                page-break-inside: avoid;
+            }
+
+            .stat-card {
+                background: #f8f9fc !important;
+                border: 2px solid #e6b31e !important;
+                border-radius: 6px !important;
+                padding: 4mm 3mm !important;
+                text-align: center !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+                position: relative !important;
+                overflow: visible !important;
+            }
+
+            .stat-card::before {
+                display: none !important;
+            }
+
+            .stat-card .number {
+                color: #0a1628 !important;
+                font-size: 18pt !important;
+                font-weight: 800 !important;
+                line-height: 1 !important;
+                margin: 2mm 0 !important;
+                background: none !important;
+                -webkit-text-fill-color: #0a1628 !important;
+            }
+
+            .stat-card .number.gold { color: #c99a0e !important; -webkit-text-fill-color: #c99a0e !important; }
+            .stat-card .number.green { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
+            .stat-card .number.yellow { color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; }
+            .stat-card .number.red { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
+            .stat-card .number.blue { color: #1d4ed8 !important; -webkit-text-fill-color: #1d4ed8 !important; }
+
+            .stat-card .label {
+                color: #4b5563 !important;
+                font-size: 9pt !important;
+                font-weight: 700 !important;
+            }
+
+            .stat-card .icon-bg {
+                display: none !important;
+            }
+
+            .table-wrapper {
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                page-break-inside: auto;
+            }
+
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 8.5pt !important;
+                page-break-inside: auto;
+                border: 2px solid #0a1628 !important;
+                min-width: 0 !important;
+            }
+
+            thead {
+                display: table-header-group !important;
+                background: #0a1628 !important;
+                color: #e6b31e !important;
+            }
+
+            thead th {
+                background: #0a1628 !important;
+                color: #e6b31e !important;
+                padding: 3mm 2mm !important;
+                font-size: 9pt !important;
+                font-weight: 800 !important;
+                text-align: center !important;
+                border: 1px solid #1a2a4a !important;
+                letter-spacing: 0 !important;
+                text-transform: none !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            thead th i {
+                display: none !important;
+            }
+
+            tbody tr {
+                page-break-inside: avoid;
+                background: #ffffff !important;
+            }
+
+            tbody tr:nth-child(even) {
+                background: #f9fafb !important;
+            }
+
+            tbody td {
+                padding: 2.5mm 2mm !important;
+                border: 1px solid #e5e7eb !important;
+                color: #1f2937 !important;
+                text-align: center !important;
+                font-size: 8.5pt !important;
+                vertical-align: middle !important;
+                background: transparent !important;
+            }
+
+            tbody td.vessel-name,
+            tbody td strong {
+                font-weight: 800 !important;
+                color: #0a1628 !important;
+            }
+
+            .status-badge {
+                display: inline-block !important;
+                padding: 1mm 3mm !important;
+                border-radius: 10px !important;
+                font-size: 8pt !important;
+                font-weight: 700 !important;
+                border: 1px solid currentColor !important;
+                background: #ffffff !important;
+                animation: none !important;
+            }
+
+            .status-badge.completed { color: #047857 !important; background: #ecfdf5 !important; }
+            .status-badge.in-progress { color: #b45309 !important; background: #fffbeb !important; }
+            .status-badge.pending { color: #1d4ed8 !important; background: #eff6ff !important; }
+            .status-badge.overdue { color: #b91c1c !important; background: #fef2f2 !important; }
+            .status-badge.cancelled { color: #6b7280 !important; background: #f3f4f6 !important; }
+
+            .empty-state {
+                padding: 15mm !important;
+                color: #6b7280 !important;
+            }
+
+            .empty-state .spinner {
+                display: none !important;
+            }
+
+            #page-logs::after {
+                content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
+                display: block;
+                text-align: center;
+                font-size: 8pt;
+                color: #6b7280;
+                border-top: 2px solid #e6b31e;
+                padding-top: 3mm;
+                margin-top: 6mm;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+            }
+
+            tr, img, .stat-card {
+                page-break-inside: avoid;
+            }
+
+            * {
+                box-shadow: none !important;
+                text-shadow: none !important;
+                animation: none !important;
+                transition: none !important;
+            }
+        }
     </style>
 
     <!-- ===== HEADER ===== -->
-    <div class="logs-header">
+    <div class="logs-header" id="logsHeader">
         <div class="logs-header-left">
-            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
             <div class="header-icon" id="logsHeaderIcon">
                 <i class="fas fa-clipboard-list"></i>
                 <img id="globalLogo" src="" alt="شعار" style="display:none;">
             </div>
             <div>
-                <h2>سجلات الصيانة</h2>
+                <h2> الصيانة</h2>
                 <p>سجل كامل لعمليات الصيانة والتدخلات الفنية</p>
             </div>
         </div>
@@ -504,8 +877,11 @@
             <button class="btn-action primary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button class="btn-action secondary" onclick="window.location.href='/'">
-                <i class="fas fa-home"></i> الرئيسية
+            <button class="btn-action secondary" id="exportBtn">
+                <i class="fas fa-file-export"></i> تصدير
+            </button>
+            <button class="btn-action secondary" onclick="printLogs()">
+                <i class="fas fa-print"></i> طباعة
             </button>
         </div>
     </div>
@@ -518,14 +894,14 @@
             <span class="icon-bg"><i class="fas fa-clipboard-list"></i></span>
         </div>
         <div class="stat-card">
-            <div class="number blue" id="pendingCount">0</div>
-            <div class="label">⏳ قيد الانتظار</div>
-            <span class="icon-bg"><i class="fas fa-clock"></i></span>
-        </div>
-        <div class="stat-card">
             <div class="number green" id="completedCount">0</div>
             <div class="label">✅ مكتملة</div>
             <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number blue" id="pendingCount">0</div>
+            <div class="label">⏳ قيد الانتظار</div>
+            <span class="icon-bg"><i class="fas fa-clock"></i></span>
         </div>
         <div class="stat-card">
             <div class="number red" id="overdueCount">0</div>
@@ -555,8 +931,12 @@
             <option value="متأخرة">🚨 متأخرة</option>
         </select>
 
-        <button class="btn-filter primary" id="filterBtn"><i class="fas fa-filter"></i> فلترة</button>
-        <button class="btn-filter outline" id="resetBtn"><i class="fas fa-undo-alt"></i> إلغاء</button>
+        <button class="btn-filter primary" id="filterBtn">
+            <i class="fas fa-filter"></i> فلترة
+        </button>
+        <button class="btn-filter outline" id="resetBtn">
+            <i class="fas fa-undo-alt"></i> إلغاء
+        </button>
     </div>
 
     <!-- ===== TABLE ===== -->
@@ -585,412 +965,768 @@
         </table>
     </div>
 
-    <!-- ===== TOAST ===== -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- ============================================================
-    JAVASCRIPT - يجلب البيانات من السيرفر فقط
-    ============================================================ -->
     <script>
-        (function() {
-            'use strict';
+    (function() {
+        'use strict';
 
-            // ============================================================
-            // 🎨 LOGO APPLY (Dynamic)
-            // ============================================================
-            function applyLogo() {
+        console.log('📋 Logs Page v9.14 - loading...');
+
+        var _isDestroyed = false;
+        var _pageIntervals = [];
+        var _pageTimeouts = [];
+        var _eventListeners = [];
+
+        function _logsCleanup() {
+            if (_isDestroyed) return;
+            _isDestroyed = true;
+
+            _pageIntervals.forEach(function(id) {
+                try { clearInterval(id); } catch (e) {}
+            });
+            _pageIntervals = [];
+
+            _pageTimeouts.forEach(function(id) {
+                try { clearTimeout(id); } catch (e) {}
+            });
+            _pageTimeouts = [];
+
+            _eventListeners.forEach(function(item) {
                 try {
-                    var cachedLogo = localStorage.getItem('marine_logo');
-                    if (!cachedLogo) return;
-
-                    var iconDiv = document.getElementById('logsHeaderIcon');
-                    var img = document.getElementById('globalLogo');
-                    if (img) {
-                        img.src = cachedLogo;
-                        img.style.display = 'block';
-                    }
-                    if (iconDiv) {
-                        iconDiv.classList.add('has-logo');
+                    if (item.el && item.fn) {
+                        item.el.removeEventListener(item.type, item.fn);
                     }
                 } catch (e) {}
-            }
+            });
+            _eventListeners = [];
 
-            function syncLogoFromServer() {
-                var token = localStorage.getItem('marine_token') ||
-                            localStorage.getItem('token') ||
-                            localStorage.getItem('authToken') || null;
-                var headers = { 'Accept': 'application/json' };
-                if (token) headers['Authorization'] = 'Bearer ' + token;
+            try {
+                delete window.loadMaintenanceLogs;
+                delete window.applyFilters;
+                delete window.renderTable;
+                delete window.viewLog;
+                delete window.deleteLog;
+                delete window.exportLogs;
+                delete window.printLogs;
+            } catch (e) {}
 
-                fetch('/api/logo', { headers: headers, credentials: 'include' })
-                    .then(function(r) { return r.ok ? r.json() : null; })
-                    .then(function(data) {
-                        if (data && data.success && data.logo && data.logo.dataUrl) {
-                            try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
-                            applyLogo();
-                        }
-                    }).catch(function() {});
-            }
+            console.log('🧹 Logs v9.14 cleanup done');
+        }
 
-            // ✅ شغّل فوراً
-            applyLogo();
-            syncLogoFromServer();
+        window._pageCleanup = window._pageCleanup || [];
+        window._pageCleanup.push(_logsCleanup);
 
-            // ✅ استمع للتغييرات بين التبويبات
-            window.addEventListener('storage', function(e) {
-                if (e.key === 'marine_logo' && e.newValue) {
-                    applyLogo();
+        window.addEventListener('beforeunload', _logsCleanup);
+        window.addEventListener('pagehide', _logsCleanup);
+
+        // ============================================================
+        // 🎨 LOGO APPLY
+        // ============================================================
+        function applyLogo() {
+            try {
+                var cachedLogo = localStorage.getItem('marine_logo');
+                if (!cachedLogo) return;
+
+                var iconDiv = document.getElementById('logsHeaderIcon');
+                var img = document.getElementById('globalLogo');
+                if (img) {
+                    img.src = cachedLogo;
+                    img.style.display = 'block';
                 }
+                if (iconDiv) {
+                    iconDiv.classList.add('has-logo');
+                }
+            } catch (e) {}
+        }
+
+        function syncLogoFromServer() {
+            var token = localStorage.getItem('marine_token') ||
+                        localStorage.getItem('token') ||
+                        localStorage.getItem('authToken') || null;
+            var headers = { 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch('/api/logo', { headers: headers, credentials: 'include' })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (data && data.success && data.logo && data.logo.dataUrl) {
+                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                        applyLogo();
+                    }
+                }).catch(function() {});
+        }
+
+        applyLogo();
+        syncLogoFromServer();
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'marine_logo' && e.newValue) {
+                applyLogo();
+            }
+        });
+
+        // ============================================================
+        // 🖨️ PRINT DATE + printLogs
+        // ============================================================
+        function updatePrintDate() {
+            try {
+                var now = new Date();
+                var dateStr = now.toLocaleDateString('ar-TN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                var timeStr = now.toLocaleTimeString('ar-TN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                var fullDate = dateStr + ' - ' + timeStr;
+
+                var header = document.getElementById('logsHeader');
+                if (header) header.setAttribute('data-print-date', fullDate);
+            } catch (e) {
+                console.debug('🖨️ updatePrintDate (safe):', e.message);
+            }
+        }
+
+        updatePrintDate();
+        window.addEventListener('beforeprint', updatePrintDate);
+
+        function printLogs() {
+            try {
+                updatePrintDate();
+
+                var confirmed = confirm(
+                    '🖨️ قبل الطباعة تأكد من:\n\n' +
+                    '1. الاتجاه: أفقي (Landscape)\n' +
+                    '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
+                    '3. الوجهة: PDF (اختياري)\n\n' +
+                    'هل تريد المتابعة؟'
+                );
+                if (!confirmed) return;
+
+                window.print();
+            } catch (e) {
+                console.error('❌ printLogs error:', e);
+                window.print();
+            }
+        }
+
+        // ============================================================
+        // 🔐 RBAC
+        // ============================================================
+        var LEGACY_ROLE_MAP = {
+            'super_admin': 'admin',
+            'مسؤول': 'admin',
+            'مدير': 'manager',
+            'محرر': 'editor',
+            'مشغل': 'maintenance_unit',
+            'operator': 'maintenance_unit',
+            'user': 'viewer',
+            'مشاهد': 'viewer'
+        };
+
+        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
+
+        function normalizeRole(role) {
+            if (!role) return 'viewer';
+            var r = String(role).trim();
+            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
+            return LEGACY_ROLE_MAP[r] || 'viewer';
+        }
+
+        function canDeleteLog() {
+            if (window.capabilities && typeof window.capabilities.canDeleteMaintenance === 'boolean') {
+                return window.capabilities.canDeleteMaintenance;
+            }
+            var u = window.currentUser;
+            if (!u) return false;
+            var r = normalizeRole(u.role);
+            return ['admin', 'manager'].indexOf(r) !== -1;
+        }
+
+        // ============================================================
+        // 🔧 HELPERS
+        // ============================================================
+        function $(id) {
+            return document.getElementById(id);
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            var div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        }
+
+        function addSafeListener(el, type, fn, options) {
+            if (!el) return;
+            el.addEventListener(type, fn, options);
+            _eventListeners.push({ el: el, type: type, fn: fn });
+        }
+
+        // ============================================================
+        // 🔑 TOKEN + AUTH
+        // ============================================================
+        function getToken() {
+            return (
+                localStorage.getItem('marine_token') ||
+                localStorage.getItem('authToken') ||
+                localStorage.getItem('token') ||
+                null
+            );
+        }
+
+        function fetcher(url, options) {
+            if (typeof window.apiFetch === 'function') {
+                return window.apiFetch(url, options || {});
+            }
+            var token = getToken();
+            var headers = Object.assign({
+                'Accept': 'application/json'
+            }, (options && options.headers) || {});
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+            return fetch(url, Object.assign({}, options || {}, {
+                headers: headers,
+                credentials: 'include'
+            }));
+        }
+
+        // ============================================================
+        // 🍞 TOAST
+        // ============================================================
+        function showToast(message, type) {
+            type = type || 'info';
+            if (_isDestroyed) return;
+
+            var container = $('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            var icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+
+            var icon = document.createElement('span');
+            icon.textContent = icons[type] || icons.info;
+
+            var text = document.createElement('span');
+            text.textContent = String(message || '');
+
+            var close = document.createElement('button');
+            close.className = 'toast-close';
+            close.textContent = '✕';
+            close.addEventListener('click', function() {
+                toast.remove();
             });
 
-            // ============================================================
-            // 1. TOKEN & HEADERS
-            // ============================================================
+            toast.appendChild(icon);
+            toast.appendChild(text);
+            toast.appendChild(close);
+            container.appendChild(toast);
 
-            function getToken() {
-                return localStorage.getItem('authToken') ||
-                       localStorage.getItem('token') ||
-                       localStorage.getItem('marine_token') ||
-                       null;
-            }
+            var tid = window.setTimeout(function() {
+                if (toast.parentNode) toast.remove();
+            }, 5000);
+            _pageTimeouts.push(tid);
+        }
 
-            function getAuthHeaders() {
-                const token = getToken();
-                return {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? 'Bearer ' + token : ''
-                };
-            }
+        // ============================================================
+        // 📊 STATE
+        // ============================================================
+        var allLogs = [];
+        var filteredLogs = [];
 
-            async function getCsrfToken() {
+        function normalizeLog(log) {
+            if (!log || typeof log !== 'object') return null;
+
+            var vesselName =
+                log.vesselName ||
+                log.vessel ||
+                log.vessel_num ||
+                log.ship ||
+                '—';
+
+            var type =
+                log.type ||
+                log.intervention_type ||
+                log.maintenance_type ||
+                'صيانة دورية';
+
+            var dateRaw = log.date || log.createdAt || log.startDate || null;
+            var displayDate = '—';
+            var isoDate = null;
+
+            if (dateRaw) {
                 try {
-                    const r = await fetch('/api/csrf-token', {
-                        credentials: 'include',
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    const d = await r.json();
-                    return d.token;
-                } catch(e) { return null; }
-            }
-
-            // ============================================================
-            // 2. TOAST
-            // ============================================================
-
-            function showToast(message, type) {
-                type = type || 'info';
-                var container = document.getElementById('toastContainer');
-                if (!container) {
-                    container = document.createElement('div');
-                    container.id = 'toastContainer';
-                    container.className = 'toast-container';
-                    document.body.appendChild(container);
-                }
-
-                var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-                var toast = document.createElement('div');
-                toast.className = 'toast ' + type;
-                toast.innerHTML = '<span>' + icons[type] + '</span> ' + message + ' <button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
-                container.appendChild(toast);
-
-                setTimeout(function() {
-                    if (toast.parentElement) toast.remove();
-                }, 5000);
-            }
-
-            // ============================================================
-            // 3. STATE
-            // ============================================================
-
-            var allLogs = [];
-            var filteredLogs = [];
-
-            // ============================================================
-            // 4. LOAD DATA FROM SERVER
-            // ============================================================
-
-            async function loadMaintenanceLogs() {
-                var tbody = document.getElementById('tableBody');
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="empty-state">
-                            <div class="spinner"></div>
-                            <h3>جاري التحميل...</h3>
-                            <p>يرجى الانتظار</p>
-                        </td>
-                    </tr>
-                `;
-
-                try {
-                    var token = getToken();
-                    if (!token) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="7" class="empty-state">
-                                    <span class="empty-icon"><i class="fas fa-exclamation-triangle"></i></span>
-                                    <h3>يرجى تسجيل الدخول</h3>
-                                    <p>يجب تسجيل الدخول لعرض سجلات الصيانة</p>
-                                    <a href="/" style="color:#f5d76e;text-decoration:underline;">⬅️ العودة للرئيسية</a>
-                                </td>
-                            </tr>
-                        `;
-                        return;
+                    var d = new Date(dateRaw);
+                    if (!isNaN(d.getTime())) {
+                        displayDate = d.toLocaleDateString('ar-EG');
+                        isoDate = d.toISOString();
+                    } else {
+                        displayDate = String(dateRaw);
                     }
-
-                    var csrfToken = await getCsrfToken();
-
-                    var response = await fetch('/api/maintenance-logs', {
-                        headers: {
-                            'Authorization': 'Bearer ' + token,
-                            'X-CSRF-Token': csrfToken || '',
-                            'Accept': 'application/json'
-                        },
-                        credentials: 'include'
-                    });
-
-                    if (!response.ok) {
-                        if (response.status === 401) {
-                            localStorage.removeItem('authToken');
-                            window.location.href = '/';
-                            return;
-                        }
-                        throw new Error('فشل تحميل البيانات: ' + response.status);
-                    }
-
-                    var data = await response.json();
-                    allLogs = data || [];
-                    console.log('✅ Loaded ' + allLogs.length + ' maintenance logs from server');
-
-                    updateStats();
-                    applyFilters();
-
-                } catch (error) {
-                    console.error('❌ Error loading logs:', error);
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="7" class="empty-state">
-                                <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
-                                <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
-                                <p style="color:rgba(255,255,255,0.3);">${error.message}</p>
-                                <button class="retry-btn" onclick="loadMaintenanceLogs()">
-                                    <i class="fas fa-sync-alt"></i> إعادة المحاولة
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    showToast('❌ ' + error.message, 'error');
+                } catch (e) {
+                    displayDate = String(dateRaw);
                 }
             }
 
-            // ============================================================
-            // 5. UPDATE STATS
-            // ============================================================
+            var repairUnit =
+                log.repairUnit ||
+                log.unit ||
+                log.workshop ||
+                log.department ||
+                '—';
 
-            function updateStats() {
-                var total = allLogs.length;
-                var pending = allLogs.filter(function(l) {
-                    var s = l.status || '';
-                    return s === 'قيد الانتظار' || s === 'pending';
-                }).length;
-                var completed = allLogs.filter(function(l) {
-                    var s = l.status || '';
-                    return s === 'مكتملة' || s === 'مكتمل' || s === 'completed';
-                }).length;
-                var overdue = allLogs.filter(function(l) {
-                    var s = l.status || '';
-                    return s === 'متأخرة' || s === 'overdue';
-                }).length;
-                var inProgress = allLogs.filter(function(l) {
-                    var s = l.status || '';
-                    return s === 'قيد التنفيذ' || s === 'in-progress';
-                }).length;
+            var status = log.status || 'قيد الانتظار';
 
-                document.getElementById('totalCount').textContent = total;
-                document.getElementById('pendingCount').textContent = pending;
-                document.getElementById('completedCount').textContent = completed;
-                document.getElementById('overdueCount').textContent = overdue;
-                document.getElementById('inProgressCount').textContent = inProgress;
-            }
+            var id = log.id || log._id || null;
 
-            // ============================================================
-            // 6. APPLY FILTERS
-            // ============================================================
+            return {
+                id: id,
+                vesselName: vesselName,
+                vessel: vesselName,
+                vesselNum: log.vesselNum || log.num || '',
+                type: type,
+                date: displayDate,
+                isoDate: isoDate,
+                createdAt: log.createdAt || null,
+                repairUnit: repairUnit,
+                unit: repairUnit,
+                status: status,
+                cost: Number(log.cost) || 0,
+                notes: log.notes || '',
+                vesselId: log.vesselId || '',
+                _raw: log
+            };
+        }
 
-            function applyFilters() {
-                var search = document.getElementById('searchInput').value.toLowerCase().trim();
-                var statusFilter = document.getElementById('statusFilter').value;
+        // ============================================================
+        // 📊 LOAD LOGS
+        // ============================================================
+        async function loadMaintenanceLogs() {
+            if (_isDestroyed) return;
 
-                var statusMap = {
-                    'مكتملة': ['مكتملة', 'مكتمل', 'completed'],
-                    'قيد التنفيذ': ['قيد التنفيذ', 'in-progress', 'جاري'],
-                    'قيد الانتظار': ['قيد الانتظار', 'pending', 'معلق'],
-                    'متأخرة': ['متأخرة', 'overdue', 'متأخر']
-                };
+            var tbody = $('tableBody');
+            if (!tbody) return;
 
-                filteredLogs = allLogs.filter(function(l) {
-                    if (search) {
-                        var text = (l.vesselName || '') + ' ' + (l.vessel || '') + ' ' + (l.type || '');
-                        if (!text.toLowerCase().includes(search)) return false;
-                    }
-                    if (statusFilter !== 'الكل') {
-                        var statusValues = statusMap[statusFilter] || [statusFilter];
-                        var match = statusValues.some(function(s) {
-                            return l.status === s;
-                        });
-                        if (!match) return false;
-                    }
-                    return true;
-                });
+            tbody.innerHTML =
+                '<tr>' +
+                    '<td colspan="7" class="empty-state">' +
+                        '<div class="spinner"></div>' +
+                        '<h3>جاري التحميل...</h3>' +
+                        '<p>يرجى الانتظار</p>' +
+                    '</td>' +
+                '</tr>';
 
-                renderTable();
-            }
+            try {
+                var token = getToken();
 
-            // ============================================================
-            // 7. RENDER TABLE
-            // ============================================================
-
-            function renderTable() {
-                var tbody = document.getElementById('tableBody');
-
-                if (filteredLogs.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="7" class="empty-state">
-                                <span class="empty-icon"><i class="fas fa-search"></i></span>
-                                <h3>لا توجد سجلات مطابقة</h3>
-                                <p>حاول تغيير معايير البحث أو الفلترة</p>
-                            </td>
-                        </tr>
-                    `;
+                if (!token) {
+                    tbody.innerHTML =
+                        '<tr>' +
+                            '<td colspan="7" class="empty-state">' +
+                                '<span class="empty-icon"><i class="fas fa-exclamation-triangle"></i></span>' +
+                                '<h3>يرجى تسجيل الدخول</h3>' +
+                                '<p>يجب تسجيل الدخول لعرض سجلات الصيانة</p>' +
+                            '</td>' +
+                        '</tr>';
                     return;
                 }
 
-                var html = '';
-                filteredLogs.forEach(function(l, index) {
-                    var statusClass = getStatusClass(l.status);
-                    var statusLabel = getStatusLabel(l.status);
-                    var date = formatDate(l.date || l.createdAt || l.startDate);
+                var response = await fetcher('/api/maintenance-logs', { method: 'GET' });
 
-                    html += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td class="vessel-name">${l.vesselName || l.vessel || '-'}</td>
-                            <td>${l.type || 'صيانة دورية'}</td>
-                            <td>${date}</td>
-                            <td>${l.repairUnit || '-'}</td>
-                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-                            <td>
-                                <div class="action-btns">
-                                    <button class="btn-sm view" onclick="viewLog('${l.id}')"><i class="fas fa-eye"></i></button>
-                                    <button class="btn-sm edit" onclick="editLog('${l.id}')"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-sm delete" onclick="deleteLog('${l.id}')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                tbody.innerHTML = html;
-            }
-
-            // ============================================================
-            // 8. HELPERS
-            // ============================================================
-
-            function formatDate(dateStr) {
-                if (!dateStr) return '-';
-                try {
-                    var d = new Date(dateStr);
-                    if (isNaN(d.getTime())) return dateStr;
-                    return String(d.getDate()).padStart(2, '0') + '/' +
-                           String(d.getMonth() + 1).padStart(2, '0') + '/' +
-                           d.getFullYear();
-                } catch(e) { return '-'; }
-            }
-
-            function getStatusClass(status) {
-                var map = {
-                    'مكتملة': 'completed',
-                    'مكتمل': 'completed',
-                    'completed': 'completed',
-                    'قيد التنفيذ': 'in-progress',
-                    'in-progress': 'in-progress',
-                    'جاري': 'in-progress',
-                    'قيد الانتظار': 'pending',
-                    'pending': 'pending',
-                    'معلق': 'pending',
-                    'متأخرة': 'overdue',
-                    'overdue': 'overdue',
-                    'متأخر': 'overdue'
-                };
-                return map[status] || 'pending';
-            }
-
-            function getStatusLabel(status) {
-                var map = {
-                    'مكتملة': '✅ مكتملة',
-                    'مكتمل': '✅ مكتمل',
-                    'completed': '✅ مكتمل',
-                    'قيد التنفيذ': '⚡ قيد التنفيذ',
-                    'in-progress': '⚡ قيد التنفيذ',
-                    'جاري': '⚡ قيد التنفيذ',
-                    'قيد الانتظار': '⏳ قيد الانتظار',
-                    'pending': '⏳ قيد الانتظار',
-                    'معلق': '⏳ قيد الانتظار',
-                    'متأخرة': '🚨 متأخرة',
-                    'overdue': '🚨 متأخرة',
-                    'متأخر': '🚨 متأخرة'
-                };
-                return map[status] || status;
-            }
-
-            // ============================================================
-            // 9. GLOBAL FUNCTIONS
-            // ============================================================
-
-            window.viewLog = function(id) {
-                var log = allLogs.find(function(l) { return l.id === id; });
-                if (log) {
-                    showToast('📋 ' + (log.vesselName || log.vessel || '') + ' - ' + (log.type || 'صيانة'), 'info');
-                } else {
-                    showToast('📋 عرض تفاصيل السجل', 'info');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('marine_token');
+                        throw new Error('انتهت الجلسة — يرجى إعادة تسجيل الدخول');
+                    }
+                    if (response.status === 403) {
+                        throw new Error('ليس لديك صلاحية لعرض السجلات');
+                    }
+                    throw new Error('فشل تحميل البيانات: ' + response.status);
                 }
+
+                var data = await response.json();
+
+                console.log('📦 Maintenance logs response:', data);
+
+                var rawLogs = [];
+
+                if (Array.isArray(data)) {
+                    rawLogs = data;
+                } else if (data && Array.isArray(data.records)) {
+                    rawLogs = data.records;
+                } else if (data && Array.isArray(data.logs)) {
+                    rawLogs = data.logs;
+                } else if (data && Array.isArray(data.data)) {
+                    rawLogs = data.data;
+                }
+
+                console.log('✅ Extracted', rawLogs.length, 'raw logs');
+
+                allLogs = rawLogs
+                    .map(normalizeLog)
+                    .filter(function(log) { return log !== null; });
+
+                console.log('✅ Normalized', allLogs.length, 'logs');
+                if (allLogs[0]) console.log('📋 Sample log:', allLogs[0]);
+
+                updateStats();
+                applyFilters();
+
+                showToast('✅ تم تحميل ' + allLogs.length + ' سجل', 'success');
+
+            } catch (error) {
+                if (_isDestroyed) return;
+
+                console.error('❌ Error loading logs:', error);
+
+                tbody.innerHTML =
+                    '<tr>' +
+                        '<td colspan="7" class="empty-state">' +
+                            '<span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>' +
+                            '<h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>' +
+                            '<p style="color:rgba(255,255,255,0.3);">' + escapeHtml(error.message) + '</p>' +
+                            '<button class="retry-btn" onclick="window.loadMaintenanceLogs()">' +
+                                '<i class="fas fa-sync-alt"></i> إعادة المحاولة' +
+                            '</button>' +
+                        '</td>' +
+                    '</tr>';
+
+                showToast('❌ ' + error.message, 'error');
+            }
+        }
+
+        function updateStats() {
+            if (_isDestroyed) return;
+
+            var total = allLogs.length;
+
+            var pending = allLogs.filter(function(l) {
+                var s = l.status || '';
+                return s === 'قيد الانتظار' || s === 'pending' || s === 'معلق';
+            }).length;
+
+            var completed = allLogs.filter(function(l) {
+                var s = l.status || '';
+                return s === 'مكتملة' || s === 'مكتمل' || s === 'completed';
+            }).length;
+
+            var overdue = allLogs.filter(function(l) {
+                var s = l.status || '';
+                return s === 'متأخرة' || s === 'متأخر' || s === 'overdue';
+            }).length;
+
+            var inProgress = allLogs.filter(function(l) {
+                var s = l.status || '';
+                return s === 'قيد التنفيذ' || s === 'in-progress' || s === 'جاري';
+            }).length;
+
+            var el;
+            el = $('totalCount'); if (el) el.textContent = total;
+            el = $('pendingCount'); if (el) el.textContent = pending;
+            el = $('completedCount'); if (el) el.textContent = completed;
+            el = $('overdueCount'); if (el) el.textContent = overdue;
+            el = $('inProgressCount'); if (el) el.textContent = inProgress;
+        }
+
+        function applyFilters() {
+            if (_isDestroyed) return;
+
+            var searchEl = $('searchInput');
+            var statusEl = $('statusFilter');
+
+            var search = searchEl ? searchEl.value.toLowerCase().trim() : '';
+            var statusFilter = statusEl ? statusEl.value : 'الكل';
+
+            var statusMap = {
+                'مكتملة': ['مكتملة', 'مكتمل', 'completed'],
+                'قيد التنفيذ': ['قيد التنفيذ', 'in-progress', 'جاري'],
+                'قيد الانتظار': ['قيد الانتظار', 'pending', 'معلق'],
+                'متأخرة': ['متأخرة', 'متأخر', 'overdue']
             };
 
-            window.editLog = function(id) {
-                showToast('✏️ تعديل السجل', 'info');
-            };
+            filteredLogs = allLogs.filter(function(l) {
+                if (search) {
+                    var text = [
+                        l.vesselName,
+                        l.type,
+                        l.repairUnit,
+                        l.status,
+                        l.notes
+                    ].filter(Boolean).join(' ').toLowerCase();
 
-            window.deleteLog = function(id) {
-                if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) return;
-                showToast('🗑️ تم حذف السجل', 'success');
-            };
+                    if (text.indexOf(search) === -1) return false;
+                }
 
-            // ============================================================
-            // 10. INIT
-            // ============================================================
+                if (statusFilter !== 'الكل') {
+                    var statusValues = statusMap[statusFilter] || [statusFilter];
+                    var match = statusValues.some(function(s) {
+                        return l.status === s;
+                    });
+                    if (!match) return false;
+                }
 
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('🚀 تحميل صفحة سجلات الصيانة...');
-
-                document.getElementById('refreshBtn').addEventListener('click', loadMaintenanceLogs);
-                document.getElementById('filterBtn').addEventListener('click', applyFilters);
-                document.getElementById('resetBtn').addEventListener('click', function() {
-                    document.getElementById('searchInput').value = '';
-                    document.getElementById('statusFilter').value = 'الكل';
-                    applyFilters();
-                    showToast('✅ تم إلغاء جميع الفلاتر', 'success');
-                });
-
-                document.getElementById('searchInput').addEventListener('keyup', function(e) {
-                    if (e.key === 'Enter') applyFilters();
-                });
-                document.getElementById('statusFilter').addEventListener('change', applyFilters);
-
-                loadMaintenanceLogs();
-                console.log('✅ Logs page loaded - fetching real data from server');
+                return true;
             });
 
-        })();
+            renderTable();
+        }
+
+        function renderTable() {
+            if (_isDestroyed) return;
+
+            var tbody = $('tableBody');
+            if (!tbody) return;
+
+            if (filteredLogs.length === 0) {
+                tbody.innerHTML =
+                    '<tr>' +
+                        '<td colspan="7" class="empty-state">' +
+                            '<span class="empty-icon"><i class="fas fa-search"></i></span>' +
+                            '<h3>لا توجد سجلات مطابقة</h3>' +
+                            '<p>حاول تغيير معايير البحث أو الفلترة</p>' +
+                        '</td>' +
+                    '</tr>';
+                return;
+            }
+
+            var canDel = canDeleteLog();
+            var html = '';
+
+            filteredLogs.forEach(function(l, index) {
+                var statusClass = getStatusClass(l.status);
+                var statusLabel = getStatusLabel(l.status);
+
+                var delBtn = canDel ?
+                    '<button type="button" class="btn-icon btn-delete delete-btn" data-id="' + escapeHtml(l.id || '') + '" title="حذف">' +
+                        '<i class="fas fa-trash"></i>' +
+                    '</button>' : '';
+
+                html +=
+                    '<tr>' +
+                        '<td>' + (index + 1) + '</td>' +
+                        '<td class="vessel-name">' + escapeHtml(l.vesselName) + '</td>' +
+                        '<td>' + escapeHtml(l.type) + '</td>' +
+                        '<td>' + escapeHtml(l.date) + '</td>' +
+                        '<td>' + escapeHtml(l.repairUnit) + '</td>' +
+                        '<td><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+                        '<td>' +
+                            '<div class="action-btns">' +
+                                '<button type="button" class="btn-icon btn-view view-btn" data-id="' + escapeHtml(l.id || '') + '" title="عرض">' +
+                                    '<i class="fas fa-eye"></i>' +
+                                '</button>' +
+                                delBtn +
+                            '</div>' +
+                        '</td>' +
+                    '</tr>';
+            });
+
+            tbody.innerHTML = html;
+
+            tbody.querySelectorAll('.view-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    window.viewLog(this.dataset.id);
+                });
+            });
+
+            tbody.querySelectorAll('.delete-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    window.deleteLog(this.dataset.id);
+                });
+            });
+
+            console.log('✅ Rendered', filteredLogs.length, 'logs');
+        }
+
+        function getStatusClass(status) {
+            var map = {
+                'مكتملة': 'completed',
+                'مكتمل': 'completed',
+                'completed': 'completed',
+                'قيد التنفيذ': 'in-progress',
+                'in-progress': 'in-progress',
+                'جاري': 'in-progress',
+                'قيد الانتظار': 'pending',
+                'pending': 'pending',
+                'معلق': 'pending',
+                'متأخرة': 'overdue',
+                'متأخر': 'overdue',
+                'overdue': 'overdue'
+            };
+            return map[status] || 'pending';
+        }
+
+        function getStatusLabel(status) {
+            var map = {
+                'مكتملة': '✅ مكتملة',
+                'مكتمل': '✅ مكتمل',
+                'completed': '✅ مكتمل',
+                'قيد التنفيذ': '⚡ قيد التنفيذ',
+                'in-progress': '⚡ قيد التنفيذ',
+                'جاري': '⚡ قيد التنفيذ',
+                'قيد الانتظار': '⏳ قيد الانتظار',
+                'pending': '⏳ قيد الانتظار',
+                'معلق': '⏳ قيد الانتظار',
+                'متأخرة': '🚨 متأخرة',
+                'متأخر': '🚨 متأخر',
+                'overdue': '🚨 متأخرة'
+            };
+            return map[status] || status;
+        }
+
+        window.viewLog = function(id) {
+            if (_isDestroyed) return;
+
+            var log = allLogs.find(function(l) {
+                return String(l.id) === String(id);
+            });
+
+            if (log) {
+                var details =
+                    '📋 تفاصيل السجل\n' +
+                    '═══════════════════\n' +
+                    '🚢 المركب: ' + (log.vesselName || '—') + '\n' +
+                    '🔧 النوع: ' + (log.type || '—') + '\n' +
+                    '📅 التاريخ: ' + (log.date || '—') + '\n' +
+                    '🏭 الوحدة: ' + (log.repairUnit || '—') + '\n' +
+                    '📊 الحالة: ' + (log.status || '—') + '\n' +
+                    '💰 التكلفة: ' + (log.cost || 0) + ' دينار\n' +
+                    '📝 ملاحظات: ' + (log.notes || '—');
+
+                alert(details);
+            } else {
+                showToast('لم يُعثر على السجل', 'warning');
+            }
+        };
+
+        window.deleteLog = function(id) {
+            if (_isDestroyed) return;
+
+            if (!canDeleteLog()) {
+                showToast('⚠️ ليس لديك صلاحية الحذف', 'error');
+                return;
+            }
+
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) return;
+
+            fetcher('/api/maintenance-logs/' + id, { method: 'DELETE' })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return response.json().then(function(err) {
+                            throw new Error(err.error || 'فشل الحذف');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function() {
+                    showToast('✅ تم حذف السجل', 'success');
+                    loadMaintenanceLogs();
+                })
+                .catch(function(error) {
+                    showToast('❌ ' + error.message, 'error');
+                });
+        };
+
+        window.exportLogs = function() {
+            if (_isDestroyed) return;
+
+            try {
+                var csv = 'المركب,النوع,التاريخ,الوحدة,الحالة,التكلفة,ملاحظات\n';
+
+                filteredLogs.forEach(function(l) {
+                    csv +=
+                        '"' + (l.vesselName || '') + '",' +
+                        '"' + (l.type || '') + '",' +
+                        '"' + (l.date || '') + '",' +
+                        '"' + (l.repairUnit || '') + '",' +
+                        '"' + (l.status || '') + '",' +
+                        (l.cost || 0) + ',' +
+                        '"' + (l.notes || '').replace(/"/g, '""') + '"\n';
+                });
+
+                var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'maintenance-logs-' + Date.now() + '.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showToast('✅ تم تصدير ' + filteredLogs.length + ' سجل', 'success');
+
+            } catch (e) {
+                showToast('❌ فشل التصدير: ' + e.message, 'error');
+            }
+        };
+
+        function init() {
+            if (_isDestroyed) return;
+
+            console.log('🚀 Initializing Logs page v9.14...');
+            console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
+            console.log('🔐 canDeleteLog:', canDeleteLog());
+
+            addSafeListener($('refreshBtn'), 'click', function() {
+                if (_isDestroyed) return;
+                showToast('🔄 جاري التحديث...', 'info');
+                loadMaintenanceLogs();
+            });
+
+            addSafeListener($('exportBtn'), 'click', function() {
+                window.exportLogs();
+            });
+
+            addSafeListener($('filterBtn'), 'click', function() {
+                applyFilters();
+                showToast('✅ تم تطبيق الفلتر', 'success');
+            });
+
+            addSafeListener($('resetBtn'), 'click', function() {
+                var s = $('searchInput'); if (s) s.value = '';
+                var f = $('statusFilter'); if (f) f.value = 'الكل';
+                applyFilters();
+                showToast('✅ تم إلغاء الفلاتر', 'success');
+            });
+
+            addSafeListener($('searchInput'), 'keyup', function(e) {
+                if (e.key === 'Enter') {
+                    applyFilters();
+                }
+            });
+
+            addSafeListener($('statusFilter'), 'change', function() {
+                applyFilters();
+            });
+
+            loadMaintenanceLogs();
+
+            console.log('✅ Logs v9.14 ready');
+        }
+
+        window.loadMaintenanceLogs = loadMaintenanceLogs;
+        window.applyFilters = applyFilters;
+        window.renderTable = renderTable;
+        window.allLogs = allLogs;
+        window.printLogs = printLogs;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init, { once: true });
+        } else {
+            init();
+        }
+
+    })();
     </script>
 </div>
