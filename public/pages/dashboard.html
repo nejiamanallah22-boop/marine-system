@@ -2,13 +2,11 @@
 <div id="page-dashboard">
     <style>
         /* ============================================================
-           🚀 DASHBOARD - ENTERPRISE PRO VERSION
+           🚀 DASHBOARD - ENTERPRISE PRO VERSION v9.2.3
            ============================================================ */
 
-        /* ✅ اللون المعتم الأساسي على body */
         body { background: #0a0e1a; }
 
-        /* ===== CSS VARIABLES ===== */
         :root {
             --primary: #0a1628;
             --secondary: #1a2a4a;
@@ -34,7 +32,6 @@
             --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
         }
 
-        /* ===== FULL SCREEN RESET ===== */
         #page-dashboard {
             width: 100%;
             max-width: 100%;
@@ -48,7 +45,6 @@
             z-index: 2;
         }
 
-        /* ===== ANIMATED BACKGROUND ===== */
         #page-dashboard::before {
             content: '';
             position: fixed;
@@ -71,15 +67,11 @@
             66% { transform: scale(0.95) rotate(-2deg); }
         }
 
-        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
 
-        /* ============================================================
-           HEADER
-           ============================================================ */
         .dash-header {
             display: flex;
             justify-content: space-between;
@@ -206,9 +198,6 @@
             box-shadow: 0 8px 30px rgba(167,139,250,0.3);
         }
 
-        /* ============================================================
-           WELCOME BANNER
-           ============================================================ */
         .welcome-banner {
             margin: 16px 24px;
             padding: 20px 28px;
@@ -255,9 +244,6 @@
             border: 1px solid rgba(34,197,94,0.1);
         }
 
-        /* ============================================================
-           STATS CARDS
-           ============================================================ */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -372,9 +358,6 @@
             color: rgba(255,255,255,0.2);
         }
 
-        /* ============================================================
-           CHARTS SECTION
-           ============================================================ */
         .charts-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -458,9 +441,6 @@
             max-height: 220px;
         }
 
-        /* ============================================================
-           RECENT ACTIVITY
-           ============================================================ */
         .activity-card {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
@@ -583,9 +563,6 @@
             color: #f87171;
         }
 
-        /* ============================================================
-           BOTTOM GRID
-           ============================================================ */
         .bottom-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -600,9 +577,6 @@
             }
         }
 
-        /* ============================================================
-           TOAST
-           ============================================================ */
         .toast {
             position: fixed;
             bottom: 24px;
@@ -635,9 +609,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
         @media (max-width: 768px) {
             .dash-header { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
             .dash-header-left { width: 100%; }
@@ -662,8 +633,7 @@
         }
 
         /* ============================================================
-           🖨️ PROFESSIONAL PRINT STYLES — v1.0 (ADDED)
-           نفس هوية التطبيق: ألوان ذهبية + تصميم داكن
+           🖨️ PROFESSIONAL PRINT STYLES — v1.0
            ============================================================ */
 
         @media print {
@@ -676,7 +646,6 @@
                 margin-top: 8mm;
             }
 
-            /* 1) الخلفية والنص */
             html, body {
                 background: #ffffff !important;
                 color: #1a1a1a !important;
@@ -686,7 +655,6 @@
                 print-color-adjust: exact !important;
             }
 
-            /* 2) إخفاء العناصر التفاعلية */
             button,
             .btn,
             .btn-action,
@@ -714,7 +682,6 @@
                 display: none !important;
             }
 
-            /* 3) الهيدر — تصميم ذهبي داكن */
             .dash-header,
             .fleet-header,
             .users-header {
@@ -749,7 +716,6 @@
                 -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
             }
 
-            /* الشعار في الطباعة */
             .header-icon,
             #dashHeaderIcon,
             #fleetHeaderIcon {
@@ -774,7 +740,6 @@
                 color: #e6b31e !important;
             }
 
-            /* 4) عنوان الطباعة + التاريخ */
             .dash-header::after,
             .fleet-header::after,
             .users-header::after {
@@ -787,7 +752,6 @@
                 direction: rtl;
             }
 
-            /* 5) بطاقة الترحيب — طباعة أنيقة */
             .welcome-banner {
                 background: #f8f9fc !important;
                 border: 2px solid #e6b31e !important;
@@ -822,7 +786,6 @@
                 font-size: 8pt !important;
             }
 
-            /* 6) الإحصائيات — صناديق ذهبية */
             .stats-grid {
                 display: grid !important;
                 grid-template-columns: repeat(5, 1fr) !important;
@@ -902,7 +865,6 @@
                 font-size: 8pt !important;
             }
 
-            /* 7) الرسوم البيانية */
             .charts-grid {
                 display: grid !important;
                 grid-template-columns: 1fr 1fr !important;
@@ -946,7 +908,6 @@
                 width: 100% !important;
             }
 
-            /* 8) النشاطات */
             .activity-item {
                 page-break-inside: avoid;
                 border-bottom: 1px solid #e5e7eb !important;
@@ -988,7 +949,6 @@
             .activity-item .activity-status.warning { color: #b45309 !important; }
             .activity-item .activity-status.danger { color: #b91c1c !important; }
 
-            /* 9) المؤشرات السريعة */
             .bottom-grid {
                 display: grid !important;
                 grid-template-columns: 1fr 1fr !important;
@@ -1021,7 +981,6 @@
                 font-size: 8pt !important;
             }
 
-            /* 10) Empty state */
             .empty-state {
                 padding: 15mm !important;
                 color: #6b7280 !important;
@@ -1031,7 +990,6 @@
                 display: none !important;
             }
 
-            /* 11) Footer */
             #page-dashboard::after {
                 content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
                 display: block;
@@ -1043,7 +1001,6 @@
                 margin-top: 6mm;
             }
 
-            /* 12) منع كسر العناصر */
             h1, h2, h3, h4, h5, h6 {
                 page-break-after: avoid;
                 color: #0a1628 !important;
@@ -1053,7 +1010,6 @@
                 page-break-inside: avoid;
             }
 
-            /* 13) إخفاء التأثيرات */
             * {
                 box-shadow: none !important;
                 text-shadow: none !important;
@@ -1065,7 +1021,6 @@
                 display: none !important;
             }
 
-            /* 14) شارات النظام */
             .dash-header .status-badge {
                 display: none !important;
             }
@@ -1286,13 +1241,13 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT (v9.2.2 - Safe + Logo Support + Real Stats + Print)
+    JAVASCRIPT (v9.2.3 - Safe + Logo + Real Stats + Print + Dynamic Chart Colors)
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
-            console.log('📊 Dashboard v9.2.2 - loading...');
+            console.log('📊 Dashboard v9.2.3 - loading...');
 
             var _dashboardIntervals = [];
             var _dashboardTimeouts = [];
@@ -1389,7 +1344,7 @@
             });
 
             // ============================================================
-            // 🖨️ PRINT DATE (ADDED v9.2.2)
+            // 🖨️ PRINT DATE
             // ============================================================
             function updatePrintDate() {
                 try {
@@ -1416,7 +1371,6 @@
             updatePrintDate();
             window.addEventListener('beforeprint', updatePrintDate);
 
-            // ✅ زر الطباعة الاحترافي
             window.printDashboard = function() {
                 try {
                     updatePrintDate();
@@ -1516,12 +1470,17 @@
 
                 var active = vessels.filter(function(v) {
                     if (v.active === false) return false;
-                    if (v.status === 'maintenance' || v.status === 'repair') return false;
+                    if (v.status === 'maintenance' || v.status === 'repair' || v.status === 'صيانة') return false;
+                    if (v.status === 'معطب' || v.status === 'damaged') return false;
                     return true;
                 }).length;
 
                 var maintenance = vessels.filter(function(v) {
-                    return v.status === 'maintenance' || v.status === 'repair';
+                    return v.status === 'maintenance' ||
+                           v.status === 'repair' ||
+                           v.status === 'صيانة' ||
+                           v.status === 'معطب' ||
+                           v.status === 'damaged';
                 }).length;
 
                 var efficiency = total > 0 ? Math.round((active / total) * 100) : 0;
@@ -1579,6 +1538,10 @@
                     if (!res.ok) {
                         console.warn('[STATS] API returned', res.status, '→ showing 0');
                         applyStatsToDOM({});
+                        window._realVessels = [];
+                        if (window._distChart) {
+                            updateDistributionChart(window._currentDistMode, []);
+                        }
                         return;
                     }
 
@@ -1593,11 +1556,23 @@
                     if (!vessels || vessels.length === 0) {
                         console.log('[STATS] No vessels → showing 0');
                         applyStatsToDOM({});
+                        window._realVessels = [];
+                        if (window._distChart) {
+                            updateDistributionChart(window._currentDistMode, []);
+                        }
                         return;
                     }
 
                     var stats = computeStatsFromVessels(vessels);
                     applyStatsToDOM(stats);
+
+                    // ✅ احفظ المراكب للرسم
+                    window._realVessels = vessels;
+
+                    // ✅ حدّث الرسم الدائري بالألوان
+                    if (window._distChart) {
+                        updateDistributionChart(window._currentDistMode, vessels);
+                    }
 
                     console.log('[STATS] Updated from', vessels.length, 'vessels →', stats);
 
@@ -1612,6 +1587,10 @@
 
                     console.warn('[STATS] Fetch error → showing 0:', err && err.message);
                     applyStatsToDOM({});
+                    window._realVessels = [];
+                    if (window._distChart) {
+                        updateDistributionChart(window._currentDistMode, []);
+                    }
 
                 } finally {
                     _statsLoading = false;
@@ -1622,11 +1601,33 @@
             updateStats();
 
             // ============================================================
-            // CHARTS
+            // 🎨 CHARTS — v9.2.3
             // ============================================================
+
+            // 🎨 لوحة ألوان احترافية
+            var CHART_COLORS = [
+                '#f5d76e',  // gold light
+                '#60a5fa',  // blue
+                '#a78bfa',  // purple
+                '#f472b6',  // pink
+                '#4ade80',  // green
+                '#fbbf24',  // amber
+                '#06b6d4',  // cyan
+                '#f97316',  // orange
+                '#8b5cf6',  // violet
+                '#10b981'   // emerald
+            ];
+
+            var CHART_BORDERS = [
+                '#c99a0e', '#3b82f6', '#7c3aed', '#db2777',
+                '#16a34a', '#d97706', '#0891b2', '#ea580c',
+                '#6d28d9', '#059669'
+            ];
+
             function initCharts() {
                 if (_isDestroyed) return;
 
+                // 📈 Performance Chart (Line)
                 var perfCtx = document.getElementById('performanceChart');
                 if (perfCtx && typeof Chart !== 'undefined') {
                     try {
@@ -1688,6 +1689,7 @@
                     }
                 }
 
+                // 🥧 Distribution Chart (Doughnut) — ألوان كاملة
                 var distCtx = document.getElementById('distributionChart');
                 if (distCtx && typeof Chart !== 'undefined') {
                     try {
@@ -1699,19 +1701,43 @@
                                     data: [1],
                                     backgroundColor: ['rgba(255,255,255,0.06)'],
                                     borderColor: '#0a1628',
-                                    borderWidth: 3
+                                    borderWidth: 3,
+                                    hoverOffset: 8
                                 }]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: true,
+                                cutout: '60%',
                                 plugins: {
                                     legend: {
                                         position: 'bottom',
                                         labels: {
-                                            color: 'rgba(255,255,255,0.4)',
+                                            color: 'rgba(255,255,255,0.55)',
                                             font: { family: 'Cairo, sans-serif', size: 11 },
-                                            padding: 12
+                                            padding: 12,
+                                            usePointStyle: true,
+                                            pointStyle: 'circle',
+                                            boxWidth: 8,
+                                            boxHeight: 8
+                                        }
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(10,22,40,0.95)',
+                                        titleColor: '#f5d76e',
+                                        bodyColor: '#e2e8f0',
+                                        borderColor: '#e6b31e',
+                                        borderWidth: 1,
+                                        padding: 12,
+                                        titleFont: { family: 'Cairo, sans-serif', size: 12, weight: 'bold' },
+                                        bodyFont: { family: 'Cairo, sans-serif', size: 11 },
+                                        callbacks: {
+                                            label: function(context) {
+                                                var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                                var value = context.parsed;
+                                                var percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                                                return ' ' + context.label + ': ' + value + ' (' + percent + '%)';
+                                            }
                                         }
                                     }
                                 }
@@ -1723,6 +1749,85 @@
                     }
                 }
             }
+
+            // ============================================================
+            // 🎨 UPDATE DISTRIBUTION CHART — ألوان ديناميكية
+            // ============================================================
+            function updateDistributionChart(mode, vessels) {
+                if (!window._distChart) return;
+
+                if (!Array.isArray(vessels) || vessels.length === 0) {
+                    window._distChart.data.labels = ['لا توجد بيانات'];
+                    window._distChart.data.datasets[0].data = [1];
+                    window._distChart.data.datasets[0].backgroundColor = ['rgba(255,255,255,0.06)'];
+                    window._distChart.data.datasets[0].borderColor = '#0a1628';
+                    window._distChart.update('none');
+                    return;
+                }
+
+                mode = mode || 'category';
+                var counts = {};
+
+                vessels.forEach(function(v) {
+                    if (!v || typeof v !== 'object') return;
+
+                    var key;
+                    if (mode === 'region') {
+                        key = v.region || v.reg || 'غير محدد';
+                    } else {
+                        key = v.cat;
+                        if (!key) {
+                            var n = parseFloat(v.len);
+                            if (!isNaN(n)) {
+                                if (n === 11) key = 'البروق';
+                                else if (n >= 8 && n <= 12) key = 'صقور';
+                                else if (n > 12 && n <= 25) key = 'خوافر';
+                                else if (n >= 30) key = 'طوافات';
+                                else key = 'زوارق مزدوجة';
+                            } else {
+                                key = 'غير محدد';
+                            }
+                        }
+                    }
+
+                    counts[key] = (counts[key] || 0) + 1;
+                });
+
+                var entries = Object.keys(counts)
+                    .map(function(k) { return { label: k, value: counts[k] }; })
+                    .sort(function(a, b) { return b.value - a.value; });
+
+                if (entries.length === 0) {
+                    window._distChart.data.labels = ['لا توجد بيانات'];
+                    window._distChart.data.datasets[0].data = [1];
+                    window._distChart.data.datasets[0].backgroundColor = ['rgba(255,255,255,0.06)'];
+                    window._distChart.update('none');
+                    return;
+                }
+
+                var labels = entries.map(function(e) { return e.label; });
+                var data = entries.map(function(e) { return e.value; });
+
+                var colors = labels.map(function(_, i) {
+                    return CHART_COLORS[i % CHART_COLORS.length];
+                });
+                var borders = labels.map(function(_, i) {
+                    return CHART_BORDERS[i % CHART_BORDERS.length];
+                });
+
+                window._distChart.data.labels = labels;
+                window._distChart.data.datasets[0].data = data;
+                window._distChart.data.datasets[0].backgroundColor = colors;
+                window._distChart.data.datasets[0].borderColor = borders;
+                window._distChart.data.datasets[0].borderWidth = 2;
+                window._distChart.update();
+
+                console.log('[CHART] Distribution updated:', mode, counts);
+            }
+
+            // ✅ حالة عالمية
+            window._realVessels = [];
+            window._currentDistMode = 'category';
 
             // ============================================================
             // CHART SWITCHERS
@@ -1738,6 +1843,16 @@
                 document.querySelectorAll('.chart-card .chart-actions button').forEach(function(b) {
                     b.classList.toggle('active', b.textContent.trim() === type);
                 });
+
+                var mode = 'category';
+                if (type === 'region' || type === 'الإقليم') mode = 'region';
+
+                window._currentDistMode = mode;
+
+                if (window._distChart) {
+                    updateDistributionChart(mode, window._realVessels || []);
+                }
+
                 showToast('📊 تم التبديل إلى ' + type, 'info');
             };
 
@@ -1802,17 +1917,30 @@
             // ============================================================
             function init() {
                 if (_isDestroyed) return;
-                console.log('🚀 Initializing Dashboard v9.2.2...');
+                console.log('🚀 Initializing Dashboard v9.2.3...');
 
                 if (typeof Chart === 'undefined') {
                     var script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
                     script.onload = function() {
-                        if (!_isDestroyed) initCharts();
+                        if (!_isDestroyed) {
+                            initCharts();
+                            // ✅ بعد تحميل الرسم، حدّثه بالبيانات الحقيقية
+                            setTimeout(function() {
+                                if (window._distChart && window._realVessels && window._realVessels.length > 0) {
+                                    updateDistributionChart(window._currentDistMode, window._realVessels);
+                                }
+                            }, 300);
+                        }
                     };
                     document.head.appendChild(script);
                 } else {
                     initCharts();
+                    setTimeout(function() {
+                        if (window._distChart && window._realVessels && window._realVessels.length > 0) {
+                            updateDistributionChart(window._currentDistMode, window._realVessels);
+                        }
+                    }, 300);
                 }
 
                 console.log('✅ Dashboard loaded successfully');
@@ -1826,6 +1954,7 @@
 
             window.updateStats = updateStats;
             window.initCharts = initCharts;
+            window.updateDistributionChart = updateDistributionChart;
 
         })();
     </script>
