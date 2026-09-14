@@ -5,8 +5,8 @@
         body { background: #0a0e1a; }
 
         /* ============================================================
-           📋 LOGS PAGE - v9.13
-           5 Roles + normalizeRole + apiFetch + Cleanup + Dynamic Logo
+           📋 LOGS PAGE - v9.14
+           5 Roles + normalizeRole + apiFetch + Cleanup + Dynamic Logo + Print
            ============================================================ */
 
         #page-logs {
@@ -15,7 +15,6 @@
             padding: 0;
             margin: 0;
             font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
             background: transparent;
             color: #e8edf5;
             min-height: 100vh;
@@ -29,7 +28,6 @@
             box-sizing: border-box;
         }
 
-        /* ===== HEADER ===== */
         .logs-header {
             display: flex;
             justify-content: space-between;
@@ -52,7 +50,6 @@
             gap: 14px;
         }
 
-        /* ✅ الشعار الديناميكي */
         .logs-header-left .header-icon {
             width: 44px;
             height: 44px;
@@ -66,7 +63,6 @@
             overflow: hidden;
         }
 
-        /* ✅ دعم صورة الشعار */
         .logs-header-left .header-icon img {
             width: 100%;
             height: 100%;
@@ -141,7 +137,6 @@
             color: #fff;
         }
 
-        /* ===== STATS ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -206,7 +201,6 @@
             pointer-events: none;
         }
 
-        /* ===== FILTER BAR ===== */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
@@ -319,7 +313,6 @@
             color: #fff;
         }
 
-        /* ===== TABLE ===== */
         .table-wrapper {
             overflow-x: auto;
             padding: 16px 24px 24px;
@@ -374,7 +367,6 @@
             color: #fff;
         }
 
-        /* ===== STATUS BADGES ===== */
         .status-badge {
             padding: 3px 12px;
             border-radius: 20px;
@@ -421,7 +413,6 @@
             color: rgba(255,255,255,0.3);
         }
 
-        /* ===== ACTION BUTTONS ===== */
         .action-btns {
             display: flex;
             gap: 4px;
@@ -466,7 +457,6 @@
             cursor: not-allowed;
         }
 
-        /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -525,7 +515,6 @@
             box-shadow: 0 4px 24px rgba(230,179,30,0.2);
         }
 
-        /* ===== TOAST ===== */
         .toast-container {
             position: fixed;
             bottom: 24px;
@@ -600,12 +589,281 @@
             .logs-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
             .logs-header-left h2 { font-size: 14px; }
         }
+
+        /* ============================================================
+           🖨️ PROFESSIONAL PRINT STYLES — v1.0
+           ============================================================ */
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 12mm 10mm;
+            }
+
+            @page :first {
+                margin-top: 8mm;
+            }
+
+            html, body {
+                background: #ffffff !important;
+                color: #1a1a1a !important;
+                font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+                font-size: 10pt !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            button,
+            .btn-action,
+            .btn-filter,
+            .btn-icon,
+            .action-btns,
+            .retry-btn,
+            .toast,
+            .toast-container,
+            #toastContainer,
+            .logs-header-actions,
+            .filter-bar,
+            nav,
+            .sidebar,
+            .navbar,
+            .no-print {
+                display: none !important;
+            }
+
+            .logs-header {
+                display: flex !important;
+                background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
+                color: #ffffff !important;
+                padding: 12mm 8mm 6mm !important;
+                margin: 0 0 6mm !important;
+                border-radius: 8px !important;
+                border: 2px solid #e6b31e !important;
+                position: relative !important;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+                border-bottom: 2px solid #e6b31e !important;
+            }
+
+            .logs-header-left h2 {
+                color: #e6b31e !important;
+                font-size: 16pt !important;
+                font-weight: 800 !important;
+                -webkit-text-fill-color: #e6b31e !important;
+                background: none !important;
+                margin: 0 0 4pt 0 !important;
+            }
+
+            .logs-header-left p {
+                color: rgba(255,255,255,0.75) !important;
+                font-size: 10pt !important;
+            }
+
+            .header-icon,
+            #logsHeaderIcon {
+                width: 48px !important;
+                height: 48px !important;
+                border: 2px solid #e6b31e !important;
+                background: #0a1628 !important;
+                box-shadow: none !important;
+                overflow: hidden !important;
+            }
+
+            .header-icon img,
+            #globalLogo {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
+            }
+
+            .header-icon i {
+                color: #e6b31e !important;
+            }
+
+            .logs-header::after {
+                content: "طُبع بتاريخ: " attr(data-print-date);
+                position: absolute;
+                bottom: 4mm;
+                left: 8mm;
+                font-size: 9pt;
+                color: rgba(255,255,255,0.7) !important;
+                direction: rtl;
+            }
+
+            .stats-grid {
+                display: grid !important;
+                grid-template-columns: repeat(5, 1fr) !important;
+                gap: 4mm !important;
+                margin: 0 0 5mm !important;
+                padding: 0 !important;
+                page-break-inside: avoid;
+            }
+
+            .stat-card {
+                background: #f8f9fc !important;
+                border: 2px solid #e6b31e !important;
+                border-radius: 6px !important;
+                padding: 4mm 3mm !important;
+                text-align: center !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+                position: relative !important;
+                overflow: visible !important;
+            }
+
+            .stat-card::before {
+                display: none !important;
+            }
+
+            .stat-card .number {
+                color: #0a1628 !important;
+                font-size: 18pt !important;
+                font-weight: 800 !important;
+                line-height: 1 !important;
+                margin: 2mm 0 !important;
+                background: none !important;
+                -webkit-text-fill-color: #0a1628 !important;
+            }
+
+            .stat-card .number.gold { color: #c99a0e !important; -webkit-text-fill-color: #c99a0e !important; }
+            .stat-card .number.green { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
+            .stat-card .number.yellow { color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; }
+            .stat-card .number.red { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
+            .stat-card .number.blue { color: #1d4ed8 !important; -webkit-text-fill-color: #1d4ed8 !important; }
+
+            .stat-card .label {
+                color: #4b5563 !important;
+                font-size: 9pt !important;
+                font-weight: 700 !important;
+            }
+
+            .stat-card .icon-bg {
+                display: none !important;
+            }
+
+            .table-wrapper {
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                page-break-inside: auto;
+            }
+
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 8.5pt !important;
+                page-break-inside: auto;
+                border: 2px solid #0a1628 !important;
+                min-width: 0 !important;
+            }
+
+            thead {
+                display: table-header-group !important;
+                background: #0a1628 !important;
+                color: #e6b31e !important;
+            }
+
+            thead th {
+                background: #0a1628 !important;
+                color: #e6b31e !important;
+                padding: 3mm 2mm !important;
+                font-size: 9pt !important;
+                font-weight: 800 !important;
+                text-align: center !important;
+                border: 1px solid #1a2a4a !important;
+                letter-spacing: 0 !important;
+                text-transform: none !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            thead th i {
+                display: none !important;
+            }
+
+            tbody tr {
+                page-break-inside: avoid;
+                background: #ffffff !important;
+            }
+
+            tbody tr:nth-child(even) {
+                background: #f9fafb !important;
+            }
+
+            tbody td {
+                padding: 2.5mm 2mm !important;
+                border: 1px solid #e5e7eb !important;
+                color: #1f2937 !important;
+                text-align: center !important;
+                font-size: 8.5pt !important;
+                vertical-align: middle !important;
+                background: transparent !important;
+            }
+
+            tbody td.vessel-name,
+            tbody td strong {
+                font-weight: 800 !important;
+                color: #0a1628 !important;
+            }
+
+            .status-badge {
+                display: inline-block !important;
+                padding: 1mm 3mm !important;
+                border-radius: 10px !important;
+                font-size: 8pt !important;
+                font-weight: 700 !important;
+                border: 1px solid currentColor !important;
+                background: #ffffff !important;
+                animation: none !important;
+            }
+
+            .status-badge.completed { color: #047857 !important; background: #ecfdf5 !important; }
+            .status-badge.in-progress { color: #b45309 !important; background: #fffbeb !important; }
+            .status-badge.pending { color: #1d4ed8 !important; background: #eff6ff !important; }
+            .status-badge.overdue { color: #b91c1c !important; background: #fef2f2 !important; }
+            .status-badge.cancelled { color: #6b7280 !important; background: #f3f4f6 !important; }
+
+            .empty-state {
+                padding: 15mm !important;
+                color: #6b7280 !important;
+            }
+
+            .empty-state .spinner {
+                display: none !important;
+            }
+
+            #page-logs::after {
+                content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
+                display: block;
+                text-align: center;
+                font-size: 8pt;
+                color: #6b7280;
+                border-top: 2px solid #e6b31e;
+                padding-top: 3mm;
+                margin-top: 6mm;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+            }
+
+            tr, img, .stat-card {
+                page-break-inside: avoid;
+            }
+
+            * {
+                box-shadow: none !important;
+                text-shadow: none !important;
+                animation: none !important;
+                transition: none !important;
+            }
+        }
     </style>
 
     <!-- ===== HEADER ===== -->
-    <div class="logs-header">
+    <div class="logs-header" id="logsHeader">
         <div class="logs-header-left">
-            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
             <div class="header-icon" id="logsHeaderIcon">
                 <i class="fas fa-clipboard-list"></i>
                 <img id="globalLogo" src="" alt="شعار" style="display:none;">
@@ -622,7 +880,7 @@
             <button class="btn-action secondary" id="exportBtn">
                 <i class="fas fa-file-export"></i> تصدير
             </button>
-            <button class="btn-action secondary" onclick="window.print()">
+            <button class="btn-action secondary" onclick="printLogs()">
                 <i class="fas fa-print"></i> طباعة
             </button>
         </div>
@@ -707,18 +965,12 @@
         </table>
     </div>
 
-    <!-- ============================================================
-         JAVASCRIPT - v9.13
-         ============================================================ -->
     <script>
     (function() {
         'use strict';
 
-        console.log('📋 Logs Page v9.13 - loading...');
+        console.log('📋 Logs Page v9.14 - loading...');
 
-        // ============================================================
-        // ✅ CLEANUP STATE
-        // ============================================================
         var _isDestroyed = false;
         var _pageIntervals = [];
         var _pageTimeouts = [];
@@ -754,9 +1006,10 @@
                 delete window.viewLog;
                 delete window.deleteLog;
                 delete window.exportLogs;
+                delete window.printLogs;
             } catch (e) {}
 
-            console.log('🧹 Logs v9.13 cleanup done');
+            console.log('🧹 Logs v9.14 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -766,7 +1019,7 @@
         window.addEventListener('pagehide', _logsCleanup);
 
         // ============================================================
-        // 🎨 LOGO APPLY (Dynamic)
+        // 🎨 LOGO APPLY
         // ============================================================
         function applyLogo() {
             try {
@@ -802,11 +1055,9 @@
                 }).catch(function() {});
         }
 
-        // ✅ شغّل فوراً
         applyLogo();
         syncLogoFromServer();
 
-        // ✅ استمع للتغييرات بين التبويبات
         window.addEventListener('storage', function(e) {
             if (e.key === 'marine_logo' && e.newValue) {
                 applyLogo();
@@ -814,7 +1065,55 @@
         });
 
         // ============================================================
-        // 🔐 RBAC v9.13 — توحيد الأدوار
+        // 🖨️ PRINT DATE + printLogs
+        // ============================================================
+        function updatePrintDate() {
+            try {
+                var now = new Date();
+                var dateStr = now.toLocaleDateString('ar-TN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                var timeStr = now.toLocaleTimeString('ar-TN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                var fullDate = dateStr + ' - ' + timeStr;
+
+                var header = document.getElementById('logsHeader');
+                if (header) header.setAttribute('data-print-date', fullDate);
+            } catch (e) {
+                console.debug('🖨️ updatePrintDate (safe):', e.message);
+            }
+        }
+
+        updatePrintDate();
+        window.addEventListener('beforeprint', updatePrintDate);
+
+        function printLogs() {
+            try {
+                updatePrintDate();
+
+                var confirmed = confirm(
+                    '🖨️ قبل الطباعة تأكد من:\n\n' +
+                    '1. الاتجاه: أفقي (Landscape)\n' +
+                    '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
+                    '3. الوجهة: PDF (اختياري)\n\n' +
+                    'هل تريد المتابعة؟'
+                );
+                if (!confirmed) return;
+
+                window.print();
+            } catch (e) {
+                console.error('❌ printLogs error:', e);
+                window.print();
+            }
+        }
+
+        // ============================================================
+        // 🔐 RBAC
         // ============================================================
         var LEGACY_ROLE_MAP = {
             'super_admin': 'admin',
@@ -1109,9 +1408,6 @@
             }
         }
 
-        // ============================================================
-        // 📊 UPDATE STATS
-        // ============================================================
         function updateStats() {
             if (_isDestroyed) return;
 
@@ -1145,9 +1441,6 @@
             el = $('inProgressCount'); if (el) el.textContent = inProgress;
         }
 
-        // ============================================================
-        // 🔍 APPLY FILTERS
-        // ============================================================
         function applyFilters() {
             if (_isDestroyed) return;
 
@@ -1191,9 +1484,6 @@
             renderTable();
         }
 
-        // ============================================================
-        // 🎨 RENDER TABLE
-        // ============================================================
         function renderTable() {
             if (_isDestroyed) return;
 
@@ -1260,9 +1550,6 @@
             console.log('✅ Rendered', filteredLogs.length, 'logs');
         }
 
-        // ============================================================
-        // 🔧 STATUS HELPERS
-        // ============================================================
         function getStatusClass(status) {
             var map = {
                 'مكتملة': 'completed',
@@ -1293,15 +1580,12 @@
                 'pending': '⏳ قيد الانتظار',
                 'معلق': '⏳ قيد الانتظار',
                 'متأخرة': '🚨 متأخرة',
-                'متأخر': '🚨 متأخرة',
+                'متأخر': '🚨 متأخر',
                 'overdue': '🚨 متأخرة'
             };
             return map[status] || status;
         }
 
-        // ============================================================
-        // 🌐 GLOBAL FUNCTIONS
-        // ============================================================
         window.viewLog = function(id) {
             if (_isDestroyed) return;
 
@@ -1387,13 +1671,10 @@
             }
         };
 
-        // ============================================================
-        // 🚀 INIT
-        // ============================================================
         function init() {
             if (_isDestroyed) return;
 
-            console.log('🚀 Initializing Logs page v9.13...');
+            console.log('🚀 Initializing Logs page v9.14...');
             console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
             console.log('🔐 canDeleteLog:', canDeleteLog());
 
@@ -1431,20 +1712,15 @@
 
             loadMaintenanceLogs();
 
-            console.log('✅ Logs v9.13 ready');
+            console.log('✅ Logs v9.14 ready');
         }
 
-        // ============================================================
-        // 🌐 GLOBAL EXPORTS
-        // ============================================================
         window.loadMaintenanceLogs = loadMaintenanceLogs;
         window.applyFilters = applyFilters;
         window.renderTable = renderTable;
         window.allLogs = allLogs;
+        window.printLogs = printLogs;
 
-        // ============================================================
-        // 🏁 BOOT
-        // ============================================================
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init, { once: true });
         } else {
