@@ -1,341 +1,1044 @@
 <!-- public/pages/efficiency.html -->
 <div id="page-efficiency">
     <style>
-        body { background: #0a0e1a; }
+        /* ============================================================
+           🎨 EFFICIENCY PAGE — ULTRA PRO EDITION
+           ============================================================ */
 
-        :root {
-            --gold: #e6b31e;
-            --gold-light: #f5d76e;
-            --success-light: #55efc4;
-            --danger: #e17055;
-            --warning: #fdcb6e;
-            --glass-bg: rgba(255,255,255,0.04);
-            --glass-border: rgba(255,255,255,0.06);
-            --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
-            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
-            --radius: 14px;
-            --radius-sm: 8px;
-            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
-            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+        #page-efficiency {
+            --c-bg-1: #060911;
+            --c-bg-2: #0a1020;
+            --c-bg-3: #0e1628;
+            --c-surface-1: rgba(18, 26, 44, 0.75);
+            --c-surface-2: rgba(24, 34, 56, 0.65);
+            --c-border-soft: rgba(148, 163, 184, 0.08);
+            --c-border-mid: rgba(148, 163, 184, 0.15);
+            --c-border-strong: rgba(148, 163, 184, 0.25);
+
+            --c-gold-1: #f7d774;
+            --c-gold-2: #e6b31e;
+            --c-gold-3: #b8860b;
+            --c-gold-glow: rgba(230, 179, 30, 0.35);
+
+            --c-emerald-1: #6ee7b7;
+            --c-emerald-2: #10b981;
+            --c-emerald-3: #047857;
+            --c-emerald-glow: rgba(16, 185, 129, 0.35);
+
+            --c-amber-1: #fcd34d;
+            --c-amber-2: #f59e0b;
+            --c-amber-3: #b45309;
+            --c-amber-glow: rgba(245, 158, 11, 0.35);
+
+            --c-red-1: #fca5a5;
+            --c-red-2: #ef4444;
+            --c-red-3: #b91c1c;
+            --c-red-glow: rgba(239, 68, 68, 0.35);
+
+            --c-blue-1: #93c5fd;
+            --c-blue-2: #3b82f6;
+            --c-blue-3: #1d4ed8;
+
+            --c-text-1: #f1f5f9;
+            --c-text-2: #cbd5e1;
+            --c-text-3: #94a3b8;
+            --c-text-4: #64748b;
+
+            --radius-sm: 10px;
+            --radius: 16px;
+            --radius-lg: 20px;
+            --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #060911;
+            margin: 0;
+            padding: 0;
         }
 
         #page-efficiency {
-            width: 100%; max-width: 100%; padding: 0; margin: 0;
-            font-family: var(--font); background: transparent;
-            color: #e8edf5; min-height: 100vh; position: relative; z-index: 2;
+            width: 100%; max-width: 100%;
+            padding: 0; margin: 0;
+            font-family: var(--font);
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 0%, rgba(59, 130, 246, 0.08), transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 10%, rgba(230, 179, 30, 0.06), transparent 50%),
+                radial-gradient(ellipse 70% 50% at 50% 100%, rgba(16, 185, 129, 0.05), transparent 60%),
+                linear-gradient(180deg, #060911 0%, #0a1020 50%, #060911 100%);
+            color: var(--c-text-1);
+            min-height: 100vh;
+            position: relative;
+            z-index: 2;
+            overflow-x: hidden;
         }
 
+        /* Animated background orbs */
         #page-efficiency::before {
-            content: ''; position: fixed; top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(0,184,148,0.03) 0%, transparent 60%);
-            z-index: -1; pointer-events: none; animation: bgPulse 15s ease-in-out infinite;
-        }
-        @keyframes bgPulse {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.05) rotate(2deg); }
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(circle 400px at 10% 20%, rgba(59, 130, 246, 0.06), transparent 70%),
+                radial-gradient(circle 500px at 90% 60%, rgba(230, 179, 30, 0.05), transparent 70%),
+                radial-gradient(circle 350px at 50% 90%, rgba(16, 185, 129, 0.05), transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+            animation: orbsFloat 20s ease-in-out infinite;
         }
 
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+        @keyframes orbsFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(3%, -2%) scale(1.05); }
+            66% { transform: translate(-3%, 2%) scale(0.97); }
+        }
 
-        /* HEADER */
+        /* ============================================================
+           SCROLLBAR
+           ============================================================ */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--c-gold-2), var(--c-gold-3));
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--c-gold-1), var(--c-gold-2));
+            background-clip: padding-box;
+        }
+
+        /* ============================================================
+           HEADER — ULTRA PRO
+           ============================================================ */
         .eff-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px 24px; flex-wrap: wrap; gap: 12px;
-            background: var(--glass-bg); backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--glass-border);
-            position: sticky; top: 64px; z-index: 10; width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+            background: linear-gradient(135deg,
+                rgba(18, 26, 44, 0.85) 0%,
+                rgba(24, 34, 56, 0.75) 100%);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid var(--c-border-mid);
+            position: sticky;
+            top: 64px;
+            z-index: 10;
+            width: 100%;
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.03) inset,
+                0 8px 32px rgba(0,0,0,0.35);
         }
-        .eff-header-left { display: flex; align-items: center; gap: 14px; }
+
+        .eff-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
         .eff-header-left .header-icon {
-            width: 44px; height: 44px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold), #00b894);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: #0a1628; box-shadow: var(--shadow-gold);
-            animation: pulseGold 2s ease-in-out infinite; overflow: hidden;
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background:
+                linear-gradient(135deg, var(--c-gold-2) 0%, var(--c-gold-3) 50%, #7c5c07 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #060911;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 8px 24px var(--c-gold-glow),
+                0 0 0 1px rgba(255,255,255,0.08) inset,
+                0 1px 0 rgba(255,255,255,0.15) inset;
+            animation: iconFloat 4s ease-in-out infinite;
         }
+
+        .eff-header-left .header-icon::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-3px) rotate(-2deg); }
+        }
+
         .eff-header-left .header-icon img {
-            width: 100%; height: 100%; object-fit: cover;
-            border-radius: 50%; display: none;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 16px;
+            display: none;
         }
         .eff-header-left .header-icon.has-logo img { display: block; }
         .eff-header-left .header-icon.has-logo {
-            animation: none; background: transparent;
-            box-shadow: 0 0 20px rgba(230,179,30,0.3);
+            animation: none;
+            background: transparent;
+            box-shadow: 0 0 24px var(--c-gold-glow);
         }
         .eff-header-left .header-icon.has-logo i { display: none; }
-        @keyframes pulseGold {
-            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
-            50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
-        }
+
         .eff-header-left h2 {
-            font-size: 22px; font-weight: 800;
-            background: linear-gradient(135deg, var(--gold-light), #fff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.5px;
+            text-shadow: 0 0 30px var(--c-gold-glow);
         }
-        .eff-header-left p { font-size: 12px; color: rgba(255,255,255,0.3); margin: 0; }
-        .eff-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .eff-header-left p {
+            font-size: 12px;
+            color: var(--c-text-3);
+            margin: 0;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .eff-header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         .eff-header-actions .btn-action {
-            padding: 8px 18px; border: none; border-radius: 30px;
-            font-weight: 600; font-size: 0.8rem; cursor: pointer;
-            transition: all var(--transition); display: inline-flex;
-            align-items: center; gap: 8px; font-family: var(--font);
+            padding: 11px 22px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
         }
+
+        .eff-header-actions .btn-action::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
         .eff-header-actions .btn-action.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628; box-shadow: var(--shadow-gold);
+            background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
+            color: #060911;
+            box-shadow:
+                0 8px 24px var(--c-gold-glow),
+                0 0 0 1px rgba(255,255,255,0.1) inset,
+                0 1px 0 rgba(255,255,255,0.3) inset;
         }
+
         .eff-header-actions .btn-action.primary:hover {
-            transform: translateY(-2px); box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow:
+                0 12px 32px var(--c-gold-glow),
+                0 0 0 1px rgba(255,255,255,0.15) inset,
+                0 1px 0 rgba(255,255,255,0.4) inset;
         }
+
+        .eff-header-actions .btn-action.primary:active {
+            transform: translateY(0) scale(0.98);
+        }
+
         .eff-header-actions .btn-action.secondary {
-            background: var(--glass-bg); border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.5);
+            background: linear-gradient(135deg,
+                rgba(148, 163, 184, 0.08) 0%,
+                rgba(148, 163, 184, 0.04) 100%);
+            border: 1px solid var(--c-border-mid);
+            color: var(--c-text-2);
+            backdrop-filter: blur(8px);
         }
+
         .eff-header-actions .btn-action.secondary:hover {
-            background: rgba(255,255,255,0.06); color: #fff; transform: translateY(-2px);
+            background: linear-gradient(135deg,
+                rgba(148, 163, 184, 0.15) 0%,
+                rgba(148, 163, 184, 0.08) 100%);
+            color: var(--c-text-1);
+            transform: translateY(-2px);
+            border-color: var(--c-border-strong);
         }
 
-        /* STATS */
+        /* ============================================================
+           STATS CARDS — GLASSMORPHISM PRO
+           ============================================================ */
         .stats-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px; padding: 16px 24px; width: 100%;
-        }
-        .stat-card {
-            background: var(--glass-bg); backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border); border-radius: var(--radius);
-            padding: 16px 18px; text-align: center;
-            transition: all var(--transition); position: relative; overflow: hidden;
-        }
-        .stat-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, var(--gold), #00b894); opacity: 0.6;
-        }
-        .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(230,179,30,0.15); box-shadow: var(--shadow-hover);
-        }
-        .stat-card .number { font-size: 26px; font-weight: 800; color: #fff; line-height: 1.2; }
-        .stat-card .number.gold { color: var(--gold-light); }
-        .stat-card .number.green { color: var(--success-light); }
-        .stat-card .number.yellow { color: var(--warning); }
-        .stat-card .number.red { color: var(--danger); }
-        .stat-card .label {
-            font-size: 11px; color: rgba(255,255,255,0.3);
-            margin-top: 4px; font-weight: 500; letter-spacing: 0.3px;
-        }
-
-        /* FILTER */
-        .filter-bar {
-            display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
-            padding: 10px 24px; background: var(--glass-bg); backdrop-filter: blur(12px);
-            border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            padding: 24px 28px;
             width: 100%;
         }
+
+        .stat-card {
+            background: linear-gradient(135deg,
+                rgba(24, 34, 56, 0.7) 0%,
+                rgba(18, 26, 44, 0.85) 100%);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid var(--c-border-soft);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            text-align: center;
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.05) inset,
+                0 8px 24px rgba(0,0,0,0.25);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                currentColor 50%,
+                transparent 100%);
+            opacity: 0.7;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: -50%; right: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle,
+                currentColor 0%,
+                transparent 40%);
+            opacity: 0.04;
+            pointer-events: none;
+            transition: opacity var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--c-border-strong);
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.1) inset,
+                0 16px 40px rgba(0,0,0,0.4),
+                0 0 40px currentColor;
+        }
+
+        .stat-card:hover::after { opacity: 0.08; }
+
+        .stat-card:nth-child(1) { color: var(--c-gold-2); }
+        .stat-card:nth-child(2) { color: var(--c-emerald-2); }
+        .stat-card:nth-child(3) { color: var(--c-amber-2); }
+        .stat-card:nth-child(4) { color: var(--c-red-2); }
+        .stat-card:nth-child(5) { color: var(--c-blue-2); }
+
+        .stat-card .number {
+            font-size: 30px;
+            font-weight: 900;
+            line-height: 1.1;
+            color: currentColor;
+            text-shadow: 0 0 30px currentColor;
+            letter-spacing: -1px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: var(--c-text-3);
+            margin-top: 6px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================================
+           FILTER BAR — PRO
+           ============================================================ */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px 16px;
+            padding: 16px 28px;
+            background: linear-gradient(135deg,
+                rgba(18, 26, 44, 0.6) 0%,
+                rgba(24, 34, 56, 0.5) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--c-border-soft);
+            border-bottom: 1px solid var(--c-border-soft);
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset;
+        }
+
         .filter-bar label {
-            font-size: 0.7rem; color: rgba(255,255,255,0.3);
-            font-weight: 600; display: flex; align-items: center; gap: 4px;
+            font-size: 11px;
+            color: var(--c-text-3);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
+        .filter-bar label i { color: var(--c-gold-2); }
+
         .filter-bar select {
-            padding: 6px 12px; border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.03); color: #e2e8f0;
-            font-size: 0.75rem; min-width: 120px; cursor: pointer;
+            padding: 9px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--c-border-mid);
+            background: linear-gradient(135deg,
+                rgba(10, 16, 32, 0.8) 0%,
+                rgba(18, 26, 44, 0.6) 100%);
+            color: var(--c-text-1);
+            font-size: 12px;
+            min-width: 140px;
+            cursor: pointer;
             font-family: var(--font);
+            font-weight: 600;
+            transition: all var(--transition);
+            appearance: none;
+            background-image:
+                linear-gradient(135deg, rgba(10, 16, 32, 0.8), rgba(18, 26, 44, 0.6)),
+                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e6b31e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center, left 12px center;
+            background-size: auto, 16px;
+            padding-left: 36px;
         }
-        .filter-bar select:focus { outline: none; border-color: var(--gold); }
-        .filter-bar select option { background: #0a1628; color: #e2e8f0; }
+
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--c-gold-2);
+            box-shadow: 0 0 0 3px var(--c-gold-glow);
+        }
+
+        .filter-bar select option {
+            background: #0a1020;
+            color: var(--c-text-1);
+            padding: 8px;
+        }
+
         .filter-bar .btn-filter {
-            padding: 6px 16px; border: none; border-radius: 20px;
-            font-weight: 600; font-size: 0.75rem; cursor: pointer;
-            transition: all var(--transition); font-family: var(--font);
-            display: inline-flex; align-items: center; gap: 6px;
+            padding: 9px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
         }
+
+        .filter-bar .btn-filter::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
+            pointer-events: none;
+        }
+
         .filter-bar .btn-filter.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628;
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            color: #060911;
+            box-shadow: 0 6px 20px var(--c-gold-glow);
         }
-        .filter-bar .btn-filter.primary:hover { transform: scale(1.04); }
+
+        .filter-bar .btn-filter.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px var(--c-gold-glow);
+        }
+
         .filter-bar .btn-filter.outline {
-            background: transparent; border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.3);
+            background: transparent;
+            border: 1px solid var(--c-border-mid);
+            color: var(--c-text-3);
         }
+
         .filter-bar .btn-filter.outline:hover {
-            background: rgba(255,255,255,0.04); color: #fff;
+            background: rgba(148, 163, 184, 0.06);
+            color: var(--c-text-1);
+            border-color: var(--c-border-strong);
         }
 
-        /* SECTIONS */
+        /* ============================================================
+           SECTIONS — ULTRA PRO
+           ============================================================ */
         .eff-section {
-            background: var(--glass-bg); backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border); border-radius: var(--radius);
-            margin: 0 24px 16px; overflow: hidden;
+            background: linear-gradient(135deg,
+                rgba(24, 34, 56, 0.55) 0%,
+                rgba(18, 26, 44, 0.75) 100%);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid var(--c-border-soft);
+            border-radius: var(--radius);
+            margin: 0 28px 20px;
+            overflow: hidden;
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.04) inset,
+                0 12px 40px rgba(0,0,0,0.3);
+            transition: all var(--transition);
         }
+
+        .eff-section:hover {
+            border-color: var(--c-border-mid);
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.06) inset,
+                0 16px 48px rgba(0,0,0,0.4);
+        }
+
         .eff-section .section-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px; border-bottom: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--c-border-soft);
+            background: linear-gradient(135deg,
+                rgba(255,255,255,0.025) 0%,
+                rgba(255,255,255,0.005) 100%);
+            position: relative;
         }
+
+        .eff-section .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: 0;
+            width: 100px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--c-gold-2));
+        }
+
         .eff-section .section-header h3 {
-            font-size: 15px; font-weight: 700; color: #fff; margin: 0;
-            display: flex; align-items: center; gap: 8px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--c-text-1);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.2px;
         }
-        .eff-section .section-header h3 i { color: var(--gold); }
+
+        .eff-section .section-header h3 i {
+            color: var(--c-gold-2);
+            filter: drop-shadow(0 0 8px var(--c-gold-glow));
+        }
+
         .eff-section .section-header .badge {
-            font-size: 11px; padding: 4px 16px; border-radius: 20px; font-weight: 600;
+            font-size: 11px;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            position: relative;
+            overflow: hidden;
         }
-        .badge.success { background: rgba(34,197,94,0.12); color: #4ade80; }
-        .badge.warning { background: rgba(234,179,8,0.12); color: #fbbf24; }
-        .badge.danger { background: rgba(239,68,68,0.12); color: #f87171; }
-        .badge.gold { background: rgba(230,179,30,0.12); color: var(--gold-light); }
 
-        .section-content { padding: 16px 20px; }
+        .badge.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
+            color: var(--c-emerald-1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+        }
 
-        .table-wrapper { overflow-x: auto; border-radius: var(--radius-sm); }
+        .badge.warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08));
+            color: var(--c-amber-1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+        }
+
+        .badge.danger {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));
+            color: var(--c-red-1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+        }
+
+        .badge.gold {
+            background: linear-gradient(135deg, rgba(230, 179, 30, 0.15), rgba(230, 179, 30, 0.08));
+            color: var(--c-gold-1);
+            border: 1px solid rgba(230, 179, 30, 0.2);
+            box-shadow: 0 0 20px rgba(230, 179, 30, 0.1);
+        }
+
+        .section-content { padding: 0; }
+
+        /* ============================================================
+           TABLE — ULTRA PRO
+           ============================================================ */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 0;
+        }
+
         .table-wrapper table {
-            width: 100%; border-collapse: collapse;
-            font-size: 0.78rem; min-width: 600px;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+            min-width: 700px;
         }
+
         thead {
-            background: rgba(15,52,96,0.3);
-            border-bottom: 2px solid rgba(230,179,30,0.08);
+            background: linear-gradient(135deg,
+                rgba(15, 23, 42, 0.9) 0%,
+                rgba(30, 41, 59, 0.7) 100%);
+            position: relative;
         }
+
+        thead::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                var(--c-gold-2) 50%,
+                transparent 100%);
+            opacity: 0.5;
+        }
+
         thead th {
-            padding: 10px 12px; text-align: center; font-weight: 700;
-            font-size: 0.6rem; text-transform: uppercase;
-            color: rgba(255,255,255,0.35); letter-spacing: 0.5px; white-space: nowrap;
+            padding: 14px 16px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--c-text-3);
+            letter-spacing: 1px;
+            white-space: nowrap;
+            position: relative;
         }
-        thead th i { margin-left: 4px; color: var(--gold); font-size: 0.7rem; }
+
+        thead th i {
+            margin-left: 6px;
+            color: var(--c-gold-2);
+            font-size: 11px;
+            filter: drop-shadow(0 0 6px var(--c-gold-glow));
+        }
+
         tbody td {
-            padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,0.02);
-            vertical-align: middle; color: rgba(255,255,255,0.6);
-            font-size: 0.78rem; text-align: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.05);
+            vertical-align: middle;
+            color: var(--c-text-2);
+            font-size: 13px;
+            text-align: center;
+            font-weight: 500;
+            transition: all var(--transition);
         }
-        tbody tr { transition: all var(--transition); }
-        tbody tr:hover { background: rgba(255,255,255,0.03); }
 
+        tbody tr {
+            transition: all var(--transition);
+            position: relative;
+        }
+
+        tbody tr:hover {
+            background: rgba(148, 163, 184, 0.04);
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+
+        /* Category cell — bold */
+        tbody td:first-child {
+            font-weight: 800 !important;
+            color: var(--c-text-1) !important;
+            font-size: 14px;
+            letter-spacing: -0.2px;
+        }
+
+        /* ============================================================
+           ROW STATES — PROFESSIONAL COLORS
+           ============================================================ */
         .row-high {
-            background: rgba(34, 197, 94, 0.05) !important;
-            border-right: 3px solid #4ade80;
+            background: linear-gradient(90deg,
+                rgba(16, 185, 129, 0.08) 0%,
+                rgba(16, 185, 129, 0.02) 100%) !important;
+            border-right: 3px solid var(--c-emerald-2);
         }
-        .row-high .eff-cell { color: #4ade80 !important; font-weight: 700; }
+
+        .row-high td:first-child {
+            color: var(--c-emerald-1) !important;
+            text-shadow: 0 0 20px var(--c-emerald-glow);
+        }
+
+        .row-high .eff-cell {
+            color: var(--c-emerald-1) !important;
+            font-weight: 900 !important;
+            font-size: 15px !important;
+            text-shadow: 0 0 20px var(--c-emerald-glow);
+        }
+
         .row-mid {
-            background: rgba(234, 179, 8, 0.05) !important;
-            border-right: 3px solid #fbbf24;
+            background: linear-gradient(90deg,
+                rgba(245, 158, 11, 0.08) 0%,
+                rgba(245, 158, 11, 0.02) 100%) !important;
+            border-right: 3px solid var(--c-amber-2);
         }
-        .row-mid .eff-cell { color: #fbbf24 !important; font-weight: 700; }
+
+        .row-mid td:first-child {
+            color: var(--c-amber-1) !important;
+            text-shadow: 0 0 20px var(--c-amber-glow);
+        }
+
+        .row-mid .eff-cell {
+            color: var(--c-amber-1) !important;
+            font-weight: 900 !important;
+            font-size: 15px !important;
+            text-shadow: 0 0 20px var(--c-amber-glow);
+        }
+
         .row-low {
-            background: rgba(239, 68, 68, 0.05) !important;
-            border-right: 3px solid #f87171;
+            background: linear-gradient(90deg,
+                rgba(239, 68, 68, 0.08) 0%,
+                rgba(239, 68, 68, 0.02) 100%) !important;
+            border-right: 3px solid var(--c-red-2);
         }
-        .row-low .eff-cell { color: #f87171 !important; font-weight: 700; }
 
+        .row-low td:first-child {
+            color: var(--c-red-1) !important;
+            text-shadow: 0 0 20px var(--c-red-glow);
+        }
+
+        .row-low .eff-cell {
+            color: var(--c-red-1) !important;
+            font-weight: 900 !important;
+            font-size: 15px !important;
+            text-shadow: 0 0 20px var(--c-red-glow);
+        }
+
+        /* ============================================================
+           STATUS BADGES — PRO
+           ============================================================ */
         .status-badge {
-            padding: 3px 12px; border-radius: 20px;
-            font-size: 0.65rem; font-weight: 600;
-            display: inline-block; white-space: nowrap;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            display: inline-block;
+            white-space: nowrap;
+            letter-spacing: 0.4px;
+            position: relative;
+            overflow: hidden;
         }
-        .status-badge.excellent { background: rgba(34,197,94,0.12); color: #4ade80; }
-        .status-badge.good { background: rgba(74,222,128,0.08); color: #4ade80; }
-        .status-badge.medium { background: rgba(234,179,8,0.12); color: #fbbf24; }
-        .status-badge.low { background: rgba(239,68,68,0.12); color: #f87171; }
+
+        .status-badge::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .status-badge.excellent {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+            color: var(--c-emerald-1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .status-badge.good {
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.15), rgba(52, 211, 153, 0.08));
+            color: var(--c-emerald-1);
+            border: 1px solid rgba(52, 211, 153, 0.2);
+        }
+
+        .status-badge.medium {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+            color: var(--c-amber-1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+        }
+
+        .status-badge.low {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));
+            color: var(--c-red-1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
         .status-badge.critical {
-            background: rgba(239,68,68,0.2); color: #f87171;
-            animation: pulseDanger 1.5s ease-in-out infinite;
-        }
-        @keyframes pulseDanger {
-            0%, 100% { opacity: 1; } 50% { opacity: 0.6; }
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.15));
+            color: var(--c-red-1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
+            animation: criticalPulse 2s ease-in-out infinite;
         }
 
+        @keyframes criticalPulse {
+            0%, 100% {
+                box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 4px 24px rgba(239, 68, 68, 0.5);
+                transform: scale(1.02);
+            }
+        }
+
+        /* ============================================================
+           PROGRESS BAR — PRO
+           ============================================================ */
         .progress-bar {
-            width: 100%; height: 6px; background: rgba(255,255,255,0.05);
-            border-radius: 10px; overflow: hidden; min-width: 80px;
+            width: 100%;
+            height: 8px;
+            background: rgba(10, 16, 32, 0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 100px;
+            position: relative;
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.03) inset,
+                0 1px 3px rgba(0,0,0,0.3) inset;
         }
+
         .progress-bar .progress-fill {
-            height: 100%; border-radius: 10px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); width: 0%;
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+            position: relative;
+            overflow: hidden;
         }
-        .progress-bar .progress-fill.high { background: linear-gradient(90deg, #22c55e, #4ade80); }
-        .progress-bar .progress-fill.mid { background: linear-gradient(90deg, #eab308, #fbbf24); }
-        .progress-bar .progress-fill.low { background: linear-gradient(90deg, #ef4444, #f87171); }
 
-        /* CHARTS */
+        .progress-bar .progress-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255,255,255,0.3) 50%,
+                transparent 100%);
+            animation: progressShine 2s ease-in-out infinite;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-bar .progress-fill.high {
+            background: linear-gradient(90deg, var(--c-emerald-3), var(--c-emerald-2), var(--c-emerald-1));
+            box-shadow: 0 0 12px var(--c-emerald-glow);
+        }
+
+        .progress-bar .progress-fill.mid {
+            background: linear-gradient(90deg, var(--c-amber-3), var(--c-amber-2), var(--c-amber-1));
+            box-shadow: 0 0 12px var(--c-amber-glow);
+        }
+
+        .progress-bar .progress-fill.low {
+            background: linear-gradient(90deg, var(--c-red-3), var(--c-red-2), var(--c-red-1));
+            box-shadow: 0 0 12px var(--c-red-glow);
+        }
+
+        /* ============================================================
+           CHARTS
+           ============================================================ */
         .chart-section {
-            margin: 0 24px 20px; border: 1px solid var(--glass-border);
-            border-radius: var(--radius); overflow: hidden; background: var(--glass-bg);
+            margin: 0 28px 28px;
+            border: 1px solid var(--c-border-soft);
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: linear-gradient(135deg,
+                rgba(24, 34, 56, 0.55) 0%,
+                rgba(18, 26, 44, 0.75) 100%);
+            backdrop-filter: blur(20px);
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.04) inset,
+                0 12px 40px rgba(0,0,0,0.3);
         }
+
         .chart-switch {
-            display: flex; gap: 10px; padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            flex-wrap: wrap; background: rgba(255,255,255,0.02);
+            display: flex;
+            gap: 10px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--c-border-soft);
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.01);
         }
+
         .chart-btn {
-            padding: 6px 18px; border: 2px solid rgba(255,255,255,0.06);
-            border-radius: 20px; background: transparent;
-            color: rgba(255,255,255,0.3); cursor: pointer;
-            font-family: var(--font); font-size: 13px; font-weight: 600;
-            transition: all 0.3s;
+            padding: 8px 20px;
+            border: 1px solid var(--c-border-mid);
+            border-radius: 10px;
+            background: linear-gradient(135deg,
+                rgba(148, 163, 184, 0.06),
+                rgba(148, 163, 184, 0.02));
+            color: var(--c-text-3);
+            cursor: pointer;
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 700;
+            transition: all var(--transition);
+            letter-spacing: 0.3px;
         }
+
         .chart-btn:hover {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.1); color: #fff;
+            background: linear-gradient(135deg,
+                rgba(148, 163, 184, 0.12),
+                rgba(148, 163, 184, 0.04));
+            color: var(--c-text-1);
+            border-color: var(--c-border-strong);
+            transform: translateY(-1px);
         }
+
         .chart-btn.active {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            border-color: var(--gold); color: #0a1628;
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            border-color: var(--c-gold-2);
+            color: #060911;
+            box-shadow: 0 6px 20px var(--c-gold-glow);
         }
+
         .chart-btn i { margin-left: 6px; }
-        .charts-container { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 20px; }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 24px;
+        }
+
         .chart-box {
-            background: rgba(255,255,255,0.02); border-radius: var(--radius-sm);
-            padding: 16px; border: 1px solid rgba(255,255,255,0.04);
+            background: linear-gradient(135deg,
+                rgba(10, 16, 32, 0.6) 0%,
+                rgba(18, 26, 44, 0.4) 100%);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            border: 1px solid var(--c-border-soft);
         }
+
         .chart-box h4 {
-            font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.5);
-            margin-bottom: 12px; text-align: center;
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--c-text-2);
+            margin-bottom: 16px;
+            text-align: center;
+            letter-spacing: 0.3px;
         }
-        .chart-box canvas { width: 100% !important; max-height: 320px; }
 
+        .chart-box canvas {
+            width: 100% !important;
+            max-height: 320px;
+        }
+
+        /* ============================================================
+           EMPTY / LOADING
+           ============================================================ */
         .empty-state {
-            text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.15);
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--c-text-4);
         }
+
         .empty-state .spinner {
-            width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.04);
-            border-top-color: var(--gold); border-radius: 50%;
-            animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(148, 163, 184, 0.1);
+            border-top-color: var(--c-gold-2);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+            box-shadow: 0 0 20px var(--c-gold-glow);
         }
+
         @keyframes spin { to { transform: rotate(360deg); } }
+
         .empty-state h3 {
-            font-size: 0.9rem; font-weight: 600;
-            color: rgba(255,255,255,0.2); margin-bottom: 4px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--c-text-3);
+            margin-bottom: 4px;
         }
 
-        /* RESPONSIVE */
+        .empty-state p {
+            font-size: 12px;
+            color: var(--c-text-4);
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
         @media (max-width: 992px) {
-            .eff-header { padding: 12px 16px; top: 60px; }
-            .eff-header-left h2 { font-size: 18px; }
-            .stats-grid { padding: 12px 16px; gap: 10px; }
-            .filter-bar { padding: 8px 16px; gap: 6px 10px; }
-            .eff-section { margin: 0 16px 12px; }
-            .chart-section { margin: 0 16px 16px; }
-        }
-        @media (max-width: 768px) {
-            .eff-header { flex-direction: column; align-items: flex-start; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .filter-bar { flex-direction: column; align-items: stretch; }
-            .filter-bar select { min-width: 100%; }
-            .table-wrapper table { font-size: 0.7rem; min-width: 500px; }
-            thead th, tbody td { padding: 6px 8px; }
-            .section-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .eff-header { padding: 16px 20px; top: 60px; }
+            .eff-header-left h2 { font-size: 20px; }
+            .stats-grid { padding: 16px 20px; gap: 12px; }
+            .filter-bar { padding: 12px 20px; gap: 8px 12px; }
+            .eff-section { margin: 0 20px 16px; }
+            .chart-section { margin: 0 20px 20px; }
         }
 
-        /* PRINT */
+        @media (max-width: 768px) {
+            .eff-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px;
+            }
+            .eff-header-left { width: 100%; }
+            .eff-header-left h2 { font-size: 18px; }
+            .eff-header-actions { width: 100%; }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 14px 16px;
+            }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .number { font-size: 24px; }
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 14px 16px;
+            }
+            .filter-bar select { min-width: 100%; }
+            .eff-section { margin: 0 16px 14px; }
+            .table-wrapper table { font-size: 11px; min-width: 550px; }
+            thead th, tbody td { padding: 10px 12px; }
+            .chart-section { margin: 0 16px 16px; }
+            .chart-box canvas { max-height: 240px; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stat-card .number { font-size: 20px; }
+            .eff-header-left .header-icon { width: 44px; height: 44px; font-size: 20px; }
+            .eff-header-left h2 { font-size: 16px; }
+        }
+
+        /* ============================================================
+           PRINT
+           ============================================================ */
         @media print {
-            @page { size: A4 landscape; margin: 12mm 10mm; }
+            @page { size: A4 landscape; margin: 10mm; }
             html, body {
-                background: #ffffff !important; color: #1a1a1a !important;
+                background: #ffffff !important;
+                color: #1a1a1a !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
@@ -343,33 +1046,47 @@
             .eff-header-actions, .filter-bar, .chart-switch { display: none !important; }
             .eff-header {
                 background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
-                color: #ffffff !important; border: 2px solid #e6b31e !important;
-                border-radius: 8px !important; padding: 12mm 8mm 6mm !important;
+                color: #ffffff !important;
+                border: 2px solid #e6b31e !important;
+                border-radius: 8px !important;
+                padding: 10mm 8mm 6mm !important;
                 margin-bottom: 6mm !important;
             }
-            .eff-header-left h2 { color: #e6b31e !important; -webkit-text-fill-color: #e6b31e !important; }
+            .eff-header-left h2 {
+                color: #e6b31e !important;
+                -webkit-text-fill-color: #e6b31e !important;
+            }
             .stats-grid { grid-template-columns: repeat(5, 1fr) !important; gap: 4mm !important; }
             .stat-card {
-                background: #f8f9fc !important; border: 2px solid #e6b31e !important;
+                background: #f8f9fc !important;
+                border: 2px solid #e6b31e !important;
                 padding: 4mm 3mm !important;
             }
-            .stat-card .number { color: #0a1628 !important; -webkit-text-fill-color: #0a1628 !important; }
+            .stat-card .number { color: #0a1628 !important; text-shadow: none !important; }
             .eff-section {
-                background: #ffffff !important; border: 2px solid #0a1628 !important;
+                background: #ffffff !important;
+                border: 2px solid #0a1628 !important;
                 page-break-inside: avoid;
+                margin-bottom: 5mm !important;
             }
             .eff-section .section-header {
-                background: #0a1628 !important; color: #e6b31e !important;
+                background: #0a1628 !important;
+                color: #e6b31e !important;
             }
             .eff-section .section-header h3 { color: #e6b31e !important; }
             table { width: 100% !important; border: 1px solid #0a1628 !important; }
             thead { background: #0a1628 !important; }
-            thead th { background: #0a1628 !important; color: #e6b31e !important; border: 1px solid #1a2a4a !important; }
+            thead th {
+                background: #0a1628 !important;
+                color: #e6b31e !important;
+                border: 1px solid #1a2a4a !important;
+            }
             tbody td { border: 1px solid #e5e7eb !important; color: #1f2937 !important; }
             .row-high { background: #ecfdf5 !important; }
             .row-mid { background: #fffbeb !important; }
             .row-low { background: #fef2f2 !important; }
-            .status-badge { border: 1px solid currentColor !important; background: #fff !important; }
+            .status-badge { border: 1px solid currentColor !important; background: #fff !important; animation: none !important; }
+            .progress-bar .progress-fill::after { display: none !important; }
             * { box-shadow: none !important; text-shadow: none !important; animation: none !important; }
             #page-efficiency::before { display: none !important; }
         }
@@ -400,23 +1117,23 @@
     <!-- STATS -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="number gold" id="totalVessels">0</div>
+            <div class="number" id="totalVessels">0</div>
             <div class="label">🚢 إجمالي المراكب</div>
         </div>
         <div class="stat-card">
-            <div class="number green" id="activeVessels">0</div>
+            <div class="number" id="activeVessels">0</div>
             <div class="label">✅ صالح للخدمة</div>
         </div>
         <div class="stat-card">
-            <div class="number yellow" id="maintenanceVessels">0</div>
+            <div class="number" id="maintenanceVessels">0</div>
             <div class="label">🔧 تحت الصيانة</div>
         </div>
         <div class="stat-card">
-            <div class="number red" id="damagedVessels">0</div>
+            <div class="number" id="damagedVessels">0</div>
             <div class="label">🟥 معطوبة</div>
         </div>
         <div class="stat-card">
-            <div class="number" id="efficiencyPercent" style="color:var(--gold-light);">0%</div>
+            <div class="number" id="efficiencyPercent">0%</div>
             <div class="label">📈 نسبة النجاعة</div>
         </div>
     </div>
@@ -735,812 +1452,925 @@
     </div>
 
     <script>
-        // ============================================================
-        // ✅ الفئات الثابتة — الخمس دائمًا مع النسب المئوية
-        // ============================================================
-        const FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
+        (function () {
+            'use strict';
 
-        // ============================================================
-        // ✅ الأقاليم الثابتة (4)
-        // ============================================================
-        const FIXED_REGIONS = [
-            { key: 'الشمال', match: 'الشمال' },
-            { key: 'الساحل', match: 'الساحل' },
-            { key: 'الوسط',  match: 'الوسط'  },
-            { key: 'الجنوب', match: 'الجنوب' }
-        ];
+            // ============================================================
+            // ✅ CONSTANTS
+            // ============================================================
+            const FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 
-        // ============================================================
-        // ✅ وحدات الصيانة الثابتة (5)
-        // ============================================================
-        const FIXED_UNITS = [
-            { key: 'تونس',    match: 'وحدة الصيانة والإسناد البحري تونس' },
-            { key: 'جرجيس',   match: 'وحدة الصيانة والإسناد البحري جرجيس' },
-            { key: 'صفاقس',   match: 'وحدة الصيانة والإسناد البحري صفاقس' },
-            { key: 'المنستير', match: 'وحدة الصيانة والإسناد البحري المنستير' },
-            { key: 'قبيبة',   match: 'المجمع الأمني بقبيبة' }
-        ];
+            const FIXED_REGIONS = [
+                { key: 'الشمال', match: 'الشمال' },
+                { key: 'الساحل', match: 'الساحل' },
+                { key: 'الوسط',  match: 'الوسط'  },
+                { key: 'الجنوب', match: 'الجنوب' }
+            ];
 
-        // ============================================================
-        // ✅ الحالة العامة
-        // ============================================================
-        let currentChart = 'pie';
-        let vesselStats = null;
+            const FIXED_UNITS = [
+                { key: 'تونس',    match: 'وحدة الصيانة والإسناد البحري تونس' },
+                { key: 'جرجيس',   match: 'وحدة الصيانة والإسناد البحري جرجيس' },
+                { key: 'صفاقس',   match: 'وحدة الصيانة والإسناد البحري صفاقس' },
+                { key: 'المنستير', match: 'وحدة الصيانة والإسناد البحري المنستير' },
+                { key: 'قبيبة',   match: 'المجمع الأمني بقبيبة' }
+            ];
 
-        // ============================================================
-        // ✅ تطبيع النصوص والفئات
-        // ============================================================
-        function normText(v) {
-            if (v === null || v === undefined) return '';
-            return String(v).trim().replace(/\s+/g, ' ');
-        }
+            let currentChart = 'pie';
+            let vesselStats = null;
+            let initialized = false;
+            let loadingVessels = false;
 
-        function normalizeCategoryName(name) {
-            const n = normText(name);
-            if (!n) return '';
+            // ============================================================
+            // ✅ TEXT HELPERS
+            // ============================================================
+            function normText(v) {
+                if (v === null || v === undefined) return '';
+                return String(v).trim().replace(/\s+/g, ' ');
+            }
 
-            // توحيد جميع الصيغ المحتملة
-            if (n === 'البروق' || n === 'بروق' || n === 'البرق' || n === 'برق') return 'البروق';
-            if (n === 'صقور' || n === 'الصقور' || n === 'صقر' || n === 'الصقر') return 'صقور';
-            if (n === 'خوافر' || n === 'الخوافر' || n === 'خافر' || n === 'الخافر') return 'خوافر';
-            if (n === 'زوارق مزدوجة' || n === 'زوارق مزدوجه' || n === 'الزوارق المزدوجة' || n === 'زوجية') return 'زوارق مزدوجة';
-            if (n === 'طوافات' || n === 'الطوافات' || n === 'طوافة' || n === 'الطوافة') return 'طوافات';
+            function normalizeCategoryName(name) {
+                const n = normText(name);
+                if (!n) return '';
+                if (n === 'البروق' || n === 'بروق' || n === 'البرق' || n === 'برق') return 'البروق';
+                if (n === 'صقور' || n === 'الصقور' || n === 'صقر' || n === 'الصقر') return 'صقور';
+                if (n === 'خوافر' || n === 'الخوافر' || n === 'خافر') return 'خوافر';
+                if (n === 'زوارق مزدوجة' || n === 'زوارق مزدوجه' || n === 'الزوارق المزدوجة') return 'زوارق مزدوجة';
+                if (n === 'طوافات' || n === 'الطوافات' || n === 'طوافة') return 'طوافات';
+                return n;
+            }
 
-            return n;
-        }
+            function normalizeStatusName(status) {
+                const s = normText(status).toLowerCase();
+                if (!s) return '';
+                if (s.includes('صالح') || s === 'active' || s === 'ready') return 'صالح';
+                if (s.includes('معطب') || s.includes('عطب') || s === 'damaged') return 'معطب';
+                if (s.includes('صيانة') || s === 'maintenance' || s === 'repair') return 'صيانة';
+                return normText(status);
+            }
 
-        function normalizeStatusName(status) {
-            const s = normText(status).toLowerCase();
-            if (!s) return '';
-            if (s.includes('صالح') || s === 'active' || s === 'ready' || s === 'operational') return 'صالح';
-            if (s.includes('معطب') || s.includes('عطب') || s === 'damaged' || s === 'down') return 'معطب';
-            if (s.includes('صيانة') || s === 'maintenance' || s === 'repair') return 'صيانة';
-            return normText(status);
-        }
+            // ============================================================
+            // ✅ BUILD STATS
+            // ============================================================
+            function createEmptyCategoriesMap() {
+                const map = {};
+                FIXED_CATEGORIES.forEach(cat => {
+                    map[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
+                });
+                return map;
+            }
 
-        // ============================================================
-        // ✅ بناء الإحصائيات من المراكب
-        // ============================================================
-        function createEmptyCategoriesMap() {
-            const map = {};
-            FIXED_CATEGORIES.forEach(cat => {
-                map[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
-            });
-            return map;
-        }
+            function buildStatsFromVessels(vessels) {
+                const stats = {
+                    general: createEmptyCategoriesMap(),
+                    regions: {},
+                    units: {}
+                };
 
-        function buildStatsFromVessels(vessels) {
-            // ✅ تهيئة الفئات الخمس بقيم صفرية
-            const stats = {
-                general: createEmptyCategoriesMap(),
-                regions: {},
-                units: {}
+                FIXED_REGIONS.forEach(r => {
+                    stats.regions[r.match] = {
+                        active: 0, damaged: 0, maintenance: 0, total: 0,
+                        categories: createEmptyCategoriesMap()
+                    };
+                });
+
+                FIXED_UNITS.forEach(u => {
+                    stats.units[u.match] = {
+                        active: 0, damaged: 0, maintenance: 0, total: 0,
+                        categories: createEmptyCategoriesMap()
+                    };
+                });
+
+                (vessels || []).forEach(v => {
+                    const cat = normalizeCategoryName(
+                        v.cat !== undefined ? v.cat : (v.category || v.type || v.cls)
+                    );
+                    const status = normalizeStatusName(
+                        v.stat !== undefined ? v.stat : (v.status || v.state)
+                    );
+                    const reg = normText(v.reg || v.region || v.area);
+                    const unit = normText(v.repairUnit || v.maintenanceUnit || v.maintenance || v.unit);
+
+                    if (!cat) return;
+
+                    // --- General ---
+                    if (!stats.general[cat]) {
+                        stats.general[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
+                    }
+                    const g = stats.general[cat];
+                    g.total++;
+                    if (status === 'صالح') g.active++;
+                    else if (status === 'معطب') g.damaged++;
+                    else if (status === 'صيانة') g.maintenance++;
+
+                    // --- Region ---
+                    if (reg && stats.regions[reg]) {
+                        const r = stats.regions[reg];
+                        r.total++;
+                        if (status === 'صالح') r.active++;
+                        else if (status === 'معطب') r.damaged++;
+                        else if (status === 'صيانة') r.maintenance++;
+
+                        if (!r.categories[cat]) {
+                            r.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
+                        }
+                        const rc = r.categories[cat];
+                        rc.total++;
+                        if (status === 'صالح') rc.active++;
+                        else if (status === 'معطب') rc.damaged++;
+                        else if (status === 'صيانة') rc.maintenance++;
+                    }
+
+                    // --- Unit ---
+                    if (unit && stats.units[unit]) {
+                        const u = stats.units[unit];
+                        u.total++;
+                        if (status === 'صالح') u.active++;
+                        else if (status === 'معطب') u.damaged++;
+                        else if (status === 'صيانة') u.maintenance++;
+
+                        if (!u.categories[cat]) {
+                            u.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
+                        }
+                        const uc = u.categories[cat];
+                        uc.total++;
+                        if (status === 'صالح') uc.active++;
+                        else if (status === 'معطب') uc.damaged++;
+                        else if (status === 'صيانة') uc.maintenance++;
+                    }
+                });
+
+                return stats;
+            }
+
+            // ============================================================
+            // ✅ LOAD VESSELS FROM API
+            // ============================================================
+            async function loadVessels() {
+                if (loadingVessels) return null;
+                loadingVessels = true;
+
+                try {
+                    const token = localStorage.getItem('marine_token')
+                        || localStorage.getItem('token')
+                        || localStorage.getItem('authToken');
+
+                    const headers = { 'Accept': 'application/json' };
+                    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                    const res = await fetch('/api/vessels', {
+                        headers: headers,
+                        credentials: 'include',
+                        cache: 'no-store'
+                    });
+
+                    if (!res.ok) throw new Error('فشل تحميل البيانات (' + res.status + ')');
+
+                    const text = await res.text();
+                    let payload = null;
+                    try { payload = text ? JSON.parse(text) : null; } catch (e) {}
+
+                    let vessels = [];
+                    if (Array.isArray(payload)) vessels = payload;
+                    else if (payload && Array.isArray(payload.vessels)) vessels = payload.vessels;
+                    else if (payload && Array.isArray(payload.data)) vessels = payload.data;
+                    else if (payload && Array.isArray(payload.items)) vessels = payload.items;
+
+                    try { window.allVessels = vessels; window.vesselsData = vessels; } catch (e) {}
+
+                    return vessels;
+                } finally {
+                    loadingVessels = false;
+                }
+            }
+
+            // ============================================================
+            // ✅ HELPERS
+            // ============================================================
+            function getStatusInfo(eff) {
+                if (eff >= 80) return { cls: 'excellent', text: 'ممتازة', row: 'row-high', prog: 'high' };
+                if (eff >= 70) return { cls: 'good',      text: 'جيدة',   row: 'row-high', prog: 'high' };
+                if (eff >= 50) return { cls: 'medium',    text: 'متوسطة', row: 'row-mid',  prog: 'mid'  };
+                if (eff >= 30) return { cls: 'low',       text: 'منخفضة', row: 'row-low',  prog: 'low'  };
+                return              { cls: 'critical',  text: 'حرجة',   row: 'row-low',  prog: 'low'  };
+            }
+
+            // ============================================================
+            // ✅ BUILD ROWS — 5 CATEGORIES ALWAYS + PERCENTAGES
+            // ============================================================
+            function buildCategoryRows(categoriesMap) {
+                const categoryFilter = document.getElementById('fCatEff').value;
+                const statusFilter = document.getElementById('fStatusEff').value;
+
+                // ✅ Start with the 5 fixed categories — always visible
+                let rows = FIXED_CATEGORIES.map(cat => {
+                    const c = (categoriesMap && categoriesMap[cat]) || { active: 0, damaged: 0, maintenance: 0, total: 0 };
+                    const totalForEff = (c.active || 0) + (c.damaged || 0);
+                    const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
+                    return {
+                        category: cat,
+                        active: c.active || 0,
+                        damaged: c.damaged || 0,
+                        maintenance: c.maintenance || 0,
+                        total: c.total || 0,
+                        efficiency: eff
+                    };
+                });
+
+                // Add any extra categories from data
+                if (categoriesMap) {
+                    Object.keys(categoriesMap).forEach(cat => {
+                        if (FIXED_CATEGORIES.indexOf(cat) === -1) {
+                            const c = categoriesMap[cat];
+                            const totalForEff = (c.active || 0) + (c.damaged || 0);
+                            const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
+                            rows.push({
+                                category: cat,
+                                active: c.active || 0,
+                                damaged: c.damaged || 0,
+                                maintenance: c.maintenance || 0,
+                                total: c.total || 0,
+                                efficiency: eff
+                            });
+                        }
+                    });
+                }
+
+                // Category filter
+                if (categoryFilter !== 'الكل') {
+                    rows = rows.filter(r => r.category === categoryFilter);
+                }
+
+                // Status filter
+                if (statusFilter !== 'الكل') {
+                    rows = rows.filter(r => {
+                        if (statusFilter === 'صالح') return r.active > 0;
+                        if (statusFilter === 'صيانة') return r.maintenance > 0;
+                        if (statusFilter === 'معطب') return r.damaged > 0;
+                        return true;
+                    });
+                }
+
+                if (rows.length === 0) {
+                    return `
+                        <tr>
+                            <td colspan="6" class="empty-state" style="padding:20px;">
+                                <h3 style="font-size:13px;">لا توجد فئات مطابقة</h3>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                return rows.map(item => {
+                    const info = getStatusInfo(item.efficiency);
+                    const percentText = item.efficiency.toFixed(1) + '%';
+                    return `
+                        <tr class="${info.row}">
+                            <td>${item.category}</td>
+                            <td>${item.active}</td>
+                            <td>${item.damaged}</td>
+                            <td class="eff-cell">${percentText}</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill ${info.prog}" style="width:${Math.min(item.efficiency, 100)}%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="status-badge ${info.cls}">${info.text}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // ============================================================
+            // ✅ RENDER GENERAL TABLE
+            // ============================================================
+            function renderGeneralTable() {
+                const tbody = document.getElementById('generalBody');
+                if (!tbody) return;
+
+                tbody.innerHTML = buildCategoryRows(vesselStats.general);
+
+                const badge = document.getElementById('generalBadge');
+                if (!badge) return;
+
+                let totalActive = 0, totalDamaged = 0;
+                FIXED_CATEGORIES.forEach(cat => {
+                    const c = vesselStats.general[cat];
+                    if (c) {
+                        totalActive += c.active || 0;
+                        totalDamaged += c.damaged || 0;
+                    }
+                });
+                const sum = totalActive + totalDamaged;
+                const avg = sum > 0 ? (totalActive / sum) * 100 : 0;
+
+                if (avg >= 80) { badge.textContent = '✅ أداء ممتاز'; badge.className = 'badge success'; }
+                else if (avg >= 70) { badge.textContent = '📈 أداء جيد'; badge.className = 'badge gold'; }
+                else if (avg >= 50) { badge.textContent = '⚠️ أداء متوسط'; badge.className = 'badge warning'; }
+                else { badge.textContent = '🚨 أداء منخفض'; badge.className = 'badge danger'; }
+            }
+
+            // ============================================================
+            // ✅ RENDER REGION/UNIT TABLE
+            // ============================================================
+            function renderRegionTable(prefix, key, data) {
+                const tbodyId = 'body-' + prefix + '-' + key;
+                const badgeId = 'badge-' + prefix + '-' + key;
+                const tbody = document.getElementById(tbodyId);
+                const badgeEl = document.getElementById(badgeId);
+
+                if (!tbody) return;
+
+                tbody.innerHTML = buildCategoryRows(data.categories || {});
+
+                if (badgeEl) {
+                    const totalForEff = (data.active || 0) + (data.damaged || 0);
+                    const eff = totalForEff > 0 ? ((data.active || 0) / totalForEff) * 100 : 0;
+                    const info = getStatusInfo(eff);
+                    badgeEl.textContent = eff.toFixed(0) + '% جاهزية';
+                    badgeEl.className = 'badge ' + (
+                        info.cls === 'excellent' || info.cls === 'good' ? 'success' :
+                        info.cls === 'medium' ? 'warning' : 'danger'
+                    );
+                }
+            }
+
+            // ============================================================
+            // ✅ RENDER ALL TABLES
+            // ============================================================
+            function renderAllTables() {
+                renderGeneralTable();
+
+                FIXED_REGIONS.forEach(r => {
+                    const data = vesselStats.regions[r.match] || {
+                        active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
+                    };
+                    renderRegionTable('region', r.key, data);
+                });
+
+                FIXED_UNITS.forEach(u => {
+                    const data = vesselStats.units[u.match] || {
+                        active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
+                    };
+                    renderRegionTable('unit', u.key, data);
+                });
+            }
+
+            // ============================================================
+            // ✅ RENDER STATS CARDS
+            // ============================================================
+            function renderStatsCards() {
+                let total = 0, active = 0, maintenance = 0, damaged = 0;
+
+                FIXED_CATEGORIES.forEach(cat => {
+                    const c = vesselStats.general[cat];
+                    if (c) {
+                        total += c.total || 0;
+                        active += c.active || 0;
+                        maintenance += c.maintenance || 0;
+                        damaged += c.damaged || 0;
+                    }
+                });
+
+                Object.keys(vesselStats.general).forEach(cat => {
+                    if (FIXED_CATEGORIES.indexOf(cat) === -1) {
+                        const c = vesselStats.general[cat];
+                        total += c.total || 0;
+                        active += c.active || 0;
+                        maintenance += c.maintenance || 0;
+                        damaged += c.damaged || 0;
+                    }
+                });
+
+                const totalForEff = active + damaged;
+                const efficiency = totalForEff > 0 ? ((active / totalForEff) * 100).toFixed(1) : 0;
+
+                const totalEl = document.getElementById('totalVessels');
+                const activeEl = document.getElementById('activeVessels');
+                const maintEl = document.getElementById('maintenanceVessels');
+                const damagedEl = document.getElementById('damagedVessels');
+                const effEl = document.getElementById('efficiencyPercent');
+
+                if (totalEl) totalEl.textContent = total;
+                if (activeEl) activeEl.textContent = active;
+                if (maintEl) maintEl.textContent = maintenance;
+                if (damagedEl) damagedEl.textContent = damaged;
+                if (effEl) effEl.textContent = efficiency + '%';
+            }
+
+            // ============================================================
+            // ✅ MAIN RENDER
+            // ============================================================
+            function renderEfficiency() {
+                if (!vesselStats) vesselStats = buildStatsFromVessels([]);
+
+                // Vérifier que les éléments existent
+                if (!document.getElementById('generalBody')) return;
+
+                renderStatsCards();
+                renderAllTables();
+                drawChart(currentChart);
+            }
+
+            window.renderEfficiency = renderEfficiency;
+
+            // ============================================================
+            // ✅ FILTERS
+            // ============================================================
+            window.resetEfficiencyFilters = function () {
+                document.getElementById('fRegEff').value = 'الكل';
+                document.getElementById('fCatEff').value = 'الكل';
+                document.getElementById('fStatusEff').value = 'الكل';
+                renderEfficiency();
             };
 
-            // ✅ تهيئة الأقاليم الأربعة
-            FIXED_REGIONS.forEach(r => {
-                stats.regions[r.match] = {
-                    active: 0, damaged: 0, maintenance: 0, total: 0,
-                    categories: createEmptyCategoriesMap()
-                };
-            });
+            window.refreshEfficiency = async function () {
+                const btn = document.querySelector('.btn-action.primary');
+                if (!btn) return;
+                const old = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
 
-            // ✅ تهيئة الوحدات الخمس
-            FIXED_UNITS.forEach(u => {
-                stats.units[u.match] = {
-                    active: 0, damaged: 0, maintenance: 0, total: 0,
-                    categories: createEmptyCategoriesMap()
-                };
-            });
-
-            // ✅ ملء البيانات من المراكب
-            vessels.forEach(v => {
-                const cat = normalizeCategoryName(
-                    v.cat !== undefined ? v.cat : (v.category || v.type || v.cls)
-                );
-                const status = normalizeStatusName(
-                    v.stat !== undefined ? v.stat : (v.status || v.state)
-                );
-                const reg = normText(v.reg || v.region || v.area);
-                const unit = normText(v.repairUnit || v.maintenanceUnit || v.maintenance || v.unit);
-
-                // تخطي المراكب بدون فئة معروفة
-                if (!cat) return;
-
-                // --- الجدول العام ---
-                if (!stats.general[cat]) {
-                    stats.general[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
-                }
-                const g = stats.general[cat];
-                g.total++;
-                if (status === 'صالح') g.active++;
-                else if (status === 'معطب') g.damaged++;
-                else if (status === 'صيانة') g.maintenance++;
-
-                // --- الإقليم ---
-                if (reg && stats.regions[reg]) {
-                    const r = stats.regions[reg];
-                    r.total++;
-                    if (status === 'صالح') r.active++;
-                    else if (status === 'معطب') r.damaged++;
-                    else if (status === 'صيانة') r.maintenance++;
-
-                    if (!r.categories[cat]) {
-                        r.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
+                try {
+                    const vessels = await loadVessels();
+                    if (vessels) {
+                        vesselStats = buildStatsFromVessels(vessels);
                     }
-                    const rc = r.categories[cat];
-                    rc.total++;
-                    if (status === 'صالح') rc.active++;
-                    else if (status === 'معطب') rc.damaged++;
-                    else if (status === 'صيانة') rc.maintenance++;
+                    renderEfficiency();
+                    showNotification('تم تحديث البيانات بنجاح ✅', 'success');
+                } catch (err) {
+                    showNotification('فشل التحديث: ' + err.message, 'error');
+                } finally {
+                    btn.innerHTML = old;
+                    btn.disabled = false;
+                }
+            };
+
+            // ============================================================
+            // ✅ CHART
+            // ============================================================
+            window.switchChart = function (type) {
+                currentChart = type;
+                document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+                const btn = document.querySelector(`.chart-btn[onclick="switchChart('${type}')"]`);
+                if (btn) btn.classList.add('active');
+                drawChart(type);
+            };
+
+            function drawChart(type) {
+                const canvas = document.getElementById('efficiencyChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const width = canvas.parentElement.clientWidth - 40;
+                const height = 340;
+
+                canvas.width = width * 2;
+                canvas.height = height * 2;
+                canvas.style.width = width + 'px';
+                canvas.style.height = height + 'px';
+                ctx.setTransform(2, 0, 0, 2, 0, 0);
+                ctx.clearRect(0, 0, width, height);
+
+                const data = [];
+
+                FIXED_REGIONS.forEach(r => {
+                    const d = vesselStats.regions[r.match];
+                    if (d) {
+                        const totalForEff = (d.active || 0) + (d.damaged || 0);
+                        const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
+                        data.push({ label: r.key, value: eff, color: getColor(r.key) });
+                    }
+                });
+
+                FIXED_UNITS.forEach(u => {
+                    const d = vesselStats.units[u.match];
+                    if (d) {
+                        const totalForEff = (d.active || 0) + (d.damaged || 0);
+                        const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
+                        data.push({ label: u.key, value: eff, color: getColor(u.key) });
+                    }
+                });
+
+                if (data.length === 0 || data.every(d => d.value === 0)) {
+                    ctx.fillStyle = 'rgba(148,163,184,0.4)';
+                    ctx.font = '14px Cairo, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('لا توجد بيانات فعلية', width / 2, height / 2);
+                    return;
                 }
 
-                // --- الوحدة ---
-                if (unit && stats.units[unit]) {
-                    const u = stats.units[unit];
-                    u.total++;
-                    if (status === 'صالح') u.active++;
-                    else if (status === 'معطب') u.damaged++;
-                    else if (status === 'صيانة') u.maintenance++;
+                if (type === 'pie') drawPieChart(ctx, data, width, height);
+                else if (type === 'bar') drawBarChart(ctx, data, width, height);
+                else if (type === 'line') drawLineChart(ctx, data, width, height);
+            }
 
-                    if (!u.categories[cat]) {
-                        u.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
+            function getColor(name) {
+                const colors = ['#e6b31e','#10b981','#f59e0b','#ef4444','#3b82f6','#a78bfa','#f472b6','#34d399','#fb923c','#818cf8'];
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                return colors[Math.abs(hash) % colors.length];
+            }
+
+            function drawPieChart(ctx, data, width, height) {
+                const cx = width / 2 - 100;
+                const cy = height / 2;
+                const radius = Math.min(width / 2 - 40, height / 2 - 40);
+                let startAngle = -Math.PI / 2;
+                const total = data.reduce((sum, d) => sum + d.value, 0);
+                if (total === 0) return;
+
+                data.forEach((item) => {
+                    if (item.value === 0) return;
+                    const sliceAngle = (item.value / total) * 2 * Math.PI;
+                    const endAngle = startAngle + sliceAngle;
+
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.arc(cx, cy, radius, startAngle, endAngle);
+                    ctx.closePath();
+
+                    ctx.fillStyle = item.color;
+                    ctx.shadowColor = item.color;
+                    ctx.shadowBlur = 20;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    ctx.strokeStyle = 'rgba(6,9,17,0.9)';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    const midAngle = startAngle + sliceAngle / 2;
+                    const lx = cx + Math.cos(midAngle) * radius * 0.72;
+                    const ly = cy + Math.sin(midAngle) * radius * 0.72;
+
+                    if (sliceAngle > 0.3) {
+                        ctx.fillStyle = '#fff';
+                        ctx.font = 'bold 11px Cairo, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                        ctx.shadowBlur = 4;
+                        ctx.fillText(`${item.value.toFixed(0)}%`, lx, ly);
+                        ctx.shadowBlur = 0;
                     }
-                    const uc = u.categories[cat];
-                    uc.total++;
-                    if (status === 'صالح') uc.active++;
-                    else if (status === 'معطب') uc.damaged++;
-                    else if (status === 'صيانة') uc.maintenance++;
-                }
-            });
 
-            return stats;
-        }
+                    startAngle = endAngle;
+                });
 
-        // ============================================================
-        // ✅ تحميل المراكب من API
-        // ============================================================
-        async function loadVessels() {
-            const token = localStorage.getItem('marine_token')
-                || localStorage.getItem('token')
-                || localStorage.getItem('authToken');
+                let legendY = 40;
+                const legendX = width - 160;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
 
-            const headers = { 'Accept': 'application/json' };
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-
-            const res = await fetch('/api/vessels', {
-                headers: headers,
-                credentials: 'include',
-                cache: 'no-store'
-            });
-
-            if (!res.ok) throw new Error('فشل تحميل البيانات (' + res.status + ')');
-
-            const text = await res.text();
-            let payload = null;
-            try { payload = text ? JSON.parse(text) : null; } catch (e) {}
-
-            let vessels = [];
-            if (Array.isArray(payload)) vessels = payload;
-            else if (payload && Array.isArray(payload.vessels)) vessels = payload.vessels;
-            else if (payload && Array.isArray(payload.data)) vessels = payload.data;
-            else if (payload && Array.isArray(payload.items)) vessels = payload.items;
-
-            try { window.allVessels = vessels; window.vesselsData = vessels; } catch (e) {}
-
-            return vessels;
-        }
-
-        // ============================================================
-        // ✅ Helper: معلومات الحالة من النسبة
-        // ============================================================
-        function getStatusInfo(eff) {
-            if (eff >= 80) return { cls: 'excellent', text: 'ممتازة', row: 'row-high', prog: 'high' };
-            if (eff >= 70) return { cls: 'good',      text: 'جيدة',   row: 'row-high', prog: 'high' };
-            if (eff >= 50) return { cls: 'medium',    text: 'متوسطة', row: 'row-mid',  prog: 'mid'  };
-            if (eff >= 30) return { cls: 'low',       text: 'منخفضة', row: 'row-low',  prog: 'low'  };
-            return              { cls: 'critical',  text: 'حرجة',   row: 'row-low',  prog: 'low'  };
-        }
-
-        // ============================================================
-        // ✅ ✅ ✅ بناء صفوف الفئات الخمس دائمًا مع النسب المئوية
-        // ============================================================
-        function buildCategoryRows(categoriesMap) {
-            const categoryFilter = document.getElementById('fCatEff').value;
-            const statusFilter = document.getElementById('fStatusEff').value;
-
-            // ✅ نبدأ بالفئات الخمس الإلزامية — دائمًا موجودة
-            let rows = FIXED_CATEGORIES.map(cat => {
-                const c = (categoriesMap && categoriesMap[cat]) || { active: 0, damaged: 0, maintenance: 0, total: 0 };
-                const totalForEff = (c.active || 0) + (c.damaged || 0); // الجاهزية = صالح / (صالح + معطب)
-                const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
-                return {
-                    category: cat,
-                    active: c.active || 0,
-                    damaged: c.damaged || 0,
-                    maintenance: c.maintenance || 0,
-                    total: c.total || 0,
-                    efficiency: eff
-                };
-            });
-
-            // ✅ نضيف أي فئة إضافية (احتياط)
-            if (categoriesMap) {
-                Object.keys(categoriesMap).forEach(cat => {
-                    if (FIXED_CATEGORIES.indexOf(cat) === -1) {
-                        const c = categoriesMap[cat];
-                        const totalForEff = (c.active || 0) + (c.damaged || 0);
-                        const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
-                        rows.push({
-                            category: cat,
-                            active: c.active || 0,
-                            damaged: c.damaged || 0,
-                            maintenance: c.maintenance || 0,
-                            total: c.total || 0,
-                            efficiency: eff
-                        });
-                    }
+                data.forEach((item, i) => {
+                    const y = legendY + i * 26;
+                    ctx.fillStyle = item.color;
+                    ctx.shadowColor = item.color;
+                    ctx.shadowBlur = 8;
+                    ctx.fillRect(legendX, y, 14, 14);
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = 'rgba(203,213,225,0.9)';
+                    ctx.font = '11px Cairo, sans-serif';
+                    ctx.fillText(item.label, legendX + 22, y + 1);
                 });
             }
 
-            // ✅ فلترة الفئة
-            if (categoryFilter !== 'الكل') {
-                rows = rows.filter(r => r.category === categoryFilter);
-            }
+            function drawBarChart(ctx, data, width, height) {
+                const padding = { top: 30, bottom: 80, left: 50, right: 30 };
+                const chartWidth = width - padding.left - padding.right;
+                const chartHeight = height - padding.top - padding.bottom;
+                const maxVal = Math.max(...data.map(d => d.value), 100);
+                const barWidth = Math.min(chartWidth / data.length * 0.6, 44);
+                const gap = chartWidth / data.length;
 
-            // ✅ فلترة الحالة
-            if (statusFilter !== 'الكل') {
-                rows = rows.filter(r => {
-                    if (statusFilter === 'صالح') return r.active > 0;
-                    if (statusFilter === 'صيانة') return r.maintenance > 0;
-                    if (statusFilter === 'معطب') return r.damaged > 0;
-                    return true;
+                for (let i = 0; i <= 4; i++) {
+                    const y = padding.top + chartHeight - (i / 4) * chartHeight;
+                    ctx.strokeStyle = 'rgba(148,163,184,0.08)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(padding.left, y);
+                    ctx.lineTo(width - padding.right, y);
+                    ctx.stroke();
+
+                    ctx.fillStyle = 'rgba(148,163,184,0.4)';
+                    ctx.font = '10px Cairo, sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 8, y);
+                }
+
+                data.forEach((item, i) => {
+                    const x = padding.left + i * gap + (gap - barWidth) / 2;
+                    const barHeight = (item.value / maxVal) * chartHeight;
+                    const y = padding.top + chartHeight - barHeight;
+
+                    const gradient = ctx.createLinearGradient(x, y, x, padding.top + chartHeight);
+                    gradient.addColorStop(0, item.color);
+                    gradient.addColorStop(1, item.color + '22');
+
+                    ctx.fillStyle = gradient;
+                    ctx.shadowColor = item.color;
+                    ctx.shadowBlur = 15;
+                    ctx.fillRect(x, y, barWidth, barHeight);
+                    ctx.shadowBlur = 0;
+
+                    ctx.fillStyle = 'rgba(241,245,249,0.9)';
+                    ctx.font = 'bold 11px Cairo, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(`${item.value.toFixed(0)}%`, x + barWidth / 2, y - 6);
+
+                    ctx.fillStyle = 'rgba(148,163,184,0.7)';
+                    ctx.font = '10px Cairo, sans-serif';
+                    ctx.textBaseline = 'top';
+                    ctx.save();
+                    ctx.translate(x + barWidth / 2, padding.top + chartHeight + 8);
+                    ctx.rotate(-Math.PI / 5);
+                    ctx.fillText(item.label, 0, 0);
+                    ctx.restore();
                 });
             }
 
-            // ✅ إذا فارغة
-            if (rows.length === 0) {
-                return `
-                    <tr>
-                        <td colspan="6" class="empty-state" style="padding:20px;">
-                            <h3 style="font-size:0.85rem;">لا توجد فئات مطابقة</h3>
-                        </td>
-                    </tr>
-                `;
-            }
+            function drawLineChart(ctx, data, width, height) {
+                const padding = { top: 30, bottom: 80, left: 50, right: 30 };
+                const chartWidth = width - padding.left - padding.right;
+                const chartHeight = height - padding.top - padding.bottom;
+                const maxVal = Math.max(...data.map(d => d.value), 100);
 
-            // ✅ الرسم
-            return rows.map(item => {
-                const info = getStatusInfo(item.efficiency);
-                const percentText = item.efficiency.toFixed(1) + '%';
-                return `
-                    <tr class="${info.row}">
-                        <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
-                        <td>${item.active}</td>
-                        <td>${item.damaged}</td>
-                        <td class="eff-cell">${percentText}</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill ${info.prog}" style="width:${Math.min(item.efficiency, 100)}%;"></div>
-                            </div>
-                        </td>
-                        <td><span class="status-badge ${info.cls}">${info.text}</span></td>
-                    </tr>
-                `;
-            }).join('');
-        }
+                const points = data.map((d, i) => ({
+                    x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
+                    y: padding.top + chartHeight - (d.value / maxVal) * chartHeight,
+                    value: d.value,
+                    label: d.label,
+                    color: d.color
+                }));
 
-        // ============================================================
-        // ✅ رسم الجدول العام
-        // ============================================================
-        function renderGeneralTable() {
-            const tbody = document.getElementById('generalBody');
-            tbody.innerHTML = buildCategoryRows(vesselStats.general);
+                for (let i = 0; i <= 4; i++) {
+                    const y = padding.top + chartHeight - (i / 4) * chartHeight;
+                    ctx.strokeStyle = 'rgba(148,163,184,0.08)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(padding.left, y);
+                    ctx.lineTo(width - padding.right, y);
+                    ctx.stroke();
 
-            // Badge عام
-            const badge = document.getElementById('generalBadge');
-            let totalActive = 0, totalDamaged = 0;
-            FIXED_CATEGORIES.forEach(cat => {
-                const c = vesselStats.general[cat];
-                if (c) {
-                    totalActive += c.active || 0;
-                    totalDamaged += c.damaged || 0;
+                    ctx.fillStyle = 'rgba(148,163,184,0.4)';
+                    ctx.font = '10px Cairo, sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 8, y);
                 }
-            });
-            const sum = totalActive + totalDamaged;
-            const avg = sum > 0 ? (totalActive / sum) * 100 : 0;
 
-            if (avg >= 80) { badge.textContent = '✅ أداء ممتاز'; badge.className = 'badge success'; }
-            else if (avg >= 70) { badge.textContent = '📈 أداء جيد'; badge.className = 'badge gold'; }
-            else if (avg >= 50) { badge.textContent = '⚠️ أداء متوسط'; badge.className = 'badge warning'; }
-            else { badge.textContent = '🚨 أداء منخفض'; badge.className = 'badge danger'; }
-        }
-
-        // ============================================================
-        // ✅ رسم جدول إقليم / وحدة
-        // ============================================================
-        function renderRegionTable(prefix, key, data) {
-            const tbodyId = 'body-' + prefix + '-' + key;
-            const badgeId = 'badge-' + prefix + '-' + key;
-            const tbody = document.getElementById(tbodyId);
-            const badgeEl = document.getElementById(badgeId);
-
-            if (!tbody) return;
-
-            // ✅ الفئات الخمس دائمًا
-            tbody.innerHTML = buildCategoryRows(data.categories || {});
-
-            // Badge
-            if (badgeEl) {
-                const totalForEff = (data.active || 0) + (data.damaged || 0);
-                const eff = totalForEff > 0 ? ((data.active || 0) / totalForEff) * 100 : 0;
-                const info = getStatusInfo(eff);
-                badgeEl.textContent = eff.toFixed(0) + '% جاهزية';
-                badgeEl.className = 'badge ' + (
-                    info.cls === 'excellent' || info.cls === 'good' ? 'success' :
-                    info.cls === 'medium' ? 'warning' : 'danger'
-                );
-            }
-        }
-
-        // ============================================================
-        // ✅ رسم كل الجداول
-        // ============================================================
-        function renderAllTables() {
-            // 1. الجدول العام
-            renderGeneralTable();
-
-            // 2-5. الأقاليم الأربعة
-            FIXED_REGIONS.forEach(r => {
-                const data = vesselStats.regions[r.match] || {
-                    active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
-                };
-                renderRegionTable('region', r.key, data);
-            });
-
-            // 6-10. الوحدات الخمس
-            FIXED_UNITS.forEach(u => {
-                const data = vesselStats.units[u.match] || {
-                    active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
-                };
-                renderRegionTable('unit', u.key, data);
-            });
-        }
-
-        // ============================================================
-        // ✅ إحصائيات البطاقات العلوية
-        // ============================================================
-        function renderStatsCards() {
-            let total = 0, active = 0, maintenance = 0, damaged = 0;
-
-            // ✅ نحسب من الجدول العام (لأنه يمثل كل المراكب)
-            FIXED_CATEGORIES.forEach(cat => {
-                const c = vesselStats.general[cat];
-                if (c) {
-                    total += c.total || 0;
-                    active += c.active || 0;
-                    maintenance += c.maintenance || 0;
-                    damaged += c.damaged || 0;
-                }
-            });
-
-            // إذا فئات إضافية موجودة، نجمعها أيضًا
-            Object.keys(vesselStats.general).forEach(cat => {
-                if (FIXED_CATEGORIES.indexOf(cat) === -1) {
-                    const c = vesselStats.general[cat];
-                    total += c.total || 0;
-                    active += c.active || 0;
-                    maintenance += c.maintenance || 0;
-                    damaged += c.damaged || 0;
-                }
-            });
-
-            const totalForEff = active + damaged;
-            const efficiency = totalForEff > 0 ? ((active / totalForEff) * 100).toFixed(1) : 0;
-
-            document.getElementById('totalVessels').textContent = total;
-            document.getElementById('activeVessels').textContent = active;
-            document.getElementById('maintenanceVessels').textContent = maintenance;
-            document.getElementById('damagedVessels').textContent = damaged;
-            document.getElementById('efficiencyPercent').textContent = efficiency + '%';
-        }
-
-        // ============================================================
-        // ✅ الرسم البياني
-        // ============================================================
-        function drawChart(type) {
-            const canvas = document.getElementById('efficiencyChart');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const width = canvas.parentElement.clientWidth - 32;
-            const height = 320;
-
-            canvas.width = width * 2;
-            canvas.height = height * 2;
-            canvas.style.width = width + 'px';
-            canvas.style.height = height + 'px';
-            ctx.setTransform(2, 0, 0, 2, 0, 0);
-            ctx.clearRect(0, 0, width, height);
-
-            const data = [];
-
-            FIXED_REGIONS.forEach(r => {
-                const d = vesselStats.regions[r.match];
-                if (d) {
-                    const totalForEff = (d.active || 0) + (d.damaged || 0);
-                    const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
-                    data.push({ label: r.key, value: eff, color: getColor(r.key) });
-                }
-            });
-
-            FIXED_UNITS.forEach(u => {
-                const d = vesselStats.units[u.match];
-                if (d) {
-                    const totalForEff = (d.active || 0) + (d.damaged || 0);
-                    const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
-                    data.push({ label: u.key, value: eff, color: getColor(u.key) });
-                }
-            });
-
-            if (data.length === 0 || data.every(d => d.value === 0)) {
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.font = '14px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('لا توجد بيانات فعلية', width / 2, height / 2);
-                return;
-            }
-
-            if (type === 'pie') drawPieChart(ctx, data, width, height);
-            else if (type === 'bar') drawBarChart(ctx, data, width, height);
-            else if (type === 'line') drawLineChart(ctx, data, width, height);
-        }
-
-        function getColor(name) {
-            const colors = ['#e6b31e','#4ade80','#fbbf24','#f87171','#60a5fa','#a78bfa','#f472b6','#34d399','#fb923c','#818cf8'];
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            return colors[Math.abs(hash) % colors.length];
-        }
-
-        function drawPieChart(ctx, data, width, height) {
-            const cx = width / 2 - 80;
-            const cy = height / 2;
-            const radius = Math.min(width / 2, height) / 2 - 40;
-
-            let startAngle = -Math.PI / 2;
-            const total = data.reduce((sum, d) => sum + d.value, 0);
-
-            if (total === 0) return;
-
-            data.forEach((item) => {
-                if (item.value === 0) return;
-                const sliceAngle = (item.value / total) * 2 * Math.PI;
-                const endAngle = startAngle + sliceAngle;
-
+                // Fill area
                 ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.arc(cx, cy, radius, startAngle, endAngle);
+                points.forEach((p, i) => {
+                    if (i === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                });
+                ctx.lineTo(points[points.length - 1].x, padding.top + chartHeight);
+                ctx.lineTo(points[0].x, padding.top + chartHeight);
                 ctx.closePath();
 
-                ctx.fillStyle = item.color;
+                const areaGrad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartHeight);
+                areaGrad.addColorStop(0, 'rgba(230,179,30,0.35)');
+                areaGrad.addColorStop(1, 'rgba(230,179,30,0.02)');
+                ctx.fillStyle = areaGrad;
                 ctx.fill();
-                ctx.strokeStyle = 'rgba(10,14,26,0.8)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
 
-                const midAngle = startAngle + sliceAngle / 2;
-                const labelRadius = radius * 0.7;
-                const lx = cx + Math.cos(midAngle) * labelRadius;
-                const ly = cy + Math.sin(midAngle) * labelRadius;
-
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 10px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                if (sliceAngle > 0.3) {
-                    ctx.fillText(`${item.value.toFixed(0)}%`, lx, ly);
-                }
-
-                startAngle = endAngle;
-            });
-
-            let legendY = 20;
-            const legendX = width - 160;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-
-            data.forEach((item, i) => {
-                const y = legendY + i * 20;
-                ctx.fillStyle = item.color;
-                ctx.fillRect(legendX, y, 12, 12);
-                ctx.fillStyle = 'rgba(255,255,255,0.6)';
-                ctx.font = '10px Cairo, sans-serif';
-                ctx.fillText(item.label, legendX + 16, y + 1);
-            });
-        }
-
-        function drawBarChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 70, left: 40, right: 20 };
-            const chartWidth = width - padding.left - padding.right;
-            const chartHeight = height - padding.top - padding.bottom;
-
-            const maxVal = Math.max(...data.map(d => d.value), 100);
-            const barWidth = Math.min(chartWidth / data.length * 0.7, 40);
-            const gap = chartWidth / data.length;
-
-            for (let i = 0; i <= 4; i++) {
-                const y = padding.top + chartHeight - (i / 4) * chartHeight;
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.lineWidth = 1;
+                // Line
+                ctx.strokeStyle = '#e6b31e';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#e6b31e';
+                ctx.shadowBlur = 15;
                 ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
+                points.forEach((p, i) => {
+                    if (i === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                });
                 ctx.stroke();
+                ctx.shadowBlur = 0;
 
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.font = '9px Cairo, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 5, y);
+                // Points
+                points.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#e6b31e';
+                    ctx.shadowColor = '#e6b31e';
+                    ctx.shadowBlur = 20;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = '#060911';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    ctx.fillStyle = 'rgba(241,245,249,0.9)';
+                    ctx.font = 'bold 10px Cairo, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(`${p.value.toFixed(0)}%`, p.x, p.y - 10);
+                });
+
+                points.forEach(p => {
+                    ctx.fillStyle = 'rgba(148,163,184,0.7)';
+                    ctx.font = '10px Cairo, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.save();
+                    ctx.translate(p.x, padding.top + chartHeight + 8);
+                    ctx.rotate(-Math.PI / 5);
+                    ctx.fillText(p.label, 0, 0);
+                    ctx.restore();
+                });
             }
 
-            data.forEach((item, i) => {
-                const x = padding.left + i * gap + (gap - barWidth) / 2;
-                const barHeight = (item.value / maxVal) * chartHeight;
-                const y = padding.top + chartHeight - barHeight;
+            // ============================================================
+            // ✅ NOTIFICATION
+            // ============================================================
+            function showNotification(message, type) {
+                const old = document.querySelector('.eff-notification');
+                if (old) old.remove();
 
-                const gradient = ctx.createLinearGradient(x, y, x, padding.top + chartHeight);
-                gradient.addColorStop(0, item.color);
-                gradient.addColorStop(1, item.color + '33');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(x, y, barWidth, barHeight);
+                const notif = document.createElement('div');
+                notif.className = 'eff-notification';
+                notif.style.cssText = `
+                    position: fixed;
+                    bottom: 24px; right: 24px;
+                    background: ${type === 'success'
+                        ? 'linear-gradient(135deg, rgba(16,185,129,0.95), rgba(5,150,105,0.9))'
+                        : 'linear-gradient(135deg, rgba(239,68,68,0.95), rgba(185,28,28,0.9))'};
+                    backdrop-filter: blur(20px);
+                    border: 1px solid ${type === 'success' ? 'rgba(110,231,183,0.5)' : 'rgba(252,165,165,0.5)'};
+                    padding: 14px 24px;
+                    border-radius: 14px;
+                    color: #fff;
+                    font-family: Cairo, sans-serif;
+                    font-size: 14px;
+                    font-weight: 700;
+                    z-index: 9999;
+                    box-shadow:
+                        0 20px 60px rgba(0,0,0,0.5),
+                        0 0 40px ${type === 'success' ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'};
+                    animation: slideUp 0.4s cubic-bezier(0.4,0,0.2,1);
+                `;
+                notif.textContent = message;
+                document.body.appendChild(notif);
 
-                ctx.strokeStyle = item.color;
-                ctx.lineWidth = 1;
-                ctx.strokeRect(x, y, barWidth, barHeight);
-
-                ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.font = 'bold 9px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(`${item.value.toFixed(0)}%`, x + barWidth / 2, y - 3);
-
-                ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.font = '8px Cairo, sans-serif';
-                ctx.textBaseline = 'top';
-                ctx.save();
-                ctx.translate(x + barWidth / 2, padding.top + chartHeight + 5);
-                ctx.rotate(-Math.PI / 5);
-                ctx.fillText(item.label, 0, 0);
-                ctx.restore();
-            });
-        }
-
-        function drawLineChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 70, left: 40, right: 20 };
-            const chartWidth = width - padding.left - padding.right;
-            const chartHeight = height - padding.top - padding.bottom;
-
-            const maxVal = Math.max(...data.map(d => d.value), 100);
-            const points = data.map((d, i) => ({
-                x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
-                y: padding.top + chartHeight - (d.value / maxVal) * chartHeight,
-                value: d.value,
-                label: d.label
-            }));
-
-            for (let i = 0; i <= 4; i++) {
-                const y = padding.top + chartHeight - (i / 4) * chartHeight;
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.font = '9px Cairo, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 5, y);
+                setTimeout(() => {
+                    notif.style.opacity = '0';
+                    notif.style.transform = 'translateY(20px)';
+                    notif.style.transition = 'all 0.4s ease-out';
+                    setTimeout(() => notif.remove(), 400);
+                }, 3000);
             }
 
-            ctx.strokeStyle = '#e6b31e';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            points.forEach((p, i) => {
-                if (i === 0) ctx.moveTo(p.x, p.y);
-                else ctx.lineTo(p.x, p.y);
-            });
-            ctx.stroke();
-
-            points.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
-                ctx.fillStyle = '#e6b31e';
-                ctx.fill();
-                ctx.strokeStyle = '#0a0e1a';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.font = 'bold 9px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(`${p.value.toFixed(0)}%`, p.x, p.y - 6);
-            });
-
-            points.forEach(p => {
-                ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.font = '8px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                ctx.save();
-                ctx.translate(p.x, padding.top + chartHeight + 5);
-                ctx.rotate(-Math.PI / 5);
-                ctx.fillText(p.label, 0, 0);
-                ctx.restore();
-            });
-        }
-
-        // ============================================================
-        // ✅ التحديث والفلترة
-        // ============================================================
-        function renderEfficiency() {
-            if (!vesselStats) vesselStats = buildStatsFromVessels([]);
-            renderStatsCards();
-            renderAllTables();
-            drawChart(currentChart);
-        }
-
-        function resetEfficiencyFilters() {
-            document.getElementById('fRegEff').value = 'الكل';
-            document.getElementById('fCatEff').value = 'الكل';
-            document.getElementById('fStatusEff').value = 'الكل';
-            renderEfficiency();
-        }
-
-        async function refreshEfficiency() {
-            const btn = document.querySelector('.btn-action.primary');
-            const old = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            btn.disabled = true;
-            try {
-                const vessels = await loadVessels();
-                vesselStats = buildStatsFromVessels(vessels);
-                renderEfficiency();
-                showNotification('تم تحديث البيانات بنجاح ✅', 'success');
-            } catch (err) {
-                showNotification('فشل التحديث: ' + err.message, 'error');
-            } finally {
-                btn.innerHTML = old;
-                btn.disabled = false;
+            // ============================================================
+            // ✅ LOGO
+            // ============================================================
+            function applyLogo() {
+                try {
+                    const cachedLogo = localStorage.getItem('marine_logo');
+                    if (!cachedLogo) return;
+                    const iconDiv = document.getElementById('effHeaderIcon');
+                    const img = document.getElementById('globalLogo');
+                    if (img) { img.src = cachedLogo; img.style.display = 'block'; }
+                    if (iconDiv) iconDiv.classList.add('has-logo');
+                } catch (e) {}
             }
-        }
 
-        function switchChart(type) {
-            currentChart = type;
-            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
-            const btn = document.querySelector(`.chart-btn[onclick="switchChart('${type}')"]`);
-            if (btn) btn.classList.add('active');
-            drawChart(type);
-        }
+            function syncLogoFromServer() {
+                const token = localStorage.getItem('marine_token')
+                    || localStorage.getItem('token')
+                    || localStorage.getItem('authToken') || null;
+                const headers = { 'Accept': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
 
-        // ============================================================
-        // ✅ NOTIFICATION
-        // ============================================================
-        function showNotification(message, type) {
-            const old = document.querySelector('.eff-notification');
-            if (old) old.remove();
+                fetch('/api/logo', { headers: headers, credentials: 'include' })
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (data && data.success && data.logo && data.logo.dataUrl) {
+                            try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                            applyLogo();
+                        }
+                    }).catch(() => {});
+            }
 
-            const notif = document.createElement('div');
-            notif.className = 'eff-notification';
-            notif.style.cssText = `
-                position: fixed; bottom: 24px; right: 24px;
-                background: ${type === 'success' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'};
-                backdrop-filter: blur(12px);
-                border: 1px solid ${type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'};
-                padding: 12px 20px; border-radius: 12px; color: #fff;
-                font-family: Cairo, sans-serif; font-size: 14px; z-index: 9999;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            `;
-            notif.textContent = message;
-            document.body.appendChild(notif);
-
-            setTimeout(() => {
-                notif.style.opacity = '0';
-                notif.style.transform = 'translateY(20px)';
-                notif.style.transition = 'all 0.4s ease-out';
-                setTimeout(() => notif.remove(), 400);
-            }, 3000);
-        }
-
-        // ============================================================
-        // ✅ LOGO
-        // ============================================================
-        function applyLogo() {
-            try {
-                var cachedLogo = localStorage.getItem('marine_logo');
-                if (!cachedLogo) return;
-                var iconDiv = document.getElementById('effHeaderIcon');
-                var img = document.getElementById('globalLogo');
-                if (img) { img.src = cachedLogo; img.style.display = 'block'; }
-                if (iconDiv) iconDiv.classList.add('has-logo');
-            } catch (e) {}
-        }
-
-        function syncLogoFromServer() {
-            var token = localStorage.getItem('marine_token')
-                || localStorage.getItem('token')
-                || localStorage.getItem('authToken') || null;
-            var headers = { 'Accept': 'application/json' };
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-
-            fetch('/api/logo', { headers: headers, credentials: 'include' })
-                .then(function(r) { return r.ok ? r.json() : null; })
-                .then(function(data) {
-                    if (data && data.success && data.logo && data.logo.dataUrl) {
-                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
-                        applyLogo();
-                    }
-                }).catch(function() {});
-        }
-
-        applyLogo();
-        syncLogoFromServer();
-
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'marine_logo' && e.newValue) applyLogo();
-        });
-
-        // ============================================================
-        // ✅ PRINT DATE
-        // ============================================================
-        (function() {
+            // ============================================================
+            // ✅ PRINT DATE
+            // ============================================================
             function updatePrintDate() {
                 try {
-                    var now = new Date();
-                    var fullDate = now.toLocaleDateString('ar-TN', {
+                    const now = new Date();
+                    const fullDate = now.toLocaleDateString('ar-TN', {
                         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                     }) + ' - ' + now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-                    var header = document.querySelector('.eff-header');
+                    const header = document.querySelector('.eff-header');
                     if (header) header.setAttribute('data-print-date', fullDate);
                 } catch (e) {}
             }
-            updatePrintDate();
-            window.addEventListener('beforeprint', updatePrintDate);
-        })();
 
-        // ============================================================
-        // ✅ INIT
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', async function () {
-            // ✅ رسم أولي بالقيم الصفرية — الفئات الخمس ستظهر
-            vesselStats = buildStatsFromVessels([]);
-            renderEfficiency();
+            // ============================================================
+            // ✅ INIT — CRITICAL FIX
+            // ============================================================
+            async function initEfficiencyPage() {
+                if (initialized) return true;
 
-            // ✅ تحميل البيانات الحقيقية
-            try {
-                const vessels = await loadVessels();
-                vesselStats = buildStatsFromVessels(vessels);
+                // ✅ التحقق من وجود العناصر
+                const generalBody = document.getElementById('generalBody');
+                if (!generalBody) return false;
+
+                initialized = true;
+
+                console.log('🎨 Efficiency: Initializing...');
+
+                applyLogo();
+                syncLogoFromServer();
+                updatePrintDate();
+
+                // ✅ 1) رسم أولي بالقيم الصفرية — الفئات الخمس ستظهر فورًا
+                vesselStats = buildStatsFromVessels([]);
                 renderEfficiency();
-            } catch (err) {
-                console.warn('تعذر تحميل البيانات:', err);
-                showNotification('تعذر تحميل البيانات: ' + err.message, 'error');
+
+                // ✅ 2) تحميل البيانات الحقيقية
+                try {
+                    const vessels = await loadVessels();
+                    if (vessels) {
+                        vesselStats = buildStatsFromVessels(vessels);
+                        renderEfficiency();
+                        console.log('✅ Efficiency: Data loaded —', vessels.length, 'vessels');
+                    }
+                } catch (err) {
+                    console.warn('⚠️ Efficiency: Data load failed —', err.message);
+                    showNotification('تعذر تحميل البيانات: ' + err.message, 'error');
+                }
+
+                // ✅ 3) رسم بياني بعد التهيئة
+                setTimeout(() => drawChart('pie'), 150);
+
+                return true;
             }
 
-            setTimeout(() => drawChart('pie'), 200);
-        });
+            // ============================================================
+            // ✅ AUTO-START (متعدد المحاولات لـ SPA)
+            // ============================================================
+            function tryInit() {
+                if (initialized) return;
+                initEfficiencyPage().then(started => {
+                    if (started) {
+                        // ✅ إضافة مستمعي الأحداث
+                        window.addEventListener('beforeprint', updatePrintDate);
+                        window.addEventListener('storage', e => {
+                            if (e.key === 'marine_logo' && e.newValue) applyLogo();
+                        });
 
-        // ============================================================
-        // ✅ RESIZE
-        // ============================================================
-        let resizeTimer = null;
-        window.addEventListener('resize', function () {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => drawChart(currentChart), 150);
-        });
+                        let resizeTimer = null;
+                        window.addEventListener('resize', () => {
+                            clearTimeout(resizeTimer);
+                            resizeTimer = setTimeout(() => drawChart(currentChart), 150);
+                        });
 
-        console.log('📊 Efficiency Page loaded — 10 tables with FIXED 5 categories');
+                        console.log('🎨 Efficiency: Ready');
+                    }
+                });
+            }
+
+            // ✅ محاولة فورية
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', tryInit, { once: true });
+            } else {
+                tryInit();
+            }
+
+            // ✅ محاولات متكررة (SPA — الصفحة قد تُدرج لاحقًا)
+            const retry = setInterval(() => {
+                if (initialized) {
+                    clearInterval(retry);
+                    return;
+                }
+                tryInit();
+            }, 300);
+
+            // ✅ إيقاف المحاولات بعد 10 ثواني
+            setTimeout(() => clearInterval(retry), 10000);
+
+            // ✅ MutationObserver — يكتشف إدراج الصفحة في DOM
+            if (typeof MutationObserver !== 'undefined') {
+                const observer = new MutationObserver(() => {
+                    if (initialized) {
+                        observer.disconnect();
+                        return;
+                    }
+                    tryInit();
+                });
+                observer.observe(document.body || document.documentElement, {
+                    childList: true,
+                    subtree: true
+                });
+                setTimeout(() => observer.disconnect(), 10000);
+            }
+
+            // ✅ Expose globally
+            window.initEfficiencyPage = initEfficiencyPage;
+
+        })();
     </script>
 </div>
