@@ -2,16 +2,13 @@
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           🎨 EFFICIENCY PAGE — ULTRA PRO v10.3
-           (No Sticky Overlap + Vivid Colors + Pro Print)
+           🎨 EFFICIENCY PAGE — ULTRA PRO v11.0
+           (Working Region Filter + Vivid Colors + Pro Print)
            ============================================================ */
 
         #page-efficiency {
             --c-bg-1: #060911;
-            --c-bg-2: #0a1020;
-            --c-bg-3: #0e1628;
             --c-surface-1: rgba(18, 26, 44, 0.75);
-            --c-surface-2: rgba(24, 34, 56, 0.65);
             --c-border-soft: rgba(148, 163, 184, 0.08);
             --c-border-mid: rgba(148, 163, 184, 0.15);
             --c-border-strong: rgba(148, 163, 184, 0.25);
@@ -23,22 +20,15 @@
 
             --c-emerald-1: #6ee7b7;
             --c-emerald-2: #10b981;
-            --c-emerald-3: #047857;
             --c-emerald-glow: rgba(16, 185, 129, 0.35);
 
             --c-amber-1: #fcd34d;
             --c-amber-2: #f59e0b;
-            --c-amber-3: #b45309;
             --c-amber-glow: rgba(245, 158, 11, 0.35);
 
             --c-red-1: #fca5a5;
             --c-red-2: #ef4444;
-            --c-red-3: #b91c1c;
             --c-red-glow: rgba(239, 68, 68, 0.35);
-
-            --c-blue-1: #93c5fd;
-            --c-blue-2: #3b82f6;
-            --c-blue-3: #1d4ed8;
 
             --c-text-1: #f1f5f9;
             --c-text-2: #cbd5e1;
@@ -47,16 +37,11 @@
 
             --radius-sm: 10px;
             --radius: 16px;
-            --radius-lg: 20px;
             --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             --font: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
-        body {
-            background: #060911;
-            margin: 0;
-            padding: 0;
-        }
+        body { background: #060911; margin: 0; padding: 0; }
 
         #page-efficiency {
             width: 100%; max-width: 100%;
@@ -107,7 +92,7 @@
         }
 
         /* ============================================================
-           HEADER — NO STICKY (fixed overlap)
+           HEADER
            ============================================================ */
         .eff-header {
             display: flex;
@@ -139,10 +124,7 @@
             min-width: 0;
         }
 
-        .eff-header-left .header-text {
-            min-width: 0;
-            overflow: hidden;
-        }
+        .eff-header-left .header-text { min-width: 0; overflow: hidden; }
 
         .eff-header-left .header-icon {
             width: 50px; height: 50px;
@@ -199,7 +181,6 @@
             color: var(--c-text-3);
             margin: 0;
             font-weight: 500;
-            letter-spacing: 0.3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -227,7 +208,6 @@
             font-family: var(--font);
             position: relative;
             overflow: hidden;
-            letter-spacing: 0.3px;
             white-space: nowrap;
             flex-shrink: 0;
             line-height: 1;
@@ -242,33 +222,22 @@
         .eff-header-actions .btn-action.primary {
             background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
             color: #060911;
-            box-shadow:
-                0 8px 24px var(--c-gold-glow),
-                0 0 0 1px rgba(255,255,255,0.1) inset,
-                0 1px 0 rgba(255,255,255,0.3) inset;
+            box-shadow: 0 8px 24px var(--c-gold-glow);
         }
         .eff-header-actions .btn-action.primary:hover {
             transform: translateY(-2px) scale(1.02);
-            box-shadow:
-                0 12px 32px var(--c-gold-glow),
-                0 0 0 1px rgba(255,255,255,0.15) inset,
-                0 1px 0 rgba(255,255,255,0.4) inset;
+            box-shadow: 0 12px 32px var(--c-gold-glow);
         }
-        .eff-header-actions .btn-action.primary:active {
-            transform: translateY(0) scale(0.98);
-        }
+        .eff-header-actions .btn-action.primary:active { transform: translateY(0) scale(0.98); }
         .eff-header-actions .btn-action.secondary {
             background: linear-gradient(135deg,
                 rgba(148, 163, 184, 0.08) 0%,
                 rgba(148, 163, 184, 0.04) 100%);
             border: 1px solid var(--c-border-mid);
             color: var(--c-text-2);
-            backdrop-filter: blur(8px);
         }
         .eff-header-actions .btn-action.secondary:hover {
-            background: linear-gradient(135deg,
-                rgba(148, 163, 184, 0.15) 0%,
-                rgba(148, 163, 184, 0.08) 100%);
+            background: rgba(148, 163, 184, 0.15);
             color: var(--c-text-1);
             transform: translateY(-2px);
             border-color: var(--c-border-strong);
@@ -305,9 +274,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            box-shadow:
-                0 1px 0 rgba(255,255,255,0.05) inset,
-                0 8px 24px rgba(0,0,0,0.25);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.25);
         }
 
         .stat-card::before {
@@ -315,11 +282,7 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 4px;
-            background: linear-gradient(90deg,
-                transparent 0%,
-                currentColor 50%,
-                transparent 100%);
-            opacity: 1;
+            background: linear-gradient(90deg, transparent 0%, currentColor 50%, transparent 100%);
             filter: drop-shadow(0 0 8px currentColor);
         }
 
@@ -367,7 +330,6 @@
             font-size: 11px;
             color: rgba(203, 213, 225, 0.75);
             font-weight: 700;
-            letter-spacing: 0.3px;
             position: relative;
             z-index: 1;
             line-height: 1.3;
@@ -390,7 +352,6 @@
                 rgba(18, 26, 44, 0.6) 0%,
                 rgba(24, 34, 56, 0.5) 100%);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--c-border-soft);
             border-radius: var(--radius);
             margin: 0 24px 20px;
@@ -406,7 +367,6 @@
             align-items: center;
             gap: 6px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             white-space: nowrap;
         }
 
@@ -452,7 +412,6 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            letter-spacing: 0.3px;
             white-space: nowrap;
             position: relative;
             overflow: hidden;
@@ -502,18 +461,16 @@
             border-radius: var(--radius);
             margin: 0 24px 20px;
             overflow: hidden;
-            box-shadow:
-                0 1px 0 rgba(255,255,255,0.04) inset,
-                0 12px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
             transition: all var(--transition);
             page-break-inside: avoid;
         }
 
+        .eff-section[style*="display: none"] { display: none !important; }
+
         .eff-section:hover {
             border-color: var(--c-border-mid);
-            box-shadow:
-                0 1px 0 rgba(255,255,255,0.06) inset,
-                0 16px 48px rgba(0,0,0,0.4);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 16px 48px rgba(0,0,0,0.4);
         }
 
         .eff-section .section-header {
@@ -549,7 +506,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            letter-spacing: -0.2px;
         }
 
         .eff-section .section-header h3 i {
@@ -562,33 +518,29 @@
             padding: 6px 18px;
             border-radius: 20px;
             font-weight: 700;
-            letter-spacing: 0.4px;
             white-space: nowrap;
         }
 
         .badge.success {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
+            background: rgba(16, 185, 129, 0.15);
             color: var(--c-emerald-1);
             border: 1px solid rgba(16, 185, 129, 0.25);
             box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
         }
-
         .badge.warning {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08));
+            background: rgba(245, 158, 11, 0.15);
             color: var(--c-amber-1);
             border: 1px solid rgba(245, 158, 11, 0.25);
             box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
         }
-
         .badge.danger {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));
+            background: rgba(239, 68, 68, 0.15);
             color: var(--c-red-1);
             border: 1px solid rgba(239, 68, 68, 0.25);
             box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
         }
-
         .badge.gold {
-            background: linear-gradient(135deg, rgba(230, 179, 30, 0.15), rgba(230, 179, 30, 0.08));
+            background: rgba(230, 179, 30, 0.15);
             color: var(--c-gold-1);
             border: 1px solid rgba(230, 179, 30, 0.25);
             box-shadow: 0 0 20px rgba(230, 179, 30, 0.15);
@@ -626,12 +578,7 @@
             bottom: 0; left: 0; right: 0;
             height: 3px;
             background: linear-gradient(90deg,
-                transparent 0%,
-                #f7d774 20%,
-                #e6b31e 50%,
-                #f7d774 80%,
-                transparent 100%);
-            opacity: 0.9;
+                transparent 0%, #f7d774 20%, #e6b31e 50%, #f7d774 80%, transparent 100%);
             box-shadow: 0 0 20px rgba(230, 179, 30, 0.5);
         }
 
@@ -673,7 +620,6 @@
             font-weight: 800 !important;
             color: #f1f5f9 !important;
             font-size: 14px;
-            letter-spacing: -0.2px;
             text-align: right;
             padding-right: 22px;
         }
@@ -752,7 +698,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .status-badge::before {
             content: '';
             position: absolute;
@@ -760,12 +705,11 @@
             background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
             pointer-events: none;
         }
-
         .status-badge.excellent {
             background: linear-gradient(135deg, #059669, #10b981);
             color: #ffffff;
             border: 1px solid #6ee7b7;
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
         }
         .status-badge.good {
             background: linear-gradient(135deg, #047857, #059669);
@@ -777,7 +721,7 @@
             background: linear-gradient(135deg, #b45309, #f59e0b);
             color: #ffffff;
             border: 1px solid #fcd34d;
-            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
         }
         .status-badge.low {
             background: linear-gradient(135deg, #b91c1c, #ef4444);
@@ -789,13 +733,12 @@
             background: linear-gradient(135deg, #7f1d1d, #dc2626, #ef4444);
             color: #ffffff;
             border: 1px solid #fca5a5;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6);
             animation: criticalPulse 2s ease-in-out infinite;
         }
-
         @keyframes criticalPulse {
-            0%, 100% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255,255,255,0.3); }
-            50% { box-shadow: 0 4px 32px rgba(239, 68, 68, 0.9), inset 0 1px 0 rgba(255,255,255,0.3); }
+            0%, 100% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6); }
+            50% { box-shadow: 0 4px 32px rgba(239, 68, 68, 0.9); }
         }
 
         /* ============================================================
@@ -809,11 +752,8 @@
             overflow: hidden;
             min-width: 100px;
             position: relative;
-            box-shadow:
-                0 1px 0 rgba(255,255,255,0.03) inset,
-                0 2px 6px rgba(0,0,0,0.4) inset;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 2px 6px rgba(0,0,0,0.4) inset;
         }
-
         .progress-bar .progress-fill {
             height: 100%;
             border-radius: 10px;
@@ -822,7 +762,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .progress-bar .progress-fill::after {
             content: '';
             position: absolute;
@@ -830,12 +769,10 @@
             background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
             animation: progressShine 2s ease-in-out infinite;
         }
-
         @keyframes progressShine {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
         }
-
         .progress-bar .progress-fill.high {
             background: linear-gradient(90deg, #047857, #10b981, #34d399);
             box-shadow: 0 0 16px rgba(16, 185, 129, 0.7);
@@ -850,7 +787,7 @@
         }
 
         /* ============================================================
-           CHART SECTION
+           CHART
            ============================================================ */
         .chart-section {
             margin: 0 24px 28px;
@@ -861,20 +798,15 @@
                 rgba(24, 34, 56, 0.55) 0%,
                 rgba(18, 26, 44, 0.75) 100%);
             backdrop-filter: blur(20px);
-            box-shadow:
-                0 1px 0 rgba(255,255,255,0.04) inset,
-                0 12px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
         }
-
         .chart-switch {
             display: flex;
             gap: 10px;
             padding: 16px 24px;
             border-bottom: 1px solid var(--c-border-soft);
             flex-wrap: wrap;
-            background: rgba(255,255,255,0.01);
         }
-
         .chart-btn {
             padding: 8px 20px;
             border: 1px solid var(--c-border-mid);
@@ -888,34 +820,26 @@
             font-size: 12px;
             font-weight: 700;
             transition: all var(--transition);
-            letter-spacing: 0.3px;
         }
-
         .chart-btn:hover {
-            background: linear-gradient(135deg,
-                rgba(148, 163, 184, 0.12),
-                rgba(148, 163, 184, 0.04));
+            background: rgba(148, 163, 184, 0.12);
             color: var(--c-text-1);
             border-color: var(--c-border-strong);
             transform: translateY(-1px);
         }
-
         .chart-btn.active {
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             border-color: var(--c-gold-2);
             color: #060911;
             box-shadow: 0 6px 20px var(--c-gold-glow);
         }
-
         .chart-btn i { margin-left: 6px; }
-
         .charts-container {
             display: grid;
             grid-template-columns: 1fr;
             gap: 20px;
             padding: 24px;
         }
-
         .chart-box {
             background: linear-gradient(135deg,
                 rgba(10, 16, 32, 0.6) 0%,
@@ -924,16 +848,13 @@
             padding: 20px;
             border: 1px solid var(--c-border-soft);
         }
-
         .chart-box h4 {
             font-size: 14px;
             font-weight: 800;
             color: var(--c-text-2);
             margin-bottom: 16px;
             text-align: center;
-            letter-spacing: 0.3px;
         }
-
         .chart-box canvas {
             width: 100% !important;
             max-height: 320px;
@@ -947,10 +868,8 @@
             padding: 48px 24px;
             color: var(--c-text-4);
         }
-
         .empty-state .spinner {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             border: 3px solid rgba(148, 163, 184, 0.1);
             border-top-color: var(--c-gold-2);
             border-radius: 50%;
@@ -958,37 +877,23 @@
             margin: 0 auto 16px;
             box-shadow: 0 0 20px var(--c-gold-glow);
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
-
         .empty-state h3 {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--c-text-3);
-            margin-bottom: 4px;
+            font-size: 14px; font-weight: 700;
+            color: var(--c-text-3); margin-bottom: 4px;
         }
-
-        .empty-state p {
-            font-size: 12px;
-            color: var(--c-text-4);
-        }
+        .empty-state p { font-size: 12px; color: var(--c-text-4); }
 
         /* ============================================================
            RESPONSIVE
            ============================================================ */
         @media (max-width: 1100px) {
-            .stats-grid {
-                grid-template-columns: repeat(5, minmax(0, 1fr));
-                gap: 12px;
-                padding: 0 20px 18px;
-            }
+            .stats-grid { gap: 12px; padding: 0 20px 18px; }
             .stat-card { padding: 18px 12px 16px; }
             .stat-card .number { font-size: 26px; }
             .stat-card .label { font-size: 10.5px; }
-            .eff-header,
-            .filter-bar { margin-left: 20px; margin-right: 20px; }
-            .eff-section { margin-left: 20px; margin-right: 20px; }
-            .chart-section { margin-left: 20px; margin-right: 20px; }
+            .eff-header, .filter-bar { margin-left: 20px; margin-right: 20px; }
+            .eff-section, .chart-section { margin-left: 20px; margin-right: 20px; }
         }
 
         @media (max-width: 1024px) {
@@ -997,7 +902,6 @@
                 align-items: stretch;
                 padding: 16px 20px;
             }
-            .eff-header-left { flex: 1 1 auto; }
             .eff-header-actions {
                 width: 100%;
                 justify-content: flex-start;
@@ -1005,10 +909,7 @@
         }
 
         @media (max-width: 900px) {
-            .stats-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 12px;
-            }
+            .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .stat-card .number { font-size: 24px; }
         }
 
@@ -1021,20 +922,15 @@
             .eff-header-left h2 { font-size: 18px; }
             .eff-header-left p { font-size: 11px; }
             .eff-header-left .header-icon {
-                width: 42px;
-                height: 42px;
-                font-size: 18px;
-                border-radius: 12px;
+                width: 42px; height: 42px;
+                font-size: 18px; border-radius: 12px;
             }
             .stats-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 12px;
                 padding: 0 16px 16px;
             }
-            .stat-card {
-                padding: 16px 12px 14px;
-                min-height: 100px;
-            }
+            .stat-card { padding: 16px 12px 14px; min-height: 100px; }
             .stat-card .number { font-size: 22px; }
             .stat-card .label { font-size: 10.5px; }
             .filter-bar {
@@ -1058,10 +954,7 @@
                 padding: 0 14px 14px;
             }
             .stat-card { padding: 14px 10px 12px; }
-            .stat-card .number {
-                font-size: 20px;
-                letter-spacing: -0.5px;
-            }
+            .stat-card .number { font-size: 20px; }
             .stat-card .label {
                 font-size: 10px;
                 white-space: normal;
@@ -1070,41 +963,25 @@
         }
 
         @media (max-width: 480px) {
-            .eff-header-left .header-icon {
-                width: 38px;
-                height: 38px;
-                font-size: 16px;
-            }
+            .eff-header-left .header-icon { width: 38px; height: 38px; font-size: 16px; }
             .eff-header-left h2 { font-size: 16px; }
             .eff-header-actions { gap: 6px; }
-            .eff-header-actions .btn-action {
-                padding: 8px 14px;
-                font-size: 12px;
-            }
+            .eff-header-actions .btn-action { padding: 8px 14px; font-size: 12px; }
         }
 
         @media (max-width: 400px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 8px;
-                padding: 0 12px 12px;
-            }
+            .stats-grid { gap: 8px; padding: 0 12px 12px; }
             .stat-card { padding: 12px 8px 10px; min-height: 90px; }
             .stat-card .number { font-size: 18px; }
             .stat-card .label { font-size: 9.5px; }
         }
 
         /* ============================================================
-           🖨️ PROFESSIONAL PRINT v4.0
+           🖨️ PRINT
            ============================================================ */
         @media print {
-            @page {
-                size: A4 landscape;
-                margin: 12mm 10mm 18mm 10mm;
-            }
-            @page :first {
-                margin-top: 8mm;
-            }
+            @page { size: A4 landscape; margin: 12mm 10mm 18mm 10mm; }
+            @page :first { margin-top: 8mm; }
 
             html, body {
                 background: #ffffff !important;
@@ -1113,13 +990,9 @@
                 font-size: 9.5pt !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                color-adjust: exact !important;
             }
 
-            #page-efficiency {
-                background: #ffffff !important;
-                min-height: auto !important;
-            }
+            #page-efficiency { background: #ffffff !important; min-height: auto !important; }
             #page-efficiency::before { display: none !important; }
 
             button, .btn-action, .btn-filter, .chart-btn, .chart-switch,
@@ -1129,7 +1002,7 @@
 
             .eff-header {
                 display: flex !important;
-                background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
+                background: #0a1628 !important;
                 color: #ffffff !important;
                 padding: 8mm 10mm !important;
                 margin: 0 0 5mm !important;
@@ -1138,18 +1011,12 @@
                 page-break-inside: avoid;
                 page-break-after: avoid;
                 position: relative !important;
-                box-shadow: none !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
             }
             .eff-header-left h2 {
                 color: #f7d774 !important;
                 font-size: 20pt !important;
-                font-weight: 800 !important;
                 -webkit-text-fill-color: #f7d774 !important;
                 background: none !important;
-                margin: 0 0 3pt 0 !important;
-                text-shadow: none !important;
             }
             .eff-header-left p {
                 color: rgba(255,255,255,0.9) !important;
@@ -1157,8 +1024,7 @@
                 font-size: 10.5pt !important;
             }
             .eff-header-left .header-icon {
-                width: 14mm !important;
-                height: 14mm !important;
+                width: 14mm !important; height: 14mm !important;
                 border: 2px solid #e6b31e !important;
                 background: #0a1628 !important;
                 box-shadow: none !important;
@@ -1167,8 +1033,7 @@
             }
             .eff-header-left .header-icon img {
                 display: block !important;
-                width: 100% !important;
-                height: 100% !important;
+                width: 100% !important; height: 100% !important;
                 object-fit: contain !important;
                 border-radius: 50% !important;
             }
@@ -1196,23 +1061,16 @@
                 border: 2px solid #e6b31e !important;
                 border-radius: 6px !important;
                 padding: 4mm 2mm !important;
-                text-align: center !important;
                 box-shadow: none !important;
-                backdrop-filter: none !important;
                 page-break-inside: avoid;
-                position: relative !important;
-                overflow: visible !important;
                 min-height: auto !important;
                 display: block !important;
             }
             .stat-card::before {
                 content: '' !important;
                 position: absolute !important;
-                top: 0; left: 0; right: 0;
-                height: 3px !important;
+                top: 0; left: 0; right: 0; height: 3px !important;
                 background: #e6b31e !important;
-                display: block !important;
-                opacity: 1 !important;
                 filter: none !important;
             }
             .stat-card::after { display: none !important; }
@@ -1225,15 +1083,12 @@
 
             .stat-card .number {
                 font-size: 20pt !important;
-                font-weight: 900 !important;
-                line-height: 1 !important;
                 text-shadow: none !important;
                 margin: 2mm 0 !important;
             }
             .stat-card .label {
                 color: #374151 !important;
                 font-size: 8.5pt !important;
-                font-weight: 700 !important;
                 -webkit-text-fill-color: #374151 !important;
             }
 
@@ -1243,33 +1098,21 @@
                 border: 2px solid #0a1628 !important;
                 border-radius: 4px !important;
                 box-shadow: none !important;
-                backdrop-filter: none !important;
                 page-break-inside: avoid;
-                overflow: visible !important;
             }
             .eff-section .section-header {
                 background: #0a1628 !important;
                 border-bottom: 2px solid #e6b31e !important;
                 padding: 3mm 4mm !important;
                 page-break-after: avoid;
-                position: relative !important;
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
             }
             .eff-section .section-header::after { display: none !important; }
             .eff-section .section-header h3 {
                 color: #f7d774 !important;
                 -webkit-text-fill-color: #f7d774 !important;
                 font-size: 11.5pt !important;
-                font-weight: 800 !important;
             }
-            .eff-section .section-header h3 i {
-                color: #f7d774 !important;
-                filter: none !important;
-                display: inline !important;
-                margin-left: 4px !important;
-            }
+            .eff-section .section-header h3 i { color: #f7d774 !important; filter: none !important; }
             .eff-section .section-header .badge {
                 border: 1.5px solid #ffffff !important;
                 background: #0a1628 !important;
@@ -1277,19 +1120,14 @@
                 -webkit-text-fill-color: #f7d774 !important;
                 font-size: 8.5pt !important;
                 padding: 1mm 3mm !important;
-                box-shadow: none !important;
             }
 
-            .table-wrapper {
-                overflow: visible !important;
-                padding: 0 !important;
-            }
+            .table-wrapper { overflow: visible !important; padding: 0 !important; }
             .table-wrapper table {
                 width: 100% !important;
                 border-collapse: collapse !important;
                 font-size: 8.5pt !important;
                 min-width: 0 !important;
-                page-break-inside: auto;
             }
             thead {
                 display: table-header-group !important;
@@ -1302,26 +1140,12 @@
                 -webkit-text-fill-color: #f7d774 !important;
                 padding: 2.5mm 2mm !important;
                 font-size: 9pt !important;
-                font-weight: 800 !important;
-                text-align: center !important;
                 border: 1px solid #1a2a4a !important;
                 text-transform: none !important;
                 letter-spacing: 0 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
             }
-            thead th i {
-                display: inline !important;
-                color: #f7d774 !important;
-                filter: none !important;
-                margin-left: 3px !important;
-                font-size: 9pt !important;
-            }
-
-            tbody tr {
-                page-break-inside: avoid;
-                background: #ffffff !important;
-            }
+            thead th i { color: #f7d774 !important; filter: none !important; }
+            tbody tr { page-break-inside: avoid; background: #ffffff !important; }
             tbody tr:nth-child(even) { background: #f9fafb !important; }
             tbody td {
                 padding: 2.2mm 2mm !important;
@@ -1329,48 +1153,27 @@
                 color: #1f2937 !important;
                 -webkit-text-fill-color: #1f2937 !important;
                 font-size: 8.5pt !important;
-                text-align: center !important;
-                vertical-align: middle !important;
-                font-weight: 600 !important;
-                background: transparent !important;
             }
             tbody td:first-child {
                 text-align: right !important;
-                padding-right: 3mm !important;
                 color: #0a1628 !important;
                 -webkit-text-fill-color: #0a1628 !important;
-                font-weight: 800 !important;
             }
 
-            .row-high {
-                background: #ecfdf5 !important;
-                border-right: 4px solid #047857 !important;
-                box-shadow: none !important;
-            }
-            .row-high td:first-child,
-            .row-high .eff-cell {
+            .row-high { background: #ecfdf5 !important; border-right: 4px solid #047857 !important; }
+            .row-high td:first-child, .row-high .eff-cell {
                 color: #047857 !important;
                 -webkit-text-fill-color: #047857 !important;
                 text-shadow: none !important;
             }
-            .row-mid {
-                background: #fffbeb !important;
-                border-right: 4px solid #b45309 !important;
-                box-shadow: none !important;
-            }
-            .row-mid td:first-child,
-            .row-mid .eff-cell {
+            .row-mid { background: #fffbeb !important; border-right: 4px solid #b45309 !important; }
+            .row-mid td:first-child, .row-mid .eff-cell {
                 color: #b45309 !important;
                 -webkit-text-fill-color: #b45309 !important;
                 text-shadow: none !important;
             }
-            .row-low {
-                background: #fef2f2 !important;
-                border-right: 4px solid #b91c1c !important;
-                box-shadow: none !important;
-            }
-            .row-low td:first-child,
-            .row-low .eff-cell {
+            .row-low { background: #fef2f2 !important; border-right: 4px solid #b91c1c !important; }
+            .row-low td:first-child, .row-low .eff-cell {
                 color: #b91c1c !important;
                 -webkit-text-fill-color: #b91c1c !important;
                 text-shadow: none !important;
@@ -1381,14 +1184,11 @@
                 padding: 1mm 3mm !important;
                 border-radius: 6px !important;
                 font-size: 8pt !important;
-                font-weight: 800 !important;
                 border: 1.5px solid currentColor !important;
                 background: #ffffff !important;
                 animation: none !important;
                 box-shadow: none !important;
                 -webkit-text-fill-color: currentColor !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
             }
             .status-badge::before { display: none !important; }
             .status-badge.excellent { color: #047857 !important; background: #d1fae5 !important; }
@@ -1412,8 +1212,6 @@
                 margin: 0 0 4mm 0 !important;
                 background: #ffffff !important;
                 border: 2px solid #0a1628 !important;
-                border-radius: 4px !important;
-                box-shadow: none !important;
                 page-break-inside: avoid;
             }
             .chart-switch { display: none !important; }
@@ -1422,17 +1220,13 @@
                 background: #f8f9fc !important;
                 border: 1px solid #e5e7eb !important;
                 padding: 4mm !important;
-                page-break-inside: avoid;
             }
             .chart-box h4 {
                 color: #0a1628 !important;
                 font-size: 11.5pt !important;
-                font-weight: 800 !important;
                 -webkit-text-fill-color: #0a1628 !important;
             }
-            .chart-box canvas {
-                max-height: 75mm !important;
-            }
+            .chart-box canvas { max-height: 75mm !important; }
 
             #page-efficiency::after {
                 content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية | صفحة " counter(page) " / " counter(pages);
@@ -1445,9 +1239,7 @@
                 margin-top: 5mm;
             }
 
-            h1, h2, h3, h4, h5, h6 {
-                page-break-after: avoid;
-            }
+            h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
             tr, img, .stat-card, .eff-section, .chart-box, .chart-section {
                 page-break-inside: avoid;
             }
@@ -1515,11 +1307,11 @@
             <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
             <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
             <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+            <option value="unit-تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="unit-المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="unit-صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="unit-جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="unit-قبيبة">🏛️ المجمع الأمني بقبيبة</option>
         </select>
 
         <label><i class="fas fa-filter"></i> الفئة</label>
@@ -1549,7 +1341,7 @@
     </div>
 
     <!-- جدول 1: النجاعة العامة -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="general">
         <div class="section-header">
             <h3><i class="fas fa-chart-line"></i> النجاعة العامة للأسطول</h3>
             <span class="badge gold" id="generalBadge">📊 جاري التحميل...</span>
@@ -1574,7 +1366,7 @@
     </div>
 
     <!-- جدول 2: الشمال -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="region-الشمال">
         <div class="section-header">
             <h3><i class="fas fa-map-pin"></i> الحرس البحري بالشمال</h3>
             <span class="badge gold" id="badge-region-الشمال">0% جاهزية</span>
@@ -1599,7 +1391,7 @@
     </div>
 
     <!-- جدول 3: الساحل -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="region-الساحل">
         <div class="section-header">
             <h3><i class="fas fa-map-pin"></i> الحرس البحري بالساحل</h3>
             <span class="badge gold" id="badge-region-الساحل">0% جاهزية</span>
@@ -1624,7 +1416,7 @@
     </div>
 
     <!-- جدول 4: الوسط -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="region-الوسط">
         <div class="section-header">
             <h3><i class="fas fa-map-pin"></i> الحرس البحري بالوسط</h3>
             <span class="badge gold" id="badge-region-الوسط">0% جاهزية</span>
@@ -1649,7 +1441,7 @@
     </div>
 
     <!-- جدول 5: الجنوب -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="region-الجنوب">
         <div class="section-header">
             <h3><i class="fas fa-map-pin"></i> الحرس البحري بالجنوب</h3>
             <span class="badge gold" id="badge-region-الجنوب">0% جاهزية</span>
@@ -1674,7 +1466,7 @@
     </div>
 
     <!-- جدول 6: وحدة تونس -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="unit-تونس">
         <div class="section-header">
             <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس</h3>
             <span class="badge gold" id="badge-unit-تونس">0% جاهزية</span>
@@ -1699,7 +1491,7 @@
     </div>
 
     <!-- جدول 7: وحدة جرجيس -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="unit-جرجيس">
         <div class="section-header">
             <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس</h3>
             <span class="badge gold" id="badge-unit-جرجيس">0% جاهزية</span>
@@ -1724,7 +1516,7 @@
     </div>
 
     <!-- جدول 8: وحدة صفاقس -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="unit-صفاقس">
         <div class="section-header">
             <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس</h3>
             <span class="badge gold" id="badge-unit-صفاقس">0% جاهزية</span>
@@ -1749,7 +1541,7 @@
     </div>
 
     <!-- جدول 9: وحدة المنستير -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="unit-المنستير">
         <div class="section-header">
             <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير</h3>
             <span class="badge gold" id="badge-unit-المنستير">0% جاهزية</span>
@@ -1774,7 +1566,7 @@
     </div>
 
     <!-- جدول 10: المجمع الأمني بقبيبة -->
-    <div class="eff-section">
+    <div class="eff-section" data-section-key="unit-قبيبة">
         <div class="section-header">
             <h3><i class="fas fa-building"></i> المجمع الأمني بقبيبة</h3>
             <span class="badge gold" id="badge-unit-قبيبة">0% جاهزية</span>
@@ -2147,6 +1939,48 @@
                 });
             }
 
+            // ============================================================
+            // 🎯 FILTER BY REGION / UNIT — يعمل فعليًا
+            // ============================================================
+            function applyRegionFilter() {
+                const filter = document.getElementById('fRegEff').value;
+                const sections = document.querySelectorAll('.eff-section[data-section-key]');
+
+                sections.forEach(sec => {
+                    const key = sec.getAttribute('data-section-key');
+
+                    // النجاعة العامة تبقى ظاهرة دائمًا
+                    if (key === 'general') {
+                        sec.style.display = '';
+                        return;
+                    }
+
+                    // "الكل" → إظهار كل الأقسام
+                    if (filter === 'الكل') {
+                        sec.style.display = '';
+                        return;
+                    }
+
+                    // فلتر وحدة صيانة (يبدأ بـ unit-)
+                    if (filter.indexOf('unit-') === 0) {
+                        if (key.indexOf('unit-') === 0) {
+                            sec.style.display = (filter === key) ? '' : 'none';
+                        } else {
+                            sec.style.display = 'none';
+                        }
+                        return;
+                    }
+
+                    // فلتر إقليم (الشمال/الساحل/الوسط/الجنوب)
+                    if (key.indexOf('region-') === 0) {
+                        const regionKey = key.replace('region-', '');
+                        sec.style.display = (filter === regionKey) ? '' : 'none';
+                    } else {
+                        sec.style.display = 'none';
+                    }
+                });
+            }
+
             function renderStatsCards() {
                 let total = 0, active = 0, maintenance = 0, damaged = 0;
 
@@ -2190,6 +2024,7 @@
                 if (!document.getElementById('generalBody')) return;
                 renderStatsCards();
                 renderAllTables();
+                applyRegionFilter();
                 drawChart(currentChart);
             }
 
@@ -2571,7 +2406,7 @@
                 if (!generalBody) return false;
                 initialized = true;
 
-                console.log('🎨 Efficiency v10.3: Initializing...');
+                console.log('🎨 Efficiency v11.0: Initializing...');
 
                 applyLogo();
                 syncLogoFromServer();
@@ -2609,7 +2444,7 @@
                             clearTimeout(resizeTimer);
                             resizeTimer = setTimeout(() => drawChart(currentChart), 150);
                         });
-                        console.log('🎨 Efficiency v10.3: Ready');
+                        console.log('🎨 Efficiency v11.0: Ready');
                     }
                 });
             }
