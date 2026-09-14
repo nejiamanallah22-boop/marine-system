@@ -5,7 +5,7 @@
         body { background: #0a0e1a; }
 
         /* ============================================================
-           🔧 MAINTENANCE - ENTERPRISE PRO v9.16 (Year Checkboxes + Dynamic Logo)
+           🔧 MAINTENANCE - ENTERPRISE PRO v9.17 (Year Checkboxes + Dynamic Logo + Print)
            ============================================================ */
 
         :root {
@@ -39,7 +39,6 @@
             padding: 20px;
             margin: 0;
             font-family: var(--font);
-            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
             background: transparent;
             color: #e8edf5;
             min-height: 100vh;
@@ -90,7 +89,6 @@
 
         .maint-header-left { display: flex; align-items: center; gap: 14px; }
 
-        /* ✅ الشعار الديناميكي */
         .maint-header-left .header-icon {
             width: 44px; height: 44px;
             border-radius: 50%;
@@ -101,7 +99,6 @@
             overflow: hidden;
         }
 
-        /* ✅ دعم صورة الشعار */
         .maint-header-left .header-icon img {
             width: 100%;
             height: 100%;
@@ -784,12 +781,462 @@
             }
             .year-check { flex-shrink: 0; }
         }
+
+        /* ============================================================
+           🖨️ PROFESSIONAL PRINT STYLES — v1.0
+           ============================================================ */
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 12mm 10mm;
+            }
+
+            @page :first {
+                margin-top: 8mm;
+            }
+
+            html, body {
+                background: #ffffff !important;
+                color: #1a1a1a !important;
+                font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+                font-size: 10pt !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            button,
+            .btn-action,
+            .btn-filter,
+            .action-btn,
+            .btn-submit,
+            .retry-btn,
+            .modal-close,
+            .maint-header-actions,
+            .filter-bar,
+            .year-checkbox-group,
+            .toast,
+            .toast-container,
+            #toastContainer,
+            nav,
+            .sidebar,
+            .navbar,
+            .no-print,
+            .maint-modal,
+            #maintenanceModal {
+                display: none !important;
+            }
+
+            .maint-header {
+                display: flex !important;
+                background: linear-gradient(135deg, #0a0e1a 0%, #111e3a 100%) !important;
+                color: #ffffff !important;
+                padding: 12mm 8mm 6mm !important;
+                margin: 0 0 6mm !important;
+                border-radius: 8px !important;
+                border: 2px solid #e94560 !important;
+                position: relative !important;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+            }
+
+            .maint-header-left h2 {
+                color: #f5c842 !important;
+                font-size: 16pt !important;
+                font-weight: 800 !important;
+                -webkit-text-fill-color: #f5c842 !important;
+                background: none !important;
+                margin: 0 0 4pt 0 !important;
+            }
+
+            .maint-header-left p {
+                color: rgba(255,255,255,0.75) !important;
+                font-size: 10pt !important;
+                -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
+            }
+
+            .header-icon,
+            #maintHeaderIcon {
+                width: 48px !important;
+                height: 48px !important;
+                border: 2px solid #e94560 !important;
+                background: #0a0e1a !important;
+                box-shadow: none !important;
+                animation: none !important;
+                overflow: hidden !important;
+            }
+
+            .header-icon img,
+            #globalLogo {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
+            }
+
+            .header-icon i {
+                color: #e94560 !important;
+            }
+
+            .maint-header::after {
+                content: "طُبع بتاريخ: " attr(data-print-date);
+                position: absolute;
+                bottom: 4mm;
+                left: 8mm;
+                font-size: 9pt;
+                color: rgba(255,255,255,0.7) !important;
+                direction: rtl;
+            }
+
+            .stats-grid {
+                display: grid !important;
+                grid-template-columns: repeat(5, 1fr) !important;
+                gap: 4mm !important;
+                margin: 0 0 5mm !important;
+                padding: 0 !important;
+                page-break-inside: avoid;
+            }
+
+            .stat-card {
+                background: #f8f9fc !important;
+                border: 2px solid #e94560 !important;
+                border-radius: 6px !important;
+                padding: 4mm 3mm !important;
+                text-align: center !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+                position: relative !important;
+                overflow: visible !important;
+            }
+
+            .stat-card::before {
+                display: none !important;
+            }
+
+            .stat-card .stat-top {
+                justify-content: center !important;
+                margin-bottom: 2mm !important;
+            }
+
+            .stat-card .stat-icon {
+                width: 30px !important;
+                height: 30px !important;
+                border-radius: 50% !important;
+                border: 1px solid #e94560 !important;
+                background: #ffffff !important;
+                color: #0a0e1a !important;
+                font-size: 12pt !important;
+            }
+
+            .stat-card .stat-change {
+                display: none !important;
+            }
+
+            .stat-card .number {
+                color: #0a0e1a !important;
+                font-size: 18pt !important;
+                font-weight: 800 !important;
+                line-height: 1 !important;
+                margin: 2mm 0 !important;
+                background: none !important;
+                -webkit-text-fill-color: #0a0e1a !important;
+            }
+
+            .stat-card .number.pink { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
+            .stat-card .number.gold { color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; }
+            .stat-card .number.green { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
+            .stat-card .number.purple { color: #6d28d9 !important; -webkit-text-fill-color: #6d28d9 !important; }
+            .stat-card .number.blue { color: #1d4ed8 !important; -webkit-text-fill-color: #1d4ed8 !important; }
+            .stat-card .number.red { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
+
+            .stat-card .label {
+                color: #4b5563 !important;
+                font-size: 9pt !important;
+                font-weight: 700 !important;
+            }
+
+            .stat-card .stat-bottom {
+                margin-top: 2mm !important;
+                padding-top: 2mm !important;
+                border-top: 1px solid #e5e7eb !important;
+            }
+
+            .stat-card .sub-label,
+            .stat-card .sub-label span {
+                color: #6b7280 !important;
+                font-size: 8pt !important;
+            }
+
+            .damaged-section {
+                background: #fef2f2 !important;
+                border: 2px solid #b91c1c !important;
+                border-radius: 6px !important;
+                padding: 4mm !important;
+                margin: 0 0 5mm !important;
+                page-break-inside: avoid;
+                backdrop-filter: none !important;
+            }
+
+            .damaged-section::before {
+                display: none !important;
+            }
+
+            .damaged-header h3 {
+                color: #b91c1c !important;
+                font-size: 12pt !important;
+                font-weight: 800 !important;
+            }
+
+            .damaged-header h3 i {
+                animation: none !important;
+            }
+
+            .damaged-header .damaged-count {
+                background: #fef2f2 !important;
+                color: #b91c1c !important;
+                border: 1px solid #b91c1c !important;
+                font-size: 9pt !important;
+            }
+
+            .damaged-table {
+                width: 100% !important;
+                font-size: 8.5pt !important;
+                min-width: 0 !important;
+                border: 2px solid #0a0e1a !important;
+                border-collapse: collapse !important;
+            }
+
+            .damaged-table thead {
+                background: #0a0e1a !important;
+                color: #f5c842 !important;
+            }
+
+            .damaged-table thead th {
+                background: #0a0e1a !important;
+                color: #f5c842 !important;
+                padding: 3mm 2mm !important;
+                font-size: 9pt !important;
+                font-weight: 800 !important;
+                border: 1px solid #111e3a !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .damaged-table tbody td {
+                padding: 2.5mm 2mm !important;
+                border: 1px solid #e5e7eb !important;
+                color: #1f2937 !important;
+                font-size: 8.5pt !important;
+                background: #ffffff !important;
+            }
+
+            .damaged-table tbody tr.critical {
+                background: #fef2f2 !important;
+                border-right: 3px solid #b91c1c !important;
+            }
+
+            .damaged-table tbody tr.warning {
+                background: #fffbeb !important;
+                border-right: 3px solid #b45309 !important;
+            }
+
+            .damaged-table .vessel-name-damaged {
+                color: #b91c1c !important;
+                font-weight: 800 !important;
+            }
+
+            .damaged-table .damage-type {
+                color: #b45309 !important;
+                font-weight: 700 !important;
+            }
+
+            .damaged-table .damage-date {
+                color: #6b7280 !important;
+            }
+
+            .damaged-table .urgency-badge {
+                padding: 1mm 3mm !important;
+                border-radius: 10px !important;
+                font-size: 7pt !important;
+                font-weight: 700 !important;
+                border: 1px solid currentColor !important;
+                background: #ffffff !important;
+                animation: none !important;
+            }
+
+            .damaged-table .urgency-badge.critical { color: #b91c1c !important; }
+            .damaged-table .urgency-badge.warning { color: #b45309 !important; }
+            .damaged-table .urgency-badge.normal { color: #4b5563 !important; }
+
+            .table-wrapper {
+                background: #ffffff !important;
+                border: 2px solid #0a0e1a !important;
+                border-radius: 6px !important;
+                page-break-inside: auto;
+                overflow: visible !important;
+            }
+
+            .table-header {
+                background: #f3f4f6 !important;
+                border-bottom: 2px solid #e94560 !important;
+                padding: 3mm 4mm !important;
+                page-break-after: avoid;
+            }
+
+            .table-header h3 {
+                color: #0a0e1a !important;
+                font-size: 11pt !important;
+                font-weight: 800 !important;
+            }
+
+            .table-header h3 i {
+                color: #e94560 !important;
+            }
+
+            .table-header .badge {
+                border: 1px solid currentColor !important;
+                background: #ffffff !important;
+                font-size: 8pt !important;
+                padding: 1mm 3mm !important;
+            }
+
+            .table-header .badge.pink { color: #b91c1c !important; }
+            .table-header .badge.gold { color: #b45309 !important; }
+            .table-header .badge.green { color: #047857 !important; }
+
+            .table-scroll {
+                overflow: visible !important;
+                padding: 0 !important;
+            }
+
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 8.5pt !important;
+                min-width: 0 !important;
+                page-break-inside: auto;
+            }
+
+            thead {
+                display: table-header-group !important;
+                background: #0a0e1a !important;
+                color: #f5c842 !important;
+            }
+
+            thead th {
+                background: #0a0e1a !important;
+                color: #f5c842 !important;
+                padding: 3mm 2mm !important;
+                font-size: 9pt !important;
+                font-weight: 800 !important;
+                text-align: center !important;
+                border: 1px solid #111e3a !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            thead th i {
+                display: none !important;
+            }
+
+            tbody tr {
+                page-break-inside: avoid;
+                background: #ffffff !important;
+            }
+
+            tbody tr:nth-child(even) {
+                background: #f9fafb !important;
+            }
+
+            tbody td {
+                padding: 2.5mm 2mm !important;
+                border: 1px solid #e5e7eb !important;
+                color: #1f2937 !important;
+                font-size: 8.5pt !important;
+                text-align: center !important;
+                vertical-align: middle !important;
+                background: transparent !important;
+            }
+
+            tbody tr.damaged {
+                background: #fef2f2 !important;
+                border-right: 3px solid #b91c1c !important;
+            }
+
+            tbody tr.damaged td {
+                color: #991b1b !important;
+            }
+
+            tbody .vessel-name,
+            tbody td strong {
+                font-weight: 800 !important;
+                color: #0a0e1a !important;
+            }
+
+            .status-badge {
+                display: inline-block !important;
+                padding: 1mm 3mm !important;
+                border-radius: 10px !important;
+                font-size: 8pt !important;
+                font-weight: 700 !important;
+                border: 1px solid currentColor !important;
+                background: #ffffff !important;
+                animation: none !important;
+            }
+
+            .status-badge.active { color: #b45309 !important; }
+            .status-badge.completed { color: #047857 !important; }
+            .status-badge.cancelled { color: #b91c1c !important; }
+            .status-badge.damaged { color: #b91c1c !important; }
+
+            .empty-state {
+                padding: 15mm !important;
+                color: #6b7280 !important;
+            }
+
+            .empty-state .empty-icon {
+                color: #d1d5db !important;
+            }
+
+            .empty-state h3 {
+                color: #4b5563 !important;
+            }
+
+            #page-maintenance::after {
+                content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
+                display: block;
+                text-align: center;
+                font-size: 8pt;
+                color: #6b7280;
+                border-top: 2px solid #e94560;
+                padding-top: 3mm;
+                margin-top: 6mm;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+            }
+
+            tr, img, .stat-card, .damaged-section {
+                page-break-inside: avoid;
+            }
+
+            * {
+                box-shadow: none !important;
+                text-shadow: none !important;
+                animation: none !important;
+                transition: none !important;
+            }
+
+            #page-maintenance::before {
+                display: none !important;
+            }
+        }
     </style>
 
     <!-- HEADER -->
-    <div class="maint-header">
+    <div class="maint-header" id="maintHeader">
         <div class="maint-header-left">
-            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
             <div class="header-icon" id="maintHeaderIcon">
                 <i class="fas fa-tools"></i>
                 <img id="globalLogo" src="" alt="شعار" style="display:none;">
@@ -802,7 +1249,7 @@
         <div class="maint-header-actions">
             <button class="btn-action primary" onclick="openAddMaintenance()"><i class="fas fa-plus"></i> إضافة صيانة</button>
             <button class="btn-action success" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
-            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+            <button class="btn-action secondary" onclick="printMaintenance()"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
@@ -995,7 +1442,7 @@
         (function() {
             'use strict';
 
-            console.log('🔧 Maintenance Page v9.16 - loading...');
+            console.log('🔧 Maintenance Page v9.17 - loading...');
 
             // ============================================================
             // ✅ CLEANUP STATE
@@ -1017,8 +1464,9 @@
                     delete window.resetFilters;
                     delete window.toggleYearFilter;
                     delete window.onYearCheckChange;
+                    delete window.printMaintenance;
                 } catch (e) {}
-                console.log('🧹 Maintenance v9.16 cleanup done');
+                console.log('🧹 Maintenance v9.17 cleanup done');
             }
 
             window._pageCleanup = window._pageCleanup || [];
@@ -1063,16 +1511,62 @@
                     }).catch(function() {});
             }
 
-            // ✅ شغّل فوراً
             applyLogo();
             syncLogoFromServer();
 
-            // ✅ استمع للتغييرات بين التبويبات
             window.addEventListener('storage', function(e) {
                 if (e.key === 'marine_logo' && e.newValue) {
                     applyLogo();
                 }
             });
+
+            // ============================================================
+            // 🖨️ PRINT DATE + printMaintenance
+            // ============================================================
+            function updatePrintDate() {
+                try {
+                    var now = new Date();
+                    var dateStr = now.toLocaleDateString('ar-TN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    var timeStr = now.toLocaleTimeString('ar-TN', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    var fullDate = dateStr + ' - ' + timeStr;
+
+                    var header = document.getElementById('maintHeader');
+                    if (header) header.setAttribute('data-print-date', fullDate);
+                } catch (e) {
+                    console.debug('🖨️ updatePrintDate (safe):', e.message);
+                }
+            }
+
+            updatePrintDate();
+            window.addEventListener('beforeprint', updatePrintDate);
+
+            function printMaintenance() {
+                try {
+                    updatePrintDate();
+
+                    var confirmed = confirm(
+                        '🖨️ قبل الطباعة تأكد من:\n\n' +
+                        '1. الاتجاه: أفقي (Landscape)\n' +
+                        '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
+                        '3. الوجهة: PDF (اختياري)\n\n' +
+                        'هل تريد المتابعة؟'
+                    );
+                    if (!confirmed) return;
+
+                    window.print();
+                } catch (e) {
+                    console.error('❌ printMaintenance error:', e);
+                    window.print();
+                }
+            }
 
             // ============================================================
             // 🔐 RBAC
@@ -1876,7 +2370,7 @@
 
             async function init() {
                 if (_isDestroyed) return;
-                console.log('🚀 Initializing Maintenance v9.16...');
+                console.log('🚀 Initializing Maintenance v9.17...');
                 console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
                 console.log('🔐 canCreate:', canCreateMaintenance());
                 console.log('🔐 canDelete:', canDeleteMaintenance());
@@ -1942,7 +2436,7 @@
                         if (e.target === this) closeModal();
                     });
 
-                    console.log('✅ Maintenance v9.16 ready');
+                    console.log('✅ Maintenance v9.17 ready');
                     console.log('🔧 ' + maintenanceData.length + ' tasks');
                     console.log('🚨 ' + damagedVessels.length + ' damaged vessels');
 
@@ -1974,6 +2468,7 @@
             window.onYearCheckChange = onYearCheckChange;
             window.toggleYearFilter = toggleYearFilter;
             window.getSelectedYears = getSelectedYears;
+            window.printMaintenance = printMaintenance;
 
         })();
     </script>
