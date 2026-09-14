@@ -2,8 +2,9 @@
 <div id="page-maintenance">
     <style>
         /* ============================================================
-           🔧 MAINTENANCE — ENTERPRISE PRO v10.1
-           (Flexible Damaged Detection + Enhanced Print)
+           🔧 الصيانة — ENTERPRISE PRO v11.0
+           Columns: نوع التدخل + الوحدة المسؤولة
+           Features: Damaged Vessels + Working Stats + Clean Print
            ============================================================ */
 
         body { background: #0a0e1a; }
@@ -20,10 +21,12 @@
             --success: #00b894;
             --danger: #e17055;
             --warning: #fdcb6e;
+            --info: #0984e3;
             --glass-bg: rgba(255,255,255,0.04);
             --glass-border: rgba(255,255,255,0.06);
             --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
             --radius: 14px;
+            --radius-sm: 8px;
             --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
             --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
         }
@@ -59,24 +62,38 @@
             border-radius: 10px;
         }
 
-        /* ===== HEADER ===== */
+        /* ============================================================
+           HEADER — مرتّب بلا تداخل
+           ============================================================ */
         .maint-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px 24px; flex-wrap: wrap; gap: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            flex-wrap: wrap;
+            gap: 14px;
             background: var(--glass-bg);
             backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius);
             margin-bottom: 20px;
         }
-        .maint-header-left { display: flex; align-items: center; gap: 14px; }
+        .maint-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1 1 260px;
+            min-width: 0;
+        }
         .maint-header-left .header-icon {
-            width: 44px; height: 44px; border-radius: 50%;
+            width: 46px; height: 46px;
+            border-radius: 50%;
             background: linear-gradient(135deg, #e94560, #6c5ce7);
             display: flex; align-items: center; justify-content: center;
             font-size: 20px; color: #0a1628;
-            animation: pulseIcon 2s ease-in-out infinite;
-            overflow: hidden; flex-shrink: 0;
+            flex-shrink: 0;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(233,69,96,0.2);
         }
         .maint-header-left .header-icon img {
             width: 100%; height: 100%;
@@ -84,33 +101,57 @@
             display: none;
         }
         .maint-header-left .header-icon.has-logo img { display: block; }
-        .maint-header-left .header-icon.has-logo {
-            animation: none; background: transparent;
-            box-shadow: 0 0 20px rgba(233,69,96,0.3);
-        }
         .maint-header-left .header-icon.has-logo i { display: none; }
-        @keyframes pulseIcon {
-            0%, 100% { box-shadow: 0 0 20px rgba(233,69,96,0.2); }
-            50%      { box-shadow: 0 0 50px rgba(233,69,96,0.4); }
+
+        .maint-header-left .header-text {
+            min-width: 0;
+            overflow: hidden;
         }
         .maint-header-left h2 {
-            font-size: 22px; font-weight: 800; margin: 0;
+            font-size: 20px; font-weight: 800; margin: 0;
             background: linear-gradient(135deg, #e94560, #f5c842, #6c5ce7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .maint-header-left p {
-            font-size: 12px; color: rgba(255,255,255,0.3); margin: 0;
+            font-size: 11.5px;
+            color: rgba(255,255,255,0.35);
+            margin: 2px 0 0 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .maint-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .maint-header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex-shrink: 0;
+        }
 
         .btn-action {
-            padding: 8px 18px; border: none; border-radius: 30px;
-            font-weight: 600; font-size: 0.8rem; cursor: pointer;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            cursor: pointer;
             transition: all var(--transition);
-            display: inline-flex; align-items: center; gap: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-family: var(--font);
+            white-space: nowrap;
+            flex-shrink: 0;
+            line-height: 1;
         }
+        .btn-action i { font-size: 0.85rem; }
+
         .btn-action.primary {
             background: linear-gradient(135deg, #e94560, #f5c842);
             color: #0a1628;
@@ -120,7 +161,7 @@
         .btn-action.secondary {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.55);
         }
         .btn-action.secondary:hover { background: rgba(255,255,255,0.06); color: #fff; transform: translateY(-2px); }
         .btn-action.success {
@@ -130,20 +171,25 @@
         .btn-action.success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,184,148,0.3); }
         .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
-        /* ===== STATS ===== */
+        /* ============================================================
+           STATS — 5 بطاقات
+           ============================================================ */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 14px; margin-bottom: 20px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            clear: both;
         }
         .stat-card {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius);
-            padding: 16px 20px;
+            padding: 14px 16px;
             transition: all var(--transition);
-            position: relative; overflow: hidden;
+            position: relative;
+            overflow: hidden;
         }
         .stat-card::before {
             content: ''; position: absolute;
@@ -156,11 +202,17 @@
             border-color: rgba(233,69,96,0.15);
             box-shadow: var(--shadow-hover);
         }
-        .stat-card .stat-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .stat-card .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
         .stat-card .stat-icon {
-            width: 40px; height: 40px; border-radius: 10px;
+            width: 36px; height: 36px;
+            border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 16px; flex-shrink: 0;
+            font-size: 15px; flex-shrink: 0;
         }
         .stat-card .stat-icon.pink   { background: rgba(233,69,96,0.12);  color: #e94560; }
         .stat-card .stat-icon.gold   { background: rgba(245,200,66,0.12); color: #f5c842; }
@@ -169,12 +221,12 @@
         .stat-card .stat-icon.blue   { background: rgba(9,132,227,0.12);  color: #0984e3; }
         .stat-card .stat-icon.red    { background: rgba(233,69,96,0.15);  color: #e94560; }
 
-        .stat-card .stat-change { font-size: 10px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
-        .stat-card .stat-change.up   { background: rgba(0,184,148,0.12); color: #55efc4; }
-        .stat-card .stat-change.down { background: rgba(233,69,96,0.12); color: #e94560; }
-        .stat-card .stat-change.flat { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); }
-
-        .stat-card .number { font-size: 28px; font-weight: 800; color: #fff; line-height: 1.2; margin-top: 6px; }
+        .stat-card .number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.1;
+        }
         .stat-card .number.pink   { color: #e94560; }
         .stat-card .number.gold   { color: #f5c842; }
         .stat-card .number.green  { color: #55efc4; }
@@ -182,23 +234,25 @@
         .stat-card .number.blue   { color: #0984e3; }
         .stat-card .number.red    { color: #e94560; }
 
-        .stat-card .label { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; font-weight: 500; }
-        .stat-card .stat-bottom {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-top: 8px; padding-top: 8px;
-            border-top: 1px solid rgba(255,255,255,0.04);
+        .stat-card .label {
+            font-size: 10.5px;
+            color: rgba(255,255,255,0.35);
+            margin-top: 2px;
+            font-weight: 600;
         }
-        .stat-card .stat-bottom .sub-label { font-size: 10px; color: rgba(255,255,255,0.2); }
 
-        /* ===== DAMAGED ===== */
+        /* ============================================================
+           DAMAGED VESSELS SECTION
+           ============================================================ */
         .damaged-section {
             background: rgba(233,69,96,0.04);
-            border: 1px solid rgba(233,69,96,0.1);
+            border: 1px solid rgba(233,69,96,0.15);
             border-radius: var(--radius);
-            padding: 16px 20px;
+            padding: 14px 18px;
             margin-bottom: 20px;
             backdrop-filter: blur(12px);
-            position: relative; overflow: hidden;
+            position: relative;
+            overflow: hidden;
         }
         .damaged-section::before {
             content: ''; position: absolute;
@@ -217,8 +271,8 @@
             flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
         }
         .damaged-header h3 {
-            font-size: 16px; font-weight: 700; color: #e94560;
-            display: flex; align-items: center; gap: 10px; margin: 0;
+            font-size: 15px; font-weight: 700; color: #e94560;
+            display: flex; align-items: center; gap: 8px; margin: 0;
         }
         .damaged-header h3 i { animation: pulseDanger 1.5s infinite; }
         @keyframes pulseDanger {
@@ -226,62 +280,68 @@
             50%      { opacity: 0.5; transform: scale(1.1); }
         }
         .damaged-header .damaged-count {
-            padding: 4px 16px; border-radius: 20px;
-            font-size: 13px; font-weight: 700;
+            padding: 3px 14px; border-radius: 20px;
+            font-size: 12px; font-weight: 700;
             background: rgba(233,69,96,0.15);
             color: #e94560;
-            border: 1px solid rgba(233,69,96,0.1);
+            border: 1px solid rgba(233,69,96,0.2);
         }
         .damaged-table-wrapper { overflow-x: auto; }
         .damaged-table {
             width: 100%; border-collapse: collapse;
-            font-size: 0.78rem; min-width: 600px;
+            font-size: 0.76rem; min-width: 600px;
         }
         .damaged-table thead { background: rgba(233,69,96,0.06); }
         .damaged-table thead th {
-            padding: 8px 12px; text-align: center;
+            padding: 8px 10px; text-align: center;
             font-weight: 700; font-size: 0.6rem;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.4);
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
         .damaged-table tbody td {
             padding: 8px 10px;
             border-bottom: 1px solid rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.5);
-            font-size: 0.75rem; text-align: center;
+            color: rgba(255,255,255,0.55);
+            font-size: 0.74rem; text-align: center;
         }
         .damaged-table tbody tr {
             transition: all var(--transition);
             border-right: 3px solid transparent;
         }
         .damaged-table tbody tr:hover { background: rgba(233,69,96,0.05); }
-        .damaged-table tbody tr.critical { border-right: 3px solid #e94560; background: rgba(233,69,96,0.04); }
-        .damaged-table tbody tr.warning  { border-right: 3px solid #f5c842; background: rgba(245,200,66,0.04); }
-        .damaged-table .vessel-name-damaged { font-weight: 600; color: #e94560; }
+        .damaged-table tbody tr.critical { border-right-color: #e94560; background: rgba(233,69,96,0.04); }
+        .damaged-table tbody tr.warning  { border-right-color: #f5c842; background: rgba(245,200,66,0.04); }
+        .damaged-table .vessel-name-damaged { font-weight: 700; color: #e94560; }
         .damaged-table .damage-type { color: #f5c842; }
-        .damaged-table .damage-date { color: rgba(255,255,255,0.3); font-size: 0.7rem; }
+        .damaged-table .damage-date { color: rgba(255,255,255,0.35); font-size: 0.7rem; }
         .damaged-table .urgency-badge {
-            padding: 2px 12px; border-radius: 20px;
-            font-size: 0.6rem; font-weight: 600;
+            padding: 2px 10px; border-radius: 20px;
+            font-size: 0.6rem; font-weight: 700;
+            display: inline-block;
         }
         .damaged-table .urgency-badge.critical {
             background: rgba(233,69,96,0.15); color: #e94560;
             animation: pulseDanger 1.5s infinite;
         }
         .damaged-table .urgency-badge.warning  { background: rgba(245,200,66,0.15); color: #f5c842; }
-        .damaged-table .urgency-badge.normal   { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); }
+        .damaged-table .urgency-badge.normal   { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.4); }
 
-        .damaged-empty { text-align: center; padding: 30px 20px; color: rgba(255,255,255,0.1); }
-        .damaged-empty .empty-icon { font-size: 2.5rem; color: rgba(255,255,255,0.03); display: block; margin-bottom: 8px; }
-        .damaged-empty h4 { font-size: 0.9rem; font-weight: 600; color: rgba(255,255,255,0.15); margin-bottom: 2px; }
-        .damaged-empty p { font-size: 0.75rem; color: rgba(255,255,255,0.06); }
+        .damaged-empty { text-align: center; padding: 24px 20px; color: rgba(255,255,255,0.15); }
+        .damaged-empty .empty-icon { font-size: 2rem; color: rgba(85,239,196,0.4); display: block; margin-bottom: 6px; }
+        .damaged-empty h4 { font-size: 0.85rem; font-weight: 600; color: #55efc4; margin: 0 0 2px 0; }
+        .damaged-empty p { font-size: 0.72rem; color: rgba(255,255,255,0.25); margin: 0; }
 
-        /* ===== FILTER BAR ===== */
+        /* ============================================================
+           FILTER BAR — مرن بلا تداخل
+           ============================================================ */
         .filter-bar {
-            display: flex; flex-wrap: wrap; align-items: center;
-            gap: 8px 14px;
-            padding: 12px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 12px;
+            padding: 12px 18px;
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
@@ -289,26 +349,32 @@
             margin-bottom: 20px;
         }
         .filter-bar label {
-            font-size: 0.7rem; color: rgba(255,255,255,0.3);
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.35);
             font-weight: 600;
             display: flex; align-items: center; gap: 4px;
+            white-space: nowrap;
         }
-        .filter-bar input,
+        .filter-bar input[type="text"],
         .filter-bar select {
-            padding: 6px 14px; border-radius: 20px;
+            padding: 7px 14px;
+            border-radius: 20px;
             border: 1px solid var(--glass-border);
             background: rgba(255,255,255,0.03);
-            color: #e2e8f0; font-size: 0.75rem;
-            min-width: 120px; cursor: pointer;
+            color: #e2e8f0;
+            font-size: 0.74rem;
+            min-width: 130px;
+            cursor: pointer;
             font-family: var(--font);
             transition: all var(--transition);
         }
-        .filter-bar input:focus,
+        .filter-bar input[type="text"]:focus,
         .filter-bar select:focus {
-            outline: none; border-color: #e94560;
+            outline: none;
+            border-color: #e94560;
             box-shadow: 0 0 0 4px rgba(233,69,96,0.06);
         }
-        .filter-bar input::placeholder { color: rgba(255,255,255,0.15); }
+        .filter-bar input::placeholder { color: rgba(255,255,255,0.2); }
         .filter-bar select option { background: #0a1628; color: #e2e8f0; }
 
         .year-checkbox-group {
@@ -316,12 +382,12 @@
             gap: 6px; align-items: center;
         }
         .year-check {
-            display: flex; align-items: center; gap: 6px;
-            padding: 5px 12px; border-radius: 20px;
+            display: flex; align-items: center; gap: 5px;
+            padding: 5px 11px; border-radius: 20px;
             border: 1px solid var(--glass-border);
             background: rgba(255,255,255,0.03);
             color: rgba(255,255,255,0.5);
-            font-size: 0.75rem; font-weight: 600;
+            font-size: 0.72rem; font-weight: 600;
             cursor: pointer;
             transition: all var(--transition);
             user-select: none;
@@ -333,9 +399,9 @@
         }
         .year-check input[type="checkbox"] {
             appearance: none; -webkit-appearance: none;
-            width: 16px; height: 16px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 4px;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.25);
+            border-radius: 3px;
             background: rgba(255,255,255,0.02);
             cursor: pointer; position: relative;
             transition: all 0.2s; margin: 0; flex-shrink: 0;
@@ -349,7 +415,7 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            color: #0a1628; font-size: 11px; font-weight: 900;
+            color: #0a1628; font-size: 9px; font-weight: 900;
         }
         .year-check:has(input:checked) {
             background: rgba(233,69,96,0.1);
@@ -358,11 +424,12 @@
         }
 
         .btn-filter {
-            padding: 6px 16px; border: none; border-radius: 20px;
-            font-weight: 600; font-size: 0.75rem; cursor: pointer;
+            padding: 7px 16px; border: none; border-radius: 20px;
+            font-weight: 600; font-size: 0.74rem; cursor: pointer;
             transition: all var(--transition);
             font-family: var(--font);
             display: inline-flex; align-items: center; gap: 6px;
+            white-space: nowrap;
         }
         .btn-filter.primary {
             background: linear-gradient(135deg, #e94560, #f5c842);
@@ -372,11 +439,13 @@
         .btn-filter.outline {
             background: transparent;
             border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.35);
         }
         .btn-filter.outline:hover { background: rgba(255,255,255,0.04); color: #fff; }
 
-        /* ===== MAIN TABLE ===== */
+        /* ============================================================
+           MAIN TABLE
+           ============================================================ */
         .table-wrapper {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
@@ -386,69 +455,75 @@
         }
         .table-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px;
+            padding: 12px 18px;
             border-bottom: 1px solid var(--glass-border);
             background: rgba(255,255,255,0.02);
             flex-wrap: wrap; gap: 8px;
         }
         .table-header h3 {
-            font-size: 14px; font-weight: 700;
-            color: rgba(255,255,255,0.4); margin: 0;
+            font-size: 13.5px; font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            margin: 0;
             display: flex; align-items: center; gap: 8px;
         }
         .table-header h3 i { color: #e94560; }
         .table-header .badge {
-            font-size: 10px; padding: 3px 14px;
-            border-radius: 20px; font-weight: 600;
+            font-size: 10.5px; padding: 3px 12px;
+            border-radius: 20px; font-weight: 700;
         }
         .badge.pink  { background: rgba(233,69,96,0.12);  color: #e94560; }
         .badge.gold  { background: rgba(245,200,66,0.12); color: #f5c842; }
         .badge.green { background: rgba(0,184,148,0.12);  color: #55efc4; }
+        .badge.blue  { background: rgba(9,132,227,0.12);  color: #0984e3; }
 
-        .table-scroll { overflow-x: auto; padding: 0 16px 16px; }
+        .table-scroll { overflow-x: auto; padding: 0 14px 14px; }
         table {
             width: 100%; border-collapse: collapse;
-            font-size: 0.78rem; min-width: 800px;
+            font-size: 0.76rem; min-width: 800px;
         }
         thead {
             background: rgba(233,69,96,0.04);
-            border-bottom: 2px solid rgba(233,69,96,0.06);
+            border-bottom: 2px solid rgba(233,69,96,0.08);
         }
         thead th {
-            padding: 10px 12px;
+            padding: 10px 10px;
             text-align: center;
-            font-weight: 700; font-size: 0.6rem;
+            font-weight: 700; font-size: 0.62rem;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.3);
-            letter-spacing: 0.8px;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.7px;
             white-space: nowrap;
         }
         thead th i { margin-left: 4px; color: #e94560; }
 
         tbody td {
-            padding: 9px 10px;
+            padding: 9px 8px;
             border-bottom: 1px solid rgba(255,255,255,0.02);
             vertical-align: middle;
-            color: rgba(255,255,255,0.5);
-            font-size: 0.78rem; text-align: center;
+            color: rgba(255,255,255,0.55);
+            font-size: 0.76rem;
+            text-align: center;
         }
         tbody tr { transition: all var(--transition); }
         tbody tr:hover { background: rgba(255,255,255,0.03); }
         tbody tr.damaged { border-right: 3px solid #e94560; }
-        tbody tr.virtual { opacity: 0.85; }
-        tbody .vessel-name { font-weight: 600; color: #fff; }
+        tbody tr.virtual { opacity: 0.88; }
+        tbody .vessel-name { font-weight: 700; color: #fff; }
 
         .status-badge {
-            padding: 3px 12px; border-radius: 20px;
-            font-size: 0.65rem; font-weight: 600;
-            display: inline-block; white-space: nowrap;
+            padding: 3px 11px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            display: inline-block;
+            white-space: nowrap;
         }
         .status-badge.active    { background: rgba(245,200,66,0.12); color: #f5c842; animation: pulseActive 2s infinite; }
         .status-badge.completed { background: rgba(0,184,148,0.12);  color: #55efc4; }
         .status-badge.cancelled { background: rgba(233,69,96,0.12);  color: #e94560; }
         .status-badge.damaged   { background: rgba(233,69,96,0.2);   color: #e94560; animation: pulseDanger 1.5s infinite; }
         .status-badge.pending   { background: rgba(9,132,227,0.12);  color: #0984e3; }
-        @keyframes pulseActive { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes pulseActive { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
 
         .action-btn {
             padding: 4px 8px; border: none; border-radius: 6px;
@@ -456,39 +531,46 @@
             transition: all var(--transition);
             font-family: var(--font);
             display: inline-flex; align-items: center; gap: 4px;
-            margin: 2px;
+            margin: 2px 1px;
         }
-        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .action-btn.edit     { background: rgba(245,200,66,0.1);  color: #f5c842; }
-        .action-btn.edit:hover     { background: rgba(245,200,66,0.2); transform: scale(1.05); }
+        .action-btn.edit:hover     { background: rgba(245,200,66,0.22); transform: scale(1.08); }
         .action-btn.complete { background: rgba(0,184,148,0.1);   color: #55efc4; }
-        .action-btn.complete:hover { background: rgba(0,184,148,0.2);  transform: scale(1.05); }
+        .action-btn.complete:hover { background: rgba(0,184,148,0.22);  transform: scale(1.08); }
         .action-btn.history  { background: rgba(108,92,231,0.1);  color: #6c5ce7; }
-        .action-btn.history:hover  { background: rgba(108,92,231,0.2); transform: scale(1.05); }
+        .action-btn.history:hover  { background: rgba(108,92,231,0.22); transform: scale(1.08); }
         .action-btn.delete   { background: rgba(233,69,96,0.1);   color: #e94560; }
-        .action-btn.delete:hover   { background: rgba(233,69,96,0.2);  transform: scale(1.05); }
-        .action-btn.start    { background: rgba(9,132,227,0.12);  color: #0984e3; padding: 4px 12px; }
-        .action-btn.start:hover    { background: rgba(9,132,227,0.22); transform: scale(1.05); }
+        .action-btn.delete:hover   { background: rgba(233,69,96,0.22);  transform: scale(1.08); }
+        .action-btn.start {
+            background: rgba(9,132,227,0.12);
+            color: #0984e3;
+            padding: 4px 11px;
+            font-weight: 700;
+        }
+        .action-btn.start:hover { background: rgba(9,132,227,0.25); transform: scale(1.05); }
 
-        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.1); }
-        .empty-state .empty-icon { font-size: 3.5rem; color: rgba(255,255,255,0.03); display: block; margin-bottom: 12px; }
-        .empty-state h3 { font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.15); margin-bottom: 4px; }
-        .empty-state p { font-size: 0.8rem; color: rgba(255,255,255,0.06); }
+        .empty-state { text-align: center; padding: 55px 20px; color: rgba(255,255,255,0.15); }
+        .empty-state .empty-icon { font-size: 3rem; color: rgba(255,255,255,0.04); display: block; margin-bottom: 12px; }
+        .empty-state h3 { font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.2); margin: 0 0 4px 0; }
+        .empty-state p { font-size: 0.78rem; color: rgba(255,255,255,0.1); margin: 0; }
         .empty-state .retry-btn {
-            margin-top: 12px;
-            padding: 8px 24px; border: none; border-radius: 30px;
+            margin-top: 14px;
+            padding: 8px 22px; border: none; border-radius: 30px;
             background: linear-gradient(135deg, #e94560, #f5c842);
-            color: #0a1628; font-weight: 700; font-size: 0.8rem;
+            color: #0a1628; font-weight: 700; font-size: 0.78rem;
             cursor: pointer; transition: all var(--transition);
             font-family: var(--font);
+            display: inline-flex; align-items: center; gap: 6px;
         }
         .empty-state .retry-btn:hover { transform: scale(1.04); box-shadow: 0 4px 24px rgba(233,69,96,0.3); }
 
-        /* ===== MODAL ===== */
+        /* ============================================================
+           MODAL
+           ============================================================ */
         .maint-modal {
             display: none;
             position: fixed; inset: 0; z-index: 9999;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.72);
             backdrop-filter: blur(12px);
             align-items: center; justify-content: center;
             padding: 20px;
@@ -498,9 +580,9 @@
             background: #111e3a;
             border: 1px solid rgba(233,69,96,0.15);
             border-radius: var(--radius);
-            max-width: 650px; width: 100%;
+            max-width: 620px; width: 100%;
             max-height: 90vh; overflow-y: auto;
-            padding: 28px;
+            padding: 26px;
             animation: modalFade 0.3s ease;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
@@ -515,25 +597,28 @@
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         .maint-modal .modal-header h3 {
-            color: #fff; font-size: 20px; font-weight: 700;
+            color: #fff; font-size: 18px; font-weight: 700;
             background: linear-gradient(135deg, #e94560, #f5c842);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
         }
         .maint-modal .modal-close {
             background: none; border: none;
-            color: rgba(255,255,255,0.2);
-            font-size: 24px; cursor: pointer;
+            color: rgba(255,255,255,0.25);
+            font-size: 22px; cursor: pointer;
             padding: 4px 8px; border-radius: 8px;
             transition: all 0.3s;
+            line-height: 1;
         }
         .maint-modal .modal-close:hover { background: rgba(255,255,255,0.04); color: #fff; transform: rotate(90deg); }
 
-        .maint-modal .form-group { margin-bottom: 14px; }
+        .maint-modal .form-group { margin-bottom: 13px; }
         .maint-modal .form-group label {
-            display: block; font-size: 0.75rem;
-            color: rgba(255,255,255,0.3);
-            margin-bottom: 4px; font-weight: 600;
+            display: block; font-size: 0.72rem;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 5px; font-weight: 600;
         }
         .maint-modal .form-group label .required { color: #e94560; }
         .maint-modal .form-group input,
@@ -541,10 +626,11 @@
         .maint-modal .form-group textarea {
             width: 100%;
             padding: 10px 14px; border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
             background: rgba(255,255,255,0.04);
-            color: #e2e8f0; font-family: inherit; font-size: 0.9rem;
+            color: #e2e8f0; font-family: inherit; font-size: 0.88rem;
             transition: all 0.3s;
+            box-sizing: border-box;
         }
         .maint-modal .form-group input:focus,
         .maint-modal .form-group select:focus,
@@ -557,12 +643,12 @@
         .maint-modal .form-group textarea { min-height: 60px; resize: vertical; }
         .maint-modal .form-group select option { background: #0a1628; color: #e2e8f0; }
         .maint-modal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .maint-modal .modal-footer { display: flex; gap: 10px; margin-top: 16px; }
+        .maint-modal .modal-footer { display: flex; gap: 10px; margin-top: 18px; }
         .maint-modal .modal-footer .btn-submit { flex: 1; }
 
         .btn-submit {
-            padding: 10px 24px; border: none; border-radius: 10px;
-            font-weight: 700; font-size: 0.95rem; cursor: pointer;
+            padding: 10px 22px; border: none; border-radius: 10px;
+            font-weight: 700; font-size: 0.9rem; cursor: pointer;
             transition: all var(--transition);
             font-family: var(--font);
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -580,17 +666,16 @@
         .btn-submit.secondary {
             background: rgba(255,255,255,0.04);
             border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.45);
         }
         .btn-submit.secondary:hover { background: rgba(255,255,255,0.08); color: #fff; }
 
-        .history-list { max-height: 200px; overflow-y: auto; }
-        .history-item { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.8rem; }
-        .history-item .h-date { color: rgba(255,255,255,0.3); font-size: 0.7rem; }
-        .history-item .h-action { color: #f5c842; font-weight: 600; }
-        .history-item .h-details { color: rgba(255,255,255,0.4); }
+        .history-list { max-height: 220px; overflow-y: auto; }
+        .history-item { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.78rem; }
+        .history-item .h-date { color: rgba(255,255,255,0.35); font-size: 0.68rem; }
+        .history-item .h-action { color: #f5c842; font-weight: 700; }
+        .history-item .h-details { color: rgba(255,255,255,0.45); }
 
-        /* ===== CONFIRM MODAL ===== */
         .confirm-modal .modal-content {
             max-width: 420px;
             text-align: center;
@@ -601,13 +686,13 @@
         }
         .confirm-modal .confirm-icon.danger { color: #e94560; }
         .confirm-modal .confirm-message {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.95rem; line-height: 1.6;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.92rem; line-height: 1.6;
             margin-bottom: 20px;
             white-space: pre-line;
         }
 
-        /* ===== TOAST ===== */
+        /* TOAST */
         .toast {
             position: fixed;
             bottom: 24px; right: 24px;
@@ -620,65 +705,75 @@
             max-width: 350px;
             direction: rtl;
         }
-        .toast-success { background: rgba(0,184,148,0.15); border: 1px solid rgba(0,184,148,0.2); }
-        .toast-error   { background: rgba(233,69,96,0.15); border: 1px solid rgba(233,69,96,0.2); }
-        .toast-info    { background: rgba(108,92,231,0.15); border: 1px solid rgba(108,92,231,0.2); }
+        .toast-success { background: rgba(0,184,148,0.2); border: 1px solid rgba(0,184,148,0.3); }
+        .toast-error   { background: rgba(233,69,96,0.2); border: 1px solid rgba(233,69,96,0.3); }
+        .toast-info    { background: rgba(108,92,231,0.2); border: 1px solid rgba(108,92,231,0.3); }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== PRINT HEADER (hidden on screen) ===== */
         .print-header { display: none; }
-        .print-footer { display: none; }
 
-        /* ===== RESPONSIVE ===== */
+        /* ============================================================
+           RESPONSIVE — لا تداخل
+           ============================================================ */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(5, 1fr); gap: 10px; }
+            .stat-card .number { font-size: 22px; }
+        }
+        @media (max-width: 1024px) {
+            .maint-header { flex-direction: column; align-items: stretch; }
+            .maint-header-left { flex: 1 1 auto; }
+            .maint-header-actions { width: 100%; justify-content: flex-start; }
+        }
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+        }
         @media (max-width: 768px) {
             #page-maintenance { padding: 12px; }
-            .maint-header { flex-direction: column; align-items: flex-start; padding: 12px 16px; }
-            .maint-header-left { width: 100%; }
-            .maint-header-left h2 { font-size: 16px; }
-            .maint-header-actions { width: 100%; justify-content: flex-start; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .stat-card { padding: 12px 14px; }
-            .stat-card .number { font-size: 20px; }
-            .filter-bar { flex-direction: column; align-items: stretch; padding: 10px 14px; }
-            .filter-bar input, .filter-bar select { min-width: 100%; }
-            .damaged-section { padding: 12px 14px; }
-            .damaged-table { font-size: 0.7rem; min-width: 500px; }
+            .maint-header { padding: 12px 14px; gap: 10px; }
+            .maint-header-left h2 { font-size: 17px; }
+            .maint-header-left p { font-size: 11px; }
+            .maint-header-left .header-icon { width: 40px; height: 40px; font-size: 17px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-card { padding: 11px 12px; }
+            .stat-card .number { font-size: 18px; }
+            .stat-card .stat-icon { width: 32px; height: 32px; font-size: 13px; }
+            .stat-card .label { font-size: 9.5px; }
+            .filter-bar { padding: 10px 12px; }
+            .filter-bar input[type="text"],
+            .filter-bar select { min-width: 100%; flex: 1 1 100%; }
+            .damaged-section { padding: 12px 12px; }
+            .damaged-table { font-size: 0.7rem; min-width: 520px; }
             .table-scroll { padding: 0 8px 8px; }
-            table { font-size: 0.7rem; min-width: 700px; }
+            table { font-size: 0.7rem; min-width: 720px; }
             .maint-modal .form-row { grid-template-columns: 1fr; }
-            .maint-modal .modal-content { padding: 16px; max-width: 100%; }
-            .maint-modal .modal-header h3 { font-size: 16px; }
+            .maint-modal .modal-content { padding: 18px; max-width: 100%; }
+            .maint-modal .modal-header h3 { font-size: 15px; }
         }
         @media (max-width: 480px) {
+            .maint-header-actions { gap: 6px; }
+            .btn-action { padding: 7px 12px; font-size: 0.72rem; }
+            .btn-action i { font-size: 0.78rem; }
             .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
-            .stat-card { padding: 8px 10px; }
+            .stat-card { padding: 9px 10px; }
             .stat-card .number { font-size: 16px; }
             .stat-card .label { font-size: 9px; }
-            .stat-card .stat-icon { width: 32px; height: 32px; font-size: 13px; }
-            .maint-modal .modal-content { padding: 12px; }
-            .year-checkbox-group {
-                width: 100%; overflow-x: auto;
-                flex-wrap: nowrap; padding-bottom: 4px;
-            }
+            .stat-card .stat-icon { width: 28px; height: 28px; font-size: 12px; }
+            .maint-modal .modal-content { padding: 14px; }
+            .year-checkbox-group { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
             .year-check { flex-shrink: 0; }
         }
 
         /* ============================================================
-           🖨️ ENHANCED PRINT STYLES v2.0
-           A4 Landscape | Colored | Repeated Headers | Numbered Pages
+           🖨️ PRINT — احترافي
            ============================================================ */
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 14mm 10mm 18mm 10mm;
+                margin: 12mm 10mm 16mm 10mm;
             }
-            @page :first {
-                margin-top: 10mm;
-            }
-
             html, body {
                 background: #ffffff !important;
                 color: #1a1a1a !important;
@@ -687,114 +782,87 @@
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-
-            /* إخفاء عناصر التفاعل */
             button, .btn-action, .btn-filter, .action-btn, .btn-submit,
             .retry-btn, .modal-close, .maint-header-actions, .filter-bar,
-            .year-checkbox-group, .toast, .toast-container, #toastContainer,
-            nav, .sidebar, .navbar, .no-print, .maint-modal, #maintenanceModal,
-            #confirmModal, .stat-change, .badge {
+            .year-checkbox-group, .toast, nav, .sidebar, .navbar, .no-print,
+            .maint-modal, #maintenanceModal, #confirmModal, .stat-card::before,
+            .damaged-section::before {
                 display: none !important;
             }
 
-            /* ===== PRINT HEADER ===== */
+            /* Print header */
             .print-header {
                 display: flex !important;
                 justify-content: space-between;
                 align-items: center;
-                padding: 6mm 8mm;
-                margin: 0 0 5mm 0;
+                padding: 4mm 6mm;
+                margin: 0 0 4mm 0;
                 border: 2px solid #0a0e1a;
                 border-radius: 4px;
-                background: linear-gradient(135deg, #0a0e1a 0%, #111e3a 100%) !important;
+                background: #0a0e1a !important;
                 color: #f5c842 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 page-break-inside: avoid;
             }
-            .print-header .ph-left { display: flex; align-items: center; gap: 5mm; }
+            .print-header .ph-left { display: flex; align-items: center; gap: 4mm; }
             .print-header .ph-logo {
-                width: 18mm; height: 18mm;
-                border: 2px solid #e94560;
-                border-radius: 50%;
-                background: #ffffff;
-                display: flex; align-items: center; justify-content: center;
-                overflow: hidden;
-                flex-shrink: 0;
+                width: 14mm; height: 14mm;
+                border: 2px solid #e94560; border-radius: 50%;
+                background: #fff; display: flex; align-items: center; justify-content: center;
+                overflow: hidden; flex-shrink: 0;
             }
-            .print-header .ph-logo img {
-                width: 100%; height: 100%;
-                object-fit: contain;
-            }
-            .print-header .ph-logo i {
-                font-size: 20pt; color: #e94560;
-            }
-            .print-header .ph-title {
-                display: flex; flex-direction: column;
-            }
+            .print-header .ph-logo img { width: 100%; height: 100%; object-fit: contain; }
+            .print-header .ph-logo i { font-size: 15pt; color: #e94560; }
             .print-header .ph-title h1 {
-                font-size: 16pt; font-weight: 800;
+                font-size: 14pt; font-weight: 800;
                 color: #f5c842 !important;
                 margin: 0 0 1mm 0;
                 -webkit-text-fill-color: #f5c842 !important;
             }
             .print-header .ph-title p {
-                font-size: 10pt;
-                color: rgba(255,255,255,0.85) !important;
-                margin: 0;
+                font-size: 9pt; color: rgba(255,255,255,0.85) !important; margin: 0;
             }
             .print-header .ph-right {
-                text-align: left;
-                font-size: 9pt;
-                line-height: 1.5;
-                color: rgba(255,255,255,0.9) !important;
+                text-align: left; font-size: 8.5pt;
+                line-height: 1.5; color: rgba(255,255,255,0.9) !important;
             }
-            .print-header .ph-right strong {
-                color: #e94560 !important;
-                font-weight: 800;
-            }
+            .print-header .ph-right strong { color: #e94560 !important; font-weight: 800; }
 
-            /* إخفاء الهيدر التفاعلي الأصلي */
             .maint-header { display: none !important; }
 
-            /* ===== STATS ===== */
             .stats-grid {
                 display: grid !important;
                 grid-template-columns: repeat(5, 1fr) !important;
-                gap: 3mm !important;
-                margin: 0 0 5mm !important;
-                padding: 0 !important;
+                gap: 2.5mm !important;
+                margin: 0 0 4mm !important;
                 page-break-inside: avoid;
             }
             .stat-card {
                 background: #f8f9fc !important;
                 border: 1.5px solid #e94560 !important;
                 border-radius: 4px !important;
-                padding: 3mm 2mm !important;
+                padding: 2.5mm 2mm !important;
                 text-align: center !important;
                 box-shadow: none !important;
                 backdrop-filter: none !important;
-                position: relative !important;
-                overflow: visible !important;
                 page-break-inside: avoid;
             }
-            .stat-card::before { display: none !important; }
             .stat-card .stat-top { justify-content: center !important; margin-bottom: 1mm !important; }
             .stat-card .stat-icon {
-                width: 8mm !important; height: 8mm !important;
+                width: 7mm !important; height: 7mm !important;
                 border-radius: 50% !important;
                 border: 1px solid #e94560 !important;
                 background: #ffffff !important;
                 color: #0a0e1a !important;
-                font-size: 11pt !important;
+                font-size: 10pt !important;
             }
             .stat-card .number {
                 color: #0a0e1a !important;
-                font-size: 15pt !important;
+                font-size: 14pt !important;
                 font-weight: 800 !important;
                 line-height: 1 !important;
-                margin: 1.5mm 0 !important;
-                background: none !important;
+                margin: 1mm 0 !important;
                 -webkit-text-fill-color: #0a0e1a !important;
             }
             .stat-card .number.pink   { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
@@ -803,50 +871,30 @@
             .stat-card .number.purple { color: #6d28d9 !important; -webkit-text-fill-color: #6d28d9 !important; }
             .stat-card .number.blue   { color: #1d4ed8 !important; -webkit-text-fill-color: #1d4ed8 !important; }
             .stat-card .number.red    { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
-            .stat-card .label {
-                color: #374151 !important;
-                font-size: 8pt !important;
-                font-weight: 700 !important;
-            }
-            .stat-card .stat-bottom {
-                margin-top: 1.5mm !important;
-                padding-top: 1.5mm !important;
-                border-top: 1px solid #d1d5db !important;
-            }
-            .stat-card .sub-label, .stat-card .sub-label span {
-                color: #6b7280 !important;
-                font-size: 7pt !important;
-            }
+            .stat-card .label { color: #374151 !important; font-size: 8pt !important; font-weight: 700 !important; }
 
-            /* ===== DAMAGED SECTION ===== */
             .damaged-section {
                 background: #fef2f2 !important;
                 border: 2px solid #b91c1c !important;
                 border-radius: 4px !important;
                 padding: 3mm 4mm !important;
-                margin: 0 0 5mm !important;
+                margin: 0 0 4mm !important;
                 page-break-inside: avoid;
-                backdrop-filter: none !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            .damaged-section::before { display: none !important; }
-            .damaged-header h3 {
-                color: #b91c1c !important;
-                font-size: 11pt !important;
-                font-weight: 800 !important;
-            }
+            .damaged-header h3 { color: #b91c1c !important; font-size: 11pt !important; font-weight: 800 !important; }
             .damaged-header h3 i { animation: none !important; }
             .damaged-header .damaged-count {
                 background: #fef2f2 !important;
                 color: #b91c1c !important;
                 border: 1.5px solid #b91c1c !important;
-                font-size: 9pt !important;
-                padding: 1mm 3mm !important;
+                font-size: 8.5pt !important;
+                padding: 0.8mm 2.5mm !important;
             }
             .damaged-table {
                 width: 100% !important;
-                font-size: 8.5pt !important;
+                font-size: 8pt !important;
                 min-width: 0 !important;
                 border: 1.5px solid #0a0e1a !important;
                 border-collapse: collapse !important;
@@ -854,34 +902,25 @@
             .damaged-table thead, .damaged-table thead th {
                 background: #0a0e1a !important;
                 color: #f5c842 !important;
-                padding: 2.5mm 2mm !important;
-                font-size: 9pt !important;
+                padding: 2mm 1.5mm !important;
+                font-size: 8.5pt !important;
                 font-weight: 800 !important;
                 border: 1px solid #111e3a !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
             }
             .damaged-table tbody td {
-                padding: 2mm 2mm !important;
+                padding: 1.8mm 1.5mm !important;
                 border: 1px solid #e5e7eb !important;
                 color: #1f2937 !important;
-                font-size: 8.5pt !important;
+                font-size: 8pt !important;
                 background: #ffffff !important;
             }
-            .damaged-table tbody tr.critical {
-                background: #fef2f2 !important;
-                border-right: 3px solid #b91c1c !important;
-            }
-            .damaged-table tbody tr.warning {
-                background: #fffbeb !important;
-                border-right: 3px solid #b45309 !important;
-            }
+            .damaged-table tbody tr.critical { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
+            .damaged-table tbody tr.warning  { background: #fffbeb !important; border-right: 3px solid #b45309 !important; }
             .damaged-table .vessel-name-damaged { color: #b91c1c !important; font-weight: 800 !important; }
             .damaged-table .damage-type { color: #b45309 !important; font-weight: 700 !important; }
-            .damaged-table .damage-date { color: #6b7280 !important; }
             .damaged-table .urgency-badge {
-                padding: 0.8mm 2.5mm !important;
-                border-radius: 8px !important;
+                padding: 0.7mm 2mm !important;
+                border-radius: 6px !important;
                 font-size: 7pt !important;
                 font-weight: 700 !important;
                 border: 1px solid currentColor !important;
@@ -891,32 +930,22 @@
             .damaged-table .urgency-badge.critical { color: #b91c1c !important; background: #fee2e2 !important; }
             .damaged-table .urgency-badge.warning  { color: #b45309 !important; background: #fef3c7 !important; }
             .damaged-table .urgency-badge.normal   { color: #4b5563 !important; background: #f3f4f6 !important; }
-
-            .damaged-empty { padding: 8mm !important; }
-            .damaged-empty h4 { color: #047857 !important; font-size: 11pt !important; }
+            .damaged-empty h4 { color: #047857 !important; font-size: 10pt !important; }
             .damaged-empty p { color: #6b7280 !important; }
 
-            /* ===== MAIN TABLE ===== */
             .table-wrapper {
                 background: #ffffff !important;
                 border: 1.5px solid #0a0e1a !important;
                 border-radius: 4px !important;
-                page-break-inside: auto;
                 overflow: visible !important;
             }
             .table-header {
                 background: #0a0e1a !important;
                 border-bottom: 2px solid #e94560 !important;
-                padding: 3mm 4mm !important;
+                padding: 2.5mm 4mm !important;
                 page-break-after: avoid;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
             }
-            .table-header h3 {
-                color: #f5c842 !important;
-                font-size: 11pt !important;
-                font-weight: 800 !important;
-            }
+            .table-header h3 { color: #f5c842 !important; font-size: 10.5pt !important; font-weight: 800 !important; }
             .table-header h3 i { color: #e94560 !important; }
 
             .table-scroll { overflow: visible !important; padding: 0 !important; }
@@ -925,55 +954,38 @@
                 border-collapse: collapse !important;
                 font-size: 8.5pt !important;
                 min-width: 0 !important;
-                page-break-inside: auto;
             }
             thead {
                 display: table-header-group !important;
                 background: #0a0e1a !important;
-                color: #f5c842 !important;
             }
             thead th {
                 background: #0a0e1a !important;
                 color: #f5c842 !important;
-                padding: 2.5mm 2mm !important;
+                padding: 2mm 1.5mm !important;
                 font-size: 8.5pt !important;
                 font-weight: 800 !important;
-                text-align: center !important;
                 border: 1px solid #111e3a !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
             }
             thead th i { display: none !important; }
-
-            tbody tr {
-                page-break-inside: avoid;
-                background: #ffffff !important;
-            }
+            tbody tr { page-break-inside: avoid; background: #ffffff !important; }
             tbody tr:nth-child(even) { background: #f9fafb !important; }
             tbody td {
-                padding: 2mm 2mm !important;
+                padding: 1.8mm 1.5mm !important;
                 border: 1px solid #e5e7eb !important;
                 color: #1f2937 !important;
                 font-size: 8.5pt !important;
-                text-align: center !important;
-                vertical-align: middle !important;
                 background: transparent !important;
             }
-            tbody tr.damaged {
-                background: #fef2f2 !important;
-                border-right: 3px solid #b91c1c !important;
-            }
+            tbody tr.damaged { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
             tbody tr.damaged td { color: #991b1b !important; }
             tbody tr.virtual { opacity: 1 !important; }
-            tbody .vessel-name, tbody td strong {
-                font-weight: 800 !important;
-                color: #0a0e1a !important;
-            }
+            tbody .vessel-name { font-weight: 800 !important; color: #0a0e1a !important; }
 
             .status-badge {
                 display: inline-block !important;
-                padding: 0.8mm 2.5mm !important;
-                border-radius: 8px !important;
+                padding: 0.7mm 2mm !important;
+                border-radius: 6px !important;
                 font-size: 7.5pt !important;
                 font-weight: 700 !important;
                 border: 1px solid currentColor !important;
@@ -986,39 +998,9 @@
             .status-badge.damaged   { color: #b91c1c !important; background: #fee2e2 !important; }
             .status-badge.pending   { color: #1d4ed8 !important; background: #dbeafe !important; }
 
-            .empty-state { padding: 12mm !important; color: #6b7280 !important; }
-            .empty-state .empty-icon { color: #d1d5db !important; }
+            .empty-state { padding: 12mm !important; }
             .empty-state h3 { color: #4b5563 !important; }
-
-            /* ===== PRINT FOOTER (ثابت أسفل كل صفحة) ===== */
-            .print-footer {
-                display: block !important;
-                position: fixed;
-                bottom: 0; left: 0; right: 0;
-                padding: 2mm 10mm;
-                text-align: center;
-                font-size: 8pt;
-                color: #6b7280;
-                border-top: 1.5px solid #e94560;
-                background: #ffffff;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            .print-footer strong { color: #0a0e1a; font-weight: 800; }
-
-            /* تفادي تكرار الفوتر */
-            .print-footer { display: none !important; }
-            @page {
-                @bottom-center {
-                    content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية | صفحة " counter(page) " / " counter(pages);
-                    font-family: 'Cairo', 'Segoe UI', sans-serif;
-                    font-size: 8pt;
-                    color: #6b7280;
-                    border-top: 1.5px solid #e94560;
-                    padding-top: 2mm;
-                    width: 100%;
-                }
-            }
+            .empty-state .empty-icon { color: #d1d5db !important; }
 
             h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
             tr, img, .stat-card, .damaged-section { page-break-inside: avoid; }
@@ -1032,7 +1014,7 @@
         }
     </style>
 
-    <!-- ============ PRINT HEADER (hidden on screen) ============ -->
+    <!-- PRINT HEADER -->
     <div class="print-header" aria-hidden="true">
         <div class="ph-left">
             <div class="ph-logo">
@@ -1040,8 +1022,8 @@
                 <i class="fas fa-tools" id="printLogoFallback"></i>
             </div>
             <div class="ph-title">
-                <h1>سجلات الصيانة</h1>
-                <p>متابعة وإدارة مهام الصيانة للمراكب البحرية</p>
+                <h1>سجل الصيانة</h1>
+                <p>سجل كامل لعمليات الصيانة والتدخلات الفنية</p>
             </div>
         </div>
         <div class="ph-right">
@@ -1051,98 +1033,71 @@
         </div>
     </div>
 
-    <!-- ============ HEADER ============ -->
+    <!-- HEADER -->
     <div class="maint-header" id="maintHeader">
         <div class="maint-header-left">
             <div class="header-icon" id="maintHeaderIcon" aria-hidden="true">
                 <i class="fas fa-tools"></i>
                 <img id="globalLogo" src="" alt="" style="display:none;">
             </div>
-            <div>
-                <h2>سجلات الصيانة</h2>
-                <p>متابعة وإدارة مهام الصيانة للمراكب البحرية</p>
+            <div class="header-text">
+                <h2>الصيانة</h2>
+                <p>سجل كامل لعمليات الصيانة والتدخلات الفنية</p>
             </div>
         </div>
         <div class="maint-header-actions">
-            <button type="button" class="btn-action primary" id="addBtn">
-                <i class="fas fa-plus"></i> إضافة صيانة
-            </button>
             <button type="button" class="btn-action success" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button type="button" class="btn-action secondary" id="printBtn">
-                <i class="fas fa-print"></i> طباعة
+            <button type="button" class="btn-action secondary" id="exportBtn">
+                <i class="fas fa-file-export"></i> تصدير
             </button>
-            <button type="button" class="btn-action secondary" id="debugBtn" title="تشخيص" aria-label="تشخيص">
-                <i class="fas fa-bug"></i>
+            <button type="button" class="btn-action primary" id="printBtn">
+                <i class="fas fa-print"></i> طباعة
             </button>
         </div>
     </div>
 
-    <!-- ============ STATS ============ -->
+    <!-- STATS -->
     <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
             <div class="stat-top">
                 <div class="stat-icon pink"><i class="fas fa-clipboard-list"></i></div>
-                <span class="stat-change flat" data-stat-trend="total">—</span>
             </div>
             <div class="number pink" id="totalTasks">0</div>
-            <div class="label">📋 إجمالي مهام الصيانة</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-sync-alt" style="color:#f5c842;"></i> <span id="activeTasks">0</span> قيد التنفيذ</span>
-            </div>
+            <div class="label">📋 إجمالي السجلات</div>
         </div>
-
         <div class="stat-card">
             <div class="stat-top">
                 <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-                <span class="stat-change flat" data-stat-trend="completed">—</span>
             </div>
             <div class="number green" id="completedTasks">0</div>
-            <div class="label">✅ المهام المكتملة</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-calendar" style="color:#55efc4;"></i> هذا الشهر</span>
-            </div>
+            <div class="label">✅ مكتملة</div>
         </div>
-
         <div class="stat-card">
             <div class="stat-top">
-                <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
-                <span class="stat-change flat" data-stat-trend="damaged">—</span>
-            </div>
-            <div class="number red" id="damagedCount">0</div>
-            <div class="label">🟥 مراكب معطبة</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-clock" style="color:#f5c842;"></i> تحتاج صيانة عاجلة</span>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-top">
-                <div class="stat-icon gold"><i class="fas fa-coins"></i></div>
-                <span class="stat-change flat" data-stat-trend="cost">—</span>
-            </div>
-            <div class="number gold" id="totalCost">0</div>
-            <div class="label">💰 التكلفة الإجمالية</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-chart-line" style="color:#f5c842;"></i> د.ت</span>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-top">
-                <div class="stat-icon blue"><i class="fas fa-clock"></i></div>
-                <span class="stat-change flat" data-stat-trend="pending">—</span>
+                <div class="stat-icon blue"><i class="fas fa-hourglass-half"></i></div>
             </div>
             <div class="number blue" id="pendingTasks">0</div>
             <div class="label">⏳ قيد الانتظار</div>
-            <div class="stat-bottom">
-                <span class="sub-label"><i class="fas fa-hourglass-half" style="color:#0984e3;"></i> تحتاج إلى مراجعة</span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
             </div>
+            <div class="number red" id="damagedCount">0</div>
+            <div class="label">🚨 متأخرة</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon gold"><i class="fas fa-bolt"></i></div>
+            </div>
+            <div class="number gold" id="activeTasks">0</div>
+            <div class="label">⚡ قيد التنفيذ</div>
         </div>
     </div>
 
-    <!-- ============ DAMAGED VESSELS ============ -->
+    <!-- DAMAGED VESSELS -->
     <div class="damaged-section" id="damagedSection">
         <div class="damaged-header">
             <h3><i class="fas fa-exclamation-triangle"></i> 🚨 المراكب المعطبة - تحتاج صيانة عاجلة</h3>
@@ -1173,10 +1128,10 @@
         </div>
     </div>
 
-    <!-- ============ FILTER BAR ============ -->
+    <!-- FILTER BAR -->
     <div class="filter-bar">
-        <label for="searchMaint"><i class="fas fa-search"></i> بحث</label>
-        <input type="text" id="searchMaint" placeholder="المركب، العطب، الفني..." />
+        <label for="searchMaint"><i class="fas fa-search"></i> بحث في السجلات</label>
+        <input type="text" id="searchMaint" placeholder="المركب، نوع التدخل، الوحدة..." />
 
         <label><i class="fas fa-calendar"></i> السنة</label>
         <div class="year-checkbox-group" id="yearFilterGroup"></div>
@@ -1184,11 +1139,11 @@
         <label for="statusFilter"><i class="fas fa-circle"></i> الحالة</label>
         <select id="statusFilter">
             <option value="الكل">📊 جميع الحالات</option>
-            <option value="قيد الإنجاز">🔄 قيد التنفيذ</option>
+            <option value="قيد التنفيذ">⚡ قيد التنفيذ</option>
             <option value="مكتملة">✅ مكتملة</option>
-            <option value="ملغية">❌ ملغية</option>
+            <option value="ملغاة">❌ ملغاة</option>
             <option value="قيد الانتظار">⏳ قيد الانتظار</option>
-            <option value="معطب">🟥 معطب</option>
+            <option value="متأخرة">🚨 متأخرة</option>
         </select>
 
         <button type="button" class="btn-filter primary" id="filterBtn">
@@ -1199,11 +1154,11 @@
         </button>
     </div>
 
-    <!-- ============ MAIN TABLE ============ -->
+    <!-- MAIN TABLE -->
     <div class="table-wrapper">
         <div class="table-header">
-            <h3><i class="fas fa-list-ul"></i> قائمة مهام الصيانة</h3>
-            <span class="badge pink" id="tableBadge">📊 جاري التحميل...</span>
+            <h3><i class="fas fa-list-ul"></i> سجلات الصيانة</h3>
+            <span class="badge blue" id="tableBadge">📊 جاري التحميل...</span>
         </div>
         <div class="table-scroll">
             <table>
@@ -1211,17 +1166,16 @@
                     <tr>
                         <th style="text-align:right;"><i class="fas fa-hashtag"></i> #</th>
                         <th style="text-align:right;"><i class="fas fa-ship"></i> المركب</th>
-                        <th><i class="fas fa-tools"></i> نوع العطب</th>
-                        <th><i class="fas fa-user"></i> الفني</th>
+                        <th><i class="fas fa-tools"></i> نوع التدخل</th>
                         <th><i class="fas fa-calendar"></i> التاريخ</th>
+                        <th><i class="fas fa-building"></i> الوحدة المسؤولة</th>
                         <th><i class="fas fa-circle"></i> الحالة</th>
-                        <th><i class="fas fa-coins"></i> التكلفة</th>
-                        <th><i class="fas fa-cogs"></i> الإجراءات</th>
+                        <th><i class="fas fa-cogs"></i> إجراء</th>
                     </tr>
                 </thead>
                 <tbody id="maintenanceBody">
                     <tr>
-                        <td colspan="8" class="empty-state">
+                        <td colspan="7" class="empty-state">
                             <span class="empty-icon"><i class="fas fa-spinner fa-pulse"></i></span>
                             <h3>جاري تحميل البيانات...</h3>
                             <p>يرجى الانتظار</p>
@@ -1232,8 +1186,8 @@
         </div>
     </div>
 
-    <!-- ============ MODAL ============ -->
-    <div class="maint-modal" id="maintenanceModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <!-- MODAL -->
+    <div class="maint-modal" id="maintenanceModal" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle">📝 إدارة الصيانة</h3>
@@ -1243,7 +1197,7 @@
         </div>
     </div>
 
-    <!-- ============ CONFIRM MODAL ============ -->
+    <!-- CONFIRM MODAL -->
     <div class="maint-modal confirm-modal" id="confirmModal" role="alertdialog" aria-modal="true">
         <div class="modal-content">
             <div class="confirm-icon" id="confirmIcon">
@@ -1264,12 +1218,8 @@
     <script>
         (function() {
             'use strict';
+            console.log('🔧 Maintenance v11.0 - loading...');
 
-            console.log('🔧 Maintenance Page v10.1 - loading...');
-
-            // ============================================================
-            // ✅ STATE
-            // ============================================================
             var state = {
                 destroyed: false,
                 initialized: false,
@@ -1280,24 +1230,20 @@
             };
 
             var VIRTUAL_PREFIX = 'damaged_';
-
             function isVirtualId(id) {
                 return typeof id === 'string' && id.indexOf(VIRTUAL_PREFIX) === 0;
             }
 
-            // ============================================================
-            // ✅ SAFE BINDING + CLEANUP
-            // ============================================================
-            function bind(target, event, handler, options) {
+            // ===== BIND + CLEANUP =====
+            function bind(target, ev, fn, opts) {
                 if (!target) return;
-                target.addEventListener(event, handler, options);
-                state.listeners.push({ target: target, event: event, handler: handler, options: options });
+                target.addEventListener(ev, fn, opts);
+                state.listeners.push({ target: target, event: ev, handler: fn, options: opts });
             }
-            function bindWin(event, handler, options) {
-                window.addEventListener(event, handler, options);
-                state.listeners.push({ target: window, event: event, handler: handler, options: options });
+            function bindWin(ev, fn, opts) {
+                window.addEventListener(ev, fn, opts);
+                state.listeners.push({ target: window, event: ev, handler: fn, options: opts });
             }
-
             function cleanup() {
                 if (state.destroyed) return;
                 state.destroyed = true;
@@ -1305,113 +1251,70 @@
                     try { l.target.removeEventListener(l.event, l.handler, l.options); } catch (e) {}
                 });
                 state.listeners = [];
-                [
-                    'openAddMaintenance','openEditModal','saveMaintenance','completeMaintenance',
-                    'deleteMaintenance','showHistory','closeModal','refreshMaintenance',
-                    'resetFilters','onYearCheckChange','printMaintenance','startMaintenanceForVessel'
-                ].forEach(function(name) {
-                    try { delete window[name]; } catch (e) {}
-                });
-                console.log('🧹 Maintenance v10.1 cleanup done');
+                console.log('🧹 v11.0 cleanup done');
             }
-
             window._pageCleanup = window._pageCleanup || [];
             window._pageCleanup.push(cleanup);
             bindWin('beforeunload', cleanup);
             bindWin('pagehide', cleanup);
 
-            // ============================================================
-            // 🎨 LOGO
-            // ============================================================
+            // ===== LOGO =====
             function applyLogo() {
                 try {
                     var cached = localStorage.getItem('marine_logo');
                     if (!cached) return;
-                    var iconDiv = document.getElementById('maintHeaderIcon');
                     var img = document.getElementById('globalLogo');
-                    var printImg = document.getElementById('printLogo');
-                    var printFallback = document.getElementById('printLogoFallback');
+                    var iconDiv = document.getElementById('maintHeaderIcon');
+                    var pImg = document.getElementById('printLogo');
+                    var pFb = document.getElementById('printLogoFallback');
                     if (img) { img.src = cached; img.style.display = 'block'; }
-                    if (printImg) { printImg.src = cached; printImg.style.display = 'block'; }
-                    if (printFallback) printFallback.style.display = 'none';
+                    if (pImg) { pImg.src = cached; pImg.style.display = 'block'; }
+                    if (pFb) pFb.style.display = 'none';
                     if (iconDiv) iconDiv.classList.add('has-logo');
                 } catch (e) {}
             }
-            function syncLogoFromServer() {
-                var token = getToken();
-                var headers = { 'Accept': 'application/json' };
-                if (token) headers['Authorization'] = 'Bearer ' + token;
-                fetch('/api/logo', { headers: headers, credentials: 'include' })
-                    .then(function(r) { return r.ok ? r.json() : null; })
-                    .then(function(data) {
-                        if (data && data.success && data.logo && data.logo.dataUrl) {
-                            try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
-                            applyLogo();
-                        }
-                    }).catch(function() {});
-            }
-            function onStorageChange(e) {
-                if (e.key === 'marine_logo' && e.newValue) applyLogo();
-            }
-
             applyLogo();
-            syncLogoFromServer();
-            bindWin('storage', onStorageChange);
+            bindWin('storage', function(e) { if (e.key === 'marine_logo') applyLogo(); });
 
-            // ============================================================
-            // 🖨️ PRINT DATE
-            // ============================================================
+            // ===== PRINT DATE =====
             function updatePrintDate() {
                 try {
                     var now = new Date();
-                    var dateStr = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                    });
-                    var timeStr = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-                    var h = document.getElementById('maintHeader');
-                    if (h) h.setAttribute('data-print-date', dateStr + ' - ' + timeStr);
-
-                    var printDateEl = document.getElementById('printDate');
-                    if (printDateEl) printDateEl.textContent = dateStr;
-                    var printTimeEl = document.getElementById('printTime');
-                    if (printTimeEl) printTimeEl.textContent = timeStr;
-                    var printCountEl = document.getElementById('printCount');
-                    if (printCountEl) printCountEl.textContent = state.data.length;
+                    var d = now.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    var t = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
+                    var setEl = function(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+                    setEl('printDate', d);
+                    setEl('printTime', t);
+                    setEl('printCount', state.data.length);
                 } catch (e) {}
             }
             updatePrintDate();
             bindWin('beforeprint', updatePrintDate);
 
-            // ============================================================
-            // 🔐 AUTH + RBAC
-            // ============================================================
+            // ===== RBAC =====
             var LEGACY_ROLE_MAP = {
                 'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
                 'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit',
                 'user': 'viewer', 'مشاهد': 'viewer'
             };
-            var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-
-            function normalizeRole(role) {
-                if (!role) return 'viewer';
-                var r = String(role).trim();
-                if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
-                return LEGACY_ROLE_MAP[r] || 'viewer';
+            var ALLOWED_ROLES = ['admin','manager','editor','maintenance_unit','viewer'];
+            function normalizeRole(r) {
+                if (!r) return 'viewer';
+                var s = String(r).trim();
+                if (ALLOWED_ROLES.indexOf(s) !== -1) return s;
+                return LEGACY_ROLE_MAP[s] || 'viewer';
             }
-
             function canCreate() {
                 if (window.capabilities && typeof window.capabilities.canCreateMaintenance === 'boolean')
                     return window.capabilities.canCreateMaintenance;
-                var u = window.currentUser;
-                if (!u) return false;
-                return ['admin','manager','editor','maintenance_unit'].indexOf(normalizeRole(u.role)) !== -1;
+                if (!window.currentUser) return false;
+                return ['admin','manager','editor','maintenance_unit'].indexOf(normalizeRole(window.currentUser.role)) !== -1;
             }
             function canDelete() {
                 if (window.capabilities && typeof window.capabilities.canDeleteMaintenance === 'boolean')
                     return window.capabilities.canDeleteMaintenance;
-                var u = window.currentUser;
-                if (!u) return false;
-                return ['admin','manager'].indexOf(normalizeRole(u.role)) !== -1;
+                if (!window.currentUser) return false;
+                return ['admin','manager'].indexOf(normalizeRole(window.currentUser.role)) !== -1;
             }
 
             function normalizeStatusForServer(status) {
@@ -1420,26 +1323,24 @@
                 var ALLOWED = ['معلقة','قيد التنفيذ','مكتملة','ملغاة','متأخرة','قيد الانتظار'];
                 if (ALLOWED.indexOf(s) !== -1) return s;
                 var MAP = {
-                    'قيد الإنجاز': 'قيد التنفيذ', 'جاري': 'قيد التنفيذ',
-                    'in-progress': 'قيد التنفيذ', 'completed': 'مكتملة',
-                    'cancelled': 'ملغاة', 'overdue': 'متأخرة',
-                    'pending': 'قيد الانتظار', 'معطب': 'متأخرة'
+                    'قيد الإنجاز':'قيد التنفيذ','جاري':'قيد التنفيذ',
+                    'in-progress':'قيد التنفيذ','completed':'مكتملة',
+                    'cancelled':'ملغاة','overdue':'متأخرة',
+                    'pending':'قيد الانتظار','معطب':'متأخرة'
                 };
                 return MAP[s] || 'قيد التنفيذ';
             }
 
-            // ============================================================
-            // 🌐 HTTP
-            // ============================================================
+            // ===== HTTP =====
             function getToken() {
                 return localStorage.getItem('marine_token') ||
                        localStorage.getItem('token') ||
                        localStorage.getItem('authToken') || null;
             }
             function getAuthHeaders() {
-                var token = getToken();
+                var t = getToken();
                 var h = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-                if (token) h['Authorization'] = 'Bearer ' + token;
+                if (t) h['Authorization'] = 'Bearer ' + t;
                 try {
                     document.cookie.split('; ').forEach(function(c) {
                         if (c.indexOf('marine_csrf=') === 0)
@@ -1456,37 +1357,30 @@
                 }));
             }
 
-            // ============================================================
-            // 🧰 UTILS
-            // ============================================================
-            function escapeHtml(str) {
-                if (str === null || str === undefined) return '';
-                return String(str).replace(/[&<>"']/g, function(m) {
+            // ===== UTILS =====
+            function escapeHtml(s) {
+                if (s === null || s === undefined) return '';
+                return String(s).replace(/[&<>"']/g, function(m) {
                     return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
                 });
             }
-            function escapeAttr(str) {
-                return escapeHtml(str);
-            }
-
+            function escapeAttr(s) { return escapeHtml(s); }
             function formatDate(d) {
                 if (!d) return '-';
                 try {
                     var dt = new Date(d);
                     if (isNaN(dt.getTime())) return '-';
-                    return String(dt.getDate()).padStart(2, '0') + '/' +
-                           String(dt.getMonth() + 1).padStart(2, '0') + '/' +
+                    return String(dt.getDate()).padStart(2,'0') + '/' +
+                           String(dt.getMonth()+1).padStart(2,'0') + '/' +
                            dt.getFullYear();
                 } catch (_) { return '-'; }
             }
-
-            function daysSince(dateStr) {
-                if (!dateStr) return null;
-                var d = new Date(dateStr);
-                if (isNaN(d.getTime())) return null;
-                return Math.floor((Date.now() - d.getTime()) / 86400000);
+            function daysSince(d) {
+                if (!d) return null;
+                var dt = new Date(d);
+                if (isNaN(dt.getTime())) return null;
+                return Math.floor((Date.now() - dt.getTime()) / 86400000);
             }
-
             function formatDaysCount(n) {
                 if (n === null || n === undefined) return '-';
                 if (n <= 0) return 'اليوم';
@@ -1497,16 +1391,13 @@
                     var w = Math.floor(n / 7);
                     if (w === 1) return 'أسبوع';
                     if (w === 2) return 'أسبوعان';
-                    if (w <= 10) return w + ' أسابيع';
-                    return w + ' أسبوع';
+                    return w + ' أسابيع';
                 }
                 var m = Math.floor(n / 30);
                 if (m === 1) return 'شهر';
                 if (m === 2) return 'شهران';
-                if (m <= 10) return m + ' أشهر';
-                return m + ' شهر';
+                return m + ' أشهر';
             }
-
             function showToast(msg, type) {
                 var old = document.querySelector('.toast');
                 if (old) old.remove();
@@ -1521,10 +1412,6 @@
                     setTimeout(function() { n.remove(); }, 400);
                 }, 3000);
             }
-
-            // ============================================================
-            // ❓ CONFIRM HELPER
-            // ============================================================
             function confirmAction(opts) {
                 return new Promise(function(resolve) {
                     var modal = document.getElementById('confirmModal');
@@ -1532,96 +1419,76 @@
                     var msg = document.getElementById('confirmMessage');
                     var yes = document.getElementById('confirmYes');
                     var no = document.getElementById('confirmNo');
-                    if (!modal || !yes || !no) return resolve(window.confirm(opts.message || 'متأكد؟'));
+                    if (!modal) return resolve(window.confirm(opts.message || 'متأكد؟'));
 
                     icon.innerHTML = '<i class="fas ' + (opts.icon || 'fa-question-circle') + '"></i>';
                     icon.className = 'confirm-icon' + (opts.danger ? ' danger' : '');
                     msg.textContent = opts.message || 'هل أنت متأكد؟';
 
-                    function done(result) {
+                    function done(r) {
                         modal.classList.remove('active');
                         yes.removeEventListener('click', onYes);
                         no.removeEventListener('click', onNo);
-                        modal.removeEventListener('click', onBackdrop);
+                        modal.removeEventListener('click', onBd);
                         document.removeEventListener('keydown', onKey);
-                        resolve(result);
+                        resolve(r);
                     }
                     function onYes() { done(true); }
                     function onNo() { done(false); }
-                    function onBackdrop(e) { if (e.target === modal) done(false); }
+                    function onBd(e) { if (e.target === modal) done(false); }
                     function onKey(e) { if (e.key === 'Escape') done(false); }
 
                     yes.addEventListener('click', onYes);
                     no.addEventListener('click', onNo);
-                    modal.addEventListener('click', onBackdrop);
+                    modal.addEventListener('click', onBd);
                     document.addEventListener('keydown', onKey);
                     modal.classList.add('active');
                 });
             }
 
-            // ============================================================
-            // 🚨 DAMAGED DETECTION — FLEXIBLE
-            // ============================================================
-            var DAMAGED_VALUES = [
-                'معطب', 'معطبة', 'معطوب', 'معطوبة', 'عاطل', 'عاطلة',
-                'متوقف', 'متوقفة', 'خارج الخدمة', 'خارج الخدمه',
-                'damaged', 'broken', 'out-of-service', 'out_of_service',
-                'under-repair', 'needs-repair', 'down', 'unavailable'
-            ];
-
-            var STATUS_FIELDS = [
-                'stat', 'status', 'state', 'condition',
-                'vesselStatus', 'vessel_status',
-                'operationalStatus', 'operational_status',
-                'shipStatus', 'ship_status',
-                'currentStatus', 'maintenanceStatus',
-                'availabilityStatus', 'availability_status'
-            ];
-
+            // ===== DAMAGED VESSEL DETECTION =====
             function isVesselDamaged(v) {
                 if (!v) return false;
 
-                for (var i = 0; i < STATUS_FIELDS.length; i++) {
-                    var val = v[STATUS_FIELDS[i]];
-                    if (val === undefined || val === null) continue;
+                // ابحث في كل الحقول عن قيمة تعني "معطب"
+                for (var key in v) {
+                    if (!v.hasOwnProperty(key)) continue;
+                    var val = v[key];
+                    if (val === null || val === undefined) continue;
+
+                    if (typeof val === 'string') {
+                        var s = val.trim();
+                        if (/^(معطب|معطبة|معطوب|عاطل|عاطلة|متوقف|متوقفة|خارج الخدمة|damaged|broken|out.of.service|down|unavailable)$/i.test(s))
+                            return true;
+                    }
+                    if (typeof val === 'boolean' && val === true) {
+                        if (/damaged|broken|outOfService|needsRepair|isBroken/i.test(key)) return true;
+                    }
                     if (typeof val === 'object') {
-                        // nested: { value, name, label }
-                        var nested = val.value || val.name || val.label || val.code;
-                        if (nested && DAMAGED_VALUES.indexOf(String(nested).trim().toLowerCase()) !== -1) return true;
-                        if (nested && DAMAGED_VALUES.indexOf(String(nested).trim()) !== -1) return true;
-                        continue;
+                        try {
+                            var j = JSON.stringify(val);
+                            if (/معطب|معطوب|عاطل|damaged|broken/i.test(j)) return true;
+                        } catch (e) {}
                     }
-                    var s = String(val).trim();
-                    if (DAMAGED_VALUES.indexOf(s) !== -1) return true;
-                    if (DAMAGED_VALUES.indexOf(s.toLowerCase()) !== -1) return true;
                 }
-
-                // حقل منطقي
-                if (v.isDamaged === true || v.damaged === true ||
-                    v.broken === true || v.isBroken === true ||
-                    v.outOfService === true || v.needsRepair === true) return true;
-
-                // حقل عطل موجود
-                if (v.break || v.breakdown || v.problem || v.issue) {
-                    // إذا كان هناك "عطل" مسجل، نعتبره معطبًا فقط إذا لم يكن هناك حالة معارضة
-                    var hasActiveStatus = false;
-                    for (var j = 0; j < STATUS_FIELDS.length; j++) {
-                        var sv = v[STATUS_FIELDS[j]];
-                        if (sv && typeof sv === 'string' && sv.trim()) { hasActiveStatus = true; break; }
+                // حقل عطل مسجّل بدون حالة نشطة
+                if (v.break || v.breakdown || v.problem || v.issue || v.fault) {
+                    var hasActive = false;
+                    for (var k in v) {
+                        if (typeof v[k] === 'string' &&
+                            /^(يعمل|نشط|جيد|سليم|active|working|ok|good)$/i.test(v[k].trim())) {
+                            hasActive = true; break;
+                        }
                     }
-                    if (!hasActiveStatus) return true;
+                    if (!hasActive) return true;
                 }
-
                 return false;
             }
 
-            // ============================================================
-            // 📅 DYNAMIC YEAR FILTER
-            // ============================================================
+            // ===== YEAR FILTER =====
             function buildYearFilters() {
                 var group = document.getElementById('yearFilterGroup');
                 if (!group) return;
-
                 var years = {};
                 state.data.forEach(function(r) {
                     if (r.date) {
@@ -1629,26 +1496,18 @@
                         if (!isNaN(y)) years[y] = true;
                     }
                 });
-                var currentYear = new Date().getFullYear();
-                years[currentYear] = true;
-
-                var list = Object.keys(years).map(Number).sort(function(a, b) { return b - a; }).slice(0, 6);
-                var previous = getSelectedYears();
-
+                years[new Date().getFullYear()] = true;
+                var list = Object.keys(years).map(Number).sort(function(a,b) { return b-a; }).slice(0, 6);
+                var prev = getSelectedYears();
                 group.innerHTML = list.map(function(y) {
-                    var checked = previous.indexOf(String(y)) !== -1 ? ' checked' : '';
-                    return '<label class="year-check">' +
-                        '<input type="checkbox" value="' + y + '"' + checked + '>' +
-                        '<span>' + y + '</span>' +
-                    '</label>';
+                    var chk = prev.indexOf(String(y)) !== -1 ? ' checked' : '';
+                    return '<label class="year-check"><input type="checkbox" value="' + y + '"' + chk + '><span>' + y + '</span></label>';
                 }).join('');
             }
-
             function getSelectedYears() {
                 var cbs = document.querySelectorAll('#yearFilterGroup input[type="checkbox"]:checked');
                 return Array.prototype.map.call(cbs, function(cb) { return cb.value; });
             }
-
             function onYearCheckChange() {
                 if (state.destroyed) return;
                 renderDamagedVessels();
@@ -1656,24 +1515,14 @@
                 updateStats();
             }
 
-            // ============================================================
-            // 📡 API
-            // ============================================================
+            // ===== API =====
             async function loadVessels() {
                 if (state.destroyed) return [];
                 var token = getToken();
-                if (!token) {
-                    console.warn('⚠️ [loadVessels] لا يوجد token');
-                    state.vessels = [];
-                    return [];
-                }
+                if (!token) { state.vessels = []; return []; }
                 try {
                     var res = await fetcher('/api/vessels', { method: 'GET' });
-                    if (!res.ok) {
-                        console.warn('⚠️ [loadVessels] HTTP', res.status);
-                        state.vessels = [];
-                        return [];
-                    }
+                    if (!res.ok) { state.vessels = []; return []; }
                     var data = await res.json();
                     var list = [];
                     if (Array.isArray(data)) list = data;
@@ -1682,20 +1531,18 @@
                     else if (data && Array.isArray(data.records)) list = data.records;
 
                     state.vessels = list;
-                    window.__debugVessels = list;
-
-                    console.log('🚢 [loadVessels] تم تحميل', list.length, 'مركب');
+                    console.log('🚢 [loadVessels]', list.length, 'مركب');
                     if (list.length > 0) {
-                        console.log('🚢 [loadVessels] مفاتيح أول مركب:', Object.keys(list[0]));
+                        console.log('  🔑 مفاتيح:', Object.keys(list[0]));
                         var dmg = list.filter(isVesselDamaged);
-                        console.log('🚨 [loadVessels] معطبة:', dmg.length);
-                        if (dmg.length === 0 && list.length > 0) {
-                            console.log('⚠️ [loadVessels] لم يتم كشف أي معطب. عيّنة:', list[0]);
+                        console.log('  🚨 معطبة:', dmg.length);
+                        if (dmg.length === 0) {
+                            console.log('  ⚠️ لم يُكتشف أي معطب. عيّنة:', list[0]);
                         }
                     }
                     return state.vessels;
                 } catch (e) {
-                    console.error('❌ [loadVessels]', e);
+                    console.error('❌ loadVessels:', e);
                     state.vessels = [];
                     return [];
                 }
@@ -1705,7 +1552,6 @@
                 if (state.destroyed) return [];
                 var token = getToken();
                 if (!token) { state.data = []; return []; }
-
                 try {
                     var res = await fetcher('/api/maintenance-logs', { method: 'GET' });
                     if (!res.ok) { state.data = []; return []; }
@@ -1721,24 +1567,24 @@
                     }
 
                     state.data = records.map(function(r) {
-                        var rawStatus = r.status || 'قيد التنفيذ';
-                        var displayStatus = rawStatus;
-                        if (rawStatus === 'قيد التنفيذ') displayStatus = 'قيد الإنجاز';
-                        else if (rawStatus === 'متأخرة') displayStatus = 'معطب';
+                        var raw = r.status || 'قيد التنفيذ';
+                        var disp = raw;
+                        if (raw === 'قيد التنفيذ') disp = 'قيد التنفيذ';
+                        else if (raw === 'متأخرة') disp = 'متأخرة';
+                        else if (raw === 'قيد الإنجاز') disp = 'قيد التنفيذ';
 
                         return {
                             id: r.id || r._id || ('id_' + Math.random().toString(36).slice(2)),
                             vesselId: r.vesselId || '',
                             vesselName: r.vesselName || r.vessel || 'مركب غير معروف',
-                            damage: r.type || r.damage || 'عطل غير محدد',
-                            technician: r.repairUnit || r.unit || r.technician || 'غير محدد',
+                            interventionType: r.type || r.interventionType || r.damage || 'تدخل غير محدد',
+                            interventionUnit: r.repairUnit || r.unit || r.responsibleUnit || r.technician || 'غير محدد',
                             date: r.date || r.startDate || r.createdAt || new Date().toISOString(),
-                            status: displayStatus,
-                            statusRaw: rawStatus,
+                            status: disp,
+                            statusRaw: raw,
                             cost: parseFloat(r.cost || 0) || 0,
-                            parts: r.parts || r.spareParts || [],
-                            history: r.history || [],
                             description: r.notes || r.description || '',
+                            history: r.history || [],
                             createdAt: r.createdAt || r.date || new Date().toISOString(),
                             isVirtual: false
                         };
@@ -1751,18 +1597,11 @@
                 }
             }
 
-            // ============================================================
-            // 🚨 MERGE DAMAGED VESSELS
-            // ============================================================
+            // ===== MERGE =====
             function mergeDamagedVessels() {
                 var damagedVessels = state.vessels.filter(isVesselDamaged);
+                console.log('🔍 [MERGE] المراكب:', state.vessels.length, '| معطبة:', damagedVessels.length);
 
-                window.__debugVessels = state.vessels;
-                window.__debugData = state.data;
-                console.log('🔍 [MERGE] Vessels total:', state.vessels.length);
-                console.log('🔍 [MERGE] Damaged detected:', damagedVessels.length);
-
-                // فهرس: هل للمركب سجل وهمي مسبقًا؟
                 var virtualByVessel = {};
                 state.data.forEach(function(m) {
                     if (m.isVirtual && m.vesselId) virtualByVessel[m.vesselId] = true;
@@ -1770,145 +1609,71 @@
 
                 damagedVessels.forEach(function(v) {
                     var vid = v._id || v.id;
-                    if (!vid) return;
-                    if (virtualByVessel[vid]) return;
-
+                    if (!vid || virtualByVessel[vid]) return;
                     state.data.push({
-                        id: VIRTUAL_PREFIX + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+                        id: VIRTUAL_PREFIX + Date.now() + '_' + Math.random().toString(36).slice(2,8),
                         vesselId: vid,
                         vesselName: v.name || v.vesselName || v.title || 'مركب غير معروف',
-                        damage: v.break || v.damage || v.breakdown || v.problem || v.issue || 'عطل غير محدد',
-                        technician: 'غير محدد',
+                        interventionType: v.break || v.damage || v.breakdown || v.problem || v.issue || 'عطل غير محدد',
+                        interventionUnit: 'غير محدد',
                         date: v.fDate || v.damagedAt || v.date || v.updatedAt || new Date().toISOString(),
                         status: 'معطب',
                         statusRaw: 'متأخرة',
                         cost: 0,
-                        parts: [],
-                        history: [{
-                            action: 'تم إضافة المركب تلقائيًا من قائمة المراكب',
-                            date: new Date().toISOString()
-                        }],
                         description: v.break || v.damage || '',
+                        history: [{ action: 'تم الإضافة تلقائياً من قائمة المراكب', date: new Date().toISOString() }],
                         createdAt: new Date().toISOString(),
                         isVirtual: true
                     });
                 });
-
-                console.log('📊 [MERGE] After merge — total:', state.data.length,
-                            '| virtual:', state.data.filter(function(m) { return m.isVirtual; }).length);
+                console.log('📊 [MERGE] إجمالي بعد الدمج:', state.data.length);
             }
 
-            // ============================================================
-            // 📊 STATS
-            // ============================================================
-            function updateStatTrend(el, current, previous) {
-                if (!el) return;
-                if (previous === 0 && current === 0) {
-                    el.className = 'stat-change flat'; el.textContent = '—'; return;
-                }
-                if (previous === 0) {
-                    el.className = 'stat-change up'; el.textContent = '↑ جديد'; return;
-                }
-                var pct = Math.round(((current - previous) / previous) * 100);
-                if (pct > 0) { el.className = 'stat-change up'; el.textContent = '↑ ' + pct + '%'; }
-                else if (pct < 0) { el.className = 'stat-change down'; el.textContent = '↓ ' + Math.abs(pct) + '%'; }
-                else { el.className = 'stat-change flat'; el.textContent = '—'; }
-            }
-
+            // ===== STATS =====
             function updateStats() {
                 if (state.destroyed) return;
-                var data = state.data;
-                var total = data.length;
-                var active = data.filter(function(r) { return r.status === 'قيد الإنجاز'; }).length;
-                var completed = data.filter(function(r) { return r.status === 'مكتملة'; }).length;
-                var damaged = data.filter(function(r) { return r.status === 'معطب'; }).length;
-                var pending = data.filter(function(r) { return r.status === 'قيد الانتظار'; }).length;
-                var totalCost = data.reduce(function(s, r) { return s + (r.cost || 0); }, 0);
+                var d = state.data;
+                var total = d.length;
+                var completed = d.filter(function(r) { return r.status === 'مكتملة'; }).length;
+                var pending = d.filter(function(r) { return r.status === 'قيد الانتظار'; }).length;
+                var late = d.filter(function(r) { return r.status === 'متأخرة' || r.status === 'معطب'; }).length;
+                var active = d.filter(function(r) { return r.status === 'قيد التنفيذ'; }).length;
 
-                var now = new Date();
-                var thisMonth = now.getMonth(), thisYear = now.getFullYear();
-                var prevMonth = thisMonth === 0 ? 11 : thisMonth - 1;
-                var prevYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+                var set = function(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+                set('totalTasks', total);
+                set('completedTasks', completed);
+                set('pendingTasks', pending);
+                set('damagedCount', late);
+                set('activeTasks', active);
 
-                function inMonth(r, m, y) {
-                    var d = new Date(r.date);
-                    return d.getMonth() === m && d.getFullYear() === y;
+                var b = document.getElementById('tableBadge');
+                if (b) {
+                    if (late > 0) { b.textContent = '🚨 ' + late + ' متأخرة'; b.className = 'badge pink'; }
+                    else if (active > 0) { b.textContent = '⚡ ' + active + ' قيد التنفيذ'; b.className = 'badge gold'; }
+                    else { b.textContent = '✅ ' + completed + ' مكتملة'; b.className = 'badge green'; }
                 }
-
-                var curTotal = data.filter(function(r) { return inMonth(r, thisMonth, thisYear); }).length;
-                var prevTotal = data.filter(function(r) { return inMonth(r, prevMonth, prevYear); }).length;
-                var curCompleted = data.filter(function(r) { return r.status === 'مكتملة' && inMonth(r, thisMonth, thisYear); }).length;
-                var prevCompleted = data.filter(function(r) { return r.status === 'مكتملة' && inMonth(r, prevMonth, prevYear); }).length;
-                var curDamaged = data.filter(function(r) { return r.status === 'معطب' && inMonth(r, thisMonth, thisYear); }).length;
-                var prevDamaged = data.filter(function(r) { return r.status === 'معطب' && inMonth(r, prevMonth, prevYear); }).length;
-                var curCost = data.filter(function(r) { return inMonth(r, thisMonth, thisYear); }).reduce(function(s, r) { return s + r.cost; }, 0);
-                var prevCost = data.filter(function(r) { return inMonth(r, prevMonth, prevYear); }).reduce(function(s, r) { return s + r.cost; }, 0);
-                var curPending = data.filter(function(r) { return r.status === 'قيد الانتظار' && inMonth(r, thisMonth, thisYear); }).length;
-                var prevPending = data.filter(function(r) { return r.status === 'قيد الانتظار' && inMonth(r, prevMonth, prevYear); }).length;
-
-                var setText = function(id, val) {
-                    var el = document.getElementById(id);
-                    if (el) el.textContent = val;
-                };
-                setText('totalTasks', total);
-                setText('activeTasks', active);
-                setText('completedTasks', completed);
-                setText('damagedCount', damaged);
-                setText('totalCost', totalCost.toFixed(0));
-                setText('pendingTasks', pending);
-
-                updateStatTrend(document.querySelector('[data-stat-trend="total"]'), curTotal, prevTotal);
-                updateStatTrend(document.querySelector('[data-stat-trend="completed"]'), curCompleted, prevCompleted);
-                updateStatTrend(document.querySelector('[data-stat-trend="damaged"]'), curDamaged, prevDamaged);
-                updateStatTrend(document.querySelector('[data-stat-trend="cost"]'), curCost, prevCost);
-                updateStatTrend(document.querySelector('[data-stat-trend="pending"]'), curPending, prevPending);
-
-                var badge = document.getElementById('tableBadge');
-                if (badge) {
-                    if (damaged > 0) {
-                        badge.textContent = '🚨 ' + damaged + ' مركب معطب';
-                        badge.className = 'badge pink';
-                    } else if (active > 0) {
-                        badge.textContent = '🔄 ' + active + ' مهمة قيد التنفيذ';
-                        badge.className = 'badge gold';
-                    } else {
-                        badge.textContent = '✅ ' + completed + ' مهمة مكتملة';
-                        badge.className = 'badge green';
-                    }
-                }
-                var badge2 = document.getElementById('damagedCountBadge');
-                if (badge2) badge2.textContent = damaged + ' مركب معطب';
-
-                var printCountEl = document.getElementById('printCount');
-                if (printCountEl) printCountEl.textContent = total;
+                var b2 = document.getElementById('damagedCountBadge');
+                if (b2) b2.textContent = late + ' مركب معطب';
+                updatePrintDate();
             }
 
-            // ============================================================
-            // 🚨 RENDER DAMAGED
-            // ============================================================
+            // ===== RENDER DAMAGED =====
             function renderDamagedVessels() {
                 if (state.destroyed) return;
                 var tbody = document.getElementById('damagedBody');
                 if (!tbody) return;
 
-                var years = getSelectedYears();
                 var damaged = state.data.filter(function(r) {
-                    if (r.status !== 'معطب') return false;
-                    if (r.isVirtual) return true; // الوهمية تظهر دائمًا
-                    if (years.length === 0) return true;
-                    var y = r.date ? new Date(r.date).getFullYear().toString() : '';
-                    return years.indexOf(y) !== -1;
+                    return r.status === 'معطب' || r.status === 'متأخرة';
                 }).sort(function(a, b) {
-                    if (a.isVirtual && !b.isVirtual) return -1;
-                    if (!a.isVirtual && b.isVirtual) return 1;
                     return new Date(a.date) - new Date(b.date);
                 });
 
                 if (damaged.length === 0) {
                     tbody.innerHTML =
                         '<tr><td colspan="7" class="damaged-empty">' +
-                        '<span class="empty-icon"><i class="fas fa-check-circle" style="color:#55efc4;"></i></span>' +
-                        '<h4 style="color:#55efc4;">✅ لا توجد مراكب معطبة</h4>' +
+                        '<span class="empty-icon"><i class="fas fa-check-circle"></i></span>' +
+                        '<h4>✅ لا توجد مراكب معطبة</h4>' +
                         '<p>جميع المراكب في حالة جيدة</p>' +
                         '</td></tr>';
                     return;
@@ -1918,82 +1683,58 @@
                 var html = '';
                 damaged.forEach(function(r, i) {
                     var n = daysSince(r.date);
-                    var isCritical = n !== null && n <= 3;
-                    var isWarning = n !== null && n > 3 && n <= 7;
-                    var rowClass = isCritical ? 'critical' : (isWarning ? 'warning' : '');
-                    var urgencyClass = isCritical ? 'critical' : (isWarning ? 'warning' : 'normal');
-                    var urgencyText = isCritical ? '🚨 عاجل جداً' : (isWarning ? '⚠️ عاجل' : '📌 عادي');
+                    var critical = n !== null && n <= 3;
+                    var warn = n !== null && n > 3 && n <= 7;
+                    var rowCls = critical ? 'critical' : (warn ? 'warning' : '');
+                    var urgCls = critical ? 'critical' : (warn ? 'warning' : 'normal');
+                    var urgTxt = critical ? '🚨 عاجل جداً' : (warn ? '⚠️ عاجل' : '📌 عادي');
 
                     var actions = '';
                     if (canEdit) {
                         if (r.isVirtual) {
-                            actions =
-                                '<button type="button" class="action-btn start" ' +
-                                    'data-action="start" data-id="' + escapeAttr(r.id) + '" ' +
-                                    'aria-label="بدء صيانة">' +
-                                    '<i class="fas fa-play"></i> بدء الصيانة' +
-                                '</button>';
+                            actions = '<button type="button" class="action-btn start" data-action="start" data-id="' + escapeAttr(r.id) + '">' +
+                                '<i class="fas fa-play"></i> بدء الصيانة</button>';
                         } else {
                             actions =
-                                '<button type="button" class="action-btn edit" ' +
-                                    'data-action="edit" data-id="' + escapeAttr(r.id) + '" aria-label="تعديل">' +
-                                    '<i class="fas fa-edit"></i></button>' +
-                                '<button type="button" class="action-btn history" ' +
-                                    'data-action="history" data-id="' + escapeAttr(r.id) + '" aria-label="السجل">' +
-                                    '<i class="fas fa-history"></i></button>' +
-                                '<button type="button" class="action-btn complete" ' +
-                                    'data-action="complete" data-id="' + escapeAttr(r.id) + '" aria-label="إكمال">' +
-                                    '<i class="fas fa-check"></i></button>';
+                                '<button type="button" class="action-btn edit" data-action="edit" data-id="' + escapeAttr(r.id) + '" aria-label="تعديل"><i class="fas fa-edit"></i></button>' +
+                                '<button type="button" class="action-btn history" data-action="history" data-id="' + escapeAttr(r.id) + '" aria-label="سجل"><i class="fas fa-history"></i></button>' +
+                                '<button type="button" class="action-btn complete" data-action="complete" data-id="' + escapeAttr(r.id) + '" aria-label="إكمال"><i class="fas fa-check"></i></button>';
                         }
                     }
 
-                    html += '<tr class="' + rowClass + '">' +
-                        '<td>' + (i + 1) + '</td>' +
+                    html += '<tr class="' + rowCls + '">' +
+                        '<td>' + (i+1) + '</td>' +
                         '<td class="vessel-name-damaged">' + escapeHtml(r.vesselName) + '</td>' +
-                        '<td class="damage-type">' + escapeHtml(r.damage || '-') + '</td>' +
+                        '<td class="damage-type">' + escapeHtml(r.interventionType || '-') + '</td>' +
                         '<td class="damage-date">' + formatDate(r.date) + '</td>' +
                         '<td class="damage-date">' + formatDaysCount(n) + '</td>' +
-                        '<td><span class="urgency-badge ' + urgencyClass + '">' + urgencyText + '</span></td>' +
+                        '<td><span class="urgency-badge ' + urgCls + '">' + urgTxt + '</span></td>' +
                         '<td>' + actions + '</td>' +
                     '</tr>';
                 });
                 tbody.innerHTML = html;
             }
 
-            // ============================================================
-            // 📋 RENDER TABLE
-            // ============================================================
+            // ===== RENDER TABLE =====
             function renderTable() {
                 if (state.destroyed) return;
-
-                var searchEl = document.getElementById('searchMaint');
-                var statusEl = document.getElementById('statusFilter');
-                var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
-                var statusFilter = statusEl ? statusEl.value : 'الكل';
+                var sEl = document.getElementById('searchMaint');
+                var stEl = document.getElementById('statusFilter');
+                var search = sEl ? sEl.value.trim().toLowerCase() : '';
+                var status = stEl ? stEl.value : 'الكل';
                 var years = getSelectedYears();
 
                 var filtered = state.data.filter(function(r) {
-                    if (r.isVirtual) {
-                        // الوهمية تظهر دائمًا إلا إذا كان فلتر الحالة يستبعد "معطب"
-                        if (statusFilter !== 'الكل' && statusFilter !== 'معطب') return false;
-                        // البحث يطبق عليها أيضًا لكن بمطابقة مرنة
-                        if (search) {
-                            var txt = (r.vesselName + ' ' + (r.damage || '')).toLowerCase();
-                            if (txt.indexOf(search) === -1) return false;
-                        }
-                        return true;
-                    }
-                    var text = [r.vesselName, r.damage, r.technician, r.description]
+                    var txt = [r.vesselName, r.interventionType, r.interventionUnit, r.description]
                         .filter(Boolean).join(' ').toLowerCase();
-                    var matchSearch = !search || text.indexOf(search) !== -1;
-
-                    var matchYear = true;
-                    if (years.length > 0) {
+                    var mS = !search || txt.indexOf(search) !== -1;
+                    var mY = true;
+                    if (years.length > 0 && !r.isVirtual) {
                         var y = r.date ? new Date(r.date).getFullYear().toString() : '';
-                        matchYear = years.indexOf(y) !== -1;
+                        mY = years.indexOf(y) !== -1;
                     }
-                    var matchStatus = statusFilter === 'الكل' || r.status === statusFilter;
-                    return matchSearch && matchYear && matchStatus;
+                    var mSt = status === 'الكل' || r.status === status;
+                    return mS && mY && mSt;
                 });
 
                 filtered.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
@@ -2003,13 +1744,11 @@
 
                 if (filtered.length === 0) {
                     tbody.innerHTML =
-                        '<tr><td colspan="8" class="empty-state">' +
+                        '<tr><td colspan="7" class="empty-state">' +
                         '<span class="empty-icon"><i class="fas fa-inbox"></i></span>' +
-                        '<h3>لا توجد مهام صيانة</h3>' +
-                        '<p>قم بإضافة مهمة صيانة جديدة</p>' +
-                        '<button type="button" class="retry-btn" data-action="add">' +
-                            '<i class="fas fa-plus"></i> إضافة صيانة' +
-                        '</button>' +
+                        '<h3>لا توجد سجلات مطابقة</h3>' +
+                        '<p>جرّب تغيير معايير البحث أو الفلاتر</p>' +
+                        '<button type="button" class="retry-btn" data-action="add"><i class="fas fa-plus"></i> إضافة سجل</button>' +
                         '</td></tr>';
                     return;
                 }
@@ -2019,52 +1758,39 @@
 
                 var statusMap = {
                     'مكتملة': 'completed',
-                    'ملغية': 'cancelled',
-                    'قيد الإنجاز': 'active',
+                    'ملغاة': 'cancelled',
+                    'قيد التنفيذ': 'active',
+                    'متأخرة': 'damaged',
                     'معطب': 'damaged',
                     'قيد الانتظار': 'pending'
                 };
 
                 var html = '';
                 filtered.forEach(function(r, i) {
-                    var display = r.status || 'قيد الإنجاز';
-                    var cls = statusMap[display] || 'active';
-                    var isDamaged = display === 'معطب';
+                    var disp = r.status || 'قيد التنفيذ';
+                    var cls = statusMap[disp] || 'active';
+                    var isDmg = disp === 'معطب' || disp === 'متأخرة';
 
                     var actions = '';
                     if (canEdit) {
                         if (r.isVirtual) {
-                            actions = '<button type="button" class="action-btn start" ' +
-                                'data-action="start" data-id="' + escapeAttr(r.id) + '" ' +
-                                'aria-label="بدء صيانة">' +
-                                '<i class="fas fa-play"></i> بدء الصيانة</button>';
+                            actions = '<button type="button" class="action-btn start" data-action="start" data-id="' + escapeAttr(r.id) + '">' +
+                                '<i class="fas fa-play"></i> بدء</button>';
                         } else {
-                            actions += '<button type="button" class="action-btn edit" ' +
-                                'data-action="edit" data-id="' + escapeAttr(r.id) + '" aria-label="تعديل">' +
-                                '<i class="fas fa-edit"></i></button>';
-                            actions += '<button type="button" class="action-btn complete" ' +
-                                'data-action="complete" data-id="' + escapeAttr(r.id) + '" aria-label="إكمال">' +
-                                '<i class="fas fa-check"></i></button>';
-                            actions += '<button type="button" class="action-btn history" ' +
-                                'data-action="history" data-id="' + escapeAttr(r.id) + '" aria-label="السجل">' +
-                                '<i class="fas fa-history"></i></button>';
-                            if (canDel) {
-                                actions += '<button type="button" class="action-btn delete" ' +
-                                    'data-action="delete" data-id="' + escapeAttr(r.id) + '" aria-label="حذف">' +
-                                    '<i class="fas fa-trash-alt"></i></button>';
-                            }
+                            actions += '<button type="button" class="action-btn edit" data-action="edit" data-id="' + escapeAttr(r.id) + '" aria-label="تعديل"><i class="fas fa-edit"></i></button>';
+                            actions += '<button type="button" class="action-btn complete" data-action="complete" data-id="' + escapeAttr(r.id) + '" aria-label="إكمال"><i class="fas fa-check"></i></button>';
+                            actions += '<button type="button" class="action-btn history" data-action="history" data-id="' + escapeAttr(r.id) + '" aria-label="سجل"><i class="fas fa-history"></i></button>';
+                            if (canDel) actions += '<button type="button" class="action-btn delete" data-action="delete" data-id="' + escapeAttr(r.id) + '" aria-label="حذف"><i class="fas fa-trash-alt"></i></button>';
                         }
                     }
 
-                    html += '<tr class="' + (isDamaged ? 'damaged' : '') + (r.isVirtual ? ' virtual' : '') + '">' +
-                        '<td>' + (i + 1) + '</td>' +
+                    html += '<tr class="' + (isDmg ? 'damaged' : '') + (r.isVirtual ? ' virtual' : '') + '">' +
+                        '<td>' + (i+1) + '</td>' +
                         '<td class="vessel-name">' + escapeHtml(r.vesselName) + '</td>' +
-                        '<td style="color:' + (isDamaged ? '#e94560' : 'rgba(255,255,255,0.6)') + '">' +
-                            escapeHtml(r.damage || '-') + '</td>' +
-                        '<td>' + escapeHtml(r.technician || '-') + '</td>' +
+                        '<td style="color:' + (isDmg ? '#e94560' : 'rgba(255,255,255,0.6)') + '">' + escapeHtml(r.interventionType || '-') + '</td>' +
                         '<td>' + formatDate(r.date) + '</td>' +
-                        '<td><span class="status-badge ' + cls + '">' + display + '</span></td>' +
-                        '<td>' + (r.cost ? r.cost.toFixed(2) : '0.00') + ' د.ت</td>' +
+                        '<td>' + escapeHtml(r.interventionUnit || '-') + '</td>' +
+                        '<td><span class="status-badge ' + cls + '">' + disp + '</span></td>' +
                         '<td>' + actions + '</td>' +
                     '</tr>';
                 });
@@ -2078,19 +1804,13 @@
                 renderTable();
             }
 
-            // ============================================================
-            // 🔄 REFRESH
-            // ============================================================
+            // ===== REFRESH =====
             async function refreshMaintenance() {
                 if (state.destroyed) return;
                 var btn = document.getElementById('refreshBtn');
                 var orig = btn ? btn.innerHTML : '';
-                if (btn) {
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-                    btn.disabled = true;
-                }
+                if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> تحديث...'; btn.disabled = true; }
                 try {
-                    // نظّف السجلات الوهمية القديمة
                     state.data = state.data.filter(function(m) { return !m.isVirtual; });
                     await loadVessels();
                     await loadMaintenance();
@@ -2098,246 +1818,166 @@
                     if (state.destroyed) return;
                     renderAll();
                     if (btn) { btn.innerHTML = orig; btn.disabled = false; }
-                    showToast('✅ تم تحديث بيانات الصيانة', 'success');
+                    showToast('✅ تم التحديث', 'success');
                 } catch (err) {
                     if (btn) { btn.innerHTML = orig; btn.disabled = false; }
-                    showToast('❌ ' + (err.message || 'خطأ في التحديث'), 'error');
+                    showToast('❌ ' + (err.message || 'خطأ'), 'error');
                 }
             }
 
             function resetFilters() {
                 var s = document.getElementById('searchMaint'); if (s) s.value = '';
                 var st = document.getElementById('statusFilter'); if (st) st.value = 'الكل';
-                document.querySelectorAll('#yearFilterGroup input[type="checkbox"]').forEach(function(cb) {
-                    cb.checked = false;
-                });
-                renderDamagedVessels();
-                renderTable();
-                updateStats();
-                showToast('✅ تم إلغاء جميع الفلاتر', 'success');
+                document.querySelectorAll('#yearFilterGroup input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
+                renderAll();
+                showToast('✅ تم إلغاء الفلاتر', 'success');
             }
 
-            // ============================================================
-            // 🪟 MODAL
-            // ============================================================
-            function openModal() {
-                var m = document.getElementById('maintenanceModal');
-                if (m) m.classList.add('active');
-            }
-            function closeModal() {
-                var m = document.getElementById('maintenanceModal');
-                if (m) m.classList.remove('active');
-                state.editId = null;
-            }
+            // ===== MODAL =====
+            function openModal() { var m = document.getElementById('maintenanceModal'); if (m) m.classList.add('active'); }
+            function closeModal() { var m = document.getElementById('maintenanceModal'); if (m) m.classList.remove('active'); state.editId = null; }
 
-            function buildVesselOptions(selectedId) {
-                var opts = '<option value="">اختر المركب</option>';
+            function buildVesselOptions(sel) {
+                var o = '<option value="">اختر المركب</option>';
                 state.vessels.forEach(function(v) {
                     var vid = v._id || v.id;
-                    var sel = (vid == selectedId) ? ' selected' : '';
-                    opts += '<option value="' + escapeAttr(vid) + '"' + sel + '>' +
-                        escapeHtml(v.name || '') + '</option>';
+                    var s = (vid == sel) ? ' selected' : '';
+                    o += '<option value="' + escapeAttr(vid) + '"' + s + '>' + escapeHtml(v.name || '') + '</option>';
                 });
-                return opts;
+                return o;
             }
 
-            // ============================================================
-            // ➕ ADD
-            // ============================================================
             function openAddMaintenance(prefill) {
                 if (state.destroyed) return;
-                if (!canCreate()) {
-                    showToast('⚠️ ليس لديك صلاحية لإضافة صيانة', 'error');
-                    return;
-                }
+                if (!canCreate()) { showToast('⚠️ ليس لديك صلاحية', 'error'); return; }
                 prefill = prefill || {};
                 state.editId = null;
-
-                var titleEl = document.getElementById('modalTitle');
-                if (titleEl) titleEl.textContent = '➕ إضافة مهمة صيانة جديدة';
-
+                var t = document.getElementById('modalTitle');
+                if (t) t.textContent = '➕ إضافة سجل صيانة';
                 var body = document.getElementById('modalBody');
                 if (!body) return;
-
                 body.innerHTML =
-                    '<div class="form-group">' +
-                        '<label for="mVessel">🚢 المركب <span class="required">*</span></label>' +
-                        '<select id="mVessel">' + buildVesselOptions(prefill.vesselId) + '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label for="mDamage">🔧 نوع العطب <span class="required">*</span></label>' +
-                        '<input type="text" id="mDamage" placeholder="مثال: عطل في المحرك" ' +
-                        'value="' + escapeAttr(prefill.damage || '') + '">' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label for="mTechnician">👤 الفني المسؤول</label>' +
-                        '<input type="text" id="mTechnician" placeholder="اسم الفني">' +
-                    '</div>' +
+                    '<div class="form-group"><label for="mVessel">🚢 المركب <span class="required">*</span></label>' +
+                        '<select id="mVessel">' + buildVesselOptions(prefill.vesselId) + '</select></div>' +
+                    '<div class="form-group"><label for="mType">🔧 نوع التدخل <span class="required">*</span></label>' +
+                        '<input type="text" id="mType" placeholder="مثال: صيانة المحرك" value="' + escapeAttr(prefill.interventionType || '') + '"></div>' +
+                    '<div class="form-group"><label for="mUnit">🏢 الوحدة المسؤولة</label>' +
+                        '<input type="text" id="mUnit" placeholder="اسم الوحدة"></div>' +
                     '<div class="form-row">' +
-                        '<div class="form-group">' +
-                            '<label for="mDate">📅 تاريخ العطب</label>' +
-                            '<input type="date" id="mDate" value="' +
-                                new Date().toISOString().split('T')[0] + '">' +
-                        '</div>' +
-                        '<div class="form-group">' +
-                            '<label for="mCost">💰 التكلفة (د.ت)</label>' +
-                            '<input type="number" id="mCost" placeholder="0.00" step="0.01">' +
-                        '</div>' +
+                        '<div class="form-group"><label for="mDate">📅 التاريخ</label>' +
+                            '<input type="date" id="mDate" value="' + new Date().toISOString().split('T')[0] + '"></div>' +
+                        '<div class="form-group"><label for="mCost">💰 التكلفة (د.ت)</label>' +
+                            '<input type="number" id="mCost" placeholder="0.00" step="0.01"></div>' +
                     '</div>' +
-                    '<div class="form-group">' +
-                        '<label for="mDescription">📝 وصف العطب</label>' +
-                        '<textarea id="mDescription" placeholder="تفاصيل العطب...">' +
-                            escapeHtml(prefill.description || '') +
-                        '</textarea>' +
-                    '</div>' +
+                    '<div class="form-group"><label for="mStatus">📊 الحالة</label>' +
+                        '<select id="mStatus">' +
+                            '<option value="قيد التنفيذ">⚡ قيد التنفيذ</option>' +
+                            '<option value="مكتملة">✅ مكتملة</option>' +
+                            '<option value="قيد الانتظار">⏳ قيد الانتظار</option>' +
+                            '<option value="ملغاة">❌ ملغاة</option>' +
+                            '<option value="متأخرة">🚨 متأخرة</option>' +
+                        '</select></div>' +
+                    '<div class="form-group"><label for="mDescription">📝 الوصف</label>' +
+                        '<textarea id="mDescription" placeholder="تفاصيل...">' + escapeHtml(prefill.description || '') + '</textarea></div>' +
                     '<div class="modal-footer">' +
-                        '<button type="button" class="btn-submit primary" id="saveBtn">' +
-                            '<i class="fas fa-save"></i> حفظ' +
-                        '</button>' +
+                        '<button type="button" class="btn-submit primary" id="saveBtn"><i class="fas fa-save"></i> حفظ</button>' +
                         '<button type="button" class="btn-submit secondary" id="cancelBtn">إلغاء</button>' +
                     '</div>';
-
-                var saveBtn = document.getElementById('saveBtn');
-                var cancelBtn = document.getElementById('cancelBtn');
-                if (saveBtn) saveBtn.addEventListener('click', saveMaintenance);
-                if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+                var sb = document.getElementById('saveBtn');
+                var cb = document.getElementById('cancelBtn');
+                if (sb) sb.addEventListener('click', saveMaintenance);
+                if (cb) cb.addEventListener('click', closeModal);
                 openModal();
-                setTimeout(function() {
-                    var d = document.getElementById('mDamage');
-                    if (d) d.focus();
-                }, 100);
+                setTimeout(function() { var e = document.getElementById('mType'); if (e) e.focus(); }, 100);
             }
 
-            // ============================================================
-            // ✏️ EDIT
-            // ============================================================
             function openEditModal(id) {
                 if (state.destroyed) return;
                 var rec = state.data.find(function(r) { return r.id == id; });
-                if (!rec) { showToast('❌ المهمة غير موجودة', 'error'); return; }
+                if (!rec) { showToast('❌ غير موجود', 'error'); return; }
                 if (rec.isVirtual) { startMaintenanceForVessel(id); return; }
-                if (!canCreate()) {
-                    showToast('⚠️ ليس لديك صلاحية للتعديل', 'error');
-                    return;
-                }
+                if (!canCreate()) { showToast('⚠️ لا صلاحية', 'error'); return; }
                 state.editId = id;
-
-                var titleEl = document.getElementById('modalTitle');
-                if (titleEl) titleEl.textContent = '✏️ تعديل مهمة الصيانة';
-
+                var t = document.getElementById('modalTitle');
+                if (t) t.textContent = '✏️ تعديل السجل';
                 var body = document.getElementById('modalBody');
                 if (!body) return;
-
                 body.innerHTML =
-                    '<div class="form-group">' +
-                        '<label for="mVessel">🚢 المركب <span class="required">*</span></label>' +
-                        '<select id="mVessel">' + buildVesselOptions(rec.vesselId) + '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label for="mDamage">🔧 نوع العطب <span class="required">*</span></label>' +
-                        '<input type="text" id="mDamage" value="' + escapeAttr(rec.damage || '') + '">' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label for="mTechnician">👤 الفني المسؤول</label>' +
-                        '<input type="text" id="mTechnician" value="' + escapeAttr(rec.technician || '') + '">' +
-                    '</div>' +
+                    '<div class="form-group"><label for="mVessel">🚢 المركب</label>' +
+                        '<select id="mVessel">' + buildVesselOptions(rec.vesselId) + '</select></div>' +
+                    '<div class="form-group"><label for="mType">🔧 نوع التدخل <span class="required">*</span></label>' +
+                        '<input type="text" id="mType" value="' + escapeAttr(rec.interventionType || '') + '"></div>' +
+                    '<div class="form-group"><label for="mUnit">🏢 الوحدة المسؤولة</label>' +
+                        '<input type="text" id="mUnit" value="' + escapeAttr(rec.interventionUnit || '') + '"></div>' +
                     '<div class="form-row">' +
-                        '<div class="form-group">' +
-                            '<label for="mDate">📅 تاريخ العطب</label>' +
-                            '<input type="date" id="mDate" value="' +
-                                (rec.date ? new Date(rec.date).toISOString().split('T')[0] : '') + '">' +
-                        '</div>' +
-                        '<div class="form-group">' +
-                            '<label for="mCost">💰 التكلفة (د.ت)</label>' +
-                            '<input type="number" id="mCost" value="' + (rec.cost || 0) + '" step="0.01">' +
-                        '</div>' +
+                        '<div class="form-group"><label for="mDate">📅 التاريخ</label>' +
+                            '<input type="date" id="mDate" value="' + (rec.date ? new Date(rec.date).toISOString().split('T')[0] : '') + '"></div>' +
+                        '<div class="form-group"><label for="mCost">💰 التكلفة (د.ت)</label>' +
+                            '<input type="number" id="mCost" value="' + (rec.cost || 0) + '" step="0.01"></div>' +
                     '</div>' +
-                    '<div class="form-group">' +
-                        '<label for="mDescription">📝 وصف العطب</label>' +
-                        '<textarea id="mDescription">' + escapeHtml(rec.description || '') + '</textarea>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label for="mStatus">📊 الحالة</label>' +
+                    '<div class="form-group"><label for="mStatus">📊 الحالة</label>' +
                         '<select id="mStatus">' +
-                            '<option value="قيد التنفيذ"' + (rec.statusRaw === 'قيد التنفيذ' ? ' selected' : '') + '>🔄 قيد التنفيذ</option>' +
+                            '<option value="قيد التنفيذ"' + (rec.statusRaw === 'قيد التنفيذ' ? ' selected' : '') + '>⚡ قيد التنفيذ</option>' +
                             '<option value="مكتملة"' + (rec.status === 'مكتملة' ? ' selected' : '') + '>✅ مكتملة</option>' +
-                            '<option value="ملغاة"' + (rec.status === 'ملغية' ? ' selected' : '') + '>❌ ملغاة</option>' +
                             '<option value="قيد الانتظار"' + (rec.status === 'قيد الانتظار' ? ' selected' : '') + '>⏳ قيد الانتظار</option>' +
-                            '<option value="متأخرة"' + (rec.status === 'معطب' ? ' selected' : '') + '>🚨 متأخرة</option>' +
-                        '</select>' +
-                    '</div>' +
+                            '<option value="ملغاة"' + (rec.status === 'ملغاة' ? ' selected' : '') + '>❌ ملغاة</option>' +
+                            '<option value="متأخرة"' + (rec.status === 'متأخرة' || rec.status === 'معطب' ? ' selected' : '') + '>🚨 متأخرة</option>' +
+                        '</select></div>' +
+                    '<div class="form-group"><label for="mDescription">📝 الوصف</label>' +
+                        '<textarea id="mDescription">' + escapeHtml(rec.description || '') + '</textarea></div>' +
                     '<div class="modal-footer">' +
-                        '<button type="button" class="btn-submit primary" id="saveBtn">' +
-                            '<i class="fas fa-save"></i> تحديث' +
-                        '</button>' +
+                        '<button type="button" class="btn-submit primary" id="saveBtn"><i class="fas fa-save"></i> تحديث</button>' +
                         '<button type="button" class="btn-submit secondary" id="cancelBtn">إلغاء</button>' +
                     '</div>';
-
-                var saveBtn = document.getElementById('saveBtn');
-                var cancelBtn = document.getElementById('cancelBtn');
-                if (saveBtn) saveBtn.addEventListener('click', saveMaintenance);
-                if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+                var sb = document.getElementById('saveBtn');
+                var cb = document.getElementById('cancelBtn');
+                if (sb) sb.addEventListener('click', saveMaintenance);
+                if (cb) cb.addEventListener('click', closeModal);
                 openModal();
             }
 
-            // ============================================================
-            // ▶️ START (virtual → real)
-            // ============================================================
             function startMaintenanceForVessel(id) {
                 var rec = state.data.find(function(r) { return r.id == id; });
                 if (!rec) return;
                 openAddMaintenance({
                     vesselId: rec.vesselId,
-                    damage: rec.damage,
+                    interventionType: rec.interventionType,
                     description: rec.description
                 });
             }
 
-            // ============================================================
-            // 💾 SAVE
-            // ============================================================
             function saveMaintenance() {
                 if (state.destroyed) return;
-                if (!canCreate()) { showToast('⚠️ ليس لديك صلاحية', 'error'); return; }
-                if (state.editId && isVirtualId(state.editId)) {
-                    showToast('⚠️ لا يمكن تعديل سجل وهمي', 'error');
-                    return;
-                }
+                if (!canCreate()) { showToast('⚠️ لا صلاحية', 'error'); return; }
+                if (state.editId && isVirtualId(state.editId)) { showToast('⚠️ سجل وهمي', 'error'); return; }
 
-                var vesselEl = document.getElementById('mVessel');
-                var damageEl = document.getElementById('mDamage');
-                var techEl   = document.getElementById('mTechnician');
-                var dateEl   = document.getElementById('mDate');
-                var costEl   = document.getElementById('mCost');
-                var descEl   = document.getElementById('mDescription');
-                var statusEl = document.getElementById('mStatus');
+                var vEl = document.getElementById('mVessel');
+                var tEl = document.getElementById('mType');
+                var uEl = document.getElementById('mUnit');
+                var dEl = document.getElementById('mDate');
+                var cEl = document.getElementById('mCost');
+                var stEl = document.getElementById('mStatus');
+                var dsEl = document.getElementById('mDescription');
 
-                if (!vesselEl || !damageEl) return;
-                var vesselId = vesselEl.value;
-                var damage = damageEl.value.trim();
-                if (!vesselId) { showToast('⚠️ يرجى اختيار المركب', 'error'); return; }
-                if (!damage) { showToast('⚠️ يرجى إدخال نوع العطب', 'error'); return; }
+                if (!vEl || !tEl) return;
+                var vid = vEl.value;
+                var type = tEl.value.trim();
+                if (!vid) { showToast('⚠️ اختر المركب', 'error'); return; }
+                if (!type) { showToast('⚠️ أدخل نوع التدخل', 'error'); return; }
 
                 var token = getToken();
-                if (!token) {
-                    showToast('⚠️ الرجاء تسجيل الدخول', 'error');
-                    setTimeout(function() { window.location.href = '/index.html'; }, 1200);
-                    return;
-                }
+                if (!token) { showToast('⚠️ سجّل الدخول', 'error'); return; }
 
-                var vessel = state.vessels.find(function(v) { return (v._id || v.id) == vesselId; });
-                var vesselName = vessel ? vessel.name : 'مركب غير معروف';
-                var serverStatus = normalizeStatusForServer(statusEl ? statusEl.value : 'قيد التنفيذ');
-
+                var vessel = state.vessels.find(function(v) { return (v._id || v.id) == vid; });
                 var payload = {
-                    vesselId: vesselId,
-                    vesselName: vesselName,
-                    type: damage,
-                    status: serverStatus,
-                    date: (dateEl && dateEl.value) ? dateEl.value : new Date().toISOString(),
-                    repairUnit: (techEl && techEl.value.trim()) || 'غير محدد',
-                    cost: parseFloat(costEl ? costEl.value : 0) || 0,
-                    notes: descEl ? descEl.value.trim() : ''
+                    vesselId: vid,
+                    vesselName: vessel ? vessel.name : 'مركب غير معروف',
+                    type: type,
+                    status: normalizeStatusForServer(stEl ? stEl.value : 'قيد التنفيذ'),
+                    date: (dEl && dEl.value) ? dEl.value : new Date().toISOString(),
+                    repairUnit: (uEl && uEl.value.trim()) || 'غير محدد',
+                    cost: parseFloat(cEl ? cEl.value : 0) || 0,
+                    notes: dsEl ? dsEl.value.trim() : ''
                 };
 
                 var method = state.editId ? 'PUT' : 'POST';
@@ -2349,238 +1989,142 @@
                 var orig = btn ? btn.innerHTML : '';
                 if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; }
 
-                fetcher(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                })
-                .then(function(res) {
-                    if (!res.ok) {
-                        return res.json().then(function(err) {
-                            throw new Error(err.error || err.details || ('فشل (' + res.status + ')'));
-                        }).catch(function() {
-                            throw new Error('فشل الحفظ (' + res.status + ')');
-                        });
-                    }
-                    return res.json();
-                })
-                .then(function() {
-                    closeModal();
-                    refreshMaintenance();
-                    showToast(state.editId ? '✅ تم تحديث المهمة' : '✅ تم إضافة المهمة', 'success');
-                })
-                .catch(function(err) {
-                    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
-                    showToast('❌ ' + (err.message || 'خطأ'), 'error');
-                });
-            }
-
-            // ============================================================
-            // ✅ COMPLETE
-            // ============================================================
-            function completeMaintenance(id) {
-                if (state.destroyed) return;
-                if (isVirtualId(id)) {
-                    showToast('⚠️ يجب إنشاء سجل صيانة أولاً', 'error');
-                    startMaintenanceForVessel(id);
-                    return;
-                }
-                confirmAction({
-                    message: '✅ هل تريد إكمال هذه المهمة؟',
-                    icon: 'fa-check-circle'
-                }).then(function(ok) {
-                    if (!ok) return;
-                    var token = getToken();
-                    if (!token) { showToast('⚠️ الرجاء تسجيل الدخول', 'error'); return; }
-
-                    fetcher('/api/maintenance-logs/' + encodeURIComponent(id), {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status: 'مكتملة' })
-                    })
+                fetcher(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
                     .then(function(res) {
-                        if (!res.ok) return res.json().then(function(err) { throw new Error(err.error || 'فشل'); });
+                        if (!res.ok) return res.json().then(function(e) { throw new Error(e.error || 'فشل'); }).catch(function() { throw new Error('فشل (' + res.status + ')'); });
                         return res.json();
                     })
                     .then(function() {
+                        closeModal();
                         refreshMaintenance();
-                        showToast('✅ تم إكمال المهمة', 'success');
+                        showToast(state.editId ? '✅ تم التحديث' : '✅ تم الإضافة', 'success');
                     })
+                    .catch(function(err) {
+                        if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+                        showToast('❌ ' + (err.message || 'خطأ'), 'error');
+                    });
+            }
+
+            function completeMaintenance(id) {
+                if (state.destroyed) return;
+                if (isVirtualId(id)) { startMaintenanceForVessel(id); return; }
+                confirmAction({ message: '✅ إكمال هذه المهمة؟', icon: 'fa-check-circle' }).then(function(ok) {
+                    if (!ok) return;
+                    if (!getToken()) { showToast('⚠️ سجّل الدخول', 'error'); return; }
+                    fetcher('/api/maintenance-logs/' + encodeURIComponent(id), {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: 'مكتملة' })
+                    })
+                    .then(function(res) { if (!res.ok) throw new Error('فشل'); return res.json(); })
+                    .then(function() { refreshMaintenance(); showToast('✅ تم الإكمال', 'success'); })
                     .catch(function(err) { showToast('❌ ' + err.message, 'error'); });
                 });
             }
 
-            // ============================================================
-            // 🗑️ DELETE
-            // ============================================================
             function deleteMaintenance(id) {
                 if (state.destroyed) return;
-                if (isVirtualId(id)) { showToast('⚠️ لا يمكن حذف سجل وهمي', 'error'); return; }
-                if (!canDelete()) { showToast('⚠️ ليس لديك صلاحية الحذف', 'error'); return; }
-
-                confirmAction({
-                    message: '⚠️ هل أنت متأكد من حذف هذه المهمة؟\nلا يمكن التراجع عن هذا الإجراء.',
-                    icon: 'fa-trash-alt',
-                    danger: true
-                }).then(function(ok) {
+                if (isVirtualId(id)) { showToast('⚠️ سجل وهمي', 'error'); return; }
+                if (!canDelete()) { showToast('⚠️ لا صلاحية حذف', 'error'); return; }
+                confirmAction({ message: '⚠️ حذف هذا السجل؟\nلا يمكن التراجع.', icon: 'fa-trash-alt', danger: true }).then(function(ok) {
                     if (!ok) return;
-                    var token = getToken();
-                    if (!token) { showToast('⚠️ الرجاء تسجيل الدخول', 'error'); return; }
-
                     fetcher('/api/maintenance-logs/' + encodeURIComponent(id), { method: 'DELETE' })
-                    .then(function(res) {
-                        if (!res.ok) return res.json().then(function(err) { throw new Error(err.error || 'فشل'); });
-                        return res.json().catch(function() { return {}; });
-                    })
-                    .then(function() {
-                        refreshMaintenance();
-                        showToast('✅ تم حذف المهمة', 'success');
-                    })
+                    .then(function(res) { if (!res.ok) throw new Error('فشل'); return res.json().catch(function() { return {}; }); })
+                    .then(function() { refreshMaintenance(); showToast('✅ تم الحذف', 'success'); })
                     .catch(function(err) { showToast('❌ ' + err.message, 'error'); });
                 });
             }
 
-            // ============================================================
-            // 📜 HISTORY
-            // ============================================================
             function showHistory(id) {
                 if (state.destroyed) return;
                 var rec = state.data.find(function(r) { return r.id == id; });
-                if (!rec) { showToast('❌ المهمة غير موجودة', 'error'); return; }
-
-                var titleEl = document.getElementById('modalTitle');
-                if (titleEl) titleEl.textContent = '📜 سجل الصيانة - ' + rec.vesselName;
-
+                if (!rec) { showToast('❌ غير موجود', 'error'); return; }
+                var t = document.getElementById('modalTitle');
+                if (t) t.textContent = '📜 سجل - ' + rec.vesselName;
                 var body = document.getElementById('modalBody');
                 if (!body) return;
-
-                var historyHtml = '<div class="history-list">';
+                var h = '<div class="history-list">';
                 if (!rec.history || rec.history.length === 0) {
-                    historyHtml += '<p style="color:rgba(255,255,255,0.2);text-align:center;padding:20px;">' +
-                        'لا يوجد سجل تاريخي</p>';
+                    h += '<p style="color:rgba(255,255,255,0.25);text-align:center;padding:20px;">لا يوجد سجل تاريخي</p>';
                 } else {
-                    rec.history.forEach(function(h) {
-                        historyHtml += '<div class="history-item">' +
-                            '<div class="h-action">' + escapeHtml(h.action || 'تحديث') + '</div>' +
-                            '<div class="h-date">' + formatDate(h.date) + '</div>' +
-                            '<div class="h-details">' + escapeHtml(h.details || '') + '</div>' +
-                        '</div>';
+                    rec.history.forEach(function(x) {
+                        h += '<div class="history-item"><div class="h-action">' + escapeHtml(x.action || 'تحديث') + '</div>' +
+                             '<div class="h-date">' + formatDate(x.date) + '</div>' +
+                             '<div class="h-details">' + escapeHtml(x.details || '') + '</div></div>';
                     });
                 }
-                historyHtml += '</div>';
-
-                var statusCls = rec.status === 'مكتملة' ? 'completed'
-                    : (rec.status === 'معطب' ? 'damaged'
-                    : (rec.status === 'قيد الانتظار' ? 'pending' : 'active'));
-
+                h += '</div>';
                 body.innerHTML =
-                    '<div style="margin-bottom:14px;">' +
-                        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;">' +
-                            '<div><strong style="color:#fff;">🔧 العطب:</strong> ' +
-                                '<span style="color:rgba(255,255,255,0.6);">' + escapeHtml(rec.damage || '-') + '</span></div>' +
-                            '<div><strong style="color:#fff;">👤 الفني:</strong> ' +
-                                '<span style="color:rgba(255,255,255,0.6);">' + escapeHtml(rec.technician || '-') + '</span></div>' +
-                            '<div><strong style="color:#fff;">💰 التكلفة:</strong> ' +
-                                '<span style="color:#f5c842;">' + (rec.cost ? rec.cost.toFixed(2) : '0.00') + ' د.ت</span></div>' +
-                            '<div><strong style="color:#fff;">📊 الحالة:</strong> ' +
-                                '<span class="status-badge ' + statusCls + '">' + (rec.status || 'قيد الإنجاز') + '</span></div>' +
+                    '<div style="margin-bottom:14px;font-size:0.85rem;">' +
+                        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+                            '<div><strong style="color:#fff;">🔧 التدخل:</strong> ' + escapeHtml(rec.interventionType || '-') + '</div>' +
+                            '<div><strong style="color:#fff;">🏢 الوحدة:</strong> ' + escapeHtml(rec.interventionUnit || '-') + '</div>' +
+                            '<div><strong style="color:#fff;">💰 التكلفة:</strong> <span style="color:#f5c842;">' + (rec.cost ? rec.cost.toFixed(2) : '0.00') + ' د.ت</span></div>' +
+                            '<div><strong style="color:#fff;">📊 الحالة:</strong> ' + (rec.status || '-') + '</div>' +
                         '</div>' +
-                        (rec.description ? '<div style="margin-top:6px;font-size:0.8rem;color:rgba(255,255,255,0.4);">' +
-                            '📝 ' + escapeHtml(rec.description) + '</div>' : '') +
+                        (rec.description ? '<div style="margin-top:8px;color:rgba(255,255,255,0.45);">📝 ' + escapeHtml(rec.description) + '</div>' : '') +
                     '</div>' +
                     '<hr style="border-color:rgba(255,255,255,0.04);margin:12px 0;">' +
-                    '<h4 style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-bottom:10px;">📋 سجل التعديلات</h4>' +
-                    historyHtml +
-                    '<div style="margin-top:16px;">' +
-                        '<button type="button" id="historyCloseBtn" style="width:100%;padding:10px;border:none;' +
-                        'border-radius:8px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);' +
-                        'cursor:pointer;font-weight:600;transition:all 0.3s;">' +
-                            '<i class="fas fa-times"></i> إغلاق' +
-                        '</button>' +
-                    '</div>';
-
-                var cb = document.getElementById('historyCloseBtn');
-                if (cb) cb.addEventListener('click', closeModal);
+                    '<h4 style="color:rgba(255,255,255,0.45);font-size:0.85rem;margin-bottom:10px;">📋 سجل التعديلات</h4>' +
+                    h +
+                    '<div style="margin-top:16px;"><button type="button" id="hClose" style="width:100%;padding:10px;border:none;border-radius:8px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.45);cursor:pointer;font-weight:600;">' +
+                        '<i class="fas fa-times"></i> إغلاق</button></div>';
+                var hb = document.getElementById('hClose');
+                if (hb) hb.addEventListener('click', closeModal);
                 openModal();
             }
 
-            // ============================================================
-            // 🖨️ PRINT
-            // ============================================================
             function printMaintenance() {
                 if (state.destroyed) return;
                 updatePrintDate();
                 confirmAction({
-                    message: '🖨️ قبل الطباعة تأكد من:\n\n' +
-                             '• الاتجاه: أفقي (Landscape)\n' +
-                             '• خيار "خلفيات ورسوم" مفعّل ✅\n' +
-                             '• الوجهة: PDF (اختياري)',
+                    message: '🖨️ قبل الطباعة:\n\n• الاتجاه: أفقي (Landscape)\n• خلفيات ورسوم: مفعّل ✅\n\nمتابعة؟',
                     icon: 'fa-print'
                 }).then(function(ok) {
                     if (!ok) return;
-                    try { window.print(); }
-                    catch (e) { console.error('print error:', e); }
+                    try { window.print(); } catch (e) { console.error(e); }
                 });
             }
 
-            // ============================================================
-            // 🖱️ EVENT DELEGATION
-            // ============================================================
+            function exportCSV() {
+                if (state.destroyed) return;
+                if (state.data.length === 0) { showToast('⚠️ لا توجد بيانات', 'error'); return; }
+                var rows = [['#', 'المركب', 'نوع التدخل', 'التاريخ', 'الوحدة المسؤولة', 'الحالة', 'التكلفة']];
+                state.data.forEach(function(r, i) {
+                    rows.push([i+1, r.vesselName, r.interventionType, formatDate(r.date), r.interventionUnit, r.status, r.cost]);
+                });
+                var csv = '\uFEFF' + rows.map(function(r) { return r.map(function(c) {
+                    return '"' + String(c === null || c === undefined ? '' : c).replace(/"/g, '""') + '"';
+                }).join(','); }).join('\n');
+                var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'maintenance_' + new Date().toISOString().split('T')[0] + '.csv';
+                link.click();
+                URL.revokeObjectURL(link.href);
+                showToast('✅ تم التصدير', 'success');
+            }
+
+            // ===== DELEGATION =====
             function handleAction(e) {
                 var btn = e.target.closest('[data-action]');
                 if (!btn) return;
-                var action = btn.getAttribute('data-action');
+                var a = btn.getAttribute('data-action');
                 var id = btn.getAttribute('data-id');
-
-                switch (action) {
-                    case 'edit':     openEditModal(id); break;
+                switch (a) {
+                    case 'edit': openEditModal(id); break;
                     case 'complete': completeMaintenance(id); break;
-                    case 'history':  showHistory(id); break;
-                    case 'delete':   deleteMaintenance(id); break;
-                    case 'start':    startMaintenanceForVessel(id); break;
-                    case 'add':      openAddMaintenance(); break;
+                    case 'history': showHistory(id); break;
+                    case 'delete': deleteMaintenance(id); break;
+                    case 'start': startMaintenanceForVessel(id); break;
+                    case 'add': openAddMaintenance(); break;
                 }
             }
 
-            // ============================================================
-            // 🐛 DEBUG
-            // ============================================================
-            function runDebug() {
-                console.group('🔍 Maintenance v10.1 Debug');
-                console.log('Vessels total:', state.vessels.length);
-                var damagedVessels = state.vessels.filter(isVesselDamaged);
-                console.log('Vessels damaged (detected):', damagedVessels.length);
-                console.log('Data total:', state.data.length);
-                console.log('Data virtual:', state.data.filter(function(m) { return m.isVirtual; }).length);
-                console.log('Data "معطب":', state.data.filter(function(m) { return m.status === 'معطب'; }).length);
-                console.log('--- Sample vessel keys ---');
-                if (state.vessels[0]) {
-                    console.log('Keys:', Object.keys(state.vessels[0]));
-                    console.log('Sample:', state.vessels[0]);
-                } else {
-                    console.warn('لا توجد مراكب محمّلة');
-                }
-                console.log('--- Sample damaged vessel ---');
-                console.log(damagedVessels[0] || 'لا يوجد');
-                console.groupEnd();
-
-                if (damagedVessels.length === 0 && state.vessels.length > 0) {
-                    showToast('⚠️ 0 معطب من ' + state.vessels.length + ' مركب. راجع Console.', 'error');
-                } else {
-                    showToast('🔍 راجع Console (' + damagedVessels.length + ' معطب)', 'info');
-                }
-            }
-
-            // ============================================================
-            // 🚀 INIT
-            // ============================================================
+            // ===== INIT =====
             async function init() {
                 if (state.destroyed || state.initialized) return;
                 state.initialized = true;
-
-                console.log('🚀 Maintenance v10.1 init...');
-                console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
-
+                console.log('🚀 v11.0 init...');
                 try {
                     await loadVessels();
                     await loadMaintenance();
@@ -2588,83 +2132,44 @@
                     if (state.destroyed) return;
                     renderAll();
 
-                    // Header
-                    var addBtn = document.getElementById('addBtn');
-                    if (addBtn) addBtn.addEventListener('click', function() { openAddMaintenance(); });
+                    var b;
+                    b = document.getElementById('refreshBtn'); if (b) b.addEventListener('click', refreshMaintenance);
+                    b = document.getElementById('printBtn'); if (b) b.addEventListener('click', printMaintenance);
+                    b = document.getElementById('exportBtn'); if (b) b.addEventListener('click', exportCSV);
+                    b = document.getElementById('filterBtn'); if (b) b.addEventListener('click', function() { renderAll(); showToast('✅ تم تطبيق الفلاتر', 'success'); });
+                    b = document.getElementById('resetBtn'); if (b) b.addEventListener('click', resetFilters);
+                    b = document.getElementById('modalClose'); if (b) b.addEventListener('click', closeModal);
 
-                    var refreshBtn = document.getElementById('refreshBtn');
-                    if (refreshBtn) refreshBtn.addEventListener('click', refreshMaintenance);
+                    var s = document.getElementById('searchMaint');
+                    if (s) { var tm; s.addEventListener('input', function() { clearTimeout(tm); tm = setTimeout(renderTable, 200); }); }
+                    var sf = document.getElementById('statusFilter');
+                    if (sf) sf.addEventListener('change', renderTable);
+                    var yg = document.getElementById('yearFilterGroup');
+                    if (yg) yg.addEventListener('change', onYearCheckChange);
 
-                    var printBtn = document.getElementById('printBtn');
-                    if (printBtn) printBtn.addEventListener('click', printMaintenance);
+                    var mb = document.getElementById('maintenanceBody'); if (mb) mb.addEventListener('click', handleAction);
+                    var db = document.getElementById('damagedBody'); if (db) db.addEventListener('click', handleAction);
 
-                    var debugBtn = document.getElementById('debugBtn');
-                    if (debugBtn) debugBtn.addEventListener('click', runDebug);
-
-                    // Filters
-                    var filterBtn = document.getElementById('filterBtn');
-                    if (filterBtn) filterBtn.addEventListener('click', function() {
-                        renderTable(); renderDamagedVessels(); updateStats();
-                        showToast('✅ تم تطبيق الفلاتر', 'success');
-                    });
-                    var resetBtn = document.getElementById('resetBtn');
-                    if (resetBtn) resetBtn.addEventListener('click', resetFilters);
-
-                    // Search (debounced)
-                    var search = document.getElementById('searchMaint');
-                    if (search) {
-                        var timer = null;
-                        search.addEventListener('input', function() {
-                            clearTimeout(timer);
-                            timer = setTimeout(renderTable, 200);
-                        });
-                    }
-
-                    var statusFilter = document.getElementById('statusFilter');
-                    if (statusFilter) statusFilter.addEventListener('change', renderTable);
-
-                    var yearGroup = document.getElementById('yearFilterGroup');
-                    if (yearGroup) yearGroup.addEventListener('change', onYearCheckChange);
-
-                    // Tables (delegation)
-                    var maintBody = document.getElementById('maintenanceBody');
-                    if (maintBody) maintBody.addEventListener('click', handleAction);
-
-                    var dmgBody = document.getElementById('damagedBody');
-                    if (dmgBody) dmgBody.addEventListener('click', handleAction);
-
-                    // Modal close
-                    var modalClose = document.getElementById('modalClose');
-                    if (modalClose) modalClose.addEventListener('click', closeModal);
-
-                    var modal = document.getElementById('maintenanceModal');
-                    if (modal) modal.addEventListener('click', function(e) {
-                        if (e.target === modal) closeModal();
-                    });
-
+                    var m = document.getElementById('maintenanceModal');
+                    if (m) m.addEventListener('click', function(e) { if (e.target === m) closeModal(); });
                     bindWin('keydown', function(e) {
                         if (e.key === 'Escape') {
-                            var m = document.getElementById('maintenanceModal');
-                            if (m && m.classList.contains('active')) closeModal();
+                            var mm = document.getElementById('maintenanceModal');
+                            if (mm && mm.classList.contains('active')) closeModal();
                         }
                     });
 
-                    console.log('✅ Maintenance v10.1 ready — ' + state.data.length + ' tasks');
+                    console.log('✅ v11.0 ready — ' + state.data.length + ' records');
                 } catch (err) {
-                    console.error('❌ Init error:', err);
-                    showToast('❌ خطأ في تحميل الصفحة', 'error');
+                    console.error('❌ Init:', err);
+                    showToast('❌ خطأ في التحميل', 'error');
                 }
             }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
-            } else {
-                init();
-            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+            else init();
 
-            // ============================================================
-            // 🌐 EXPOSE
-            // ============================================================
+            // ===== EXPOSE =====
             window.openAddMaintenance = openAddMaintenance;
             window.openEditModal = openEditModal;
             window.saveMaintenance = saveMaintenance;
@@ -2674,11 +2179,8 @@
             window.closeModal = closeModal;
             window.refreshMaintenance = refreshMaintenance;
             window.resetFilters = resetFilters;
-            window.showToast = showToast;
-            window.onYearCheckChange = onYearCheckChange;
             window.printMaintenance = printMaintenance;
-            window.startMaintenanceForVessel = startMaintenanceForVessel;
-
+            window.showToast = showToast;
         })();
     </script>
 </div>
