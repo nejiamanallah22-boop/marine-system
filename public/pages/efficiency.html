@@ -4,8 +4,6 @@
         body { background: #0a0e1a; }
 
         :root {
-            --primary-dark: #0a1628;
-            --primary: #0f3460;
             --gold: #e6b31e;
             --gold-light: #f5d76e;
             --success-light: #55efc4;
@@ -128,10 +126,6 @@
         .stat-card .label {
             font-size: 11px; color: rgba(255,255,255,0.3);
             margin-top: 4px; font-weight: 500; letter-spacing: 0.3px;
-        }
-        .stat-card .icon-bg {
-            position: absolute; right: -10px; bottom: -10px;
-            font-size: 50px; opacity: 0.04; pointer-events: none;
         }
 
         /* FILTER */
@@ -267,44 +261,6 @@
         .progress-bar .progress-fill.mid { background: linear-gradient(90deg, #eab308, #fbbf24); }
         .progress-bar .progress-fill.low { background: linear-gradient(90deg, #ef4444, #f87171); }
 
-        .region-card { padding: 0; border-bottom: 1px solid var(--glass-border); }
-        .region-card:last-child { border-bottom: none; }
-        .region-card .region-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px; background: rgba(255,255,255,0.02);
-            flex-wrap: wrap; gap: 8px;
-        }
-        .region-card .region-header .region-name {
-            font-size: 15px; font-weight: 700; color: #fff;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .region-card .region-header .region-name i { color: var(--gold); }
-        .region-card .region-header .region-badge {
-            font-size: 12px; font-weight: 600; padding: 4px 16px; border-radius: 20px;
-        }
-        .region-badge.excellent {
-            background: rgba(34,197,94,0.15); color: #4ade80;
-            border: 1px solid rgba(34,197,94,0.1);
-        }
-        .region-badge.good {
-            background: rgba(74,222,128,0.1); color: #4ade80;
-            border: 1px solid rgba(74,222,128,0.05);
-        }
-        .region-badge.medium {
-            background: rgba(234,179,8,0.15); color: #fbbf24;
-            border: 1px solid rgba(234,179,8,0.1);
-        }
-        .region-badge.low {
-            background: rgba(239,68,68,0.15); color: #f87171;
-            border: 1px solid rgba(239,68,68,0.1);
-        }
-        .region-badge.critical {
-            background: rgba(239,68,68,0.25); color: #f87171;
-            border: 1px solid rgba(239,68,68,0.2);
-            animation: pulseDanger 1.5s ease-in-out infinite;
-        }
-        .region-card .region-body { padding: 0 20px 16px; }
-
         /* CHARTS */
         .chart-section {
             margin: 0 24px 20px; border: 1px solid var(--glass-border);
@@ -345,10 +301,6 @@
         .empty-state {
             text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.15);
         }
-        .empty-state .empty-icon {
-            font-size: 3rem; color: rgba(255,255,255,0.04);
-            display: block; margin-bottom: 12px;
-        }
         .empty-state .spinner {
             width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.04);
             border-top-color: var(--gold); border-radius: 50%;
@@ -359,55 +311,24 @@
             font-size: 0.9rem; font-weight: 600;
             color: rgba(255,255,255,0.2); margin-bottom: 4px;
         }
-        .empty-state p { font-size: 0.75rem; color: rgba(255,255,255,0.1); }
 
+        /* RESPONSIVE */
         @media (max-width: 992px) {
             .eff-header { padding: 12px 16px; top: 60px; }
             .eff-header-left h2 { font-size: 18px; }
-            .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+            .stats-grid { padding: 12px 16px; gap: 10px; }
             .filter-bar { padding: 8px 16px; gap: 6px 10px; }
             .eff-section { margin: 0 16px 12px; }
             .chart-section { margin: 0 16px 16px; }
-            .charts-container { padding: 12px; }
-            .region-card .region-body { padding: 0 12px 12px; }
         }
         @media (max-width: 768px) {
-            .eff-header { flex-direction: column; align-items: flex-start; padding: 12px 16px; top: 56px; }
-            .eff-header-left { width: 100%; }
-            .eff-header-left h2 { font-size: 16px; }
-            .eff-header-actions { width: 100%; justify-content: flex-start; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 16px; }
-            .stat-card { padding: 12px 14px; }
-            .stat-card .number { font-size: 20px; }
-            .filter-bar { flex-direction: column; align-items: stretch; padding: 10px 16px; gap: 6px; }
-            .filter-bar label { font-size: 0.65rem; }
+            .eff-header { flex-direction: column; align-items: flex-start; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .filter-bar { flex-direction: column; align-items: stretch; }
             .filter-bar select { min-width: 100%; }
-            .eff-section { margin: 0 12px 10px; }
-            .section-header { flex-direction: column; align-items: flex-start; gap: 4px; }
-            .section-content { padding: 12px 14px; }
             .table-wrapper table { font-size: 0.7rem; min-width: 500px; }
             thead th, tbody td { padding: 6px 8px; }
-            .chart-section { margin: 0 12px 12px; }
-            .charts-container { padding: 10px; gap: 12px; }
-            .chart-box { padding: 12px; }
-            .chart-box canvas { max-height: 220px; }
-            .eff-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
-            .chart-switch { padding: 10px 12px; justify-content: center; }
-            .chart-btn { font-size: 11px; padding: 4px 12px; }
-            .region-card .region-header { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
-            .region-card .region-body { padding: 0 10px 10px; }
-        }
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
-            .stat-card { padding: 10px 12px; }
-            .stat-card .number { font-size: 18px; }
-            .stat-card .label { font-size: 9px; }
-            .eff-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
-            .eff-header-left h2 { font-size: 14px; }
-            .eff-header-left p { font-size: 10px; }
-            .section-header h3 { font-size: 13px; }
-            .section-content { padding: 10px 12px; }
-            thead th, tbody td { padding: 4px 6px; font-size: 0.65rem; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 4px; }
         }
 
         /* PRINT */
@@ -415,152 +336,41 @@
             @page { size: A4 landscape; margin: 12mm 10mm; }
             html, body {
                 background: #ffffff !important; color: #1a1a1a !important;
-                font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-                font-size: 10pt !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
             button, .btn-action, .btn-filter, .chart-btn,
-            .eff-header-actions, .filter-bar, .chart-switch,
-            nav, .sidebar, .navbar, .no-print { display: none !important; }
+            .eff-header-actions, .filter-bar, .chart-switch { display: none !important; }
             .eff-header {
-                display: flex !important;
                 background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
-                color: #ffffff !important; padding: 12mm 8mm 6mm !important;
-                margin: 0 0 6mm !important; border-radius: 8px !important;
-                border: 2px solid #e6b31e !important; position: relative !important;
-                page-break-inside: avoid; page-break-after: avoid;
+                color: #ffffff !important; border: 2px solid #e6b31e !important;
+                border-radius: 8px !important; padding: 12mm 8mm 6mm !important;
+                margin-bottom: 6mm !important;
             }
-            .eff-header-left h2 {
-                color: #e6b31e !important; font-size: 16pt !important; font-weight: 800 !important;
-                -webkit-text-fill-color: #e6b31e !important; background: none !important;
-                margin: 0 0 4pt 0 !important;
-            }
-            .eff-header-left p {
-                color: rgba(255,255,255,0.75) !important; font-size: 10pt !important;
-            }
-            .eff-header-left .header-icon {
-                width: 48px !important; height: 48px !important;
-                border: 2px solid #e6b31e !important; background: #0a1628 !important;
-                box-shadow: none !important; animation: none !important;
-            }
-            .stats-grid {
-                display: grid !important; grid-template-columns: repeat(5, 1fr) !important;
-                gap: 4mm !important; margin: 0 0 5mm !important;
-                padding: 0 !important; page-break-inside: avoid;
-            }
+            .eff-header-left h2 { color: #e6b31e !important; -webkit-text-fill-color: #e6b31e !important; }
+            .stats-grid { grid-template-columns: repeat(5, 1fr) !important; gap: 4mm !important; }
             .stat-card {
                 background: #f8f9fc !important; border: 2px solid #e6b31e !important;
-                border-radius: 6px !important; padding: 4mm 3mm !important;
-                text-align: center !important; box-shadow: none !important;
+                padding: 4mm 3mm !important;
             }
-            .stat-card::before { display: none !important; }
-            .stat-card .number {
-                color: #0a1628 !important; font-size: 16pt !important;
-                font-weight: 800 !important; -webkit-text-fill-color: #0a1628 !important;
-            }
-            .stat-card .number.gold { color: #c99a0e !important; -webkit-text-fill-color: #c99a0e !important; }
-            .stat-card .number.green { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
-            .stat-card .number.yellow { color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; }
-            .stat-card .number.red { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
-            .stat-card .label { color: #4b5563 !important; font-size: 8pt !important; font-weight: 700 !important; }
-            .eff-section, .chart-section {
+            .stat-card .number { color: #0a1628 !important; -webkit-text-fill-color: #0a1628 !important; }
+            .eff-section {
                 background: #ffffff !important; border: 2px solid #0a1628 !important;
-                border-radius: 6px !important; margin: 0 0 5mm !important;
-                overflow: visible !important;
+                page-break-inside: avoid;
             }
             .eff-section .section-header {
                 background: #0a1628 !important; color: #e6b31e !important;
-                padding: 3mm 4mm !important;
-                border-bottom: 2px solid #e6b31e !important;
-                page-break-after: avoid;
             }
-            .eff-section .section-header h3 {
-                color: #e6b31e !important; font-size: 11pt !important; font-weight: 800 !important;
-            }
-            .eff-section .section-header h3 i { color: #e6b31e !important; }
-            .section-content { padding: 0 !important; }
-            .table-wrapper { overflow: visible !important; }
-            table {
-                width: 100% !important; border-collapse: collapse !important;
-                font-size: 8.5pt !important; min-width: 0 !important;
-                border: 1px solid #0a1628 !important;
-            }
-            thead { display: table-header-group !important; background: #0a1628 !important; }
-            thead th {
-                background: #0a1628 !important; color: #e6b31e !important;
-                padding: 3mm 2mm !important; font-size: 9pt !important;
-                font-weight: 800 !important; text-align: center !important;
-                border: 1px solid #1a2a4a !important;
-                text-transform: none !important; letter-spacing: 0 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            thead th i { display: none !important; }
-            tbody tr { page-break-inside: avoid; background: #ffffff !important; }
-            tbody tr:nth-child(even) { background: #f9fafb !important; }
-            tbody td {
-                padding: 2.5mm 2mm !important;
-                border: 1px solid #e5e7eb !important; color: #1f2937 !important;
-                font-size: 8.5pt !important; text-align: center !important;
-                vertical-align: middle !important; background: transparent !important;
-            }
-            .row-high { background: #ecfdf5 !important; border-right: 3px solid #047857 !important; }
-            .row-high .eff-cell { color: #047857 !important; font-weight: 800 !important; }
-            .row-mid { background: #fffbeb !important; border-right: 3px solid #b45309 !important; }
-            .row-mid .eff-cell { color: #b45309 !important; font-weight: 800 !important; }
-            .row-low { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
-            .row-low .eff-cell { color: #b91c1c !important; font-weight: 800 !important; }
-            .status-badge {
-                display: inline-block !important; padding: 1mm 3mm !important;
-                border-radius: 10px !important; font-size: 8pt !important;
-                font-weight: 700 !important; border: 1px solid currentColor !important;
-                background: #ffffff !important; animation: none !important;
-            }
-            .status-badge.excellent { color: #047857 !important; background: #ecfdf5 !important; }
-            .status-badge.good { color: #047857 !important; background: #ecfdf5 !important; }
-            .status-badge.medium { color: #b45309 !important; background: #fffbeb !important; }
-            .status-badge.low { color: #b91c1c !important; background: #fef2f2 !important; }
-            .status-badge.critical { color: #b91c1c !important; background: #fef2f2 !important; }
-            .progress-bar { background: #e5e7eb !important; border-radius: 5px !important; }
-            .progress-bar .progress-fill.high { background: #047857 !important; }
-            .progress-bar .progress-fill.mid { background: #b45309 !important; }
-            .progress-bar .progress-fill.low { background: #b91c1c !important; }
-            .region-card { page-break-inside: avoid; border-bottom: 1px solid #e5e7eb !important; }
-            .region-card .region-header {
-                background: #f3f4f6 !important; padding: 3mm 4mm !important;
-                border-bottom: 1px solid #e5e7eb !important;
-            }
-            .region-card .region-header .region-name {
-                color: #0a1628 !important; font-size: 11pt !important; font-weight: 800 !important;
-            }
-            .region-card .region-header .region-name i { color: #c99a0e !important; }
-            .region-badge {
-                border: 1px solid currentColor !important; background: #ffffff !important;
-                font-size: 9pt !important; font-weight: 700 !important; animation: none !important;
-            }
-            .region-badge.excellent { color: #047857 !important; }
-            .region-badge.good { color: #047857 !important; }
-            .region-badge.medium { color: #b45309 !important; }
-            .region-badge.low { color: #b91c1c !important; }
-            .region-badge.critical { color: #b91c1c !important; }
-            .region-card .region-body { padding: 3mm !important; }
-            .chart-box {
-                background: #f9fafb !important; border: 1px solid #e5e7eb !important;
-                padding: 4mm !important; page-break-inside: avoid;
-                margin-bottom: 5mm !important;
-            }
-            .chart-box h4 {
-                color: #0a1628 !important; font-size: 11pt !important; font-weight: 800 !important;
-                border-bottom: 2px solid #e6b31e !important;
-                padding-bottom: 2mm !important; margin-bottom: 3mm !important;
-            }
-            .chart-box canvas { max-height: 80mm !important; width: 100% !important; }
-            .empty-state { padding: 15mm !important; color: #6b7280 !important; }
-            .empty-state .spinner { display: none !important; }
-            h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
-            tr, img, .stat-card, .eff-section, .chart-section, .region-card { page-break-inside: avoid; }
-            * { box-shadow: none !important; text-shadow: none !important; animation: none !important; transition: none !important; }
+            .eff-section .section-header h3 { color: #e6b31e !important; }
+            table { width: 100% !important; border: 1px solid #0a1628 !important; }
+            thead { background: #0a1628 !important; }
+            thead th { background: #0a1628 !important; color: #e6b31e !important; border: 1px solid #1a2a4a !important; }
+            tbody td { border: 1px solid #e5e7eb !important; color: #1f2937 !important; }
+            .row-high { background: #ecfdf5 !important; }
+            .row-mid { background: #fffbeb !important; }
+            .row-low { background: #fef2f2 !important; }
+            .status-badge { border: 1px solid currentColor !important; background: #fff !important; }
+            * { box-shadow: none !important; text-shadow: none !important; animation: none !important; }
             #page-efficiency::before { display: none !important; }
         }
     </style>
@@ -588,7 +398,7 @@
     </div>
 
     <!-- STATS -->
-    <div class="stats-grid" id="statsCards">
+    <div class="stats-grid">
         <div class="stat-card">
             <div class="number gold" id="totalVessels">0</div>
             <div class="label">🚢 إجمالي المراكب</div>
@@ -653,9 +463,7 @@
         </button>
     </div>
 
-    <!-- ============================================================
-         جدول 1: النجاعة العامة للأسطول
-         ============================================================ -->
+    <!-- ✅ جدول 1: النجاعة العامة -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-chart-line"></i> النجاعة العامة للأسطول</h3>
@@ -680,13 +488,11 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         جدول 2: الحرس البحري بالشمال
-         ============================================================ -->
+    <!-- ✅ جدول 2: الشمال -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-map-pin"></i> الحرس البحري بالشمال</h3>
-            <span class="badge gold region-badge-header" id="badge-الشمال">0% جاهزية</span>
+            <span class="badge gold" id="badge-region-الشمال">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -701,19 +507,17 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="regionBody-الشمال"></tbody>
+                    <tbody id="body-region-الشمال"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         جدول 3: الحرس البحري بالساحل
-         ============================================================ -->
+    <!-- ✅ جدول 3: الساحل -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-map-pin"></i> الحرس البحري بالساحل</h3>
-            <span class="badge gold region-badge-header" id="badge-الساحل">0% جاهزية</span>
+            <span class="badge gold" id="badge-region-الساحل">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -728,19 +532,17 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="regionBody-الساحل"></tbody>
+                    <tbody id="body-region-الساحل"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         جدول 4: الحرس البحري بالوسط
-         ============================================================ -->
+    <!-- ✅ جدول 4: الوسط -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-map-pin"></i> الحرس البحري بالوسط</h3>
-            <span class="badge gold region-badge-header" id="badge-الوسط">0% جاهزية</span>
+            <span class="badge gold" id="badge-region-الوسط">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -755,19 +557,17 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="regionBody-الوسط"></tbody>
+                    <tbody id="body-region-الوسط"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         جدول 5: الحرس البحري بالجنوب
-         ============================================================ -->
+    <!-- ✅ جدول 5: الجنوب -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-map-pin"></i> الحرس البحري بالجنوب</h3>
-            <span class="badge gold region-badge-header" id="badge-الجنوب">0% جاهزية</span>
+            <span class="badge gold" id="badge-region-الجنوب">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -782,19 +582,17 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="regionBody-وحدة_تونس"></tbody>
+                    <tbody id="body-region-الجنوب"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         جدول 6: وحدة الصيانة والإسناد البحري تونس
-         ============================================================ -->
+    <!-- ✅ جدول 6: وحدة تونس -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس</h3>
-            <span class="badge gold region-badge-header" id="badge-وحدة_تونس">0% جاهزية</span>
+            <span class="badge gold" id="badge-unit-تونس">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -809,19 +607,17 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="regionBody-وحدة_تونس"></tbody>
+                    <tbody id="body-unit-تونس"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         جدول 7: وحدة الصيانة والإسناد البحري جرجيس
-         ============================================================ -->
+    <!-- ✅ جدول 7: وحدة جرجيس -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس</h3>
-            <span class="badge gold region-badge-header" id="badge-وحدة_جرجيس">0% جاهزية</span>
+            <span class="badge gold" id="badge-unit-جرجيس">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -836,19 +632,17 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="regionBody-وحدة_جرجيس"></tbody>
+                    <tbody id="body-unit-جرجيس"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         جدول 8: وحدة الصيانة والإسناد البحري صفاقس
-         ============================================================ -->
+    <!-- ✅ جدول 8: وحدة صفاقس -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس</h3>
-            <span class="badge gold region-badge-header" id="badge-وحدة_صفاقس">0% جاهزية</span>
+            <span class="badge gold" id="badge-unit-صفاقس">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -863,19 +657,17 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="regionBody-وحدة_صفاقس"></tbody>
+                    <tbody id="body-unit-صفاقس"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         جدول 9: وحدة الصيانة والإسناد البحري المنستير
-         ============================================================ -->
+    <!-- ✅ جدول 9: وحدة المنستير -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير</h3>
-            <span class="badge gold region-badge-header" id="badge-وحدة_المنستير">0% جاهزية</span>
+            <span class="badge gold" id="badge-unit-المنستير">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -890,19 +682,17 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="regionBody-وحدة_المنستير"></tbody>
+                    <tbody id="body-unit-المنستير"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         جدول 10: المجمع الأمني بقبيبة
-         ============================================================ -->
+    <!-- ✅ جدول 10: المجمع الأمني بقبيبة -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-building"></i> المجمع الأمني بقبيبة</h3>
-            <span class="badge gold region-badge-header" id="badge-وحدة_قبيبة">0% جاهزية</span>
+            <span class="badge gold" id="badge-unit-قبيبة">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -917,15 +707,13 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="regionBody-وحدة_قبيبة"></tbody>
+                    <tbody id="body-unit-قبيبة"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         CHARTS
-         ============================================================ -->
+    <!-- CHARTS -->
     <div class="chart-section">
         <div class="chart-switch">
             <button class="chart-btn active" onclick="switchChart('pie')">
@@ -940,202 +728,151 @@
         </div>
         <div class="charts-container">
             <div class="chart-box">
-                <h4>📊 توزيع الجاهزية حسب الإقليم</h4>
+                <h4>📊 توزيع الجاهزية حسب الإقليم والوحدة</h4>
                 <canvas id="efficiencyChart" height="250"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         JAVASCRIPT
-         ============================================================ -->
     <script>
         // ============================================================
-        // ✅ الفئات الثابتة
+        // ✅ الفئات الثابتة — الخمس دائمًا مع النسب المئوية
         // ============================================================
         const FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 
         // ============================================================
-        // ✅ الأقاليم الثابتة (4 أقاليم)
+        // ✅ الأقاليم الثابتة (4)
         // ============================================================
         const FIXED_REGIONS = [
-            { key: 'الشمال', label: 'الحرس البحري بالشمال', field: 'region', match: 'الشمال' },
-            { key: 'الساحل', label: 'الحرس البحري بالساحل', field: 'region', match: 'الساحل' },
-            { key: 'الوسط',  label: 'الحرس البحري بالوسط',  field: 'region', match: 'الوسط' },
-            { key: 'الجنوب', label: 'الحرس البحري بالجنوب', field: 'region', match: 'الجنوب' }
+            { key: 'الشمال', match: 'الشمال' },
+            { key: 'الساحل', match: 'الساحل' },
+            { key: 'الوسط',  match: 'الوسط'  },
+            { key: 'الجنوب', match: 'الجنوب' }
         ];
 
         // ============================================================
-        // ✅ وحدات الصيانة الثابتة (5 وحدات)
+        // ✅ وحدات الصيانة الثابتة (5)
         // ============================================================
         const FIXED_UNITS = [
-            { key: 'وحدة_تونس',    label: 'وحدة الصيانة والإسناد البحري تونس',   match: 'وحدة الصيانة والإسناد البحري تونس' },
-            { key: 'وحدة_جرجيس',   label: 'وحدة الصيانة والإسناد البحري جرجيس',  match: 'وحدة الصيانة والإسناد البحري جرجيس' },
-            { key: 'وحدة_صفاقس',   label: 'وحدة الصيانة والإسناد البحري صفاقس',  match: 'وحدة الصيانة والإسناد البحري صفاقس' },
-            { key: 'وحدة_المنستير', label: 'وحدة الصيانة والإسناد البحري المنستير', match: 'وحدة الصيانة والإسناد البحري المنستير' },
-            { key: 'وحدة_قبيبة',   label: 'المجمع الأمني بقبيبة',                 match: 'المجمع الأمني بقبيبة' }
+            { key: 'تونس',    match: 'وحدة الصيانة والإسناد البحري تونس' },
+            { key: 'جرجيس',   match: 'وحدة الصيانة والإسناد البحري جرجيس' },
+            { key: 'صفاقس',   match: 'وحدة الصيانة والإسناد البحري صفاقس' },
+            { key: 'المنستير', match: 'وحدة الصيانة والإسناد البحري المنستير' },
+            { key: 'قبيبة',   match: 'المجمع الأمني بقبيبة' }
         ];
 
         // ============================================================
-        // ✅ هيكل البيانات (يُملأ من API)
+        // ✅ الحالة العامة
         // ============================================================
-        let vesselStats = {
-            general: {},      // { category: { active, damaged, total } }
-            regions: {},      // { regionName: { categories: {...}, active, damaged, total } }
-            units: {}         // { unitName: { categories: {...}, active, damaged, total } }
-        };
-
         let currentChart = 'pie';
+        let vesselStats = null;
 
         // ============================================================
-        // ✅ DYNAMIC LOGO
-        // ============================================================
-        function applyLogo() {
-            try {
-                var cachedLogo = localStorage.getItem('marine_logo');
-                if (!cachedLogo) return;
-                var iconDiv = document.getElementById('effHeaderIcon');
-                var img = document.getElementById('globalLogo');
-                if (img) { img.src = cachedLogo; img.style.display = 'block'; }
-                if (iconDiv) iconDiv.classList.add('has-logo');
-            } catch (e) {}
-        }
-
-        function syncLogoFromServer() {
-            var token = localStorage.getItem('marine_token') ||
-                        localStorage.getItem('token') ||
-                        localStorage.getItem('authToken') || null;
-            var headers = { 'Accept': 'application/json' };
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-
-            fetch('/api/logo', { headers: headers, credentials: 'include' })
-                .then(function(r) { return r.ok ? r.json() : null; })
-                .then(function(data) {
-                    if (data && data.success && data.logo && data.logo.dataUrl) {
-                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
-                        applyLogo();
-                    }
-                }).catch(function() {});
-        }
-
-        applyLogo();
-        syncLogoFromServer();
-
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'marine_logo' && e.newValue) applyLogo();
-        });
-
-        // ============================================================
-        // 🖨️ PRINT DATE
-        // ============================================================
-        (function() {
-            function updatePrintDate() {
-                try {
-                    var now = new Date();
-                    var fullDate = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                    }) + ' - ' + now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-                    var header = document.querySelector('.eff-header');
-                    if (header) header.setAttribute('data-print-date', fullDate);
-                } catch (e) {}
-            }
-            updatePrintDate();
-            window.addEventListener('beforeprint', updatePrintDate);
-        })();
-
-        // ============================================================
-        // ✅ تطبيع النصوص
+        // ✅ تطبيع النصوص والفئات
         // ============================================================
         function normText(v) {
             if (v === null || v === undefined) return '';
             return String(v).trim().replace(/\s+/g, ' ');
         }
 
-        function normStatus(v) {
-            const s = normText(v).toLowerCase();
+        function normalizeCategoryName(name) {
+            const n = normText(name);
+            if (!n) return '';
+
+            // توحيد جميع الصيغ المحتملة
+            if (n === 'البروق' || n === 'بروق' || n === 'البرق' || n === 'برق') return 'البروق';
+            if (n === 'صقور' || n === 'الصقور' || n === 'صقر' || n === 'الصقر') return 'صقور';
+            if (n === 'خوافر' || n === 'الخوافر' || n === 'خافر' || n === 'الخافر') return 'خوافر';
+            if (n === 'زوارق مزدوجة' || n === 'زوارق مزدوجه' || n === 'الزوارق المزدوجة' || n === 'زوجية') return 'زوارق مزدوجة';
+            if (n === 'طوافات' || n === 'الطوافات' || n === 'طوافة' || n === 'الطوافة') return 'طوافات';
+
+            return n;
+        }
+
+        function normalizeStatusName(status) {
+            const s = normText(status).toLowerCase();
             if (!s) return '';
-            if (s.includes('صالح') || s === 'active' || s === 'ready') return 'صالح';
-            if (s.includes('معطب') || s.includes('عطب') || s === 'damaged') return 'معطب';
-            if (s.includes('صيانة') || s === 'maintenance') return 'صيانة';
-            return normText(v);
-        }
-
-        function normCategory(v, vessel) {
-            const c = normText(v);
-            if (c) return c;
-            const len = parseFloat(vessel && (vessel.len !== undefined ? vessel.len : vessel.length));
-            if (!isFinite(len)) return 'غير محدد';
-            if (len === 11) return 'البروق';
-            if (len >= 8 && len <= 12) return 'صقور';
-            if (len > 12 && len <= 25) return 'خوافر';
-            if (len >= 30) return 'طوافات';
-            return 'زوارق مزدوجة';
+            if (s.includes('صالح') || s === 'active' || s === 'ready' || s === 'operational') return 'صالح';
+            if (s.includes('معطب') || s.includes('عطب') || s === 'damaged' || s === 'down') return 'معطب';
+            if (s.includes('صيانة') || s === 'maintenance' || s === 'repair') return 'صيانة';
+            return normText(status);
         }
 
         // ============================================================
-        // ✅ بناء الإحصائيات من المراكب الحقيقية
+        // ✅ بناء الإحصائيات من المراكب
         // ============================================================
-        function buildStats(vessels) {
-            // تهيئة الفئات الخمس بقيم صفرية
-            const emptyCategories = () => {
-                const obj = {};
-                FIXED_CATEGORIES.forEach(cat => {
-                    obj[cat] = { active: 0, damaged: 0, total: 0 };
-                });
-                return obj;
-            };
+        function createEmptyCategoriesMap() {
+            const map = {};
+            FIXED_CATEGORIES.forEach(cat => {
+                map[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
+            });
+            return map;
+        }
 
+        function buildStatsFromVessels(vessels) {
+            // ✅ تهيئة الفئات الخمس بقيم صفرية
             const stats = {
-                general: emptyCategories(),
+                general: createEmptyCategoriesMap(),
                 regions: {},
                 units: {}
             };
 
-            // تهيئة الأقاليم الثابتة
+            // ✅ تهيئة الأقاليم الأربعة
             FIXED_REGIONS.forEach(r => {
                 stats.regions[r.match] = {
                     active: 0, damaged: 0, maintenance: 0, total: 0,
-                    categories: emptyCategories()
+                    categories: createEmptyCategoriesMap()
                 };
             });
 
-            // تهيئة الوحدات الثابتة
+            // ✅ تهيئة الوحدات الخمس
             FIXED_UNITS.forEach(u => {
                 stats.units[u.match] = {
                     active: 0, damaged: 0, maintenance: 0, total: 0,
-                    categories: emptyCategories()
+                    categories: createEmptyCategoriesMap()
                 };
             });
 
-            // ملء البيانات من المراكب
+            // ✅ ملء البيانات من المراكب
             vessels.forEach(v => {
-                const cat = normCategory(v.cat !== undefined ? v.cat : v.category, v);
-                const status = normStatus(v.stat !== undefined ? v.stat : v.status);
-                const reg = normText(v.reg || v.region);
-                const unit = normText(v.repairUnit || v.maintenanceUnit || v.maintenance);
+                const cat = normalizeCategoryName(
+                    v.cat !== undefined ? v.cat : (v.category || v.type || v.cls)
+                );
+                const status = normalizeStatusName(
+                    v.stat !== undefined ? v.stat : (v.status || v.state)
+                );
+                const reg = normText(v.reg || v.region || v.area);
+                const unit = normText(v.repairUnit || v.maintenanceUnit || v.maintenance || v.unit);
+
+                // تخطي المراكب بدون فئة معروفة
+                if (!cat) return;
 
                 // --- الجدول العام ---
                 if (!stats.general[cat]) {
-                    stats.general[cat] = { active: 0, damaged: 0, total: 0 };
+                    stats.general[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
                 }
-                stats.general[cat].total++;
-                if (status === 'صالح') stats.general[cat].active++;
-                else if (status === 'معطب') stats.general[cat].damaged++;
+                const g = stats.general[cat];
+                g.total++;
+                if (status === 'صالح') g.active++;
+                else if (status === 'معطب') g.damaged++;
+                else if (status === 'صيانة') g.maintenance++;
 
                 // --- الإقليم ---
                 if (reg && stats.regions[reg]) {
                     const r = stats.regions[reg];
                     r.total++;
                     if (status === 'صالح') r.active++;
-                    else if (status === 'صيانة') r.maintenance++;
                     else if (status === 'معطب') r.damaged++;
+                    else if (status === 'صيانة') r.maintenance++;
 
                     if (!r.categories[cat]) {
-                        r.categories[cat] = { active: 0, damaged: 0, total: 0 };
+                        r.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
                     }
-                    r.categories[cat].total++;
-                    if (status === 'صالح') r.categories[cat].active++;
-                    else if (status === 'معطب') r.categories[cat].damaged++;
+                    const rc = r.categories[cat];
+                    rc.total++;
+                    if (status === 'صالح') rc.active++;
+                    else if (status === 'معطب') rc.damaged++;
+                    else if (status === 'صيانة') rc.maintenance++;
                 }
 
                 // --- الوحدة ---
@@ -1143,15 +880,17 @@
                     const u = stats.units[unit];
                     u.total++;
                     if (status === 'صالح') u.active++;
-                    else if (status === 'صيانة') u.maintenance++;
                     else if (status === 'معطب') u.damaged++;
+                    else if (status === 'صيانة') u.maintenance++;
 
                     if (!u.categories[cat]) {
-                        u.categories[cat] = { active: 0, damaged: 0, total: 0 };
+                        u.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
                     }
-                    u.categories[cat].total++;
-                    if (status === 'صالح') u.categories[cat].active++;
-                    else if (status === 'معطب') u.categories[cat].damaged++;
+                    const uc = u.categories[cat];
+                    uc.total++;
+                    if (status === 'صالح') uc.active++;
+                    else if (status === 'معطب') uc.damaged++;
+                    else if (status === 'صيانة') uc.maintenance++;
                 }
             });
 
@@ -1193,7 +932,7 @@
         }
 
         // ============================================================
-        // ✅ Helpers
+        // ✅ Helper: معلومات الحالة من النسبة
         // ============================================================
         function getStatusInfo(eff) {
             if (eff >= 80) return { cls: 'excellent', text: 'ممتازة', row: 'row-high', prog: 'high' };
@@ -1203,60 +942,63 @@
             return              { cls: 'critical',  text: 'حرجة',   row: 'row-low',  prog: 'low'  };
         }
 
-        function formatPercent(v) {
-            if (!isFinite(v)) return '0%';
-            return (Math.round(v * 10) / 10) + '%';
-        }
-
         // ============================================================
-        // ✅ بناء صفوف الفئات الخمس (دائمًا)
+        // ✅ ✅ ✅ بناء صفوف الفئات الخمس دائمًا مع النسب المئوية
         // ============================================================
-        function buildCategoryRows(categoriesData) {
+        function buildCategoryRows(categoriesMap) {
             const categoryFilter = document.getElementById('fCatEff').value;
             const statusFilter = document.getElementById('fStatusEff').value;
 
+            // ✅ نبدأ بالفئات الخمس الإلزامية — دائمًا موجودة
             let rows = FIXED_CATEGORIES.map(cat => {
-                const c = (categoriesData && categoriesData[cat]) || { active: 0, damaged: 0, total: 0 };
-                const eff = c.total > 0 ? (c.active / c.total) * 100 : 0;
+                const c = (categoriesMap && categoriesMap[cat]) || { active: 0, damaged: 0, maintenance: 0, total: 0 };
+                const totalForEff = (c.active || 0) + (c.damaged || 0); // الجاهزية = صالح / (صالح + معطب)
+                const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
                 return {
                     category: cat,
                     active: c.active || 0,
                     damaged: c.damaged || 0,
+                    maintenance: c.maintenance || 0,
+                    total: c.total || 0,
                     efficiency: eff
                 };
             });
 
-            // أي فئة إضافية موجودة
-            if (categoriesData) {
-                Object.keys(categoriesData).forEach(cat => {
+            // ✅ نضيف أي فئة إضافية (احتياط)
+            if (categoriesMap) {
+                Object.keys(categoriesMap).forEach(cat => {
                     if (FIXED_CATEGORIES.indexOf(cat) === -1) {
-                        const c = categoriesData[cat];
-                        const eff = c.total > 0 ? (c.active / c.total) * 100 : 0;
+                        const c = categoriesMap[cat];
+                        const totalForEff = (c.active || 0) + (c.damaged || 0);
+                        const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
                         rows.push({
                             category: cat,
                             active: c.active || 0,
                             damaged: c.damaged || 0,
+                            maintenance: c.maintenance || 0,
+                            total: c.total || 0,
                             efficiency: eff
                         });
                     }
                 });
             }
 
-            // فلترة الفئة
+            // ✅ فلترة الفئة
             if (categoryFilter !== 'الكل') {
                 rows = rows.filter(r => r.category === categoryFilter);
             }
 
-            // فلترة الحالة
+            // ✅ فلترة الحالة
             if (statusFilter !== 'الكل') {
                 rows = rows.filter(r => {
-                    if (statusFilter === 'صالح') return r.efficiency >= 70;
-                    if (statusFilter === 'صيانة') return r.efficiency >= 50 && r.efficiency < 70;
-                    if (statusFilter === 'معطب') return r.efficiency < 50;
+                    if (statusFilter === 'صالح') return r.active > 0;
+                    if (statusFilter === 'صيانة') return r.maintenance > 0;
+                    if (statusFilter === 'معطب') return r.damaged > 0;
                     return true;
                 });
             }
 
+            // ✅ إذا فارغة
             if (rows.length === 0) {
                 return `
                     <tr>
@@ -1267,14 +1009,16 @@
                 `;
             }
 
+            // ✅ الرسم
             return rows.map(item => {
                 const info = getStatusInfo(item.efficiency);
+                const percentText = item.efficiency.toFixed(1) + '%';
                 return `
                     <tr class="${info.row}">
                         <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
                         <td>${item.active}</td>
                         <td>${item.damaged}</td>
-                        <td class="eff-cell">${item.efficiency.toFixed(1)}%</td>
+                        <td class="eff-cell">${percentText}</td>
                         <td>
                             <div class="progress-bar">
                                 <div class="progress-fill ${info.prog}" style="width:${Math.min(item.efficiency, 100)}%;"></div>
@@ -1293,12 +1037,15 @@
             const tbody = document.getElementById('generalBody');
             tbody.innerHTML = buildCategoryRows(vesselStats.general);
 
-            // Badge
+            // Badge عام
             const badge = document.getElementById('generalBadge');
             let totalActive = 0, totalDamaged = 0;
-            Object.values(vesselStats.general).forEach(c => {
-                totalActive += c.active || 0;
-                totalDamaged += c.damaged || 0;
+            FIXED_CATEGORIES.forEach(cat => {
+                const c = vesselStats.general[cat];
+                if (c) {
+                    totalActive += c.active || 0;
+                    totalDamaged += c.damaged || 0;
+                }
             });
             const sum = totalActive + totalDamaged;
             const avg = sum > 0 ? (totalActive / sum) * 100 : 0;
@@ -1310,25 +1057,29 @@
         }
 
         // ============================================================
-        // ✅ رسم جدول إقليم/وحدة
+        // ✅ رسم جدول إقليم / وحدة
         // ============================================================
-        function renderRegionTable(key, data) {
-            const tbody = document.getElementById('regionBody-' + key);
-            const badgeEl = document.getElementById('badge-' + key);
+        function renderRegionTable(prefix, key, data) {
+            const tbodyId = 'body-' + prefix + '-' + key;
+            const badgeId = 'badge-' + prefix + '-' + key;
+            const tbody = document.getElementById(tbodyId);
+            const badgeEl = document.getElementById(badgeId);
 
             if (!tbody) return;
 
+            // ✅ الفئات الخمس دائمًا
             tbody.innerHTML = buildCategoryRows(data.categories || {});
 
             // Badge
             if (badgeEl) {
-                const eff = data.total > 0 ? (data.active / data.total) * 100 : 0;
+                const totalForEff = (data.active || 0) + (data.damaged || 0);
+                const eff = totalForEff > 0 ? ((data.active || 0) / totalForEff) * 100 : 0;
                 const info = getStatusInfo(eff);
                 badgeEl.textContent = eff.toFixed(0) + '% جاهزية';
                 badgeEl.className = 'badge ' + (
                     info.cls === 'excellent' || info.cls === 'good' ? 'success' :
                     info.cls === 'medium' ? 'warning' : 'danger'
-                ) + ' region-badge-header';
+                );
             }
         }
 
@@ -1341,38 +1092,51 @@
 
             // 2-5. الأقاليم الأربعة
             FIXED_REGIONS.forEach(r => {
-                renderRegionTable(r.key, vesselStats.regions[r.match] || {
+                const data = vesselStats.regions[r.match] || {
                     active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
-                });
+                };
+                renderRegionTable('region', r.key, data);
             });
 
             // 6-10. الوحدات الخمس
             FIXED_UNITS.forEach(u => {
-                renderRegionTable(u.key, vesselStats.units[u.match] || {
+                const data = vesselStats.units[u.match] || {
                     active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
-                });
+                };
+                renderRegionTable('unit', u.key, data);
             });
         }
 
         // ============================================================
-        // ✅ STATS CARDS
+        // ✅ إحصائيات البطاقات العلوية
         // ============================================================
         function renderStatsCards() {
             let total = 0, active = 0, maintenance = 0, damaged = 0;
 
-            // نجمع من الجدول العام فقط لتجنب التكرار
-            Object.values(vesselStats.general).forEach(c => {
-                total += c.total || 0;
-                active += c.active || 0;
-                damaged += c.damaged || 0;
+            // ✅ نحسب من الجدول العام (لأنه يمثل كل المراكب)
+            FIXED_CATEGORIES.forEach(cat => {
+                const c = vesselStats.general[cat];
+                if (c) {
+                    total += c.total || 0;
+                    active += c.active || 0;
+                    maintenance += c.maintenance || 0;
+                    damaged += c.damaged || 0;
+                }
             });
 
-            // الصيانة من الأقاليم (لأنها غير محسوبة في general)
-            Object.values(vesselStats.regions).forEach(r => {
-                maintenance += r.maintenance || 0;
+            // إذا فئات إضافية موجودة، نجمعها أيضًا
+            Object.keys(vesselStats.general).forEach(cat => {
+                if (FIXED_CATEGORIES.indexOf(cat) === -1) {
+                    const c = vesselStats.general[cat];
+                    total += c.total || 0;
+                    active += c.active || 0;
+                    maintenance += c.maintenance || 0;
+                    damaged += c.damaged || 0;
+                }
             });
 
-            const efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
+            const totalForEff = active + damaged;
+            const efficiency = totalForEff > 0 ? ((active / totalForEff) * 100).toFixed(1) : 0;
 
             document.getElementById('totalVessels').textContent = total;
             document.getElementById('activeVessels').textContent = active;
@@ -1382,53 +1146,8 @@
         }
 
         // ============================================================
-        // ✅ MAIN RENDER
+        // ✅ الرسم البياني
         // ============================================================
-        function renderEfficiency() {
-            renderStatsCards();
-            renderAllTables();
-            drawChart(currentChart);
-        }
-
-        // ============================================================
-        // ✅ FILTERS
-        // ============================================================
-        function resetEfficiencyFilters() {
-            document.getElementById('fRegEff').value = 'الكل';
-            document.getElementById('fCatEff').value = 'الكل';
-            document.getElementById('fStatusEff').value = 'الكل';
-            renderEfficiency();
-        }
-
-        async function refreshEfficiency() {
-            const btn = document.querySelector('.btn-action.primary');
-            const old = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            btn.disabled = true;
-            try {
-                const vessels = await loadVessels();
-                vesselStats = buildStats(vessels);
-                renderEfficiency();
-                showNotification('تم تحديث البيانات بنجاح ✅', 'success');
-            } catch (err) {
-                showNotification('فشل التحديث: ' + err.message, 'error');
-            } finally {
-                btn.innerHTML = old;
-                btn.disabled = false;
-            }
-        }
-
-        // ============================================================
-        // ✅ CHART
-        // ============================================================
-        function switchChart(type) {
-            currentChart = type;
-            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
-            const btn = document.querySelector(`.chart-btn[onclick="switchChart('${type}')"]`);
-            if (btn) btn.classList.add('active');
-            drawChart(type);
-        }
-
         function drawChart(type) {
             const canvas = document.getElementById('efficiencyChart');
             if (!canvas) return;
@@ -1443,22 +1162,27 @@
             ctx.setTransform(2, 0, 0, 2, 0, 0);
             ctx.clearRect(0, 0, width, height);
 
-            // ✅ نبني البيانات من الأقاليم الأربعة + الوحدات الخمس
             const data = [];
 
             FIXED_REGIONS.forEach(r => {
                 const d = vesselStats.regions[r.match];
-                const eff = d && d.total > 0 ? (d.active / d.total) * 100 : 0;
-                data.push({ label: r.label, value: eff, color: getColor(r.label) });
+                if (d) {
+                    const totalForEff = (d.active || 0) + (d.damaged || 0);
+                    const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
+                    data.push({ label: r.key, value: eff, color: getColor(r.key) });
+                }
             });
 
             FIXED_UNITS.forEach(u => {
                 const d = vesselStats.units[u.match];
-                const eff = d && d.total > 0 ? (d.active / d.total) * 100 : 0;
-                data.push({ label: u.label, value: eff, color: getColor(u.label) });
+                if (d) {
+                    const totalForEff = (d.active || 0) + (d.damaged || 0);
+                    const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
+                    data.push({ label: u.key, value: eff, color: getColor(u.key) });
+                }
             });
 
-            if (data.length === 0) {
+            if (data.length === 0 || data.every(d => d.value === 0)) {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.font = '14px Cairo, sans-serif';
                 ctx.textAlign = 'center';
@@ -1480,22 +1204,17 @@
         }
 
         function drawPieChart(ctx, data, width, height) {
-            const cx = width / 2;
+            const cx = width / 2 - 80;
             const cy = height / 2;
-            const radius = Math.min(width, height) / 2 - 40;
+            const radius = Math.min(width / 2, height) / 2 - 40;
 
             let startAngle = -Math.PI / 2;
             const total = data.reduce((sum, d) => sum + d.value, 0);
 
-            if (total === 0) {
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.font = '14px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('لا توجد بيانات', cx, cy);
-                return;
-            }
+            if (total === 0) return;
 
             data.forEach((item) => {
+                if (item.value === 0) return;
                 const sliceAngle = (item.value / total) * 2 * Math.PI;
                 const endAngle = startAngle + sliceAngle;
 
@@ -1511,7 +1230,7 @@
                 ctx.stroke();
 
                 const midAngle = startAngle + sliceAngle / 2;
-                const labelRadius = radius * 0.65;
+                const labelRadius = radius * 0.7;
                 const lx = cx + Math.cos(midAngle) * labelRadius;
                 const ly = cy + Math.sin(midAngle) * labelRadius;
 
@@ -1526,24 +1245,23 @@
                 startAngle = endAngle;
             });
 
-            let legendY = 10;
-            const legendX = width - 180;
+            let legendY = 20;
+            const legendX = width - 160;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
 
             data.forEach((item, i) => {
-                const y = legendY + i * 18;
+                const y = legendY + i * 20;
                 ctx.fillStyle = item.color;
                 ctx.fillRect(legendX, y, 12, 12);
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.font = '9px Cairo, sans-serif';
-                const label = item.label.length > 22 ? item.label.slice(0, 22) + '...' : item.label;
-                ctx.fillText(label, legendX + 16, y);
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.font = '10px Cairo, sans-serif';
+                ctx.fillText(item.label, legendX + 16, y + 1);
             });
         }
 
         function drawBarChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 60, left: 40, right: 20 };
+            const padding = { top: 20, bottom: 70, left: 40, right: 20 };
             const chartWidth = width - padding.left - padding.right;
             const chartHeight = height - padding.top - padding.bottom;
 
@@ -1576,12 +1294,13 @@
                 gradient.addColorStop(0, item.color);
                 gradient.addColorStop(1, item.color + '33');
                 ctx.fillStyle = gradient;
-                ctx.shadowColor = item.color + '44';
-                ctx.shadowBlur = 10;
                 ctx.fillRect(x, y, barWidth, barHeight);
-                ctx.shadowBlur = 0;
 
-                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.strokeStyle = item.color;
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, barWidth, barHeight);
+
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
                 ctx.font = 'bold 9px Cairo, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
@@ -1589,19 +1308,17 @@
 
                 ctx.fillStyle = 'rgba(255,255,255,0.4)';
                 ctx.font = '8px Cairo, sans-serif';
-                ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
-                const label = item.label.length > 14 ? item.label.slice(0, 14) + '..' : item.label;
                 ctx.save();
                 ctx.translate(x + barWidth / 2, padding.top + chartHeight + 5);
-                ctx.rotate(-Math.PI / 6);
-                ctx.fillText(label, 0, 0);
+                ctx.rotate(-Math.PI / 5);
+                ctx.fillText(item.label, 0, 0);
                 ctx.restore();
             });
         }
 
         function drawLineChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 60, left: 40, right: 20 };
+            const padding = { top: 20, bottom: 70, left: 40, right: 20 };
             const chartWidth = width - padding.left - padding.right;
             const chartHeight = height - padding.top - padding.bottom;
 
@@ -1616,7 +1333,6 @@
             for (let i = 0; i <= 4; i++) {
                 const y = padding.top + chartHeight - (i / 4) * chartHeight;
                 ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(padding.left, y);
                 ctx.lineTo(width - padding.right, y);
@@ -1631,22 +1347,12 @@
 
             ctx.strokeStyle = '#e6b31e';
             ctx.lineWidth = 2;
-            ctx.shadowColor = '#e6b31e44';
-            ctx.shadowBlur = 10;
             ctx.beginPath();
             points.forEach((p, i) => {
                 if (i === 0) ctx.moveTo(p.x, p.y);
                 else ctx.lineTo(p.x, p.y);
             });
             ctx.stroke();
-            ctx.shadowBlur = 0;
-
-            const lastPoint = points[points.length - 1];
-            ctx.lineTo(lastPoint.x, padding.top + chartHeight);
-            ctx.lineTo(points[0].x, padding.top + chartHeight);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(230,179,30,0.08)';
-            ctx.fill();
 
             points.forEach(p => {
                 ctx.beginPath();
@@ -1657,7 +1363,7 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
                 ctx.font = 'bold 9px Cairo, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
@@ -1669,13 +1375,55 @@
                 ctx.font = '8px Cairo, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
-                const label = p.label.length > 14 ? p.label.slice(0, 14) + '..' : p.label;
                 ctx.save();
                 ctx.translate(p.x, padding.top + chartHeight + 5);
-                ctx.rotate(-Math.PI / 6);
-                ctx.fillText(label, 0, 0);
+                ctx.rotate(-Math.PI / 5);
+                ctx.fillText(p.label, 0, 0);
                 ctx.restore();
             });
+        }
+
+        // ============================================================
+        // ✅ التحديث والفلترة
+        // ============================================================
+        function renderEfficiency() {
+            if (!vesselStats) vesselStats = buildStatsFromVessels([]);
+            renderStatsCards();
+            renderAllTables();
+            drawChart(currentChart);
+        }
+
+        function resetEfficiencyFilters() {
+            document.getElementById('fRegEff').value = 'الكل';
+            document.getElementById('fCatEff').value = 'الكل';
+            document.getElementById('fStatusEff').value = 'الكل';
+            renderEfficiency();
+        }
+
+        async function refreshEfficiency() {
+            const btn = document.querySelector('.btn-action.primary');
+            const old = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+            btn.disabled = true;
+            try {
+                const vessels = await loadVessels();
+                vesselStats = buildStatsFromVessels(vessels);
+                renderEfficiency();
+                showNotification('تم تحديث البيانات بنجاح ✅', 'success');
+            } catch (err) {
+                showNotification('فشل التحديث: ' + err.message, 'error');
+            } finally {
+                btn.innerHTML = old;
+                btn.disabled = false;
+            }
+        }
+
+        function switchChart(type) {
+            currentChart = type;
+            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+            const btn = document.querySelector(`.chart-btn[onclick="switchChart('${type}')"]`);
+            if (btn) btn.classList.add('active');
+            drawChart(type);
         }
 
         // ============================================================
@@ -1694,7 +1442,6 @@
                 border: 1px solid ${type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'};
                 padding: 12px 20px; border-radius: 12px; color: #fff;
                 font-family: Cairo, sans-serif; font-size: 14px; z-index: 9999;
-                animation: slideUp 0.4s ease-out;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             `;
             notif.textContent = message;
@@ -1709,17 +1456,73 @@
         }
 
         // ============================================================
+        // ✅ LOGO
+        // ============================================================
+        function applyLogo() {
+            try {
+                var cachedLogo = localStorage.getItem('marine_logo');
+                if (!cachedLogo) return;
+                var iconDiv = document.getElementById('effHeaderIcon');
+                var img = document.getElementById('globalLogo');
+                if (img) { img.src = cachedLogo; img.style.display = 'block'; }
+                if (iconDiv) iconDiv.classList.add('has-logo');
+            } catch (e) {}
+        }
+
+        function syncLogoFromServer() {
+            var token = localStorage.getItem('marine_token')
+                || localStorage.getItem('token')
+                || localStorage.getItem('authToken') || null;
+            var headers = { 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch('/api/logo', { headers: headers, credentials: 'include' })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (data && data.success && data.logo && data.logo.dataUrl) {
+                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                        applyLogo();
+                    }
+                }).catch(function() {});
+        }
+
+        applyLogo();
+        syncLogoFromServer();
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'marine_logo' && e.newValue) applyLogo();
+        });
+
+        // ============================================================
+        // ✅ PRINT DATE
+        // ============================================================
+        (function() {
+            function updatePrintDate() {
+                try {
+                    var now = new Date();
+                    var fullDate = now.toLocaleDateString('ar-TN', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    }) + ' - ' + now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
+                    var header = document.querySelector('.eff-header');
+                    if (header) header.setAttribute('data-print-date', fullDate);
+                } catch (e) {}
+            }
+            updatePrintDate();
+            window.addEventListener('beforeprint', updatePrintDate);
+        })();
+
+        // ============================================================
         // ✅ INIT
         // ============================================================
         document.addEventListener('DOMContentLoaded', async function () {
-            // رسم أولي بالبيانات الفارغة (الفئات الخمس تظهر بـ 0)
-            vesselStats = buildStats([]);
+            // ✅ رسم أولي بالقيم الصفرية — الفئات الخمس ستظهر
+            vesselStats = buildStatsFromVessels([]);
             renderEfficiency();
 
-            // تحميل البيانات الحقيقية
+            // ✅ تحميل البيانات الحقيقية
             try {
                 const vessels = await loadVessels();
-                vesselStats = buildStats(vessels);
+                vesselStats = buildStatsFromVessels(vessels);
                 renderEfficiency();
             } catch (err) {
                 console.warn('تعذر تحميل البيانات:', err);
@@ -1730,25 +1533,14 @@
         });
 
         // ============================================================
-        // ✅ STYLES
+        // ✅ RESIZE
         // ============================================================
-        (function() {
-            const styleNotif = document.createElement('style');
-            styleNotif.textContent = `
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `;
-            document.head.appendChild(styleNotif);
-        })();
-
         let resizeTimer = null;
         window.addEventListener('resize', function () {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => drawChart(currentChart), 150);
         });
 
-        console.log('📊 Efficiency Page loaded — 10 tables, real data only');
+        console.log('📊 Efficiency Page loaded — 10 tables with FIXED 5 categories');
     </script>
 </div>
