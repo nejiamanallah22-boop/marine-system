@@ -1,19 +1,15 @@
 <!-- public/pages/logs.html -->
 <div id="page-logs">
     <style>
-        /* ✅ اللون المعتم على body */
         body { background: #0a0e1a; }
 
         /* ============================================================
-           📋 LOGS PAGE - v9.14
-           5 Roles + normalizeRole + apiFetch + Cleanup + Dynamic Logo + Print
+           📋 LOGS PAGE — v10.0 (Damaged Vessels + Fixed Header + Print)
            ============================================================ */
 
         #page-logs {
-            width: 100%;
-            max-width: 100%;
-            padding: 0;
-            margin: 0;
+            width: 100%; max-width: 100%;
+            padding: 0; margin: 0;
             font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
             background: transparent;
             color: #e8edf5;
@@ -21,20 +17,20 @@
             position: relative;
             z-index: 2;
         }
-
-        #page-logs *,
-        #page-logs *::before,
-        #page-logs *::after {
+        #page-logs *, #page-logs *::before, #page-logs *::after {
             box-sizing: border-box;
         }
 
+        /* ============================================================
+           HEADER — إصلاح التداخل
+           ============================================================ */
         .logs-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 24px;
+            padding: 14px 20px;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 14px;
             background: rgba(255,255,255,0.04);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -43,108 +39,112 @@
             z-index: 10;
             width: 100%;
         }
-
         .logs-header-left {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
+            flex: 1 1 240px;
+            min-width: 0;
         }
-
         .logs-header-left .header-icon {
-            width: 44px;
-            height: 44px;
+            width: 44px; height: 44px;
             border-radius: 50%;
             background: linear-gradient(135deg, #f5d76e, #e6b31e);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #0a1628;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #0a1628;
             overflow: hidden;
+            flex-shrink: 0;
         }
-
         .logs-header-left .header-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
+            width: 100%; height: 100%;
+            object-fit: cover; border-radius: 50%;
             display: none;
         }
-        .logs-header-left .header-icon.has-logo img {
-            display: block;
-        }
+        .logs-header-left .header-icon.has-logo img { display: block; }
         .logs-header-left .header-icon.has-logo {
             background: transparent;
             box-shadow: 0 0 20px rgba(230,179,30,0.3);
         }
-        .logs-header-left .header-icon.has-logo i {
-            display: none;
-        }
+        .logs-header-left .header-icon.has-logo i { display: none; }
 
+        .logs-header-left .header-text {
+            min-width: 0;
+            overflow: hidden;
+        }
         .logs-header-left h2 {
-            font-size: 22px;
-            font-weight: 800;
+            font-size: 22px; font-weight: 800;
             background: linear-gradient(135deg, #f5d76e, #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-
         .logs-header-left p {
             font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            margin: 0;
+            color: rgba(255,255,255,0.35);
+            margin: 2px 0 0 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .logs-header-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
+            align-items: center;
+            flex-shrink: 0;
         }
-
         .btn-action {
-            padding: 8px 18px;
+            padding: 8px 16px;
             border: none;
             border-radius: 30px;
             font-weight: 600;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             cursor: pointer;
             transition: all 0.3s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-family: 'Cairo', sans-serif;
+            white-space: nowrap;
+            flex-shrink: 0;
+            line-height: 1;
         }
+        .btn-action i { font-size: 0.85rem; }
 
         .btn-action.primary {
             background: linear-gradient(135deg, #e6b31e, #f5d76e);
             color: #0a1628;
         }
-
         .btn-action.primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
-
         .btn-action.secondary {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.55);
         }
-
         .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
+            transform: translateY(-2px);
         }
 
+        /* ============================================================
+           STATS
+           ============================================================ */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
-            padding: 16px 24px;
+            padding: 16px 20px;
             width: 100%;
         }
-
         .stat-card {
             background: rgba(255,255,255,0.04);
             backdrop-filter: blur(12px);
@@ -156,69 +156,182 @@
             position: relative;
             overflow: hidden;
         }
-
         .stat-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
+            top: 0; left: 0; right: 0; height: 3px;
             background: linear-gradient(90deg, #e6b31e, #f5d76e);
             opacity: 0.6;
         }
-
         .stat-card:hover {
             transform: translateY(-3px);
             border-color: rgba(230,179,30,0.15);
         }
-
         .stat-card .number {
             font-size: 26px;
             font-weight: 800;
             color: #fff;
             line-height: 1.2;
         }
-
-        .stat-card .number.gold { color: #f5d76e; }
-        .stat-card .number.green { color: #4ade80; }
+        .stat-card .number.gold   { color: #f5d76e; }
+        .stat-card .number.green  { color: #4ade80; }
         .stat-card .number.yellow { color: #fbbf24; }
-        .stat-card .number.red { color: #f87171; }
-        .stat-card .number.blue { color: #60a5fa; }
-
+        .stat-card .number.red    { color: #f87171; }
+        .stat-card .number.blue   { color: #60a5fa; }
         .stat-card .label {
             font-size: 11px;
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.35);
             margin-top: 4px;
         }
-
         .stat-card .icon-bg {
             position: absolute;
-            right: -10px;
-            bottom: -10px;
+            right: -10px; bottom: -10px;
             font-size: 50px;
             opacity: 0.04;
             pointer-events: none;
         }
 
+        /* ============================================================
+           DAMAGED VESSELS SECTION — جديد
+           ============================================================ */
+        .damaged-section {
+            background: rgba(233,69,96,0.05);
+            border: 1px solid rgba(233,69,96,0.15);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin: 0 20px 20px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .damaged-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #e94560, #f5c842, #e94560);
+            background-size: 300% 100%;
+            animation: damageGradient 3s ease-in-out infinite;
+        }
+        @keyframes damageGradient {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .damaged-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .damaged-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #e94560;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+        .damaged-header h3 i { animation: pulseDanger 1.5s infinite; }
+        @keyframes pulseDanger {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.5; transform: scale(1.1); }
+        }
+        .damaged-header .damaged-count {
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(233,69,96,0.15);
+            color: #e94560;
+            border: 1px solid rgba(233,69,96,0.25);
+        }
+        .damaged-table-wrapper { overflow-x: auto; }
+        .damaged-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.76rem;
+            min-width: 600px;
+        }
+        .damaged-table thead { background: rgba(233,69,96,0.06); }
+        .damaged-table thead th {
+            padding: 8px 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .damaged-table tbody td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            color: rgba(255,255,255,0.6);
+            font-size: 0.74rem;
+            text-align: center;
+        }
+        .damaged-table tbody tr { transition: all 0.3s; }
+        .damaged-table tbody tr:hover { background: rgba(233,69,96,0.06); }
+        .damaged-table tbody tr.critical { border-right: 3px solid #e94560; background: rgba(233,69,96,0.04); }
+        .damaged-table tbody tr.warning  { border-right: 3px solid #f5c842; background: rgba(245,200,66,0.04); }
+        .damaged-table .vessel-name-damaged { font-weight: 700; color: #e94560; }
+        .damaged-table .damage-type { color: #f5c842; }
+        .damaged-table .damage-date { color: rgba(255,255,255,0.4); font-size: 0.7rem; }
+        .damaged-table .urgency-badge {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.62rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .damaged-table .urgency-badge.critical { background: rgba(233,69,96,0.15); color: #e94560; }
+        .damaged-table .urgency-badge.warning  { background: rgba(245,200,66,0.15); color: #f5c842; }
+        .damaged-table .urgency-badge.normal   { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.45); }
+
+        .damaged-empty {
+            text-align: center;
+            padding: 22px 20px;
+            color: rgba(255,255,255,0.15);
+        }
+        .damaged-empty .empty-icon {
+            font-size: 2rem;
+            color: rgba(85,239,196,0.4);
+            display: block;
+            margin-bottom: 6px;
+        }
+        .damaged-empty h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #55efc4;
+            margin: 0 0 2px 0;
+        }
+        .damaged-empty p {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.25);
+            margin: 0;
+        }
+
+        /* ============================================================
+           FILTER BAR
+           ============================================================ */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             gap: 8px 14px;
-            padding: 10px 24px;
+            padding: 10px 20px;
             background: rgba(255,255,255,0.04);
             border-top: 1px solid rgba(255,255,255,0.06);
             border-bottom: 1px solid rgba(255,255,255,0.06);
             width: 100%;
         }
-
         .filter-bar .search-input {
             flex: 2 1 200px;
             min-width: 150px;
             position: relative;
         }
-
         .filter-bar .search-input input {
             width: 100%;
             padding: 8px 16px 8px 40px;
@@ -230,33 +343,26 @@
             transition: all 0.3s;
             font-family: 'Cairo', sans-serif;
         }
-
         .filter-bar .search-input input:focus {
             border-color: #e6b31e;
             outline: none;
         }
-
-        .filter-bar .search-input input::placeholder {
-            color: rgba(255,255,255,0.15);
-        }
-
+        .filter-bar .search-input input::placeholder { color: rgba(255,255,255,0.2); }
         .filter-bar .search-input .search-icon {
             position: absolute;
-            left: 14px;
-            top: 50%;
+            left: 14px; top: 50%;
             transform: translateY(-50%);
-            color: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.15);
         }
-
         .filter-bar label {
             font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.35);
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
         }
-
         .filter-bar select {
             padding: 6px 12px;
             border-radius: 20px;
@@ -264,20 +370,12 @@
             background: rgba(255,255,255,0.03);
             color: #e2e8f0;
             font-size: 0.75rem;
-            min-width: 100px;
+            min-width: 120px;
             cursor: pointer;
             font-family: 'Cairo', sans-serif;
         }
-
-        .filter-bar select:focus {
-            outline: none;
-            border-color: #e6b31e;
-        }
-
-        .filter-bar select option {
-            background: #0a1628;
-            color: #e2e8f0;
-        }
+        .filter-bar select:focus { outline: none; border-color: #e6b31e; }
+        .filter-bar select option { background: #0a1628; color: #e2e8f0; }
 
         .btn-filter {
             padding: 6px 16px;
@@ -291,64 +389,50 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
-
         .btn-filter.primary {
             background: linear-gradient(135deg, #e6b31e, #f5d76e);
             color: #0a1628;
         }
-
-        .btn-filter.primary:hover {
-            transform: scale(1.04);
-        }
-
+        .btn-filter.primary:hover { transform: scale(1.04); }
         .btn-filter.outline {
             background: transparent;
             border: 1px solid rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.35);
         }
+        .btn-filter.outline:hover { background: rgba(255,255,255,0.04); color: #fff; }
 
-        .btn-filter.outline:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
-
+        /* ============================================================
+           TABLE
+           ============================================================ */
         .table-wrapper {
             overflow-x: auto;
-            padding: 16px 24px 24px;
+            padding: 16px 20px 24px;
             width: 100%;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.78rem;
             min-width: 700px;
         }
-
         thead {
             background: rgba(15,52,96,0.4);
             border-bottom: 2px solid rgba(230,179,30,0.15);
         }
-
         thead th {
             padding: 12px 10px;
-            text-align: right;
+            text-align: center;
             font-weight: 700;
-            font-size: 0.6rem;
+            font-size: 0.62rem;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
+            color: rgba(255,255,255,0.4);
             letter-spacing: 0.8px;
             white-space: nowrap;
             border-bottom: 1px solid rgba(255,255,255,0.03);
         }
-
-        thead th i {
-            margin-left: 6px;
-            color: #e6b31e;
-            font-size: 0.7rem;
-        }
-
+        thead th i { margin-left: 6px; color: #e6b31e; font-size: 0.7rem; }
         tbody td {
             padding: 10px 8px;
             border-bottom: 1px solid rgba(255,255,255,0.02);
@@ -357,15 +441,9 @@
             font-size: 0.78rem;
             text-align: center;
         }
-
-        tbody tr:hover {
-            background: rgba(255,255,255,0.03);
-        }
-
-        .vessel-name {
-            font-weight: 700;
-            color: #fff;
-        }
+        tbody tr:hover { background: rgba(255,255,255,0.03); }
+        tbody tr.damaged { border-right: 3px solid #e94560; }
+        .vessel-name { font-weight: 700; color: #fff; }
 
         .status-badge {
             padding: 3px 12px;
@@ -375,51 +453,15 @@
             display: inline-block;
             white-space: nowrap;
         }
+        .status-badge.completed { background: rgba(74,222,128,0.12); color: #4ade80; }
+        .status-badge.in-progress { background: rgba(251,191,36,0.12); color: #fbbf24; animation: pulseProgress 2s infinite; }
+        @keyframes pulseProgress { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .status-badge.pending { background: rgba(96,165,250,0.12); color: #60a5fa; }
+        .status-badge.overdue { background: rgba(248,113,113,0.12); color: #f87171; animation: pulseDanger 1.5s infinite; }
+        .status-badge.damaged { background: rgba(233,69,96,0.15); color: #e94560; }
+        .status-badge.cancelled { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.35); }
 
-        .status-badge.completed {
-            background: rgba(74,222,128,0.12);
-            color: #4ade80;
-        }
-
-        .status-badge.in-progress {
-            background: rgba(251,191,36,0.12);
-            color: #fbbf24;
-            animation: pulseProgress 2s infinite;
-        }
-
-        @keyframes pulseProgress {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .status-badge.pending {
-            background: rgba(96,165,250,0.12);
-            color: #60a5fa;
-        }
-
-        .status-badge.overdue {
-            background: rgba(248,113,113,0.12);
-            color: #f87171;
-            animation: pulseDanger 1.5s infinite;
-        }
-
-        @keyframes pulseDanger {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .status-badge.cancelled {
-            background: rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.3);
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 4px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
+        .action-btns { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
         .btn-icon {
             padding: 4px 8px;
             border: none;
@@ -431,71 +473,27 @@
             align-items: center;
             justify-content: center;
         }
+        .btn-view { background: rgba(96,165,250,0.12); color: #60a5fa; }
+        .btn-view:hover { background: rgba(96,165,250,0.25); transform: scale(1.05); }
+        .btn-edit { background: rgba(230,179,30,0.12); color: #e6b31e; }
+        .btn-edit:hover { background: rgba(230,179,30,0.25); transform: scale(1.05); }
+        .btn-delete { background: rgba(248,113,113,0.12); color: #f87171; }
+        .btn-delete:hover { background: rgba(248,113,113,0.25); transform: scale(1.05); }
+        .btn-icon:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .btn-view {
-            background: rgba(96,165,250,0.12);
-            color: #60a5fa;
-        }
-
-        .btn-view:hover {
-            background: rgba(96,165,250,0.25);
-            transform: scale(1.05);
-        }
-
-        .btn-delete {
-            background: rgba(248,113,113,0.12);
-            color: #f87171;
-        }
-
-        .btn-delete:hover {
-            background: rgba(248,113,113,0.25);
-            transform: scale(1.05);
-        }
-
-        .btn-icon:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: rgba(255,255,255,0.2);
-        }
-
-        .empty-state .empty-icon {
-            font-size: 3rem;
-            color: rgba(255,255,255,0.04);
-            display: block;
-            margin-bottom: 12px;
-        }
-
+        .empty-state { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.2); }
+        .empty-state .empty-icon { font-size: 3rem; color: rgba(255,255,255,0.04); display: block; margin-bottom: 12px; }
         .empty-state .spinner {
-            width: 36px;
-            height: 36px;
+            width: 36px; height: 36px;
             border: 3px solid rgba(255,255,255,0.04);
             border-top-color: #e6b31e;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin: 0 auto 12px;
         }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .empty-state h3 {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.2);
-            margin-bottom: 4px;
-        }
-
-        .empty-state p {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.1);
-        }
-
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state h3 { font-size: 0.95rem; font-weight: 600; color: rgba(255,255,255,0.2); margin-bottom: 4px; }
+        .empty-state p { font-size: 0.8rem; color: rgba(255,255,255,0.1); }
         .empty-state .retry-btn {
             margin-top: 12px;
             padding: 8px 24px;
@@ -509,12 +507,9 @@
             transition: all 0.3s;
             font-family: 'Cairo', sans-serif;
         }
+        .empty-state .retry-btn:hover { transform: scale(1.04); box-shadow: 0 4px 24px rgba(230,179,30,0.2); }
 
-        .empty-state .retry-btn:hover {
-            transform: scale(1.04);
-            box-shadow: 0 4px 24px rgba(230,179,30,0.2);
-        }
-
+        /* TOAST */
         .toast-container {
             position: fixed;
             bottom: 24px;
@@ -528,7 +523,6 @@
             width: 90%;
             pointer-events: none;
         }
-
         .toast {
             padding: 12px 18px;
             border-radius: 12px;
@@ -544,12 +538,10 @@
             pointer-events: auto;
             border: 1px solid rgba(255,255,255,0.08);
         }
-
         .toast.success { background: rgba(16,185,129,0.92); }
         .toast.error { background: rgba(239,68,68,0.92); }
         .toast.warning { background: rgba(245,158,11,0.92); }
         .toast.info { background: rgba(59,130,246,0.92); }
-
         .toast .toast-close {
             background: none;
             border: none;
@@ -558,52 +550,53 @@
             margin-right: auto;
             font-size: 16px;
         }
-
         .toast .toast-close:hover { color: #fff; }
-
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .logs-header { flex-direction: column; align-items: stretch; }
+            .logs-header-left { flex: 1 1 auto; }
+            .logs-header-actions { width: 100%; justify-content: flex-start; }
+        }
         @media (max-width: 768px) {
-            .logs-header { flex-direction: column; align-items: flex-start; }
-            .logs-header-left { width: 100%; }
-            .logs-header-left h2 { font-size: 16px; }
-            .logs-header-actions { width: 100%; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 16px; }
+            .logs-header { padding: 12px 14px; }
+            .logs-header-left h2 { font-size: 17px; }
+            .logs-header-left p { font-size: 11px; }
+            .logs-header-left .header-icon { width: 38px; height: 38px; font-size: 16px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 14px; }
             .stat-card { padding: 12px 14px; }
             .stat-card .number { font-size: 20px; }
-            .filter-bar { flex-direction: column; align-items: stretch; }
-            .filter-bar select { min-width: 100%; }
+            .filter-bar { padding: 10px 14px; }
+            .filter-bar select { min-width: 100%; flex: 1 1 100%; }
+            .damaged-section { margin: 0 14px 16px 14px; padding: 12px 14px; }
+            .damaged-table { font-size: 0.7rem; min-width: 520px; }
             .table-wrapper { padding: 0 12px 12px; }
             table { font-size: 0.7rem; min-width: 500px; }
             thead th, tbody td { padding: 6px 4px; }
         }
-
         @media (max-width: 480px) {
             .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
             .stat-card { padding: 10px 12px; }
             .stat-card .number { font-size: 18px; }
             .stat-card .label { font-size: 9px; }
-            .logs-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
-            .logs-header-left h2 { font-size: 14px; }
+            .logs-header-actions { gap: 6px; }
+            .btn-action { padding: 7px 12px; font-size: 0.72rem; }
+            .logs-header-left .header-icon { width: 34px; height: 34px; font-size: 14px; }
+            .logs-header-left h2 { font-size: 15px; }
         }
 
         /* ============================================================
-           🖨️ PROFESSIONAL PRINT STYLES — v1.0
+           🖨️ PRINT — v2.0
            ============================================================ */
-
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 12mm 10mm;
+                margin: 12mm 10mm 16mm 10mm;
             }
-
-            @page :first {
-                margin-top: 8mm;
-            }
-
             html, body {
                 background: #ffffff !important;
                 color: #1a1a1a !important;
@@ -613,38 +606,26 @@
                 print-color-adjust: exact !important;
             }
 
-            button,
-            .btn-action,
-            .btn-filter,
-            .btn-icon,
-            .action-btns,
-            .retry-btn,
-            .toast,
-            .toast-container,
-            #toastContainer,
-            .logs-header-actions,
-            .filter-bar,
-            nav,
-            .sidebar,
-            .navbar,
-            .no-print {
+            button, .btn-action, .btn-filter, .btn-icon, .action-btns, .retry-btn,
+            .toast, .toast-container, #toastContainer, .logs-header-actions,
+            .filter-bar, nav, .sidebar, .navbar, .no-print, .stat-card .icon-bg,
+            .damaged-section::before {
                 display: none !important;
             }
 
             .logs-header {
                 display: flex !important;
-                background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
+                background: #0a1628 !important;
                 color: #ffffff !important;
-                padding: 12mm 8mm 6mm !important;
-                margin: 0 0 6mm !important;
-                border-radius: 8px !important;
+                padding: 10mm 8mm 5mm !important;
+                margin: 0 0 5mm !important;
+                border-radius: 6px !important;
                 border: 2px solid #e6b31e !important;
                 position: relative !important;
                 page-break-inside: avoid;
                 page-break-after: avoid;
                 border-bottom: 2px solid #e6b31e !important;
             }
-
             .logs-header-left h2 {
                 color: #e6b31e !important;
                 font-size: 16pt !important;
@@ -653,94 +634,135 @@
                 background: none !important;
                 margin: 0 0 4pt 0 !important;
             }
-
             .logs-header-left p {
-                color: rgba(255,255,255,0.75) !important;
+                color: rgba(255,255,255,0.8) !important;
                 font-size: 10pt !important;
             }
-
-            .header-icon,
-            #logsHeaderIcon {
-                width: 48px !important;
-                height: 48px !important;
+            .header-icon, #logsHeaderIcon {
+                width: 14mm !important;
+                height: 14mm !important;
                 border: 2px solid #e6b31e !important;
                 background: #0a1628 !important;
                 box-shadow: none !important;
                 overflow: hidden !important;
             }
-
-            .header-icon img,
-            #globalLogo {
+            .header-icon img, #globalLogo {
                 display: block !important;
                 width: 100% !important;
                 height: 100% !important;
                 object-fit: contain !important;
             }
-
-            .header-icon i {
-                color: #e6b31e !important;
-            }
-
+            .header-icon i { color: #e6b31e !important; }
             .logs-header::after {
                 content: "طُبع بتاريخ: " attr(data-print-date);
                 position: absolute;
-                bottom: 4mm;
-                left: 8mm;
+                bottom: 4mm; left: 8mm;
                 font-size: 9pt;
-                color: rgba(255,255,255,0.7) !important;
+                color: rgba(255,255,255,0.75) !important;
                 direction: rtl;
             }
 
             .stats-grid {
                 display: grid !important;
                 grid-template-columns: repeat(5, 1fr) !important;
-                gap: 4mm !important;
-                margin: 0 0 5mm !important;
+                gap: 3mm !important;
+                margin: 0 0 4mm !important;
                 padding: 0 !important;
                 page-break-inside: avoid;
             }
-
             .stat-card {
                 background: #f8f9fc !important;
-                border: 2px solid #e6b31e !important;
-                border-radius: 6px !important;
-                padding: 4mm 3mm !important;
+                border: 1.5px solid #e6b31e !important;
+                border-radius: 4px !important;
+                padding: 3mm 2mm !important;
                 text-align: center !important;
                 box-shadow: none !important;
                 backdrop-filter: none !important;
-                position: relative !important;
-                overflow: visible !important;
+                page-break-inside: avoid;
             }
-
-            .stat-card::before {
-                display: none !important;
-            }
-
+            .stat-card::before { display: none !important; }
             .stat-card .number {
                 color: #0a1628 !important;
-                font-size: 18pt !important;
+                font-size: 16pt !important;
                 font-weight: 800 !important;
                 line-height: 1 !important;
-                margin: 2mm 0 !important;
-                background: none !important;
                 -webkit-text-fill-color: #0a1628 !important;
             }
-
-            .stat-card .number.gold { color: #c99a0e !important; -webkit-text-fill-color: #c99a0e !important; }
-            .stat-card .number.green { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
+            .stat-card .number.gold   { color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; }
+            .stat-card .number.green  { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
             .stat-card .number.yellow { color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; }
-            .stat-card .number.red { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
-            .stat-card .number.blue { color: #1d4ed8 !important; -webkit-text-fill-color: #1d4ed8 !important; }
-
+            .stat-card .number.red    { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
+            .stat-card .number.blue   { color: #1d4ed8 !important; -webkit-text-fill-color: #1d4ed8 !important; }
             .stat-card .label {
-                color: #4b5563 !important;
-                font-size: 9pt !important;
+                color: #374151 !important;
+                font-size: 8.5pt !important;
                 font-weight: 700 !important;
             }
 
-            .stat-card .icon-bg {
-                display: none !important;
+            /* DAMAGED SECTION PRINT */
+            .damaged-section {
+                background: #fef2f2 !important;
+                border: 2px solid #b91c1c !important;
+                border-radius: 4px !important;
+                padding: 3mm 4mm !important;
+                margin: 0 0 4mm 0 !important;
+                page-break-inside: avoid;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
+            .damaged-header h3 {
+                color: #b91c1c !important;
+                font-size: 11pt !important;
+                font-weight: 800 !important;
+            }
+            .damaged-header h3 i { animation: none !important; }
+            .damaged-header .damaged-count {
+                background: #fef2f2 !important;
+                color: #b91c1c !important;
+                border: 1.5px solid #b91c1c !important;
+                font-size: 9pt !important;
+                padding: 0.8mm 2.5mm !important;
+            }
+            .damaged-table {
+                width: 100% !important;
+                font-size: 8pt !important;
+                min-width: 0 !important;
+                border: 1.5px solid #0a1628 !important;
+                border-collapse: collapse !important;
+            }
+            .damaged-table thead, .damaged-table thead th {
+                background: #0a1628 !important;
+                color: #e6b31e !important;
+                padding: 2mm 1.5mm !important;
+                font-size: 8.5pt !important;
+                font-weight: 800 !important;
+                border: 1px solid #1a2a4a !important;
+            }
+            .damaged-table tbody td {
+                padding: 1.8mm 1.5mm !important;
+                border: 1px solid #e5e7eb !important;
+                color: #1f2937 !important;
+                font-size: 8pt !important;
+                background: #ffffff !important;
+            }
+            .damaged-table tbody tr.critical { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
+            .damaged-table tbody tr.warning  { background: #fffbeb !important; border-right: 3px solid #b45309 !important; }
+            .damaged-table .vessel-name-damaged { color: #b91c1c !important; font-weight: 800 !important; }
+            .damaged-table .damage-type { color: #b45309 !important; font-weight: 700 !important; }
+            .damaged-table .urgency-badge {
+                padding: 0.7mm 2mm !important;
+                border-radius: 6px !important;
+                font-size: 7pt !important;
+                font-weight: 700 !important;
+                border: 1px solid currentColor !important;
+                background: #ffffff !important;
+                animation: none !important;
+            }
+            .damaged-table .urgency-badge.critical { color: #b91c1c !important; background: #fee2e2 !important; }
+            .damaged-table .urgency-badge.warning  { color: #b45309 !important; background: #fef3c7 !important; }
+            .damaged-table .urgency-badge.normal   { color: #4b5563 !important; background: #f3f4f6 !important; }
+            .damaged-empty h4 { color: #047857 !important; font-size: 10pt !important; }
+            .damaged-empty p { color: #6b7280 !important; }
 
             .table-wrapper {
                 margin: 0 !important;
@@ -748,7 +770,6 @@
                 overflow: visible !important;
                 page-break-inside: auto;
             }
-
             table {
                 width: 100% !important;
                 border-collapse: collapse !important;
@@ -757,101 +778,57 @@
                 border: 2px solid #0a1628 !important;
                 min-width: 0 !important;
             }
-
             thead {
                 display: table-header-group !important;
                 background: #0a1628 !important;
-                color: #e6b31e !important;
             }
-
             thead th {
                 background: #0a1628 !important;
                 color: #e6b31e !important;
-                padding: 3mm 2mm !important;
+                padding: 2.5mm 2mm !important;
                 font-size: 9pt !important;
                 font-weight: 800 !important;
-                text-align: center !important;
                 border: 1px solid #1a2a4a !important;
-                letter-spacing: 0 !important;
-                text-transform: none !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-
-            thead th i {
-                display: none !important;
-            }
-
-            tbody tr {
-                page-break-inside: avoid;
-                background: #ffffff !important;
-            }
-
-            tbody tr:nth-child(even) {
-                background: #f9fafb !important;
-            }
-
+            thead th i { display: none !important; }
+            tbody tr { page-break-inside: avoid; background: #ffffff !important; }
+            tbody tr:nth-child(even) { background: #f9fafb !important; }
             tbody td {
-                padding: 2.5mm 2mm !important;
+                padding: 2.2mm 2mm !important;
                 border: 1px solid #e5e7eb !important;
                 color: #1f2937 !important;
-                text-align: center !important;
                 font-size: 8.5pt !important;
-                vertical-align: middle !important;
                 background: transparent !important;
             }
-
-            tbody td.vessel-name,
-            tbody td strong {
-                font-weight: 800 !important;
-                color: #0a1628 !important;
-            }
+            tbody tr.damaged { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
+            tbody td.vessel-name { font-weight: 800 !important; color: #0a1628 !important; }
 
             .status-badge {
                 display: inline-block !important;
-                padding: 1mm 3mm !important;
-                border-radius: 10px !important;
+                padding: 0.8mm 2.5mm !important;
+                border-radius: 6px !important;
                 font-size: 8pt !important;
                 font-weight: 700 !important;
                 border: 1px solid currentColor !important;
                 background: #ffffff !important;
                 animation: none !important;
             }
-
-            .status-badge.completed { color: #047857 !important; background: #ecfdf5 !important; }
+            .status-badge.completed   { color: #047857 !important; background: #ecfdf5 !important; }
             .status-badge.in-progress { color: #b45309 !important; background: #fffbeb !important; }
-            .status-badge.pending { color: #1d4ed8 !important; background: #eff6ff !important; }
-            .status-badge.overdue { color: #b91c1c !important; background: #fef2f2 !important; }
-            .status-badge.cancelled { color: #6b7280 !important; background: #f3f4f6 !important; }
+            .status-badge.pending     { color: #1d4ed8 !important; background: #eff6ff !important; }
+            .status-badge.overdue     { color: #b91c1c !important; background: #fef2f2 !important; }
+            .status-badge.damaged     { color: #b91c1c !important; background: #fee2e2 !important; }
+            .status-badge.cancelled   { color: #6b7280 !important; background: #f3f4f6 !important; }
 
-            .empty-state {
-                padding: 15mm !important;
-                color: #6b7280 !important;
-            }
+            .empty-state { padding: 15mm !important; color: #6b7280 !important; }
+            .empty-state .spinner { display: none !important; }
+            .empty-state h3 { color: #4b5563 !important; }
+            .empty-state .empty-icon { color: #d1d5db !important; }
 
-            .empty-state .spinner {
-                display: none !important;
-            }
-
-            #page-logs::after {
-                content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
-                display: block;
-                text-align: center;
-                font-size: 8pt;
-                color: #6b7280;
-                border-top: 2px solid #e6b31e;
-                padding-top: 3mm;
-                margin-top: 6mm;
-            }
-
-            h1, h2, h3, h4, h5, h6 {
-                page-break-after: avoid;
-            }
-
-            tr, img, .stat-card {
-                page-break-inside: avoid;
-            }
-
+            h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
+            tr, img, .stat-card, .damaged-section { page-break-inside: avoid; }
             * {
                 box-shadow: none !important;
                 text-shadow: none !important;
@@ -864,23 +841,23 @@
     <!-- ===== HEADER ===== -->
     <div class="logs-header" id="logsHeader">
         <div class="logs-header-left">
-            <div class="header-icon" id="logsHeaderIcon">
+            <div class="header-icon" id="logsHeaderIcon" aria-hidden="true">
                 <i class="fas fa-clipboard-list"></i>
-                <img id="globalLogo" src="" alt="شعار" style="display:none;">
+                <img id="globalLogo" src="" alt="" style="display:none;">
             </div>
-            <div>
-                <h2> الصيانة</h2>
+            <div class="header-text">
+                <h2>الصيانة</h2>
                 <p>سجل كامل لعمليات الصيانة والتدخلات الفنية</p>
             </div>
         </div>
         <div class="logs-header-actions">
-            <button class="btn-action primary" id="refreshBtn">
+            <button type="button" class="btn-action primary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button class="btn-action secondary" id="exportBtn">
+            <button type="button" class="btn-action secondary" id="exportBtn">
                 <i class="fas fa-file-export"></i> تصدير
             </button>
-            <button class="btn-action secondary" onclick="printLogs()">
+            <button type="button" class="btn-action secondary" id="printBtn">
                 <i class="fas fa-print"></i> طباعة
             </button>
         </div>
@@ -915,6 +892,36 @@
         </div>
     </div>
 
+    <!-- ===== DAMAGED VESSELS — جديد ===== -->
+    <div class="damaged-section" id="damagedSection">
+        <div class="damaged-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> 🚨 المراكب المعطبة - تحتاج صيانة عاجلة</h3>
+            <span class="damaged-count" id="damagedCountBadge">0 مركب معطب</span>
+        </div>
+        <div class="damaged-table-wrapper">
+            <table class="damaged-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:right;"><i class="fas fa-hashtag"></i> #</th>
+                        <th style="text-align:right;"><i class="fas fa-ship"></i> المركب</th>
+                        <th><i class="fas fa-tools"></i> نوع العطب</th>
+                        <th><i class="fas fa-calendar"></i> تاريخ العطب</th>
+                        <th><i class="fas fa-clock"></i> مدة العطب</th>
+                        <th><i class="fas fa-flag"></i> الإلحاح</th>
+                    </tr>
+                </thead>
+                <tbody id="damagedBody">
+                    <tr>
+                        <td colspan="6" class="damaged-empty">
+                            <span class="empty-icon"><i class="fas fa-spinner fa-pulse"></i></span>
+                            <h4>جاري التحميل...</h4>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- ===== FILTER BAR ===== -->
     <div class="filter-bar">
         <div class="search-input">
@@ -931,10 +938,10 @@
             <option value="متأخرة">🚨 متأخرة</option>
         </select>
 
-        <button class="btn-filter primary" id="filterBtn">
+        <button type="button" class="btn-filter primary" id="filterBtn">
             <i class="fas fa-filter"></i> فلترة
         </button>
-        <button class="btn-filter outline" id="resetBtn">
+        <button type="button" class="btn-filter outline" id="resetBtn">
             <i class="fas fa-undo-alt"></i> إلغاء
         </button>
     </div>
@@ -969,36 +976,20 @@
     (function() {
         'use strict';
 
-        console.log('📋 Logs Page v9.14 - loading...');
+        console.log('📋 Logs Page v10.0 - loading...');
 
         var _isDestroyed = false;
-        var _pageIntervals = [];
-        var _pageTimeouts = [];
         var _eventListeners = [];
 
         function _logsCleanup() {
             if (_isDestroyed) return;
             _isDestroyed = true;
-
-            _pageIntervals.forEach(function(id) {
-                try { clearInterval(id); } catch (e) {}
-            });
-            _pageIntervals = [];
-
-            _pageTimeouts.forEach(function(id) {
-                try { clearTimeout(id); } catch (e) {}
-            });
-            _pageTimeouts = [];
-
             _eventListeners.forEach(function(item) {
                 try {
-                    if (item.el && item.fn) {
-                        item.el.removeEventListener(item.type, item.fn);
-                    }
+                    if (item.el && item.fn) item.el.removeEventListener(item.type, item.fn);
                 } catch (e) {}
             });
             _eventListeners = [];
-
             try {
                 delete window.loadMaintenanceLogs;
                 delete window.applyFilters;
@@ -1008,183 +999,91 @@
                 delete window.exportLogs;
                 delete window.printLogs;
             } catch (e) {}
-
-            console.log('🧹 Logs v9.14 cleanup done');
+            console.log('🧹 Logs v10.0 cleanup done');
         }
-
         window._pageCleanup = window._pageCleanup || [];
         window._pageCleanup.push(_logsCleanup);
-
         window.addEventListener('beforeunload', _logsCleanup);
         window.addEventListener('pagehide', _logsCleanup);
 
         // ============================================================
-        // 🎨 LOGO APPLY
+        // LOGO
         // ============================================================
         function applyLogo() {
             try {
-                var cachedLogo = localStorage.getItem('marine_logo');
-                if (!cachedLogo) return;
-
+                var cached = localStorage.getItem('marine_logo');
+                if (!cached) return;
                 var iconDiv = document.getElementById('logsHeaderIcon');
                 var img = document.getElementById('globalLogo');
-                if (img) {
-                    img.src = cachedLogo;
-                    img.style.display = 'block';
-                }
-                if (iconDiv) {
-                    iconDiv.classList.add('has-logo');
-                }
+                if (img) { img.src = cached; img.style.display = 'block'; }
+                if (iconDiv) iconDiv.classList.add('has-logo');
             } catch (e) {}
         }
-
-        function syncLogoFromServer() {
-            var token = localStorage.getItem('marine_token') ||
-                        localStorage.getItem('token') ||
-                        localStorage.getItem('authToken') || null;
-            var headers = { 'Accept': 'application/json' };
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-
-            fetch('/api/logo', { headers: headers, credentials: 'include' })
-                .then(function(r) { return r.ok ? r.json() : null; })
-                .then(function(data) {
-                    if (data && data.success && data.logo && data.logo.dataUrl) {
-                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
-                        applyLogo();
-                    }
-                }).catch(function() {});
-        }
-
         applyLogo();
-        syncLogoFromServer();
-
         window.addEventListener('storage', function(e) {
-            if (e.key === 'marine_logo' && e.newValue) {
-                applyLogo();
-            }
+            if (e.key === 'marine_logo') applyLogo();
         });
 
         // ============================================================
-        // 🖨️ PRINT DATE + printLogs
+        // PRINT DATE
         // ============================================================
         function updatePrintDate() {
             try {
                 var now = new Date();
-                var dateStr = now.toLocaleDateString('ar-TN', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                var timeStr = now.toLocaleTimeString('ar-TN', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                var fullDate = dateStr + ' - ' + timeStr;
-
+                var d = now.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                var t = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
                 var header = document.getElementById('logsHeader');
-                if (header) header.setAttribute('data-print-date', fullDate);
-            } catch (e) {
-                console.debug('🖨️ updatePrintDate (safe):', e.message);
-            }
+                if (header) header.setAttribute('data-print-date', d + ' - ' + t);
+            } catch (e) {}
         }
-
         updatePrintDate();
         window.addEventListener('beforeprint', updatePrintDate);
 
-        function printLogs() {
-            try {
-                updatePrintDate();
-
-                var confirmed = confirm(
-                    '🖨️ قبل الطباعة تأكد من:\n\n' +
-                    '1. الاتجاه: أفقي (Landscape)\n' +
-                    '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
-                    '3. الوجهة: PDF (اختياري)\n\n' +
-                    'هل تريد المتابعة؟'
-                );
-                if (!confirmed) return;
-
-                window.print();
-            } catch (e) {
-                console.error('❌ printLogs error:', e);
-                window.print();
-            }
-        }
-
         // ============================================================
-        // 🔐 RBAC
+        // RBAC
         // ============================================================
         var LEGACY_ROLE_MAP = {
-            'super_admin': 'admin',
-            'مسؤول': 'admin',
-            'مدير': 'manager',
-            'محرر': 'editor',
-            'مشغل': 'maintenance_unit',
-            'operator': 'maintenance_unit',
-            'user': 'viewer',
-            'مشاهد': 'viewer'
+            'super_admin':'admin','مسؤول':'admin','مدير':'manager','محرر':'editor',
+            'مشغل':'maintenance_unit','operator':'maintenance_unit','user':'viewer','مشاهد':'viewer'
         };
-
-        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-
-        function normalizeRole(role) {
-            if (!role) return 'viewer';
-            var r = String(role).trim();
-            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
-            return LEGACY_ROLE_MAP[r] || 'viewer';
+        var ALLOWED_ROLES = ['admin','manager','editor','maintenance_unit','viewer'];
+        function normalizeRole(r) {
+            if (!r) return 'viewer';
+            var s = String(r).trim();
+            if (ALLOWED_ROLES.indexOf(s) !== -1) return s;
+            return LEGACY_ROLE_MAP[s] || 'viewer';
         }
-
         function canDeleteLog() {
-            if (window.capabilities && typeof window.capabilities.canDeleteMaintenance === 'boolean') {
+            if (window.capabilities && typeof window.capabilities.canDeleteMaintenance === 'boolean')
                 return window.capabilities.canDeleteMaintenance;
-            }
-            var u = window.currentUser;
-            if (!u) return false;
-            var r = normalizeRole(u.role);
-            return ['admin', 'manager'].indexOf(r) !== -1;
+            if (!window.currentUser) return false;
+            return ['admin','manager'].indexOf(normalizeRole(window.currentUser.role)) !== -1;
         }
 
         // ============================================================
-        // 🔧 HELPERS
+        // HELPERS
         // ============================================================
-        function $(id) {
-            return document.getElementById(id);
+        function $(id) { return document.getElementById(id); }
+        function escapeHtml(s) {
+            if (s === null || s === undefined) return '';
+            var d = document.createElement('div');
+            d.textContent = String(s);
+            return d.innerHTML;
         }
-
-        function escapeHtml(str) {
-            if (str === null || str === undefined) return '';
-            var div = document.createElement('div');
-            div.textContent = String(str);
-            return div.innerHTML;
-        }
-
         function addSafeListener(el, type, fn, options) {
             if (!el) return;
             el.addEventListener(type, fn, options);
             _eventListeners.push({ el: el, type: type, fn: fn });
         }
-
-        // ============================================================
-        // 🔑 TOKEN + AUTH
-        // ============================================================
         function getToken() {
-            return (
-                localStorage.getItem('marine_token') ||
-                localStorage.getItem('authToken') ||
-                localStorage.getItem('token') ||
-                null
-            );
+            return localStorage.getItem('marine_token') ||
+                   localStorage.getItem('authToken') ||
+                   localStorage.getItem('token') || null;
         }
-
         function fetcher(url, options) {
-            if (typeof window.apiFetch === 'function') {
-                return window.apiFetch(url, options || {});
-            }
+            if (typeof window.apiFetch === 'function') return window.apiFetch(url, options || {});
             var token = getToken();
-            var headers = Object.assign({
-                'Accept': 'application/json'
-            }, (options && options.headers) || {});
+            var headers = Object.assign({ 'Accept': 'application/json' }, (options && options.headers) || {});
             if (token) headers['Authorization'] = 'Bearer ' + token;
             return fetch(url, Object.assign({}, options || {}, {
                 headers: headers,
@@ -1193,12 +1092,11 @@
         }
 
         // ============================================================
-        // 🍞 TOAST
+        // TOAST
         // ============================================================
         function showToast(message, type) {
             type = type || 'info';
             if (_isDestroyed) return;
-
             var container = $('toastContainer');
             if (!container) {
                 container = document.createElement('div');
@@ -1206,97 +1104,132 @@
                 container.className = 'toast-container';
                 document.body.appendChild(container);
             }
-
-            var icons = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️',
-                info: 'ℹ️'
-            };
-
+            var icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
             var toast = document.createElement('div');
             toast.className = 'toast ' + type;
-
             var icon = document.createElement('span');
             icon.textContent = icons[type] || icons.info;
-
             var text = document.createElement('span');
             text.textContent = String(message || '');
-
             var close = document.createElement('button');
             close.className = 'toast-close';
             close.textContent = '✕';
-            close.addEventListener('click', function() {
-                toast.remove();
-            });
-
+            close.addEventListener('click', function() { toast.remove(); });
             toast.appendChild(icon);
             toast.appendChild(text);
             toast.appendChild(close);
             container.appendChild(toast);
-
-            var tid = window.setTimeout(function() {
-                if (toast.parentNode) toast.remove();
-            }, 5000);
-            _pageTimeouts.push(tid);
+            setTimeout(function() { if (toast.parentNode) toast.remove(); }, 5000);
         }
 
         // ============================================================
-        // 📊 STATE
+        // STATE
         // ============================================================
         var allLogs = [];
         var filteredLogs = [];
+        var allVessels = [];
 
+        // ============================================================
+        // DAMAGED DETECTION
+        // ============================================================
+        function isVesselDamaged(v) {
+            if (!v) return false;
+            for (var key in v) {
+                if (!v.hasOwnProperty(key)) continue;
+                var val = v[key];
+                if (val === null || val === undefined) continue;
+
+                if (typeof val === 'string') {
+                    var s = val.trim();
+                    if (/^(معطب|معطبة|معطوب|معطوبة|عاطل|عاطلة|متوقف|متوقفة|خارج الخدمة|damaged|broken|out.?of.?service|down|unavailable)$/i.test(s))
+                        return true;
+                }
+                if (typeof val === 'boolean' && val === true) {
+                    if (/damaged|broken|outOfService|needsRepair|isBroken/i.test(key)) return true;
+                }
+                if (typeof val === 'object') {
+                    try {
+                        var j = JSON.stringify(val);
+                        if (/معطب|معطوب|عاطل|damaged|broken/i.test(j)) return true;
+                    } catch (e) {}
+                }
+            }
+            if (v.break || v.breakdown || v.problem || v.issue || v.fault) {
+                var hasActive = false;
+                for (var k in v) {
+                    if (typeof v[k] === 'string' &&
+                        /^(يعمل|نشط|جيد|سليم|active|working|ok|good)$/i.test(v[k].trim())) {
+                        hasActive = true; break;
+                    }
+                }
+                if (!hasActive) return true;
+            }
+            return false;
+        }
+
+        function daysSince(d) {
+            if (!d) return null;
+            var dt = new Date(d);
+            if (isNaN(dt.getTime())) return null;
+            return Math.floor((Date.now() - dt.getTime()) / 86400000);
+        }
+        function formatDaysCount(n) {
+            if (n === null || n === undefined) return '-';
+            if (n <= 0) return 'اليوم';
+            if (n === 1) return 'يوم واحد';
+            if (n === 2) return 'يومان';
+            if (n <= 10) return n + ' أيام';
+            if (n < 30) {
+                var w = Math.floor(n / 7);
+                if (w === 1) return 'أسبوع';
+                if (w === 2) return 'أسبوعان';
+                return w + ' أسابيع';
+            }
+            var m = Math.floor(n / 30);
+            if (m === 1) return 'شهر';
+            if (m === 2) return 'شهران';
+            return m + ' أشهر';
+        }
+        function formatDate(d) {
+            if (!d) return '—';
+            try {
+                var dt = new Date(d);
+                if (isNaN(dt.getTime())) return String(d);
+                return String(dt.getDate()).padStart(2,'0') + '/' +
+                       String(dt.getMonth()+1).padStart(2,'0') + '/' +
+                       dt.getFullYear();
+            } catch (e) { return String(d); }
+        }
+
+        // ============================================================
+        // NORMALIZE LOG
+        // ============================================================
         function normalizeLog(log) {
             if (!log || typeof log !== 'object') return null;
 
-            var vesselName =
-                log.vesselName ||
-                log.vessel ||
-                log.vessel_num ||
-                log.ship ||
-                '—';
-
-            var type =
-                log.type ||
-                log.intervention_type ||
-                log.maintenance_type ||
-                'صيانة دورية';
-
+            var vesselName = log.vesselName || log.vessel || log.vessel_num || log.ship || '—';
+            var type = log.type || log.intervention_type || log.maintenance_type || 'صيانة دورية';
             var dateRaw = log.date || log.createdAt || log.startDate || null;
             var displayDate = '—';
             var isoDate = null;
-
             if (dateRaw) {
                 try {
                     var d = new Date(dateRaw);
                     if (!isNaN(d.getTime())) {
-                        displayDate = d.toLocaleDateString('ar-EG');
+                        displayDate = formatDate(d);
                         isoDate = d.toISOString();
                     } else {
                         displayDate = String(dateRaw);
                     }
-                } catch (e) {
-                    displayDate = String(dateRaw);
-                }
+                } catch (e) { displayDate = String(dateRaw); }
             }
-
-            var repairUnit =
-                log.repairUnit ||
-                log.unit ||
-                log.workshop ||
-                log.department ||
-                '—';
-
+            var repairUnit = log.repairUnit || log.unit || log.workshop || log.department || '—';
             var status = log.status || 'قيد الانتظار';
 
-            var id = log.id || log._id || null;
-
             return {
-                id: id,
+                id: log.id || log._id || null,
                 vesselName: vesselName,
                 vessel: vesselName,
-                vesselNum: log.vesselNum || log.num || '',
                 type: type,
                 date: displayDate,
                 isoDate: isoDate,
@@ -1312,35 +1245,112 @@
         }
 
         // ============================================================
-        // 📊 LOAD LOGS
+        // LOAD VESSELS
+        // ============================================================
+        async function loadVessels() {
+            if (_isDestroyed) return [];
+            var token = getToken();
+            if (!token) { allVessels = []; return []; }
+            try {
+                var res = await fetcher('/api/vessels', { method: 'GET' });
+                if (!res.ok) { allVessels = []; return []; }
+                var data = await res.json();
+                var list = [];
+                if (Array.isArray(data)) list = data;
+                else if (data && Array.isArray(data.vessels)) list = data.vessels;
+                else if (data && Array.isArray(data.data)) list = data.data;
+                else if (data && Array.isArray(data.records)) list = data.records;
+
+                allVessels = list;
+                console.log('🚢 [loadVessels]', list.length, 'مركب');
+                if (list.length > 0) {
+                    console.log('  🔑 مفاتيح أول مركب:', Object.keys(list[0]));
+                    var dmg = list.filter(isVesselDamaged);
+                    console.log('  🚨 معطبة:', dmg.length);
+                    if (dmg.length === 0) {
+                        console.log('  ⚠️ لم يُكتشف أي معطب. عيّنة:', list[0]);
+                    }
+                }
+                return allVessels;
+            } catch (e) {
+                console.error('❌ loadVessels:', e);
+                allVessels = [];
+                return [];
+            }
+        }
+
+        // ============================================================
+        // RENDER DAMAGED
+        // ============================================================
+        function renderDamagedVessels() {
+            if (_isDestroyed) return;
+            var tbody = $('damagedBody');
+            if (!tbody) return;
+
+            var damaged = allVessels.filter(isVesselDamaged).sort(function(a, b) {
+                var da = new Date(a.fDate || a.damagedAt || a.date || a.updatedAt || 0);
+                var db = new Date(b.fDate || b.damagedAt || b.date || b.updatedAt || 0);
+                return da - db;
+            });
+
+            var badge = $('damagedCountBadge');
+            if (badge) badge.textContent = damaged.length + ' مركب معطب';
+
+            if (damaged.length === 0) {
+                tbody.innerHTML =
+                    '<tr><td colspan="6" class="damaged-empty">' +
+                    '<span class="empty-icon"><i class="fas fa-check-circle"></i></span>' +
+                    '<h4>✅ لا توجد مراكب معطبة</h4>' +
+                    '<p>جميع المراكب في حالة جيدة</p>' +
+                    '</td></tr>';
+                return;
+            }
+
+            var html = '';
+            damaged.forEach(function(v, i) {
+                var dateRaw = v.fDate || v.damagedAt || v.date || v.updatedAt || null;
+                var n = daysSince(dateRaw);
+                var critical = n !== null && n <= 3;
+                var warn = n !== null && n > 3 && n <= 7;
+                var rowCls = critical ? 'critical' : (warn ? 'warning' : '');
+                var urgCls = critical ? 'critical' : (warn ? 'warning' : 'normal');
+                var urgTxt = critical ? '🚨 عاجل جداً' : (warn ? '⚠️ عاجل' : '📌 عادي');
+
+                html += '<tr class="' + rowCls + '">' +
+                    '<td>' + (i+1) + '</td>' +
+                    '<td class="vessel-name-damaged">' + escapeHtml(v.name || v.vesselName || '—') + '</td>' +
+                    '<td class="damage-type">' + escapeHtml(v.break || v.damage || v.breakdown || v.problem || 'عطل غير محدد') + '</td>' +
+                    '<td class="damage-date">' + formatDate(dateRaw) + '</td>' +
+                    '<td class="damage-date">' + formatDaysCount(n) + '</td>' +
+                    '<td><span class="urgency-badge ' + urgCls + '">' + urgTxt + '</span></td>' +
+                '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+
+        // ============================================================
+        // LOAD LOGS
         // ============================================================
         async function loadMaintenanceLogs() {
             if (_isDestroyed) return;
-
             var tbody = $('tableBody');
             if (!tbody) return;
 
             tbody.innerHTML =
-                '<tr>' +
-                    '<td colspan="7" class="empty-state">' +
-                        '<div class="spinner"></div>' +
-                        '<h3>جاري التحميل...</h3>' +
-                        '<p>يرجى الانتظار</p>' +
-                    '</td>' +
-                '</tr>';
+                '<tr><td colspan="7" class="empty-state">' +
+                '<div class="spinner"></div>' +
+                '<h3>جاري التحميل...</h3><p>يرجى الانتظار</p>' +
+                '</td></tr>';
 
             try {
                 var token = getToken();
-
                 if (!token) {
                     tbody.innerHTML =
-                        '<tr>' +
-                            '<td colspan="7" class="empty-state">' +
-                                '<span class="empty-icon"><i class="fas fa-exclamation-triangle"></i></span>' +
-                                '<h3>يرجى تسجيل الدخول</h3>' +
-                                '<p>يجب تسجيل الدخول لعرض سجلات الصيانة</p>' +
-                            '</td>' +
-                        '</tr>';
+                        '<tr><td colspan="7" class="empty-state">' +
+                        '<span class="empty-icon"><i class="fas fa-exclamation-triangle"></i></span>' +
+                        '<h3>يرجى تسجيل الدخول</h3>' +
+                        '<p>يجب تسجيل الدخول لعرض سجلات الصيانة</p>' +
+                        '</td></tr>';
                     return;
                 }
 
@@ -1351,83 +1361,61 @@
                         localStorage.removeItem('marine_token');
                         throw new Error('انتهت الجلسة — يرجى إعادة تسجيل الدخول');
                     }
-                    if (response.status === 403) {
-                        throw new Error('ليس لديك صلاحية لعرض السجلات');
-                    }
+                    if (response.status === 403) throw new Error('ليس لديك صلاحية لعرض السجلات');
                     throw new Error('فشل تحميل البيانات: ' + response.status);
                 }
 
                 var data = await response.json();
-
                 console.log('📦 Maintenance logs response:', data);
 
                 var rawLogs = [];
-
-                if (Array.isArray(data)) {
-                    rawLogs = data;
-                } else if (data && Array.isArray(data.records)) {
-                    rawLogs = data.records;
-                } else if (data && Array.isArray(data.logs)) {
-                    rawLogs = data.logs;
-                } else if (data && Array.isArray(data.data)) {
-                    rawLogs = data.data;
-                }
+                if (Array.isArray(data)) rawLogs = data;
+                else if (data && Array.isArray(data.records)) rawLogs = data.records;
+                else if (data && Array.isArray(data.logs)) rawLogs = data.logs;
+                else if (data && Array.isArray(data.data)) rawLogs = data.data;
 
                 console.log('✅ Extracted', rawLogs.length, 'raw logs');
 
-                allLogs = rawLogs
-                    .map(normalizeLog)
-                    .filter(function(log) { return log !== null; });
-
+                allLogs = rawLogs.map(normalizeLog).filter(function(l) { return l !== null; });
                 console.log('✅ Normalized', allLogs.length, 'logs');
-                if (allLogs[0]) console.log('📋 Sample log:', allLogs[0]);
 
                 updateStats();
                 applyFilters();
-
-                showToast('✅ تم تحميل ' + allLogs.length + ' سجل', 'success');
-
+                if (allLogs.length > 0) {
+                    showToast('✅ تم تحميل ' + allLogs.length + ' سجل', 'success');
+                } else {
+                    showToast('ℹ️ لا توجد سجلات', 'info');
+                }
             } catch (error) {
                 if (_isDestroyed) return;
-
                 console.error('❌ Error loading logs:', error);
-
                 tbody.innerHTML =
-                    '<tr>' +
-                        '<td colspan="7" class="empty-state">' +
-                            '<span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>' +
-                            '<h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>' +
-                            '<p style="color:rgba(255,255,255,0.3);">' + escapeHtml(error.message) + '</p>' +
-                            '<button class="retry-btn" onclick="window.loadMaintenanceLogs()">' +
-                                '<i class="fas fa-sync-alt"></i> إعادة المحاولة' +
-                            '</button>' +
-                        '</td>' +
-                    '</tr>';
-
+                    '<tr><td colspan="7" class="empty-state">' +
+                    '<span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>' +
+                    '<h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>' +
+                    '<p style="color:rgba(255,255,255,0.3);">' + escapeHtml(error.message) + '</p>' +
+                    '<button class="retry-btn" onclick="window.loadMaintenanceLogs()">' +
+                    '<i class="fas fa-sync-alt"></i> إعادة المحاولة</button>' +
+                    '</td></tr>';
                 showToast('❌ ' + error.message, 'error');
             }
         }
 
         function updateStats() {
             if (_isDestroyed) return;
-
             var total = allLogs.length;
-
             var pending = allLogs.filter(function(l) {
                 var s = l.status || '';
                 return s === 'قيد الانتظار' || s === 'pending' || s === 'معلق';
             }).length;
-
             var completed = allLogs.filter(function(l) {
                 var s = l.status || '';
                 return s === 'مكتملة' || s === 'مكتمل' || s === 'completed';
             }).length;
-
             var overdue = allLogs.filter(function(l) {
                 var s = l.status || '';
                 return s === 'متأخرة' || s === 'متأخر' || s === 'overdue';
             }).length;
-
             var inProgress = allLogs.filter(function(l) {
                 var s = l.status || '';
                 return s === 'قيد التنفيذ' || s === 'in-progress' || s === 'جاري';
@@ -1443,10 +1431,8 @@
 
         function applyFilters() {
             if (_isDestroyed) return;
-
             var searchEl = $('searchInput');
             var statusEl = $('statusFilter');
-
             var search = searchEl ? searchEl.value.toLowerCase().trim() : '';
             var statusFilter = statusEl ? statusEl.value : 'الكل';
 
@@ -1459,140 +1445,88 @@
 
             filteredLogs = allLogs.filter(function(l) {
                 if (search) {
-                    var text = [
-                        l.vesselName,
-                        l.type,
-                        l.repairUnit,
-                        l.status,
-                        l.notes
-                    ].filter(Boolean).join(' ').toLowerCase();
-
+                    var text = [l.vesselName, l.type, l.repairUnit, l.status, l.notes]
+                        .filter(Boolean).join(' ').toLowerCase();
                     if (text.indexOf(search) === -1) return false;
                 }
-
                 if (statusFilter !== 'الكل') {
                     var statusValues = statusMap[statusFilter] || [statusFilter];
-                    var match = statusValues.some(function(s) {
-                        return l.status === s;
-                    });
-                    if (!match) return false;
+                    if (!statusValues.some(function(s) { return l.status === s; })) return false;
                 }
-
                 return true;
             });
-
             renderTable();
         }
 
         function renderTable() {
             if (_isDestroyed) return;
-
             var tbody = $('tableBody');
             if (!tbody) return;
 
             if (filteredLogs.length === 0) {
                 tbody.innerHTML =
-                    '<tr>' +
-                        '<td colspan="7" class="empty-state">' +
-                            '<span class="empty-icon"><i class="fas fa-search"></i></span>' +
-                            '<h3>لا توجد سجلات مطابقة</h3>' +
-                            '<p>حاول تغيير معايير البحث أو الفلترة</p>' +
-                        '</td>' +
-                    '</tr>';
+                    '<tr><td colspan="7" class="empty-state">' +
+                    '<span class="empty-icon"><i class="fas fa-search"></i></span>' +
+                    '<h3>لا توجد سجلات مطابقة</h3>' +
+                    '<p>حاول تغيير معايير البحث أو الفلترة</p>' +
+                    '</td></tr>';
                 return;
             }
 
             var canDel = canDeleteLog();
             var html = '';
-
-            filteredLogs.forEach(function(l, index) {
-                var statusClass = getStatusClass(l.status);
-                var statusLabel = getStatusLabel(l.status);
-
+            filteredLogs.forEach(function(l, i) {
+                var cls = getStatusClass(l.status);
+                var lbl = getStatusLabel(l.status);
                 var delBtn = canDel ?
-                    '<button type="button" class="btn-icon btn-delete delete-btn" data-id="' + escapeHtml(l.id || '') + '" title="حذف">' +
-                        '<i class="fas fa-trash"></i>' +
-                    '</button>' : '';
+                    '<button type="button" class="btn-icon btn-delete delete-btn" data-id="' + escapeHtml(l.id || '') + '" title="حذف"><i class="fas fa-trash"></i></button>' : '';
 
                 html +=
                     '<tr>' +
-                        '<td>' + (index + 1) + '</td>' +
+                        '<td>' + (i+1) + '</td>' +
                         '<td class="vessel-name">' + escapeHtml(l.vesselName) + '</td>' +
                         '<td>' + escapeHtml(l.type) + '</td>' +
                         '<td>' + escapeHtml(l.date) + '</td>' +
                         '<td>' + escapeHtml(l.repairUnit) + '</td>' +
-                        '<td><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></td>' +
-                        '<td>' +
-                            '<div class="action-btns">' +
-                                '<button type="button" class="btn-icon btn-view view-btn" data-id="' + escapeHtml(l.id || '') + '" title="عرض">' +
-                                    '<i class="fas fa-eye"></i>' +
-                                '</button>' +
-                                delBtn +
-                            '</div>' +
-                        '</td>' +
+                        '<td><span class="status-badge ' + cls + '">' + lbl + '</span></td>' +
+                        '<td><div class="action-btns">' +
+                            '<button type="button" class="btn-icon btn-view view-btn" data-id="' + escapeHtml(l.id || '') + '" title="عرض"><i class="fas fa-eye"></i></button>' +
+                            delBtn +
+                        '</div></td>' +
                     '</tr>';
             });
-
             tbody.innerHTML = html;
 
             tbody.querySelectorAll('.view-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    window.viewLog(this.dataset.id);
-                });
+                btn.addEventListener('click', function() { window.viewLog(this.dataset.id); });
             });
-
             tbody.querySelectorAll('.delete-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    window.deleteLog(this.dataset.id);
-                });
+                btn.addEventListener('click', function() { window.deleteLog(this.dataset.id); });
             });
-
-            console.log('✅ Rendered', filteredLogs.length, 'logs');
         }
 
         function getStatusClass(status) {
             var map = {
-                'مكتملة': 'completed',
-                'مكتمل': 'completed',
-                'completed': 'completed',
-                'قيد التنفيذ': 'in-progress',
-                'in-progress': 'in-progress',
-                'جاري': 'in-progress',
-                'قيد الانتظار': 'pending',
-                'pending': 'pending',
-                'معلق': 'pending',
-                'متأخرة': 'overdue',
-                'متأخر': 'overdue',
-                'overdue': 'overdue'
+                'مكتملة':'completed','مكتمل':'completed','completed':'completed',
+                'قيد التنفيذ':'in-progress','in-progress':'in-progress','جاري':'in-progress',
+                'قيد الانتظار':'pending','pending':'pending','معلق':'pending',
+                'متأخرة':'overdue','متأخر':'overdue','overdue':'overdue'
             };
             return map[status] || 'pending';
         }
-
         function getStatusLabel(status) {
             var map = {
-                'مكتملة': '✅ مكتملة',
-                'مكتمل': '✅ مكتمل',
-                'completed': '✅ مكتمل',
-                'قيد التنفيذ': '⚡ قيد التنفيذ',
-                'in-progress': '⚡ قيد التنفيذ',
-                'جاري': '⚡ قيد التنفيذ',
-                'قيد الانتظار': '⏳ قيد الانتظار',
-                'pending': '⏳ قيد الانتظار',
-                'معلق': '⏳ قيد الانتظار',
-                'متأخرة': '🚨 متأخرة',
-                'متأخر': '🚨 متأخر',
-                'overdue': '🚨 متأخرة'
+                'مكتملة':'✅ مكتملة','مكتمل':'✅ مكتمل','completed':'✅ مكتمل',
+                'قيد التنفيذ':'⚡ قيد التنفيذ','in-progress':'⚡ قيد التنفيذ','جاري':'⚡ قيد التنفيذ',
+                'قيد الانتظار':'⏳ قيد الانتظار','pending':'⏳ قيد الانتظار','معلق':'⏳ قيد الانتظار',
+                'متأخرة':'🚨 متأخرة','متأخر':'🚨 متأخر','overdue':'🚨 متأخرة'
             };
             return map[status] || status;
         }
 
         window.viewLog = function(id) {
             if (_isDestroyed) return;
-
-            var log = allLogs.find(function(l) {
-                return String(l.id) === String(id);
-            });
-
+            var log = allLogs.find(function(l) { return String(l.id) === String(id); });
             if (log) {
                 var details =
                     '📋 تفاصيل السجل\n' +
@@ -1604,7 +1538,6 @@
                     '📊 الحالة: ' + (log.status || '—') + '\n' +
                     '💰 التكلفة: ' + (log.cost || 0) + ' دينار\n' +
                     '📝 ملاحظات: ' + (log.notes || '—');
-
                 alert(details);
             } else {
                 showToast('لم يُعثر على السجل', 'warning');
@@ -1613,38 +1546,24 @@
 
         window.deleteLog = function(id) {
             if (_isDestroyed) return;
-
-            if (!canDeleteLog()) {
-                showToast('⚠️ ليس لديك صلاحية الحذف', 'error');
-                return;
-            }
-
+            if (!canDeleteLog()) { showToast('⚠️ ليس لديك صلاحية الحذف', 'error'); return; }
             if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) return;
-
             fetcher('/api/maintenance-logs/' + id, { method: 'DELETE' })
                 .then(function(response) {
-                    if (!response.ok) {
-                        return response.json().then(function(err) {
-                            throw new Error(err.error || 'فشل الحذف');
-                        });
-                    }
+                    if (!response.ok) return response.json().then(function(err) { throw new Error(err.error || 'فشل الحذف'); });
                     return response.json();
                 })
                 .then(function() {
                     showToast('✅ تم حذف السجل', 'success');
                     loadMaintenanceLogs();
                 })
-                .catch(function(error) {
-                    showToast('❌ ' + error.message, 'error');
-                });
+                .catch(function(error) { showToast('❌ ' + error.message, 'error'); });
         };
 
         window.exportLogs = function() {
             if (_isDestroyed) return;
-
             try {
                 var csv = 'المركب,النوع,التاريخ,الوحدة,الحالة,التكلفة,ملاحظات\n';
-
                 filteredLogs.forEach(function(l) {
                     csv +=
                         '"' + (l.vesselName || '') + '",' +
@@ -1655,7 +1574,6 @@
                         (l.cost || 0) + ',' +
                         '"' + (l.notes || '').replace(/"/g, '""') + '"\n';
                 });
-
                 var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
                 var url = URL.createObjectURL(blob);
                 var a = document.createElement('a');
@@ -1663,70 +1581,75 @@
                 a.download = 'maintenance-logs-' + Date.now() + '.csv';
                 a.click();
                 URL.revokeObjectURL(url);
-
                 showToast('✅ تم تصدير ' + filteredLogs.length + ' سجل', 'success');
-
-            } catch (e) {
-                showToast('❌ فشل التصدير: ' + e.message, 'error');
-            }
+            } catch (e) { showToast('❌ فشل التصدير: ' + e.message, 'error'); }
         };
 
-        function init() {
+        window.printLogs = function() {
+            try {
+                updatePrintDate();
+                var confirmed = confirm(
+                    '🖨️ قبل الطباعة تأكد من:\n\n' +
+                    '1. الاتجاه: أفقي (Landscape)\n' +
+                    '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
+                    '3. الوجهة: PDF (اختياري)\n\n' +
+                    'هل تريد المتابعة؟'
+                );
+                if (!confirmed) return;
+                window.print();
+            } catch (e) { console.error('❌ printLogs error:', e); window.print(); }
+        };
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        async function init() {
             if (_isDestroyed) return;
-
-            console.log('🚀 Initializing Logs page v9.14...');
+            console.log('🚀 Initializing Logs page v10.0...');
             console.log('👤 Role:', window.currentUser ? normalizeRole(window.currentUser.role) : 'unknown');
-            console.log('🔐 canDeleteLog:', canDeleteLog());
 
+            // ربط الأزرار
             addSafeListener($('refreshBtn'), 'click', function() {
                 if (_isDestroyed) return;
                 showToast('🔄 جاري التحديث...', 'info');
+                loadVessels().then(renderDamagedVessels);
                 loadMaintenanceLogs();
             });
-
-            addSafeListener($('exportBtn'), 'click', function() {
-                window.exportLogs();
-            });
-
+            addSafeListener($('exportBtn'), 'click', function() { window.exportLogs(); });
+            addSafeListener($('printBtn'), 'click', function() { window.printLogs(); });
             addSafeListener($('filterBtn'), 'click', function() {
                 applyFilters();
                 showToast('✅ تم تطبيق الفلتر', 'success');
             });
-
             addSafeListener($('resetBtn'), 'click', function() {
                 var s = $('searchInput'); if (s) s.value = '';
                 var f = $('statusFilter'); if (f) f.value = 'الكل';
                 applyFilters();
                 showToast('✅ تم إلغاء الفلاتر', 'success');
             });
-
             addSafeListener($('searchInput'), 'keyup', function(e) {
-                if (e.key === 'Enter') {
-                    applyFilters();
-                }
+                if (e.key === 'Enter') applyFilters();
             });
+            addSafeListener($('statusFilter'), 'change', function() { applyFilters(); });
 
-            addSafeListener($('statusFilter'), 'change', function() {
-                applyFilters();
-            });
+            // تحميل متوازي
+            await Promise.all([
+                loadVessels().then(function() { renderDamagedVessels(); }),
+                loadMaintenanceLogs()
+            ]);
 
-            loadMaintenanceLogs();
-
-            console.log('✅ Logs v9.14 ready');
+            console.log('✅ Logs v10.0 ready');
         }
 
         window.loadMaintenanceLogs = loadMaintenanceLogs;
         window.applyFilters = applyFilters;
         window.renderTable = renderTable;
-        window.allLogs = allLogs;
-        window.printLogs = printLogs;
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init, { once: true });
         } else {
             init();
         }
-
     })();
     </script>
 </div>
