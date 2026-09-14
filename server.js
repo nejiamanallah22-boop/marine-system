@@ -1,8 +1,9 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.0
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.0.1
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
 // ⚙️ SETTINGS + 🖼️ LOGO (MongoDB-backed)
+// 📦 PROFESSIONAL SEED PROTECTION (one-time seed + auto cleanup)
 // ============================================================
 
 'use strict';
@@ -13,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.0.1 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -523,9 +524,16 @@ async function connectMongoDB() {
             console.log('✅ MongoDB reconnected');
             mongoConnected = true;
         });
+
         await createIndexes();
         await ensureAdminExists();
+
+        // ✅ 1) نظّف أي بيانات وهمية قديمة (يعمل مرة واحدة)
+        await cleanupDemoVessels();
+
+        // ✅ 2) ازرع البيانات (فقط إذا لم تُزرع سابقاً)
         await ensureInitialData();
+
         return true;
     } catch (error) {
         console.error('❌ MongoDB connection failed:', error.message);
@@ -604,31 +612,289 @@ async function ensureAdminExists() {
     }
 }
 
+// ============================================================
+// 📦 INITIAL DATA (v10.0.1) — Professional Seed Protection
+// ============================================================
+// ✅ يزرع البيانات مرة واحدة فقط في تاريخ المشروع
+// ✅ معطّل تلقائياً في الإنتاج (production)
+// ✅ يمكن تفعيله في الإنتاج بـ SEED_DEFAULT_DATA=true
+// ✅ يمنع التكرار حتى بعد إعادة النشر 100 مرة
+// ✅ ينظّف البيانات الوهمية القديمة (101/205/312) إن وُجدت
+// ============================================================
+
+const SEED_MARKER = 'initial-data-planted-v1';
+const DEMO_VESSEL_NAMES = ['الوحدة 101', 'الوحدة 205', 'الوحدة 312'];
+
 async function ensureInitialData() {
     try {
-        const vesselCount = await Vessel.countDocuments();
-        if (vesselCount > 0) {
-            console.log(`✅ Vessels exist (${vesselCount})`);
+        // ─────────────────────────────────────────
+        // 1) فحص العلامة الدائمة — هل تم الزرع سابقاً؟
+        // ─────────────────────────────────────────
+        let seedMarker = null;
+        try {
+            seedMarker = await Log.findOne({
+                action: 'seed',
+                resource: 'system',
+                resourceName: SEED_MARKER
+            }).lean();
+        } catch (e) {
+            console.warn('⚠️ Seed marker lookup failed:', e.message);
+        }
+
+        if (seedMarker) {
+            console.log('ℹ️ Initial data already planted (permanent marker) — skipping');
             return;
         }
-        console.log('📦 Creating initial vessels...');
+
+        // ─────────────────────────────────────────
+        // 2) فحص: هل القاعدة تحتوي مراكب حقيقية؟
+        // ─────────────────────────────────────────
+        const vesselCount = await Vessel.countDocuments();
+
+        if (vesselCount > 0) {
+            console.log(`✅ Vessels exist (${vesselCount}) — marking as planted`);
+            try {
+                await Log.create({
+                    action: 'seed',
+                    resource: 'system',
+                    resourceName: SEED_MARKER,
+                    status: 'success',
+                    details: {
+                        reason: 'existing-data-detected',
+                        vesselCount,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) {
+                console.warn('⚠️ Could not create seed marker:', e.message);
+            }
+            return;
+        }
+
+        // ─────────────────────────────────────────
+        // 3) تعطيل في الإنتاج تلقائياً
+        // ─────────────────────────────────────────
+        const seedEnabledInProd = process.env.SEED_DEFAULT_DATA === 'true';
+
+        if (isProduction && !seedEnabledInProd) {
+            console.log('ℹ️ Production mode — default seed DISABLED (set SEED_DEFAULT_DATA=true to enable)');
+            try {
+                await Log.create({
+                    action: 'seed',
+                    resource: 'system',
+                    resourceName: SEED_MARKER,
+                    status: 'skipped',
+                    details: {
+                        reason: 'production-no-seed',
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) {}
+            return;
+        }
+
+        // ─────────────────────────────────────────
+        // 4) زرع البيانات (مرة واحدة فقط)
+        // ─────────────────────────────────────────
+        console.log('📦 Creating initial vessels (ONE TIME ONLY)...');
+
+        const nowIso = new Date().toISOString();
+
         const initialVessels = [
-            { id: randomId(8), name: 'الوحدة 101', num: '101', len: 11, region: 'الشمال', zone: 'تونس', port: 'الميناء الرئيسي', supp: '—', status: 'صالح', break: '—', cat: 'البروق', createdBy: 'system' },
-            { id: randomId(8), name: 'الوحدة 205', num: '205', len: 15, region: 'الساحل', zone: 'سوسة', port: 'ميناء سوسة', supp: '—', status: 'صيانة', break: 'محرك', fDate: new Date().toISOString(), ref: 'M-2024-001', repairUnit: 'وحدة الصيانة تونس', cat: 'خوافر', createdBy: 'system' },
-            { id: randomId(8), name: 'الوحدة 312', num: '312', len: 8, region: 'الجنوب', zone: 'جرجيس', port: 'ميناء جرجيس', supp: '—', status: 'معطب', break: 'هيكل', fDate: new Date().toISOString(), ref: 'M-2024-002', repairUnit: 'وحدة الصيانة جرجيس', cat: 'صقور', createdBy: 'system' }
+            {
+                id: randomId(8),
+                name: 'الوحدة 101',
+                num: '101',
+                len: 11,
+                region: 'الشمال',
+                zone: 'تونس',
+                port: 'الميناء الرئيسي',
+                supp: '—',
+                status: 'صالح',
+                break: '—',
+                cat: 'البروق',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                name: 'الوحدة 205',
+                num: '205',
+                len: 15,
+                region: 'الساحل',
+                zone: 'سوسة',
+                port: 'ميناء سوسة',
+                supp: '—',
+                status: 'صيانة',
+                break: 'محرك',
+                fDate: nowIso,
+                ref: 'M-2024-001',
+                repairUnit: 'وحدة الصيانة تونس',
+                cat: 'خوافر',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                name: 'الوحدة 312',
+                num: '312',
+                len: 8,
+                region: 'الجنوب',
+                zone: 'جرجيس',
+                port: 'ميناء جرجيس',
+                supp: '—',
+                status: 'معطب',
+                break: 'هيكل',
+                fDate: nowIso,
+                ref: 'M-2024-002',
+                repairUnit: 'وحدة الصيانة جرجيس',
+                cat: 'صقور',
+                createdBy: 'system'
+            }
         ];
+
         await Vessel.insertMany(initialVessels);
         console.log(`✅ ${initialVessels.length} vessels created`);
 
         const initialLogs = [
-            { id: randomId(8), vesselName: 'الوحدة 101', vesselNum: '101', type: 'صيانة دورية', status: 'مكتملة', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة تونس', cost: 500, notes: 'صيانة دورية', createdBy: 'system' },
-            { id: randomId(8), vesselName: 'الوحدة 205', vesselNum: '205', type: 'إصلاح محرك', status: 'قيد التنفيذ', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة صفاقس', cost: 1200, notes: 'استبدال المحرك', createdBy: 'system' },
-            { id: randomId(8), vesselName: 'الوحدة 312', vesselNum: '312', type: 'إصلاح هيكل', status: 'متأخرة', date: new Date().toISOString(), repairUnit: 'وحدة الصيانة جرجيس', cost: 2000, notes: 'إصلاح الهيكل', createdBy: 'system' }
+            {
+                id: randomId(8),
+                vesselName: 'الوحدة 101',
+                vesselNum: '101',
+                type: 'صيانة دورية',
+                status: 'مكتملة',
+                date: nowIso,
+                repairUnit: 'وحدة الصيانة تونس',
+                cost: 500,
+                notes: 'صيانة دورية',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                vesselName: 'الوحدة 205',
+                vesselNum: '205',
+                type: 'إصلاح محرك',
+                status: 'قيد التنفيذ',
+                date: nowIso,
+                repairUnit: 'وحدة الصيانة صفاقس',
+                cost: 1200,
+                notes: 'استبدال المحرك',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                vesselName: 'الوحدة 312',
+                vesselNum: '312',
+                type: 'إصلاح هيكل',
+                status: 'متأخرة',
+                date: nowIso,
+                repairUnit: 'وحدة الصيانة جرجيس',
+                cost: 2000,
+                notes: 'إصلاح الهيكل',
+                createdBy: 'system'
+            }
         ];
+
         await Maintenance.insertMany(initialLogs);
         console.log(`✅ ${initialLogs.length} maintenance logs created`);
+
+        // ─────────────────────────────────────────
+        // 5) ضع العلامة الدائمة — لن يُزرع مرة أخرى أبداً
+        // ─────────────────────────────────────────
+        try {
+            await Log.create({
+                action: 'seed',
+                resource: 'system',
+                resourceName: SEED_MARKER,
+                status: 'success',
+                details: {
+                    vessels: initialVessels.length,
+                    maintenanceLogs: initialLogs.length,
+                    timestamp: new Date().toISOString()
+                }
+            });
+            console.log('✅ Permanent seed marker created — will NEVER repeat');
+        } catch (e) {
+            console.warn('⚠️ Could not create permanent marker:', e.message);
+        }
+
     } catch (error) {
-        console.error('❌ Failed to create initial data:', error.message);
+        console.error('❌ Failed in ensureInitialData:', error.message);
+        console.error(error.stack);
+    }
+}
+
+// ============================================================
+// 🧹 CLEANUP — احذف المراكب الوهمية القديمة إن وُجدت
+// ============================================================
+// ✅ ينظّف تلقائياً المراكب 101/205/312 التي زرعها النظام سابقاً
+// ✅ يعمل مرة واحدة فقط (بعد إضافة العلامة)
+// ============================================================
+
+async function cleanupDemoVessels() {
+    try {
+        const cleanupMarker = await Log.findOne({
+            action: 'cleanup',
+            resource: 'system',
+            resourceName: 'demo-vessels-removed'
+        }).lean();
+
+        if (cleanupMarker) {
+            console.log('ℹ️ Demo vessel cleanup already done');
+            return;
+        }
+
+        const demoVessels = await Vessel.find({
+            name: { $in: DEMO_VESSEL_NAMES },
+            createdBy: 'system'
+        }).lean();
+
+        if (demoVessels.length === 0) {
+            console.log('ℹ️ No demo vessels found — nothing to cleanup');
+            try {
+                await Log.create({
+                    action: 'cleanup',
+                    resource: 'system',
+                    resourceName: 'demo-vessels-removed',
+                    status: 'success',
+                    details: { removed: 0, reason: 'none-found' }
+                });
+            } catch (e) {}
+            return;
+        }
+
+        console.log(`🧹 Found ${demoVessels.length} demo vessels — removing...`);
+
+        const demoIds = demoVessels.map(v => v.id).filter(Boolean);
+        const demoObjectIds = demoVessels.map(v => v._id).filter(Boolean);
+
+        const vesselResult = await Vessel.deleteMany({
+            _id: { $in: demoObjectIds }
+        });
+
+        const logResult = await Maintenance.deleteMany({
+            vesselId: { $in: demoIds }
+        });
+
+        console.log(`✅ Removed ${vesselResult.deletedCount} demo vessels + ${logResult.deletedCount} maintenance logs`);
+
+        try {
+            await Log.create({
+                action: 'cleanup',
+                resource: 'system',
+                resourceName: 'demo-vessels-removed',
+                status: 'success',
+                details: {
+                    removedVessels: vesselResult.deletedCount,
+                    removedLogs: logResult.deletedCount,
+                    names: DEMO_VESSEL_NAMES,
+                    timestamp: new Date().toISOString()
+                }
+            });
+        } catch (e) {
+            console.warn('⚠️ Could not create cleanup marker:', e.message);
+        }
+
+    } catch (error) {
+        console.error('❌ Cleanup error:', error.message);
     }
 }
 
@@ -1142,12 +1408,17 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '10.0.0', timestamp: new Date().toISOString(),
+            version: '10.0.1', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
                 ? 'mailjet-api'
                 : (process.env.EMAIL_HOST ? 'smtp' : 'not-configured'),
+            seed: {
+                marker: SEED_MARKER,
+                production: isProduction,
+                enabled: process.env.SEED_DEFAULT_DATA === 'true'
+            },
             models: {
                 User: !!User,
                 Vessel: !!Vessel,
@@ -2256,7 +2527,9 @@ function formatMaintenance(log) {
 
     app.get('/api/logs', authenticateAccessToken, requirePermission('logs:read'), async (req, res) => {
         try {
-            const logs = await Log.find().sort({ createdAt: -1 }).limit(200);
+            const logs = await Log.find({
+                action: { $nin: ['seed', 'cleanup'] }
+            }).sort({ createdAt: -1 }).limit(200);
             res.json(logs.map(log => ({
                 id: log._id.toString(),
                 userId: log.user?.toString() || null,
@@ -2407,7 +2680,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.0</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.0.1</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2457,9 +2730,10 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.0');
+            console.log('🚢 MARINE SYSTEM v10.0.1');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
+            console.log('📦 Seed Protection: ONE-TIME ONLY');
             console.log('🤖 AI Assistant + Smart Import: ' + (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'));
             console.log('📧 Email: ' + (
                 (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
