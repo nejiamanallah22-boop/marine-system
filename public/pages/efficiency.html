@@ -1,28 +1,19 @@
 <!-- public/pages/efficiency.html -->
 <div id="page-efficiency">
     <style>
-        /* ✅ اللون المعتم على body */
         body { background: #0a0e1a; }
-
-        /* ============================================================
-           📊 EFFICIENCY PAGE - ENTERPRISE PRO VERSION
-           ============================================================ */
 
         :root {
             --primary-dark: #0a1628;
             --primary: #0f3460;
             --gold: #e6b31e;
             --gold-light: #f5d76e;
-            --gold-dark: #c99a0e;
-            --success: #00b894;
             --success-light: #55efc4;
             --danger: #e17055;
             --warning: #fdcb6e;
-            --info: #0984e3;
             --glass-bg: rgba(255,255,255,0.04);
             --glass-border: rgba(255,255,255,0.06);
             --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
-            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
             --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
             --radius: 14px;
             --radius-sm: 8px;
@@ -31,32 +22,18 @@
         }
 
         #page-efficiency {
-            width: 100%;
-            max-width: 100%;
-            padding: 0;
-            margin: 0;
-            font-family: var(--font);
-            background: transparent;
-            color: #e8edf5;
-            min-height: 100vh;
-            position: relative;
-            z-index: 2;
+            width: 100%; max-width: 100%; padding: 0; margin: 0;
+            font-family: var(--font); background: transparent;
+            color: #e8edf5; min-height: 100vh; position: relative; z-index: 2;
         }
 
         #page-efficiency::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
+            content: ''; position: fixed; top: -50%; left: -50%;
+            width: 200%; height: 200%;
             background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
                 radial-gradient(ellipse at 80% 50%, rgba(0,184,148,0.03) 0%, transparent 60%);
-            z-index: -1;
-            pointer-events: none;
-            animation: bgPulse 15s ease-in-out infinite;
+            z-index: -1; pointer-events: none; animation: bgPulse 15s ease-in-out infinite;
         }
-
         @keyframes bgPulse {
             0%, 100% { transform: scale(1) rotate(0deg); }
             50% { transform: scale(1.05) rotate(2deg); }
@@ -65,707 +42,325 @@
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
 
-        /* ============================================================
-           HEADER
-           ============================================================ */
+        /* HEADER */
         .eff-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            flex-wrap: wrap;
-            gap: 12px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; flex-wrap: wrap; gap: 12px;
+            background: var(--glass-bg); backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--glass-border);
-            position: sticky;
-            top: 64px;
-            z-index: 10;
-            margin: 0;
-            width: 100%;
+            position: sticky; top: 64px; z-index: 10; width: 100%;
         }
-
-        .eff-header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
+        .eff-header-left { display: flex; align-items: center; gap: 14px; }
         .eff-header-left .header-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold), var(--success));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #0a1628;
-            box-shadow: var(--shadow-gold);
-            animation: pulseGold 2s ease-in-out infinite;
-            overflow: hidden;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), #00b894);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #0a1628; box-shadow: var(--shadow-gold);
+            animation: pulseGold 2s ease-in-out infinite; overflow: hidden;
         }
-
         .eff-header-left .header-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-            display: none;
+            width: 100%; height: 100%; object-fit: cover;
+            border-radius: 50%; display: none;
         }
-        .eff-header-left .header-icon.has-logo img {
-            display: block;
-        }
+        .eff-header-left .header-icon.has-logo img { display: block; }
         .eff-header-left .header-icon.has-logo {
-            animation: none;
-            background: transparent;
+            animation: none; background: transparent;
             box-shadow: 0 0 20px rgba(230,179,30,0.3);
         }
-        .eff-header-left .header-icon.has-logo i {
-            display: none;
-        }
-
+        .eff-header-left .header-icon.has-logo i { display: none; }
         @keyframes pulseGold {
             0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
             50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
         }
-
         .eff-header-left h2 {
-            font-size: 22px;
-            font-weight: 800;
+            font-size: 22px; font-weight: 800;
             background: linear-gradient(135deg, var(--gold-light), #fff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0;
         }
-
-        .eff-header-left p {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            margin: 0;
-        }
-
-        .eff-header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
+        .eff-header-left p { font-size: 12px; color: rgba(255,255,255,0.3); margin: 0; }
+        .eff-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .eff-header-actions .btn-action {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-family: var(--font);
+            padding: 8px 18px; border: none; border-radius: 30px;
+            font-weight: 600; font-size: 0.8rem; cursor: pointer;
+            transition: all var(--transition); display: inline-flex;
+            align-items: center; gap: 8px; font-family: var(--font);
         }
-
         .eff-header-actions .btn-action.primary {
             background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628;
-            box-shadow: var(--shadow-gold);
+            color: #0a1628; box-shadow: var(--shadow-gold);
         }
-
         .eff-header-actions .btn-action.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+            transform: translateY(-2px); box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
-
         .eff-header-actions .btn-action.secondary {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
             color: rgba(255,255,255,0.5);
         }
-
         .eff-header-actions .btn-action.secondary:hover {
-            background: rgba(255,255,255,0.06);
-            color: #fff;
-            transform: translateY(-2px);
+            background: rgba(255,255,255,0.06); color: #fff; transform: translateY(-2px);
         }
 
-        /* ============================================================
-           STATS CARDS
-           ============================================================ */
+        /* STATS */
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            padding: 16px 24px;
-            margin: 0;
-            width: 100%;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px; padding: 16px 24px; width: 100%;
         }
-
         .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 16px 18px;
-            text-align: center;
-            transition: all var(--transition);
-            cursor: default;
-            position: relative;
-            overflow: hidden;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border); border-radius: var(--radius);
+            padding: 16px 18px; text-align: center;
+            transition: all var(--transition); position: relative; overflow: hidden;
         }
-
         .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--gold), var(--success));
-            opacity: 0.6;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--gold), #00b894); opacity: 0.6;
         }
-
         .stat-card:hover {
             transform: translateY(-3px);
-            border-color: rgba(230,179,30,0.15);
-            box-shadow: var(--shadow-hover);
+            border-color: rgba(230,179,30,0.15); box-shadow: var(--shadow-hover);
         }
-
-        .stat-card .number {
-            font-size: 26px;
-            font-weight: 800;
-            color: #fff;
-            line-height: 1.2;
-        }
-
+        .stat-card .number { font-size: 26px; font-weight: 800; color: #fff; line-height: 1.2; }
         .stat-card .number.gold { color: var(--gold-light); }
         .stat-card .number.green { color: var(--success-light); }
         .stat-card .number.yellow { color: var(--warning); }
         .stat-card .number.red { color: var(--danger); }
-
         .stat-card .label {
-            font-size: 11px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 4px;
-            font-weight: 500;
-            letter-spacing: 0.3px;
+            font-size: 11px; color: rgba(255,255,255,0.3);
+            margin-top: 4px; font-weight: 500; letter-spacing: 0.3px;
         }
-
         .stat-card .icon-bg {
-            position: absolute;
-            right: -10px;
-            bottom: -10px;
-            font-size: 50px;
-            opacity: 0.04;
-            pointer-events: none;
+            position: absolute; right: -10px; bottom: -10px;
+            font-size: 50px; opacity: 0.04; pointer-events: none;
         }
 
-        /* ============================================================
-           FILTER BAR
-           ============================================================ */
+        /* FILTER */
         .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px 14px;
-            padding: 10px 24px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid var(--glass-border);
-            border-bottom: 1px solid var(--glass-border);
-            margin: 0;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+            padding: 10px 24px; background: var(--glass-bg); backdrop-filter: blur(12px);
+            border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
             width: 100%;
         }
-
         .filter-bar label {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            font-size: 0.7rem; color: rgba(255,255,255,0.3);
+            font-weight: 600; display: flex; align-items: center; gap: 4px;
         }
-
         .filter-bar select {
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 6px 12px; border-radius: 20px;
             border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.03);
-            color: #e2e8f0;
-            font-size: 0.75rem;
-            min-width: 120px;
-            cursor: pointer;
+            background: rgba(255,255,255,0.03); color: #e2e8f0;
+            font-size: 0.75rem; min-width: 120px; cursor: pointer;
             font-family: var(--font);
         }
-
-        .filter-bar select:focus {
-            outline: none;
-            border-color: var(--gold);
-        }
-
-        .filter-bar select option {
-            background: #0a1628;
-            color: #e2e8f0;
-        }
-
+        .filter-bar select:focus { outline: none; border-color: var(--gold); }
+        .filter-bar select option { background: #0a1628; color: #e2e8f0; }
         .filter-bar .btn-filter {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            padding: 6px 16px; border: none; border-radius: 20px;
+            font-weight: 600; font-size: 0.75rem; cursor: pointer;
+            transition: all var(--transition); font-family: var(--font);
+            display: inline-flex; align-items: center; gap: 6px;
         }
-
         .filter-bar .btn-filter.primary {
             background: linear-gradient(135deg, var(--gold), var(--gold-light));
             color: #0a1628;
         }
-
-        .filter-bar .btn-filter.primary:hover {
-            transform: scale(1.04);
-            box-shadow: 0 4px 20px rgba(230,179,30,0.2);
-        }
-
+        .filter-bar .btn-filter.primary:hover { transform: scale(1.04); }
         .filter-bar .btn-filter.outline {
-            background: transparent;
-            border: 1px solid var(--glass-border);
+            background: transparent; border: 1px solid var(--glass-border);
             color: rgba(255,255,255,0.3);
         }
-
         .filter-bar .btn-filter.outline:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
+            background: rgba(255,255,255,0.04); color: #fff;
         }
 
-        /* ============================================================
-           TABLE STYLES
-           ============================================================ */
+        /* SECTIONS */
         .eff-section {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            margin: 0 24px 16px;
-            overflow: hidden;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border); border-radius: var(--radius);
+            margin: 0 24px 16px; overflow: hidden;
         }
-
         .eff-section .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; border-bottom: 1px solid var(--glass-border);
             background: rgba(255,255,255,0.02);
         }
-
         .eff-section .section-header h3 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 15px; font-weight: 700; color: #fff; margin: 0;
+            display: flex; align-items: center; gap: 8px;
         }
-
-        .eff-section .section-header h3 i {
-            color: var(--gold);
-        }
-
+        .eff-section .section-header h3 i { color: var(--gold); }
         .eff-section .section-header .badge {
-            font-size: 11px;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-weight: 600;
+            font-size: 11px; padding: 4px 16px; border-radius: 20px; font-weight: 600;
         }
+        .badge.success { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .badge.warning { background: rgba(234,179,8,0.12); color: #fbbf24; }
+        .badge.danger { background: rgba(239,68,68,0.12); color: #f87171; }
+        .badge.gold { background: rgba(230,179,30,0.12); color: var(--gold-light); }
 
-        .badge.success {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
+        .section-content { padding: 16px 20px; }
 
-        .badge.warning {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .badge.danger {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .badge.gold {
-            background: rgba(230,179,30,0.12);
-            color: var(--gold-light);
-        }
-
-        .section-content {
-            padding: 16px 20px;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: var(--radius-sm);
-        }
-
+        .table-wrapper { overflow-x: auto; border-radius: var(--radius-sm); }
         .table-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.78rem;
-            min-width: 600px;
+            width: 100%; border-collapse: collapse;
+            font-size: 0.78rem; min-width: 600px;
         }
-
         thead {
             background: rgba(15,52,96,0.3);
             border-bottom: 2px solid rgba(230,179,30,0.08);
         }
-
         thead th {
-            padding: 10px 12px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
-            letter-spacing: 0.5px;
-            white-space: nowrap;
+            padding: 10px 12px; text-align: center; font-weight: 700;
+            font-size: 0.6rem; text-transform: uppercase;
+            color: rgba(255,255,255,0.35); letter-spacing: 0.5px; white-space: nowrap;
         }
-
-        thead th i {
-            margin-left: 4px;
-            color: var(--gold);
-            font-size: 0.7rem;
-        }
-
+        thead th i { margin-left: 4px; color: var(--gold); font-size: 0.7rem; }
         tbody td {
-            padding: 9px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            vertical-align: middle;
-            color: rgba(255,255,255,0.6);
-            font-size: 0.78rem;
-            text-align: center;
+            padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,0.02);
+            vertical-align: middle; color: rgba(255,255,255,0.6);
+            font-size: 0.78rem; text-align: center;
         }
-
-        tbody tr {
-            transition: all var(--transition);
-        }
-
-        tbody tr:hover {
-            background: rgba(255,255,255,0.03);
-        }
+        tbody tr { transition: all var(--transition); }
+        tbody tr:hover { background: rgba(255,255,255,0.03); }
 
         .row-high {
             background: rgba(34, 197, 94, 0.05) !important;
             border-right: 3px solid #4ade80;
         }
-
-        .row-high .eff-cell {
-            color: #4ade80 !important;
-            font-weight: 700;
-        }
-
+        .row-high .eff-cell { color: #4ade80 !important; font-weight: 700; }
         .row-mid {
             background: rgba(234, 179, 8, 0.05) !important;
             border-right: 3px solid #fbbf24;
         }
-
-        .row-mid .eff-cell {
-            color: #fbbf24 !important;
-            font-weight: 700;
-        }
-
+        .row-mid .eff-cell { color: #fbbf24 !important; font-weight: 700; }
         .row-low {
             background: rgba(239, 68, 68, 0.05) !important;
             border-right: 3px solid #f87171;
         }
-
-        .row-low .eff-cell {
-            color: #f87171 !important;
-            font-weight: 700;
-        }
+        .row-low .eff-cell { color: #f87171 !important; font-weight: 700; }
 
         .status-badge {
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            display: inline-block;
-            white-space: nowrap;
+            padding: 3px 12px; border-radius: 20px;
+            font-size: 0.65rem; font-weight: 600;
+            display: inline-block; white-space: nowrap;
         }
-
-        .status-badge.excellent {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .status-badge.good {
-            background: rgba(74,222,128,0.08);
-            color: #4ade80;
-        }
-
-        .status-badge.medium {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .status-badge.low {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
+        .status-badge.excellent { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .status-badge.good { background: rgba(74,222,128,0.08); color: #4ade80; }
+        .status-badge.medium { background: rgba(234,179,8,0.12); color: #fbbf24; }
+        .status-badge.low { background: rgba(239,68,68,0.12); color: #f87171; }
         .status-badge.critical {
-            background: rgba(239,68,68,0.2);
-            color: #f87171;
+            background: rgba(239,68,68,0.2); color: #f87171;
             animation: pulseDanger 1.5s ease-in-out infinite;
         }
-
         @keyframes pulseDanger {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            0%, 100% { opacity: 1; } 50% { opacity: 0.6; }
         }
 
         .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            overflow: hidden;
-            min-width: 80px;
+            width: 100%; height: 6px; background: rgba(255,255,255,0.05);
+            border-radius: 10px; overflow: hidden; min-width: 80px;
         }
-
         .progress-bar .progress-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 0%;
+            height: 100%; border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); width: 0%;
         }
+        .progress-bar .progress-fill.high { background: linear-gradient(90deg, #22c55e, #4ade80); }
+        .progress-bar .progress-fill.mid { background: linear-gradient(90deg, #eab308, #fbbf24); }
+        .progress-bar .progress-fill.low { background: linear-gradient(90deg, #ef4444, #f87171); }
 
-        .progress-bar .progress-fill.high {
-            background: linear-gradient(90deg, #22c55e, #4ade80);
-        }
-
-        .progress-bar .progress-fill.mid {
-            background: linear-gradient(90deg, #eab308, #fbbf24);
-        }
-
-        .progress-bar .progress-fill.low {
-            background: linear-gradient(90deg, #ef4444, #f87171);
-        }
-
-        /* ============================================================
-           REGION CARDS
-           ============================================================ */
-        .region-card {
-            padding: 0;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .region-card:last-child {
-            border-bottom: none;
-        }
-
+        .region-card { padding: 0; border-bottom: 1px solid var(--glass-border); }
+        .region-card:last-child { border-bottom: none; }
         .region-card .region-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            background: rgba(255,255,255,0.02);
-            flex-wrap: wrap;
-            gap: 8px;
-            transition: all var(--transition);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background: rgba(255,255,255,0.02);
+            flex-wrap: wrap; gap: 8px;
         }
-
-        .region-card .region-header:hover {
-            background: rgba(255,255,255,0.04);
-        }
-
         .region-card .region-header .region-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 15px; font-weight: 700; color: #fff;
+            display: flex; align-items: center; gap: 8px;
         }
-
-        .region-card .region-header .region-name i {
-            color: var(--gold);
-        }
-
+        .region-card .region-header .region-name i { color: var(--gold); }
         .region-card .region-header .region-badge {
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 16px;
-            border-radius: 20px;
+            font-size: 12px; font-weight: 600; padding: 4px 16px; border-radius: 20px;
         }
-
         .region-badge.excellent {
-            background: rgba(34,197,94,0.15);
-            color: #4ade80;
+            background: rgba(34,197,94,0.15); color: #4ade80;
             border: 1px solid rgba(34,197,94,0.1);
         }
-
         .region-badge.good {
-            background: rgba(74,222,128,0.1);
-            color: #4ade80;
+            background: rgba(74,222,128,0.1); color: #4ade80;
             border: 1px solid rgba(74,222,128,0.05);
         }
-
         .region-badge.medium {
-            background: rgba(234,179,8,0.15);
-            color: #fbbf24;
+            background: rgba(234,179,8,0.15); color: #fbbf24;
             border: 1px solid rgba(234,179,8,0.1);
         }
-
         .region-badge.low {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
+            background: rgba(239,68,68,0.15); color: #f87171;
             border: 1px solid rgba(239,68,68,0.1);
         }
-
         .region-badge.critical {
-            background: rgba(239,68,68,0.25);
-            color: #f87171;
+            background: rgba(239,68,68,0.25); color: #f87171;
             border: 1px solid rgba(239,68,68,0.2);
             animation: pulseDanger 1.5s ease-in-out infinite;
         }
+        .region-card .region-body { padding: 0 20px 16px; }
 
-        .region-card .region-body {
-            padding: 0 20px 16px;
-        }
-
-        /* ============================================================
-           CHARTS
-           ============================================================ */
+        /* CHARTS */
         .chart-section {
-            margin: 0 24px 20px;
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            background: var(--glass-bg);
+            margin: 0 24px 20px; border: 1px solid var(--glass-border);
+            border-radius: var(--radius); overflow: hidden; background: var(--glass-bg);
         }
-
         .chart-switch {
-            display: flex;
-            gap: 10px;
-            padding: 12px 20px;
+            display: flex; gap: 10px; padding: 12px 20px;
             border-bottom: 1px solid var(--glass-border);
-            flex-wrap: wrap;
-            background: rgba(255,255,255,0.02);
+            flex-wrap: wrap; background: rgba(255,255,255,0.02);
         }
-
         .chart-btn {
-            padding: 6px 18px;
-            border: 2px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            background: transparent;
-            color: rgba(255,255,255,0.3);
-            cursor: pointer;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 600;
+            padding: 6px 18px; border: 2px solid rgba(255,255,255,0.06);
+            border-radius: 20px; background: transparent;
+            color: rgba(255,255,255,0.3); cursor: pointer;
+            font-family: var(--font); font-size: 13px; font-weight: 600;
             transition: all 0.3s;
         }
-
         .chart-btn:hover {
             background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.1);
-            color: #fff;
+            border-color: rgba(255,255,255,0.1); color: #fff;
         }
-
         .chart-btn.active {
             background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            border-color: var(--gold);
-            color: #0a1628;
+            border-color: var(--gold); color: #0a1628;
         }
-
-        .chart-btn i {
-            margin-left: 6px;
-        }
-
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
-        }
-
+        .chart-btn i { margin-left: 6px; }
+        .charts-container { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 20px; }
         .chart-box {
-            background: rgba(255,255,255,0.02);
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            border: 1px solid rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.02); border-radius: var(--radius-sm);
+            padding: 16px; border: 1px solid rgba(255,255,255,0.04);
         }
-
-        .chart-box.full {
-            grid-column: 1 / -1;
-        }
-
         .chart-box h4 {
-            font-size: 14px;
-            font-weight: 700;
-            color: rgba(255,255,255,0.5);
-            margin-bottom: 12px;
-            text-align: center;
+            font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.5);
+            margin-bottom: 12px; text-align: center;
         }
+        .chart-box canvas { width: 100% !important; max-height: 320px; }
 
-        .chart-box canvas {
-            width: 100% !important;
-            max-height: 280px;
-        }
-
-        /* ============================================================
-           EMPTY STATE
-           ============================================================ */
         .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: rgba(255,255,255,0.15);
+            text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.15);
         }
-
         .empty-state .empty-icon {
-            font-size: 3rem;
-            color: rgba(255,255,255,0.04);
-            display: block;
-            margin-bottom: 12px;
+            font-size: 3rem; color: rgba(255,255,255,0.04);
+            display: block; margin-bottom: 12px;
         }
-
         .empty-state .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid rgba(255,255,255,0.04);
-            border-top-color: var(--gold);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
+            width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.04);
+            border-top-color: var(--gold); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 12px;
         }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
+        @keyframes spin { to { transform: rotate(360deg); } }
         .empty-state h3 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.2);
-            margin-bottom: 4px;
+            font-size: 0.9rem; font-weight: 600;
+            color: rgba(255,255,255,0.2); margin-bottom: 4px;
         }
+        .empty-state p { font-size: 0.75rem; color: rgba(255,255,255,0.1); }
 
-        .empty-state p {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.1);
-        }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
         @media (max-width: 992px) {
             .eff-header { padding: 12px 16px; top: 60px; }
             .eff-header-left h2 { font-size: 18px; }
@@ -773,34 +368,18 @@
             .filter-bar { padding: 8px 16px; gap: 6px 10px; }
             .eff-section { margin: 0 16px 12px; }
             .chart-section { margin: 0 16px 16px; }
-            .charts-container { grid-template-columns: 1fr; padding: 12px; }
-            .chart-box.full { grid-column: 1; }
+            .charts-container { padding: 12px; }
             .region-card .region-body { padding: 0 12px 12px; }
         }
-
         @media (max-width: 768px) {
-            .eff-header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px 16px;
-                top: 56px;
-            }
+            .eff-header { flex-direction: column; align-items: flex-start; padding: 12px 16px; top: 56px; }
             .eff-header-left { width: 100%; }
             .eff-header-left h2 { font-size: 16px; }
             .eff-header-actions { width: 100%; justify-content: flex-start; }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-                padding: 10px 16px;
-            }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 16px; }
             .stat-card { padding: 12px 14px; }
             .stat-card .number { font-size: 20px; }
-            .filter-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px 16px;
-                gap: 6px;
-            }
+            .filter-bar { flex-direction: column; align-items: stretch; padding: 10px 16px; gap: 6px; }
             .filter-bar label { font-size: 0.65rem; }
             .filter-bar select { min-width: 100%; }
             .eff-section { margin: 0 12px 10px; }
@@ -811,19 +390,15 @@
             .chart-section { margin: 0 12px 12px; }
             .charts-container { padding: 10px; gap: 12px; }
             .chart-box { padding: 12px; }
-            .chart-box canvas { max-height: 200px; }
+            .chart-box canvas { max-height: 220px; }
             .eff-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
             .chart-switch { padding: 10px 12px; justify-content: center; }
             .chart-btn { font-size: 11px; padding: 4px 12px; }
             .region-card .region-header { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
             .region-card .region-body { padding: 0 10px 10px; }
         }
-
         @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 6px;
-            }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
             .stat-card { padding: 10px 12px; }
             .stat-card .number { font-size: 18px; }
             .stat-card .label { font-size: 9px; }
@@ -835,371 +410,162 @@
             thead th, tbody td { padding: 4px 6px; font-size: 0.65rem; }
         }
 
-        /* ============================================================
-           🖨️ PRINT STYLES
-           ============================================================ */
+        /* PRINT */
         @media print {
-            @page {
-                size: A4 landscape;
-                margin: 12mm 10mm;
-            }
-
+            @page { size: A4 landscape; margin: 12mm 10mm; }
             html, body {
-                background: #ffffff !important;
-                color: #1a1a1a !important;
+                background: #ffffff !important; color: #1a1a1a !important;
                 font-family: 'Cairo', 'Segoe UI', sans-serif !important;
                 font-size: 10pt !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-
-            button,
-            .btn-action,
-            .btn-filter,
-            .chart-btn,
-            .eff-header-actions,
-            .filter-bar,
-            .chart-switch,
-            nav,
-            .sidebar,
-            .navbar,
-            .no-print {
-                display: none !important;
-            }
-
+            button, .btn-action, .btn-filter, .chart-btn,
+            .eff-header-actions, .filter-bar, .chart-switch,
+            nav, .sidebar, .navbar, .no-print { display: none !important; }
             .eff-header {
                 display: flex !important;
                 background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
-                color: #ffffff !important;
-                padding: 12mm 8mm 6mm !important;
-                margin: 0 0 6mm !important;
-                border-radius: 8px !important;
-                border: 2px solid #e6b31e !important;
-                position: relative !important;
-                page-break-inside: avoid;
-                page-break-after: avoid;
+                color: #ffffff !important; padding: 12mm 8mm 6mm !important;
+                margin: 0 0 6mm !important; border-radius: 8px !important;
+                border: 2px solid #e6b31e !important; position: relative !important;
+                page-break-inside: avoid; page-break-after: avoid;
             }
-
             .eff-header-left h2 {
-                color: #e6b31e !important;
-                font-size: 16pt !important;
-                font-weight: 800 !important;
-                -webkit-text-fill-color: #e6b31e !important;
-                background: none !important;
+                color: #e6b31e !important; font-size: 16pt !important; font-weight: 800 !important;
+                -webkit-text-fill-color: #e6b31e !important; background: none !important;
                 margin: 0 0 4pt 0 !important;
             }
-
             .eff-header-left p {
-                color: rgba(255,255,255,0.75) !important;
-                font-size: 10pt !important;
-                -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
+                color: rgba(255,255,255,0.75) !important; font-size: 10pt !important;
             }
-
             .eff-header-left .header-icon {
-                width: 48px !important;
-                height: 48px !important;
-                border: 2px solid #e6b31e !important;
-                background: #0a1628 !important;
-                box-shadow: none !important;
-                animation: none !important;
-                overflow: hidden !important;
+                width: 48px !important; height: 48px !important;
+                border: 2px solid #e6b31e !important; background: #0a1628 !important;
+                box-shadow: none !important; animation: none !important;
             }
-
-            .eff-header-left .header-icon img,
-            #globalLogo {
-                display: block !important;
-                width: 100% !important;
-                height: 100% !important;
-                object-fit: contain !important;
-            }
-
-            .eff-header-left .header-icon i {
-                color: #e6b31e !important;
-            }
-
-            .eff-header::after {
-                content: "طُبع بتاريخ: " attr(data-print-date);
-                position: absolute;
-                bottom: 4mm;
-                left: 8mm;
-                font-size: 9pt;
-                color: rgba(255,255,255,0.7) !important;
-                direction: rtl;
-            }
-
             .stats-grid {
-                display: grid !important;
-                grid-template-columns: repeat(5, 1fr) !important;
-                gap: 4mm !important;
-                margin: 0 0 5mm !important;
-                padding: 0 !important;
-                page-break-inside: avoid;
+                display: grid !important; grid-template-columns: repeat(5, 1fr) !important;
+                gap: 4mm !important; margin: 0 0 5mm !important;
+                padding: 0 !important; page-break-inside: avoid;
             }
-
             .stat-card {
-                background: #f8f9fc !important;
-                border: 2px solid #e6b31e !important;
-                border-radius: 6px !important;
-                padding: 4mm 3mm !important;
-                text-align: center !important;
-                box-shadow: none !important;
-                backdrop-filter: none !important;
+                background: #f8f9fc !important; border: 2px solid #e6b31e !important;
+                border-radius: 6px !important; padding: 4mm 3mm !important;
+                text-align: center !important; box-shadow: none !important;
             }
-
             .stat-card::before { display: none !important; }
-
             .stat-card .number {
-                color: #0a1628 !important;
-                font-size: 16pt !important;
-                font-weight: 800 !important;
-                background: none !important;
-                -webkit-text-fill-color: #0a1628 !important;
+                color: #0a1628 !important; font-size: 16pt !important;
+                font-weight: 800 !important; -webkit-text-fill-color: #0a1628 !important;
             }
-
             .stat-card .number.gold { color: #c99a0e !important; -webkit-text-fill-color: #c99a0e !important; }
             .stat-card .number.green { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
             .stat-card .number.yellow { color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; }
             .stat-card .number.red { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
-
-            .stat-card .label {
-                color: #4b5563 !important;
-                font-size: 8pt !important;
-                font-weight: 700 !important;
-            }
-
-            .stat-card .icon-bg { display: none !important; }
-
-            .eff-section,
-            .chart-section {
-                background: #ffffff !important;
-                border: 2px solid #0a1628 !important;
-                border-radius: 6px !important;
-                margin: 0 0 5mm !important;
-                page-break-inside: auto;
+            .stat-card .label { color: #4b5563 !important; font-size: 8pt !important; font-weight: 700 !important; }
+            .eff-section, .chart-section {
+                background: #ffffff !important; border: 2px solid #0a1628 !important;
+                border-radius: 6px !important; margin: 0 0 5mm !important;
                 overflow: visible !important;
             }
-
             .eff-section .section-header {
-                background: #0a1628 !important;
-                color: #e6b31e !important;
+                background: #0a1628 !important; color: #e6b31e !important;
                 padding: 3mm 4mm !important;
                 border-bottom: 2px solid #e6b31e !important;
                 page-break-after: avoid;
             }
-
             .eff-section .section-header h3 {
-                color: #e6b31e !important;
-                font-size: 11pt !important;
-                font-weight: 800 !important;
+                color: #e6b31e !important; font-size: 11pt !important; font-weight: 800 !important;
             }
-
             .eff-section .section-header h3 i { color: #e6b31e !important; }
-
-            .eff-section .section-header .badge {
-                border: 1px solid currentColor !important;
-                background: #ffffff !important;
-                font-size: 8pt !important;
-            }
-
-            .badge.gold { color: #b45309 !important; }
-            .badge.success { color: #047857 !important; }
-            .badge.warning { color: #b45309 !important; }
-            .badge.danger { color: #b91c1c !important; }
-
             .section-content { padding: 0 !important; }
-
             .table-wrapper { overflow: visible !important; }
-
             table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-                font-size: 8.5pt !important;
-                min-width: 0 !important;
+                width: 100% !important; border-collapse: collapse !important;
+                font-size: 8.5pt !important; min-width: 0 !important;
                 border: 1px solid #0a1628 !important;
-                page-break-inside: auto;
             }
-
-            thead {
-                display: table-header-group !important;
-                background: #0a1628 !important;
-                color: #e6b31e !important;
-            }
-
+            thead { display: table-header-group !important; background: #0a1628 !important; }
             thead th {
-                background: #0a1628 !important;
-                color: #e6b31e !important;
-                padding: 3mm 2mm !important;
-                font-size: 9pt !important;
-                font-weight: 800 !important;
-                text-align: center !important;
+                background: #0a1628 !important; color: #e6b31e !important;
+                padding: 3mm 2mm !important; font-size: 9pt !important;
+                font-weight: 800 !important; text-align: center !important;
                 border: 1px solid #1a2a4a !important;
-                text-transform: none !important;
-                letter-spacing: 0 !important;
+                text-transform: none !important; letter-spacing: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-
             thead th i { display: none !important; }
-
-            tbody tr {
-                page-break-inside: avoid;
-                background: #ffffff !important;
-            }
-
+            tbody tr { page-break-inside: avoid; background: #ffffff !important; }
             tbody tr:nth-child(even) { background: #f9fafb !important; }
-
             tbody td {
                 padding: 2.5mm 2mm !important;
-                border: 1px solid #e5e7eb !important;
-                color: #1f2937 !important;
-                font-size: 8.5pt !important;
-                text-align: center !important;
-                vertical-align: middle !important;
-                background: transparent !important;
+                border: 1px solid #e5e7eb !important; color: #1f2937 !important;
+                font-size: 8.5pt !important; text-align: center !important;
+                vertical-align: middle !important; background: transparent !important;
             }
-
-            .row-high {
-                background: #ecfdf5 !important;
-                border-right: 3px solid #047857 !important;
-            }
+            .row-high { background: #ecfdf5 !important; border-right: 3px solid #047857 !important; }
             .row-high .eff-cell { color: #047857 !important; font-weight: 800 !important; }
-
-            .row-mid {
-                background: #fffbeb !important;
-                border-right: 3px solid #b45309 !important;
-            }
+            .row-mid { background: #fffbeb !important; border-right: 3px solid #b45309 !important; }
             .row-mid .eff-cell { color: #b45309 !important; font-weight: 800 !important; }
-
-            .row-low {
-                background: #fef2f2 !important;
-                border-right: 3px solid #b91c1c !important;
-            }
+            .row-low { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
             .row-low .eff-cell { color: #b91c1c !important; font-weight: 800 !important; }
-
             .status-badge {
-                display: inline-block !important;
-                padding: 1mm 3mm !important;
-                border-radius: 10px !important;
-                font-size: 8pt !important;
-                font-weight: 700 !important;
-                border: 1px solid currentColor !important;
-                background: #ffffff !important;
-                animation: none !important;
+                display: inline-block !important; padding: 1mm 3mm !important;
+                border-radius: 10px !important; font-size: 8pt !important;
+                font-weight: 700 !important; border: 1px solid currentColor !important;
+                background: #ffffff !important; animation: none !important;
             }
-
             .status-badge.excellent { color: #047857 !important; background: #ecfdf5 !important; }
             .status-badge.good { color: #047857 !important; background: #ecfdf5 !important; }
             .status-badge.medium { color: #b45309 !important; background: #fffbeb !important; }
             .status-badge.low { color: #b91c1c !important; background: #fef2f2 !important; }
             .status-badge.critical { color: #b91c1c !important; background: #fef2f2 !important; }
-
-            .progress-bar {
-                background: #e5e7eb !important;
-                border-radius: 5px !important;
-            }
+            .progress-bar { background: #e5e7eb !important; border-radius: 5px !important; }
             .progress-bar .progress-fill.high { background: #047857 !important; }
             .progress-bar .progress-fill.mid { background: #b45309 !important; }
             .progress-bar .progress-fill.low { background: #b91c1c !important; }
-
-            .region-card {
-                page-break-inside: avoid;
-                border-bottom: 1px solid #e5e7eb !important;
-            }
-
+            .region-card { page-break-inside: avoid; border-bottom: 1px solid #e5e7eb !important; }
             .region-card .region-header {
-                background: #f3f4f6 !important;
-                padding: 3mm 4mm !important;
+                background: #f3f4f6 !important; padding: 3mm 4mm !important;
                 border-bottom: 1px solid #e5e7eb !important;
             }
-
             .region-card .region-header .region-name {
-                color: #0a1628 !important;
-                font-size: 11pt !important;
-                font-weight: 800 !important;
+                color: #0a1628 !important; font-size: 11pt !important; font-weight: 800 !important;
             }
-
             .region-card .region-header .region-name i { color: #c99a0e !important; }
-
             .region-badge {
-                border: 1px solid currentColor !important;
-                background: #ffffff !important;
-                font-size: 9pt !important;
-                font-weight: 700 !important;
-                animation: none !important;
+                border: 1px solid currentColor !important; background: #ffffff !important;
+                font-size: 9pt !important; font-weight: 700 !important; animation: none !important;
             }
             .region-badge.excellent { color: #047857 !important; }
             .region-badge.good { color: #047857 !important; }
             .region-badge.medium { color: #b45309 !important; }
             .region-badge.low { color: #b91c1c !important; }
             .region-badge.critical { color: #b91c1c !important; }
-
             .region-card .region-body { padding: 3mm !important; }
-
-            .charts-container {
-                padding: 5mm !important;
-                display: block !important;
-            }
-
             .chart-box {
-                background: #f9fafb !important;
-                border: 1px solid #e5e7eb !important;
-                padding: 4mm !important;
-                page-break-inside: avoid;
+                background: #f9fafb !important; border: 1px solid #e5e7eb !important;
+                padding: 4mm !important; page-break-inside: avoid;
                 margin-bottom: 5mm !important;
             }
-
             .chart-box h4 {
-                color: #0a1628 !important;
-                font-size: 11pt !important;
-                font-weight: 800 !important;
+                color: #0a1628 !important; font-size: 11pt !important; font-weight: 800 !important;
                 border-bottom: 2px solid #e6b31e !important;
-                padding-bottom: 2mm !important;
-                margin-bottom: 3mm !important;
+                padding-bottom: 2mm !important; margin-bottom: 3mm !important;
             }
-
-            .chart-box canvas {
-                max-height: 80mm !important;
-                width: 100% !important;
-            }
-
-            .empty-state {
-                padding: 15mm !important;
-                color: #6b7280 !important;
-            }
-
+            .chart-box canvas { max-height: 80mm !important; width: 100% !important; }
+            .empty-state { padding: 15mm !important; color: #6b7280 !important; }
             .empty-state .spinner { display: none !important; }
-
-            #page-efficiency::after {
-                content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
-                display: block;
-                text-align: center;
-                font-size: 8pt;
-                color: #6b7280;
-                border-top: 2px solid #e6b31e;
-                padding-top: 3mm;
-                margin-top: 6mm;
-            }
-
             h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
-
-            tr, img, .stat-card, .eff-section, .chart-section, .region-card {
-                page-break-inside: avoid;
-            }
-
-            * {
-                box-shadow: none !important;
-                text-shadow: none !important;
-                animation: none !important;
-                transition: none !important;
-            }
-
+            tr, img, .stat-card, .eff-section, .chart-section, .region-card { page-break-inside: avoid; }
+            * { box-shadow: none !important; text-shadow: none !important; animation: none !important; transition: none !important; }
             #page-efficiency::before { display: none !important; }
         }
     </style>
 
-    <!-- ============================================================
-    HEADER
-    ============================================================ -->
+    <!-- HEADER -->
     <div class="eff-header">
         <div class="eff-header-left">
             <div class="header-icon" id="effHeaderIcon">
@@ -1221,40 +587,31 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    STATS CARDS
-    ============================================================ -->
+    <!-- STATS -->
     <div class="stats-grid" id="statsCards">
         <div class="stat-card">
             <div class="number gold" id="totalVessels">0</div>
             <div class="label">🚢 إجمالي المراكب</div>
-            <span class="icon-bg"><i class="fas fa-ship"></i></span>
         </div>
         <div class="stat-card">
             <div class="number green" id="activeVessels">0</div>
             <div class="label">✅ صالح للخدمة</div>
-            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
         </div>
         <div class="stat-card">
             <div class="number yellow" id="maintenanceVessels">0</div>
             <div class="label">🔧 تحت الصيانة</div>
-            <span class="icon-bg"><i class="fas fa-tools"></i></span>
         </div>
         <div class="stat-card">
             <div class="number red" id="damagedVessels">0</div>
             <div class="label">🟥 معطوبة</div>
-            <span class="icon-bg"><i class="fas fa-exclamation-triangle"></i></span>
         </div>
         <div class="stat-card">
             <div class="number" id="efficiencyPercent" style="color:var(--gold-light);">0%</div>
             <div class="label">📈 نسبة النجاعة</div>
-            <span class="icon-bg"><i class="fas fa-chart-pie"></i></span>
         </div>
     </div>
 
-    <!-- ============================================================
-    FILTER BAR
-    ============================================================ -->
+    <!-- FILTER -->
     <div class="filter-bar">
         <label><i class="fas fa-map-marker-alt"></i> الإقليم</label>
         <select id="fRegEff" onchange="renderEfficiency()">
@@ -1297,8 +654,8 @@
     </div>
 
     <!-- ============================================================
-    GENERAL EFFICIENCY TABLE
-    ============================================================ -->
+         جدول 1: النجاعة العامة للأسطول
+         ============================================================ -->
     <div class="eff-section">
         <div class="section-header">
             <h3><i class="fas fa-chart-line"></i> النجاعة العامة للأسطول</h3>
@@ -1317,40 +674,258 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="generalBody">
-                        <tr>
-                            <td colspan="6" class="empty-state">
-                                <div class="spinner"></div>
-                                <h3>جاري تحميل البيانات...</h3>
-                                <p>يرجى الانتظار</p>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="generalBody"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <!-- ============================================================
-    REGIONS TABLES (يتم توليدها ديناميكيًا من API)
-    ============================================================ -->
+         جدول 2: الحرس البحري بالشمال
+         ============================================================ -->
     <div class="eff-section">
         <div class="section-header">
-            <h3><i class="fas fa-map-marked-alt"></i> تفاصيل الأقاليم ووحدات الصيانة</h3>
-            <span class="badge gold">📊 تحليل متقدم</span>
+            <h3><i class="fas fa-map-pin"></i> الحرس البحري بالشمال</h3>
+            <span class="badge gold region-badge-header" id="badge-الشمال">0% جاهزية</span>
         </div>
-        <div id="regionTables">
-            <div class="empty-state">
-                <div class="spinner"></div>
-                <h3>جاري تحميل البيانات...</h3>
-                <p>يرجى الانتظار</p>
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                            <th><i class="fas fa-check-circle"></i> صالح</th>
+                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-percent"></i> النجاعة</th>
+                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                            <th><i class="fas fa-circle"></i> الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionBody-الشمال"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <!-- ============================================================
-    CHARTS SECTION
-    ============================================================ -->
+         جدول 3: الحرس البحري بالساحل
+         ============================================================ -->
+    <div class="eff-section">
+        <div class="section-header">
+            <h3><i class="fas fa-map-pin"></i> الحرس البحري بالساحل</h3>
+            <span class="badge gold region-badge-header" id="badge-الساحل">0% جاهزية</span>
+        </div>
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                            <th><i class="fas fa-check-circle"></i> صالح</th>
+                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-percent"></i> النجاعة</th>
+                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                            <th><i class="fas fa-circle"></i> الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionBody-الساحل"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         جدول 4: الحرس البحري بالوسط
+         ============================================================ -->
+    <div class="eff-section">
+        <div class="section-header">
+            <h3><i class="fas fa-map-pin"></i> الحرس البحري بالوسط</h3>
+            <span class="badge gold region-badge-header" id="badge-الوسط">0% جاهزية</span>
+        </div>
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                            <th><i class="fas fa-check-circle"></i> صالح</th>
+                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-percent"></i> النجاعة</th>
+                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                            <th><i class="fas fa-circle"></i> الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionBody-الوسط"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         جدول 5: الحرس البحري بالجنوب
+         ============================================================ -->
+    <div class="eff-section">
+        <div class="section-header">
+            <h3><i class="fas fa-map-pin"></i> الحرس البحري بالجنوب</h3>
+            <span class="badge gold region-badge-header" id="badge-الجنوب">0% جاهزية</span>
+        </div>
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                            <th><i class="fas fa-check-circle"></i> صالح</th>
+                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-percent"></i> النجاعة</th>
+                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                            <th><i class="fas fa-circle"></i> الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionBody-وحدة_تونس"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         جدول 6: وحدة الصيانة والإسناد البحري تونس
+         ============================================================ -->
+    <div class="eff-section">
+        <div class="section-header">
+            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس</h3>
+            <span class="badge gold region-badge-header" id="badge-وحدة_تونس">0% جاهزية</span>
+        </div>
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                            <th><i class="fas fa-check-circle"></i> صالح</th>
+                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-percent"></i> النجاعة</th>
+                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                            <th><i class="fas fa-circle"></i> الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionBody-وحدة_تونس"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         جدول 7: وحدة الصيانة والإسناد البحري جرجيس
+         ============================================================ -->
+    <div class="eff-section">
+        <div class="section-header">
+            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس</h3>
+            <span class="badge gold region-badge-header" id="badge-وحدة_جرجيس">0% جاهزية</span>
+        </div>
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                            <th><i class="fas fa-check-circle"></i> صالح</th>
+                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-percent"></i> النجاعة</th>
+                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                            <th><i class="fas fa-circle"></i> الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionBody-وحدة_جرجيس"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         جدول 8: وحدة الصيانة والإسناد البحري صفاقس
+         ============================================================ -->
+    <div class="eff-section">
+        <div class="section-header">
+            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس</h3>
+            <span class="badge gold region-badge-header" id="badge-وحدة_صفاقس">0% جاهزية</span>
+        </div>
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                            <th><i class="fas fa-check-circle"></i> صالح</th>
+                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-percent"></i> النجاعة</th>
+                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                            <th><i class="fas fa-circle"></i> الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionBody-وحدة_صفاقس"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         جدول 9: وحدة الصيانة والإسناد البحري المنستير
+         ============================================================ -->
+    <div class="eff-section">
+        <div class="section-header">
+            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير</h3>
+            <span class="badge gold region-badge-header" id="badge-وحدة_المنستير">0% جاهزية</span>
+        </div>
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                            <th><i class="fas fa-check-circle"></i> صالح</th>
+                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-percent"></i> النجاعة</th>
+                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                            <th><i class="fas fa-circle"></i> الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionBody-وحدة_المنستير"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         جدول 10: المجمع الأمني بقبيبة
+         ============================================================ -->
+    <div class="eff-section">
+        <div class="section-header">
+            <h3><i class="fas fa-building"></i> المجمع الأمني بقبيبة</h3>
+            <span class="badge gold region-badge-header" id="badge-وحدة_قبيبة">0% جاهزية</span>
+        </div>
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                            <th><i class="fas fa-check-circle"></i> صالح</th>
+                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-percent"></i> النجاعة</th>
+                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                            <th><i class="fas fa-circle"></i> الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regionBody-وحدة_قبيبة"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         CHARTS
+         ============================================================ -->
     <div class="chart-section">
         <div class="chart-switch">
             <button class="chart-btn active" onclick="switchChart('pie')">
@@ -1364,7 +939,7 @@
             </button>
         </div>
         <div class="charts-container">
-            <div class="chart-box full">
+            <div class="chart-box">
                 <h4>📊 توزيع الجاهزية حسب الإقليم</h4>
                 <canvas id="efficiencyChart" height="250"></canvas>
             </div>
@@ -1372,20 +947,42 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT
-    ============================================================ -->
+         JAVASCRIPT
+         ============================================================ -->
     <script>
         // ============================================================
-        // ✅ الفئات الثابتة (تظهر دائمًا حتى بقيم 0)
+        // ✅ الفئات الثابتة
         // ============================================================
         const FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 
         // ============================================================
-        // ✅ البيانات الحية (تُملأ من API — لا توجد بيانات وهمية)
+        // ✅ الأقاليم الثابتة (4 أقاليم)
         // ============================================================
-        let efficiencyData = {
-            general: [],
-            regions: {}
+        const FIXED_REGIONS = [
+            { key: 'الشمال', label: 'الحرس البحري بالشمال', field: 'region', match: 'الشمال' },
+            { key: 'الساحل', label: 'الحرس البحري بالساحل', field: 'region', match: 'الساحل' },
+            { key: 'الوسط',  label: 'الحرس البحري بالوسط',  field: 'region', match: 'الوسط' },
+            { key: 'الجنوب', label: 'الحرس البحري بالجنوب', field: 'region', match: 'الجنوب' }
+        ];
+
+        // ============================================================
+        // ✅ وحدات الصيانة الثابتة (5 وحدات)
+        // ============================================================
+        const FIXED_UNITS = [
+            { key: 'وحدة_تونس',    label: 'وحدة الصيانة والإسناد البحري تونس',   match: 'وحدة الصيانة والإسناد البحري تونس' },
+            { key: 'وحدة_جرجيس',   label: 'وحدة الصيانة والإسناد البحري جرجيس',  match: 'وحدة الصيانة والإسناد البحري جرجيس' },
+            { key: 'وحدة_صفاقس',   label: 'وحدة الصيانة والإسناد البحري صفاقس',  match: 'وحدة الصيانة والإسناد البحري صفاقس' },
+            { key: 'وحدة_المنستير', label: 'وحدة الصيانة والإسناد البحري المنستير', match: 'وحدة الصيانة والإسناد البحري المنستير' },
+            { key: 'وحدة_قبيبة',   label: 'المجمع الأمني بقبيبة',                 match: 'المجمع الأمني بقبيبة' }
+        ];
+
+        // ============================================================
+        // ✅ هيكل البيانات (يُملأ من API)
+        // ============================================================
+        let vesselStats = {
+            general: {},      // { category: { active, damaged, total } }
+            regions: {},      // { regionName: { categories: {...}, active, damaged, total } }
+            units: {}         // { unitName: { categories: {...}, active, damaged, total } }
         };
 
         let currentChart = 'pie';
@@ -1399,10 +996,7 @@
                 if (!cachedLogo) return;
                 var iconDiv = document.getElementById('effHeaderIcon');
                 var img = document.getElementById('globalLogo');
-                if (img) {
-                    img.src = cachedLogo;
-                    img.style.display = 'block';
-                }
+                if (img) { img.src = cachedLogo; img.style.display = 'block'; }
                 if (iconDiv) iconDiv.classList.add('has-logo');
             } catch (e) {}
         }
@@ -1450,7 +1044,7 @@
         })();
 
         // ============================================================
-        // ✅ تطبيع النصوص والحالات
+        // ✅ تطبيع النصوص
         // ============================================================
         function normText(v) {
             if (v === null || v === undefined) return '';
@@ -1460,9 +1054,9 @@
         function normStatus(v) {
             const s = normText(v).toLowerCase();
             if (!s) return '';
-            if (s.includes('صالح') || s === 'active' || s === 'ready' || s === 'operational') return 'صالح';
-            if (s.includes('معطب') || s.includes('عطب') || s === 'damaged' || s === 'down') return 'معطب';
-            if (s.includes('صيانة') || s === 'maintenance' || s === 'repair') return 'صيانة';
+            if (s.includes('صالح') || s === 'active' || s === 'ready') return 'صالح';
+            if (s.includes('معطب') || s.includes('عطب') || s === 'damaged') return 'معطب';
+            if (s.includes('صيانة') || s === 'maintenance') return 'صيانة';
             return normText(v);
         }
 
@@ -1479,16 +1073,41 @@
         }
 
         // ============================================================
-        // ✅ تحويل المراكب الحقيقية إلى efficiencyData
+        // ✅ بناء الإحصائيات من المراكب الحقيقية
         // ============================================================
-        function buildEfficiencyDataFromVessels(vessels) {
-            const generalMap = {};
-            FIXED_CATEGORIES.forEach(cat => {
-                generalMap[cat] = { category: cat, active: 0, damaged: 0, total: 0 };
+        function buildStats(vessels) {
+            // تهيئة الفئات الخمس بقيم صفرية
+            const emptyCategories = () => {
+                const obj = {};
+                FIXED_CATEGORIES.forEach(cat => {
+                    obj[cat] = { active: 0, damaged: 0, total: 0 };
+                });
+                return obj;
+            };
+
+            const stats = {
+                general: emptyCategories(),
+                regions: {},
+                units: {}
+            };
+
+            // تهيئة الأقاليم الثابتة
+            FIXED_REGIONS.forEach(r => {
+                stats.regions[r.match] = {
+                    active: 0, damaged: 0, maintenance: 0, total: 0,
+                    categories: emptyCategories()
+                };
             });
 
-            const regionsMap = {};
+            // تهيئة الوحدات الثابتة
+            FIXED_UNITS.forEach(u => {
+                stats.units[u.match] = {
+                    active: 0, damaged: 0, maintenance: 0, total: 0,
+                    categories: emptyCategories()
+                };
+            });
 
+            // ملء البيانات من المراكب
             vessels.forEach(v => {
                 const cat = normCategory(v.cat !== undefined ? v.cat : v.category, v);
                 const status = normStatus(v.stat !== undefined ? v.stat : v.status);
@@ -1496,28 +1115,17 @@
                 const unit = normText(v.repairUnit || v.maintenanceUnit || v.maintenance);
 
                 // --- الجدول العام ---
-                if (!generalMap[cat]) {
-                    generalMap[cat] = { category: cat, active: 0, damaged: 0, total: 0 };
+                if (!stats.general[cat]) {
+                    stats.general[cat] = { active: 0, damaged: 0, total: 0 };
                 }
-                generalMap[cat].total++;
-                if (status === 'صالح') generalMap[cat].active++;
-                else if (status === 'معطب') generalMap[cat].damaged++;
+                stats.general[cat].total++;
+                if (status === 'صالح') stats.general[cat].active++;
+                else if (status === 'معطب') stats.general[cat].damaged++;
 
-                // --- الأقاليم والوحدات ---
-                const keys = [];
-                if (reg) keys.push(reg);
-                if (unit) keys.push(unit);
-
-                keys.forEach(name => {
-                    if (!regionsMap[name]) {
-                        regionsMap[name] = {
-                            vessels: 0, active: 0, maintenance: 0, damaged: 0,
-                            categories: {}
-                        };
-                    }
-
-                    const r = regionsMap[name];
-                    r.vessels++;
+                // --- الإقليم ---
+                if (reg && stats.regions[reg]) {
+                    const r = stats.regions[reg];
+                    r.total++;
                     if (status === 'صالح') r.active++;
                     else if (status === 'صيانة') r.maintenance++;
                     else if (status === 'معطب') r.damaged++;
@@ -1528,29 +1136,32 @@
                     r.categories[cat].total++;
                     if (status === 'صالح') r.categories[cat].active++;
                     else if (status === 'معطب') r.categories[cat].damaged++;
-                });
+                }
+
+                // --- الوحدة ---
+                if (unit && stats.units[unit]) {
+                    const u = stats.units[unit];
+                    u.total++;
+                    if (status === 'صالح') u.active++;
+                    else if (status === 'صيانة') u.maintenance++;
+                    else if (status === 'معطب') u.damaged++;
+
+                    if (!u.categories[cat]) {
+                        u.categories[cat] = { active: 0, damaged: 0, total: 0 };
+                    }
+                    u.categories[cat].total++;
+                    if (status === 'صالح') u.categories[cat].active++;
+                    else if (status === 'معطب') u.categories[cat].damaged++;
+                }
             });
 
-            const general = Object.values(generalMap).map(g => ({
-                category: g.category,
-                active: g.active,
-                damaged: g.damaged,
-                efficiency: g.total > 0 ? (g.active / g.total) * 100 : 0
-            }));
-
-            Object.values(regionsMap).forEach(r => {
-                Object.values(r.categories).forEach(c => {
-                    c.efficiency = c.total > 0 ? (c.active / c.total) * 100 : 0;
-                });
-            });
-
-            return { general, regions: regionsMap };
+            return stats;
         }
 
         // ============================================================
         // ✅ تحميل المراكب من API
         // ============================================================
-        async function loadEfficiencyVessels() {
+        async function loadVessels() {
             const token = localStorage.getItem('marine_token')
                 || localStorage.getItem('token')
                 || localStorage.getItem('authToken');
@@ -1582,7 +1193,7 @@
         }
 
         // ============================================================
-        // ✅ Helper
+        // ✅ Helpers
         // ============================================================
         function getStatusInfo(eff) {
             if (eff >= 80) return { cls: 'excellent', text: 'ممتازة', row: 'row-high', prog: 'high' };
@@ -1592,123 +1203,71 @@
             return              { cls: 'critical',  text: 'حرجة',   row: 'row-low',  prog: 'low'  };
         }
 
+        function formatPercent(v) {
+            if (!isFinite(v)) return '0%';
+            return (Math.round(v * 10) / 10) + '%';
+        }
+
         // ============================================================
-        // ✅ بناء مجموعة الفئات (الفئات الخمس دائمًا)
+        // ✅ بناء صفوف الفئات الخمس (دائمًا)
         // ============================================================
-        function getCategoryGroups(regCategories) {
-            const map = {};
-            FIXED_CATEGORIES.forEach(cat => {
-                const c = (regCategories && regCategories[cat]) || { active: 0, damaged: 0, efficiency: 0 };
-                map[cat] = { category: cat, active: c.active, damaged: c.damaged, efficiency: c.efficiency || 0 };
+        function buildCategoryRows(categoriesData) {
+            const categoryFilter = document.getElementById('fCatEff').value;
+            const statusFilter = document.getElementById('fStatusEff').value;
+
+            let rows = FIXED_CATEGORIES.map(cat => {
+                const c = (categoriesData && categoriesData[cat]) || { active: 0, damaged: 0, total: 0 };
+                const eff = c.total > 0 ? (c.active / c.total) * 100 : 0;
+                return {
+                    category: cat,
+                    active: c.active || 0,
+                    damaged: c.damaged || 0,
+                    efficiency: eff
+                };
             });
 
-            // أي فئة إضافية
-            if (regCategories) {
-                Object.keys(regCategories).forEach(cat => {
+            // أي فئة إضافية موجودة
+            if (categoriesData) {
+                Object.keys(categoriesData).forEach(cat => {
                     if (FIXED_CATEGORIES.indexOf(cat) === -1) {
-                        const c = regCategories[cat];
-                        map[cat] = { category: cat, active: c.active, damaged: c.damaged, efficiency: c.efficiency || 0 };
+                        const c = categoriesData[cat];
+                        const eff = c.total > 0 ? (c.active / c.total) * 100 : 0;
+                        rows.push({
+                            category: cat,
+                            active: c.active || 0,
+                            damaged: c.damaged || 0,
+                            efficiency: eff
+                        });
                     }
                 });
             }
 
-            return Object.values(map);
-        }
-
-        // ============================================================
-        // ✅ RENDER FUNCTIONS
-        // ============================================================
-        function renderEfficiency() {
-            renderStats();
-            renderGeneralTable();
-            renderRegionTables();
-            updateBadge();
-            drawChart(currentChart);
-        }
-
-        // ---------- STATS ----------
-        function renderStats() {
-            const regionFilter = document.getElementById('fRegEff').value;
-            const catFilter = document.getElementById('fCatEff').value;
-            const statusFilter = document.getElementById('fStatusEff').value;
-
-            let total = 0, active = 0, maintenance = 0, damaged = 0;
-
-            Object.entries(efficiencyData.regions).forEach(([name, data]) => {
-                if (regionFilter === 'الكل' || name === regionFilter) {
-                    // إذا كانت هناك فلاتر فئة/حالة، نحسب من categories
-                    if (catFilter !== 'الكل' || statusFilter !== 'الكل') {
-                        const cats = data.categories || {};
-                        Object.entries(cats).forEach(([cat, c]) => {
-                            if (catFilter !== 'الكل' && cat !== catFilter) return;
-                            total += c.total || 0;
-                            if (statusFilter === 'الكل' || statusFilter === 'صالح') active += c.active || 0;
-                            if (statusFilter === 'الكل' || statusFilter === 'معطب') damaged += c.damaged || 0;
-                            // الصيانة لا تُحسب من الفئة، تُحسب من الإجمالي
-                        });
-                    } else {
-                        total += data.vessels;
-                        active += data.active;
-                        maintenance += data.maintenance;
-                        damaged += data.damaged;
-                    }
-                }
-            });
-
-            const efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
-
-            document.getElementById('totalVessels').textContent = total;
-            document.getElementById('activeVessels').textContent = active;
-            document.getElementById('maintenanceVessels').textContent = maintenance;
-            document.getElementById('damagedVessels').textContent = damaged;
-            document.getElementById('efficiencyPercent').textContent = efficiency + '%';
-        }
-
-        // ---------- GENERAL TABLE ----------
-        function renderGeneralTable() {
-            const tbody = document.getElementById('generalBody');
-            const categoryFilter = document.getElementById('fCatEff').value;
-            const statusFilter = document.getElementById('fStatusEff').value;
-
-            const dataMap = {};
-            efficiencyData.general.forEach(item => { dataMap[item.category] = item; });
-
-            // ✅ الفئات الخمس دائمًا + أي إضافية
-            let filtered = FIXED_CATEGORIES.map(cat => {
-                return dataMap[cat] || { category: cat, active: 0, damaged: 0, efficiency: 0 };
-            });
-
-            efficiencyData.general.forEach(item => {
-                if (FIXED_CATEGORIES.indexOf(item.category) === -1) filtered.push(item);
-            });
-
+            // فلترة الفئة
             if (categoryFilter !== 'الكل') {
-                filtered = filtered.filter(item => item.category === categoryFilter);
+                rows = rows.filter(r => r.category === categoryFilter);
             }
 
+            // فلترة الحالة
             if (statusFilter !== 'الكل') {
-                filtered = filtered.filter(item => {
-                    if (statusFilter === 'صالح') return item.efficiency >= 70;
-                    if (statusFilter === 'صيانة') return item.efficiency >= 50 && item.efficiency < 70;
-                    if (statusFilter === 'معطب') return item.efficiency < 50;
+                rows = rows.filter(r => {
+                    if (statusFilter === 'صالح') return r.efficiency >= 70;
+                    if (statusFilter === 'صيانة') return r.efficiency >= 50 && r.efficiency < 70;
+                    if (statusFilter === 'معطب') return r.efficiency < 50;
                     return true;
                 });
             }
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
+            if (rows.length === 0) {
+                return `
                     <tr>
-                        <td colspan="6" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-search"></i></span>
-                            <h3>لا توجد بيانات</h3>
-                            <p>حاول تغيير معايير الفلترة</p>
+                        <td colspan="6" class="empty-state" style="padding:20px;">
+                            <h3 style="font-size:0.85rem;">لا توجد فئات مطابقة</h3>
                         </td>
                     </tr>
                 `;
-                return;
             }
 
-            tbody.innerHTML = filtered.map(item => {
+            return rows.map(item => {
                 const info = getStatusInfo(item.efficiency);
                 return `
                     <tr class="${info.row}">
@@ -1727,139 +1286,113 @@
             }).join('');
         }
 
-        // ---------- REGION TABLES ----------
-        function renderRegionTables() {
-            const container = document.getElementById('regionTables');
-            if (!container) return;
+        // ============================================================
+        // ✅ رسم الجدول العام
+        // ============================================================
+        function renderGeneralTable() {
+            const tbody = document.getElementById('generalBody');
+            tbody.innerHTML = buildCategoryRows(vesselStats.general);
 
-            const regionFilter = document.getElementById('fRegEff').value;
-            const categoryFilter = document.getElementById('fCatEff').value;
-            const statusFilter = document.getElementById('fStatusEff').value;
-
-            const regions = efficiencyData.regions;
-            const names = Object.keys(regions).filter(name => {
-                return regionFilter === 'الكل' || name === regionFilter;
-            });
-
-            if (names.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <span class="empty-icon"><i class="fas fa-ship"></i></span>
-                        <h3>لا توجد بيانات فعلية</h3>
-                        <p>لم يتم العثور على مراكب مطابقة</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = '';
-
-            names.forEach(name => {
-                const data = regions[name];
-                const eff = data.vessels > 0 ? (data.active / data.vessels) * 100 : 0;
-                const info = getStatusInfo(eff);
-
-                const icon = name.indexOf('وحدة') !== -1
-                    ? 'fa-tools'
-                    : (name.indexOf('المجمع') !== -1 ? 'fa-building' : 'fa-map-pin');
-
-                // ✅ صفوف الفئات (الفئات الخمس دائمًا)
-                let rows = getCategoryGroups(data.categories);
-
-                if (categoryFilter !== 'الكل') {
-                    rows = rows.filter(r => r.category === categoryFilter);
-                }
-                if (statusFilter !== 'الكل') {
-                    rows = rows.filter(r => {
-                        if (statusFilter === 'صالح') return r.efficiency >= 70;
-                        if (statusFilter === 'صيانة') return r.efficiency >= 50 && r.efficiency < 70;
-                        if (statusFilter === 'معطب') return r.efficiency < 50;
-                        return true;
-                    });
-                }
-
-                if (rows.length === 0) return;
-
-                const rowsHtml = rows.map(item => {
-                    const rinfo = getStatusInfo(item.efficiency);
-                    return `
-                        <tr class="${rinfo.row}">
-                            <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
-                            <td>${item.active}</td>
-                            <td>${item.damaged}</td>
-                            <td class="eff-cell">${item.efficiency.toFixed(1)}%</td>
-                            <td>
-                                <div class="progress-bar">
-                                    <div class="progress-fill ${rinfo.prog}" style="width:${Math.min(item.efficiency, 100)}%;"></div>
-                                </div>
-                            </td>
-                            <td><span class="status-badge ${rinfo.cls}">${rinfo.text}</span></td>
-                        </tr>
-                    `;
-                }).join('');
-
-                html += `
-                    <div class="region-card">
-                        <div class="region-header">
-                            <div class="region-name">
-                                <i class="fas ${icon}"></i> ${name}
-                            </div>
-                            <span class="region-badge ${info.cls}">
-                                ${eff.toFixed(0)}% جاهزية
-                            </span>
-                        </div>
-                        <div class="region-body">
-                            <div class="table-wrapper">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                            <th><i class="fas fa-circle"></i> الحالة</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${rowsHtml}</tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html || `
-                <div class="empty-state">
-                    <h3>لا توجد بيانات</h3>
-                </div>
-            `;
-        }
-
-        // ---------- BADGE ----------
-        function updateBadge() {
+            // Badge
             const badge = document.getElementById('generalBadge');
-            const total = efficiencyData.general.reduce((s, i) => s + (i.active || 0), 0);
-            const damaged = efficiencyData.general.reduce((s, i) => s + (i.damaged || 0), 0);
-            const sum = total + damaged;
-            const avg = sum > 0 ? (total / sum) * 100 : 0;
+            let totalActive = 0, totalDamaged = 0;
+            Object.values(vesselStats.general).forEach(c => {
+                totalActive += c.active || 0;
+                totalDamaged += c.damaged || 0;
+            });
+            const sum = totalActive + totalDamaged;
+            const avg = sum > 0 ? (totalActive / sum) * 100 : 0;
 
-            if (avg >= 80) {
-                badge.textContent = '✅ أداء ممتاز';
-                badge.className = 'badge success';
-            } else if (avg >= 70) {
-                badge.textContent = '📈 أداء جيد';
-                badge.className = 'badge gold';
-            } else if (avg >= 50) {
-                badge.textContent = '⚠️ أداء متوسط';
-                badge.className = 'badge warning';
-            } else {
-                badge.textContent = '🚨 أداء منخفض';
-                badge.className = 'badge danger';
+            if (avg >= 80) { badge.textContent = '✅ أداء ممتاز'; badge.className = 'badge success'; }
+            else if (avg >= 70) { badge.textContent = '📈 أداء جيد'; badge.className = 'badge gold'; }
+            else if (avg >= 50) { badge.textContent = '⚠️ أداء متوسط'; badge.className = 'badge warning'; }
+            else { badge.textContent = '🚨 أداء منخفض'; badge.className = 'badge danger'; }
+        }
+
+        // ============================================================
+        // ✅ رسم جدول إقليم/وحدة
+        // ============================================================
+        function renderRegionTable(key, data) {
+            const tbody = document.getElementById('regionBody-' + key);
+            const badgeEl = document.getElementById('badge-' + key);
+
+            if (!tbody) return;
+
+            tbody.innerHTML = buildCategoryRows(data.categories || {});
+
+            // Badge
+            if (badgeEl) {
+                const eff = data.total > 0 ? (data.active / data.total) * 100 : 0;
+                const info = getStatusInfo(eff);
+                badgeEl.textContent = eff.toFixed(0) + '% جاهزية';
+                badgeEl.className = 'badge ' + (
+                    info.cls === 'excellent' || info.cls === 'good' ? 'success' :
+                    info.cls === 'medium' ? 'warning' : 'danger'
+                ) + ' region-badge-header';
             }
         }
 
-        // ---------- FILTERS ----------
+        // ============================================================
+        // ✅ رسم كل الجداول
+        // ============================================================
+        function renderAllTables() {
+            // 1. الجدول العام
+            renderGeneralTable();
+
+            // 2-5. الأقاليم الأربعة
+            FIXED_REGIONS.forEach(r => {
+                renderRegionTable(r.key, vesselStats.regions[r.match] || {
+                    active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
+                });
+            });
+
+            // 6-10. الوحدات الخمس
+            FIXED_UNITS.forEach(u => {
+                renderRegionTable(u.key, vesselStats.units[u.match] || {
+                    active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
+                });
+            });
+        }
+
+        // ============================================================
+        // ✅ STATS CARDS
+        // ============================================================
+        function renderStatsCards() {
+            let total = 0, active = 0, maintenance = 0, damaged = 0;
+
+            // نجمع من الجدول العام فقط لتجنب التكرار
+            Object.values(vesselStats.general).forEach(c => {
+                total += c.total || 0;
+                active += c.active || 0;
+                damaged += c.damaged || 0;
+            });
+
+            // الصيانة من الأقاليم (لأنها غير محسوبة في general)
+            Object.values(vesselStats.regions).forEach(r => {
+                maintenance += r.maintenance || 0;
+            });
+
+            const efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('totalVessels').textContent = total;
+            document.getElementById('activeVessels').textContent = active;
+            document.getElementById('maintenanceVessels').textContent = maintenance;
+            document.getElementById('damagedVessels').textContent = damaged;
+            document.getElementById('efficiencyPercent').textContent = efficiency + '%';
+        }
+
+        // ============================================================
+        // ✅ MAIN RENDER
+        // ============================================================
+        function renderEfficiency() {
+            renderStatsCards();
+            renderAllTables();
+            drawChart(currentChart);
+        }
+
+        // ============================================================
+        // ✅ FILTERS
+        // ============================================================
         function resetEfficiencyFilters() {
             document.getElementById('fRegEff').value = 'الكل';
             document.getElementById('fCatEff').value = 'الكل';
@@ -1873,8 +1406,8 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
             btn.disabled = true;
             try {
-                const vessels = await loadEfficiencyVessels();
-                efficiencyData = buildEfficiencyDataFromVessels(vessels);
+                const vessels = await loadVessels();
+                vesselStats = buildStats(vessels);
                 renderEfficiency();
                 showNotification('تم تحديث البيانات بنجاح ✅', 'success');
             } catch (err) {
@@ -1901,7 +1434,7 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const width = canvas.parentElement.clientWidth - 32;
-            const height = 250;
+            const height = 320;
 
             canvas.width = width * 2;
             canvas.height = height * 2;
@@ -1910,11 +1443,20 @@
             ctx.setTransform(2, 0, 0, 2, 0, 0);
             ctx.clearRect(0, 0, width, height);
 
-            const data = Object.entries(efficiencyData.regions).map(([name, d]) => ({
-                label: name,
-                value: d.vessels > 0 ? ((d.active / d.vessels) * 100) : 0,
-                color: getColor(name)
-            }));
+            // ✅ نبني البيانات من الأقاليم الأربعة + الوحدات الخمس
+            const data = [];
+
+            FIXED_REGIONS.forEach(r => {
+                const d = vesselStats.regions[r.match];
+                const eff = d && d.total > 0 ? (d.active / d.total) * 100 : 0;
+                data.push({ label: r.label, value: eff, color: getColor(r.label) });
+            });
+
+            FIXED_UNITS.forEach(u => {
+                const d = vesselStats.units[u.match];
+                const eff = d && d.total > 0 ? (d.active / d.total) * 100 : 0;
+                data.push({ label: u.label, value: eff, color: getColor(u.label) });
+            });
 
             if (data.length === 0) {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
@@ -1985,28 +1527,28 @@
             });
 
             let legendY = 10;
-            const legendX = width - 120;
+            const legendX = width - 180;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
 
-            data.slice(0, 6).forEach((item, i) => {
+            data.forEach((item, i) => {
                 const y = legendY + i * 18;
                 ctx.fillStyle = item.color;
                 ctx.fillRect(legendX, y, 12, 12);
                 ctx.fillStyle = 'rgba(255,255,255,0.5)';
                 ctx.font = '9px Cairo, sans-serif';
-                const label = item.label.length > 15 ? item.label.slice(0, 15) + '...' : item.label;
+                const label = item.label.length > 22 ? item.label.slice(0, 22) + '...' : item.label;
                 ctx.fillText(label, legendX + 16, y);
             });
         }
 
         function drawBarChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 30, left: 40, right: 20 };
+            const padding = { top: 20, bottom: 60, left: 40, right: 20 };
             const chartWidth = width - padding.left - padding.right;
             const chartHeight = height - padding.top - padding.bottom;
 
             const maxVal = Math.max(...data.map(d => d.value), 100);
-            const barWidth = Math.min(chartWidth / data.length * 0.7, 50);
+            const barWidth = Math.min(chartWidth / data.length * 0.7, 40);
             const gap = chartWidth / data.length;
 
             for (let i = 0; i <= 4; i++) {
@@ -2039,21 +1581,27 @@
                 ctx.fillRect(x, y, barWidth, barHeight);
                 ctx.shadowBlur = 0;
 
-                ctx.strokeStyle = item.color;
-                ctx.lineWidth = 1;
-                ctx.strokeRect(x, y, barWidth, barHeight);
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.font = 'bold 9px Cairo, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(`${item.value.toFixed(0)}%`, x + barWidth / 2, y - 3);
 
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
                 ctx.font = '8px Cairo, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
-                const label = item.label.length > 10 ? item.label.slice(0, 10) + '..' : item.label;
-                ctx.fillText(label, x + barWidth / 2, padding.top + chartHeight + 5);
+                const label = item.label.length > 14 ? item.label.slice(0, 14) + '..' : item.label;
+                ctx.save();
+                ctx.translate(x + barWidth / 2, padding.top + chartHeight + 5);
+                ctx.rotate(-Math.PI / 6);
+                ctx.fillText(label, 0, 0);
+                ctx.restore();
             });
         }
 
         function drawLineChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 30, left: 40, right: 20 };
+            const padding = { top: 20, bottom: 60, left: 40, right: 20 };
             const chartWidth = width - padding.left - padding.right;
             const chartHeight = height - padding.top - padding.bottom;
 
@@ -2117,12 +1665,16 @@
             });
 
             points.forEach(p => {
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
                 ctx.font = '8px Cairo, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
-                const label = p.label.length > 12 ? p.label.slice(0, 12) + '..' : p.label;
-                ctx.fillText(label, p.x, padding.top + chartHeight + 5);
+                const label = p.label.length > 14 ? p.label.slice(0, 14) + '..' : p.label;
+                ctx.save();
+                ctx.translate(p.x, padding.top + chartHeight + 5);
+                ctx.rotate(-Math.PI / 6);
+                ctx.fillText(label, 0, 0);
+                ctx.restore();
             });
         }
 
@@ -2136,23 +1688,16 @@
             const notif = document.createElement('div');
             notif.className = 'eff-notification';
             notif.style.cssText = `
-                position: fixed;
-                bottom: 24px;
-                right: 24px;
+                position: fixed; bottom: 24px; right: 24px;
                 background: ${type === 'success' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'};
                 backdrop-filter: blur(12px);
                 border: 1px solid ${type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'};
-                padding: 12px 20px;
-                border-radius: 12px;
-                color: #fff;
-                font-family: Cairo, sans-serif;
-                font-size: 14px;
-                z-index: 9999;
+                padding: 12px 20px; border-radius: 12px; color: #fff;
+                font-family: Cairo, sans-serif; font-size: 14px; z-index: 9999;
                 animation: slideUp 0.4s ease-out;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             `;
             notif.textContent = message;
-
             document.body.appendChild(notif);
 
             setTimeout(() => {
@@ -2167,13 +1712,14 @@
         // ✅ INIT
         // ============================================================
         document.addEventListener('DOMContentLoaded', async function () {
-            // ✅ رسم أولي بقيم صفرية (الفئات الخمس تظهر)
+            // رسم أولي بالبيانات الفارغة (الفئات الخمس تظهر بـ 0)
+            vesselStats = buildStats([]);
             renderEfficiency();
 
-            // ✅ تحميل البيانات الحقيقية
+            // تحميل البيانات الحقيقية
             try {
-                const vessels = await loadEfficiencyVessels();
-                efficiencyData = buildEfficiencyDataFromVessels(vessels);
+                const vessels = await loadVessels();
+                vesselStats = buildStats(vessels);
                 renderEfficiency();
             } catch (err) {
                 console.warn('تعذر تحميل البيانات:', err);
@@ -2184,7 +1730,7 @@
         });
 
         // ============================================================
-        // ✅ NOTIFICATION STYLE
+        // ✅ STYLES
         // ============================================================
         (function() {
             const styleNotif = document.createElement('style');
@@ -2197,15 +1743,12 @@
             document.head.appendChild(styleNotif);
         })();
 
-        // ============================================================
-        // ✅ WINDOW RESIZE
-        // ============================================================
         let resizeTimer = null;
         window.addEventListener('resize', function () {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => drawChart(currentChart), 150);
         });
 
-        console.log('📊 Efficiency Page loaded (Real Data Only)');
+        console.log('📊 Efficiency Page loaded — 10 tables, real data only');
     </script>
 </div>
