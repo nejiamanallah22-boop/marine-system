@@ -1,68 +1,72 @@
 /* ============================================================
-   🖨️ MARINE SYSTEM — COMPACT PRINT v3.0
-   حل جذري: أقسام متلاصقة + 4-5 جداول في الصفحة
+   🖨️ PRINT v5.0 — FINAL ULTRA-COMPACT
+   • لا مزيد من الخلفيات المتدرجة
+   • لا مزيد من blur
+   • أقسام متلاصقة
+   • 6-8 جداول في الصفحة
    ============================================================ */
 
 @page {
     size: A4 landscape;
-    margin: 6mm 6mm 8mm 6mm;
+    margin: 4mm;
 }
 
 @page :first {
-    margin-top: 4mm;
+    margin-top: 3mm;
 }
 
 @media print {
 
-    /* ═══════════════════════════════════════════════════════
-       1) RESET قسري — كسر كل قيود منع القطع
-       ═══════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════
+       1) إزالة كل التأثيرات الثقيلة (يُسرّع الطباعة كثيرًا)
+       ═══════════════════════════════════════════════════ */
     *,
     *::before,
     *::after {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        filter: none !important;
         box-shadow: none !important;
         text-shadow: none !important;
         animation: none !important;
         transition: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-
-        /* ⚡ الأهم: السماح بالقطع في كل شيء */
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-        page-break-before: auto !important;
-        page-break-after: auto !important;
+        transform: none !important;
+        background-image: none !important;
+        background-attachment: scroll !important;
     }
 
     html, body {
         background: #ffffff !important;
         color: #111827 !important;
-        font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-        font-size: 7pt !important;
-        line-height: 1.15 !important;
+        font-family: 'Cairo', sans-serif !important;
+        font-size: 6pt !important;
+        line-height: 1.05 !important;
         margin: 0 !important;
         padding: 0 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
-    /* إخفاء عناصر UI */
+    /* ═══════════════════════════════════════════════════
+       2) إخفاء كل عناصر UI + الرسوم المتحركة
+       ═══════════════════════════════════════════════════ */
     button, .btn-action, .btn-filter, .btn-sm, .btn-save,
     .btn-icon, .action-btns, .retry-btn, .chart-btn,
     .chart-switch, nav, .sidebar, .navbar, .no-print,
     .toast, .toast-container, .eff-notification,
     .fleet-header-actions, .logs-header-actions, .eff-header-actions,
     .filter-bar, .input-grid, #inputArea,
-    .eff-chart-controls, .eff-chart-section,
+    .eff-chart-controls,
     .empty-state .spinner, .eff-spinner,
     .back-to-top, .main-header, .menu-toggle,
-    .notification-wrapper, .user-wrapper, .search-wrapper {
+    .notification-wrapper, .user-wrapper, .search-wrapper,
+    canvas {
         display: none !important;
     }
 
-    /* ═══════════════════════════════════════════════════════
-       2) HEADER مؤسسي صغير
-       ═══════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════
+       3) HEADER — سطر واحد رقيق جدًا
+       ═══════════════════════════════════════════════════ */
     .fleet-header,
     .logs-header,
     .eff-header {
@@ -71,14 +75,12 @@
         align-items: center !important;
         background: #0a1628 !important;
         color: #ffffff !important;
-        padding: 3mm 5mm 2.5mm !important;
-        margin: 0 0 2mm !important;
-        border-radius: 3px !important;
-        border: 1.5px solid #e6b31e !important;
-        position: relative !important;
-        min-height: 14mm !important;
+        padding: 1.2mm 3mm !important;
+        margin: 0 0 1.2mm !important;
+        border: 1px solid #e6b31e !important;
+        border-radius: 2px !important;
+        min-height: auto !important;
         page-break-after: avoid !important;
-        page-break-inside: avoid !important;
     }
 
     .fleet-header-left,
@@ -86,7 +88,7 @@
     .eff-header-left {
         display: flex !important;
         align-items: center !important;
-        gap: 3mm !important;
+        gap: 2mm !important;
     }
 
     .fleet-header-left h2,
@@ -94,10 +96,9 @@
     .eff-header-left h2,
     .eff-title h1 {
         color: #f7d774 !important;
-        font-size: 13pt !important;
-        font-weight: 800 !important;
         -webkit-text-fill-color: #f7d774 !important;
-        background: none !important;
+        font-size: 10pt !important;
+        font-weight: 800 !important;
         margin: 0 !important;
         line-height: 1 !important;
     }
@@ -106,10 +107,7 @@
     .logs-header-left p,
     .eff-header-left p,
     .eff-title p {
-        color: rgba(255,255,255,0.8) !important;
-        -webkit-text-fill-color: rgba(255,255,255,0.8) !important;
-        font-size: 7.5pt !important;
-        margin: 1mm 0 0 0 !important;
+        display: none !important;
     }
 
     .header-icon,
@@ -117,17 +115,16 @@
     #logsHeaderIcon,
     #effHeaderIcon,
     .eff-title-icon {
-        width: 9mm !important;
-        height: 9mm !important;
-        min-width: 9mm !important;
-        border: 1.5px solid #e6b31e !important;
+        width: 7mm !important;
+        height: 7mm !important;
+        min-width: 7mm !important;
+        border: 1px solid #e6b31e !important;
         background: #0a1628 !important;
-        border-radius: 3px !important;
+        border-radius: 2px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         overflow: hidden !important;
-        animation: none !important;
     }
 
     .header-icon img, #globalLogo {
@@ -139,7 +136,7 @@
 
     .header-icon i, .eff-title-icon i {
         color: #f7d774 !important;
-        font-size: 10pt !important;
+        font-size: 8pt !important;
     }
 
     .fleet-header::after,
@@ -147,22 +144,23 @@
     .eff-header::after {
         content: "طُبع: " attr(data-print-date);
         position: absolute;
-        bottom: 1.5mm;
-        left: 5mm;
-        font-size: 6.5pt;
+        bottom: 1mm;
+        left: 3mm;
+        font-size: 5.5pt;
         color: rgba(255,255,255,0.7) !important;
         direction: rtl;
     }
 
-    /* ═══════════════════════════════════════════════════════
-       3) STATS CARDS — صف واحد مضغوط جدًا
-       ═══════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════
+       4) STATS — صف واحد مضغوط جدًا
+       ═══════════════════════════════════════════════════ */
     .stats-grid {
         display: grid !important;
-        gap: 1.5mm !important;
-        margin: 0 0 2mm !important;
+        gap: 1mm !important;
+        margin: 0 0 1.2mm !important;
         padding: 0 !important;
         page-break-after: avoid !important;
+        background: none !important;
     }
 
     #page-fleet .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
@@ -171,22 +169,22 @@
 
     .stat-card {
         background: #f8fafc !important;
-        border: 1.2px solid #e6b31e !important;
-        border-radius: 3px !important;
-        padding: 1.5mm 1mm !important;
+        border: 1px solid #e6b31e !important;
+        border-radius: 2px !important;
+        padding: 1mm 0.5mm !important;
         text-align: center !important;
         display: block !important;
         min-height: auto !important;
     }
 
-    .stat-card::before { display: none !important; }
+    .stat-card::before,
     .stat-card::after { display: none !important; }
 
     .stat-card .number,
     .stat-card .eff-stat-value {
         color: #0a1628 !important;
         -webkit-text-fill-color: #0a1628 !important;
-        font-size: 11pt !important;
+        font-size: 9pt !important;
         font-weight: 900 !important;
         line-height: 1 !important;
         margin: 0 !important;
@@ -203,73 +201,78 @@
     .stat-card .eff-stat-label {
         color: #4b5563 !important;
         -webkit-text-fill-color: #4b5563 !important;
-        font-size: 6pt !important;
+        font-size: 5.5pt !important;
         font-weight: 700 !important;
-        margin-top: 0.8mm !important;
+        margin-top: 0.5mm !important;
         display: block !important;
         white-space: nowrap !important;
+        overflow: hidden !important;
     }
 
     .stat-card .icon-bg,
     .stat-card .eff-stat-sub { display: none !important; }
 
-    /* ═══════════════════════════════════════════════════════
-       4) SECTIONS — متلاصقة، تُقطع بحرية
-       ═══════════════════════════════════════════════════════ */
-    .eff-section {
+    /* ═══════════════════════════════════════════════════
+       5) SECTIONS — متلاصقة + قابلة للقطع
+       ═══════════════════════════════════════════════════ */
+    #page-efficiency .eff-section,
+    #page-fleet .eff-section,
+    #page-logs .eff-section,
+    .region-card,
+    .eff-group {
         background: #ffffff !important;
-        border: 1.2px solid #0a1628 !important;
+        border: 1px solid #0a1628 !important;
         border-radius: 2px !important;
-        margin: 0 0 1.5mm !important;
+        margin: 0 0 1mm !important;
         padding: 0 !important;
         overflow: visible !important;
         page-break-inside: auto !important;
         break-inside: auto !important;
         page-break-before: auto !important;
+        page-break-after: auto !important;
     }
 
-    .region-card,
-    .eff-group {
-        background: #ffffff !important;
-        border: 1.2px solid #0a1628 !important;
-        border-radius: 2px !important;
-        margin: 0 0 1.5mm !important;
-        padding: 0 !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
+    /* الأقسام المخفية (بعد الفلترة) تبقى مخفية */
+    #page-efficiency .eff-section[style*="display: none"] {
+        display: none !important;
     }
 
-    .eff-section .section-header,
+    #page-efficiency .eff-section .section-header,
+    #page-fleet .eff-section .section-header,
+    #page-logs .eff-section .section-header,
     .region-card .region-header,
     .eff-group-head {
         background: #0a1628 !important;
         color: #f7d774 !important;
-        padding: 1.5mm 3mm !important;
-        border-bottom: 1.2px solid #e6b31e !important;
+        padding: 0.8mm 2mm !important;
+        border-bottom: 1px solid #e6b31e !important;
         page-break-after: avoid !important;
-        page-break-inside: avoid !important;
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
     }
 
-    .eff-section .section-header h3,
+    #page-efficiency .eff-section .section-header h3,
+    #page-fleet .eff-section .section-header h3,
+    #page-logs .eff-section .section-header h3,
     .region-card .region-header .region-name,
     .eff-group-name {
         color: #f7d774 !important;
         -webkit-text-fill-color: #f7d774 !important;
-        font-size: 8.5pt !important;
+        font-size: 7pt !important;
         font-weight: 800 !important;
         margin: 0 !important;
         display: flex !important;
         align-items: center !important;
-        gap: 2mm !important;
+        gap: 1mm !important;
     }
 
-    .eff-section .section-header h3 i,
-    .region-card .region-header .region-name i {
+    #page-efficiency .eff-section .section-header h3 i,
+    #page-fleet .eff-section .section-header h3 i,
+    #page-logs .eff-section .section-header h3 i {
         color: #f7d774 !important;
         margin: 0 !important;
+        font-size: 6pt !important;
     }
 
     .eff-section .section-header .badge,
@@ -277,40 +280,40 @@
     .eff-badge {
         background: #ffffff !important;
         color: #0a1628 !important;
-        border: 1px solid #e6b31e !important;
-        font-size: 6.5pt !important;
-        padding: 0.5mm 2mm !important;
-        border-radius: 8px !important;
+        -webkit-text-fill-color: #0a1628 !important;
+        border: 0.5px solid #e6b31e !important;
+        font-size: 5.5pt !important;
+        padding: 0.2mm 1.5mm !important;
+        border-radius: 6px !important;
         font-weight: 700 !important;
-        animation: none !important;
     }
 
     .section-content { padding: 0 !important; }
     .region-card .region-body,
-    .eff-group .eff-table-wrap { padding: 1.5mm !important; }
+    .eff-group .eff-table-wrap { padding: 1mm !important; }
 
-    /* ═══════════════════════════════════════════════════════
-       5) TABLES — رقيقة جدًا
-       ═══════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════
+       6) TABLES — رقيقة كالورقة
+       ═══════════════════════════════════════════════════ */
     .table-wrapper {
-        padding: 1.5mm !important;
+        padding: 1mm !important;
         margin: 0 !important;
         overflow: visible !important;
         page-break-inside: auto !important;
         border: none !important;
     }
 
-    table {
+    #page-efficiency table,
+    #page-fleet table,
+    #page-logs table {
         width: 100% !important;
         border-collapse: collapse !important;
-        border: 1px solid #0a1628 !important;
+        border: 0.5px solid #0a1628 !important;
         min-width: 0 !important;
         background: #ffffff !important;
-        font-size: 6.5pt !important;
+        font-size: 5.5pt !important;
         page-break-inside: auto !important;
     }
-
-    #page-efficiency table { font-size: 7pt !important; }
 
     thead {
         display: table-header-group !important;
@@ -321,20 +324,18 @@
         background: #0a1628 !important;
         color: #f7d774 !important;
         -webkit-text-fill-color: #f7d774 !important;
-        padding: 1mm 1.5mm !important;
-        font-size: 6.5pt !important;
+        padding: 0.5mm 1mm !important;
+        font-size: 5.5pt !important;
         font-weight: 800 !important;
         text-align: center !important;
         border: 0.5px solid #1a2a4a !important;
-        letter-spacing: 0 !important;
-        text-transform: none !important;
         white-space: nowrap !important;
+        line-height: 1 !important;
     }
 
     thead th i { display: none !important; }
 
     tbody tr {
-        /* ⚡ السماح بقطع الصفوف — هذا ما يحل المشكلة */
         page-break-inside: auto !important;
         break-inside: auto !important;
         background: #ffffff !important;
@@ -343,19 +344,17 @@
     tbody tr:nth-child(even) { background: #f9fafb !important; }
 
     tbody td {
-        padding: 0.8mm 1.5mm !important;
+        padding: 0.4mm 1mm !important;
         border: 0.5px solid #e5e7eb !important;
         color: #1f2937 !important;
         -webkit-text-fill-color: #1f2937 !important;
         text-align: center !important;
-        font-size: 6.5pt !important;
+        font-size: 5.5pt !important;
         vertical-align: middle !important;
         background: transparent !important;
-        line-height: 1.1 !important;
+        line-height: 1 !important;
         white-space: nowrap !important;
     }
-
-    #page-efficiency tbody td { font-size: 7pt !important; }
 
     tbody td:first-child,
     tbody td.vessel-name {
@@ -363,21 +362,21 @@
         color: #0a1628 !important;
         -webkit-text-fill-color: #0a1628 !important;
         text-align: right !important;
-        padding-right: 2mm !important;
+        padding-right: 1.5mm !important;
     }
 
     /* حالات الصفوف */
-    .row-high { background: #ecfdf5 !important; border-right: 2px solid #047857 !important; }
+    .row-high { background: #ecfdf5 !important; border-right: 1.5px solid #047857 !important; }
     .row-high td:first-child, .row-high .eff-cell {
         color: #047857 !important; -webkit-text-fill-color: #047857 !important;
     }
 
-    .row-mid { background: #fffbeb !important; border-right: 2px solid #b45309 !important; }
+    .row-mid { background: #fffbeb !important; border-right: 1.5px solid #b45309 !important; }
     .row-mid td:first-child, .row-mid .eff-cell {
         color: #b45309 !important; -webkit-text-fill-color: #b45309 !important;
     }
 
-    .row-low, tbody tr.damaged { background: #fef2f2 !important; border-right: 2px solid #b91c1c !important; }
+    .row-low, tbody tr.damaged { background: #fef2f2 !important; border-right: 1.5px solid #b91c1c !important; }
     .row-low td:first-child, .row-low .eff-cell {
         color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important;
     }
@@ -385,21 +384,20 @@
         color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important;
     }
 
-    /* ═══════════════════════════════════════════════════════
-       6) STATUS BADGES — صغيرة
-       ═══════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════
+       7) STATUS BADGES
+       ═══════════════════════════════════════════════════ */
     .status-badge,
     .eff-status {
         display: inline-block !important;
-        padding: 0.3mm 1.5mm !important;
-        border-radius: 4px !important;
-        font-size: 6pt !important;
+        padding: 0.1mm 1mm !important;
+        border-radius: 3px !important;
+        font-size: 5pt !important;
         font-weight: 700 !important;
-        border: 0.8px solid currentColor !important;
+        border: 0.5px solid currentColor !important;
         background: #ffffff !important;
-        animation: none !important;
         white-space: nowrap !important;
-        line-height: 1.2 !important;
+        line-height: 1.1 !important;
     }
 
     .status-badge.excellent, .status-badge.good,
@@ -417,16 +415,18 @@
         background: #fef2f2 !important;
     }
 
-    /* ═══════════════════════════════════════════════════════
-       7) PROGRESS BAR — رقيقة جدًا
-       ═══════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════
+       8) PROGRESS BAR — شعرة
+       ═══════════════════════════════════════════════════ */
     .progress-bar,
     .eff-progress {
         background: #e5e7eb !important;
-        height: 2mm !important;
-        min-width: 15mm !important;
-        border-radius: 1mm !important;
-        border: 0.5px solid #d1d5db !important;
+        height: 1.2mm !important;
+        min-width: 12mm !important;
+        border-radius: 0.6mm !important;
+        border: 0.3px solid #d1d5db !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
     }
     .progress-bar .progress-fill::after,
     .eff-progress > span::after { display: none !important; }
@@ -434,50 +434,50 @@
     .progress-bar .progress-fill.mid, .eff-progress.mid > span { background: #b45309 !important; }
     .progress-bar .progress-fill.low, .eff-progress.bad > span { background: #b91c1c !important; }
 
-    /* ═══════════════════════════════════════════════════════
-       8) PRINT SUMMARY (fleet)
-       ═══════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════
+       9) PRINT SUMMARY
+       ═══════════════════════════════════════════════════ */
     .print-only,
     .print-summary-section {
         display: block !important;
-        margin: 0 0 2mm !important;
+        margin: 0 0 1.5mm !important;
         page-break-after: avoid !important;
     }
 
     .print-summary-title {
         background: #0a1628 !important;
         color: #f7d774 !important;
-        padding: 1.5mm 3mm !important;
-        font-size: 8pt !important;
+        padding: 0.8mm 2mm !important;
+        font-size: 7pt !important;
         font-weight: 800 !important;
-        border: 1px solid #0a1628 !important;
+        border: 0.5px solid #0a1628 !important;
         text-align: center !important;
     }
 
     .print-summary-table {
         width: 100% !important;
         border-collapse: collapse !important;
-        font-size: 7pt !important;
-        border: 1px solid #0a1628 !important;
+        font-size: 6pt !important;
+        border: 0.5px solid #0a1628 !important;
         background: #ffffff !important;
-        margin: 0 !important;
         min-width: 0 !important;
     }
 
     .print-summary-table thead th {
         background: #1a2a4a !important;
         color: #f7d774 !important;
-        padding: 1mm 1.5mm !important;
-        font-size: 7pt !important;
+        -webkit-text-fill-color: #f7d774 !important;
+        padding: 0.5mm 1mm !important;
+        font-size: 6pt !important;
         font-weight: 800 !important;
         border: 0.5px solid #0a1628 !important;
     }
 
     .print-summary-table tbody td {
-        padding: 0.8mm 1.5mm !important;
+        padding: 0.4mm 1mm !important;
         border: 0.5px solid #e5e7eb !important;
         color: #1f2937 !important;
-        font-size: 7pt !important;
+        font-size: 6pt !important;
         font-weight: 600 !important;
         text-align: center !important;
     }
@@ -486,101 +486,46 @@
         background: #fffbeb !important;
         font-weight: 800 !important;
         color: #0a1628 !important;
-        border-top: 1.5px solid #e6b31e !important;
+        border-top: 1px solid #e6b31e !important;
     }
 
     .print-summary-table .cat-name {
         text-align: right !important;
         font-weight: 800 !important;
         color: #0a1628 !important;
-        padding-right: 3mm !important;
+        padding-right: 2mm !important;
     }
 
-    /* ═══════════════════════════════════════════════════════
-       9) CHARTS
-       ═══════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════
+       10) CHARTS — مخفية للطباعة السريعة
+       ═══════════════════════════════════════════════════ */
     .chart-section {
-        background: #ffffff !important;
-        border: 1.2px solid #0a1628 !important;
-        border-radius: 2px !important;
-        margin: 0 0 2mm !important;
-        page-break-inside: avoid !important;
+        display: none !important;
     }
 
-    .charts-container { padding: 2mm !important; display: block !important; }
-    .chart-box {
-        background: #f9fafb !important;
-        border: 1px solid #e5e7eb !important;
-        padding: 2mm !important;
-        page-break-inside: avoid !important;
-    }
-    .chart-box h4 {
-        color: #0a1628 !important;
-        font-size: 8pt !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        margin: 0 0 2mm !important;
-    }
-    .chart-box canvas {
-        max-height: 60mm !important;
-        height: auto !important;
-        width: 100% !important;
-    }
-
-    /* ═══════════════════════════════════════════════════════
-       10) FOOTER
-       ═══════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════
+       11) FOOTER
+       ═══════════════════════════════════════════════════ */
     #page-fleet::after,
     #page-logs::after,
     #page-efficiency::after {
         display: block !important;
         text-align: center !important;
-        font-size: 6.5pt !important;
+        font-size: 5.5pt !important;
         color: #6b7280 !important;
-        border-top: 1px solid #e6b31e !important;
-        padding-top: 1.5mm !important;
-        margin-top: 2mm !important;
+        border-top: 0.5px solid #e6b31e !important;
+        padding-top: 1mm !important;
+        margin-top: 1.5mm !important;
         font-weight: 600 !important;
     }
 
     #page-fleet::after { content: "🚢 منظومة الوسائل البحرية — السجل العام للأسطول" !important; }
-    #page-logs::after { content: "🚢 منظومة الوسائل البحرية — سجل الصيانة والتدخلات الفنية" !important; }
+    #page-logs::after { content: "🚢 منظومة الوسائل البحرية — سجل الصيانة" !important; }
     #page-efficiency::after { content: "🚢 منظومة الوسائل البحرية — تقرير جاهزية الأسطول" !important; }
 
-    /* ═══════════════════════════════════════════════════════
-       11) OVERRIDES نهاية — تضمن القطع
-       ═══════════════════════════════════════════════════════ */
-    
-    /* ⚡ أجبر الأقسام على التجاور */
-    .eff-section,
-    .region-card,
-    .eff-group,
-    .table-wrapper,
-    table,
-    tbody,
-    tr,
-    td,
-    th {
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-    }
-
-    /* ⚡ فقط العناصر الصغيرة تبقى معًا */
-    .status-badge,
-    .progress-bar,
-    .stat-card {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-    }
-
-    /* إخفاء خلفيات الصفحات الأصلية */
-    body::before, body::after,
-    #page-fleet::before,
-    #page-logs::before,
-    #page-efficiency::before {
-        display: none !important;
-    }
-
+    /* ═══════════════════════════════════════════════════
+       12) OVERRIDES نهائية
+       ═══════════════════════════════════════════════════ */
     #page-fleet, #page-logs, #page-efficiency {
         width: 100% !important;
         max-width: 100% !important;
@@ -588,6 +533,33 @@
         margin: 0 !important;
         min-height: 0 !important;
         background: #ffffff !important;
+    }
+
+    body::before, body::after,
+    #page-fleet::before,
+    #page-logs::before,
+    #page-efficiency::before {
+        display: none !important;
+    }
+
+    /* ⚡⚡⚡ فرض كسر كل القيود في نهاية الملف ⚡⚡⚡ */
+    #page-efficiency .eff-section,
+    #page-fleet .eff-section,
+    #page-logs .eff-section,
+    #page-efficiency .table-wrapper,
+    #page-fleet .table-wrapper,
+    #page-logs .table-wrapper,
+    #page-efficiency table,
+    #page-fleet table,
+    #page-logs table,
+    #page-efficiency tbody,
+    #page-fleet tbody,
+    #page-logs tbody,
+    #page-efficiency tr,
+    #page-fleet tr,
+    #page-logs tr {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
     }
 }
 
