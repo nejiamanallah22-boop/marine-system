@@ -156,6 +156,49 @@
             font-size: 12px;
             color: var(--text-muted);
             margin: 2px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .geo-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .geo-indicator.searching {
+            background: rgba(245,158,11,0.15);
+            color: #fbbf24;
+            animation: geoPulse 1.5s ease-in-out infinite;
+        }
+
+        .geo-indicator.active {
+            background: rgba(34,197,94,0.15);
+            color: #4ade80;
+        }
+
+        .geo-indicator.denied {
+            background: rgba(239,68,68,0.15);
+            color: var(--red);
+        }
+
+        .geo-indicator.error {
+            background: rgba(245,158,11,0.15);
+            color: #fbbf24;
+        }
+
+        @keyframes geoPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .mon-header-actions {
@@ -316,6 +359,17 @@
             background: linear-gradient(135deg, var(--gold), var(--gold-light));
             border-color: var(--gold);
             color: #0a1628;
+        }
+
+        .map-type-btn.locate-btn {
+            margin-inline-start: auto;
+            border-color: rgba(245,215,110,0.3);
+            color: var(--gold-light);
+        }
+
+        .map-type-btn.locate-btn:hover {
+            background: rgba(245,215,110,0.1);
+            border-color: var(--gold);
         }
 
         /* ============================================================
@@ -488,6 +542,17 @@
             white-space: nowrap;
         }
 
+        .sessions-table .user-name .me-tag {
+            display: inline-block;
+            font-size: 8px;
+            background: rgba(245,215,110,0.15);
+            color: var(--gold-light);
+            padding: 1px 6px;
+            border-radius: 8px;
+            margin-right: 4px;
+            font-weight: 700;
+        }
+
         .sessions-table .user-id-cell {
             font-family: 'Courier New', monospace;
             font-size: 0.6rem;
@@ -635,6 +700,23 @@
             margin: 0 auto 12px;
             font-weight: 700;
             box-shadow: 0 0 30px rgba(230,179,30,0.25);
+            position: relative;
+        }
+
+        .user-panel .user-avatar.is-me::after {
+            content: '📍';
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            font-size: 16px;
+            background: #0a1628;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--gold-light);
         }
 
         .user-panel .user-name {
@@ -751,6 +833,16 @@
         .leaflet-popup-close-button { color: var(--text-muted) !important; }
 
         .popup-user-name { font-size: 16px; font-weight: 700; color: var(--gold-light); margin-bottom: 6px; }
+        .popup-me-tag {
+            display: inline-block;
+            font-size: 10px;
+            background: rgba(245,215,110,0.15);
+            color: var(--gold-light);
+            padding: 2px 8px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
         .popup-user-detail { font-size: 12px; color: var(--text-secondary); padding: 3px 0; display: flex; align-items: center; gap: 8px; }
         .popup-user-detail i { color: var(--gold); width: 14px; text-align: center; }
         .popup-user-id {
@@ -771,6 +863,17 @@
         .leaflet-bar a { background: #0a1628 !important; color: #fff !important; border-color: var(--border-subtle) !important; }
         .leaflet-bar a:hover { background: #162036 !important; }
 
+        /* 🆕 نبض علامة المستخدم الحالي */
+        @keyframes meMarkerPulse {
+            0% { box-shadow: 0 0 0 0 rgba(245,215,110,0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(245,215,110,0); }
+            100% { box-shadow: 0 0 0 0 rgba(245,215,110,0); }
+        }
+
+        .custom-marker.marker-me > div {
+            animation: meMarkerPulse 2s infinite;
+        }
+
         /* ============================================================
            📱 RESPONSIVE
            ============================================================ */
@@ -788,6 +891,7 @@
             .map-type-selector { padding: 8px 16px; justify-content: center; }
             .map-type-selector .label { width: 100%; text-align: center; }
             .map-type-btn { font-size: 0.65rem; padding: 5px 12px; }
+            .map-type-btn.locate-btn { margin-inline-start: 0; }
             .monitoring-grid { padding: 10px 16px; gap: 12px; }
             .map-container { min-height: 340px; }
             #realMap { min-height: 300px; }
@@ -818,6 +922,7 @@
                 background: none !important;
             }
             .mon-header-left p { color: #555 !important; }
+            .geo-indicator { background: #eee !important; color: #333 !important; animation: none !important; }
             .mon-header-actions,
             .map-type-selector,
             .user-panel,
@@ -887,7 +992,13 @@
             </div>
             <div>
                 <h2>المراقبة الشاملة</h2>
-                <p>تتبع المستخدمين + جلسات النشاط — بيانات حقيقية</p>
+                <p>
+                    <span>تتبع المستخدمين + جلسات النشاط</span>
+                    <span class="geo-indicator" id="geoIndicator">
+                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                        <span id="geoIndicatorText">جاري تحديد موقعك...</span>
+                    </span>
+                </p>
             </div>
         </div>
         <div class="mon-header-actions">
@@ -916,6 +1027,9 @@
         <button class="map-type-btn active" data-type="satellite" type="button"><i class="fas fa-satellite" aria-hidden="true"></i> قمر صناعي</button>
         <button class="map-type-btn" data-type="standard" type="button"><i class="fas fa-map" aria-hidden="true"></i> عادية</button>
         <button class="map-type-btn" data-type="terrain" type="button"><i class="fas fa-mountain" aria-hidden="true"></i> تضاريس</button>
+        <button class="map-type-btn locate-btn" id="locateMeBtn" type="button" title="الانتقال إلى موقعي">
+            <i class="fas fa-crosshairs" aria-hidden="true"></i> موقعي
+        </button>
     </div>
 
     <!-- GRID -->
@@ -971,6 +1085,7 @@
         <div class="detail-row"><span class="label">🌐 المتصفح</span><span class="value" id="panelBrowser">-</span></div>
         <div class="detail-row"><span class="label">📍 الموقع</span><span class="value" id="panelLocation">-</span></div>
         <div class="detail-row"><span class="label">📌 الإحداثيات</span><span class="value" id="panelCoords">-</span></div>
+        <div class="detail-row"><span class="label">🎯 الدقة</span><span class="value" id="panelAccuracy">-</span></div>
         <div class="detail-row"><span class="label">🟢 الحالة</span><span class="value" id="panelStatus">-</span></div>
         <div class="detail-row"><span class="label">👔 الدور</span><span class="value" id="panelReadiness">-</span></div>
         <div class="detail-row"><span class="label">📅 آخر نشاط</span><span class="value" id="panelLastActive">-</span></div>
@@ -987,9 +1102,11 @@
         /* ============================================================
            🔒 STATE
            ============================================================ */
-        var VERSION = '11.0';
+        var VERSION = '12.0';
         var _isDestroyed = false;
         var _map = null;
+        var _myLocationMarker = null; // 🆕 علامة موقعي الفعلية
+        var _myLocationAccuracyCircle = null;
         var _markers = [];
         var _tileLayers = null;
         var _currentLayer = 'satellite';
@@ -997,13 +1114,30 @@
         var _pageTimeouts = new Set();
         var _pageIntervals = new Set();
         var _resizeHandler = null;
+        var _keydownHandler = null;
+        var _storageHandler = null;
         var _usersData = [];
         var _sessionsData = [];
+        var _myId = null;
+        var _myUser = null;
         var _leafletReady = false;
         var _leafletLoading = false;
         var _leafletCallbacks = [];
         var _autoRefreshInterval = null;
-        var AUTO_REFRESH_MS = 30000; // 30 ثانية
+        var AUTO_REFRESH_MS = 30000;
+
+        // 🆕 Geolocation state
+        var _geoWatchId = null;
+        var _geoLastSent = 0;
+        var _geoLastLat = null;
+        var _geoLastLng = null;
+        var _geoLastAccuracy = null;
+        var _geoHeartbeatId = null;
+        var _geoStatus = 'idle'; // idle | searching | active | denied | error
+        var _GEO_SEND_THROTTLE = 30000;   // إرسال كل 30 ثانية كحد أدنى
+        var _GEO_HEARTBEAT_MS = 60000;    // heartbeat كل دقيقة
+        var _GEO_MIN_DISTANCE = 20;       // متر
+        var _GEO_HIGH_ACCURACY = true;
 
         console.log('🔄 monitoring.html v' + VERSION + ' - loading...');
 
@@ -1012,6 +1146,11 @@
            ============================================================ */
         function _monitoringCleanup() {
             if (_isDestroyed) return;
+
+            // 🆕 إيقاف تتبع الموقع أولاً
+            stopGeolocationTracking();
+            endSessionBeacon();
+
             _isDestroyed = true;
 
             _pageTimeouts.forEach(function (id) { try { clearTimeout(id); } catch (e) {} });
@@ -1031,16 +1170,27 @@
                 try { window.removeEventListener('resize', _resizeHandler); } catch (e) {}
                 _resizeHandler = null;
             }
+            if (_keydownHandler) {
+                try { document.removeEventListener('keydown', _keydownHandler); } catch (e) {}
+                _keydownHandler = null;
+            }
+            if (_storageHandler) {
+                try { window.removeEventListener('storage', _storageHandler); } catch (e) {}
+                _storageHandler = null;
+            }
 
             try { window.removeEventListener('beforeunload', _monitoringCleanup); } catch (e) {}
             try { window.removeEventListener('pagehide', _monitoringCleanup); } catch (e) {}
-            try { window.removeEventListener('storage', _storageHandler); } catch (e) {}
             try { window.removeEventListener('beforeprint', updatePrintDate); } catch (e) {}
+            try { window.removeEventListener('beforeunload', endSessionBeacon); } catch (e) {}
+            try { window.removeEventListener('pagehide', endSessionBeacon); } catch (e) {}
 
             if (_map) {
                 try {
                     _markers.forEach(function (m) { try { _map.removeLayer(m); } catch (e) {} });
                     _markers = [];
+                    if (_myLocationMarker) { try { _map.removeLayer(_myLocationMarker); } catch (e) {} }
+                    if (_myLocationAccuracyCircle) { try { _map.removeLayer(_myLocationAccuracyCircle); } catch (e) {} }
                     if (_tileLayers) {
                         Object.keys(_tileLayers).forEach(function (k) {
                             try { _map.removeLayer(_tileLayers[k]); } catch (e) {}
@@ -1052,9 +1202,13 @@
                 _map = null;
             }
             _tileLayers = null;
+            _myLocationMarker = null;
+            _myLocationAccuracyCircle = null;
 
-            ['refreshAll', 'switchMapType', 'showToast', 'initMap', 'printMonitoring', 'detectDevice']
-                .forEach(function (k) { try { delete window[k]; } catch (e) {} });
+            ['refreshAll', 'switchMapType', 'showToast', 'initMap', 'printMonitoring',
+             'detectDevice', 'recenterToMe'].forEach(function (k) {
+                try { delete window[k]; } catch (e) {}
+            });
 
             try {
                 var idx = (window._pageCleanup || []).indexOf(_monitoringCleanup);
@@ -1114,6 +1268,17 @@
             var t = getToken();
             if (t) h['Authorization'] = 'Bearer ' + t;
             return h;
+        }
+
+        function decodeJWT(token) {
+            try {
+                if (!token) return null;
+                var parts = token.split('.');
+                if (parts.length < 2) return null;
+                var payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                while (payload.length % 4) payload += '=';
+                return JSON.parse(atob(payload));
+            } catch (e) { return null; }
         }
 
         function getInitials(name) {
@@ -1182,6 +1347,17 @@
             } catch (e) { return '—'; }
         }
 
+        function distanceMeters(lat1, lng1, lat2, lng2) {
+            var R = 6371000;
+            var toRad = function (d) { return d * Math.PI / 180; };
+            var dLat = toRad(lat2 - lat1);
+            var dLng = toRad(lng2 - lng1);
+            var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
         /* ============================================================
            📱 DEVICE DETECTION
            ============================================================ */
@@ -1225,21 +1401,18 @@
         }
 
         /* ============================================================
-           🍞 TOASTS (STACK-BASED)
+           🍞 TOASTS
            ============================================================ */
         function showToast(msg, type) {
             if (_isDestroyed) return;
             var stack = $('toastStack');
             if (!stack) return;
 
-            // Limit visible toasts to 4
             while (stack.children.length >= 4) {
                 stack.removeChild(stack.firstChild);
             }
 
-            var icons = {
-                success: '✅', info: 'ℹ️', error: '❌', warning: '⚠️'
-            };
+            var icons = { success: '✅', info: 'ℹ️', error: '❌', warning: '⚠️' };
             var n = document.createElement('div');
             n.className = 'toast toast-' + (type || 'info');
             n.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span><span>' + escapeHtml(msg) + '</span>';
@@ -1279,11 +1452,196 @@
             } catch (e) {}
         }
 
-        function _storageHandler(e) {
+        _storageHandler = function (e) {
             if (e.key === 'marine_logo') applyLogo();
-        }
+        };
         applyLogo();
         window.addEventListener('storage', _storageHandler);
+
+        /* ============================================================
+           📍 GEOLOCATION STATUS INDICATOR
+           ============================================================ */
+        function setGeoStatus(status, text) {
+            _geoStatus = status;
+            var indicator = $('geoIndicator');
+            var textEl = $('geoIndicatorText');
+            if (!indicator || !textEl) return;
+
+            indicator.classList.remove('searching', 'active', 'denied', 'error');
+            if (status !== 'idle') indicator.classList.add(status);
+
+            var icons = {
+                searching: '<i class="fas fa-circle-notch fa-spin"></i>',
+                active: '<i class="fas fa-map-marker-alt"></i>',
+                denied: '<i class="fas fa-ban"></i>',
+                error: '<i class="fas fa-exclamation-triangle"></i>',
+                idle: '<i class="fas fa-map-marker-alt"></i>'
+            };
+            indicator.innerHTML = (icons[status] || icons.idle) +
+                ' <span id="geoIndicatorText">' + escapeHtml(text) + '</span>';
+        }
+
+        /* ============================================================
+           📍 GEOLOCATION TRACKING
+           ============================================================ */
+        function isSecureContext() {
+            return window.isSecureContext ||
+                   location.protocol === 'https:' ||
+                   location.hostname === 'localhost' ||
+                   location.hostname === '127.0.0.1';
+        }
+
+        async function sendLocationToServer(lat, lng, accuracy) {
+            if (_isDestroyed) return;
+            try {
+                var res = await fetch('/api/monitoring/location', {
+                    method: 'POST',
+                    headers: Object.assign({}, authHeaders(), {
+                        'Content-Type': 'application/json'
+                    }),
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        lat: lat,
+                        lng: lng,
+                        accuracy: accuracy || null,
+                        userAgent: navigator.userAgent
+                    })
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                console.log('📍 Location sent:', lat.toFixed(4), lng.toFixed(4));
+            } catch (err) {
+                console.warn('[GEO] send error:', err.message);
+            }
+        }
+
+        function onGeoSuccess(pos) {
+            if (_isDestroyed) return;
+            var lat = pos.coords.latitude;
+            var lng = pos.coords.longitude;
+            var acc = pos.coords.accuracy;
+            var now = Date.now();
+
+            var isFirst = (_geoLastLat === null);
+            var timeElapsed = now - _geoLastSent;
+            var distance = isFirst ? Infinity :
+                distanceMeters(_geoLastLat, _geoLastLng, lat, lng);
+
+            var shouldSend = isFirst ||
+                             timeElapsed >= _GEO_SEND_THROTTLE ||
+                             distance >= _GEO_MIN_DISTANCE;
+
+            _geoLastLat = lat;
+            _geoLastLng = lng;
+            _geoLastAccuracy = acc;
+
+            // 🆕 تحديث علامة موقعي على الخريطة
+            updateMyLocationMarker(lat, lng, acc);
+
+            // 🆕 تحديث بيانات المستخدم الحالي محلياً
+            if (_myUser) {
+                _myUser.lat = lat;
+                _myUser.lng = lng;
+                _myUser.accuracy = acc;
+                _myUser.lastActive = new Date().toISOString();
+                // أعد رسم الجدول ليظهر الموقع المحدث
+                renderSessions();
+            }
+
+            if (shouldSend) {
+                _geoLastSent = now;
+                sendLocationToServer(lat, lng, acc);
+            }
+
+            if (_geoStatus !== 'active') {
+                setGeoStatus('active', 'تم تحديد موقعك (دقة ' + Math.round(acc) + 'م)');
+            }
+        }
+
+        function onGeoError(err) {
+            if (_isDestroyed) return;
+            var msgs = {
+                1: 'تم رفض الوصول للموقع',
+                2: 'تعذّر تحديد الموقع',
+                3: 'انتهت مهلة تحديد الموقع'
+            };
+            var label = msgs[err.code] || 'خطأ في تحديد الموقع';
+            console.warn('[GEO]', label, err.message);
+
+            if (err.code === 1) {
+                setGeoStatus('denied', 'الوصول للموقع مرفوض');
+            } else {
+                setGeoStatus('error', label);
+            }
+        }
+
+        function startGeolocationTracking() {
+            if (_isDestroyed) return;
+
+            if (!isSecureContext()) {
+                setGeoStatus('error', 'يتطلب HTTPS لتحديد الموقع');
+                console.warn('[GEO] غير آمن — يتطلب HTTPS');
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                setGeoStatus('error', 'غير مدعوم في المتصفح');
+                console.warn('[GEO] غير مدعوم');
+                return;
+            }
+
+            setGeoStatus('searching', 'جاري تحديد موقعك...');
+
+            try {
+                _geoWatchId = navigator.geolocation.watchPosition(
+                    onGeoSuccess,
+                    onGeoError,
+                    {
+                        enableHighAccuracy: _GEO_HIGH_ACCURACY,
+                        timeout: 15000,
+                        maximumAge: 30000
+                    }
+                );
+                console.log('📍 Geolocation tracking started, watchId:', _geoWatchId);
+            } catch (e) {
+                console.warn('[GEO] watchPosition failed:', e.message);
+                setGeoStatus('error', 'فشل بدء التتبع');
+                return;
+            }
+
+            // Heartbeat دوري
+            _geoHeartbeatId = safeInterval(function () {
+                if (_geoLastLat !== null && _geoLastLng !== null) {
+                    sendLocationToServer(_geoLastLat, _geoLastLng, _geoLastAccuracy);
+                }
+            }, _GEO_HEARTBEAT_MS);
+        }
+
+        function stopGeolocationTracking() {
+            if (_geoWatchId !== null && navigator.geolocation) {
+                try { navigator.geolocation.clearWatch(_geoWatchId); } catch (e) {}
+                _geoWatchId = null;
+            }
+            if (_geoHeartbeatId) {
+                try { clearInterval(_geoHeartbeatId); } catch (e) {}
+                _pageIntervals.delete(_geoHeartbeatId);
+                _geoHeartbeatId = null;
+            }
+            console.log('📍 Geolocation tracking stopped');
+        }
+
+        // 🆕 إرسال إغلاق الجلسة عند مغادرة الصفحة
+        function endSessionBeacon() {
+            if (_isDestroyed) return;
+            try {
+                var token = getToken();
+                if (!token || !navigator.sendBeacon) return;
+                var blob = new Blob(['{}'], { type: 'application/json' });
+                navigator.sendBeacon(
+                    '/api/monitoring/session/end?token=' + encodeURIComponent(token),
+                    blob
+                );
+            } catch (e) {}
+        }
 
         /* ============================================================
            🖨️ PRINT
@@ -1379,12 +1737,12 @@
                 var lng = (typeof u.lng === 'number') ? u.lng
                     : (typeof u.longitude === 'number') ? u.longitude : null;
 
-                // Validate lat/lng ranges
                 if (lat !== null && (lat < -90 || lat > 90)) lat = null;
                 if (lng !== null && (lng < -180 || lng > 180)) lng = null;
 
+                var id = u.id || u._id || '';
                 return {
-                    id: u.id || u._id || '',
+                    id: id,
                     name: u.name || u.username || 'مستخدم',
                     username: u.username || '',
                     email: u.email || '',
@@ -1392,9 +1750,11 @@
                     active: u.active !== false && u.isActive !== false,
                     lat: lat,
                     lng: lng,
+                    accuracy: (typeof u.accuracy === 'number') ? u.accuracy : null,
                     location: u.location || '—',
                     lastActive: u.lastLogin || u.lastActive || null,
-                    userAgent: u.userAgent || u.device || null
+                    userAgent: u.userAgent || u.device || null,
+                    isMe: _myId !== null && String(id) === String(_myId)
                 };
             });
         }
@@ -1412,7 +1772,6 @@
                 var created = s.createdAt || s.startedAt || null;
                 var lastAct = s.lastActivity || s.lastActive || created;
 
-                // Determine status dynamically
                 var status = 'active';
                 if (s.status) status = s.status;
                 else if (s.endedAt) status = 'ended';
@@ -1422,9 +1781,10 @@
                     else if (idle > 600) status = 'idle';
                 }
 
+                var uid = s.userId || '';
                 return {
                     id: s.sessionId || s.id || '',
-                    userId: s.userId || '',
+                    userId: uid,
                     user: s.name || s.username || 'مستخدم',
                     username: s.username || '',
                     email: s.email || '',
@@ -1434,7 +1794,8 @@
                     createdAt: created,
                     lastActivity: lastAct,
                     userAgent: ua,
-                    device: deviceInfo
+                    device: deviceInfo,
+                    isMe: _myId !== null && String(uid) === String(_myId)
                 };
             });
         }
@@ -1444,7 +1805,8 @@
             try {
                 var data = await fetchJSON('/api/monitoring/users');
                 _usersData = normalizeUsers(data);
-                console.log('✅ Loaded', _usersData.length, 'users');
+                _myUser = _usersData.find(function (u) { return u.isMe; }) || null;
+                console.log('✅ Loaded', _usersData.length, 'users, me:', _myUser ? _myUser.name : 'unknown');
                 return _usersData;
             } catch (err) {
                 console.warn('[MONITORING] users error:', err.message);
@@ -1468,7 +1830,7 @@
         }
 
         /* ============================================================
-           🗺️ LEAFLET LOADER (DYNAMIC + PROMISE-BASED)
+           🗺️ LEAFLET LOADER
            ============================================================ */
         function loadLeaflet() {
             return new Promise(function (resolve, reject) {
@@ -1484,7 +1846,6 @@
 
                 _leafletLoading = true;
 
-                // Inject CSS into <head>
                 if (!document.querySelector('link[data-leaflet-css]')) {
                     var link = document.createElement('link');
                     link.rel = 'stylesheet';
@@ -1495,7 +1856,6 @@
                     document.head.appendChild(link);
                 }
 
-                // Inject JS
                 var script = document.createElement('script');
                 script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
                 script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
@@ -1579,6 +1939,11 @@
 
                 addMarkers();
 
+                // 🆕 إذا كان لدينا موقع محلي، أضفه فوراً
+                if (_geoLastLat !== null && _geoLastLng !== null) {
+                    updateMyLocationMarker(_geoLastLat, _geoLastLng, _geoLastAccuracy);
+                }
+
                 safeTimeout(function () {
                     if (_map && !_isDestroyed) {
                         try { _map.invalidateSize(); } catch (e) {}
@@ -1605,6 +1970,102 @@
             } catch (e) {}
         }
 
+        /* ============================================================
+           🆕 MY LOCATION MARKER (العلامة الحية لموقعي)
+           ============================================================ */
+        function updateMyLocationMarker(lat, lng, accuracy) {
+            if (_isDestroyed || !_map) return;
+
+            var latlng = [lat, lng];
+
+            // إنشاء أو تحديث العلامة
+            if (!_myLocationMarker) {
+                var myIcon = L.divIcon({
+                    className: 'custom-marker marker-me',
+                    html:
+                        '<div style="position:relative;width:44px;height:44px;">' +
+                            '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#f5d76e,#e6b31e);' +
+                                'border-radius:50%;border:4px solid #fff;' +
+                                'box-shadow:0 0 0 0 rgba(245,215,110,0.7),0 4px 15px rgba(0,0,0,0.4);' +
+                                'display:flex;align-items:center;justify-content:center;' +
+                                'font-size:18px;color:#0a1628;font-weight:700;' +
+                                'animation:meMarkerPulse 2s infinite;">' +
+                                '<i class="fas fa-location-arrow" style="transform:rotate(45deg);"></i>' +
+                            '</div>' +
+                        '</div>',
+                    iconSize: [44, 44],
+                    iconAnchor: [22, 22],
+                    popupAnchor: [0, -25]
+                });
+
+                _myLocationMarker = L.marker(latlng, {
+                    icon: myIcon,
+                    zIndexOffset: 1000,
+                    title: 'موقعي الحالي'
+                }).addTo(_map);
+
+                _myLocationMarker.bindPopup(
+                    '<div style="text-align:right;">' +
+                    '<div class="popup-me-tag">📍 موقعك الحالي</div>' +
+                    '<div class="popup-user-name">' + escapeHtml(_myUser ? _myUser.name : 'أنت') + '</div>' +
+                    '<div class="popup-user-detail"><i class="fas fa-crosshairs"></i> دقة: ' +
+                        Math.round(accuracy || 0) + ' متر</div>' +
+                    '<div class="popup-user-id">' + lat.toFixed(5) + '°, ' + lng.toFixed(5) + '°</div>' +
+                    '</div>',
+                    { maxWidth: 280 }
+                );
+            } else {
+                _myLocationMarker.setLatLng(latlng);
+            }
+
+            // دائرة الدقة
+            if (_myLocationAccuracyCircle) {
+                try { _map.removeLayer(_myLocationAccuracyCircle); } catch (e) {}
+            }
+            if (accuracy && accuracy > 0) {
+                _myLocationAccuracyCircle = L.circle(latlng, {
+                    radius: Math.min(accuracy, 500),
+                    color: '#f5d76e',
+                    weight: 1,
+                    opacity: 0.5,
+                    fillColor: '#f5d76e',
+                    fillOpacity: 0.08,
+                    interactive: false
+                }).addTo(_map);
+            }
+        }
+
+        // 🆕 زر "موقعي" — الانتقال لموقعي
+        function recenterToMe() {
+            if (_isDestroyed) return;
+
+            if (_geoLastLat === null || _geoLastLng === null) {
+                showToast('لم يتم تحديد موقعك بعد', 'warning');
+                // حاول مرة أخرى
+                if (navigator.geolocation) {
+                    setGeoStatus('searching', 'جاري تحديد موقعك...');
+                    navigator.geolocation.getCurrentPosition(onGeoSuccess, onGeoError, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
+                }
+                return;
+            }
+
+            if (_map) {
+                try {
+                    _map.setView([_geoLastLat, _geoLastLng], 15, { animate: true });
+                    if (_myLocationMarker) {
+                        _myLocationMarker.openPopup();
+                    }
+                } catch (e) {}
+            }
+        }
+
+        /* ============================================================
+           🗺️ ADD MARKERS (users)
+           ============================================================ */
         function addMarkers() {
             if (_isDestroyed || !_map) return;
 
@@ -1612,12 +2073,13 @@
             _markers = [];
 
             var usersWithLocation = _usersData.filter(function (u) {
+                if (u.isMe) return false; // موقعي له علامة خاصة
                 return typeof u.lat === 'number' && typeof u.lng === 'number' &&
-                    !isNaN(u.lat) && !isNaN(u.lng);
+                       !isNaN(u.lat) && !isNaN(u.lng);
             });
 
             if (usersWithLocation.length === 0) {
-                console.log('ℹ️ No users with location');
+                console.log('ℹ️ No other users with location');
                 return;
             }
 
@@ -1657,7 +2119,10 @@
                 _markers.push(marker);
             });
 
-            fitMapToMarkers();
+            // إذا لا يوجد موقعي، ضع كل شيء في الإطار
+            if (_geoLastLat === null) {
+                fitMapToMarkers();
+            }
         }
 
         function switchMapType(type) {
@@ -1667,7 +2132,7 @@
             try { _tileLayers[type].addTo(_map); } catch (e) { return; }
             _currentLayer = type;
 
-            document.querySelectorAll('.map-type-btn').forEach(function (b) {
+            document.querySelectorAll('.map-type-btn[data-type]').forEach(function (b) {
                 b.classList.toggle('active', b.dataset.type === type);
             });
 
@@ -1713,10 +2178,12 @@
                 };
                 var st = statusMap[s.status] || statusMap.active;
 
+                var meTag = s.isMe ? '<span class="me-tag">أنت</span>' : '';
+
                 html +=
-                    '<tr>' +
+                    '<tr' + (s.isMe ? ' style="background:rgba(245,215,110,0.03);"' : '') + '>' +
                     '<td class="user-id-cell">' + idDisplay + '</td>' +
-                    '<td class="user-name">' + escapeHtml(s.user) + '</td>' +
+                    '<td class="user-name">' + meTag + escapeHtml(s.user) + '</td>' +
                     '<td><span class="role-tag" style="color:' + roleColor +
                     ';border:1px solid ' + roleColor + '44;">' +
                     escapeHtml(getRoleLabel(s.role)) + '</span></td>' +
@@ -1741,8 +2208,12 @@
             panel.classList.add('visible');
 
             var device = detectDevice(user.userAgent || '');
+            var avatar = $('panelAvatar');
+            if (avatar) {
+                avatar.textContent = getInitials(user.name);
+                avatar.classList.toggle('is-me', !!user.isMe);
+            }
 
-            if ($('panelAvatar')) $('panelAvatar').textContent = getInitials(user.name);
             if ($('panelName')) $('panelName').textContent = user.name;
             if ($('panelRole')) $('panelRole').textContent = getRoleLabel(user.role);
             if ($('panelId')) $('panelId').textContent = user.id ? '#' + user.id : '—';
@@ -1750,7 +2221,16 @@
             if ($('panelBrowser')) $('panelBrowser').textContent = device.browser + ' · ' + device.os;
             if ($('panelLocation')) $('panelLocation').textContent = user.location || '—';
             if ($('panelCoords')) $('panelCoords').textContent =
-                (user.lat !== null && user.lng !== null) ? (user.lat.toFixed(4) + '°, ' + user.lng.toFixed(4) + '°') : '— لا يوجد موقع —';
+                (user.lat !== null && user.lng !== null)
+                    ? (user.lat.toFixed(5) + '°, ' + user.lng.toFixed(5) + '°')
+                    : '— لا يوجد موقع —';
+
+            var accEl = $('panelAccuracy');
+            if (accEl) {
+                accEl.textContent = (typeof user.accuracy === 'number' && user.accuracy > 0)
+                    ? Math.round(user.accuracy) + ' متر'
+                    : '—';
+            }
 
             var se = $('panelStatus');
             if (se) {
@@ -1801,10 +2281,9 @@
                     else showToast('تعذّر تحديث بعض البيانات', 'warning');
                 }
 
-                // Update session badge if error
-                if (failed.length > 0) {
+                if (failed.length > 0 && _sessionsData.length === 0) {
                     var badge = $('sessionBadge');
-                    if (badge && _sessionsData.length === 0) {
+                    if (badge) {
                         badge.textContent = '⚠️ فشل التحميل';
                         badge.className = 'badge error';
                     }
@@ -1828,7 +2307,14 @@
             if (_isDestroyed) return;
             console.log('🚀 Initializing monitoring v' + VERSION + '...');
 
-            // Bind UI events first (so they work even if data fails)
+            // 🆕 استخراج myId من JWT
+            var payload = decodeJWT(getToken());
+            if (payload) {
+                _myId = payload.id || payload.userId || payload.sub || payload._id || null;
+                console.log('👤 My ID:', _myId);
+            }
+
+            // Bind UI events
             var refreshBtn = $('refreshBtn');
             if (refreshBtn) refreshBtn.addEventListener('click', function () { refreshAll(false); });
 
@@ -1841,15 +2327,19 @@
             var overlay = $('panelOverlay');
             if (overlay) overlay.addEventListener('click', closePanel);
 
-            document.querySelectorAll('.map-type-btn').forEach(function (b) {
+            var locateBtn = $('locateMeBtn');
+            if (locateBtn) locateBtn.addEventListener('click', recenterToMe);
+
+            document.querySelectorAll('.map-type-btn[data-type]').forEach(function (b) {
                 b.addEventListener('click', function () {
                     if (!_isDestroyed) switchMapType(this.dataset.type);
                 });
             });
 
-            document.addEventListener('keydown', function (e) {
+            _keydownHandler = function (e) {
                 if (e.key === 'Escape' && !_isDestroyed) closePanel();
-            });
+            };
+            document.addEventListener('keydown', _keydownHandler);
 
             _resizeHandler = function () {
                 if (_isDestroyed) return;
@@ -1860,6 +2350,13 @@
                 }, 250);
             };
             window.addEventListener('resize', _resizeHandler);
+
+            // 🆕 إغلاق الجلسة عند مغادرة الصفحة
+            window.addEventListener('beforeunload', endSessionBeacon);
+            window.addEventListener('pagehide', endSessionBeacon);
+
+            // 🆕 بدء تتبع الموقع فوراً (قبل تحميل البيانات)
+            startGeolocationTracking();
 
             // Load data
             try {
@@ -1872,7 +2369,7 @@
             updateStats();
             renderSessions();
 
-            // Init map after data is loaded
+            // Init map
             await initMap();
 
             // Auto-refresh
@@ -1891,7 +2388,7 @@
         }
 
         /* ============================================================
-           🌐 EXPORTS (for external cleanup / debugging)
+           🌐 EXPORTS
            ============================================================ */
         window.refreshAll = refreshAll;
         window.switchMapType = switchMapType;
@@ -1899,6 +2396,7 @@
         window.initMap = initMap;
         window.printMonitoring = printMonitoring;
         window.detectDevice = detectDevice;
+        window.recenterToMe = recenterToMe;
 
     })();
     </script>
