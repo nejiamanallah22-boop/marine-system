@@ -1,441 +1,437 @@
 /* ============================================================
-   🖨️ PRINT v8.0 — احترافي، منظم، يملأ الصفحة بالكامل
-   Professional Full-Page Print Layout
+   🖨️ PRINT v9.0 — MAGAZINE / REPORT STYLE
+   طباعة احترافية بأسلوب مجلة تقرير رسمي — تملأ الصفحة بالكامل
    ============================================================ */
 
 @page {
-    size: A4 landscape;
-    margin: 10mm 8mm;
+    size: A4;
+    margin: 24mm 16mm 20mm;
 }
 
 @media print {
 
-    *,
-    *::before,
-    *::after {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        box-shadow: none !important;
-        text-shadow: none !important;
+    /* ═══════════════════════════════════════════════
+       0. أساس نظيف — إزالة كل التأثيرات الرقمية الثقيلة
+       ═══════════════════════════════════════════════ */
+    *, *::before, *::after {
         animation: none !important;
         transition: none !important;
-        transform: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        text-shadow: none !important;
         filter: none !important;
-        background-image: none !important;
-        float: none !important;
+        box-shadow: none !important;
     }
 
     html, body {
         background: #ffffff !important;
-        color: #111827 !important;
+        color: #1a1a2e !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-        font-size: 10pt !important;
-        line-height: 1.35 !important;
+        font-size: 10.5pt !important;
+        line-height: 1.5 !important;
         margin: 0 !important;
         padding: 0 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        width: 100% !important;
-        height: auto !important;
     }
 
-    /* ═══ إخفاء كل عناصر الواجهة ═══ */
-    button, .btn-action, .btn-filter, .btn-sm, .btn-save,
-    .btn-icon, .action-btns, .retry-btn, .chart-btn,
-    .chart-switch, nav, .sidebar, .navbar, .no-print,
-    .toast, .toast-container, .eff-notification,
-    .fleet-header-actions, .logs-header-actions, .eff-header-actions,
-    .filter-bar, .input-grid, #inputArea,
-    .back-to-top, .main-header, .menu-toggle,
+    /* ═══════════════════════════════════════════════
+       1. إخفاء كل عناصر الواجهة التفاعلية
+       ═══════════════════════════════════════════════ */
+    button, .btn-action, .btn-filter, .chart-btn, .chart-switch,
+    .filter-bar, nav, .sidebar, .navbar, .main-header, .menu-toggle,
     .notification-wrapper, .user-wrapper, .search-wrapper,
-    .chart-section, .eff-chart-section,
-    .empty-state .spinner, .eff-spinner {
+    .back-to-top, .toast-container, .toast, .eff-notification,
+    .chart-section, .empty-state .spinner, .no-print,
+    #loginOverlay, #authLoadingOverlay, #forgotPasswordModal {
         display: none !important;
     }
 
-    /* ═══ الصفحة تملأ العرض الكامل ═══ */
+    #mainApp { display: block !important; }
+    .main-content { margin: 0 !important; padding: 0 !important; }
+    .page-container { max-width: 100% !important; margin: 0 !important; }
+
     #page-fleet, #page-logs, #page-efficiency {
         width: 100% !important;
         max-width: 100% !important;
-        min-height: 100% !important;
-        padding: 0 !important;
         margin: 0 !important;
+        padding: 0 !important;
         background: #ffffff !important;
-        display: block !important;
     }
-
-    body::before, body::after,
-    #page-fleet::before, #page-logs::before, #page-efficiency::before {
+    #page-fleet::before, #page-logs::before, #page-efficiency::before,
+    body::before, body::after {
         display: none !important;
     }
 
-    /* ═══ HEADER احترافي بعرض كامل ═══ */
-    .eff-header,
-    .fleet-header,
-    .logs-header {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        background: #0a1628 !important;
-        color: #ffffff !important;
+    /* ═══════════════════════════════════════════════
+       2. صفحة الغلاف / الترويسة — بأسلوب مجلة
+       تظهر مرة واحدة أعلى المستند، ضخمة وواضحة
+       ═══════════════════════════════════════════════ */
+    .eff-header, .fleet-header, .logs-header {
+        display: block !important;
         width: 100% !important;
-        padding: 4mm 8mm !important;
-        margin: 0 0 5mm !important;
+        text-align: center !important;
+        background: none !important;
         border: none !important;
-        border-bottom: 3px solid #e6b31e !important;
-        border-radius: 0 !important;
+        border-bottom: 3px double #0a1628 !important;
+        padding: 0 0 6mm !important;
+        margin: 0 0 10mm !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
     }
 
-    .eff-header-left,
-    .fleet-header-left,
-    .logs-header-left {
+    .eff-header-left, .fleet-header-left, .logs-header-left {
         display: flex !important;
+        flex-direction: column !important;
         align-items: center !important;
-        gap: 3mm !important;
+        gap: 2mm !important;
     }
 
-    .eff-header-left h2,
-    .fleet-header-left h2,
-    .logs-header-left h2,
-    .eff-title h1 {
-        color: #f7d774 !important;
-        -webkit-text-fill-color: #f7d774 !important;
-        font-size: 16pt !important;
-        font-weight: 800 !important;
-        margin: 0 !important;
-        line-height: 1.2 !important;
-    }
-
-    .eff-header-left p,
-    .fleet-header-left p,
-    .logs-header-left p {
-        display: block !important;
-        color: #cbd5e1 !important;
-        -webkit-text-fill-color: #cbd5e1 !important;
-        font-size: 8.5pt !important;
-        margin: 1mm 0 0 !important;
-    }
-
-    .header-icon,
-    #fleetHeaderIcon, #logsHeaderIcon, #effHeaderIcon {
-        width: 14mm !important;
-        height: 14mm !important;
-        min-width: 14mm !important;
-        border: 2px solid #e6b31e !important;
+    /* الشعار كخاتم علوي صغير أنيق */
+    .header-icon, #fleetHeaderIcon, #logsHeaderIcon, #effHeaderIcon {
+        width: 16mm !important;
+        height: 16mm !important;
+        border: 1.5px solid #e6b31e !important;
+        border-radius: 50% !important;
         background: #0a1628 !important;
-        border-radius: 3px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         overflow: hidden !important;
+        margin: 0 auto 3mm !important;
     }
-
     .header-icon img, #globalLogo {
         display: block !important;
         width: 100% !important;
         height: 100% !important;
-        object-fit: contain !important;
+        object-fit: cover !important;
+    }
+    .header-icon i { color: #f7d774 !important; font-size: 14pt !important; }
+
+    .eff-header-left h2, .fleet-header-left h2, .logs-header-left h2 {
+        color: #0a1628 !important;
+        -webkit-text-fill-color: #0a1628 !important;
+        font-size: 22pt !important;
+        font-weight: 900 !important;
+        margin: 0 !important;
+        letter-spacing: -0.3px !important;
     }
 
-    .header-icon i { color: #f7d774 !important; font-size: 12pt !important; }
-
-    /* تاريخ ووقت الطباعة أعلى اليسار */
-    .eff-header::after,
-    .fleet-header::after,
-    .logs-header::after {
-        content: "تاريخ الطباعة: " attr(data-print-date) !important;
-        font-size: 7.5pt !important;
-        color: #cbd5e1 !important;
+    .eff-header-left p, .fleet-header-left p, .logs-header-left p {
+        display: block !important;
+        color: #6b7280 !important;
+        -webkit-text-fill-color: #6b7280 !important;
+        font-size: 10.5pt !important;
         font-weight: 500 !important;
+        margin: 0 !important;
     }
 
-    /* ═══ STATS — شبكة موزعة بعرض كامل ═══ */
+    /* خط تاريخ الطباعة تحت العنوان، بأسلوب "صادر بتاريخ" */
+    .eff-header::after, .fleet-header::after, .logs-header::after {
+        content: "تاريخ الإصدار: " attr(data-print-date) !important;
+        display: block !important;
+        margin-top: 4mm !important;
+        font-size: 8.5pt !important;
+        color: #9ca3af !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.3px !important;
+    }
+
+    /* ═══════════════════════════════════════════════
+       3. الأرقام الرئيسية — كأرقام غلاف مجلة، بارزة جدًا
+       ═══════════════════════════════════════════════ */
     .stats-grid {
         display: grid !important;
-        gap: 3mm !important;
-        margin: 0 0 5mm !important;
-        padding: 0 !important;
-        width: 100% !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
+        gap: 0 !important;
+        margin: 0 0 10mm !important;
+        padding: 5mm 0 !important;
+        border-top: 0.75pt solid #d1d5db !important;
+        border-bottom: 0.75pt solid #d1d5db !important;
     }
-
     #page-fleet .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
     #page-logs .stats-grid,
     #page-efficiency .stats-grid { grid-template-columns: repeat(5, 1fr) !important; }
 
     .stat-card {
-        background: #f8fafc !important;
-        border: 1px solid #d4d4d8 !important;
-        border-top: 3px solid #e6b31e !important;
-        border-radius: 3px !important;
-        padding: 3mm 2mm !important;
+        background: none !important;
+        border: none !important;
+        border-left: 0.5pt solid #e5e7eb !important;
+        border-radius: 0 !important;
+        padding: 0 3mm !important;
         text-align: center !important;
         display: block !important;
+        min-height: 0 !important;
     }
-
+    .stat-card:last-child { border-left: none !important; }
     .stat-card::before, .stat-card::after { display: none !important; }
     .stat-card .icon-bg { display: none !important; }
 
-    .stat-card .number,
-    .stat-card .eff-stat-value {
+    .stat-card .number, .stat-card .eff-stat-value {
         color: #0a1628 !important;
         -webkit-text-fill-color: #0a1628 !important;
-        font-size: 15pt !important;
+        font-size: 20pt !important;
         font-weight: 900 !important;
-        line-height: 1.1 !important;
+        line-height: 1 !important;
         display: block !important;
+        margin-bottom: 1.5mm !important;
     }
-
     .stat-card .label {
-        color: #52525b !important;
-        -webkit-text-fill-color: #52525b !important;
+        color: #6b7280 !important;
+        -webkit-text-fill-color: #6b7280 !important;
         font-size: 7.5pt !important;
         font-weight: 700 !important;
-        margin-top: 1mm !important;
         display: block !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: 0.4px !important;
+        white-space: normal !important;
     }
 
-    /* ═══ SECTIONS ═══ */
-    #page-efficiency .eff-section,
-    #page-fleet .eff-section,
-    #page-logs .eff-section {
-        background: #ffffff !important;
-        border: 1px solid #0a1628 !important;
-        border-radius: 3px !important;
-        margin: 0 0 5mm !important;
+    /* ═══════════════════════════════════════════════
+       4. الأقسام — بأسلوب فصول تقرير/مجلة
+       عنوان كبير + خط ذهبي رفيع + جدول أنيق
+       ═══════════════════════════════════════════════ */
+    .eff-section, .fleet-section, .logs-section {
+        background: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        margin: 0 0 9mm !important;
         padding: 0 !important;
-        overflow: visible !important;
-        width: 100% !important;
         page-break-inside: auto !important;
         break-inside: auto !important;
     }
+    .eff-section[style*="display: none"] { display: none !important; }
 
-    #page-efficiency .eff-section[style*="display: none"] {
-        display: none !important;
-    }
-
-    #page-efficiency .eff-section .section-header,
-    #page-fleet .eff-section .section-header,
-    #page-logs .eff-section .section-header {
-        background: #0a1628 !important;
-        padding: 2.5mm 5mm !important;
-        border-bottom: 2px solid #e6b31e !important;
-        page-break-after: avoid !important;
-        page-break-inside: avoid !important;
-        break-after: avoid !important;
-        break-inside: avoid !important;
+    .eff-section .section-header,
+    .fleet-section .section-header,
+    .logs-section .section-header {
         display: flex !important;
         justify-content: space-between !important;
-        align-items: center !important;
+        align-items: baseline !important;
+        background: none !important;
+        border: none !important;
+        border-bottom: 1.5pt solid #e6b31e !important;
+        padding: 0 0 2mm !important;
+        margin: 0 0 3mm !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        page-break-inside: avoid !important;
     }
 
-    #page-efficiency .eff-section .section-header h3,
-    #page-fleet .eff-section .section-header h3,
-    #page-logs .eff-section .section-header h3 {
-        color: #f7d774 !important;
-        -webkit-text-fill-color: #f7d774 !important;
-        font-size: 10.5pt !important;
+    .eff-section .section-header h3,
+    .fleet-section .section-header h3,
+    .logs-section .section-header h3 {
+        color: #0a1628 !important;
+        -webkit-text-fill-color: #0a1628 !important;
+        font-size: 13.5pt !important;
         font-weight: 800 !important;
         margin: 0 !important;
         display: flex !important;
         align-items: center !important;
         gap: 2mm !important;
     }
-
     .eff-section .section-header h3 i {
-        color: #f7d774 !important;
-        font-size: 9pt !important;
+        color: #c99a0e !important;
+        font-size: 10.5pt !important;
     }
 
-    .eff-section .section-header .badge {
-        background: #ffffff !important;
+    .eff-section .section-header .badge,
+    .badge {
+        background: none !important;
         color: #0a1628 !important;
         -webkit-text-fill-color: #0a1628 !important;
-        border: 1px solid #e6b31e !important;
+        border: 0.75pt solid #0a1628 !important;
         font-size: 7.5pt !important;
-        padding: 0.5mm 3mm !important;
-        border-radius: 8px !important;
         font-weight: 700 !important;
+        padding: 0.6mm 3mm !important;
+        border-radius: 10px !important;
     }
 
     .section-content { padding: 0 !important; }
 
-    /* ═══ TABLE — يملأ العرض بتوزيع مريح ═══ */
+    /* ═══════════════════════════════════════════════
+       5. الجداول — أسلوب مجلة: خطوط أفقية رفيعة فقط
+       بلا صناديق ثقيلة، توزيع مريح، عناوين واضحة
+       ═══════════════════════════════════════════════ */
     .table-wrapper {
         padding: 0 !important;
         margin: 0 !important;
         overflow: visible !important;
-        width: 100% !important;
     }
 
-    #page-efficiency table,
-    #page-fleet table,
-    #page-logs table {
+    #page-efficiency table, #page-fleet table, #page-logs table {
         width: 100% !important;
         border-collapse: collapse !important;
-        font-size: 9pt !important;
-        border: none !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
+        font-size: 9.5pt !important;
         table-layout: auto !important;
-        background: #ffffff !important;
+        background: none !important;
+        min-width: 0 !important;
     }
 
-    thead {
-        display: table-header-group !important;
-        background: #0a1628 !important;
-    }
-
+    thead { display: table-header-group !important; }
     thead th {
-        background: #0a1628 !important;
-        color: #f7d774 !important;
-        -webkit-text-fill-color: #f7d774 !important;
-        padding: 2.5mm 3mm !important;
-        font-size: 8.5pt !important;
+        background: none !important;
+        color: #0a1628 !important;
+        -webkit-text-fill-color: #0a1628 !important;
+        padding: 2mm 2.5mm !important;
+        font-size: 8pt !important;
         font-weight: 800 !important;
         text-align: center !important;
-        border: 0.5px solid #1a2a4a !important;
+        border: none !important;
+        border-bottom: 1.5pt solid #0a1628 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
         white-space: nowrap !important;
     }
-
     thead th i { display: none !important; }
 
-    tfoot {
-        display: table-footer-group !important;
-    }
+    tfoot { display: table-footer-group !important; }
 
     tbody tr {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
-        background: #ffffff !important;
+        background: none !important;
     }
-
-    tbody tr:nth-child(even) { background: #f8fafc !important; }
+    tbody tr:nth-child(even) { background: #f8f9fb !important; }
 
     tbody td {
-        padding: 2.5mm 3mm !important;
-        border: 0.5px solid #e5e7eb !important;
+        padding: 2.2mm 2.5mm !important;
+        border: none !important;
+        border-bottom: 0.5pt solid #e5e7eb !important;
         color: #1f2937 !important;
         -webkit-text-fill-color: #1f2937 !important;
         text-align: center !important;
-        font-size: 8.5pt !important;
+        font-size: 9pt !important;
         vertical-align: middle !important;
-        background: transparent !important;
         line-height: 1.3 !important;
         white-space: normal !important;
         word-break: break-word !important;
     }
+    tbody tr:last-child td { border-bottom: none !important; }
 
     tbody td:first-child {
         font-weight: 800 !important;
         color: #0a1628 !important;
         -webkit-text-fill-color: #0a1628 !important;
         text-align: right !important;
-        padding-right: 4mm !important;
+        padding-right: 3mm !important;
     }
 
-    /* Row states */
-    .row-high { background: #ecfdf5 !important; border-right: 3px solid #047857 !important; }
+    /* حالات الصفوف — شريط جانبي رفيع بدل الخلفية الملوّنة الثقيلة */
+    .row-high {
+        background: #f4faf7 !important;
+        border-right: 2.5pt solid #047857 !important;
+    }
     .row-high td:first-child, .row-high .eff-cell {
         color: #047857 !important; -webkit-text-fill-color: #047857 !important;
     }
-
-    .row-mid { background: #fffbeb !important; border-right: 3px solid #b45309 !important; }
+    .row-mid {
+        background: #fffaf0 !important;
+        border-right: 2.5pt solid #b45309 !important;
+    }
     .row-mid td:first-child, .row-mid .eff-cell {
         color: #b45309 !important; -webkit-text-fill-color: #b45309 !important;
     }
-
-    .row-low, tbody tr.damaged { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
+    .row-low, tbody tr.damaged {
+        background: #fdf4f4 !important;
+        border-right: 2.5pt solid #b91c1c !important;
+    }
     .row-low td:first-child, .row-low .eff-cell, tbody tr.damaged td:first-child {
         color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important;
     }
 
-    /* ═══ BADGES ═══ */
-    .status-badge,
-    .eff-status {
+    /* ═══════════════════════════════════════════════
+       6. الشارات وأشرطة التقدم — مبسّطة للطباعة الرمادية/الملونة
+       ═══════════════════════════════════════════════ */
+    .status-badge, .eff-status {
         display: inline-block !important;
-        padding: 0.5mm 3mm !important;
-        border-radius: 6px !important;
+        padding: 0.6mm 2.8mm !important;
+        border-radius: 10px !important;
         font-size: 7.5pt !important;
-        font-weight: 700 !important;
-        border: 0.5px solid currentColor !important;
+        font-weight: 800 !important;
+        border: 0.75pt solid currentColor !important;
         background: #ffffff !important;
         white-space: nowrap !important;
-        line-height: 1.4 !important;
     }
-
     .status-badge.excellent, .status-badge.good,
     .status-badge.active, .status-badge.completed, .status-good {
         color: #047857 !important; -webkit-text-fill-color: #047857 !important;
-        background: #ecfdf5 !important;
     }
     .status-badge.medium, .status-badge.pending,
     .status-badge.in-progress, .status-mid {
         color: #b45309 !important; -webkit-text-fill-color: #b45309 !important;
-        background: #fffbeb !important;
     }
     .status-badge.low, .status-badge.critical, .status-badge.damaged,
     .status-badge.overdue, .status-badge.cancelled, .status-bad {
         color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important;
-        background: #fef2f2 !important;
     }
 
-    /* ═══ PROGRESS BAR ═══ */
     .progress-bar {
         background: #e5e7eb !important;
-        height: 3mm !important;
-        min-width: 18mm !important;
-        max-width: 100% !important;
-        border-radius: 1.5mm !important;
-        border: 0.3px solid #d1d5db !important;
+        height: 2.2mm !important;
+        min-width: 14mm !important;
+        border-radius: 1mm !important;
+        border: none !important;
         overflow: hidden !important;
         display: inline-block !important;
         vertical-align: middle !important;
     }
     .progress-bar .progress-fill::after { display: none !important; }
     .progress-bar .progress-fill.high { background: #047857 !important; }
-    .progress-bar .progress-fill.mid { background: #b45309 !important; }
-    .progress-bar .progress-fill.low { background: #b91c1c !important; }
+    .progress-bar .progress-fill.mid  { background: #b45309 !important; }
+    .progress-bar .progress-fill.low  { background: #b91c1c !important; }
 
-    /* ═══ FOOTER احترافي ثابت بأسفل كل صفحة ═══ */
-    #page-fleet::after, #page-logs::after, #page-efficiency::after {
+    /* ═══════════════════════════════════════════════
+       7. تذييل متكرر في كل صفحة (position:fixed يتكرر
+       عند الطباعة في المتصفحات القائمة على Chromium)
+       ═══════════════════════════════════════════════ */
+    .print-footer {
         display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important; right: 0 !important;
         text-align: center !important;
         font-size: 7.5pt !important;
-        color: #6b7280 !important;
-        border-top: 1px solid #e6b31e !important;
+        color: #9ca3af !important;
+        border-top: 0.5pt solid #e5e7eb !important;
         padding-top: 2mm !important;
-        margin-top: 5mm !important;
-        font-weight: 600 !important;
-        width: 100% !important;
     }
 
-    #page-fleet::after { content: "🚢 منظومة الوسائل البحرية — السجل العام للأسطول" !important; }
-    #page-logs::after { content: "🚢 منظومة الوسائل البحرية — سجل الصيانة" !important; }
-    #page-efficiency::after { content: "🚢 منظومة الوسائل البحرية — تقرير جاهزية الأسطول" !important; }
+    #page-fleet::after, #page-logs::after, #page-efficiency::after {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important; right: 0 !important;
+        text-align: center !important;
+        font-size: 7.5pt !important;
+        color: #9ca3af !important;
+        border-top: 0.5pt solid #e5e7eb !important;
+        padding-top: 2mm !important;
+        font-weight: 600 !important;
+    }
+    #page-fleet::after      { content: "⚓ منظومة الوسائل البحرية  —  السجل العام للأسطول" !important; }
+    #page-logs::after       { content: "⚓ منظومة الوسائل البحرية  —  سجل الصيانة" !important; }
+    #page-efficiency::after { content: "⚓ منظومة الوسائل البحرية  —  تقرير جاهزية الأسطول" !important; }
 
-    /* ⚡ كسر شامل لقيود القطع الزائدة ⚡ */
+    /* ترقيم الصفحات (مدعوم في متصفحات Chromium عبر @page) */
+    @bottom-center {
+        content: counter(page) " / " counter(pages);
+        font-family: 'Cairo', sans-serif;
+        font-size: 8pt;
+        color: #9ca3af;
+    }
+
+    /* ═══════════════════════════════════════════════
+       8. كسر شامل لأي قيود overflow متبقية من واجهة الشاشة
+       ═══════════════════════════════════════════════ */
     html body #page-efficiency .eff-section *,
     html body #page-fleet .eff-section *,
     html body #page-logs .eff-section *,
-    html body #page-efficiency .table-wrapper,
-    html body #page-fleet .table-wrapper,
-    html body #page-logs .table-wrapper,
-    html body #page-efficiency table,
-    html body #page-fleet table,
-    html body #page-logs table,
-    html body #page-efficiency tbody,
-    html body #page-fleet tbody,
-    html body #page-logs tbody {
+    html body .table-wrapper,
+    html body table, html body tbody {
         overflow: visible !important;
     }
 }
 
 @media screen {
-    .print-only, .print-summary-section { display: none; }
+    .print-footer, .print-only { display: none; }
 }
