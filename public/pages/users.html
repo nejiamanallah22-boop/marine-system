@@ -2,8 +2,10 @@
 <div id="page-users">
     <style>
         /* ============================================================
-           👥 USERS PAGE - v10.0
-           Enterprise Hardened + 5 Roles + REGION/UNIT (الإقليم/الوحدة)
+           👥 USERS PAGE - v10.1
+           Enterprise Hardened + 5 Roles + REGION/UNIT
+           + الوحدة المركزية للحرس الوطني
+           + إدارة إسناد الوحدات البحرية
            ============================================================ */
 
         #page-users {
@@ -161,7 +163,7 @@
             border-collapse: collapse;
             font-size: 13px;
             font-family: 'Cairo',sans-serif;
-            min-width: 1000px;
+            min-width: 1050px;
         }
 
         .users-table thead th {
@@ -295,6 +297,22 @@
             background: rgba(139,92,246,.15);
             color: #c4b5fd;
             border-color: rgba(139,92,246,.2);
+        }
+
+        /* ✅ الوحدة المركزية للحرس الوطني — ذهبي */
+        .region-badge.central {
+            background: rgba(230,179,30,.18);
+            color: #f5d76e;
+            border-color: rgba(230,179,30,.3);
+            font-weight: 700;
+        }
+
+        /* ✅ إدارة إسناد الوحدات البحرية — سماوي */
+        .region-badge.support {
+            background: rgba(6,182,212,.18);
+            color: #67e8f9;
+            border-color: rgba(6,182,212,.3);
+            font-weight: 700;
         }
 
         .btn-sm {
@@ -447,6 +465,12 @@
         .form-group select option {
             background:#0a1628;
             color:#e2e8f0;
+        }
+
+        .form-group select optgroup {
+            background:#0a1628;
+            color:#f5d76e;
+            font-weight: 700;
         }
 
         .form-group input.invalid,
@@ -628,7 +652,7 @@
                     <img id="globalLogo" alt="logo" />
                 </div>
                 👥 إدارة المستخدمين
-                <span class="badge">v10.0 🔐 5 Roles + إقليم</span>
+                <span class="badge">v10.1 🔐 5 Roles + إقليم/وحدة</span>
             </h2>
 
             <div class="header-actions">
@@ -739,24 +763,32 @@
                     </select>
                 </div>
 
-                <!-- ✅ حقل الإقليم / الوحدة -->
+                <!-- ✅ حقل الإقليم / الوحدة — محدّث -->
                 <div class="form-group">
                     <label>🗺️ الإقليم / الوحدة</label>
                     <select id="userRegion">
                         <option value="">— غير محدد —</option>
-                        <optgroup label="الحرس البحري">
+
+                        <optgroup label="🏛️ الهياكل المركزية">
+                            <option value="الوحدة المركزية للحرس الوطني">🏛️ الوحدة المركزية للحرس الوطني</option>
+                            <option value="إدارة إسناد الوحدات البحرية">⚓ إدارة إسناد الوحدات البحرية</option>
+                        </optgroup>
+
+                        <optgroup label="🗺️ الحرس البحري">
                             <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
                             <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
                             <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
                             <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
                         </optgroup>
-                        <optgroup label="وحدات الصيانة والإسناد">
+
+                        <optgroup label="🛠️ وحدات الصيانة والإسناد">
                             <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
                             <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
                             <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
                             <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
                         </optgroup>
-                        <optgroup label="مجمعات">
+
+                        <optgroup label="🏛️ مجمعات">
                             <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
                         </optgroup>
                     </select>
@@ -788,10 +820,6 @@
     <script>
     (function() {
         'use strict';
-
-        // ============================================================
-        // ✅ STATE
-        // ============================================================
 
         var _isDestroyed = false;
         var _pageIntervals = [];
@@ -834,17 +862,13 @@
                 delete window.syncLogoFromServer;
             } catch (e) {}
 
-            console.log('🧹 Users v10.0 cleanup done');
+            console.log('🧹 Users v10.1 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
         window._pageCleanup.push(_usersCleanup);
         window.addEventListener('beforeunload', _usersCleanup);
         window.addEventListener('pagehide', _usersCleanup);
-
-        // ============================================================
-        // 📦 CONFIG
-        // ============================================================
 
         var PAGE_ID = 'page-users';
         var API_BASE = '/api/users';
@@ -856,19 +880,21 @@
         var currentAbortController = null;
 
         // ============================================================
-        // 🗺️ قائمة الإقاليم والوحدات المعتمدة
+        // 🗺️ خريطة الإقاليم والوحدات — v10.1
         // ============================================================
 
         var REGION_MAP = {
-            'الشمال':                                     { label: '🗺️ الحرس البحري بالشمال',         cls: 'region-north'  },
-            'الساحل':                                     { label: '🗺️ الحرس البحري بالساحل',         cls: 'region-coast'  },
-            'الوسط':                                      { label: '🗺️ الحرس البحري بالوسط',          cls: 'region-center' },
-            'الجنوب':                                     { label: '🗺️ الحرس البحري بالجنوب',         cls: 'region-south'  },
-            'وحدة الصيانة والإسناد البحري تونس':           { label: '🛠️ وحدة الصيانة تونس',            cls: 'unit' },
-            'وحدة الصيانة والإسناد البحري صفاقس':          { label: '🛠️ وحدة الصيانة صفاقس',           cls: 'unit' },
-            'وحدة الصيانة والإسناد البحري المنستير':       { label: '🛠️ وحدة الصيانة المنستير',        cls: 'unit' },
-            'وحدة الصيانة والإسناد البحري جرجيس':          { label: '🛠️ وحدة الصيانة جرجيس',           cls: 'unit' },
-            'المجمع الأمني بقبيبة':                        { label: '🏛️ المجمع الأمني بقبيبة',         cls: 'unit' }
+            'الشمال':                                     { label: '🗺️ الحرس البحري بالشمال',              cls: 'region-north'  },
+            'الساحل':                                     { label: '🗺️ الحرس البحري بالساحل',              cls: 'region-coast'  },
+            'الوسط':                                      { label: '🗺️ الحرس البحري بالوسط',               cls: 'region-center' },
+            'الجنوب':                                     { label: '🗺️ الحرس البحري بالجنوب',              cls: 'region-south'  },
+            'الوحدة المركزية للحرس الوطني':                { label: '🏛️ الوحدة المركزية للحرس الوطني',       cls: 'central'       },
+            'إدارة إسناد الوحدات البحرية':                 { label: '⚓ إدارة إسناد الوحدات البحرية',         cls: 'support'       },
+            'وحدة الصيانة والإسناد البحري تونس':           { label: '🛠️ وحدة الصيانة تونس',                 cls: 'unit' },
+            'وحدة الصيانة والإسناد البحري صفاقس':          { label: '🛠️ وحدة الصيانة صفاقس',                cls: 'unit' },
+            'وحدة الصيانة والإسناد البحري المنستير':       { label: '🛠️ وحدة الصيانة المنستير',             cls: 'unit' },
+            'وحدة الصيانة والإسناد البحري جرجيس':          { label: '🛠️ وحدة الصيانة جرجيس',                cls: 'unit' },
+            'المجمع الأمني بقبيبة':                        { label: '🏛️ المجمع الأمني بقبيبة',              cls: 'unit' }
         };
 
         function normalizeRegion(value) {
@@ -876,7 +902,6 @@
             var s = String(value).trim();
             if (REGION_MAP[s]) return s;
 
-            // مطابقة مرنة
             var keys = Object.keys(REGION_MAP);
             for (var i = 0; i < keys.length; i++) {
                 if (s.indexOf(keys[i]) !== -1 || keys[i].indexOf(s) !== -1) {
@@ -1276,7 +1301,7 @@
                 '<th>👤 المستخدم</th>' +
                 '<th>📧 البريد الإلكتروني</th>' +
                 '<th>👔 الدور</th>' +
-                '<th>🗺️ الإقليم / الوحدة</th>' +   // ✅ عمود جديد
+                '<th>🗺️ الإقليم / الوحدة</th>' +
                 '<th>📊 الحالة</th>' +
                 '<th>📅 آخر دخول</th>' +
                 '<th>⚙️ الإجراءات</th>' +
@@ -1309,7 +1334,6 @@
                 var normalizedRole = normalizeRole(user.role);
                 var role = roleMap[normalizedRole] || escapeHtml(normalizedRole || '-');
 
-                // ✅ الإقليم / الوحدة
                 var regionInfo = getRegionInfo(user.region || user.unit || user.reg || '');
 
                 html +=
@@ -1380,7 +1404,7 @@
             el = $('userEmail'); if (el) el.value = '';
             el = $('userPassword'); if (el) el.value = '';
             el = $('userRole'); if (el) el.value = 'viewer';
-            el = $('userRegion'); if (el) el.value = '';    // ✅ إعادة تعيين الإقليم
+            el = $('userRegion'); if (el) el.value = '';
             el = $('userStatus'); if (el) el.value = 'active';
             el = $('formTitle'); if (el) el.textContent = '➕ إضافة مستخدم جديد';
             el = $('passwordRequired'); if (el) el.textContent = '*';
@@ -1432,12 +1456,10 @@
             el = $('userPassword'); if (el) el.value = '';
             el = $('userRole'); if (el) el.value = normalizeRole(user.role);
 
-            // ✅ تحميل الإقليم / الوحدة
             el = $('userRegion');
             if (el) {
                 var regionValue = user.region || user.unit || user.reg || '';
                 el.value = normalizeRegion(regionValue);
-                // إذا لم يكن الخيار موجودًا، أضفه مؤقتًا
                 if (regionValue && el.value !== regionValue) {
                     var opt = document.createElement('option');
                     opt.value = regionValue;
@@ -1460,7 +1482,7 @@
         }
 
         // ============================================================
-        // ✅ VALIDATE FORM
+        // ✅ VALIDATE
         // ============================================================
 
         function validateForm(data) {
@@ -1501,7 +1523,7 @@
         }
 
         // ============================================================
-        // 💾 SAVE USER
+        // 💾 SAVE
         // ============================================================
 
         async function saveUser() {
@@ -1512,7 +1534,7 @@
             var emailEl = $('userEmail');
             var passwordEl = $('userPassword');
             var roleEl = $('userRole');
-            var regionEl = $('userRegion');      // ✅ جديد
+            var regionEl = $('userRegion');
             var statusEl = $('userStatus');
 
             if (!usernameEl || !emailEl || !passwordEl || !roleEl || !statusEl) return;
@@ -1522,7 +1544,7 @@
             var email = emailEl.value.trim();
             var password = passwordEl.value;
             var role = roleEl.value;
-            var region = regionEl ? regionEl.value : '';    // ✅ جديد
+            var region = regionEl ? regionEl.value : '';
             var status = statusEl.value;
 
             if (!validateForm({ id: id, username: username, email: email, password: password })) return;
@@ -1542,7 +1564,7 @@
                 username: username,
                 email: email,
                 role: role,
-                region: region,                    // ✅ جديد
+                region: region,
                 active: status === 'active'
             };
 
@@ -1644,7 +1666,7 @@
         }
 
         // ============================================================
-        // 🗑️ DELETE USER
+        // 🗑️ DELETE
         // ============================================================
 
         async function deleteUser(id) {
@@ -1703,7 +1725,7 @@
         function init() {
             if (!pageExists()) return;
 
-            console.log('👥 Users v10.0 initializing...');
+            console.log('👥 Users v10.1 initializing...');
 
             syncLogoFromServer();
 
@@ -1727,7 +1749,7 @@
 
             loadUsersData();
 
-            console.log('✅ Users v10.0 initialized');
+            console.log('✅ Users v10.1 initialized');
         }
 
         // ============================================================
