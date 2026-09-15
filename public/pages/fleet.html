@@ -39,7 +39,6 @@
             padding: 0;
             margin: 0;
             font-family: var(--font);
-            /* ✅ شفاف ليظهر div الخلفية الديناميكية خلفه */
             background: transparent;
             color: #e8edf5;
             min-height: 100vh;
@@ -94,7 +93,6 @@
             gap: 14px;
         }
 
-        /* ✅ الشعار الديناميكي */
         .fleet-header-left .header-icon {
             width: 44px;
             height: 44px;
@@ -110,7 +108,6 @@
             overflow: hidden;
         }
 
-        /* ✅ دعم صورة الشعار */
         .fleet-header-left .header-icon img {
             width: 100%;
             height: 100%;
@@ -681,14 +678,295 @@
             .input-grid { grid-template-columns: 1fr; }
             .input-grid .btn-save { grid-column: span 1; }
         }
+
+        /* ============================================================
+           🖨️ PRINT STYLES — إضافة فقط
+           ============================================================ */
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm 8mm;
+            }
+
+            @page :first {
+                margin-top: 8mm;
+            }
+
+            html, body {
+                background: #ffffff !important;
+                color: #1a1a1a !important;
+                font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+                font-size: 9pt !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            button,
+            .btn-action,
+            .btn-filter,
+            .btn-sm,
+            .btn-save,
+            .action-btns,
+            .retry-btn,
+            .fleet-header-actions,
+            .filter-bar,
+            .input-grid,
+            #inputArea,
+            nav,
+            .sidebar,
+            .navbar,
+            .no-print {
+                display: none !important;
+            }
+
+            .fleet-header {
+                display: flex !important;
+                background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
+                color: #ffffff !important;
+                padding: 10mm 8mm 6mm !important;
+                margin: 0 0 5mm !important;
+                border-radius: 8px !important;
+                border: 2px solid #e6b31e !important;
+                position: relative !important;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+                border-bottom: 2px solid #e6b31e !important;
+            }
+
+            .fleet-header-left h2 {
+                color: #e6b31e !important;
+                font-size: 16pt !important;
+                font-weight: 800 !important;
+                -webkit-text-fill-color: #e6b31e !important;
+                background: none !important;
+                margin: 0 0 4pt 0 !important;
+            }
+
+            .fleet-header-left p {
+                color: rgba(255,255,255,0.75) !important;
+                font-size: 10pt !important;
+                -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
+            }
+
+            .header-icon,
+            #fleetHeaderIcon {
+                width: 48px !important;
+                height: 48px !important;
+                border: 2px solid #e6b31e !important;
+                background: #0a1628 !important;
+                box-shadow: none !important;
+                animation: none !important;
+                overflow: hidden !important;
+            }
+
+            .header-icon img,
+            #globalLogo {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
+            }
+
+            .header-icon i {
+                color: #e6b31e !important;
+            }
+
+            .fleet-header::after {
+                content: "طُبع بتاريخ: " attr(data-print-date);
+                position: absolute;
+                bottom: 4mm;
+                left: 8mm;
+                font-size: 9pt;
+                color: rgba(255,255,255,0.7) !important;
+                direction: rtl;
+            }
+
+            .stats-grid {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 4mm !important;
+                margin: 0 0 5mm !important;
+                padding: 0 !important;
+                page-break-inside: avoid;
+            }
+
+            .stat-card {
+                background: #f8f9fc !important;
+                border: 2px solid #e6b31e !important;
+                border-radius: 6px !important;
+                padding: 3mm 2mm !important;
+                text-align: center !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+                position: relative !important;
+                overflow: visible !important;
+            }
+
+            .stat-card::before {
+                display: none !important;
+            }
+
+            .stat-card .number {
+                color: #0a1628 !important;
+                font-size: 16pt !important;
+                font-weight: 800 !important;
+                line-height: 1 !important;
+                margin: 2mm 0 !important;
+                background: none !important;
+                -webkit-text-fill-color: #0a1628 !important;
+            }
+
+            .stat-card .number.gold { color: #c99a0e !important; -webkit-text-fill-color: #c99a0e !important; }
+            .stat-card .number.green { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
+            .stat-card .number.yellow { color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; }
+            .stat-card .number.red { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
+
+            .stat-card .label {
+                color: #4b5563 !important;
+                font-size: 8pt !important;
+                font-weight: 700 !important;
+            }
+
+            .stat-card .icon-bg {
+                display: none !important;
+            }
+
+            .table-wrapper {
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                page-break-inside: auto;
+            }
+
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 7pt !important;
+                page-break-inside: auto;
+                border: 2px solid #0a1628 !important;
+                min-width: 0 !important;
+                background: #ffffff !important;
+                border-radius: 0 !important;
+            }
+
+            thead {
+                display: table-header-group !important;
+                background: #0a1628 !important;
+                color: #e6b31e !important;
+            }
+
+            thead th {
+                background: #0a1628 !important;
+                color: #e6b31e !important;
+                padding: 2mm 1.5mm !important;
+                font-size: 7.5pt !important;
+                font-weight: 800 !important;
+                text-align: center !important;
+                border: 1px solid #1a2a4a !important;
+                letter-spacing: 0 !important;
+                text-transform: none !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                white-space: normal !important;
+            }
+
+            thead th i {
+                display: none !important;
+            }
+
+            tbody tr {
+                page-break-inside: avoid;
+                background: #ffffff !important;
+            }
+
+            tbody tr:nth-child(even) {
+                background: #f9fafb !important;
+            }
+
+            tbody tr.damaged {
+                background: #fef2f2 !important;
+                border-right: 3px solid #b91c1c !important;
+            }
+
+            tbody td {
+                padding: 2mm 1.5mm !important;
+                border: 1px solid #e5e7eb !important;
+                color: #1f2937 !important;
+                text-align: center !important;
+                font-size: 7.5pt !important;
+                vertical-align: middle !important;
+                background: transparent !important;
+            }
+
+            tbody td.vessel-name {
+                font-weight: 800 !important;
+                color: #0a1628 !important;
+                text-align: right !important;
+            }
+
+            .status-badge {
+                display: inline-block !important;
+                padding: 0.5mm 2mm !important;
+                border-radius: 8px !important;
+                font-size: 7pt !important;
+                font-weight: 700 !important;
+                border: 1px solid currentColor !important;
+                background: #ffffff !important;
+                animation: none !important;
+            }
+
+            .status-badge.active { color: #047857 !important; background: #ecfdf5 !important; }
+            .status-badge.pending { color: #b45309 !important; background: #fffbeb !important; }
+            .status-badge.completed { color: #1d4ed8 !important; background: #eff6ff !important; }
+            .status-badge.cancelled { color: #b91c1c !important; background: #fef2f2 !important; }
+            .status-badge.damaged { color: #b91c1c !important; background: #fef2f2 !important; }
+
+            .empty-state {
+                padding: 15mm !important;
+                color: #6b7280 !important;
+            }
+
+            .empty-state .spinner {
+                display: none !important;
+            }
+
+            #page-fleet::after {
+                content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
+                display: block;
+                text-align: center;
+                font-size: 8pt;
+                color: #6b7280;
+                border-top: 2px solid #e6b31e;
+                padding-top: 3mm;
+                margin-top: 5mm;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid;
+            }
+
+            tr, img, .stat-card {
+                page-break-inside: avoid;
+            }
+
+            * {
+                box-shadow: none !important;
+                text-shadow: none !important;
+                animation: none !important;
+                transition: none !important;
+            }
+
+            #page-fleet::before {
+                display: none !important;
+            }
+        }
     </style>
 
     <!-- ============================================================
     HEADER
     ============================================================ -->
-    <div class="fleet-header">
+    <div class="fleet-header" id="fleetHeader">
         <div class="fleet-header-left">
-            <!-- ✅ الأيقونة تدعم صورة الشعار الديناميكي -->
             <div class="header-icon" id="fleetHeaderIcon">
                 <i class="fas fa-ship"></i>
                 <img id="globalLogo" src="" alt="شعار" style="display:none;">
@@ -701,6 +979,9 @@
         <div class="fleet-header-actions">
             <button class="btn-action primary" onclick="refreshFleet()">
                 <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="btn-action secondary" onclick="printFleet()">
+                <i class="fas fa-print"></i> طباعة
             </button>
         </div>
     </div>
@@ -851,7 +1132,7 @@
 <script>
     // ============================================================
     // 🚢 FLEET PAGE - GOLD EDITION v9.13
-    // ✨ 5 Roles + normalizeRole + apiFetch + Cleanup + Dynamic Logo
+    // ✨ 5 Roles + normalizeRole + apiFetch + Cleanup + Dynamic Logo + Print
     // ============================================================
     (function() {
         'use strict';
@@ -874,6 +1155,7 @@
                 delete window.clearMainSearch;
                 delete window.updateZones;
                 delete window.refreshFleet;
+                delete window.printFleet;
             } catch (e) {}
 
             console.log('🧹 Fleet v9.13 cleanup done');
@@ -932,6 +1214,54 @@
                 applyLogo();
             }
         });
+
+        // ============================================================
+        // 🖨️ PRINT DATE + printFleet
+        // ============================================================
+        function updatePrintDate() {
+            try {
+                var now = new Date();
+                var dateStr = now.toLocaleDateString('ar-TN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                var timeStr = now.toLocaleTimeString('ar-TN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                var fullDate = dateStr + ' - ' + timeStr;
+
+                var header = document.getElementById('fleetHeader');
+                if (header) header.setAttribute('data-print-date', fullDate);
+            } catch (e) {
+                console.debug('🖨️ updatePrintDate (safe):', e.message);
+            }
+        }
+
+        updatePrintDate();
+        window.addEventListener('beforeprint', updatePrintDate);
+
+        function printFleet() {
+            try {
+                updatePrintDate();
+
+                var confirmed = confirm(
+                    '🖨️ قبل الطباعة تأكد من:\n\n' +
+                    '1. الاتجاه: أفقي (Landscape)\n' +
+                    '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
+                    '3. الوجهة: PDF (اختياري)\n\n' +
+                    'هل تريد المتابعة؟'
+                );
+                if (!confirmed) return;
+
+                window.print();
+            } catch (e) {
+                console.error('❌ printFleet error:', e);
+                window.print();
+            }
+        }
 
         // ============================================================
         // 🔐 RBAC v9.13 — توحيد الأدوار
@@ -1547,6 +1877,7 @@
         window.clearMainSearch = clearMainSearch;
         window.updateZones = updateZones;
         window.refreshFleet = refreshFleet;
+        window.printFleet = printFleet;
         window.getToken = getToken;
 
     })();
