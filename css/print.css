@@ -1,16 +1,15 @@
 /* ============================================================
-   🖨️ PRINT v6.0 — READABLE + BEAUTIFUL + COMPACT
-   خط مقروء 9pt | تنظيم جميل | 4-5 جداول/صفحة
+   🖨️ PRINT v8.0 — احترافي، منظم، يملأ الصفحة بالكامل
+   Professional Full-Page Print Layout
    ============================================================ */
 
 @page {
     size: A4 landscape;
-    margin: 8mm 8mm 12mm 8mm;
+    margin: 10mm 8mm;
 }
 
 @media print {
 
-    /* ═══ 1) إزالة التأثيرات الثقيلة فقط ═══ */
     *,
     *::before,
     *::after {
@@ -23,6 +22,7 @@
         transform: none !important;
         filter: none !important;
         background-image: none !important;
+        float: none !important;
     }
 
     html, body {
@@ -30,14 +30,16 @@
         color: #111827 !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
         font-size: 10pt !important;
-        line-height: 1.25 !important;
+        line-height: 1.35 !important;
         margin: 0 !important;
         padding: 0 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        width: 100% !important;
+        height: auto !important;
     }
 
-    /* ═══ 2) إخفاء UI ═══ */
+    /* ═══ إخفاء كل عناصر الواجهة ═══ */
     button, .btn-action, .btn-filter, .btn-sm, .btn-save,
     .btn-icon, .action-btns, .retry-btn, .chart-btn,
     .chart-switch, nav, .sidebar, .navbar, .no-print,
@@ -51,21 +53,39 @@
         display: none !important;
     }
 
-    /* ═══ 3) HEADER — رأس أنيق ═══ */
+    /* ═══ الصفحة تملأ العرض الكامل ═══ */
+    #page-fleet, #page-logs, #page-efficiency {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #ffffff !important;
+        display: block !important;
+    }
+
+    body::before, body::after,
+    #page-fleet::before, #page-logs::before, #page-efficiency::before {
+        display: none !important;
+    }
+
+    /* ═══ HEADER احترافي بعرض كامل ═══ */
+    .eff-header,
     .fleet-header,
-    .logs-header,
-    .eff-header {
+    .logs-header {
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
         background: #0a1628 !important;
         color: #ffffff !important;
-        padding: 3mm 5mm !important;
-        margin: 0 0 3mm !important;
-        border: 1.5px solid #e6b31e !important;
-        border-radius: 4px !important;
+        width: 100% !important;
+        padding: 4mm 8mm !important;
+        margin: 0 0 5mm !important;
+        border: none !important;
+        border-bottom: 3px solid #e6b31e !important;
+        border-radius: 0 !important;
         page-break-after: avoid !important;
-        page-break-inside: avoid !important;
+        break-after: avoid !important;
     }
 
     .eff-header-left,
@@ -82,29 +102,28 @@
     .eff-title h1 {
         color: #f7d774 !important;
         -webkit-text-fill-color: #f7d774 !important;
-        font-size: 14pt !important;
+        font-size: 16pt !important;
         font-weight: 800 !important;
         margin: 0 !important;
-        line-height: 1.1 !important;
+        line-height: 1.2 !important;
     }
 
     .eff-header-left p,
     .fleet-header-left p,
-    .logs-header-left p,
-    .eff-title p {
-        color: rgba(255,255,255,0.85) !important;
-        -webkit-text-fill-color: rgba(255,255,255,0.85) !important;
-        font-size: 9pt !important;
-        margin: 0.5mm 0 0 0 !important;
+    .logs-header-left p {
+        display: block !important;
+        color: #cbd5e1 !important;
+        -webkit-text-fill-color: #cbd5e1 !important;
+        font-size: 8.5pt !important;
+        margin: 1mm 0 0 !important;
     }
 
     .header-icon,
-    #fleetHeaderIcon, #logsHeaderIcon, #effHeaderIcon,
-    .eff-title-icon {
-        width: 12mm !important;
-        height: 12mm !important;
-        min-width: 12mm !important;
-        border: 1.5px solid #e6b31e !important;
+    #fleetHeaderIcon, #logsHeaderIcon, #effHeaderIcon {
+        width: 14mm !important;
+        height: 14mm !important;
+        min-width: 14mm !important;
+        border: 2px solid #e6b31e !important;
         background: #0a1628 !important;
         border-radius: 3px !important;
         display: flex !important;
@@ -120,31 +139,27 @@
         object-fit: contain !important;
     }
 
-    .header-icon i, .eff-title-icon i {
-        color: #f7d774 !important;
-        font-size: 12pt !important;
-    }
+    .header-icon i { color: #f7d774 !important; font-size: 12pt !important; }
 
+    /* تاريخ ووقت الطباعة أعلى اليسار */
     .eff-header::after,
     .fleet-header::after,
     .logs-header::after {
-        content: "طُبع: " attr(data-print-date);
-        position: absolute;
-        bottom: 1.5mm;
-        left: 5mm;
-        font-size: 8pt;
-        color: rgba(255,255,255,0.75) !important;
-        direction: rtl;
+        content: "تاريخ الطباعة: " attr(data-print-date) !important;
+        font-size: 7.5pt !important;
+        color: #cbd5e1 !important;
+        font-weight: 500 !important;
     }
 
-    /* ═══ 4) STATS — صف أنيق ═══ */
+    /* ═══ STATS — شبكة موزعة بعرض كامل ═══ */
     .stats-grid {
         display: grid !important;
-        gap: 2mm !important;
-        margin: 0 0 3mm !important;
+        gap: 3mm !important;
+        margin: 0 0 5mm !important;
         padding: 0 !important;
+        width: 100% !important;
         page-break-inside: avoid !important;
-        page-break-after: avoid !important;
+        break-inside: avoid !important;
     }
 
     #page-fleet .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
@@ -153,15 +168,16 @@
 
     .stat-card {
         background: #f8fafc !important;
-        border: 1.5px solid #e6b31e !important;
-        border-radius: 4px !important;
-        padding: 2.5mm 2mm !important;
+        border: 1px solid #d4d4d8 !important;
+        border-top: 3px solid #e6b31e !important;
+        border-radius: 3px !important;
+        padding: 3mm 2mm !important;
         text-align: center !important;
         display: block !important;
-        min-height: auto !important;
     }
 
     .stat-card::before, .stat-card::after { display: none !important; }
+    .stat-card .icon-bg { display: none !important; }
 
     .stat-card .number,
     .stat-card .eff-stat-value {
@@ -169,47 +185,36 @@
         -webkit-text-fill-color: #0a1628 !important;
         font-size: 15pt !important;
         font-weight: 900 !important;
-        line-height: 1 !important;
-        margin: 0 !important;
+        line-height: 1.1 !important;
         display: block !important;
     }
 
-    .stat-card:nth-child(1) .number { color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; }
-    .stat-card:nth-child(2) .number { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
-    .stat-card:nth-child(3) .number { color: #0369a1 !important; -webkit-text-fill-color: #0369a1 !important; }
-    .stat-card:nth-child(4) .number { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
-    .stat-card:nth-child(5) .number { color: #6d28d9 !important; -webkit-text-fill-color: #6d28d9 !important; }
-
-    .stat-card .label,
-    .stat-card .eff-stat-label {
-        color: #4b5563 !important;
-        -webkit-text-fill-color: #4b5563 !important;
-        font-size: 8pt !important;
+    .stat-card .label {
+        color: #52525b !important;
+        -webkit-text-fill-color: #52525b !important;
+        font-size: 7.5pt !important;
         font-weight: 700 !important;
         margin-top: 1mm !important;
         display: block !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
     }
 
-    .stat-card .icon-bg,
-    .stat-card .eff-stat-sub { display: none !important; }
-
-    /* ═══ 5) SECTIONS — الأقسام (الأهم!) ═══ */
+    /* ═══ SECTIONS ═══ */
     #page-efficiency .eff-section,
     #page-fleet .eff-section,
     #page-logs .eff-section {
         background: #ffffff !important;
-        border: 1.5px solid #0a1628 !important;
-        border-radius: 4px !important;
-        margin: 0 0 2.5mm !important;
+        border: 1px solid #0a1628 !important;
+        border-radius: 3px !important;
+        margin: 0 0 5mm !important;
         padding: 0 !important;
-
-        /* ⚡⚡⚡ المفتاح: هذان السطران ⚡⚡⚡ */
         overflow: visible !important;
+        width: 100% !important;
         page-break-inside: auto !important;
         break-inside: auto !important;
     }
 
-    /* الأقسام المخفية تبقى مخفية */
     #page-efficiency .eff-section[style*="display: none"] {
         display: none !important;
     }
@@ -218,9 +223,12 @@
     #page-fleet .eff-section .section-header,
     #page-logs .eff-section .section-header {
         background: #0a1628 !important;
-        padding: 2mm 3mm !important;
-        border-bottom: 1.5px solid #e6b31e !important;
+        padding: 2.5mm 5mm !important;
+        border-bottom: 2px solid #e6b31e !important;
         page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+        break-after: avoid !important;
+        break-inside: avoid !important;
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
@@ -249,20 +257,20 @@
         color: #0a1628 !important;
         -webkit-text-fill-color: #0a1628 !important;
         border: 1px solid #e6b31e !important;
-        font-size: 8pt !important;
-        padding: 0.5mm 2.5mm !important;
+        font-size: 7.5pt !important;
+        padding: 0.5mm 3mm !important;
         border-radius: 8px !important;
         font-weight: 700 !important;
     }
 
     .section-content { padding: 0 !important; }
 
-    /* ═══ 6) TABLE — جدول مقروء ═══ */
+    /* ═══ TABLE — يملأ العرض بتوزيع مريح ═══ */
     .table-wrapper {
-        padding: 2mm !important;
+        padding: 0 !important;
         margin: 0 !important;
         overflow: visible !important;
-        page-break-inside: auto !important;
+        width: 100% !important;
     }
 
     #page-efficiency table,
@@ -271,10 +279,11 @@
         width: 100% !important;
         border-collapse: collapse !important;
         font-size: 9pt !important;
-        border: 1px solid #0a1628 !important;
+        border: none !important;
         min-width: 0 !important;
+        max-width: 100% !important;
+        table-layout: auto !important;
         background: #ffffff !important;
-        page-break-inside: auto !important;
     }
 
     thead {
@@ -286,36 +295,40 @@
         background: #0a1628 !important;
         color: #f7d774 !important;
         -webkit-text-fill-color: #f7d774 !important;
-        padding: 1.5mm 2mm !important;
+        padding: 2.5mm 3mm !important;
         font-size: 8.5pt !important;
         font-weight: 800 !important;
         text-align: center !important;
-        border: 1px solid #1a2a4a !important;
+        border: 0.5px solid #1a2a4a !important;
         white-space: nowrap !important;
-        line-height: 1.15 !important;
     }
 
     thead th i { display: none !important; }
 
+    tfoot {
+        display: table-footer-group !important;
+    }
+
     tbody tr {
-        page-break-inside: auto !important;
-        break-inside: auto !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
         background: #ffffff !important;
     }
 
-    tbody tr:nth-child(even) { background: #f9fafb !important; }
+    tbody tr:nth-child(even) { background: #f8fafc !important; }
 
     tbody td {
-        padding: 1.5mm 2mm !important;
-        border: 1px solid #e5e7eb !important;
+        padding: 2.5mm 3mm !important;
+        border: 0.5px solid #e5e7eb !important;
         color: #1f2937 !important;
         -webkit-text-fill-color: #1f2937 !important;
         text-align: center !important;
-        font-size: 9pt !important;
+        font-size: 8.5pt !important;
         vertical-align: middle !important;
         background: transparent !important;
-        line-height: 1.2 !important;
-        white-space: nowrap !important;
+        line-height: 1.3 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
     }
 
     tbody td:first-child {
@@ -323,210 +336,102 @@
         color: #0a1628 !important;
         -webkit-text-fill-color: #0a1628 !important;
         text-align: right !important;
-        padding-right: 3mm !important;
+        padding-right: 4mm !important;
     }
 
-    /* حالات الصفوف */
-    .row-high {
-        background: #ecfdf5 !important;
-        border-right: 3px solid #047857 !important;
-    }
-    .row-high td:first-child {
-        color: #047857 !important;
-        -webkit-text-fill-color: #047857 !important;
-    }
-    .row-high .eff-cell {
-        color: #047857 !important;
-        -webkit-text-fill-color: #047857 !important;
-        font-weight: 900 !important;
+    /* Row states */
+    .row-high { background: #ecfdf5 !important; border-right: 3px solid #047857 !important; }
+    .row-high td:first-child, .row-high .eff-cell {
+        color: #047857 !important; -webkit-text-fill-color: #047857 !important;
     }
 
-    .row-mid {
-        background: #fffbeb !important;
-        border-right: 3px solid #b45309 !important;
-    }
-    .row-mid td:first-child {
-        color: #b45309 !important;
-        -webkit-text-fill-color: #b45309 !important;
-    }
-    .row-mid .eff-cell {
-        color: #b45309 !important;
-        -webkit-text-fill-color: #b45309 !important;
-        font-weight: 900 !important;
+    .row-mid { background: #fffbeb !important; border-right: 3px solid #b45309 !important; }
+    .row-mid td:first-child, .row-mid .eff-cell {
+        color: #b45309 !important; -webkit-text-fill-color: #b45309 !important;
     }
 
-    .row-low {
-        background: #fef2f2 !important;
-        border-right: 3px solid #b91c1c !important;
-    }
-    .row-low td:first-child {
-        color: #b91c1c !important;
-        -webkit-text-fill-color: #b91c1c !important;
-    }
-    .row-low .eff-cell {
-        color: #b91c1c !important;
-        -webkit-text-fill-color: #b91c1c !important;
-        font-weight: 900 !important;
+    .row-low, tbody tr.damaged { background: #fef2f2 !important; border-right: 3px solid #b91c1c !important; }
+    .row-low td:first-child, .row-low .eff-cell, tbody tr.damaged td:first-child {
+        color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important;
     }
 
-    /* ═══ 7) STATUS BADGES — أنيقة ═══ */
+    /* ═══ BADGES ═══ */
     .status-badge,
     .eff-status {
         display: inline-block !important;
-        padding: 0.5mm 2.5mm !important;
+        padding: 0.5mm 3mm !important;
         border-radius: 6px !important;
         font-size: 7.5pt !important;
         font-weight: 700 !important;
-        border: 1px solid currentColor !important;
+        border: 0.5px solid currentColor !important;
         background: #ffffff !important;
         white-space: nowrap !important;
-        line-height: 1.2 !important;
+        line-height: 1.4 !important;
     }
 
     .status-badge.excellent, .status-badge.good,
     .status-badge.active, .status-badge.completed, .status-good {
-        color: #047857 !important;
-        -webkit-text-fill-color: #047857 !important;
+        color: #047857 !important; -webkit-text-fill-color: #047857 !important;
         background: #ecfdf5 !important;
     }
-
     .status-badge.medium, .status-badge.pending,
     .status-badge.in-progress, .status-mid {
-        color: #b45309 !important;
-        -webkit-text-fill-color: #b45309 !important;
+        color: #b45309 !important; -webkit-text-fill-color: #b45309 !important;
         background: #fffbeb !important;
     }
-
-    .status-badge.low, .status-badge.critical,
-    .status-badge.damaged, .status-badge.overdue,
-    .status-badge.cancelled, .status-bad {
-        color: #b91c1c !important;
-        -webkit-text-fill-color: #b91c1c !important;
+    .status-badge.low, .status-badge.critical, .status-badge.damaged,
+    .status-badge.overdue, .status-badge.cancelled, .status-bad {
+        color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important;
         background: #fef2f2 !important;
     }
 
-    /* ═══ 8) PROGRESS BAR — واضح ═══ */
+    /* ═══ PROGRESS BAR ═══ */
     .progress-bar {
         background: #e5e7eb !important;
-        height: 2.5mm !important;
+        height: 3mm !important;
         min-width: 18mm !important;
-        border-radius: 1mm !important;
-        border: 1px solid #d1d5db !important;
+        max-width: 100% !important;
+        border-radius: 1.5mm !important;
+        border: 0.3px solid #d1d5db !important;
         overflow: hidden !important;
         display: inline-block !important;
         vertical-align: middle !important;
     }
-
-    .progress-bar .progress-fill {
-        height: 100% !important;
-    }
-
     .progress-bar .progress-fill::after { display: none !important; }
-
     .progress-bar .progress-fill.high { background: #047857 !important; }
     .progress-bar .progress-fill.mid { background: #b45309 !important; }
     .progress-bar .progress-fill.low { background: #b91c1c !important; }
 
-    /* ═══ 9) PRINT SUMMARY (fleet) ═══ */
-    .print-only, .print-summary-section {
-        display: block !important;
-        margin: 0 0 3mm !important;
-        page-break-after: avoid !important;
-    }
-
-    .print-summary-title {
-        background: #0a1628 !important;
-        color: #f7d774 !important;
-        -webkit-text-fill-color: #f7d774 !important;
-        padding: 2mm 3mm !important;
-        font-size: 10pt !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        border: 1.5px solid #0a1628 !important;
-    }
-
-    .print-summary-table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 9pt !important;
-        border: 1.5px solid #0a1628 !important;
-        background: #ffffff !important;
-        min-width: 0 !important;
-    }
-
-    .print-summary-table thead th {
-        background: #0a1628 !important;
-        color: #f7d774 !important;
-        -webkit-text-fill-color: #f7d774 !important;
-        padding: 1.5mm 2mm !important;
-        font-size: 9pt !important;
-        font-weight: 800 !important;
-        border: 1px solid #1a2a4a !important;
-    }
-
-    .print-summary-table tbody td {
-        padding: 1.5mm 2mm !important;
-        border: 1px solid #e5e7eb !important;
-        color: #1f2937 !important;
-        font-size: 9pt !important;
-        font-weight: 600 !important;
-        text-align: center !important;
-    }
-
-    .print-summary-table tbody tr.total-row td {
-        background: #fffbeb !important;
-        font-weight: 800 !important;
-        color: #0a1628 !important;
-        border-top: 1.5px solid #e6b31e !important;
-    }
-
-    .print-summary-table .cat-name {
-        text-align: right !important;
-        font-weight: 800 !important;
-        color: #0a1628 !important;
-        padding-right: 3mm !important;
-    }
-
-    /* ═══ 10) FOOTER ═══ */
+    /* ═══ FOOTER احترافي ثابت بأسفل كل صفحة ═══ */
     #page-fleet::after, #page-logs::after, #page-efficiency::after {
         display: block !important;
         text-align: center !important;
-        font-size: 8pt !important;
+        font-size: 7.5pt !important;
         color: #6b7280 !important;
         border-top: 1px solid #e6b31e !important;
         padding-top: 2mm !important;
-        margin-top: 3mm !important;
+        margin-top: 5mm !important;
         font-weight: 600 !important;
+        width: 100% !important;
     }
 
     #page-fleet::after { content: "🚢 منظومة الوسائل البحرية — السجل العام للأسطول" !important; }
     #page-logs::after { content: "🚢 منظومة الوسائل البحرية — سجل الصيانة" !important; }
     #page-efficiency::after { content: "🚢 منظومة الوسائل البحرية — تقرير جاهزية الأسطول" !important; }
 
-    /* ═══ 11) OVERRIDES نهائية ═══ */
-    body::before, body::after,
-    #page-fleet::before, #page-logs::before, #page-efficiency::before {
-        display: none !important;
-    }
-
-    #page-fleet, #page-logs, #page-efficiency {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        min-height: 0 !important;
-        background: #ffffff !important;
-    }
-
-    /* ⚡ إجبار كسر كل القيود ⚡ */
-    html body #page-efficiency .eff-section,
-    html body #page-fleet .eff-section,
-    html body #page-logs .eff-section,
+    /* ⚡ كسر شامل لقيود القطع الزائدة ⚡ */
     html body #page-efficiency .eff-section *,
     html body #page-fleet .eff-section *,
-    html body #page-logs .eff-section * {
-        page-break-inside: auto !important;
-        break-inside: auto !important;
+    html body #page-logs .eff-section *,
+    html body #page-efficiency .table-wrapper,
+    html body #page-fleet .table-wrapper,
+    html body #page-logs .table-wrapper,
+    html body #page-efficiency table,
+    html body #page-fleet table,
+    html body #page-logs table,
+    html body #page-efficiency tbody,
+    html body #page-fleet tbody,
+    html body #page-logs tbody {
         overflow: visible !important;
     }
 }
