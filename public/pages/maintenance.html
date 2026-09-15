@@ -2,8 +2,10 @@
 <div id="page-maintenance">
     <style>
         /* ============================================================
-           🔧 MAINTENANCE PAGE — v13.1
-           Isolated IIFE — No global flags — SPA-safe
+           🔧 MAINTENANCE PAGE — v14.0
+           ✅ منع تكرار المركب في السجل العام
+           ✅ يرسل _id (ObjectId) بدلًا من id
+           ✅ يتحقق من وجود المركب قبل PUT
            ============================================================ */
 
         body { background: #0a0e1a; }
@@ -653,11 +655,8 @@
     (function() {
         'use strict';
 
-        console.log('🔧 Maintenance v13.1 - loading (isolated, SPA-safe)...');
+        console.log('🔧 Maintenance v14.0 - loading...');
 
-        // ============================================================
-        // STATE — local, no globals, no persistent flags
-        // ============================================================
         var M = {
             destroyed: false,
             initialized: false,
@@ -795,6 +794,71 @@
         }
 
         // ============================================================
+        // ✅ دالة موحّدة لتحديث حالة المركب
+        // ✅ تحل مشكلة التكرار: تستخدم _id أولًا ثم id
+        // ============================================================
+        async function updateVesselStatus(vesselObj, newStatus, extraFields) {
+            if (!vesselObj) {
+                console.warn('⚠️ [updateVesselStatus] لا يوجد مركب');
+                return false;
+            }
+
+            // ✅ نجرّب _id أولًا (ObjectId - الأضمن)
+            var tryIds = [];
+            if (vesselObj._id) tryIds.push(vesselObj._id);
+            if (vesselObj.id && vesselObj.id !== vesselObj._id) tryIds.push(vesselObj.id);
+
+            if (tryIds.length === 0) {
+                console.warn('⚠️ [updateVesselStatus] لا يوجد _id ولا id');
+                return false;
+            }
+
+            var payload = Object.assign({
+                status: newStatus,
+                stat: newStatus
+            }, extraFields || {});
+
+            // جرب كل ID حتى ينجح
+            for (var i = 0; i < tryIds.length; i++) {
+                var vid = tryIds[i];
+                try {
+                    // ✅ 1) تحقق أولًا من وجود المركب
+                    var checkRes = await fetchJSON(
+                        apiBase() + '/api/vessels/' + encodeURIComponent(vid),
+                        { method: 'GET' }
+                    );
+
+                    if (!checkRes.ok) {
+                        console.log('🔍 المركب غير موجود بـ', vid, '(HTTP', checkRes.status + ') — تجربة معرف آخر...');
+                        continue;
+                    }
+
+                    // ✅ 2) المركب موجود → حدّث حالته
+                    var putRes = await fetchJSON(
+                        apiBase() + '/api/vessels/' + encodeURIComponent(vid),
+                        {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        }
+                    );
+
+                    if (putRes.ok) {
+                        console.log('✅ تم تحديث حالة المركب باستخدام:', vid);
+                        return true;
+                    } else {
+                        console.warn('⚠️ فشل التحديث بـ', vid, '(HTTP', putRes.status + ')');
+                    }
+                } catch (e) {
+                    console.warn('⚠️ خطأ في تحديث المركب بـ', vid, ':', e.message);
+                }
+            }
+
+            console.warn('❌ [updateVesselStatus] فشل تحديث المركب بكل المعرّفات:', tryIds);
+            return false;
+        }
+
+        // ============================================================
         // CONFIRM MODAL
         // ============================================================
         function confirmAction(opts) {
@@ -835,23 +899,13 @@
         // ============================================================
         async function loadVessels() {
             if (M.destroyed) return [];
-            if (!getToken()) {
-                console.warn('⚠️ [loadVessels] لا يوجد token');
-                M.vessels = [];
-                return [];
-            }
+            if (!getToken()) { M.vessels = []; return []; }
             try {
-                console.log('📡 [loadVessels] جاري الجلب من /api/vessels...');
                 var res = await fetchJSON(apiBase() + '/api/vessels', { method: 'GET' });
                 if (M.destroyed) return [];
-                if (!res.ok) {
-                    console.warn('⚠️ [loadVessels] HTTP', res.status);
-                    M.vessels = [];
-                    return [];
-                }
+                if (!res.ok) { M.vessels = []; return []; }
                 var data = await res.json();
-                var list = Array.isArray(data) ? data :
-                           (data.vessels || data.data || []);
+                var list = Array.isArray(data) ? data : (data.vessels || data.data || []);
                 M.vessels = list;
                 console.log('🚢 [loadVessels]', list.length, 'مركب');
                 console.log('  🚨 معطبة:', list.filter(isVesselDamaged).length);
@@ -868,23 +922,13 @@
         // ============================================================
         async function loadMaintenance() {
             if (M.destroyed) return [];
-            if (!getToken()) {
-                console.warn('⚠️ [loadMaintenance] لا يوجد token');
-                M.data = [];
-                return [];
-            }
+            if (!getToken()) { M.data = []; return []; }
             try {
-                console.log('📡 [loadMaintenance] جاري الجلب من /api/maintenance...');
                 var res = await fetchJSON(apiBase() + '/api/maintenance', { method: 'GET' });
                 if (M.destroyed) return [];
-                if (!res.ok) {
-                    console.warn('⚠️ [loadMaintenance] HTTP', res.status);
-                    M.data = [];
-                    return [];
-                }
+                if (!res.ok) { M.data = []; return []; }
                 var data = await res.json();
-                var records = Array.isArray(data) ? data :
-                              (data.records || data.data || []);
+                var records = Array.isArray(data) ? data : (data.records || data.data || []);
                 M.data = records.map(function(r) {
                     var raw = r.status || 'قيد الانتظار';
                     var display = raw === 'قيد الإنجاز' ? 'قيد التنفيذ' : raw;
@@ -983,10 +1027,14 @@
                 var urgCls = critical ? 'critical' : (warn ? 'warning' : 'normal');
                 var urgTxt = critical ? '🚨 عاجل جداً' : (warn ? '⚠️ عاجل' : '📌 عادي');
 
+                // ✅ نحفظ _id و id كلاهما
+                var vesselId = v._id || v.id || '';
+
                 var actions = '';
                 if (canEdit) {
                     actions = '<button type="button" class="action-btn start" data-action="start" ' +
-                        'data-vessel-id="' + escapeHtml(v.id || v._id || '') + '" ' +
+                        'data-vessel-id="' + escapeHtml(vesselId) + '" ' +
+                        'data-vessel-obj-id="' + escapeHtml(JSON.stringify({ _id: v._id || null, id: v.id || null }).replace(/"/g, '&quot;')) + '" ' +
                         'data-vessel-name="' + escapeHtml(v.name || '') + '" ' +
                         'data-vessel-num="' + escapeHtml(v.num || '') + '" ' +
                         'data-vessel-break="' + escapeHtml(v.break || '') + '">' +
@@ -1162,7 +1210,7 @@
         // ============================================================
         // OPEN FORM
         // ============================================================
-        function openAddForm(vesselId, vesselName, vesselNum, breakType) {
+        function openAddForm(vesselId, vesselName, vesselNum, breakType, vesselObjIdData) {
             if (!canCreate()) { showToast('⚠️ ليس لديك صلاحية', 'error'); return; }
 
             var t = $('maintModalTitle');
@@ -1171,6 +1219,16 @@
             var body = $('maintModalBody');
             if (!body) return;
 
+            // ✅ نحفظ بيانات المركب كاملة
+            var vesselRef = { _id: null, id: vesselId };
+            try {
+                if (vesselObjIdData) {
+                    var parsed = typeof vesselObjIdData === 'string' ? JSON.parse(vesselObjIdData) : vesselObjIdData;
+                    if (parsed._id) vesselRef._id = parsed._id;
+                    if (parsed.id) vesselRef.id = parsed.id;
+                }
+            } catch (e) {}
+
             body.innerHTML =
                 '<div class="form-section">' +
                     '<h4 class="form-section-title"><i class="fas fa-ship"></i> معلومات المركب</h4>' +
@@ -1178,7 +1236,8 @@
                         '<div class="form-group">' +
                             '<label>المركب</label>' +
                             '<input type="text" id="maintVesselName" value="' + escapeHtml(vesselName || '') + '" readonly style="background:rgba(255,255,255,0.02);">' +
-                            '<input type="hidden" id="maintVesselId" value="' + escapeHtml(vesselId || '') + '">' +
+                            '<input type="hidden" id="maintVesselId" value="' + escapeHtml(vesselRef.id || '') + '">' +
+                            '<input type="hidden" id="maintVesselObjId" value="' + escapeHtml(vesselRef._id || '') + '">' +
                         '</div>' +
                         '<div class="form-group">' +
                             '<label>رقم المركب</label>' +
@@ -1326,13 +1385,14 @@
         }
 
         // ============================================================
-        // SAVE
+        // SAVE — الحل الأساسي لمنع التكرار
         // ============================================================
         function saveMaintenance() {
             if (M.destroyed) return;
             if (!canCreate()) { showToast('⚠️ ليس لديك صلاحية', 'error'); return; }
 
             var vesselId = $('maintVesselId')?.value;
+            var vesselObjId = $('maintVesselObjId')?.value;  // ✅ _id
             var vesselName = $('maintVesselName')?.value || '';
             var vesselNum = $('maintVesselNum')?.value || '';
             var technician = $('maintTechnician')?.value.trim();
@@ -1347,7 +1407,7 @@
             var otherCost = parseFloat($('maintOtherCost')?.value) || 0;
             var notes = $('maintNotes')?.value.trim();
 
-            if (!vesselId) { showToast('⚠️ المركب مطلوب', 'error'); return; }
+            if (!vesselId && !vesselObjId) { showToast('⚠️ المركب مطلوب', 'error'); return; }
             if (!technician) { showToast('⚠️ اسم الفني مطلوب', 'error'); return; }
             if (!description) { showToast('⚠️ وصف العطل مطلوب', 'error'); return; }
 
@@ -1371,8 +1431,11 @@
 
             if (!getToken()) { showToast('⚠️ سجّل الدخول', 'error'); return; }
 
+            // ✅ نستخدم _id إذا متوفر (أدق)
+            var primaryVesselId = vesselObjId || vesselId;
+
             var payload = {
-                vesselId: vesselId,
+                vesselId: primaryVesselId,
                 vesselName: vesselName,
                 vesselNum: vesselNum,
                 type: repairType || 'صيانة دورية',
@@ -1411,19 +1474,20 @@
                 return res.json();
             })
             .then(async function() {
-                try {
-                    await fetchJSON(apiBase() + '/api/vessels/' + encodeURIComponent(vesselId), {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            status: 'صيانة',
-                            stat: 'صيانة',
-                            repairUnit: unit || 'غير محدد'
-                        })
-                    });
+                // ✅ تحديث حالة المركب باستخدام الدالة الموحّدة
+                var vesselRef = {
+                    _id: vesselObjId || null,
+                    id: vesselId || null
+                };
+
+                var updated = await updateVesselStatus(vesselRef, 'صيانة', {
+                    repairUnit: unit || 'غير محدد'
+                });
+
+                if (updated) {
                     console.log('✅ تم تحديث حالة المركب إلى "صيانة"');
-                } catch (e) {
-                    console.warn('⚠️ لم يتم تحديث السجل العام:', e.message);
+                } else {
+                    console.warn('⚠️ لم يتم تحديث حالة المركب — قد يكون غير موجود في السجل العام');
                 }
 
                 closeModal();
@@ -1456,20 +1520,32 @@
                     });
 
                     if (!res.ok) {
+                        // fallback: PUT مباشر
                         await fetchJSON(apiBase() + '/api/maintenance/' + encodeURIComponent(id), {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ status: 'مكتملة', endDate: todayISO() })
                         });
-
-                        if (rec.vesselId) {
-                            await fetchJSON(apiBase() + '/api/vessels/' + encodeURIComponent(rec.vesselId), {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ status: 'صالح', stat: 'صالح', break: '', fDate: null, eDate: todayISO() })
-                            });
-                        }
                     }
+
+                    // ✅ تحديث حالة المركب
+                    if (rec.vesselId) {
+                        // ابحث عن المركب في M.vessels للحصول على _id
+                        var vesselObj = M.vessels.find(function(v) {
+                            return v._id == rec.vesselId || v.id == rec.vesselId;
+                        });
+
+                        var vesselRef = vesselObj
+                            ? { _id: vesselObj._id, id: vesselObj.id }
+                            : { _id: null, id: rec.vesselId };
+
+                        await updateVesselStatus(vesselRef, 'صالح', {
+                            break: '',
+                            fDate: null,
+                            eDate: todayISO()
+                        });
+                    }
+
                     console.log('✅ تم إكمال الصيانة');
                     await refreshMaintenance();
                     showToast('✅ تم إكمال الصيانة — المركب أصبح صالحًا', 'success');
@@ -1565,11 +1641,14 @@
             var id = btn.getAttribute('data-id');
 
             if (a === 'start') {
+                // ✅ نقرأ vesselObjId أيضاً
+                var objIdRaw = btn.getAttribute('data-vessel-obj-id');
                 openAddForm(
                     btn.getAttribute('data-vessel-id'),
                     btn.getAttribute('data-vessel-name'),
                     btn.getAttribute('data-vessel-num'),
-                    btn.getAttribute('data-vessel-break')
+                    btn.getAttribute('data-vessel-break'),
+                    objIdRaw
                 );
                 return;
             }
@@ -1591,7 +1670,7 @@
                 try { l.target.removeEventListener(l.event, l.handler, l.options); } catch (e) {}
             });
             M.listeners = [];
-            console.log('🧹 Maintenance v13.1 cleanup');
+            console.log('🧹 Maintenance v14.0 cleanup');
         }
         window._pageCleanup = window._pageCleanup || [];
         window._pageCleanup.push(cleanup);
@@ -1599,19 +1678,14 @@
         window.addEventListener('pagehide', cleanup);
 
         // ============================================================
-        // INIT — runs every time page loads (SPA-safe)
+        // INIT
         // ============================================================
         async function init() {
-            if (M.destroyed) return;
-            if (M.initialized) {
-                console.log('ℹ️ Maintenance already initialized in this mount — skipping');
-                return;
-            }
+            if (M.destroyed || M.initialized) return;
             M.initialized = true;
-            console.log('🚀 Maintenance v13.1 init...');
+            console.log('🚀 Maintenance v14.0 init...');
 
             try {
-                // Logo
                 try {
                     var cached = localStorage.getItem('marine_logo');
                     if (cached) {
@@ -1653,14 +1727,13 @@
                     }
                 });
 
-                console.log('✅ Maintenance v13.1 ready — ' + M.data.length + ' records');
+                console.log('✅ Maintenance v14.0 ready — ' + M.data.length + ' records');
             } catch (err) {
                 console.error('❌ Init:', err);
                 showToast('❌ خطأ في التحميل', 'error');
             }
         }
 
-        // تشغيل التهيئة
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init, { once: true });
         } else {
