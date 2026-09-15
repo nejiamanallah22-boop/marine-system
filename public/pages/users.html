@@ -2,9 +2,8 @@
 <div id="page-users">
     <style>
         /* ============================================================
-           👥 USERS PAGE - v9.12
-           Enterprise Hardened + 5 Roles (admin/manager/editor/
-           maintenance_unit/viewer) + Full CRUD
+           👥 USERS PAGE - v10.0
+           Enterprise Hardened + 5 Roles + REGION/UNIT (الإقليم/الوحدة)
            ============================================================ */
 
         #page-users {
@@ -162,6 +161,7 @@
             border-collapse: collapse;
             font-size: 13px;
             font-family: 'Cairo',sans-serif;
+            min-width: 1000px;
         }
 
         .users-table thead th {
@@ -172,6 +172,7 @@
             background: rgba(255,255,255,.02);
             font-weight: 600;
             font-size: 12px;
+            white-space: nowrap;
         }
 
         .users-table tbody td {
@@ -191,7 +192,8 @@
         }
 
         .status-badge,
-        .role-badge {
+        .role-badge,
+        .region-badge {
             display: inline-block;
             border-radius: 20px;
             font-weight: 600;
@@ -247,6 +249,52 @@
             background: rgba(255,255,255,.06);
             color: rgba(255,255,255,.5);
             border: 1px solid rgba(255,255,255,.04);
+        }
+
+        /* ✅ Region/Unit badges */
+        .region-badge {
+            padding: 4px 12px;
+            font-size: 11px;
+            background: rgba(6,182,212,.12);
+            color: #67e8f9;
+            border: 1px solid rgba(6,182,212,.15);
+            white-space: nowrap;
+        }
+
+        .region-badge.empty {
+            background: rgba(255,255,255,.03);
+            color: rgba(255,255,255,.25);
+            border-color: rgba(255,255,255,.05);
+        }
+
+        .region-badge.region-north {
+            background: rgba(59,130,246,.15);
+            color: #93c5fd;
+            border-color: rgba(59,130,246,.2);
+        }
+
+        .region-badge.region-coast {
+            background: rgba(16,185,129,.15);
+            color: #6ee7b7;
+            border-color: rgba(16,185,129,.2);
+        }
+
+        .region-badge.region-center {
+            background: rgba(245,158,11,.15);
+            color: #fcd34d;
+            border-color: rgba(245,158,11,.2);
+        }
+
+        .region-badge.region-south {
+            background: rgba(233,69,96,.15);
+            color: #fca5a5;
+            border-color: rgba(233,69,96,.2);
+        }
+
+        .region-badge.unit {
+            background: rgba(139,92,246,.15);
+            color: #c4b5fd;
+            border-color: rgba(139,92,246,.2);
         }
 
         .btn-sm {
@@ -356,7 +404,7 @@
 
         .form-grid {
             display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+            grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
             gap:16px;
         }
 
@@ -524,7 +572,7 @@
         }
 
         /* ============================================================
-           🖼️ GLOBAL LOGO SUPPORT — v9.12 (ADDED)
+           🖼️ GLOBAL LOGO SUPPORT
            ============================================================ */
 
         #page-users .icon {
@@ -573,16 +621,14 @@
 
     <div class="users-container">
 
-        <!-- ============================================================
-             HEADER
-             ============================================================ -->
+        <!-- ===== HEADER ===== -->
         <div class="users-header">
             <h2>
                 <div class="icon">
                     <img id="globalLogo" alt="logo" />
                 </div>
                 👥 إدارة المستخدمين
-                <span class="badge">v9.12 🔐 5 Roles</span>
+                <span class="badge">v10.0 🔐 5 Roles + إقليم</span>
             </h2>
 
             <div class="header-actions">
@@ -600,9 +646,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-             STATS
-             ============================================================ -->
+        <!-- ===== STATS ===== -->
         <div class="users-stats">
             <div class="stat-card total">
                 <div class="stat-icon">👥</div>
@@ -629,9 +673,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-             TABLE
-             ============================================================ -->
+        <!-- ===== TABLE ===== -->
         <div id="usersTableContainer">
             <div class="empty-state">
                 <div class="spinner"></div>
@@ -639,9 +681,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-             FORM
-             ============================================================ -->
+        <!-- ===== FORM ===== -->
         <div class="user-form" id="userForm">
             <div class="form-header">
                 <h3 id="formTitle">➕ إضافة مستخدم جديد</h3>
@@ -699,6 +739,30 @@
                     </select>
                 </div>
 
+                <!-- ✅ حقل الإقليم / الوحدة -->
+                <div class="form-group">
+                    <label>🗺️ الإقليم / الوحدة</label>
+                    <select id="userRegion">
+                        <option value="">— غير محدد —</option>
+                        <optgroup label="الحرس البحري">
+                            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
+                            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
+                            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
+                            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
+                        </optgroup>
+                        <optgroup label="وحدات الصيانة والإسناد">
+                            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                        </optgroup>
+                        <optgroup label="مجمعات">
+                            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                        </optgroup>
+                    </select>
+                    <span class="form-hint">الإقليم الجغرافي أو الوحدة الإدارية</span>
+                </div>
+
                 <div class="form-group">
                     <label>📊 الحالة</label>
                     <select id="userStatus">
@@ -721,15 +785,12 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         JAVASCRIPT - v9.12
-         ============================================================ -->
     <script>
     (function() {
         'use strict';
 
         // ============================================================
-        // ✅ v9.12: CLEANUP STATE
+        // ✅ STATE
         // ============================================================
 
         var _isDestroyed = false;
@@ -741,26 +802,19 @@
             if (_isDestroyed) return;
             _isDestroyed = true;
 
-            _pageIntervals.forEach(function(id) {
-                try { clearInterval(id); } catch (e) {}
-            });
+            _pageIntervals.forEach(function(id) { try { clearInterval(id); } catch (e) {} });
             _pageIntervals = [];
 
-            _pageTimeouts.forEach(function(id) {
-                try { clearTimeout(id); } catch (e) {}
-            });
+            _pageTimeouts.forEach(function(id) { try { clearTimeout(id); } catch (e) {} });
             _pageTimeouts = [];
 
             _eventListeners.forEach(function(item) {
                 try {
-                    if (item.el && item.fn) {
-                        item.el.removeEventListener(item.type, item.fn);
-                    }
+                    if (item.el && item.fn) item.el.removeEventListener(item.type, item.fn);
                 } catch (e) {}
             });
             _eventListeners = [];
 
-            // 🖼️ إزالة مستمع storage للشعار
             try {
                 window.removeEventListener('storage', _handleLogoStorageEvent);
             } catch (e) {}
@@ -780,12 +834,11 @@
                 delete window.syncLogoFromServer;
             } catch (e) {}
 
-            console.log('🧹 Users v9.12 cleanup done');
+            console.log('🧹 Users v10.0 cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
         window._pageCleanup.push(_usersCleanup);
-
         window.addEventListener('beforeunload', _usersCleanup);
         window.addEventListener('pagehide', _usersCleanup);
 
@@ -803,28 +856,60 @@
         var currentAbortController = null;
 
         // ============================================================
-        // 🖼️ GLOBAL LOGO — v9.12 (ADDED)
+        // 🗺️ قائمة الإقاليم والوحدات المعتمدة
+        // ============================================================
+
+        var REGION_MAP = {
+            'الشمال':                                     { label: '🗺️ الحرس البحري بالشمال',         cls: 'region-north'  },
+            'الساحل':                                     { label: '🗺️ الحرس البحري بالساحل',         cls: 'region-coast'  },
+            'الوسط':                                      { label: '🗺️ الحرس البحري بالوسط',          cls: 'region-center' },
+            'الجنوب':                                     { label: '🗺️ الحرس البحري بالجنوب',         cls: 'region-south'  },
+            'وحدة الصيانة والإسناد البحري تونس':           { label: '🛠️ وحدة الصيانة تونس',            cls: 'unit' },
+            'وحدة الصيانة والإسناد البحري صفاقس':          { label: '🛠️ وحدة الصيانة صفاقس',           cls: 'unit' },
+            'وحدة الصيانة والإسناد البحري المنستير':       { label: '🛠️ وحدة الصيانة المنستير',        cls: 'unit' },
+            'وحدة الصيانة والإسناد البحري جرجيس':          { label: '🛠️ وحدة الصيانة جرجيس',           cls: 'unit' },
+            'المجمع الأمني بقبيبة':                        { label: '🏛️ المجمع الأمني بقبيبة',         cls: 'unit' }
+        };
+
+        function normalizeRegion(value) {
+            if (!value) return '';
+            var s = String(value).trim();
+            if (REGION_MAP[s]) return s;
+
+            // مطابقة مرنة
+            var keys = Object.keys(REGION_MAP);
+            for (var i = 0; i < keys.length; i++) {
+                if (s.indexOf(keys[i]) !== -1 || keys[i].indexOf(s) !== -1) {
+                    return keys[i];
+                }
+            }
+            return s;
+        }
+
+        function getRegionInfo(value) {
+            var key = normalizeRegion(value);
+            if (!key) return { label: '— غير محدد —', cls: 'empty' };
+            if (REGION_MAP[key]) return { label: REGION_MAP[key].label, cls: REGION_MAP[key].cls };
+            return { label: key, cls: 'region-badge' };
+        }
+
+        // ============================================================
+        // 🖼️ LOGO
         // ============================================================
 
         var LOGO_STORAGE_KEY = 'globalLogo';
-        var LOGO_SERVER_KEY  = 'globalLogo';
+        var LOGO_SERVER_KEY = 'globalLogo';
         var LOGO_API_ENDPOINT = '/api/settings/logo';
 
-        /**
-         * تطبيق الشعار على #globalLogo داخل صفحة المستخدمين فقط
-         */
         function applyLogo(dataUrl) {
             if (_isDestroyed) return;
-
             var iconEl = document.querySelector('#page-users .icon');
-            var imgEl  = document.getElementById('globalLogo');
-
+            var imgEl = document.getElementById('globalLogo');
             if (!imgEl) return;
 
             if (dataUrl && typeof dataUrl === 'string' && dataUrl.trim() !== '') {
                 imgEl.src = dataUrl;
                 if (iconEl) iconEl.classList.add('has-logo');
-
                 imgEl.onerror = function() {
                     if (iconEl) iconEl.classList.remove('has-logo');
                     imgEl.removeAttribute('src');
@@ -835,72 +920,46 @@
             }
         }
 
-        /**
-         * مزامنة الشعار من السيرفر (مع localStorage كبديل فوري)
-         */
         async function syncLogoFromServer() {
             if (_isDestroyed) return;
-
-            // 1) قراءة سريعة من localStorage
             try {
                 var local = localStorage.getItem(LOGO_STORAGE_KEY);
                 if (local) applyLogo(local);
-            } catch (e) {
-                console.warn('[LOGO] localStorage unavailable');
-            }
+            } catch (e) {}
 
-            // 2) محاولة الجلب من السيرفر
             try {
                 var res = await fetch(LOGO_API_ENDPOINT, {
                     cache: 'no-store',
                     credentials: 'include',
                     headers: getAuthHeaders()
                 });
-
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-
+                if (!res.ok) return;
                 var data = await safeJson(res);
                 var serverLogo = (data && (data.logo || data[LOGO_SERVER_KEY])) || null;
-
                 if (_isDestroyed) return;
-
                 applyLogo(serverLogo);
-
                 if (serverLogo) {
                     try { localStorage.setItem(LOGO_STORAGE_KEY, serverLogo); } catch (e) {}
-                } else {
-                    try { localStorage.removeItem(LOGO_STORAGE_KEY); } catch (e) {}
                 }
-
             } catch (err) {
-                console.warn('[LOGO] تعذّر الجلب من السيرفر، الاعتماد على localStorage:', err);
+                console.warn('[LOGO] server fetch failed:', err.message);
             }
         }
 
-        /**
-         * مستمع تغيير الشعار من تبويب آخر
-         */
         function _handleLogoStorageEvent(e) {
-            if (e && e.key === LOGO_STORAGE_KEY) {
-                applyLogo(e.newValue || null);
-            }
+            if (e && e.key === LOGO_STORAGE_KEY) applyLogo(e.newValue || null);
         }
 
         window.addEventListener('storage', _handleLogoStorageEvent);
 
         // ============================================================
-        // 🔐 ROLE NORMALIZATION — v9.12
+        // 🔐 ROLE NORMALIZATION
         // ============================================================
 
         var LEGACY_ROLE_MAP = {
-            'super_admin': 'admin',
-            'مسؤول': 'admin',
-            'مدير': 'manager',
-            'محرر': 'editor',
-            'مشغل': 'maintenance_unit',
-            'operator': 'maintenance_unit',
-            'user': 'viewer',
-            'مشاهد': 'viewer'
+            'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
+            'محرر': 'editor', 'مشغل': 'maintenance_unit',
+            'operator': 'maintenance_unit', 'user': 'viewer', 'مشاهد': 'viewer'
         };
 
         var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
@@ -913,26 +972,17 @@
         }
 
         // ============================================================
-        // 🔧 DOM HELPERS
+        // 🔧 HELPERS
         // ============================================================
 
-        function $(id) {
-            return document.getElementById(id);
-        }
-
-        function pageExists() {
-            return !!$(PAGE_ID) && !_isDestroyed;
-        }
+        function $(id) { return document.getElementById(id); }
+        function pageExists() { return !!$(PAGE_ID) && !_isDestroyed; }
 
         function addSafeListener(el, type, fn, options) {
             if (!el) return;
             el.addEventListener(type, fn, options);
             _eventListeners.push({ el: el, type: type, fn: fn });
         }
-
-        // ============================================================
-        // 🔐 SECURITY HELPERS
-        // ============================================================
 
         function escapeHtml(value) {
             if (value === null || value === undefined) return '';
@@ -943,16 +993,12 @@
 
         function normalizeId(id) {
             if (id === null || id === undefined) return '';
-
             var value = String(id).trim();
-
             if (!value) return '';
-
             if (!/^[a-zA-Z0-9_\-]{1,64}$/.test(value)) {
                 console.warn('⚠️ normalizeId: invalid format:', value);
                 return '';
             }
-
             return value;
         }
 
@@ -960,8 +1006,7 @@
             return (
                 localStorage.getItem('marine_token') ||
                 localStorage.getItem('authToken') ||
-                localStorage.getItem('token') ||
-                null
+                localStorage.getItem('token') || null
             );
         }
 
@@ -978,11 +1023,7 @@
             try {
                 var meta = document.querySelector('meta[name="csrf-token"]');
                 if (meta && meta.content) return meta.content;
-
-                if (window.csrfToken && typeof window.csrfToken === 'string') {
-                    return window.csrfToken;
-                }
-
+                if (window.csrfToken && typeof window.csrfToken === 'string') return window.csrfToken;
                 var cookies = document.cookie.split('; ');
                 for (var i = 0; i < cookies.length; i++) {
                     var c = cookies[i];
@@ -990,30 +1031,23 @@
                         return decodeURIComponent(c.substring('marine_csrf='.length));
                     }
                 }
-            } catch (e) {
-                console.warn('[USERS] CSRF token unavailable');
-            }
+            } catch (e) {}
             return null;
         }
-
-        // ============================================================
-        // ✅ VALIDATION
-        // ============================================================
 
         function isValidEmail(email) {
             if (!email || email.length > 254) return false;
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
 
-        function isStrongEnoughPassword(password) {
-            if (!password) return false;
-            return password.length >= 12 && password.length <= 128;
+        function isStrongEnoughPassword(p) {
+            return p && p.length >= 12 && p.length <= 128;
         }
 
-        function isValidUsername(username) {
-            if (!username) return false;
-            if (username.length < 3 || username.length > 64) return false;
-            return /^[\p{L}\p{N}_\-]+$/u.test(username);
+        function isValidUsername(u) {
+            if (!u) return false;
+            if (u.length < 3 || u.length > 64) return false;
+            return /^[\p{L}\p{N}_\-]+$/u.test(u);
         }
 
         // ============================================================
@@ -1025,7 +1059,6 @@
             if (_isDestroyed) return;
 
             var container = $('toastContainer');
-
             if (!container) {
                 container = document.createElement('div');
                 container.id = 'toastContainer';
@@ -1036,12 +1069,7 @@
             var toast = document.createElement('div');
             toast.className = 'toast ' + type;
 
-            var icons = {
-                success: '✅',
-                warning: '⚠️',
-                danger: '❌',
-                info: 'ℹ️'
-            };
+            var icons = { success:'✅', warning:'⚠️', danger:'❌', info:'ℹ️' };
 
             var icon = document.createElement('span');
             icon.textContent = icons[type] || icons.info;
@@ -1053,73 +1081,41 @@
             close.type = 'button';
             close.className = 'toast-close';
             close.textContent = '✕';
-
-            close.addEventListener('click', function() {
-                toast.remove();
-            });
+            close.addEventListener('click', function() { toast.remove(); });
 
             toast.appendChild(icon);
             toast.appendChild(text);
             toast.appendChild(close);
-
             container.appendChild(toast);
 
             var tid = window.setTimeout(function() {
-                if (toast.isConnected) {
-                    toast.remove();
-                }
+                if (toast.isConnected) toast.remove();
             }, 4000);
             _pageTimeouts.push(tid);
         }
 
         // ============================================================
-        // 🌐 API REQUEST
+        // 🌐 API
         // ============================================================
 
         async function safeJson(response) {
             var contentType = response.headers.get('content-type') || '';
-
-            if (!contentType.includes('application/json')) {
-                return null;
-            }
-
-            try {
-                return await response.json();
-            } catch (e) {
-                return null;
-            }
+            if (!contentType.includes('application/json')) return null;
+            try { return await response.json(); } catch (e) { return null; }
         }
 
         async function apiRequest(url, options) {
             options = options || {};
-
-            if (_isDestroyed) {
-                throw new Error('Page destroyed');
-            }
-
-            if (!navigator.onLine) {
-                throw new Error('لا يوجد اتصال بالإنترنت');
-            }
+            if (_isDestroyed) throw new Error('Page destroyed');
+            if (!navigator.onLine) throw new Error('لا يوجد اتصال بالإنترنت');
 
             var controller = new AbortController();
-
-            var timeout = window.setTimeout(function() {
-                controller.abort();
-            }, REQUEST_TIMEOUT);
-
+            var timeout = window.setTimeout(function() { controller.abort(); }, REQUEST_TIMEOUT);
             currentAbortController = controller;
 
             var headers = new Headers(options.headers || {});
-
-            if (!headers.has('Accept')) {
-                headers.set('Accept', 'application/json');
-            }
-
-            if (
-                options.body &&
-                typeof options.body === 'string' &&
-                !headers.has('Content-Type')
-            ) {
+            if (!headers.has('Accept')) headers.set('Accept', 'application/json');
+            if (options.body && typeof options.body === 'string' && !headers.has('Content-Type')) {
                 headers.set('Content-Type', 'application/json');
             }
 
@@ -1129,12 +1125,9 @@
             }
 
             var method = String(options.method || 'GET').toUpperCase();
-
             if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
                 var csrf = getCsrfToken();
-                if (csrf) {
-                    headers.set('X-CSRF-Token', csrf);
-                }
+                if (csrf) headers.set('X-CSRF-Token', csrf);
             }
 
             try {
@@ -1151,41 +1144,21 @@
                     localStorage.removeItem('marine_token');
                     throw new Error('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.');
                 }
-
-                if (response.status === 403) {
-                    throw new Error('ليس لديك صلاحية لتنفيذ هذه العملية.');
-                }
-
-                if (response.status === 404) {
-                    throw new Error('المستخدم أو المورد غير موجود.');
-                }
-
+                if (response.status === 403) throw new Error('ليس لديك صلاحية لتنفيذ هذه العملية.');
+                if (response.status === 404) throw new Error('المستخدم أو المورد غير موجود.');
                 if (response.status === 409) {
                     var errData = await safeJson(response);
-                    throw new Error(
-                        (errData && (errData.error || errData.message)) ||
-                        'تعارض في البيانات.'
-                    );
+                    throw new Error((errData && (errData.error || errData.message)) || 'تعارض في البيانات.');
                 }
-
-                if (response.status === 429) {
-                    throw new Error('تم تجاوز عدد الطلبات المسموح بها. حاول بعد قليل.');
-                }
+                if (response.status === 429) throw new Error('تم تجاوز عدد الطلبات المسموح بها. حاول بعد قليل.');
 
                 return response;
-
             } catch (error) {
-                if (error.name === 'AbortError') {
-                    throw new Error('انتهت مهلة الاتصال بالخادم.');
-                }
+                if (error.name === 'AbortError') throw new Error('انتهت مهلة الاتصال بالخادم.');
                 throw error;
-
             } finally {
                 window.clearTimeout(timeout);
-
-                if (currentAbortController === controller) {
-                    currentAbortController = null;
-                }
+                if (currentAbortController === controller) currentAbortController = null;
             }
         }
 
@@ -1199,7 +1172,6 @@
             isLoading = true;
 
             var container = $('usersTableContainer');
-
             if (container) {
                 container.innerHTML =
                     '<div class="empty-state">' +
@@ -1210,23 +1182,14 @@
 
             try {
                 var response = await apiRequest(API_BASE, { method: 'GET' });
-
                 if (_isDestroyed) return;
 
                 var data = await safeJson(response);
 
-                console.log('📦 Users response:', data);
-
-                if (Array.isArray(data)) {
-                    usersData = data;
-                } else if (data && Array.isArray(data.users)) {
-                    usersData = data.users;
-                } else if (data && Array.isArray(data.data)) {
-                    usersData = data.data;
-                } else {
-                    console.warn('⚠️ Unexpected users response shape:', data);
-                    usersData = [];
-                }
+                if (Array.isArray(data)) usersData = data;
+                else if (data && Array.isArray(data.users)) usersData = data.users;
+                else if (data && Array.isArray(data.data)) usersData = data.data;
+                else usersData = [];
 
                 usersData = usersData.filter(function(user) {
                     return user && typeof user === 'object';
@@ -1241,7 +1204,6 @@
 
             } catch (error) {
                 if (_isDestroyed) return;
-
                 console.error('❌ [USERS] Load error:', error);
 
                 if (container) {
@@ -1253,14 +1215,9 @@
                         '</div>';
                 }
 
-                if (
-                    error.message &&
-                    (error.message.includes('انتهت صلاحية') ||
-                     error.message.includes('صلاحية'))
-                ) {
+                if (error.message && (error.message.includes('انتهت صلاحية') || error.message.includes('صلاحية'))) {
                     showToast(error.message, 'warning');
                 }
-
             } finally {
                 isLoading = false;
             }
@@ -1274,32 +1231,15 @@
             if (_isDestroyed) return;
 
             var total = users.length;
-
-            var active = users.filter(function(u) {
-                return u.active !== false;
-            }).length;
-
-            var inactive = users.filter(function(u) {
-                return u.active === false;
-            }).length;
-
-            var admins = users.filter(function(u) {
-                return normalizeRole(u.role) === 'admin';
-            }).length;
+            var active = users.filter(function(u) { return u.active !== false; }).length;
+            var inactive = users.filter(function(u) { return u.active === false; }).length;
+            var admins = users.filter(function(u) { return normalizeRole(u.role) === 'admin'; }).length;
 
             var el;
-
-            el = $('totalUsers');
-            if (el) el.textContent = total;
-
-            el = $('activeUsers');
-            if (el) el.textContent = active;
-
-            el = $('inactiveUsers');
-            if (el) el.textContent = inactive;
-
-            el = $('adminUsers');
-            if (el) el.textContent = admins;
+            el = $('totalUsers'); if (el) el.textContent = total;
+            el = $('activeUsers'); if (el) el.textContent = active;
+            el = $('inactiveUsers'); if (el) el.textContent = inactive;
+            el = $('adminUsers'); if (el) el.textContent = admins;
         }
 
         // ============================================================
@@ -1336,8 +1276,9 @@
                 '<th>👤 المستخدم</th>' +
                 '<th>📧 البريد الإلكتروني</th>' +
                 '<th>👔 الدور</th>' +
+                '<th>🗺️ الإقليم / الوحدة</th>' +   // ✅ عمود جديد
                 '<th>📊 الحالة</th>' +
-                '<th>📅 آخر تسجيل دخول</th>' +
+                '<th>📅 آخر دخول</th>' +
                 '<th>⚙️ الإجراءات</th>' +
                 '</tr></thead><tbody>';
 
@@ -1345,18 +1286,10 @@
 
             users.forEach(function(user) {
                 var rawId = user.id || user._id || user.userId;
-
-                if (!rawId) {
-                    console.warn('⚠️ User without id:', user);
-                    return;
-                }
+                if (!rawId) { console.warn('⚠️ User without id:', user); return; }
 
                 var id = normalizeId(rawId);
-
-                if (!id) {
-                    console.warn('⚠️ User with invalid id:', rawId, user);
-                    return;
-                }
+                if (!id) { console.warn('⚠️ User with invalid id:', rawId, user); return; }
 
                 validCount++;
 
@@ -1376,11 +1309,16 @@
                 var normalizedRole = normalizeRole(user.role);
                 var role = roleMap[normalizedRole] || escapeHtml(normalizedRole || '-');
 
+                // ✅ الإقليم / الوحدة
+                var regionInfo = getRegionInfo(user.region || user.unit || user.reg || '');
+
                 html +=
                     '<tr>' +
                     '<td><strong>' + escapeHtml(username) + '</strong></td>' +
                     '<td>' + escapeHtml(email) + '</td>' +
                     '<td>' + role + '</td>' +
+                    '<td><span class="region-badge ' + regionInfo.cls + '">' +
+                        escapeHtml(regionInfo.label) + '</span></td>' +
                     '<td>' + (
                         active
                             ? '<span class="status-badge active">✅ نشط</span>'
@@ -1388,28 +1326,15 @@
                     ) + '</td>' +
                     '<td>' + escapeHtml(lastLogin) + '</td>' +
                     '<td>' +
-                        '<button ' +
-                            'type="button" ' +
-                            'class="btn-sm btn-edit edit-btn" ' +
-                            'data-id="' + escapeHtml(id) + '" ' +
-                            'title="تعديل">' +
-                            '✏️' +
-                        '</button>' +
-                        '<button ' +
-                            'type="button" ' +
-                            'class="btn-sm btn-toggle toggle-btn" ' +
+                        '<button type="button" class="btn-sm btn-edit edit-btn" ' +
+                            'data-id="' + escapeHtml(id) + '" title="تعديل">✏️</button>' +
+                        '<button type="button" class="btn-sm btn-toggle toggle-btn" ' +
                             'data-id="' + escapeHtml(id) + '" ' +
                             'data-status="' + String(active) + '" ' +
                             'title="' + (active ? 'تعطيل' : 'تفعيل') + '">' +
-                            (active ? '🔒' : '🔓') +
-                        '</button>' +
-                        '<button ' +
-                            'type="button" ' +
-                            'class="btn-sm btn-delete delete-btn" ' +
-                            'data-id="' + escapeHtml(id) + '" ' +
-                            'title="حذف">' +
-                            '🗑️' +
-                        '</button>' +
+                            (active ? '🔒' : '🔓') + '</button>' +
+                        '<button type="button" class="btn-sm btn-delete delete-btn" ' +
+                            'data-id="' + escapeHtml(id) + '" title="حذف">🗑️</button>' +
                     '</td>' +
                     '</tr>';
             });
@@ -1421,9 +1346,6 @@
                     '<div class="empty-state">' +
                     '<div class="icon">⚠️</div>' +
                     '<p>لا توجد مستخدمين بمعرّفات صالحة</p>' +
-                    '<p style="font-size:12px;color:rgba(255,255,255,.15);margin-top:8px;">' +
-                    'افحص الـ Console لتفاصيل أكثر' +
-                    '</p>' +
                     '</div>';
                 return;
             }
@@ -1431,24 +1353,15 @@
             container.innerHTML = html;
 
             container.querySelectorAll('.edit-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    editUser(this.dataset.id);
-                });
+                btn.addEventListener('click', function() { editUser(this.dataset.id); });
             });
-
             container.querySelectorAll('.toggle-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    toggleUserStatus(
-                        this.dataset.id,
-                        this.dataset.status === 'true'
-                    );
+                    toggleUserStatus(this.dataset.id, this.dataset.status === 'true');
                 });
             });
-
             container.querySelectorAll('.delete-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    deleteUser(this.dataset.id);
-                });
+                btn.addEventListener('click', function() { deleteUser(this.dataset.id); });
             });
 
             console.log('✅ Rendered', validCount, 'of', users.length, 'users');
@@ -1462,30 +1375,15 @@
             if (!$('userForm')) return;
 
             var el;
-
-            el = $('userId');
-            if (el) el.value = '';
-
-            el = $('userUsername');
-            if (el) el.value = '';
-
-            el = $('userEmail');
-            if (el) el.value = '';
-
-            el = $('userPassword');
-            if (el) el.value = '';
-
-            el = $('userRole');
-            if (el) el.value = 'viewer';
-
-            el = $('userStatus');
-            if (el) el.value = 'active';
-
-            el = $('formTitle');
-            if (el) el.textContent = '➕ إضافة مستخدم جديد';
-
-            el = $('passwordRequired');
-            if (el) el.textContent = '*';
+            el = $('userId'); if (el) el.value = '';
+            el = $('userUsername'); if (el) el.value = '';
+            el = $('userEmail'); if (el) el.value = '';
+            el = $('userPassword'); if (el) el.value = '';
+            el = $('userRole'); if (el) el.value = 'viewer';
+            el = $('userRegion'); if (el) el.value = '';    // ✅ إعادة تعيين الإقليم
+            el = $('userStatus'); if (el) el.value = 'active';
+            el = $('formTitle'); if (el) el.textContent = '➕ إضافة مستخدم جديد';
+            el = $('passwordRequired'); if (el) el.textContent = '*';
 
             ['userUsername', 'userEmail', 'userPassword'].forEach(function(id) {
                 var field = $(id);
@@ -1507,13 +1405,8 @@
         function toggleUserForm() {
             var form = $('userForm');
             if (!form) return;
-
-            if (form.classList.contains('active')) {
-                closeUserForm();
-            } else {
-                resetForm();
-                openUserForm();
-            }
+            if (form.classList.contains('active')) closeUserForm();
+            else { resetForm(); openUserForm(); }
         }
 
         // ============================================================
@@ -1522,41 +1415,37 @@
 
         function editUser(id) {
             var normalizedId = normalizeId(id);
-
-            if (!normalizedId) {
-                showToast('معرّف المستخدم غير صالح.', 'danger');
-                return;
-            }
+            if (!normalizedId) { showToast('معرّف المستخدم غير صالح.', 'danger'); return; }
 
             var user = usersData.find(function(u) {
                 var uid = u.id || u._id || u.userId;
                 return normalizeId(uid) === normalizedId;
             });
 
-            if (!user) {
-                showToast('المستخدم غير موجود.', 'warning');
-                return;
-            }
+            if (!user) { showToast('المستخدم غير موجود.', 'warning'); return; }
 
             var el;
+            el = $('formTitle'); if (el) el.textContent = '✏️ تعديل مستخدم';
+            el = $('userId'); if (el) el.value = normalizedId;
+            el = $('userUsername'); if (el) el.value = user.username || '';
+            el = $('userEmail'); if (el) el.value = user.email || '';
+            el = $('userPassword'); if (el) el.value = '';
+            el = $('userRole'); if (el) el.value = normalizeRole(user.role);
 
-            el = $('formTitle');
-            if (el) el.textContent = '✏️ تعديل مستخدم';
-
-            el = $('userId');
-            if (el) el.value = normalizedId;
-
-            el = $('userUsername');
-            if (el) el.value = user.username || '';
-
-            el = $('userEmail');
-            if (el) el.value = user.email || '';
-
-            el = $('userPassword');
-            if (el) el.value = '';
-
-            el = $('userRole');
-            if (el) el.value = normalizeRole(user.role);
+            // ✅ تحميل الإقليم / الوحدة
+            el = $('userRegion');
+            if (el) {
+                var regionValue = user.region || user.unit || user.reg || '';
+                el.value = normalizeRegion(regionValue);
+                // إذا لم يكن الخيار موجودًا، أضفه مؤقتًا
+                if (regionValue && el.value !== regionValue) {
+                    var opt = document.createElement('option');
+                    opt.value = regionValue;
+                    opt.textContent = regionValue;
+                    opt.selected = true;
+                    el.appendChild(opt);
+                }
+            }
 
             el = $('userStatus');
             if (el) el.value = user.active !== false ? 'active' : 'inactive';
@@ -1623,25 +1512,22 @@
             var emailEl = $('userEmail');
             var passwordEl = $('userPassword');
             var roleEl = $('userRole');
+            var regionEl = $('userRegion');      // ✅ جديد
             var statusEl = $('userStatus');
 
-            if (!usernameEl || !emailEl || !passwordEl || !roleEl || !statusEl) {
-                return;
-            }
+            if (!usernameEl || !emailEl || !passwordEl || !roleEl || !statusEl) return;
 
             var id = normalizeId(idEl ? idEl.value : '');
             var username = usernameEl.value.trim();
             var email = emailEl.value.trim();
             var password = passwordEl.value;
             var role = roleEl.value;
+            var region = regionEl ? regionEl.value : '';    // ✅ جديد
             var status = statusEl.value;
 
-            if (!validateForm({ id: id, username: username, email: email, password: password })) {
-                return;
-            }
+            if (!validateForm({ id: id, username: username, email: email, password: password })) return;
 
             var allowedRoles = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-
             if (allowedRoles.indexOf(role) === -1) {
                 showToast('الدور المحدد غير صالح.', 'danger');
                 return;
@@ -1656,17 +1542,14 @@
                 username: username,
                 email: email,
                 role: role,
+                region: region,                    // ✅ جديد
                 active: status === 'active'
             };
 
-            if (password) {
-                payload.password = password;
-            }
+            if (password) payload.password = password;
 
             isSaving = true;
-
             var saveButton = $('saveUserBtn');
-
             if (saveButton) {
                 saveButton.disabled = true;
                 saveButton.textContent = '⏳ جاري الحفظ...';
@@ -1687,31 +1570,19 @@
                 var data = await safeJson(response);
 
                 if (!response.ok) {
-                    throw new Error(
-                        (data && (data.error || data.message)) ||
-                        'فشل حفظ المستخدم.'
-                    );
+                    throw new Error((data && (data.error || data.message)) || 'فشل حفظ المستخدم.');
                 }
 
-                showToast(
-                    id ? 'تم تحديث المستخدم بنجاح.' : 'تم إضافة المستخدم بنجاح.',
-                    'success'
-                );
-
+                showToast(id ? 'تم تحديث المستخدم بنجاح.' : 'تم إضافة المستخدم بنجاح.', 'success');
                 closeUserForm();
-
                 await loadUsersData();
 
             } catch (error) {
                 if (_isDestroyed) return;
-
                 console.error('❌ [USERS] Save error:', error);
-
                 showToast(error.message || 'فشل حفظ المستخدم.', 'danger');
-
             } finally {
                 isSaving = false;
-
                 if (saveButton) {
                     saveButton.disabled = false;
                     saveButton.textContent = '💾 حفظ';
@@ -1727,27 +1598,19 @@
             if (_isDestroyed) return;
 
             var normalizedId = normalizeId(id);
-
-            if (!normalizedId) {
-                showToast('معرّف المستخدم غير صالح.', 'danger');
-                return;
-            }
+            if (!normalizedId) { showToast('معرّف المستخدم غير صالح.', 'danger'); return; }
 
             var user = usersData.find(function(u) {
                 var uid = u.id || u._id || u.userId;
                 return normalizeId(uid) === normalizedId;
             });
 
-            if (!user) {
-                showToast('المستخدم غير موجود.', 'warning');
-                return;
-            }
+            if (!user) { showToast('المستخدم غير موجود.', 'warning'); return; }
 
             if (currentStatus && normalizeRole(user.role) === 'admin') {
                 var activeAdmins = usersData.filter(function(u) {
                     return normalizeRole(u.role) === 'admin' && u.active !== false;
                 });
-
                 if (activeAdmins.length <= 1) {
                     showToast('لا يمكن تعطيل آخر مسؤول نشط.', 'warning');
                     return;
@@ -1755,40 +1618,27 @@
             }
 
             var action = currentStatus ? 'تعطيل' : 'تفعيل';
-
-            if (!window.confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) {
-                return;
-            }
+            if (!window.confirm('⚠️ هل أنت متأكد من ' + action + ' هذا المستخدم؟')) return;
 
             try {
                 var response = await apiRequest(
                     API_BASE + '/' + encodeURIComponent(normalizedId),
-                    {
-                        method: 'PUT',
-                        body: JSON.stringify({ active: !currentStatus })
-                    }
+                    { method: 'PUT', body: JSON.stringify({ active: !currentStatus }) }
                 );
 
                 if (_isDestroyed) return;
-
                 var data = await safeJson(response);
 
                 if (!response.ok) {
-                    throw new Error(
-                        (data && (data.error || data.message)) ||
-                        'فشل تغيير الحالة.'
-                    );
+                    throw new Error((data && (data.error || data.message)) || 'فشل تغيير الحالة.');
                 }
 
                 showToast('تم ' + action + ' المستخدم بنجاح.', 'success');
-
                 await loadUsersData();
 
             } catch (error) {
                 if (_isDestroyed) return;
-
                 console.error('❌ [USERS] Toggle error:', error);
-
                 showToast(error.message || 'فشل تغيير حالة المستخدم.', 'danger');
             }
         }
@@ -1801,27 +1651,19 @@
             if (_isDestroyed) return;
 
             var normalizedId = normalizeId(id);
-
-            if (!normalizedId) {
-                showToast('معرّف المستخدم غير صالح.', 'danger');
-                return;
-            }
+            if (!normalizedId) { showToast('معرّف المستخدم غير صالح.', 'danger'); return; }
 
             var user = usersData.find(function(u) {
                 var uid = u.id || u._id || u.userId;
                 return normalizeId(uid) === normalizedId;
             });
 
-            if (!user) {
-                showToast('المستخدم غير موجود.', 'warning');
-                return;
-            }
+            if (!user) { showToast('المستخدم غير موجود.', 'warning'); return; }
 
             if (normalizeRole(user.role) === 'admin') {
                 var adminCount = usersData.filter(function(u) {
                     return normalizeRole(u.role) === 'admin';
                 }).length;
-
                 if (adminCount <= 1) {
                     showToast('لا يمكن حذف آخر مسؤول في النظام.', 'warning');
                     return;
@@ -1829,10 +1671,7 @@
             }
 
             var username = user.username || user.name || 'هذا المستخدم';
-
-            if (!window.confirm('⚠️ سيتم حذف "' + username + '" نهائيًا.\n\nهل أنت متأكد؟')) {
-                return;
-            }
+            if (!window.confirm('⚠️ سيتم حذف "' + username + '" نهائيًا.\n\nهل أنت متأكد؟')) return;
 
             try {
                 var response = await apiRequest(
@@ -1841,25 +1680,18 @@
                 );
 
                 if (_isDestroyed) return;
-
                 var data = await safeJson(response);
 
                 if (!response.ok) {
-                    throw new Error(
-                        (data && (data.error || data.message)) ||
-                        'فشل حذف المستخدم.'
-                    );
+                    throw new Error((data && (data.error || data.message)) || 'فشل حذف المستخدم.');
                 }
 
                 showToast('تم حذف المستخدم بنجاح.', 'success');
-
                 await loadUsersData();
 
             } catch (error) {
                 if (_isDestroyed) return;
-
                 console.error('❌ [USERS] Delete error:', error);
-
                 showToast(error.message || 'فشل حذف المستخدم.', 'danger');
             }
         }
@@ -1871,9 +1703,8 @@
         function init() {
             if (!pageExists()) return;
 
-            console.log('👥 Users v9.12 initializing...');
+            console.log('👥 Users v10.0 initializing...');
 
-            // 🖼️ مزامنة الشعار العام (ADDED)
             syncLogoFromServer();
 
             addSafeListener($('addUserBtn'), 'click', toggleUserForm);
@@ -1896,11 +1727,11 @@
 
             loadUsersData();
 
-            console.log('✅ Users v9.12 initialized');
+            console.log('✅ Users v10.0 initialized');
         }
 
         // ============================================================
-        // 🌐 GLOBAL EXPORTS
+        // 🌐 EXPORTS
         // ============================================================
 
         window.usersData = usersData;
@@ -1915,15 +1746,11 @@
         window.showToast = showToast;
         window.getToken = getToken;
         window.normalizeRole = normalizeRole;
+        window.normalizeRegion = normalizeRegion;
+        window.getRegionInfo = getRegionInfo;
         window.cleanupUsersPage = _usersCleanup;
-
-        // 🖼️ تصدير دوال الشعار (ADDED)
         window.applyLogo = applyLogo;
         window.syncLogoFromServer = syncLogoFromServer;
-
-        // ============================================================
-        // 🏁 BOOT
-        // ============================================================
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init, { once: true });
