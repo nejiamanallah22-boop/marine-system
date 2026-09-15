@@ -1545,6 +1545,17 @@
                 return normText(status);
             }
 
+            // ✅ دالة مساعدة: حساب الفئة من الطول (نفس منطق fleet.html)
+            function categoryFromLength(len) {
+                const n = parseFloat(len);
+                if (isNaN(n)) return 'زوارق مزدوجة';
+                if (n === 11) return 'البروق';
+                if (n >= 8 && n <= 12) return 'صقور';
+                if (n > 12 && n <= 25) return 'خوافر';
+                if (n >= 30) return 'طوافات';
+                return 'زوارق مزدوجة';
+            }
+
             function createEmptyCategoriesMap() {
                 const map = {};
                 FIXED_CATEGORIES.forEach(cat => {
@@ -1575,17 +1586,20 @@
                 });
 
                 (vessels || []).forEach(v => {
-                    const cat = normalizeCategoryName(
-                        v.cat !== undefined ? v.cat : (v.category || v.type || v.cls)
-                    );
+                    // ✅ حساب الفئة: من cat → من category/type/cls → من len → افتراضي
+                    let catRaw = v.cat !== undefined ? v.cat : (v.category || v.type || v.cls);
+                    if (!catRaw && v.len !== undefined && v.len !== null && v.len !== '') {
+                        catRaw = categoryFromLength(v.len);
+                    }
+                    const cat = normalizeCategoryName(catRaw) || 'زوارق مزدوجة';
+
                     const status = normalizeStatusName(
                         v.stat !== undefined ? v.stat : (v.status || v.state)
                     );
                     const reg = normText(v.reg || v.region || v.area);
                     const unit = normText(v.repairUnit || v.maintenanceUnit || v.maintenance || v.unit);
 
-                    if (!cat) return;
-
+                    // ✅ المركب الآن دائماً له فئة → لا نتجاهله أبداً
                     if (!stats.general[cat]) {
                         stats.general[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
                     }
@@ -1822,9 +1836,6 @@
                 });
             }
 
-            // ============================================================
-            // 🎯 فلتر الإقليم/الوحدة
-            // ============================================================
             function applyRegionFilter() {
                 const filter = document.getElementById('fRegEff').value;
                 const sections = document.querySelectorAll('.eff-section[data-section-key]');
@@ -1899,7 +1910,6 @@
                 renderAllTables();
                 applyRegionFilter();
 
-                // ✅ إعادة رسم البياني بعد أن يستقر DOM
                 if (chartRetryTimer) clearTimeout(chartRetryTimer);
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
@@ -1948,9 +1958,6 @@
                 drawChart(type);
             };
 
-            // ============================================================
-            // 📊 الرسم البياني — محسّن
-            // ============================================================
             function drawChart(type) {
                 const canvas = document.getElementById('efficiencyChart');
                 if (!canvas) return;
@@ -1959,14 +1966,12 @@
                 const width = parent ? parent.clientWidth - 40 : 0;
                 const height = 320;
 
-                // ✅ إذا كانت الحاوية غير جاهزة → انتظر
                 if (width <= 0) {
                     if (chartRetryTimer) clearTimeout(chartRetryTimer);
                     chartRetryTimer = setTimeout(() => { chartRetryTimer = null; drawChart(type); }, 200);
                     return;
                 }
 
-                // ✅ دقة عالية
                 const dpr = window.devicePixelRatio || 1;
                 canvas.width = width * dpr;
                 canvas.height = height * dpr;
@@ -2008,7 +2013,6 @@
                 else if (type === 'line') drawLineChart(ctx, data, width, height);
             }
 
-            // ✅ حالة فارغة جميلة
             function drawEmptyChartState(ctx, width, height) {
                 const cx = width / 2;
                 const cy = height / 2;
@@ -2347,7 +2351,7 @@
                 if (!generalBody) return false;
                 initialized = true;
 
-                console.log('🎨 Efficiency v11.1: Initializing...');
+                console.log('🎨 Efficiency v11.2: Initializing...');
 
                 applyLogo();
                 syncLogoFromServer();
@@ -2368,7 +2372,6 @@
                     showNotification('تعذر تحميل البيانات: ' + err.message, 'error');
                 }
 
-                // ✅ تأخير إضافي لإعادة رسم البياني عند استقرار DOM
                 setTimeout(() => drawChart('pie'), 300);
                 setTimeout(() => drawChart('pie'), 800);
                 return true;
@@ -2389,7 +2392,6 @@
                             resizeTimer = setTimeout(() => drawChart(currentChart), 200);
                         });
 
-                        // ✅ مراقبة حجم الحاوية (SPA)
                         if (typeof ResizeObserver !== 'undefined') {
                             const chartParent = document.getElementById('efficiencyChart')?.parentElement;
                             if (chartParent) {
@@ -2404,7 +2406,7 @@
                             }
                         }
 
-                        console.log('🎨 Efficiency v11.1: Ready');
+                        console.log('🎨 Efficiency v11.2: Ready');
                     }
                 });
             }
