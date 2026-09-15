@@ -4,34 +4,26 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
-// استيراد الـ models — عدّل المسارات حسب مشروعك
 const User = require('../models/User');
 const Session = require('../models/Session');
-
-// استيراد middleware المصادقة
 const auth = require('../middleware/auth');
 
 // ============================================================
-// 🛡️ Middleware مصادقة اختياري (يقرأ التوكن من query)
-// يُستخدم مع sendBeacon التي لا تدعم headers
+// 🛡️ Middleware للمصادقة من query (لـ sendBeacon)
 // ============================================================
 function authFromQueryOrHeader(req, res, next) {
     try {
         let token = null;
 
-        // 1) من Authorization header
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
             token = authHeader.substring(7);
         }
-
-        // 2) من query (لـ sendBeacon)
         if (!token && req.query.token) {
             token = req.query.token;
         }
-
-        // 3) من cookie
         if (!token && req.cookies && req.cookies.token) {
             token = req.cookies.token;
         }
@@ -57,24 +49,43 @@ function authFromQueryOrHeader(req, res, next) {
 }
 
 // ============================================================
+// 🔍 Helper: إيجاد المستخدم بواسطة UUID أو _id
+// ============================================================
+async function findUserByAnyId(userId) {
+    if (!userId) return null;
+
+    // أولاً: جرّب حقل id (UUID)
+    let user = await User.findOne({ id: userId });
+    if (user) return user;
+
+    // ثانياً: إذا كان ObjectId صالح، جرّب _id
+    if (/^[0-9a-fA-F]{24}$/.test(String(userId))) {
+        user = await User.findById(userId);
+        if (user) return user;
+    }
+
+    return null;
+}
+
+// ============================================================
 // 📥 GET /api/monitoring/users
-// قائمة المستخدمين مع مواقعهم — للخريطة
 // ============================================================
 router.get('/users', auth, async (req, res) => {
     try {
         const users = await User.find({})
-            .select('name username email role active isActive lat lng accuracy location lastLogin lastActive userAgent')
+            .select('id username email name role region isActive lat lng accuracy location lastLogin lastActive userAgent')
             .lean()
             .limit(500);
 
         const normalized = users.map(u => ({
-            id: String(u._id),
+            // ✅ استخدم حقل id (UUID) أولاً
+            id: u.id || String(u._id),
             name: u.name || u.username || 'مستخدم',
             username: u.username || '',
             email: u.email || '',
             role: u.role || 'viewer',
-            active: u.active !== false && u.isActive !== false,
-            // ✅ التحقق من صحة الإحداثيات
+            region: u.region || '',
+            active: u.isActive !== false,
             lat: (typeof u.lat === 'number' && u.lat >= -90 && u.lat <= 90) ? u.lat : null,
             lng: (typeof u.lng === 'number' && u.lng >= -180 && u.lng <= 180) ? u.lng : null,
             accuracy: (typeof u.accuracy === 'number') ? u.accuracy : null,
@@ -93,18 +104,16 @@ router.get('/users', auth, async (req, res) => {
 
 // ============================================================
 // 📥 GET /api/monitoring/sessions
-// الجلسات النشطة
 // ============================================================
 router.get('/sessions', auth, async (req, res) => {
     try {
-        // آخر ساعة فقط = نشطة
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
         const sessions = await Session.find({
             status: 'active',
             lastActivity: { $gte: oneHourAgo }
         })
-            .populate('userId', 'name username email role')
+            .populate('userId', 'id name username email role')
             .sort({ lastActivity: -1 })
             .lean()
             .limit(200);
@@ -112,9 +121,9 @@ router.get('/sessions', auth, async (req, res) => {
         const normalized = sessions.map(s => {
             const u = s.userId || {};
             return {
-                id: String(s._id),
+                id: s.sessionId || String(s._id),
                 sessionId: s.sessionId || String(s._id),
-                userId: String(u._id || s.userId || ''),
+                userId: u.id || String(u._id || s.userId || ''),
                 name: u.name || u.username || 'مستخدم',
                 username: u.username || '',
                 email: u.email || '',
@@ -137,13 +146,12 @@ router.get('/sessions', auth, async (req, res) => {
 
 // ============================================================
 // 📍 POST /api/monitoring/location
-// استقبال موقع المستخدم الحالي + heartbeat
 // ============================================================
 router.post('/location', auth, async (req, res) => {
     try {
         const { lat, lng, accuracy, userAgent } = req.body || {};
 
-        // ✅ التحقق من صحة الإحداثيات
+        // ✅ التحقق من الإحداثيات
         if (typeof lat !== 'number' || typeof lng !== 'number' ||
             !isFinite(lat) || !isFinite(lng) ||
             lat < -90 || lat > 90 || lng < -180 || lng > 180) {
@@ -154,68 +162,79 @@ router.post('/location', auth, async (req, res) => {
         const now = new Date();
         const ua = (userAgent || req.headers['user-agent'] || '').substring(0, 500);
 
-        // ✅ تحديث بيانات المستخدم
-        const updateResult = await User.findByIdAndUpdate(
-            userId,
-            {
-                $set: {
-                    lat: Number(lat.toFixed(6)),
-                    lng: Number(lng.toFixed(6)),
-                    accuracy: (typeof accuracy === 'number') ? Math.round(accuracy) : null,
-                    userAgent: ua,
-                    lastActive: now,
-                    lastLatLngUpdate: now
-                }
-            },
-            { new: false }
-        );
+        console.log('[MONITORING] POST /location — userId:', userId);
 
-        if (!updateResult) {
+        // ✅ إيجاد المستخدم بـ id (UUID) أو _id
+        const user = await findUserByAnyId(userId);
+
+        if (!user) {
+            console.warn('[MONITORING] User not found:', userId);
             return res.status(404).json({ error: 'المستخدم غير موجود' });
         }
 
-        // ✅ تحديث/إنشاء الجلسة النشطة
+        console.log('[MONITORING] User found:', user.username, '_id:', user._id);
+
+        // ✅ تحديث المستخدم
+        user.lat = Number(lat.toFixed(6));
+        user.lng = Number(lng.toFixed(6));
+        user.accuracy = (typeof accuracy === 'number') ? Math.round(accuracy) : null;
+        user.userAgent = ua;
+        user.lastActive = now;
+        user.lastLatLngUpdate = now;
+        await user.save();
+
+        // ✅ تحديث/إنشاء الجلسة — استخدم _id الحقيقي
         await Session.findOneAndUpdate(
-            { userId, status: 'active' },
+            { userId: user._id, status: 'active' },
             {
                 $set: {
                     lastActivity: now,
                     userAgent: ua,
-                    lat: Number(lat.toFixed(6)),
-                    lng: Number(lng.toFixed(6))
+                    lat: user.lat,
+                    lng: user.lng
                 },
                 $setOnInsert: {
-                    userId,
+                    userId: user._id,  // ⬅️ ObjectId الحقيقي
                     createdAt: now,
                     status: 'active',
-                    sessionId: require('crypto').randomUUID()
+                    sessionId: crypto.randomUUID()
                 }
             },
             { upsert: true, new: true }
         );
 
-        res.json({ ok: true, ts: now.toISOString() });
+        res.json({
+            ok: true,
+            ts: now.toISOString(),
+            user: { id: user.id, name: user.name }
+        });
     } catch (err) {
         console.error('[MONITORING] POST /location error:', err);
-        res.status(500).json({ error: 'فشل تحديث الموقع' });
+        res.status(500).json({ error: 'فشل تحديث الموقع', details: err.message });
     }
 });
 
 // ============================================================
 // 🚪 POST /api/monitoring/session/end
-// إغلاق الجلسة — يُستدعى من sendBeacon عند مغادرة الصفحة
 // ============================================================
 router.post('/session/end', authFromQueryOrHeader, async (req, res) => {
     try {
         const userId = req.user.id;
         const now = new Date();
 
+        console.log('[MONITORING] POST /session/end — userId:', userId);
+
+        const user = await findUserByAnyId(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'المستخدم غير موجود' });
+        }
+
         const result = await Session.updateMany(
-            { userId, status: 'active' },
+            { userId: user._id, status: 'active' },
             { $set: { status: 'ended', endedAt: now } }
         );
 
-        console.log('[MONITORING] Session ended for user:', userId, 'count:', result.modifiedCount);
+        console.log('[MONITORING] Session ended — count:', result.modifiedCount);
         res.json({ ok: true, ended: result.modifiedCount });
     } catch (err) {
         console.error('[MONITORING] POST /session/end error:', err);
@@ -224,14 +243,16 @@ router.post('/session/end', authFromQueryOrHeader, async (req, res) => {
 });
 
 // ============================================================
-// 📊 GET /api/monitoring/stats — إحصائيات سريعة (اختياري)
+// 📊 GET /api/monitoring/stats
 // ============================================================
 router.get('/stats', auth, async (req, res) => {
     try {
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+
         const [totalUsers, activeUsers, admins, sessionsCount] = await Promise.all([
             User.countDocuments({}),
-            User.countDocuments({ active: { $ne: false }, isActive: { $ne: false } }),
-            User.countDocuments({ role: { $in: ['admin', 'manager'] } }),
+            User.countDocuments({ isActive: true, lastActive: { $gte: fiveMinAgo } }),
+            User.countDocuments({ role: { $in: ['admin', 'manager'] }, isActive: true }),
             Session.countDocuments({
                 status: 'active',
                 lastActivity: { $gte: new Date(Date.now() - 3600000) }
@@ -249,6 +270,24 @@ router.get('/stats', auth, async (req, res) => {
         console.error('[MONITORING] GET /stats error:', err);
         res.status(500).json({ error: 'فشل تحميل الإحصائيات' });
     }
+});
+
+// ============================================================
+// 🏥 GET /api/monitoring/health — للتشخيص
+// ============================================================
+router.get('/health', (req, res) => {
+    res.json({
+        ok: true,
+        routes: [
+            'GET  /api/monitoring/users',
+            'GET  /api/monitoring/sessions',
+            'POST /api/monitoring/location',
+            'POST /api/monitoring/session/end',
+            'GET  /api/monitoring/stats',
+            'GET  /api/monitoring/health'
+        ],
+        ts: new Date().toISOString()
+    });
 });
 
 module.exports = router;
