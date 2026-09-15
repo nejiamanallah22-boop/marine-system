@@ -1,9 +1,10 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.0.1
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.1.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
 // ⚙️ SETTINGS + 🖼️ LOGO (MongoDB-backed)
 // 📦 PROFESSIONAL SEED PROTECTION (one-time seed + auto cleanup)
+// ✨ v10.1: Unified Maintenance Routes + Enhanced formatMaintenance
 // ============================================================
 
 'use strict';
@@ -14,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.0.1 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.1.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -470,7 +471,6 @@ const forgotPasswordLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use(compression());
-// ⚠️ زيادة الحد لاستيعاب الشعار Base64 (حتى ~2.8 MB)
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: false, limit: '5mb' }));
 app.use(cookieParser());
@@ -527,11 +527,7 @@ async function connectMongoDB() {
 
         await createIndexes();
         await ensureAdminExists();
-
-        // ✅ 1) نظّف أي بيانات وهمية قديمة (يعمل مرة واحدة)
         await cleanupDemoVessels();
-
-        // ✅ 2) ازرع البيانات (فقط إذا لم تُزرع سابقاً)
         await ensureInitialData();
 
         return true;
@@ -613,13 +609,7 @@ async function ensureAdminExists() {
 }
 
 // ============================================================
-// 📦 INITIAL DATA (v10.0.1) — Professional Seed Protection
-// ============================================================
-// ✅ يزرع البيانات مرة واحدة فقط في تاريخ المشروع
-// ✅ معطّل تلقائياً في الإنتاج (production)
-// ✅ يمكن تفعيله في الإنتاج بـ SEED_DEFAULT_DATA=true
-// ✅ يمنع التكرار حتى بعد إعادة النشر 100 مرة
-// ✅ ينظّف البيانات الوهمية القديمة (101/205/312) إن وُجدت
+// 📦 INITIAL DATA (v10.1.0) — Professional Seed Protection
 // ============================================================
 
 const SEED_MARKER = 'initial-data-planted-v1';
@@ -627,9 +617,6 @@ const DEMO_VESSEL_NAMES = ['الوحدة 101', 'الوحدة 205', 'الوحدة
 
 async function ensureInitialData() {
     try {
-        // ─────────────────────────────────────────
-        // 1) فحص العلامة الدائمة — هل تم الزرع سابقاً؟
-        // ─────────────────────────────────────────
         let seedMarker = null;
         try {
             seedMarker = await Log.findOne({
@@ -646,9 +633,6 @@ async function ensureInitialData() {
             return;
         }
 
-        // ─────────────────────────────────────────
-        // 2) فحص: هل القاعدة تحتوي مراكب حقيقية؟
-        // ─────────────────────────────────────────
         const vesselCount = await Vessel.countDocuments();
 
         if (vesselCount > 0) {
@@ -671,13 +655,10 @@ async function ensureInitialData() {
             return;
         }
 
-        // ─────────────────────────────────────────
-        // 3) تعطيل في الإنتاج تلقائياً
-        // ─────────────────────────────────────────
         const seedEnabledInProd = process.env.SEED_DEFAULT_DATA === 'true';
 
         if (isProduction && !seedEnabledInProd) {
-            console.log('ℹ️ Production mode — default seed DISABLED (set SEED_DEFAULT_DATA=true to enable)');
+            console.log('ℹ️ Production mode — default seed DISABLED');
             try {
                 await Log.create({
                     action: 'seed',
@@ -693,9 +674,6 @@ async function ensureInitialData() {
             return;
         }
 
-        // ─────────────────────────────────────────
-        // 4) زرع البيانات (مرة واحدة فقط)
-        // ─────────────────────────────────────────
         console.log('📦 Creating initial vessels (ONE TIME ONLY)...');
 
         const nowIso = new Date().toISOString();
@@ -796,9 +774,6 @@ async function ensureInitialData() {
         await Maintenance.insertMany(initialLogs);
         console.log(`✅ ${initialLogs.length} maintenance logs created`);
 
-        // ─────────────────────────────────────────
-        // 5) ضع العلامة الدائمة — لن يُزرع مرة أخرى أبداً
-        // ─────────────────────────────────────────
         try {
             await Log.create({
                 action: 'seed',
@@ -821,13 +796,6 @@ async function ensureInitialData() {
         console.error(error.stack);
     }
 }
-
-// ============================================================
-// 🧹 CLEANUP — احذف المراكب الوهمية القديمة إن وُجدت
-// ============================================================
-// ✅ ينظّف تلقائياً المراكب 101/205/312 التي زرعها النظام سابقاً
-// ✅ يعمل مرة واحدة فقط (بعد إضافة العلامة)
-// ============================================================
 
 async function cleanupDemoVessels() {
     try {
@@ -1319,13 +1287,15 @@ function formatVessel(vessel) {
         zone: vessel.zone || '',
         port: vessel.port || '',
         supp: vessel.supp || '',
-        status: vessel.status || 'صالح',
+        status: vessel.status || vessel.stat || 'صالح',
+        stat: vessel.stat || vessel.status || 'صالح',
         break: vessel.break || '',
         fDate: vessel.fDate || null,
         eDate: vessel.eDate || null,
         ref: vessel.ref || '',
         repairUnit: vessel.repairUnit || '',
         cat: vessel.cat || '',
+        category: vessel.cat || vessel.category || '',
         type: vessel.type || '',
         location: vessel.location || '',
         createdAt: vessel.createdAt,
@@ -1333,33 +1303,72 @@ function formatVessel(vessel) {
     };
 }
 
+// ============================================================
+// 🔧 formatMaintenance — v10.1 ENHANCED (يدعم partsUsed + parts)
+// ============================================================
 function formatMaintenance(log) {
     if (!log) return null;
+
     const isoDate = log.date || log.startDate || log.createdAt || new Date().toISOString();
     let displayDate = isoDate;
     try {
         const d = new Date(isoDate);
         if (!isNaN(d.getTime())) displayDate = d.toLocaleDateString('ar-EG');
     } catch (e) {}
+
+    // ✅ توحيد قطع الغيار: partsUsed → parts
+    const rawParts = log.partsUsed || log.parts || [];
+    const parts = (Array.isArray(rawParts) ? rawParts : []).map(p => ({
+        name: p.partName || p.name || '',
+        quantity: Number(p.quantity) || 1,
+        price: Number(p.cost || p.price) || 0,
+        total: (Number(p.cost || p.price) || 0) * (Number(p.quantity) || 1)
+    }));
+
     return {
         id: log.id,
         _id: log._id ? log._id.toString() : null,
+
+        // المركب
+        vesselId: log.vesselId || '',
         vesselName: log.vesselName || '—',
         vessel: log.vesselName || '—',
         vesselNum: log.vesselNum || '',
+
+        // الوحدة والفني
+        repairUnit: log.repairUnit || '—',
+        unit: log.repairUnit || '—',
+        technician: log.supervisorName || log.supervisor || 'غير محدد',
+        supervisorName: log.supervisorName || '',
+        phone: typeof log.supervisor === 'string' ? log.supervisor : '',
+
+        // نوع التدخل
         type: log.type || 'صيانة دورية',
-        status: log.status || 'قيد الانتظار',
+        interventionType: log.type || 'صيانة دورية',
+        faultType: log.faultType || 'أخرى',
+        priority: log.priority || 'متوسط',
+
+        // التواريخ
         date: displayDate,
         isoDate: isoDate,
         startDate: log.startDate,
         endDate: log.endDate,
         createdAt: log.createdAt,
-        repairUnit: log.repairUnit || '—',
-        unit: log.repairUnit || '—',
+        updatedAt: log.updatedAt,
+
+        // التكاليف
         cost: Number(log.cost) || 0,
+
+        // قطع الغيار
+        parts: parts,
+        partsUsed: parts,
+
+        // الوصف
+        description: log.description || '',
         notes: log.notes || '',
-        vesselId: log.vesselId || '',
-        updatedAt: log.updatedAt
+
+        // الحالة
+        status: log.status || 'قيد الانتظار'
     };
 }
 
@@ -1408,7 +1417,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '10.0.1', timestamp: new Date().toISOString(),
+            version: '10.1.0', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
@@ -2149,7 +2158,8 @@ function formatMaintenance(log) {
             const newVessel = await Vessel.create({
                 id: randomId(8), name: name.trim(), num: num || '', len: Number(len) || 0,
                 region: region || '', zone: zone || '', port: port || '', supp: supp || '',
-                status: status || 'صالح', break: breakType || '', fDate: fDate || null,
+                status: status || 'صالح', stat: status || 'صالح',
+                break: breakType || '', fDate: fDate || null,
                 eDate: eDate || null, ref: ref || '', repairUnit: repairUnit || '', cat: cat || '',
                 createdBy: req.user.id
             });
@@ -2184,8 +2194,8 @@ function formatMaintenance(log) {
             const vessel = await Vessel.findOne(idQuery);
             if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
 
-            const { name, num, len, region, zone, port, supp, status, break: breakType, fDate, eDate, ref, repairUnit, cat } = req.body;
-            const oldStatus = vessel.status;
+            const { name, num, len, region, zone, port, supp, status, stat, break: breakType, fDate, eDate, ref, repairUnit, cat } = req.body;
+            const oldStatus = vessel.status || vessel.stat;
 
             if (typeof name === 'string' && name.trim()) vessel.name = name.trim();
             if (num !== undefined) vessel.num = num;
@@ -2194,7 +2204,8 @@ function formatMaintenance(log) {
             if (zone !== undefined) vessel.zone = zone;
             if (port !== undefined) vessel.port = port;
             if (supp !== undefined) vessel.supp = supp;
-            if (status !== undefined) vessel.status = status;
+            if (status !== undefined) { vessel.status = status; vessel.stat = status; }
+            else if (stat !== undefined) { vessel.status = stat; vessel.stat = stat; }
             if (breakType !== undefined) vessel.break = breakType;
             if (fDate !== undefined) vessel.fDate = fDate;
             if (eDate !== undefined) vessel.eDate = eDate;
@@ -2250,105 +2261,256 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // MAINTENANCE
+    // 🔧 MAINTENANCE — UNIFIED ROUTES (v10.1)
+    // يدعم كلا المسارين: /api/maintenance + /api/maintenance-logs
     // ========================================================
 
-    app.get('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:read'), async (req, res) => {
-        try {
-            const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
-            res.json(logs.map(l => formatMaintenance(l)));
-        } catch (error) {
-            res.status(500).json({ success: false, error: 'فشل تحميل سجلات الصيانة' });
-        }
-    });
-
-    app.get('/api/maintenance', authenticateAccessToken, requirePermission('maintenance:read'), async (req, res) => {
+    // 📋 GET (both paths)
+    async function handleGetMaintenance(req, res) {
         try {
             const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
             const records = logs.map(l => formatMaintenance(l));
-            res.json({
-                success: true, records,
+            return res.json({
+                success: true,
+                records,
+                data: records,
+                total: records.length,
                 stats: {
                     total: records.length,
                     completed: records.filter(r => r.status === 'مكتملة').length,
-                    pending: records.filter(r => r.status === 'معلقة' || r.status === 'قيد الانتظار').length,
+                    pending: records.filter(r => r.status === 'قيد الانتظار' || r.status === 'معلقة').length,
                     overdue: records.filter(r => r.status === 'متأخرة').length,
-                    inProgress: records.filter(r => r.status === 'قيد التنفيذ').length
+                    inProgress: records.filter(r => r.status === 'قيد التنفيذ' || r.status === 'قيد الإنجاز').length
                 }
             });
         } catch (error) {
-            res.status(500).json({ success: false, error: 'فشل تحميل الصيانة' });
+            console.error('❌ GET maintenance:', error);
+            return res.status(500).json({ success: false, error: 'فشل تحميل الصيانة' });
         }
-    });
+    }
+    app.get('/api/maintenance', authenticateAccessToken, requirePermission('maintenance:read'), handleGetMaintenance);
+    app.get('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:read'), handleGetMaintenance);
 
-    app.post('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, async (req, res) => {
+    // ➕ POST (both paths)
+    async function handleCreateMaintenance(req, res) {
         try {
-            const { vesselId, vesselName, vesselNum, type, status, date, repairUnit, cost, notes } = req.body;
-            if (typeof vesselName !== 'string' || !vesselName.trim()) return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
+            const {
+                vesselId, vesselName, vesselNum,
+                type, status, date, startDate, endDate,
+                repairUnit, unit, cost,
+                technician, supervisorName, supervisor,
+                description, notes,
+                partsUsed, parts,
+                priority, faultType
+            } = req.body;
+
+            if (typeof vesselName !== 'string' || !vesselName.trim()) {
+                return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
+            }
+
+            // توحيد قطع الغيار
+            const rawParts = partsUsed || parts || [];
+            const normalizedParts = (Array.isArray(rawParts) ? rawParts : []).map(p => ({
+                partName: p.partName || p.name || '',
+                quantity: Number(p.quantity) || 1,
+                cost: Number(p.cost || p.price) || 0
+            })).filter(p => p.partName);
 
             const logEntry = await Maintenance.create({
-                id: randomId(8), vesselId: vesselId || '', vesselName: vesselName.trim(),
-                vesselNum: vesselNum || '', type: type || 'صيانة دورية',
-                status: status || 'قيد التنفيذ', date: date || new Date().toISOString(),
-                startDate: date ? new Date(date) : new Date(),
-                repairUnit: repairUnit || '—', cost: Number(cost) || 0,
-                notes: notes || '', createdBy: req.user.id
+                id: randomId(8),
+                vesselId: vesselId || '',
+                vesselName: vesselName.trim(),
+                vesselNum: vesselNum || '',
+                type: type || 'صيانة دورية',
+                priority: priority || 'متوسط',
+                status: status || 'قيد التنفيذ',
+                date: date || new Date().toISOString(),
+                startDate: startDate ? new Date(startDate) : new Date(),
+                endDate: endDate ? new Date(endDate) : null,
+                repairUnit: repairUnit || unit || '—',
+                cost: Number(cost) || 0,
+                description: description || '',
+                notes: notes || '',
+                supervisorName: supervisorName || technician || '',
+                supervisor: supervisor || null,
+                faultType: faultType || 'أخرى',
+                partsUsed: normalizedParts,
+                createdBy: req.user.id
             });
 
-            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'create', resource: 'maintenance', resourceId: logEntry.id, resourceName: logEntry.vesselName, status: 'success', ip: req.ip, requestId: req.requestId });
-            await notify({ type: 'info', category: 'maintenance', title: 'مهمة صيانة جديدة', message: 'تم إضافة "' + logEntry.vesselName + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/maintenance.html', icon: 'wrench', actorName: req.user.name || req.user.username });
+            await addSystemLog({
+                userId: req.user.id, userName: req.user.name,
+                action: 'create', resource: 'maintenance',
+                resourceId: logEntry.id, resourceName: logEntry.vesselName,
+                status: 'success', ip: req.ip, requestId: req.requestId
+            });
 
-            return res.status(201).json({ success: true, message: 'تم إضافة سجل الصيانة', log: formatMaintenance(logEntry) });
+            await notify({
+                type: 'info', category: 'maintenance',
+                title: 'مهمة صيانة جديدة',
+                message: 'تم إضافة "' + logEntry.vesselName + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/maintenance.html', icon: 'wrench',
+                actorName: req.user.name || req.user.username
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: 'تم إضافة سجل الصيانة',
+                log: formatMaintenance(logEntry),
+                record: formatMaintenance(logEntry),
+                data: formatMaintenance(logEntry)
+            });
         } catch (error) {
-            return res.status(500).json({ success: false, error: 'خطأ في إضافة سجل الصيانة' });
+            console.error('❌ POST maintenance:', error);
+            return res.status(500).json({ success: false, error: 'خطأ في إضافة السجل', details: error.message });
         }
-    });
+    }
+    app.post('/api/maintenance', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, handleCreateMaintenance);
+    app.post('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, handleCreateMaintenance);
 
-    app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, async (req, res) => {
+    // ✏️ PUT (both paths)
+    async function handleUpdateMaintenance(req, res) {
         try {
             const idQuery = buildIdQuery(req.params.id);
             if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
             const log = await Maintenance.findOne(idQuery);
-            if (!log) return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
+            if (!log) return res.status(404).json({ success: false, error: 'السجل غير موجود' });
 
-            const { status, cost, notes } = req.body;
-            if (status !== undefined) log.status = status;
-            if (cost !== undefined) log.cost = Number(cost) || 0;
-            if (notes !== undefined) log.notes = notes;
+            const allowedFields = ['status', 'cost', 'notes', 'description', 'endDate', 'priority', 'repairUnit', 'supervisorName', 'type', 'faultType'];
+            allowedFields.forEach(field => {
+                if (req.body[field] !== undefined) log[field] = req.body[field];
+            });
+
+            if (req.body.partsUsed || req.body.parts) {
+                const rawParts = req.body.partsUsed || req.body.parts;
+                log.partsUsed = (Array.isArray(rawParts) ? rawParts : []).map(p => ({
+                    partName: p.partName || p.name || '',
+                    quantity: Number(p.quantity) || 1,
+                    cost: Number(p.cost || p.price) || 0
+                })).filter(p => p.partName);
+            }
 
             log.updatedAt = new Date();
             await log.save();
 
-            await notify({ type: 'info', category: 'maintenance', title: 'تعديل صيانة', message: 'تم تعديل "' + log.vesselName + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/maintenance.html', icon: 'edit', actorName: req.user.name || req.user.username });
+            await notify({
+                type: 'info', category: 'maintenance',
+                title: 'تعديل صيانة',
+                message: 'تم تعديل "' + log.vesselName + '" بواسطة ' + (req.user.name || req.user.username),
+                link: '/pages/maintenance.html', icon: 'edit',
+                actorName: req.user.name || req.user.username
+            });
 
-            return res.json({ success: true, message: 'تم تحديث سجل الصيانة', log: formatMaintenance(log) });
+            return res.json({
+                success: true,
+                message: 'تم تحديث السجل',
+                log: formatMaintenance(log),
+                record: formatMaintenance(log),
+                data: formatMaintenance(log)
+            });
         } catch (error) {
-            return res.status(500).json({ success: false, error: 'خطأ في تحديث السجل' });
+            console.error('❌ PUT maintenance:', error);
+            return res.status(500).json({ success: false, error: 'خطأ في التحديث' });
         }
-    });
+    }
+    app.put('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleUpdateMaintenance);
+    app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleUpdateMaintenance);
 
-    app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, async (req, res) => {
+    // 🗑️ DELETE (both paths)
+    async function handleDeleteMaintenance(req, res) {
         try {
             const idQuery = buildIdQuery(req.params.id);
             if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
             const log = await Maintenance.findOne(idQuery);
-            if (!log) return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
+            if (!log) return res.status(404).json({ success: false, error: 'السجل غير موجود' });
 
             const vesselName = log.vesselName;
             const logId = log.id;
 
             await Maintenance.deleteOne({ _id: log._id });
 
-            await addSystemLog({ userId: req.user.id, userName: req.user.name, action: 'delete', resource: 'maintenance', resourceId: logId, resourceName: vesselName, status: 'success', ip: req.ip, requestId: req.requestId });
-            await notify({ type: 'warning', category: 'maintenance', title: 'حذف صيانة', message: 'تم حذف "' + vesselName + '" بواسطة ' + (req.user.name || req.user.username), link: '/pages/maintenance.html', icon: 'trash', actorName: req.user.name || req.user.username });
+            await addSystemLog({
+                userId: req.user.id, userName: req.user.name,
+                action: 'delete', resource: 'maintenance',
+                resourceId: logId, resourceName: vesselName,
+                status: 'success', ip: req.ip, requestId: req.requestId
+            });
 
-            return res.json({ success: true, message: 'تم حذف سجل الصيانة' });
+            return res.json({ success: true, message: 'تم حذف السجل' });
         } catch (error) {
+            console.error('❌ DELETE maintenance:', error);
             return res.status(500).json({ success: false, error: 'خطأ في الحذف' });
         }
-    });
+    }
+    app.delete('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, handleDeleteMaintenance);
+    app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, handleDeleteMaintenance);
+
+    // ✅ POST COMPLETE — إكمال + تحديث المركب في السجل العام
+    async function handleCompleteMaintenance(req, res) {
+        try {
+            const idQuery = buildIdQuery(req.params.id);
+            if (!idQuery) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const log = await Maintenance.findOne(idQuery);
+            if (!log) return res.status(404).json({ success: false, error: 'السجل غير موجود' });
+
+            log.status = 'مكتملة';
+            log.endDate = new Date();
+            await log.save();
+
+            // ✅ تحديث المركب في السجل العام
+            let vesselUpdated = false;
+            try {
+                const vesselIdQuery = buildIdQuery(log.vesselId);
+                if (vesselIdQuery) {
+                    const vessel = await Vessel.findOne(vesselIdQuery);
+                    if (vessel) {
+                        vessel.status = 'صالح';
+                        vessel.stat = 'صالح';
+                        vessel.break = '';
+                        vessel.fDate = null;
+                        vessel.eDate = new Date().toISOString().split('T')[0];
+                        vessel.updatedAt = new Date();
+                        await vessel.save();
+                        vesselUpdated = true;
+                        console.log('✅ تم تحديث حالة المركب:', vessel.name, '→ صالح');
+                    }
+                }
+            } catch (vErr) {
+                console.warn('⚠️ لم يتم تحديث السجل العام:', vErr.message);
+            }
+
+            await addSystemLog({
+                userId: req.user.id, userName: req.user.name,
+                action: 'complete', resource: 'maintenance',
+                resourceId: log.id, resourceName: log.vesselName,
+                status: 'success', ip: req.ip, requestId: req.requestId
+            });
+
+            await notify({
+                type: 'success', category: 'maintenance',
+                title: 'إكمال صيانة',
+                message: 'تم إكمال صيانة "' + log.vesselName + '"',
+                link: '/pages/maintenance.html', icon: 'check',
+                actorName: req.user.name || req.user.username
+            });
+
+            return res.json({
+                success: true,
+                message: 'تم إكمال الصيانة' + (vesselUpdated ? ' وتحديث حالة المركب' : ''),
+                log: formatMaintenance(log),
+                record: formatMaintenance(log),
+                vesselUpdated
+            });
+        } catch (error) {
+            console.error('❌ POST complete:', error);
+            return res.status(500).json({ success: false, error: error.message });
+        }
+    }
+    app.post('/api/maintenance/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleCompleteMaintenance);
+    app.post('/api/maintenance-logs/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleCompleteMaintenance);
 
     // ========================================================
     // USERS (admin only)
@@ -2680,7 +2842,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.0.1</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.1.0</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2730,10 +2892,11 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.0.1');
+            console.log('🚢 MARINE SYSTEM v10.1.0');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('📦 Seed Protection: ONE-TIME ONLY');
+            console.log('🔧 Maintenance Routes: UNIFIED (maintenance + maintenance-logs)');
             console.log('🤖 AI Assistant + Smart Import: ' + (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'));
             console.log('📧 Email: ' + (
                 (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
