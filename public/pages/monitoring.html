@@ -1,19 +1,18 @@
 <!-- public/pages/monitoring.html -->
 <div id="page-monitoring">
     <style>
-        /* ✅ اللون المعتم على body */
         body { background: #0a0e1a; }
 
         /* ============================================================
-           📊 MONITORING PAGE - REAL DATA ONLY v9.4
-           بدون بيانات وهمية + طباعة احترافية
+           📊 MONITORING PAGE — v10.0
+           ✅ ID المستخدم
+           ✅ نوع الجهاز (كشف تلقائي من userAgent)
+           ✅ بيانات حقيقية من API
            ============================================================ */
 
         #page-monitoring {
-            width: 100%;
-            max-width: 100%;
-            padding: 0;
-            margin: 0;
+            width: 100%; max-width: 100%;
+            padding: 0; margin: 0;
             font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
             background: transparent;
             color: #e8edf5;
@@ -25,10 +24,8 @@
         #page-monitoring::before {
             content: '';
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
             background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
                 radial-gradient(ellipse at 80% 50%, rgba(167,139,250,0.03) 0%, transparent 60%);
             z-index: -1;
@@ -41,64 +38,42 @@
             50% { transform: scale(1.05) rotate(2deg); }
         }
 
-        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: #e6b31e; border-radius: 10px; }
 
         .mon-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            flex-wrap: wrap;
-            gap: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; flex-wrap: wrap; gap: 12px;
             background: rgba(255,255,255,0.04);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid rgba(255,255,255,0.06);
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            position: sticky; top: 0; z-index: 10;
             width: 100%;
         }
 
-        .mon-header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
+        .mon-header-left { display: flex; align-items: center; gap: 14px; }
 
         .mon-header-left .icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
+            width: 44px; height: 44px; border-radius: 50%;
             background: linear-gradient(135deg, #e6b31e, #a78bfa);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #0a1628;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #0a1628;
             animation: pulseGold 2s ease-in-out infinite;
             overflow: hidden;
         }
 
         .mon-header-left .icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
+            width: 100%; height: 100%;
+            object-fit: cover; border-radius: 50%;
             display: none;
         }
-        .mon-header-left .icon.has-logo img {
-            display: block;
-        }
+        .mon-header-left .icon.has-logo img { display: block; }
         .mon-header-left .icon.has-logo {
-            animation: none;
-            background: transparent;
+            animation: none; background: transparent;
             box-shadow: 0 0 20px rgba(230,179,30,0.3);
         }
-        .mon-header-left .icon.has-logo i {
-            display: none;
-        }
+        .mon-header-left .icon.has-logo i { display: none; }
 
         @keyframes pulseGold {
             0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
@@ -106,8 +81,7 @@
         }
 
         .mon-header-left h2 {
-            font-size: 22px;
-            font-weight: 800;
+            font-size: 22px; font-weight: 800;
             background: linear-gradient(135deg, #f5d76e, #a78bfa, #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -120,23 +94,13 @@
             margin: 0;
         }
 
-        .mon-header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+        .mon-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
         .btn-action {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            cursor: pointer;
+            padding: 8px 18px; border: none; border-radius: 30px;
+            font-weight: 600; font-size: 0.8rem; cursor: pointer;
             transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            display: inline-flex; align-items: center; gap: 8px;
             font-family: 'Cairo', sans-serif;
         }
 
@@ -144,32 +108,14 @@
             background: linear-gradient(135deg, #e6b31e, #f5d76e);
             color: #0a1628;
         }
-
-        .btn-action.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
-        }
-
-        .btn-action.danger {
-            background: linear-gradient(135deg, #ef4444, #f87171);
-            color: #fff;
-        }
-
-        .btn-action.danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
-        }
+        .btn-action.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(230,179,30,0.3); }
 
         .btn-action.secondary {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
             color: rgba(255,255,255,0.5);
         }
-
-        .btn-action.secondary:hover {
-            background: rgba(255,255,255,0.06);
-            color: #fff;
-        }
+        .btn-action.secondary:hover { background: rgba(255,255,255,0.06); color: #fff; }
 
         .stats-grid {
             display: grid;
@@ -191,28 +137,18 @@
         }
 
         .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
             background: linear-gradient(90deg, #e6b31e, #a78bfa);
             opacity: 0.6;
         }
 
-        .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(230,179,30,0.15);
-        }
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(230,179,30,0.15); }
 
         .stat-card .number {
-            font-size: 22px;
-            font-weight: 800;
-            color: #fff;
-            line-height: 1.2;
+            font-size: 22px; font-weight: 800;
+            color: #fff; line-height: 1.2;
         }
-
         .stat-card .number.gold { color: #f5d76e; }
         .stat-card .number.green { color: #55efc4; }
         .stat-card .number.blue { color: #60a5fa; }
@@ -228,13 +164,11 @@
         }
 
         .map-type-selector {
-            display: flex;
-            gap: 10px;
+            display: flex; gap: 10px;
             padding: 10px 24px;
             background: rgba(255,255,255,0.02);
             border-bottom: 1px solid rgba(255,255,255,0.06);
-            flex-wrap: wrap;
-            align-items: center;
+            flex-wrap: wrap; align-items: center;
         }
 
         .map-type-selector .label {
@@ -255,15 +189,10 @@
             font-size: 0.75rem;
             font-weight: 600;
             transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            display: flex; align-items: center; gap: 6px;
         }
 
-        .map-type-btn:hover {
-            border-color: rgba(255,255,255,0.15);
-            color: #fff;
-        }
+        .map-type-btn:hover { border-color: rgba(255,255,255,0.15); color: #fff; }
 
         .map-type-btn.active {
             background: linear-gradient(135deg, #e6b31e, #f5d76e);
@@ -280,9 +209,7 @@
         }
 
         @media (max-width: 992px) {
-            .monitoring-grid {
-                grid-template-columns: 1fr;
-            }
+            .monitoring-grid { grid-template-columns: 1fr; }
         }
 
         .map-container {
@@ -296,22 +223,16 @@
 
         .map-container .section-title {
             padding: 10px 16px;
-            font-size: 13px;
-            font-weight: 700;
+            font-size: 13px; font-weight: 700;
             color: rgba(255,255,255,0.4);
             border-bottom: 1px solid rgba(255,255,255,0.04);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            display: flex; align-items: center; gap: 8px;
             flex-wrap: wrap;
-            z-index: 10;
-            position: relative;
+            z-index: 10; position: relative;
             background: rgba(10,14,26,0.6);
         }
 
-        .map-container .section-title i {
-            color: #e6b31e;
-        }
+        .map-container .section-title i { color: #e6b31e; }
 
         .map-container .section-title .hint {
             font-size: 10px;
@@ -320,9 +241,7 @@
         }
 
         #realMap {
-            width: 100%;
-            height: 450px;
-            min-height: 450px;
+            width: 100%; height: 450px; min-height: 450px;
             background: #0a1628;
             border-radius: 0 0 14px 14px;
         }
@@ -336,20 +255,14 @@
 
         .sessions-container .section-title {
             padding: 10px 16px;
-            font-size: 13px;
-            font-weight: 700;
+            font-size: 13px; font-weight: 700;
             color: rgba(255,255,255,0.4);
             border-bottom: 1px solid rgba(255,255,255,0.04);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 8px;
         }
 
-        .sessions-container .section-title i {
-            color: #a78bfa;
-        }
+        .sessions-container .section-title i { color: #a78bfa; }
 
         .badge {
             font-size: 10px;
@@ -358,15 +271,8 @@
             font-weight: 600;
         }
 
-        .badge.success {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .badge.purple {
-            background: rgba(167,139,250,0.12);
-            color: #a78bfa;
-        }
+        .badge.success { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .badge.purple { background: rgba(167,139,250,0.12); color: #a78bfa; }
 
         .sessions-scroll {
             max-height: 400px;
@@ -374,23 +280,17 @@
             padding: 0 12px 12px;
         }
 
-        .sessions-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .sessions-scroll::-webkit-scrollbar-thumb {
-            background: #a78bfa;
-            border-radius: 10px;
-        }
+        .sessions-scroll::-webkit-scrollbar { width: 4px; }
+        .sessions-scroll::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 10px; }
 
         .sessions-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
+            min-width: 750px;
         }
 
-        .sessions-table thead {
-            background: rgba(167,139,250,0.06);
-        }
+        .sessions-table thead { background: rgba(167,139,250,0.06); }
 
         .sessions-table thead th {
             padding: 8px 6px;
@@ -411,18 +311,56 @@
             padding: 6px 4px;
             border-bottom: 1px solid rgba(255,255,255,0.02);
             color: rgba(255,255,255,0.5);
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             text-align: center;
         }
 
-        .sessions-table tbody tr:hover {
-            background: rgba(255,255,255,0.03);
-        }
+        .sessions-table tbody tr:hover { background: rgba(255,255,255,0.03); }
 
         .sessions-table .user-name {
             font-weight: 600;
             color: #fff;
             white-space: nowrap;
+        }
+
+        /* ✅ عمود ID */
+        .sessions-table .user-id-cell {
+            font-family: 'Courier New', monospace;
+            font-size: 0.6rem;
+            color: #f5d76e;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            max-width: 90px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ✅ عمود الجهاز */
+        .sessions-table .device-cell {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.55);
+            white-space: nowrap;
+            text-align: right;
+            padding-right: 8px;
+        }
+
+        .device-icon {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 0.75rem;
+            color: #60a5fa;
+        }
+        .device-icon.mobile { color: #34d399; }
+        .device-icon.tablet { color: #fbbf24; }
+        .device-icon.desktop { color: #60a5fa; }
+        .device-icon.unknown { color: rgba(255,255,255,0.3); }
+
+        .device-browser {
+            font-size: 0.58rem;
+            color: rgba(255,255,255,0.3);
+            display: block;
+            margin-top: 1px;
         }
 
         .sessions-table .region-tag {
@@ -443,41 +381,28 @@
             white-space: nowrap;
         }
 
-        .status-badge.active {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
+        .status-badge.active { background: rgba(34,197,94,0.12); color: #4ade80; }
 
-        .status-badge.expired {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .status-badge.terminated {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
+        /* USER PANEL */
         .user-panel {
             display: none;
             position: fixed;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: #0a1628;
             border: 1px solid rgba(230,179,30,0.2);
             border-radius: 16px;
             padding: 24px 28px;
-            max-width: 400px;
+            max-width: 420px;
             width: 90%;
             z-index: 1000;
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             animation: slideUp 0.3s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        .user-panel.visible {
-            display: block;
-        }
+        .user-panel.visible { display: block; }
 
         @keyframes slideUp {
             from { opacity: 0; transform: translate(-50%, -40%); }
@@ -486,37 +411,25 @@
 
         .user-panel .close-btn {
             position: absolute;
-            top: 10px;
-            left: 14px;
-            background: none;
-            border: none;
+            top: 10px; left: 14px;
+            background: none; border: none;
             color: rgba(255,255,255,0.3);
-            font-size: 1.3rem;
-            cursor: pointer;
+            font-size: 1.3rem; cursor: pointer;
         }
-
-        .user-panel .close-btn:hover {
-            color: #fff;
-            transform: rotate(90deg);
-        }
+        .user-panel .close-btn:hover { color: #fff; transform: rotate(90deg); }
 
         .user-panel .user-avatar {
-            width: 60px;
-            height: 60px;
+            width: 60px; height: 60px;
             border-radius: 50%;
             background: linear-gradient(135deg, #e6b31e, #a78bfa);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #0a1628;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; color: #0a1628;
             margin: 0 auto 12px;
             font-weight: 700;
         }
 
         .user-panel .user-name {
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 20px; font-weight: 700;
             text-align: center;
             color: #fff;
             margin-bottom: 2px;
@@ -532,44 +445,49 @@
         .user-panel .detail-row {
             display: flex;
             justify-content: space-between;
-            padding: 6px 0;
+            padding: 7px 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
             font-size: 0.8rem;
+            gap: 8px;
         }
 
         .user-panel .detail-row .label {
             color: rgba(255,255,255,0.3);
+            flex-shrink: 0;
         }
 
         .user-panel .detail-row .value {
             color: #fff;
             font-weight: 600;
+            text-align: left;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
-        .user-panel .detail-row .value.gold { color: #f5d76e; }
+        .user-panel .detail-row .value.gold {
+            color: #f5d76e;
+            font-family: 'Courier New', monospace;
+            font-size: 0.72rem;
+        }
         .user-panel .detail-row .value.green { color: #55efc4; }
         .user-panel .detail-row .value.red { color: #f87171; }
+        .user-panel .detail-row .value.blue { color: #60a5fa; }
 
         .panel-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(4px);
             z-index: 999;
         }
 
-        .panel-overlay.visible {
-            display: block;
-        }
+        .panel-overlay.visible { display: block; }
 
         .toast {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
+            bottom: 24px; right: 24px;
             padding: 12px 20px;
             border-radius: 12px;
             color: #fff;
@@ -583,15 +501,10 @@
             direction: rtl;
         }
 
-        .toast-success {
-            background: rgba(34,197,94,0.15);
-            border: 1px solid rgba(34,197,94,0.2);
-        }
-
-        .toast-info {
-            background: rgba(9,132,227,0.15);
-            border: 1px solid rgba(9,132,227,0.2);
-        }
+        .toast-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.2); }
+        .toast-info { background: rgba(9,132,227,0.15); border: 1px solid rgba(9,132,227,0.2); }
+        .toast-error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.2); }
+        .toast-warning { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.2); }
 
         @media (max-width: 768px) {
             .mon-header { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
@@ -608,7 +521,6 @@
             .map-container { min-height: 300px; }
             #realMap { height: 300px; min-height: 300px; }
             .sessions-scroll { max-height: 280px; }
-            .sessions-table { font-size: 0.65rem; }
             .user-panel { padding: 16px 20px; max-width: 95%; }
         }
 
@@ -621,9 +533,9 @@
             .sessions-scroll { max-height: 230px; }
             .mon-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
             .mon-header-left h2 { font-size: 14px; }
-            .sessions-table { font-size: 0.6rem; }
         }
 
+        /* LEAFLET */
         .leaflet-popup-content-wrapper {
             background: #0a1628;
             color: #e8edf5;
@@ -631,36 +543,22 @@
             border-radius: 12px;
             font-family: 'Cairo', sans-serif;
         }
+        .leaflet-popup-tip { background: #0a1628; border: 1px solid rgba(230,179,30,0.2); }
+        .leaflet-popup-content { font-family: 'Cairo', sans-serif; color: #e8edf5; min-width: 200px; }
 
-        .leaflet-popup-tip {
-            background: #0a1628;
-            border: 1px solid rgba(230,179,30,0.2);
-        }
-
-        .leaflet-popup-content {
-            font-family: 'Cairo', sans-serif;
-            color: #e8edf5;
-            min-width: 200px;
-        }
-
-        .popup-user-name {
-            font-size: 16px;
-            font-weight: 700;
+        .popup-user-name { font-size: 16px; font-weight: 700; color: #f5d76e; margin-bottom: 4px; }
+        .popup-user-detail { font-size: 12px; color: rgba(255,255,255,0.5); padding: 2px 0; }
+        .popup-user-detail i { margin-left: 6px; color: #e6b31e; }
+        .popup-user-id {
+            font-family: 'Courier New', monospace;
             color: #f5d76e;
-            margin-bottom: 4px;
+            font-size: 11px;
+            background: rgba(245,215,110,0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-top: 4px;
         }
-
-        .popup-user-detail {
-            font-size: 12px;
-            color: rgba(255,255,255,0.5);
-            padding: 2px 0;
-        }
-
-        .popup-user-detail i {
-            margin-left: 6px;
-            color: #e6b31e;
-        }
-
         .popup-status {
             display: inline-block;
             padding: 2px 10px;
@@ -669,31 +567,12 @@
             font-weight: 600;
             margin-top: 4px;
         }
+        .popup-status.online { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .popup-status.offline { background: rgba(239,68,68,0.15); color: #f87171; }
 
-        .popup-status.online {
-            background: rgba(34,197,94,0.15);
-            color: #4ade80;
-        }
-
-        .popup-status.offline {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-        }
-
-        /* ============================================================
-           🖨️ PROFESSIONAL PRINT STYLES
-           ============================================================ */
-
+        /* PRINT */
         @media print {
-            @page {
-                size: A4 landscape;
-                margin: 12mm 10mm;
-            }
-
-            @page :first {
-                margin-top: 8mm;
-            }
-
+            @page { size: A4 landscape; margin: 12mm 10mm; }
             html, body {
                 background: #ffffff !important;
                 color: #1a1a1a !important;
@@ -703,27 +582,15 @@
                 print-color-adjust: exact !important;
             }
 
-            button,
-            .btn-action,
-            .mon-header-actions,
-            .map-type-selector,
-            .map-type-btn,
-            .toast,
-            .toast-container,
-            #toastContainer,
-            .user-panel,
-            .panel-overlay,
-            nav,
-            .sidebar,
-            .navbar,
-            .no-print,
-            .hint {
+            button, .btn-action, .mon-header-actions, .map-type-selector,
+            .map-type-btn, .toast, .toast-container, #toastContainer,
+            .user-panel, .panel-overlay, nav, .sidebar, .navbar, .no-print, .hint {
                 display: none !important;
             }
 
             .mon-header {
                 display: flex !important;
-                background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
+                background: #0a1628 !important;
                 color: #ffffff !important;
                 padding: 12mm 8mm 6mm !important;
                 margin: 0 0 6mm !important;
@@ -737,46 +604,34 @@
             .mon-header-left h2 {
                 color: #e6b31e !important;
                 font-size: 16pt !important;
-                font-weight: 800 !important;
                 -webkit-text-fill-color: #e6b31e !important;
                 background: none !important;
-                margin: 0 0 4pt 0 !important;
             }
 
             .mon-header-left p {
                 color: rgba(255,255,255,0.75) !important;
-                font-size: 10pt !important;
                 -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
             }
 
-            .mon-header-left .icon,
-            #monHeaderIcon {
-                width: 48px !important;
-                height: 48px !important;
+            .mon-header-left .icon, #monHeaderIcon {
+                width: 48px !important; height: 48px !important;
                 border: 2px solid #e6b31e !important;
                 background: #0a1628 !important;
-                box-shadow: none !important;
                 animation: none !important;
-                overflow: hidden !important;
             }
 
-            .mon-header-left .icon img,
-            #globalLogo {
+            .mon-header-left .icon img, #globalLogo {
                 display: block !important;
-                width: 100% !important;
-                height: 100% !important;
+                width: 100% !important; height: 100% !important;
                 object-fit: contain !important;
             }
 
-            .mon-header-left .icon i {
-                color: #e6b31e !important;
-            }
+            .mon-header-left .icon i { color: #e6b31e !important; }
 
             .mon-header::after {
                 content: "طُبع بتاريخ: " attr(data-print-date);
                 position: absolute;
-                bottom: 4mm;
-                left: 8mm;
+                bottom: 4mm; left: 8mm;
                 font-size: 9pt;
                 color: rgba(255,255,255,0.7) !important;
                 direction: rtl;
@@ -796,24 +651,16 @@
                 border: 2px solid #e6b31e !important;
                 border-radius: 6px !important;
                 padding: 4mm 3mm !important;
-                text-align: center !important;
                 box-shadow: none !important;
                 backdrop-filter: none !important;
-                position: relative !important;
-                overflow: visible !important;
+                page-break-inside: avoid;
             }
 
-            .stat-card::before {
-                display: none !important;
-            }
+            .stat-card::before { display: none !important; }
 
             .stat-card .number {
                 color: #0a1628 !important;
                 font-size: 16pt !important;
-                font-weight: 800 !important;
-                line-height: 1 !important;
-                margin: 2mm 0 !important;
-                background: none !important;
                 -webkit-text-fill-color: #0a1628 !important;
             }
 
@@ -833,7 +680,6 @@
             .monitoring-grid {
                 display: block !important;
                 padding: 0 !important;
-                gap: 0 !important;
                 page-break-inside: avoid;
             }
 
@@ -855,10 +701,6 @@
                 font-size: 11pt !important;
                 font-weight: 800 !important;
                 border-bottom: 2px solid #e6b31e !important;
-            }
-
-            .map-container .section-title i {
-                color: #e6b31e !important;
             }
 
             #realMap {
@@ -884,17 +726,6 @@
                 border-bottom: 2px solid #e6b31e !important;
             }
 
-            .sessions-container .section-title i {
-                color: #e6b31e !important;
-            }
-
-            .badge {
-                border: 1px solid currentColor !important;
-                background: #ffffff !important;
-                color: #047857 !important;
-                font-size: 8pt !important;
-            }
-
             .sessions-scroll {
                 max-height: none !important;
                 overflow: visible !important;
@@ -906,12 +737,12 @@
                 border-collapse: collapse !important;
                 font-size: 8.5pt !important;
                 border: 1px solid #0a1628 !important;
+                min-width: 0 !important;
             }
 
             .sessions-table thead {
-                background: #0a1628 !important;
-                color: #e6b31e !important;
                 display: table-header-group !important;
+                background: #0a1628 !important;
             }
 
             .sessions-table thead th {
@@ -924,19 +755,10 @@
                 text-transform: none !important;
                 letter-spacing: 0 !important;
                 position: static !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
             }
 
-            .sessions-table tbody tr {
-                page-break-inside: avoid;
-                background: #ffffff !important;
-            }
-
-            .sessions-table tbody tr:nth-child(even) {
-                background: #f9fafb !important;
-            }
-
+            .sessions-table tbody tr { page-break-inside: avoid; background: #ffffff !important; }
+            .sessions-table tbody tr:nth-child(even) { background: #f9fafb !important; }
             .sessions-table tbody td {
                 padding: 2.5mm 2mm !important;
                 border: 1px solid #e5e7eb !important;
@@ -945,18 +767,9 @@
                 background: transparent !important;
             }
 
-            .sessions-table .user-name {
-                color: #0a1628 !important;
-                font-weight: 800 !important;
-            }
-
-            .sessions-table .region-tag {
-                background: #ffffff !important;
-                border: 1px solid currentColor !important;
-                font-size: 7pt !important;
-                padding: 1mm 2.5mm !important;
-                color: #374151 !important;
-            }
+            .sessions-table .user-name { color: #0a1628 !important; font-weight: 800 !important; }
+            .sessions-table .user-id-cell { color: #6d28d9 !important; font-family: 'Courier New', monospace !important; }
+            .sessions-table .device-cell { color: #1f2937 !important; }
 
             .status-badge {
                 display: inline-block !important;
@@ -970,8 +783,6 @@
             }
 
             .status-badge.active { color: #047857 !important; background: #ecfdf5 !important; }
-            .status-badge.expired { color: #b45309 !important; background: #fffbeb !important; }
-            .status-badge.terminated { color: #b91c1c !important; background: #fef2f2 !important; }
 
             #page-monitoring::after {
                 content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
@@ -984,29 +795,17 @@
                 margin-top: 6mm;
             }
 
-            h1, h2, h3, h4, h5, h6 {
-                page-break-after: avoid;
-            }
-
-            tr, img, .stat-card, .map-container, .sessions-container {
-                page-break-inside: avoid;
-            }
-
+            h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
+            tr, img, .stat-card, .map-container, .sessions-container { page-break-inside: avoid; }
             * {
                 box-shadow: none !important;
                 text-shadow: none !important;
                 animation: none !important;
                 transition: none !important;
             }
-
-            #page-monitoring::before {
-                display: none !important;
-            }
+            #page-monitoring::before { display: none !important; }
         }
     </style>
-
-    <!-- ===== CSS ===== -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <!-- ===== HEADER ===== -->
     <div class="mon-header" id="monHeader">
@@ -1022,8 +821,7 @@
         </div>
         <div class="mon-header-actions">
             <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
-            <button class="btn-action danger" id="terminateAllBtn"><i class="fas fa-power-off"></i> إنهاء الكل</button>
-            <button class="btn-action secondary" onclick="printMonitoring()"><i class="fas fa-print"></i> طباعة</button>
+            <button class="btn-action secondary" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
@@ -1064,15 +862,16 @@
                 <table class="sessions-table">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>المستخدم</th>
                             <th>الدور</th>
-                            <th>البريد</th>
+                            <th>الجهاز</th>
                             <th>المدة</th>
                             <th>الحالة</th>
                         </tr>
                     </thead>
                     <tbody id="sessionsBody">
-                        <tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">⏳ جاري التحميل...</td></tr>
+                        <tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">⏳ جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1086,7 +885,9 @@
         <div class="user-avatar" id="panelAvatar">👤</div>
         <div class="user-name" id="panelName">-</div>
         <div class="user-role" id="panelRole">-</div>
-        <div class="detail-row"><span class="label">🆔 المعرف</span><span class="value gold" id="panelId">-</span></div>
+        <div class="detail-row"><span class="label">🆔 ID المستخدم</span><span class="value gold" id="panelId">-</span></div>
+        <div class="detail-row"><span class="label">💻 الجهاز</span><span class="value blue" id="panelDevice">-</span></div>
+        <div class="detail-row"><span class="label">🌐 المتصفح</span><span class="value" id="panelBrowser">-</span></div>
         <div class="detail-row"><span class="label">📍 الموقع</span><span class="value" id="panelLocation">-</span></div>
         <div class="detail-row"><span class="label">📌 الإحداثيات</span><span class="value" id="panelCoords">-</span></div>
         <div class="detail-row"><span class="label">🟢 الحالة</span><span class="value" id="panelStatus">-</span></div>
@@ -1096,767 +897,778 @@
     </div>
 
     <script>
-        (function() {
-            'use strict';
+    (function() {
+        'use strict';
 
-            console.log('🔄 monitoring.html v9.4 - REAL DATA ONLY...');
+        console.log('🔄 monitoring.html v10.0 - loading...');
 
-            var _isDestroyed = false;
-            var _map = null;
-            var _markers = [];
-            var _resizeTimer = null;
-            var _dynamicScripts = [];
-            var _pageTimeouts = [];
-            var _resizeHandler = null;
-            var _usersData = [];
-            var _sessionsData = [];
+        var _isDestroyed = false;
+        var _map = null;
+        var _markers = [];
+        var _resizeTimer = null;
+        var _pageTimeouts = [];
+        var _resizeHandler = null;
+        var _usersData = [];
+        var _sessionsData = [];
 
-            function _monitoringCleanup() {
-                if (_isDestroyed) return;
-                _isDestroyed = true;
+        function _monitoringCleanup() {
+            if (_isDestroyed) return;
+            _isDestroyed = true;
 
-                _pageTimeouts.forEach(function(id) {
-                    try { clearTimeout(id); } catch (e) {}
-                });
-                _pageTimeouts = [];
+            _pageTimeouts.forEach(function(id) {
+                try { clearTimeout(id); } catch (e) {}
+            });
+            _pageTimeouts = [];
 
-                if (_resizeTimer) {
-                    try { clearTimeout(_resizeTimer); } catch (e) {}
-                    _resizeTimer = null;
-                }
+            if (_resizeTimer) {
+                try { clearTimeout(_resizeTimer); } catch (e) {}
+                _resizeTimer = null;
+            }
 
-                if (_resizeHandler) {
-                    try {
-                        window.removeEventListener('resize', _resizeHandler);
-                    } catch (e) {}
-                    _resizeHandler = null;
-                }
+            if (_resizeHandler) {
+                try { window.removeEventListener('resize', _resizeHandler); } catch (e) {}
+                _resizeHandler = null;
+            }
 
-                if (_map) {
-                    try {
-                        _markers.forEach(function(m) {
-                            try { _map.removeLayer(m); } catch (e) {}
-                        });
-                        _markers = [];
-                        _map.off();
-                        _map.remove();
-                    } catch (e) {
-                        console.warn('⚠️ Map cleanup error:', e.message);
-                    }
-                    _map = null;
-                }
-
-                _dynamicScripts.forEach(function(node) {
-                    try {
-                        if (node && node.parentNode) {
-                            node.parentNode.removeChild(node);
-                        }
-                    } catch (e) {}
-                });
-                _dynamicScripts = [];
-
+            if (_map) {
                 try {
-                    delete window.refreshAll;
-                    delete window.terminateAll;
-                    delete window.switchMapType;
-                    delete window.showToast;
-                    delete window.initMap;
-                    delete window.printMonitoring;
+                    _markers.forEach(function(m) { try { _map.removeLayer(m); } catch (e) {} });
+                    _markers = [];
+                    _map.off();
+                    _map.remove();
                 } catch (e) {}
-
-                console.log('🧹 Monitoring cleanup done');
+                _map = null;
             }
 
-            window._pageCleanup = window._pageCleanup || [];
-            window._pageCleanup.push(_monitoringCleanup);
+            try {
+                delete window.refreshAll;
+                delete window.switchMapType;
+                delete window.showToast;
+                delete window.initMap;
+                delete window.printMonitoring;
+            } catch (e) {}
 
-            window.addEventListener('beforeunload', _monitoringCleanup);
-            window.addEventListener('pagehide', _monitoringCleanup);
+            console.log('🧹 Monitoring v10.0 cleanup done');
+        }
 
-            // ============================================================
-            // 🎨 LOGO APPLY
-            // ============================================================
-            function applyLogo() {
-                try {
-                    var cachedLogo = localStorage.getItem('marine_logo');
-                    if (!cachedLogo) return;
+        window._pageCleanup = window._pageCleanup || [];
+        window._pageCleanup.push(_monitoringCleanup);
+        window.addEventListener('beforeunload', _monitoringCleanup);
+        window.addEventListener('pagehide', _monitoringCleanup);
 
-                    var iconDiv = document.getElementById('monHeaderIcon');
-                    var img = document.getElementById('globalLogo');
-                    if (img) {
-                        img.src = cachedLogo;
-                        img.style.display = 'block';
+        // ============================================================
+        // 🖥️ كشف نوع الجهاز والمتصفح
+        // ============================================================
+        function detectDevice(userAgent) {
+            var ua = String(userAgent || navigator.userAgent || '').toLowerCase();
+
+            var device = 'unknown';
+            var icon = 'fa-question-circle';
+
+            if (/ipad|tablet|playbook|silk|(android(?!.*mobile))/.test(ua)) {
+                device = 'tablet';
+                icon = 'fa-tablet-alt';
+            } else if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile|wpdesktop/.test(ua)) {
+                device = 'mobile';
+                icon = 'fa-mobile-alt';
+            } else if (/windows|macintosh|linux|cros/.test(ua)) {
+                device = 'desktop';
+                icon = 'fa-desktop';
+            }
+
+            var deviceLabel = {
+                'mobile': '📱 جوال',
+                'tablet': '📟 لوحي',
+                'desktop': '💻 حاسوب',
+                'unknown': '❓ غير معروف'
+            }[device];
+
+            // كشف المتصفح
+            var browser = 'غير معروف';
+            if (/edg\//.test(ua)) browser = 'Edge';
+            else if (/opr\/|opera/.test(ua)) browser = 'Opera';
+            else if (/chrome|crios/.test(ua)) browser = 'Chrome';
+            else if (/firefox|fxios/.test(ua)) browser = 'Firefox';
+            else if (/safari/.test(ua)) browser = 'Safari';
+            else if (/msie|trident/.test(ua)) browser = 'IE';
+
+            // كشف النظام
+            var os = '—';
+            if (/windows nt 10/.test(ua)) os = 'Windows 10/11';
+            else if (/windows nt/.test(ua)) os = 'Windows';
+            else if (/mac os x|macintosh/.test(ua)) os = 'macOS';
+            else if (/android/.test(ua)) os = 'Android';
+            else if (/iphone|ipad|ipod/.test(ua)) os = 'iOS';
+            else if (/linux/.test(ua)) os = 'Linux';
+
+            return {
+                type: device,
+                label: deviceLabel,
+                icon: icon,
+                browser: browser,
+                os: os,
+                raw: userAgent || navigator.userAgent
+            };
+        }
+
+        function getCurrentDevice() {
+            return detectDevice(navigator.userAgent);
+        }
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
+        function $(id) { return document.getElementById(id); }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+            });
+        }
+
+        function getToken() {
+            return (
+                localStorage.getItem('marine_token') ||
+                localStorage.getItem('marine_auth_token') ||
+                localStorage.getItem('authToken') ||
+                localStorage.getItem('token') || null
+            );
+        }
+
+        function authHeaders() {
+            var token = getToken();
+            var h = { 'Accept': 'application/json' };
+            if (token) h['Authorization'] = 'Bearer ' + token;
+            return h;
+        }
+
+        function getInitials(name) {
+            if (!name) return '👤';
+            var parts = String(name).trim().split(/\s+/);
+            if (parts.length >= 2) return parts[0][0] + parts[1][0];
+            return String(name).slice(0, 2);
+        }
+
+        function getRoleLabel(role) {
+            var map = {
+                'admin': '👑 مسؤول',
+                'manager': '📋 مدير',
+                'editor': '✏️ محرر',
+                'maintenance_unit': '🔧 صيانة',
+                'viewer': '👁️ مشاهد'
+            };
+            return map[role] || role || '👤 مستخدم';
+        }
+
+        function getRoleColor(role) {
+            var map = {
+                'admin': '#f5d76e',
+                'manager': '#60a5fa',
+                'editor': '#a78bfa',
+                'maintenance_unit': '#34d399',
+                'viewer': '#9ca3af'
+            };
+            return map[role] || '#9ca3af';
+        }
+
+        function truncateId(id) {
+            if (!id) return '—';
+            var s = String(id);
+            if (s.length <= 12) return s;
+            return s.substring(0, 8) + '…' + s.substring(s.length - 3);
+        }
+
+        function showToast(msg, type) {
+            if (_isDestroyed) return;
+            var old = document.querySelector('.toast');
+            if (old) old.remove();
+            var n = document.createElement('div');
+            n.className = 'toast toast-' + (type || 'info');
+            n.textContent = msg;
+            document.body.appendChild(n);
+            var id = setTimeout(function() {
+                n.style.opacity = '0';
+                n.style.transform = 'translateY(20px)';
+                n.style.transition = 'all 0.4s';
+                var id2 = setTimeout(function() { n.remove(); }, 400);
+                _pageTimeouts.push(id2);
+            }, 2500);
+            _pageTimeouts.push(id);
+        }
+
+        // ============================================================
+        // 🎨 LOGO
+        // ============================================================
+        function applyLogo() {
+            try {
+                var cachedLogo = localStorage.getItem('marine_logo');
+                if (!cachedLogo) return;
+                var iconDiv = $('monHeaderIcon');
+                var img = $('globalLogo');
+                if (img) { img.src = cachedLogo; img.style.display = 'block'; }
+                if (iconDiv) iconDiv.classList.add('has-logo');
+            } catch (e) {}
+        }
+
+        function syncLogoFromServer() {
+            var token = getToken();
+            var headers = { 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch('/api/logo', { headers: headers, credentials: 'include' })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) {
+                    if (data && data.success && data.logo && data.logo.dataUrl) {
+                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
+                        applyLogo();
                     }
-                    if (iconDiv) {
-                        iconDiv.classList.add('has-logo');
-                    }
-                } catch (e) {}
-            }
+                }).catch(function() {});
+        }
 
-            function syncLogoFromServer() {
-                var token = localStorage.getItem('marine_token') ||
-                            localStorage.getItem('token') ||
-                            localStorage.getItem('authToken') || null;
-                var headers = { 'Accept': 'application/json' };
-                if (token) headers['Authorization'] = 'Bearer ' + token;
+        applyLogo();
+        syncLogoFromServer();
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'marine_logo' && e.newValue) applyLogo();
+        });
 
-                fetch('/api/logo', { headers: headers, credentials: 'include' })
-                    .then(function(r) { return r.ok ? r.json() : null; })
-                    .then(function(data) {
-                        if (data && data.success && data.logo && data.logo.dataUrl) {
-                            try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
-                            applyLogo();
-                        }
-                    }).catch(function() {});
-            }
+        // ============================================================
+        // 🖨️ PRINT
+        // ============================================================
+        function updatePrintDate() {
+            try {
+                var now = new Date();
+                var dateStr = now.toLocaleDateString('ar-TN', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+                var timeStr = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
+                var header = $('monHeader');
+                if (header) header.setAttribute('data-print-date', dateStr + ' - ' + timeStr);
+            } catch (e) {}
+        }
 
-            applyLogo();
-            syncLogoFromServer();
+        updatePrintDate();
+        window.addEventListener('beforeprint', updatePrintDate);
 
-            window.addEventListener('storage', function(e) {
-                if (e.key === 'marine_logo' && e.newValue) {
-                    applyLogo();
+        function printMonitoring() {
+            try {
+                updatePrintDate();
+                var confirmed = confirm(
+                    '🖨️ قبل الطباعة تأكد من:\n\n' +
+                    '1. الاتجاه: أفقي (Landscape)\n' +
+                    '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
+                    '3. الوجهة: PDF (اختياري)\n\n' +
+                    'هل تريد المتابعة؟'
+                );
+                if (!confirmed) return;
+                window.print();
+            } catch (e) { window.print(); }
+        }
+
+        // ============================================================
+        // 📊 STATS
+        // ============================================================
+        function updateStats() {
+            if (_isDestroyed) return;
+
+            var total = _usersData.length;
+            var active = _usersData.filter(function(u) { return u.active !== false; }).length;
+            var inactive = _usersData.filter(function(u) { return u.active === false; }).length;
+            var admins = _usersData.filter(function(u) { return u.role === 'admin'; }).length;
+            var noLocation = _usersData.filter(function(u) {
+                return u.lat === null || u.lng === null;
+            }).length;
+
+            var activeSessions = _sessionsData.length;
+
+            var e;
+            e = $('totalUsers'); if (e) e.textContent = total;
+            e = $('activeNow'); if (e) e.textContent = active;
+            e = $('readyUsers'); if (e) e.textContent = admins;
+            e = $('busyUsers'); if (e) e.textContent = inactive;
+            e = $('offlineUsers'); if (e) e.textContent = noLocation;
+            e = $('totalSessions'); if (e) e.textContent = activeSessions;
+
+            var badge = $('sessionBadge');
+            if (badge) {
+                if (activeSessions > 0) {
+                    badge.textContent = '🟢 ' + activeSessions + ' جلسة نشطة';
+                    badge.className = 'badge success';
+                } else {
+                    badge.textContent = '📊 لا توجد جلسات';
+                    badge.className = 'badge purple';
                 }
+            }
+        }
+
+        // ============================================================
+        // 📥 LOAD USERS
+        // ============================================================
+        async function loadUsers() {
+            if (_isDestroyed) return [];
+            try {
+                var res = await fetch('/api/monitoring/users', {
+                    headers: authHeaders(),
+                    credentials: 'include',
+                    cache: 'no-store'
+                });
+
+                if (!res.ok) {
+                    if (res.status === 401) showToast('⚠️ انتهت الجلسة — يرجى إعادة الدخول', 'error');
+                    else if (res.status === 403) showToast('⚠️ ليس لديك صلاحية عرض المستخدمين', 'error');
+                    else showToast('❌ فشل تحميل المستخدمين (' + res.status + ')', 'error');
+                    _usersData = [];
+                    return [];
+                }
+
+                var data = await res.json();
+                var users = [];
+                if (Array.isArray(data)) users = data;
+                else if (data && Array.isArray(data.users)) users = data.users;
+                else if (data && Array.isArray(data.data)) users = data.data;
+
+                _usersData = users.map(function(u) {
+                    return {
+                        id: u.id || u._id || '',
+                        name: u.name || u.username || 'مستخدم',
+                        username: u.username || '',
+                        email: u.email || '',
+                        role: u.role || 'viewer',
+                        active: u.active !== false && u.isActive !== false,
+                        lat: (typeof u.lat === 'number') ? u.lat :
+                             (typeof u.latitude === 'number') ? u.latitude : null,
+                        lng: (typeof u.lng === 'number') ? u.lng :
+                             (typeof u.longitude === 'number') ? u.longitude : null,
+                        location: u.location || '—',
+                        lastActive: u.lastLogin || u.lastActive || null,
+                        userAgent: u.userAgent || u.device || null
+                    };
+                });
+
+                console.log('✅ [MONITORING] Loaded', _usersData.length, 'users');
+                return _usersData;
+            } catch (err) {
+                console.warn('[MONITORING] Load users error:', err.message);
+                showToast('❌ خطأ في الاتصال بالخادم', 'error');
+                _usersData = [];
+                return [];
+            }
+        }
+
+        // ============================================================
+        // 📥 LOAD SESSIONS
+        // ============================================================
+        async function loadSessions() {
+            if (_isDestroyed) return [];
+            try {
+                var res = await fetch('/api/monitoring/sessions', {
+                    headers: authHeaders(),
+                    credentials: 'include',
+                    cache: 'no-store'
+                });
+
+                if (!res.ok) {
+                    if (res.status === 401) console.warn('⚠️ 401 - Unauthorized');
+                    else if (res.status === 403) showToast('⚠️ ليس لديك صلاحية عرض الجلسات', 'error');
+                    _sessionsData = [];
+                    return [];
+                }
+
+                var data = await res.json();
+                var sessions = [];
+                if (Array.isArray(data)) sessions = data;
+                else if (data && Array.isArray(data.sessions)) sessions = data.sessions;
+                else if (data && Array.isArray(data.data)) sessions = data.data;
+
+                _sessionsData = sessions.map(function(s) {
+                    // ✅ نكشف الجهاز: من حقل userAgent/s.device أو من userAgent المستخدم الحالي
+                    var deviceInfo = detectDevice(
+                        s.userAgent || s.device || s.deviceType || ''
+                    );
+
+                    return {
+                        id: s.userId || s.id || '',
+                        sessionId: s.sessionId || '',
+                        user: s.name || s.username || 'مستخدم',
+                        username: s.username || '',
+                        email: s.email || '',
+                        role: s.role || 'viewer',
+                        duration: formatDuration(s.createdAt),
+                        status: 'active',
+                        createdAt: s.createdAt,
+                        userAgent: s.userAgent || s.device || '',
+                        device: deviceInfo
+                    };
+                });
+
+                console.log('✅ [MONITORING] Loaded', _sessionsData.length, 'sessions');
+                return _sessionsData;
+            } catch (err) {
+                console.warn('[MONITORING] Load sessions error:', err.message);
+                _sessionsData = [];
+                return [];
+            }
+        }
+
+        function formatDuration(startTime) {
+            if (!startTime) return '—';
+            try {
+                var start = new Date(startTime).getTime();
+                var now = Date.now();
+                var diff = Math.floor((now - start) / 1000);
+                if (diff < 0) return '—';
+                if (diff < 60) return diff + ' ثانية';
+                if (diff < 3600) return Math.floor(diff / 60) + ' دقيقة';
+                if (diff < 86400) {
+                    var h = Math.floor(diff / 3600);
+                    var m = Math.floor((diff % 3600) / 60);
+                    return h + ' س ' + m + ' د';
+                }
+                return Math.floor(diff / 86400) + ' يوم';
+            } catch (e) { return '—'; }
+        }
+
+        // ============================================================
+        // 🗺️ MAP
+        // ============================================================
+        function initMap() {
+            if (_isDestroyed) return;
+
+            if (_map) {
+                console.log('ℹ️ Map already initialized');
+                return;
+            }
+
+            if (typeof L === 'undefined') {
+                var id = setTimeout(function() {
+                    if (!_isDestroyed) initMap();
+                }, 300);
+                _pageTimeouts.push(id);
+                return;
+            }
+
+            var container = $('realMap');
+            if (!container) {
+                var id2 = setTimeout(function() {
+                    if (!_isDestroyed) initMap();
+                }, 500);
+                _pageTimeouts.push(id2);
+                return;
+            }
+
+            try {
+                _map = L.map('realMap').setView([34.5, 9.5], 7);
+
+                var tileLayers = {
+                    satellite: L.tileLayer(
+                        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                        { attribution: '&copy; Esri', maxZoom: 19 }
+                    ),
+                    standard: L.tileLayer(
+                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        { attribution: '&copy; OpenStreetMap', maxZoom: 19 }
+                    ),
+                    terrain: L.tileLayer(
+                        'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+                        { attribution: '&copy; OpenTopoMap', maxZoom: 17 }
+                    )
+                };
+
+                tileLayers.satellite.addTo(_map);
+                _map._tileLayers = tileLayers;
+                _map._currentLayer = 'satellite';
+
+                var bounds = L.latLngBounds(L.latLng(32.5, 8.0), L.latLng(37.5, 12.0));
+                _map.fitBounds(bounds, { padding: [20, 20] });
+
+                addMarkers();
+                console.log('✅ Map initialized');
+            } catch (error) {
+                console.error('❌ Map error:', error);
+            }
+        }
+
+        function addMarkers() {
+            if (_isDestroyed || !_map) return;
+
+            _markers.forEach(function(m) {
+                try { _map.removeLayer(m); } catch (e) {}
+            });
+            _markers = [];
+
+            var usersWithLocation = _usersData.filter(function(u) {
+                return typeof u.lat === 'number' && typeof u.lng === 'number' &&
+                       !isNaN(u.lat) && !isNaN(u.lng);
             });
 
-            // ============================================================
-            // 🖨️ PRINT
-            // ============================================================
-            function updatePrintDate() {
-                try {
-                    var now = new Date();
-                    var dateStr = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                    var timeStr = now.toLocaleTimeString('ar-TN', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    var fullDate = dateStr + ' - ' + timeStr;
-
-                    var header = document.getElementById('monHeader');
-                    if (header) header.setAttribute('data-print-date', fullDate);
-                } catch (e) {}
+            if (usersWithLocation.length === 0) {
+                console.log('ℹ️ No users with location data');
+                return;
             }
 
-            updatePrintDate();
-            window.addEventListener('beforeprint', updatePrintDate);
+            usersWithLocation.forEach(function(user) {
+                var color = getRoleColor(user.role);
+                var iconHtml = escapeHtml(getInitials(user.name));
 
-            function printMonitoring() {
-                try {
-                    updatePrintDate();
+                // ✅ كشف جهاز المستخدم
+                var device = detectDevice(user.userAgent || '');
 
-                    var confirmed = confirm(
-                        '🖨️ قبل الطباعة تأكد من:\n\n' +
-                        '1. الاتجاه: أفقي (Landscape)\n' +
-                        '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
-                        '3. الوجهة: PDF (اختياري)\n\n' +
-                        'هل تريد المتابعة؟'
-                    );
-                    if (!confirmed) return;
-
-                    window.print();
-                } catch (e) {
-                    console.error('❌ printMonitoring error:', e);
-                    window.print();
-                }
-            }
-
-            // ============================================================
-            // HELPERS
-            // ============================================================
-            function escapeHtml(str) {
-                if (str === null || str === undefined) return '';
-                return String(str).replace(/[&<>"']/g, function(m) {
-                    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
-                });
-            }
-
-            function getToken() {
-                return (
-                    localStorage.getItem('marine_token') ||
-                    localStorage.getItem('authToken') ||
-                    localStorage.getItem('token') ||
-                    null
-                );
-            }
-
-            function authHeaders() {
-                var token = getToken();
-                var h = { 'Accept': 'application/json' };
-                if (token) h['Authorization'] = 'Bearer ' + token;
-                return h;
-            }
-
-            function getInitials(name) {
-                if (!name) return '👤';
-                var parts = String(name).trim().split(/\s+/);
-                if (parts.length >= 2) return parts[0][0] + parts[1][0];
-                return String(name).slice(0, 2);
-            }
-
-            function getRoleLabel(role) {
-                var map = {
-                    'admin': '👑 مسؤول النظام',
-                    'manager': '📋 مدير الأسطول',
-                    'editor': '✏️ محرر',
-                    'maintenance_unit': '🔧 وحدة الصيانة',
-                    'viewer': '👁️ مشاهد'
-                };
-                return map[role] || role || '👤 مستخدم';
-            }
-
-            function getRoleColor(role) {
-                var map = {
-                    'admin': '#f5d76e',
-                    'manager': '#60a5fa',
-                    'editor': '#a78bfa',
-                    'maintenance_unit': '#34d399',
-                    'viewer': '#9ca3af'
-                };
-                return map[role] || '#9ca3af';
-            }
-
-            function showToast(msg, type) {
-                if (_isDestroyed) return;
-                var old = document.querySelector('.toast');
-                if (old) old.remove();
-                var n = document.createElement('div');
-                n.className = 'toast toast-' + (type || 'info');
-                n.textContent = msg;
-                document.body.appendChild(n);
-                var id = setTimeout(function() {
-                    n.style.opacity = '0';
-                    n.style.transform = 'translateY(20px)';
-                    n.style.transition = 'all 0.4s';
-                    var id2 = setTimeout(function() { n.remove(); }, 400);
-                    _pageTimeouts.push(id2);
-                }, 2500);
-                _pageTimeouts.push(id);
-            }
-
-            // ============================================================
-            // 📊 STATS
-            // ============================================================
-            function updateStats() {
-                if (_isDestroyed) return;
-
-                var total = _usersData.length;
-                var active = _usersData.filter(function(u) { return u.active !== false; }).length;
-                var inactive = _usersData.filter(function(u) { return u.active === false; }).length;
-                var admins = _usersData.filter(function(u) { return u.role === 'admin'; }).length;
-                var noLocation = _usersData.filter(function(u) {
-                    return u.lat === null || u.lng === null;
-                }).length;
-
-                var activeSessions = _sessionsData.length;
-
-                var el = function(id) { return document.getElementById(id); };
-
-                if (el('totalUsers')) el('totalUsers').textContent = total;
-                if (el('activeNow')) el('activeNow').textContent = active;
-                if (el('readyUsers')) el('readyUsers').textContent = admins;
-                if (el('busyUsers')) el('busyUsers').textContent = inactive;
-                if (el('offlineUsers')) el('offlineUsers').textContent = noLocation;
-                if (el('totalSessions')) el('totalSessions').textContent = activeSessions;
-
-                var badge = document.getElementById('sessionBadge');
-                if (badge) {
-                    if (activeSessions > 0) {
-                        badge.textContent = '🟢 ' + activeSessions + ' جلسة نشطة';
-                        badge.className = 'badge success';
-                    } else {
-                        badge.textContent = '📊 لا توجد جلسات';
-                        badge.className = 'badge purple';
-                    }
-                }
-            }
-
-            // ============================================================
-            // 📥 LOAD USERS FROM API
-            // ============================================================
-            async function loadUsers() {
-                if (_isDestroyed) return;
-
-                try {
-                    var res = await fetch('/api/monitoring/users', {
-                        headers: authHeaders(),
-                        credentials: 'include',
-                        cache: 'no-store'
-                    });
-
-                    if (!res.ok) {
-                        console.warn('[MONITORING] users API returned', res.status);
-                        _usersData = [];
-                        return;
-                    }
-
-                    var data = await res.json();
-                    var users = [];
-
-                    if (Array.isArray(data)) users = data;
-                    else if (data && Array.isArray(data.users)) users = data.users;
-                    else if (data && Array.isArray(data.data)) users = data.data;
-
-                    _usersData = users.map(function(u) {
-                        return {
-                            id: u.id || u._id || '',
-                            name: u.name || u.username || 'مستخدم',
-                            username: u.username || '',
-                            email: u.email || '',
-                            role: u.role || 'viewer',
-                            active: u.active !== false && u.isActive !== false,
-                            lat: (typeof u.lat === 'number') ? u.lat :
-                                 (typeof u.latitude === 'number') ? u.latitude : null,
-                            lng: (typeof u.lng === 'number') ? u.lng :
-                                 (typeof u.longitude === 'number') ? u.longitude : null,
-                            location: u.location || '—',
-                            lastActive: u.lastLogin || u.lastActive || null
-                        };
-                    });
-
-                    console.log('✅ [MONITORING] Loaded', _usersData.length, 'real users');
-                } catch (err) {
-                    console.warn('[MONITORING] Load users error:', err.message);
-                    _usersData = [];
-                }
-            }
-
-            // ============================================================
-            // 📥 LOAD SESSIONS FROM API
-            // ============================================================
-            async function loadSessions() {
-                if (_isDestroyed) return;
-
-                try {
-                    var res = await fetch('/api/monitoring/sessions', {
-                        headers: authHeaders(),
-                        credentials: 'include',
-                        cache: 'no-store'
-                    });
-
-                    if (!res.ok) {
-                        console.warn('[MONITORING] sessions API returned', res.status);
-                        _sessionsData = [];
-                        return;
-                    }
-
-                    var data = await res.json();
-                    var sessions = [];
-
-                    if (Array.isArray(data)) sessions = data;
-                    else if (data && Array.isArray(data.sessions)) sessions = data.sessions;
-                    else if (data && Array.isArray(data.data)) sessions = data.data;
-
-                    _sessionsData = sessions.map(function(s) {
-                        return {
-                            id: s.sessionId || s.id || '',
-                            user: s.name || s.username || 'مستخدم',
-                            username: s.username || '',
-                            email: s.email || '',
-                            role: s.role || 'viewer',
-                            duration: formatDuration(s.createdAt),
-                            status: 'active',
-                            createdAt: s.createdAt
-                        };
-                    });
-
-                    console.log('✅ [MONITORING] Loaded', _sessionsData.length, 'real sessions');
-                } catch (err) {
-                    console.warn('[MONITORING] Load sessions error:', err.message);
-                    _sessionsData = [];
-                }
-            }
-
-            function formatDuration(startTime) {
-                if (!startTime) return '—';
-                try {
-                    var start = new Date(startTime).getTime();
-                    var now = Date.now();
-                    var diff = Math.floor((now - start) / 1000);
-                    if (diff < 0) return '—';
-                    if (diff < 60) return diff + ' ثانية';
-                    if (diff < 3600) return Math.floor(diff / 60) + ' دقيقة';
-                    if (diff < 86400) {
-                        var h = Math.floor(diff / 3600);
-                        var m = Math.floor((diff % 3600) / 60);
-                        return h + ' ساعة ' + m + ' دقيقة';
-                    }
-                    return Math.floor(diff / 86400) + ' يوم';
-                } catch (e) { return '—'; }
-            }
-
-            // ============================================================
-            // 🗺️ MAP
-            // ============================================================
-            function initMap() {
-                if (_isDestroyed) return;
-                console.log('🗺️ Initializing map...');
-
-                var container = document.getElementById('realMap');
-                if (!container) {
-                    var id = setTimeout(function() {
-                        if (!_isDestroyed) initMap();
-                    }, 500);
-                    _pageTimeouts.push(id);
-                    return;
-                }
-
-                if (_map) {
-                    try {
-                        _markers.forEach(function(m) { try { _map.removeLayer(m); } catch (e) {} });
-                        _markers = [];
-                        _map.off();
-                        _map.remove();
-                    } catch (e) {}
-                    _map = null;
-                }
-
-                if (typeof L === 'undefined') {
-                    var script = document.createElement('script');
-                    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                    script.onload = function() {
-                        if (_isDestroyed) return;
-                        var link = document.createElement('link');
-                        link.rel = 'stylesheet';
-                        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                        document.head.appendChild(link);
-                        _dynamicScripts.push(link);
-                        var id = setTimeout(function() {
-                            if (!_isDestroyed) initMap();
-                        }, 300);
-                        _pageTimeouts.push(id);
-                    };
-                    script.onerror = function() {
-                        if (!_isDestroyed) showToast('❌ فشل تحميل الخريطة', 'error');
-                    };
-                    document.head.appendChild(script);
-                    _dynamicScripts.push(script);
-                    return;
-                }
-
-                try {
-                    _map = L.map('realMap').setView([34.5, 9.5], 7);
-
-                    var tileLayers = {
-                        satellite: L.tileLayer(
-                            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                                attribution: '&copy; Esri',
-                                maxZoom: 19
-                            }),
-                        standard: L.tileLayer(
-                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                attribution: '&copy; OpenStreetMap',
-                                maxZoom: 19
-                            }),
-                        terrain: L.tileLayer(
-                            'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                                attribution: '&copy; OpenTopoMap',
-                                maxZoom: 17
-                            })
-                    };
-
-                    tileLayers.satellite.addTo(_map);
-                    _map._tileLayers = tileLayers;
-                    _map._currentLayer = 'satellite';
-
-                    var bounds = L.latLngBounds(
-                        L.latLng(32.5, 8.0),
-                        L.latLng(37.5, 12.0)
-                    );
-                    _map.fitBounds(bounds, { padding: [20, 20] });
-
-                    addMarkers();
-                    console.log('✅ Map initialized');
-                } catch (error) {
-                    console.error('❌ Map error:', error);
-                }
-            }
-
-            function addMarkers() {
-                if (_isDestroyed) return;
-                if (!_map) return;
-
-                _markers.forEach(function(m) {
-                    try { _map.removeLayer(m); } catch (e) {}
-                });
-                _markers = [];
-
-                var usersWithLocation = _usersData.filter(function(u) {
-                    return typeof u.lat === 'number' && typeof u.lng === 'number' &&
-                           !isNaN(u.lat) && !isNaN(u.lng);
+                var icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div style="background:' + color +
+                        ';width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0a1628;border:3px solid rgba(255,255,255,0.3);box-shadow:0 0 20px ' +
+                        color + '44;">' + iconHtml + '</div>',
+                    iconSize: [38, 38],
+                    iconAnchor: [19, 19],
+                    popupAnchor: [0, -25]
                 });
 
-                if (usersWithLocation.length === 0) {
-                    console.log('ℹ️ No users with location data');
-                    return;
-                }
+                var activeBadge = user.active ?
+                    '<span class="popup-status online">🟢 نشط</span>' :
+                    '<span class="popup-status offline">⚫ غير نشط</span>';
 
-                usersWithLocation.forEach(function(user) {
-                    var color = getRoleColor(user.role);
-                    var iconHtml = escapeHtml(getInitials(user.name));
+                var popupContent =
+                    '<div style="text-align:right;font-family:Cairo,sans-serif;">' +
+                    '<div class="popup-user-name">' + escapeHtml(user.name) + '</div>' +
+                    '<div class="popup-user-detail"><i class="fas fa-user-tag"></i> ' + escapeHtml(getRoleLabel(user.role)) + '</div>' +
+                    '<div class="popup-user-detail"><i class="fas fa-at"></i> ' + escapeHtml(user.username) + '</div>' +
+                    '<div class="popup-user-detail"><i class="fas fa-envelope"></i> ' + escapeHtml(user.email) + '</div>' +
+                    (device.type !== 'unknown' ? '<div class="popup-user-detail"><i class="fas ' + device.icon + '"></i> ' + escapeHtml(device.label) + '</div>' : '') +
+                    (user.id ? '<div class="popup-user-id">ID: ' + escapeHtml(truncateId(user.id)) + '</div>' : '') +
+                    '<div style="margin-top:6px;">' + activeBadge + '</div>' +
+                    '</div>';
 
-                    var icon = L.divIcon({
-                        className: 'custom-marker',
-                        html: '<div style="background:' + color +
-                            ';width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0a1628;border:3px solid rgba(255,255,255,0.3);box-shadow:0 0 20px ' +
-                            color + '44;">' + iconHtml + '</div>',
-                        iconSize: [38, 38],
-                        iconAnchor: [19, 19],
-                        popupAnchor: [0, -25]
-                    });
+                var marker = L.marker([user.lat, user.lng], { icon: icon })
+                    .bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
 
-                    var activeBadge = user.active ?
-                        '<span class="popup-status online">🟢 نشط</span>' :
-                        '<span class="popup-status offline">⚫ غير نشط</span>';
-
-                    var popupContent =
-                        '<div style="text-align:right;font-family:Cairo,sans-serif;">' +
-                        '<div class="popup-user-name">' + escapeHtml(user.name) + '</div>' +
-                        '<div class="popup-user-detail"><i class="fas fa-user-tag"></i> ' + escapeHtml(getRoleLabel(user.role)) + '</div>' +
-                        '<div class="popup-user-detail"><i class="fas fa-at"></i> ' + escapeHtml(user.username) + '</div>' +
-                        '<div class="popup-user-detail"><i class="fas fa-envelope"></i> ' + escapeHtml(user.email) + '</div>' +
-                        '<div style="margin-top:6px;">' + activeBadge + '</div>' +
-                        '</div>';
-
-                    var marker = L.marker([user.lat, user.lng], { icon: icon })
-                        .bindPopup(popupContent, { maxWidth: 280, className: 'custom-popup' });
-
-                    marker.on('click', function() {
-                        if (!_isDestroyed) showPanel(user);
-                    });
-
-                    marker.addTo(_map);
-                    _markers.push(marker);
-                });
-            }
-
-            function switchMapType(type) {
-                if (_isDestroyed) return;
-                if (!_map || !_map._tileLayers) return;
-
-                if (_map._currentLayer) {
-                    try {
-                        _map.removeLayer(_map._tileLayers[_map._currentLayer]);
-                    } catch (e) {}
-                }
-
-                try {
-                    _map._tileLayers[type].addTo(_map);
-                    _map._currentLayer = type;
-                } catch (e) { return; }
-
-                document.querySelectorAll('.map-type-btn').forEach(function(b) {
-                    b.classList.toggle('active', b.dataset.type === type);
+                marker.on('click', function() {
+                    if (!_isDestroyed) showPanel(user);
                 });
 
-                var labels = { 'satellite': '🛰️ قمر صناعي', 'standard': '🗺️ عادية', 'terrain': '⛰️ تضاريس' };
-                showToast('🗺️ تم التبديل إلى ' + labels[type], 'info');
+                marker.addTo(_map);
+                _markers.push(marker);
+            });
+        }
+
+        function switchMapType(type) {
+            if (_isDestroyed || !_map || !_map._tileLayers) return;
+
+            if (_map._currentLayer) {
+                try { _map.removeLayer(_map._tileLayers[_map._currentLayer]); } catch (e) {}
             }
 
-            // ============================================================
-            // 📋 RENDER SESSIONS
-            // ============================================================
-            function renderSessions() {
-                if (_isDestroyed) return;
+            try {
+                _map._tileLayers[type].addTo(_map);
+                _map._currentLayer = type;
+            } catch (e) { return; }
 
-                var tbody = document.getElementById('sessionsBody');
-                if (!tbody) return;
+            document.querySelectorAll('.map-type-btn').forEach(function(b) {
+                b.classList.toggle('active', b.dataset.type === type);
+            });
 
-                if (_sessionsData.length === 0) {
-                    tbody.innerHTML =
-                        '<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">' +
-                        '<i class="fas fa-inbox" style="font-size:24px;opacity:0.3;display:block;margin-bottom:8px;"></i>' +
-                        'لا توجد جلسات نشطة' +
-                        '</td></tr>';
-                    return;
-                }
+            var labels = { 'satellite': '🛰️ قمر صناعي', 'standard': '🗺️ عادية', 'terrain': '⛰️ تضاريس' };
+            showToast('🗺️ تم التبديل إلى ' + labels[type], 'info');
+        }
 
-                var html = '';
-                _sessionsData.forEach(function(s) {
-                    var roleColor = getRoleColor(s.role);
+        // ============================================================
+        // 📋 RENDER SESSIONS
+        // ============================================================
+        function renderSessions() {
+            if (_isDestroyed) return;
+            var tbody = $('sessionsBody');
+            if (!tbody) return;
 
-                    html +=
-                        '<tr>' +
-                            '<td class="user-name">' + escapeHtml(s.user) + '</td>' +
-                            '<td><span class="region-tag" style="color:' + roleColor +
-                                ';border:1px solid ' + roleColor + '44;">' +
-                                escapeHtml(getRoleLabel(s.role)) + '</span></td>' +
-                            '<td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">' +
-                                escapeHtml(s.email || '—') + '</td>' +
-                            '<td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">' +
-                                escapeHtml(s.duration) + '</td>' +
-                            '<td><span class="status-badge active">🟢 نشطة</span></td>' +
-                        '</tr>';
-                });
-                tbody.innerHTML = html;
+            if (_sessionsData.length === 0) {
+                tbody.innerHTML =
+                    '<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">' +
+                    '<i class="fas fa-inbox" style="font-size:24px;opacity:0.3;display:block;margin-bottom:8px;"></i>' +
+                    'لا توجد جلسات نشطة' +
+                    '</td></tr>';
+                return;
             }
 
-            // ============================================================
-            // 👤 USER PANEL
-            // ============================================================
-            function showPanel(user) {
-                if (_isDestroyed) return;
+            var html = '';
+            _sessionsData.forEach(function(s) {
+                var roleColor = getRoleColor(s.role);
+                var device = s.device || detectDevice(s.userAgent || '');
+                var deviceClass = device.type || 'unknown';
 
-                var overlay = document.getElementById('panelOverlay');
-                var panel = document.getElementById('userPanel');
-                if (!overlay || !panel) return;
+                // ✅ عرض ID المستخدم
+                var idDisplay = s.id
+                    ? '<span title="' + escapeHtml(String(s.id)) + '">' + escapeHtml(truncateId(s.id)) + '</span>'
+                    : '—';
 
-                overlay.classList.add('visible');
-                panel.classList.add('visible');
+                // ✅ عرض الجهاز
+                var deviceHtml =
+                    '<span class="device-icon ' + deviceClass + '"><i class="fas ' + device.icon + '"></i></span>' +
+                    '<span>' + escapeHtml(device.label) + '</span>' +
+                    '<span class="device-browser">' + escapeHtml(device.browser) + '</span>';
 
-                var el = function(id) { return document.getElementById(id); };
+                html +=
+                    '<tr>' +
+                        '<td class="user-id-cell">' + idDisplay + '</td>' +
+                        '<td class="user-name">' + escapeHtml(s.user) + '</td>' +
+                        '<td><span class="region-tag" style="color:' + roleColor +
+                            ';border:1px solid ' + roleColor + '44;">' +
+                            escapeHtml(getRoleLabel(s.role)) + '</span></td>' +
+                        '<td class="device-cell">' + deviceHtml + '</td>' +
+                        '<td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">' +
+                            escapeHtml(s.duration) + '</td>' +
+                        '<td><span class="status-badge active">🟢 نشطة</span></td>' +
+                    '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
 
-                if (el('panelAvatar')) el('panelAvatar').textContent = getInitials(user.name);
-                if (el('panelName')) el('panelName').textContent = user.name;
-                if (el('panelRole')) el('panelRole').textContent = getRoleLabel(user.role);
-                if (el('panelId')) el('panelId').textContent = user.id ? '#' + user.id : '—';
-                if (el('panelLocation')) el('panelLocation').textContent = user.location || '—';
-                if (el('panelCoords')) el('panelCoords').textContent =
-                    (user.lat !== null && user.lng !== null)
-                        ? (user.lat + '°, ' + user.lng + '°')
-                        : '— لا يوجد موقع —';
+        // ============================================================
+        // 👤 USER PANEL
+        // ============================================================
+        function showPanel(user) {
+            if (_isDestroyed) return;
 
-                var se = document.getElementById('panelStatus');
-                if (se) {
-                    se.textContent = user.active ? '🟢 نشط' : '⚫ غير نشط';
-                    se.className = 'value ' + (user.active ? 'green' : 'red');
-                }
+            var overlay = $('panelOverlay');
+            var panel = $('userPanel');
+            if (!overlay || !panel) return;
 
-                var re = document.getElementById('panelReadiness');
-                if (re) {
-                    re.textContent = getRoleLabel(user.role);
-                    re.className = 'value gold';
-                }
+            overlay.classList.add('visible');
+            panel.classList.add('visible');
 
-                if (el('panelLastActive')) el('panelLastActive').textContent = user.lastActive || '—';
-                if (el('panelEmail')) el('panelEmail').textContent = user.email || '—';
+            var device = detectDevice(user.userAgent || '');
+
+            if ($('panelAvatar')) $('panelAvatar').textContent = getInitials(user.name);
+            if ($('panelName')) $('panelName').textContent = user.name;
+            if ($('panelRole')) $('panelRole').textContent = getRoleLabel(user.role);
+            if ($('panelId')) $('panelId').textContent = user.id ? '#' + user.id : '—';
+            if ($('panelDevice')) $('panelDevice').textContent = device.label;
+            if ($('panelBrowser')) $('panelBrowser').textContent = device.browser + ' · ' + device.os;
+            if ($('panelLocation')) $('panelLocation').textContent = user.location || '—';
+            if ($('panelCoords')) $('panelCoords').textContent =
+                (user.lat !== null && user.lng !== null)
+                    ? (user.lat + '°, ' + user.lng + '°')
+                    : '— لا يوجد موقع —';
+
+            var se = $('panelStatus');
+            if (se) {
+                se.textContent = user.active ? '🟢 نشط' : '⚫ غير نشط';
+                se.className = 'value ' + (user.active ? 'green' : 'red');
             }
 
-            function closePanel() {
-                if (_isDestroyed) return;
-                var overlay = document.getElementById('panelOverlay');
-                var panel = document.getElementById('userPanel');
-                if (overlay) overlay.classList.remove('visible');
-                if (panel) panel.classList.remove('visible');
+            var re = $('panelReadiness');
+            if (re) {
+                re.textContent = getRoleLabel(user.role);
+                re.className = 'value gold';
             }
 
-            // ============================================================
-            // 🔄 REFRESH
-            // ============================================================
-            async function refreshAll() {
-                if (_isDestroyed) return;
+            if ($('panelLastActive')) $('panelLastActive').textContent = user.lastActive || '—';
+            if ($('panelEmail')) $('panelEmail').textContent = user.email || '—';
+        }
 
-                var btn = document.getElementById('refreshBtn');
-                if (!btn) return;
+        function closePanel() {
+            if (_isDestroyed) return;
+            var overlay = $('panelOverlay');
+            var panel = $('userPanel');
+            if (overlay) overlay.classList.remove('visible');
+            if (panel) panel.classList.remove('visible');
+        }
 
-                var orig = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-                btn.disabled = true;
+        // ============================================================
+        // 🔄 REFRESH
+        // ============================================================
+        async function refreshAll() {
+            if (_isDestroyed) return;
+            var btn = $('refreshBtn');
+            if (!btn) return;
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+            btn.disabled = true;
 
-                try {
-                    await Promise.all([loadUsers(), loadSessions()]);
-                    if (_isDestroyed) return;
-
-                    updateStats();
-                    renderSessions();
-                    addMarkers();
-
-                    showToast('✅ تم تحديث البيانات', 'success');
-                } catch (err) {
-                    console.warn('[REFRESH] Error:', err.message);
-                    showToast('⚠️ تعذّر تحديث بعض البيانات', 'warning');
-                } finally {
-                    if (btn) {
-                        btn.innerHTML = orig;
-                        btn.disabled = false;
-                    }
-                }
-            }
-
-            function terminateAll() {
-                if (_isDestroyed) return;
-                if (!confirm('⚠️ إنهاء جميع الجلسات النشطة؟')) return;
-                if (_sessionsData.length === 0) {
-                    showToast('ℹ️ لا توجد جلسات', 'info');
-                    return;
-                }
-                showToast('⚠️ هذه الميزة تحتاج endpoint DELETE على السيرفر', 'warning');
-            }
-
-            _resizeHandler = function() {
-                if (_isDestroyed) return;
-                if (_resizeTimer) clearTimeout(_resizeTimer);
-                _resizeTimer = setTimeout(function() {
-                    if (_isDestroyed) return;
-                    if (_map) {
-                        try { _map.invalidateSize(); } catch (e) {}
-                    }
-                }, 300);
-            };
-
-            // ============================================================
-            // 🚀 INIT
-            // ============================================================
-            async function init() {
-                if (_isDestroyed) return;
-                console.log('🚀 Initializing monitoring page (REAL DATA)...');
-
+            try {
                 await Promise.all([loadUsers(), loadSessions()]);
                 if (_isDestroyed) return;
 
                 updateStats();
                 renderSessions();
+                addMarkers();
 
-                var id = setTimeout(function() {
-                    if (!_isDestroyed) initMap();
-                }, 300);
-                _pageTimeouts.push(id);
+                showToast('✅ تم تحديث البيانات', 'success');
+            } catch (err) {
+                console.warn('[REFRESH] Error:', err.message);
+                showToast('⚠️ تعذّر تحديث بعض البيانات', 'warning');
+            } finally {
+                if (btn) {
+                    btn.innerHTML = orig;
+                    btn.disabled = false;
+                }
+            }
+        }
 
-                var refreshBtn = document.getElementById('refreshBtn');
-                if (refreshBtn) refreshBtn.addEventListener('click', refreshAll);
+        _resizeHandler = function() {
+            if (_isDestroyed) return;
+            if (_resizeTimer) clearTimeout(_resizeTimer);
+            _resizeTimer = setTimeout(function() {
+                if (_isDestroyed) return;
+                if (_map) {
+                    try { _map.invalidateSize(); } catch (e) {}
+                }
+            }, 300);
+        };
 
-                var terminateBtn = document.getElementById('terminateAllBtn');
-                if (terminateBtn) terminateBtn.addEventListener('click', terminateAll);
+        // ============================================================
+        // 🚀 INIT
+        // ============================================================
+        async function init() {
+            if (_isDestroyed) return;
+            console.log('🚀 Initializing monitoring page v10.0...');
 
-                var closeBtn = document.getElementById('closePanelBtn');
-                if (closeBtn) closeBtn.addEventListener('click', closePanel);
+            var currentDevice = getCurrentDevice();
+            console.log('💻 Device (current):', currentDevice.label, '·', currentDevice.browser);
 
-                var overlay = document.getElementById('panelOverlay');
-                if (overlay) overlay.addEventListener('click', closePanel);
+            await Promise.all([loadUsers(), loadSessions()]);
+            if (_isDestroyed) return;
 
-                document.querySelectorAll('.map-type-btn').forEach(function(b) {
-                    b.addEventListener('click', function() {
-                        if (!_isDestroyed) switchMapType(this.dataset.type);
-                    });
+            updateStats();
+            renderSessions();
+
+            var id = setTimeout(function() {
+                if (!_isDestroyed) initMap();
+            }, 300);
+            _pageTimeouts.push(id);
+
+            var refreshBtn = $('refreshBtn');
+            if (refreshBtn) refreshBtn.addEventListener('click', refreshAll);
+
+            var printBtn = $('printBtn');
+            if (printBtn) printBtn.addEventListener('click', printMonitoring);
+
+            var closeBtn = $('closePanelBtn');
+            if (closeBtn) closeBtn.addEventListener('click', closePanel);
+
+            var overlay = $('panelOverlay');
+            if (overlay) overlay.addEventListener('click', closePanel);
+
+            document.querySelectorAll('.map-type-btn').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    if (!_isDestroyed) switchMapType(this.dataset.type);
                 });
+            });
 
-                window.addEventListener('resize', _resizeHandler);
+            window.addEventListener('resize', _resizeHandler);
 
-                console.log('✅ Monitoring ready — ' + _usersData.length + ' users, ' + _sessionsData.length + ' sessions');
-            }
+            console.log('✅ Monitoring v10.0 ready — ' + _usersData.length + ' users, ' + _sessionsData.length + ' sessions');
+        }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
-            } else {
-                init();
-            }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
 
-            window.refreshAll = refreshAll;
-            window.terminateAll = terminateAll;
-            window.switchMapType = switchMapType;
-            window.showToast = showToast;
-            window.initMap = initMap;
-            window.printMonitoring = printMonitoring;
-
-        })();
+        window.refreshAll = refreshAll;
+        window.switchMapType = switchMapType;
+        window.showToast = showToast;
+        window.initMap = initMap;
+        window.printMonitoring = printMonitoring;
+        window.detectDevice = detectDevice;
+    })();
     </script>
-
-    <!-- ============================================================
-    ✅ LEAFLET JS
-    ============================================================ -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </div>
