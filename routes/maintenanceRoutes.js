@@ -1,50 +1,40 @@
 /**
  * 🔧 مسارات الصيانة
  * @module routes/maintenanceRoutes
- * @version 1.0.0
+ * @version 2.0.0 — متوافق مع models/Maintenance.js v2.1
  */
 
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
-
-// استيراد نموذج الصيانة (إن لم يكن موجودًا، استخدم ذاكرة مؤقتة)
-let Maintenance;
-try {
-    Maintenance = require('../models/Maintenance');
-    console.log('✅ [maintenanceRoutes] Maintenance model loaded');
-} catch (e) {
-    console.warn('⚠️ [maintenanceRoutes] models/Maintenance.js غير موجود');
-    console.warn('   → أنشئ ملف models/Maintenance.js لتفعيل حفظ السجلات');
-    Maintenance = null;
-}
+const Maintenance = require('../models/Maintenance');
 
 // ============================================================
-// 📋 GET all maintenance records
+// 📋 GET ALL
 // ============================================================
 router.get('/', authenticate, async (req, res) => {
     try {
-        if (!Maintenance) {
-            return res.json({
-                success: true,
-                records: [],
-                data: [],
-                total: 0,
-                message: 'نموذج الصيانة غير مفعّل — أنشئ models/Maintenance.js'
-            });
-        }
+        const { status, vesselId, limit = 500, offset = 0 } = req.query;
+        const query = {};
+        if (status) query.status = status;
+        if (vesselId) query.vesselId = vesselId;
 
-        const records = await Maintenance.find({})
+        const records = await Maintenance.find(query)
             .sort({ createdAt: -1 })
+            .skip(parseInt(offset))
+            .limit(parseInt(limit))
             .lean();
+
+        const total = await Maintenance.countDocuments(query);
 
         return res.json({
             success: true,
-            records: records,
+            records,
             data: records,
-            total: records.length
+            total,
+            limit: parseInt(limit),
+            offset: parseInt(offset)
         });
-
     } catch (err) {
         console.error('❌ GET /maintenance:', err);
         return res.status(500).json({
@@ -55,13 +45,10 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 📋 GET one maintenance record
+// 📋 GET ONE
 // ============================================================
 router.get('/:id', authenticate, async (req, res) => {
     try {
-        if (!Maintenance) {
-            return res.status(404).json({ success: false, error: 'السجل غير موجود' });
-        }
         const { id } = req.params;
         const record = await Maintenance.findOne({
             $or: [
@@ -75,7 +62,6 @@ router.get('/:id', authenticate, async (req, res) => {
         }
 
         return res.json({ success: true, record, data: record });
-
     } catch (err) {
         console.error('❌ GET /maintenance/:id:', err);
         return res.status(500).json({ success: false, error: err.message });
@@ -83,7 +69,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// ➕ POST create maintenance record
+// ➕ POST CREATE
 // ============================================================
 router.post(
     '/',
@@ -91,27 +77,27 @@ router.post(
     authorize('admin', 'manager', 'editor', 'maintenance_unit'),
     async (req, res) => {
         try {
-            if (!Maintenance) {
-                return res.status(503).json({
-                    success: false,
-                    error: 'نموذج الصيانة غير مفعّل. تواصل مع المدير لإنشاء models/Maintenance.js'
-                });
+            const body = req.body || {};
+
+            // توليد id تلقائي إن لم يوجد
+            if (!body.id) {
+                body.id = 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
             }
 
-            // توليد id
-            const recordId = req.body.id || ('m_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+            // ضمان أن startDate تاريخ صالح
+            if (body.startDate && typeof body.startDate === 'string') {
+                body.startDate = new Date(body.startDate);
+            }
+            if (body.endDate && typeof body.endDate === 'string') {
+                body.endDate = new Date(body.endDate);
+            }
 
-            const record = new Maintenance({
-                ...req.body,
-                id: recordId,
-                createdBy: req.userId || req.user?.id || 'system',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
+            body.createdBy = req.userId || req.user?.id || 'system';
 
+            const record = new Maintenance(body);
             await record.save();
 
-            console.log('✅ [maintenanceRoutes] تم إنشاء سجل صيانة:', recordId);
+            console.log('✅ [POST /maintenance] تم إنشاء السجل:', record.id);
 
             return res.status(201).json({
                 success: true,
@@ -119,19 +105,19 @@ router.post(
                 record,
                 data: record
             });
-
         } catch (err) {
             console.error('❌ POST /maintenance:', err);
             return res.status(500).json({
                 success: false,
-                error: 'حدث خطأ في إنشاء السجل: ' + err.message
+                error: err.message || 'خطأ في إنشاء السجل',
+                details: err.errors ? Object.keys(err.errors).map(k => err.errors[k].message) : undefined
             });
         }
     }
 );
 
 // ============================================================
-// ✏️ PUT update maintenance record
+// ✏️ PUT UPDATE
 // ============================================================
 router.put(
     '/:id',
@@ -139,10 +125,68 @@ router.put(
     authorize('admin', 'manager', 'editor', 'maintenance_unit'),
     async (req, res) => {
         try {
-            if (!Maintenance) {
-                return res.status(503).json({ success: false, error: 'نموذج الصيانة غير مفعّل' });
+            const { id } = req.params;
+            const updates = { ...req.body };
+
+            // تنظيف
+            delete updates._id;
+            delete updates.id;
+            delete updates.createdAt;
+
+            // تحويل التواريخ
+            if (updates.startDate && typeof updates.startDate === 'string') {
+                updates.startDate = new Date(updates.startDate);
+            }
+            if (updates.endDate && typeof updates.endDate === 'string') {
+                updates.endDate = new Date(updates.endDate);
             }
 
+            updates.updatedBy = req.userId || req.user?.id || 'system';
+
+            const record = await Maintenance.findOne({
+                $or: [
+                    { id: id },
+                    { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }
+                ]
+            });
+
+            if (!record) {
+                return res.status(404).json({ success: false, error: 'السجل غير موجود' });
+            }
+
+            Object.keys(updates).forEach(key => {
+                record[key] = updates[key];
+            });
+
+            await record.save();
+
+            console.log('✅ [PUT /maintenance] تم تحديث السجل:', id);
+
+            return res.json({
+                success: true,
+                message: 'تم تحديث السجل بنجاح',
+                record,
+                data: record
+            });
+        } catch (err) {
+            console.error('❌ PUT /maintenance/:id:', err);
+            return res.status(500).json({
+                success: false,
+                error: err.message || 'خطأ في تحديث السجل'
+            });
+        }
+    }
+);
+
+// ============================================================
+// ✅ POST COMPLETE (اختصار + تحديث المركب)
+// ============================================================
+router.post(
+    '/:id/complete',
+    authenticate,
+    authorize('admin', 'manager', 'editor', 'maintenance_unit'),
+    async (req, res) => {
+        try {
             const { id } = req.params;
             const record = await Maintenance.findOne({
                 $or: [
@@ -155,31 +199,29 @@ router.put(
                 return res.status(404).json({ success: false, error: 'السجل غير موجود' });
             }
 
-            // تحديث الحقول (ما عدا createdBy)
-            Object.keys(req.body).forEach(key => {
-                if (key !== 'createdBy' && key !== '_id' && req.body[key] !== undefined) {
-                    record[key] = req.body[key];
-                }
-            });
+            await record.complete();
 
-            record.updatedAt = new Date();
-            await record.save();
-
-            console.log('✅ [maintenanceRoutes] تم تحديث السجل:', id);
+            // تحديث المركب في السجل العام
+            try {
+                const Vessel = require('../models/Vessel');
+                await Vessel.updateOne(
+                    { $or: [{ id: record.vesselId }, { _id: record.vesselId }] },
+                    { $set: { status: 'صالح', stat: 'صالح', break: '', fDate: null, eDate: new Date().toISOString().split('T')[0] } }
+                );
+                console.log('✅ تم تحديث حالة المركب إلى "صالح"');
+            } catch (vErr) {
+                console.warn('⚠️ لم يتم تحديث السجل العام:', vErr.message);
+            }
 
             return res.json({
                 success: true,
-                message: 'تم تحديث السجل بنجاح',
+                message: 'تم إكمال الصيانة وتحديث حالة المركب',
                 record,
                 data: record
             });
-
         } catch (err) {
-            console.error('❌ PUT /maintenance/:id:', err);
-            return res.status(500).json({
-                success: false,
-                error: 'حدث خطأ في تحديث السجل: ' + err.message
-            });
+            console.error('❌ POST /maintenance/:id/complete:', err);
+            return res.status(500).json({ success: false, error: err.message });
         }
     }
 );
@@ -193,10 +235,6 @@ router.delete(
     authorize('admin', 'manager'),
     async (req, res) => {
         try {
-            if (!Maintenance) {
-                return res.status(503).json({ success: false, error: 'نموذج الصيانة غير مفعّل' });
-            }
-
             const { id } = req.params;
             const result = await Maintenance.deleteOne({
                 $or: [
@@ -209,20 +247,14 @@ router.delete(
                 return res.status(404).json({ success: false, error: 'السجل غير موجود' });
             }
 
-            console.log('✅ [maintenanceRoutes] تم حذف السجل:', id);
-
             return res.json({
                 success: true,
                 message: 'تم حذف السجل بنجاح',
                 deleted: result.deletedCount
             });
-
         } catch (err) {
             console.error('❌ DELETE /maintenance/:id:', err);
-            return res.status(500).json({
-                success: false,
-                error: 'حدث خطأ في حذف السجل: ' + err.message
-            });
+            return res.status(500).json({ success: false, error: err.message });
         }
     }
 );
