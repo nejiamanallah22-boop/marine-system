@@ -1,180 +1,326 @@
 <!-- public/pages/monitoring.html -->
 <div id="page-monitoring">
     <style>
-        body { background: #0a0e1a; }
-
+        /* ============================================================
+           🎨 THEME & BASE
+           ============================================================ */
         #page-monitoring {
-            width: 100%; max-width: 100%;
-            padding: 0; margin: 0;
-            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+            --bg-base: #0a0e1a;
+            --bg-elevated: rgba(255,255,255,0.04);
+            --bg-elevated-hover: rgba(255,255,255,0.06);
+            --border-subtle: rgba(255,255,255,0.06);
+            --border-strong: rgba(255,255,255,0.12);
+            --text-primary: #e8edf5;
+            --text-secondary: rgba(255,255,255,0.5);
+            --text-muted: rgba(255,255,255,0.3);
+            --text-faint: rgba(255,255,255,0.15);
+            --gold: #e6b31e;
+            --gold-light: #f5d76e;
+            --purple: #a78bfa;
+            --green: #55efc4;
+            --blue: #60a5fa;
+            --red: #f87171;
+            --pink: #f472b6;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 14px;
+            --radius-pill: 30px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+            --shadow-md: 0 8px 30px rgba(0,0,0,0.3);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+            --shadow-gold: 0 8px 30px rgba(230,179,30,0.3);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+            font-family: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
             background: transparent;
-            color: #e8edf5;
+            color: var(--text-primary);
             min-height: 100vh;
             position: relative;
             z-index: 2;
+            direction: rtl;
+            text-align: right;
         }
+
+        #page-monitoring *,
+        #page-monitoring *::before,
+        #page-monitoring *::after {
+            box-sizing: border-box;
+        }
+
         #page-monitoring::before {
             content: '';
-            position: fixed; top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
+            position: fixed;
+            inset: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
                 radial-gradient(ellipse at 80% 50%, rgba(167,139,250,0.03) 0%, transparent 60%);
-            z-index: -1; pointer-events: none;
-            animation: bgPulse 15s ease-in-out infinite;
+            z-index: -1;
+            pointer-events: none;
+            animation: monBgPulse 15s ease-in-out infinite;
         }
-        @keyframes bgPulse {
+
+        @keyframes monBgPulse {
             0%, 100% { transform: scale(1) rotate(0deg); }
             50% { transform: scale(1.05) rotate(2deg); }
         }
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        ::-webkit-scrollbar-thumb { background: #e6b31e; border-radius: 10px; }
 
+        #page-monitoring ::-webkit-scrollbar { width: 6px; height: 6px; }
+        #page-monitoring ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 10px; }
+        #page-monitoring ::-webkit-scrollbar-thumb { background: rgba(230,179,30,0.5); border-radius: 10px; }
+        #page-monitoring ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+        /* ============================================================
+           📌 HEADER
+           ============================================================ */
         .mon-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px 24px; flex-wrap: wrap; gap: 12px;
-            background: rgba(255,255,255,0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: rgba(10,14,26,0.85);
             backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            position: sticky; top: 0; z-index: 10;
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 100;
             width: 100%;
         }
-        .mon-header-left { display: flex; align-items: center; gap: 14px; }
+
+        .mon-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
         .mon-header-left .icon {
-            width: 44px; height: 44px; border-radius: 50%;
-            background: linear-gradient(135deg, #e6b31e, #a78bfa);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: #0a1628;
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #0a1628;
             animation: pulseGold 2s ease-in-out infinite;
             overflow: hidden;
+            transition: var(--transition);
         }
+
         .mon-header-left .icon img {
-            width: 100%; height: 100%;
-            object-fit: cover; border-radius: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
             display: none;
         }
+
         .mon-header-left .icon.has-logo img { display: block; }
+
         .mon-header-left .icon.has-logo {
-            animation: none; background: transparent;
+            animation: none;
+            background: transparent;
             box-shadow: 0 0 20px rgba(230,179,30,0.3);
         }
+
         .mon-header-left .icon.has-logo i { display: none; }
+
         @keyframes pulseGold {
             0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
             50% { box-shadow: 0 0 40px rgba(230,179,30,0.25); }
         }
+
         .mon-header-left h2 {
-            font-size: 22px; font-weight: 800;
-            background: linear-gradient(135deg, #f5d76e, #a78bfa, #fff);
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold-light), var(--purple), #fff);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
-        }
-        .mon-header-left p {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            margin: 0;
-        }
-        .mon-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn-action {
-            padding: 8px 18px; border: none; border-radius: 30px;
-            font-weight: 600; font-size: 0.8rem; cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex; align-items: center; gap: 8px;
-            font-family: 'Cairo', sans-serif;
-        }
-        .btn-action.primary {
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
-            color: #0a1628;
-        }
-        .btn-action.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
-        }
-        .btn-action.secondary {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.5);
-        }
-        .btn-action.secondary:hover {
-            background: rgba(255,255,255,0.06);
-            color: #fff;
+            line-height: 1.2;
         }
 
+        .mon-header-left p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 2px 0 0;
+        }
+
+        .mon-header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 8px 18px;
+            border: none;
+            border-radius: var(--radius-pill);
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Cairo', sans-serif;
+            white-space: nowrap;
+        }
+
+        .btn-action:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-action.primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+        }
+
+        .btn-action.primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-gold);
+        }
+
+        .btn-action.secondary {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .btn-action.secondary:hover:not(:disabled) {
+            background: var(--bg-elevated-hover);
+            color: #fff;
+            border-color: var(--border-strong);
+        }
+
+        .btn-action .fa-sync-alt.fa-spin { animation: fa-spin 1s linear infinite; }
+
+        /* ============================================================
+           📊 STATS
+           ============================================================ */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 10px;
-            padding: 12px 24px;
+            padding: 14px 24px;
             width: 100%;
         }
+
         .stat-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 12px;
-            padding: 12px 14px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 14px;
             text-align: center;
-            transition: all 0.3s;
+            transition: var(--transition);
             position: relative;
             overflow: hidden;
         }
+
         .stat-card::before {
-            content: ''; position: absolute;
-            top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, #e6b31e, #a78bfa);
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--purple));
             opacity: 0.6;
         }
-        .stat-card:hover { transform: translateY(-2px); border-color: rgba(230,179,30,0.15); }
-        .stat-card .number {
-            font-size: 22px; font-weight: 800;
-            color: #fff; line-height: 1.2;
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(230,179,30,0.15);
+            background: var(--bg-elevated-hover);
         }
-        .stat-card .number.gold { color: #f5d76e; }
-        .stat-card .number.green { color: #55efc4; }
-        .stat-card .number.blue { color: #60a5fa; }
-        .stat-card .number.red { color: #f87171; }
-        .stat-card .number.pink { color: #f472b6; }
-        .stat-card .number.purple { color: #a78bfa; }
+
+        .stat-card .number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-card .number.gold { color: var(--gold-light); }
+        .stat-card .number.green { color: var(--green); }
+        .stat-card .number.blue { color: var(--blue); }
+        .stat-card .number.red { color: var(--red); }
+        .stat-card .number.pink { color: var(--pink); }
+        .stat-card .number.purple { color: var(--purple); }
+
         .stat-card .label {
             font-size: 10px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 3px;
+            color: var(--text-muted);
+            margin-top: 4px;
             font-weight: 500;
         }
 
+        /* ============================================================
+           🗺️ MAP TYPE SELECTOR
+           ============================================================ */
         .map-type-selector {
-            display: flex; gap: 10px;
+            display: flex;
+            gap: 10px;
             padding: 10px 24px;
             background: rgba(255,255,255,0.02);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            flex-wrap: wrap; align-items: center;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+            align-items: center;
         }
+
         .map-type-selector .label {
             font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
+            color: var(--text-muted);
             font-weight: 600;
-            margin-left: 10px;
         }
+
+        .map-type-selector .label i { color: var(--gold); margin-left: 4px; }
+
         .map-type-btn {
             padding: 6px 16px;
-            border: 2px solid rgba(255,255,255,0.06);
+            border: 2px solid var(--border-subtle);
             border-radius: 25px;
             background: transparent;
-            color: rgba(255,255,255,0.4);
+            color: var(--text-muted);
             cursor: pointer;
             font-family: 'Cairo', sans-serif;
             font-size: 0.75rem;
             font-weight: 600;
-            transition: all 0.3s;
-            display: flex; align-items: center; gap: 6px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .map-type-btn:hover { border-color: rgba(255,255,255,0.15); color: #fff; }
+
+        .map-type-btn:hover {
+            border-color: var(--border-strong);
+            color: #fff;
+        }
+
         .map-type-btn.active {
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
-            border-color: #e6b31e;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-color: var(--gold);
             color: #0a1628;
         }
 
+        /* ============================================================
+           📐 GRID
+           ============================================================ */
         .monitoring-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -182,71 +328,124 @@
             padding: 16px 24px;
             width: 100%;
         }
+
         @media (max-width: 992px) {
             .monitoring-grid { grid-template-columns: 1fr; }
         }
 
+        /* ============================================================
+           🗺️ MAP
+           ============================================================ */
         .map-container {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
             overflow: hidden;
-            min-height: 450px;
+            min-height: 480px;
             position: relative;
-        }
-        .map-container .section-title {
-            padding: 10px 16px;
-            font-size: 13px; font-weight: 700;
-            color: rgba(255,255,255,0.4);
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            display: flex; align-items: center; gap: 8px;
-            flex-wrap: wrap;
-            z-index: 10; position: relative;
-            background: rgba(10,14,26,0.6);
-        }
-        .map-container .section-title i { color: #e6b31e; }
-        .map-container .section-title .hint {
-            font-size: 10px;
-            color: rgba(255,255,255,0.15);
-            margin-right: auto;
-        }
-        #realMap {
-            width: 100%; height: 450px; min-height: 450px;
-            background: #0a1628;
-            border-radius: 0 0 14px 14px;
+            display: flex;
+            flex-direction: column;
         }
 
+        .section-title {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            z-index: 10;
+            position: relative;
+            background: rgba(10,14,26,0.6);
+            backdrop-filter: blur(8px);
+        }
+
+        .section-title i { color: var(--gold); }
+        .section-title .hint {
+            font-size: 10px;
+            color: var(--text-faint);
+            margin-inline-start: auto;
+        }
+
+        #realMap {
+            width: 100%;
+            flex: 1;
+            min-height: 420px;
+            background: #0a1628;
+            position: relative;
+        }
+
+        #realMap.map-loading::after {
+            content: '⏳ جاري تحميل الخريطة...';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            background: #0a1628;
+            z-index: 5;
+        }
+
+        #realMap.map-error::after {
+            content: '⚠️ تعذّر تحميل الخريطة. تحقق من اتصالك بالإنترنت.';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--red);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            background: #0a1628;
+            z-index: 5;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* ============================================================
+           📋 SESSIONS
+           ============================================================ */
         .sessions-container {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 480px;
         }
+
         .sessions-container .section-title {
-            padding: 10px 16px;
-            font-size: 13px; font-weight: 700;
-            color: rgba(255,255,255,0.4);
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            display: flex; align-items: center; justify-content: space-between;
-            flex-wrap: wrap; gap: 8px;
+            justify-content: space-between;
         }
-        .sessions-container .section-title i { color: #a78bfa; }
+
+        .sessions-container .section-title i { color: var(--purple); }
+
         .badge {
             font-size: 10px;
             padding: 3px 12px;
             border-radius: 20px;
             font-weight: 600;
+            white-space: nowrap;
         }
+
         .badge.success { background: rgba(34,197,94,0.12); color: #4ade80; }
-        .badge.purple { background: rgba(167,139,250,0.12); color: #a78bfa; }
+        .badge.purple { background: rgba(167,139,250,0.12); color: var(--purple); }
+        .badge.warning { background: rgba(245,158,11,0.12); color: #fbbf24; }
+        .badge.error { background: rgba(239,68,68,0.12); color: var(--red); }
 
         .sessions-scroll {
-            max-height: 400px;
+            flex: 1;
             overflow-y: auto;
+            overflow-x: auto;
             padding: 0 12px 12px;
         }
-        .sessions-scroll::-webkit-scrollbar { width: 4px; }
-        .sessions-scroll::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 10px; }
 
         .sessions-table {
             width: 100%;
@@ -254,68 +453,79 @@
             font-size: 0.72rem;
             min-width: 620px;
         }
-        .sessions-table thead { background: rgba(167,139,250,0.06); }
+
         .sessions-table thead th {
-            padding: 8px 6px;
+            padding: 10px 6px;
             text-align: center;
             font-weight: 700;
             font-size: 0.55rem;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.25);
+            color: var(--text-muted);
             letter-spacing: 0.5px;
             white-space: nowrap;
             position: sticky;
             top: 0;
-            background: #0a0e1a;
+            background: #0d1220;
             z-index: 2;
+            border-bottom: 1px solid var(--border-subtle);
         }
+
         .sessions-table tbody td {
-            padding: 6px 4px;
+            padding: 8px 4px;
             border-bottom: 1px solid rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.5);
+            color: var(--text-secondary);
             font-size: 0.68rem;
             text-align: center;
+            vertical-align: middle;
         }
+
+        .sessions-table tbody tr { transition: background 0.15s; }
         .sessions-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+
         .sessions-table .user-name {
             font-weight: 600;
             color: #fff;
             white-space: nowrap;
         }
+
         .sessions-table .user-id-cell {
             font-family: 'Courier New', monospace;
             font-size: 0.6rem;
-            color: #f5d76e;
+            color: var(--gold-light);
             font-weight: 700;
-            max-width: 90px;
+            max-width: 100px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
         .sessions-table .device-cell {
             font-size: 0.65rem;
             color: rgba(255,255,255,0.55);
             white-space: nowrap;
         }
+
         .device-icon {
             display: inline-block;
             margin-left: 4px;
             font-size: 0.75rem;
-            color: #60a5fa;
         }
+
         .device-icon.mobile { color: #34d399; }
         .device-icon.tablet { color: #fbbf24; }
-        .device-icon.desktop { color: #60a5fa; }
-        .device-icon.unknown { color: rgba(255,255,255,0.3); }
+        .device-icon.desktop { color: var(--blue); }
+        .device-icon.unknown { color: var(--text-muted); }
 
-        .sessions-table .region-tag {
-            font-size: 0.55rem;
-            padding: 2px 8px;
+        .role-tag {
+            font-size: 0.6rem;
+            padding: 2px 10px;
             border-radius: 12px;
             background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.3);
             white-space: nowrap;
+            display: inline-block;
+            font-weight: 600;
         }
+
         .status-badge {
             padding: 2px 10px;
             border-radius: 20px;
@@ -324,186 +534,356 @@
             display: inline-block;
             white-space: nowrap;
         }
+
         .status-badge.active { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .status-badge.idle { background: rgba(245,158,11,0.12); color: #fbbf24; }
+        .status-badge.ended { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-faint);
+        }
+
+        .empty-state i {
+            font-size: 28px;
+            opacity: 0.3;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* ============================================================
+           👤 USER PANEL
+           ============================================================ */
+        .panel-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .panel-overlay.visible {
+            display: block;
+            opacity: 1;
+        }
 
         .user-panel {
             display: none;
             position: fixed;
-            top: 50%; left: 50%;
+            top: 50%;
+            left: 50%;
             transform: translate(-50%, -50%);
             background: #0a1628;
             border: 1px solid rgba(230,179,30,0.2);
             border-radius: 16px;
-            padding: 24px 28px;
-            max-width: 420px;
-            width: 90%;
+            padding: 28px;
+            max-width: 440px;
+            width: 92%;
             z-index: 1000;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            box-shadow: var(--shadow-lg);
             animation: slideUpPanel 0.3s ease-out;
             max-height: 90vh;
             overflow-y: auto;
         }
+
         .user-panel.visible { display: block; }
+
         @keyframes slideUpPanel {
             from { opacity: 0; transform: translate(-50%, -40%); }
             to { opacity: 1; transform: translate(-50%, -50%); }
         }
+
         .user-panel .close-btn {
             position: absolute;
-            top: 10px; left: 14px;
-            background: none; border: none;
-            color: rgba(255,255,255,0.3);
-            font-size: 1.3rem; cursor: pointer;
-        }
-        .user-panel .close-btn:hover { color: #fff; transform: rotate(90deg); }
-        .user-panel .user-avatar {
-            width: 60px; height: 60px;
+            top: 12px;
+            left: 14px;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #e6b31e, #a78bfa);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; color: #0a1628;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .user-panel .close-btn:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+            transform: rotate(90deg);
+        }
+
+        .user-panel .user-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #0a1628;
             margin: 0 auto 12px;
             font-weight: 700;
+            box-shadow: 0 0 30px rgba(230,179,30,0.25);
         }
+
         .user-panel .user-name {
-            font-size: 20px; font-weight: 700;
+            font-size: 20px;
+            font-weight: 700;
             text-align: center;
             color: #fff;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
+
         .user-panel .user-role {
             text-align: center;
-            color: rgba(255,255,255,0.3);
+            color: var(--text-muted);
             font-size: 0.85rem;
-            margin-bottom: 12px;
+            margin-bottom: 18px;
         }
+
         .user-panel .detail-row {
             display: flex;
             justify-content: space-between;
-            padding: 7px 0;
+            align-items: center;
+            padding: 9px 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
             font-size: 0.8rem;
             gap: 8px;
         }
+
+        .user-panel .detail-row:last-child { border-bottom: none; }
+
         .user-panel .detail-row .label {
-            color: rgba(255,255,255,0.3);
+            color: var(--text-muted);
             flex-shrink: 0;
         }
+
         .user-panel .detail-row .value {
             color: #fff;
             font-weight: 600;
             text-align: left;
             word-break: break-word;
+            direction: ltr;
+            unicode-bidi: embed;
         }
-        .user-panel .detail-row .value.gold {
-            color: #f5d76e;
-            font-family: 'Courier New', monospace;
-            font-size: 0.72rem;
-        }
-        .user-panel .detail-row .value.green { color: #55efc4; }
-        .user-panel .detail-row .value.red { color: #f87171; }
-        .user-panel .detail-row .value.blue { color: #60a5fa; }
 
-        .panel-overlay {
-            display: none;
+        .user-panel .detail-row .value.gold { color: var(--gold-light); font-family: 'Courier New', monospace; font-size: 0.72rem; }
+        .user-panel .detail-row .value.green { color: var(--green); }
+        .user-panel .detail-row .value.red { color: var(--red); }
+        .user-panel .detail-row .value.blue { color: var(--blue); }
+
+        /* ============================================================
+           🍞 TOASTS
+           ============================================================ */
+        .toast-stack {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            z-index: 999;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+            max-width: 360px;
+            pointer-events: none;
         }
-        .panel-overlay.visible { display: block; }
 
         .toast {
-            position: fixed;
-            bottom: 24px; right: 24px;
             padding: 12px 20px;
-            border-radius: 12px;
+            border-radius: var(--radius-md);
             color: #fff;
             font-family: 'Cairo', sans-serif;
             font-size: 13px;
-            z-index: 9999;
-            animation: slideUpToast 0.4s ease-out;
             backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            max-width: 350px;
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-md);
             direction: rtl;
+            pointer-events: auto;
+            animation: slideUpToast 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            line-height: 1.4;
         }
-        .toast-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.2); }
-        .toast-info { background: rgba(9,132,227,0.15); border: 1px solid rgba(9,132,227,0.2); }
-        .toast-error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.2); }
-        .toast-warning { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.2); }
+
+        .toast.hiding {
+            animation: fadeOutToast 0.35s ease-in forwards;
+        }
+
+        .toast-success { background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.35); }
+        .toast-info { background: rgba(9,132,227,0.18); border: 1px solid rgba(9,132,227,0.35); }
+        .toast-error { background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.35); }
+        .toast-warning { background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.35); }
+
         @keyframes slideUpToast {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes fadeOutToast {
+            to { opacity: 0; transform: translateX(20px); }
+        }
+
+        /* ============================================================
+           🌐 LEAFLET OVERRIDES
+           ============================================================ */
+        .leaflet-popup-content-wrapper {
+            background: #0a1628;
+            color: var(--text-primary);
+            border: 1px solid rgba(230,179,30,0.25);
+            border-radius: var(--radius-md);
+            font-family: 'Cairo', sans-serif;
+            box-shadow: var(--shadow-md);
+        }
+
+        .leaflet-popup-tip { background: #0a1628; border: 1px solid rgba(230,179,30,0.25); }
+        .leaflet-popup-content { font-family: 'Cairo', sans-serif; color: var(--text-primary); min-width: 200px; margin: 12px 14px; }
+        .leaflet-popup-close-button { color: var(--text-muted) !important; }
+
+        .popup-user-name { font-size: 16px; font-weight: 700; color: var(--gold-light); margin-bottom: 6px; }
+        .popup-user-detail { font-size: 12px; color: var(--text-secondary); padding: 3px 0; display: flex; align-items: center; gap: 8px; }
+        .popup-user-detail i { color: var(--gold); width: 14px; text-align: center; }
+        .popup-user-id {
+            font-family: 'Courier New', monospace;
+            color: var(--gold-light);
+            font-size: 11px;
+            background: rgba(245,215,110,0.1);
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-top: 6px;
+            direction: ltr;
+        }
+
+        .leaflet-container { background: #0a1628 !important; font-family: 'Cairo', sans-serif !important; }
+        .leaflet-control-attribution { background: rgba(10,14,26,0.7) !important; color: var(--text-muted) !important; font-size: 9px !important; }
+        .leaflet-control-attribution a { color: var(--gold) !important; }
+        .leaflet-bar a { background: #0a1628 !important; color: #fff !important; border-color: var(--border-subtle) !important; }
+        .leaflet-bar a:hover { background: #162036 !important; }
+
+        /* ============================================================
+           📱 RESPONSIVE
+           ============================================================ */
         @media (max-width: 768px) {
-            .mon-header { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
+            .mon-header { padding: 12px 16px; flex-direction: column; align-items: stretch; }
             .mon-header-left { width: 100%; }
-            .mon-header-left h2 { font-size: 16px; }
-            .mon-header-actions { width: 100%; justify-content: flex-start; }
+            .mon-header-left h2 { font-size: 17px; }
+            .mon-header-left p { font-size: 11px; }
+            .mon-header-actions { width: 100%; }
+            .btn-action { flex: 1; justify-content: center; }
             .stats-grid { padding: 10px 16px; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-            .stat-card { padding: 8px 10px; }
+            .stat-card { padding: 10px 8px; }
             .stat-card .number { font-size: 18px; }
             .stat-card .label { font-size: 9px; }
             .map-type-selector { padding: 8px 16px; justify-content: center; }
-            .map-type-btn { font-size: 0.65rem; padding: 4px 12px; }
+            .map-type-selector .label { width: 100%; text-align: center; }
+            .map-type-btn { font-size: 0.65rem; padding: 5px 12px; }
             .monitoring-grid { padding: 10px 16px; gap: 12px; }
-            .map-container { min-height: 300px; }
-            #realMap { height: 300px; min-height: 300px; }
-            .sessions-scroll { max-height: 280px; }
-            .user-panel { padding: 16px 20px; max-width: 95%; }
+            .map-container { min-height: 340px; }
+            #realMap { min-height: 300px; }
+            .sessions-container { max-height: 400px; }
+            .user-panel { padding: 20px; max-width: 95%; }
+            .toast-stack { right: 12px; left: 12px; bottom: 12px; max-width: none; }
         }
 
-        .leaflet-popup-content-wrapper {
-            background: #0a1628;
-            color: #e8edf5;
-            border: 1px solid rgba(230,179,30,0.2);
-            border-radius: 12px;
-            font-family: 'Cairo', sans-serif;
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        .leaflet-popup-tip {
-            background: #0a1628;
-            border: 1px solid rgba(230,179,30,0.2);
+
+        /* ============================================================
+           🖨️ PRINT
+           ============================================================ */
+        @media print {
+            #page-monitoring { background: #fff !important; color: #000 !important; }
+            #page-monitoring::before { display: none !important; }
+            .mon-header {
+                position: static !important;
+                background: #fff !important;
+                border-bottom: 2px solid #333 !important;
+                color: #000 !important;
+            }
+            .mon-header-left h2 {
+                -webkit-text-fill-color: #000 !important;
+                color: #000 !important;
+                background: none !important;
+            }
+            .mon-header-left p { color: #555 !important; }
+            .mon-header-actions,
+            .map-type-selector,
+            .user-panel,
+            .panel-overlay,
+            .toast-stack { display: none !important; }
+
+            .mon-header::after {
+                content: attr(data-print-date);
+                display: block;
+                width: 100%;
+                text-align: center;
+                font-size: 11px;
+                color: #666;
+                margin-top: 8px;
+            }
+
+            .stats-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 4px !important; padding: 8px !important; }
+            .stat-card {
+                background: #f5f5f5 !important;
+                border: 1px solid #ccc !important;
+                color: #000 !important;
+            }
+            .stat-card::before { display: none !important; }
+            .stat-card .number { color: #000 !important; font-size: 18px !important; }
+            .stat-card .label { color: #555 !important; }
+
+            .monitoring-grid { grid-template-columns: 1fr !important; gap: 12px !important; padding: 8px !important; }
+            .map-container,
+            .sessions-container {
+                background: #fff !important;
+                border: 1px solid #ccc !important;
+                page-break-inside: avoid;
+            }
+            .section-title {
+                background: #eee !important;
+                color: #000 !important;
+                border-bottom: 1px solid #ccc !important;
+            }
+            .section-title i { color: #666 !important; }
+
+            #realMap { height: 400px !important; }
+
+            .sessions-table thead th {
+                background: #eee !important;
+                color: #000 !important;
+                border-bottom: 1px solid #999 !important;
+            }
+            .sessions-table tbody td { color: #333 !important; border-bottom: 1px solid #eee !important; }
+            .sessions-table .user-name { color: #000 !important; }
+            .sessions-table .user-id-cell { color: #666 !important; }
+            .badge, .role-tag, .status-badge {
+                background: #eee !important;
+                color: #333 !important;
+                border: 1px solid #ccc !important;
+            }
+
+            @page { size: landscape; margin: 1cm; }
         }
-        .leaflet-popup-content {
-            font-family: 'Cairo', sans-serif;
-            color: #e8edf5;
-            min-width: 200px;
-        }
-        .popup-user-name { font-size: 16px; font-weight: 700; color: #f5d76e; margin-bottom: 4px; }
-        .popup-user-detail { font-size: 12px; color: rgba(255,255,255,0.5); padding: 2px 0; }
-        .popup-user-detail i { margin-left: 6px; color: #e6b31e; }
-        .popup-user-id {
-            font-family: 'Courier New', monospace;
-            color: #f5d76e;
-            font-size: 11px;
-            background: rgba(245,215,110,0.1);
-            padding: 2px 8px;
-            border-radius: 6px;
-            display: inline-block;
-            margin-top: 4px;
-        }
-        .popup-status {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 4px;
-        }
-        .popup-status.online { background: rgba(34,197,94,0.15); color: #4ade80; }
-        .popup-status.offline { background: rgba(239,68,68,0.15); color: #f87171; }
     </style>
 
     <!-- HEADER -->
     <div class="mon-header" id="monHeader">
         <div class="mon-header-left">
             <div class="icon" id="monHeaderIcon">
-                <i class="fas fa-eye"></i>
-                <img id="globalLogo" src="" alt="شعار" style="display:none;">
+                <i class="fas fa-eye" aria-hidden="true"></i>
+                <img id="globalLogo" src="" alt="شعار" loading="lazy">
             </div>
             <div>
                 <h2>المراقبة الشاملة</h2>
@@ -511,49 +891,54 @@
             </div>
         </div>
         <div class="mon-header-actions">
-            <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
-            <button class="btn-action secondary" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
+            <button class="btn-action primary" id="refreshBtn" type="button">
+                <i class="fas fa-sync-alt" aria-hidden="true"></i> تحديث
+            </button>
+            <button class="btn-action secondary" id="printBtn" type="button">
+                <i class="fas fa-print" aria-hidden="true"></i> طباعة
+            </button>
         </div>
     </div>
 
     <!-- STATS -->
-    <div class="stats-grid" id="monitoringStats">
+    <div class="stats-grid" id="monitoringStats" role="region" aria-label="إحصائيات المراقبة">
         <div class="stat-card"><div class="number gold" id="totalUsers">0</div><div class="label">👥 المستخدمين</div></div>
-        <div class="stat-card"><div class="number green" id="activeNow">0</div><div class="label">🟢 نشط</div></div>
-        <div class="stat-card"><div class="number blue" id="readyUsers">0</div><div class="label">👑 مسؤولون</div></div>
-        <div class="stat-card"><div class="number red" id="busyUsers">0</div><div class="label">⛔ غير نشط</div></div>
-        <div class="stat-card"><div class="number pink" id="offlineUsers">0</div><div class="label">⚫ بلا موقع</div></div>
-        <div class="stat-card"><div class="number purple" id="totalSessions">0</div><div class="label">🟣 جلسات نشطة</div></div>
+        <div class="stat-card"><div class="number green" id="activeNow">0</div><div class="label">🟢 نشط الآن</div></div>
+        <div class="stat-card"><div class="number blue" id="adminUsers">0</div><div class="label">👑 مسؤولون</div></div>
+        <div class="stat-card"><div class="number red" id="inactiveUsers">0</div><div class="label">⛔ غير نشط</div></div>
+        <div class="stat-card"><div class="number pink" id="noLocationUsers">0</div><div class="label">⚫ بلا موقع</div></div>
+        <div class="stat-card"><div class="number purple" id="totalSessions">0</div><div class="label">🟣 جلسات</div></div>
     </div>
 
     <!-- MAP TYPE -->
-    <div class="map-type-selector">
-        <span class="label"><i class="fas fa-globe"></i> نوع الخريطة:</span>
-        <button class="map-type-btn active" data-type="satellite"><i class="fas fa-satellite"></i> قمر صناعي</button>
-        <button class="map-type-btn" data-type="standard"><i class="fas fa-map"></i> عادية</button>
-        <button class="map-type-btn" data-type="terrain"><i class="fas fa-mountain"></i> تضاريس</button>
+    <div class="map-type-selector" role="group" aria-label="نوع الخريطة">
+        <span class="label"><i class="fas fa-globe" aria-hidden="true"></i> نوع الخريطة:</span>
+        <button class="map-type-btn active" data-type="satellite" type="button"><i class="fas fa-satellite" aria-hidden="true"></i> قمر صناعي</button>
+        <button class="map-type-btn" data-type="standard" type="button"><i class="fas fa-map" aria-hidden="true"></i> عادية</button>
+        <button class="map-type-btn" data-type="terrain" type="button"><i class="fas fa-mountain" aria-hidden="true"></i> تضاريس</button>
     </div>
 
     <!-- GRID -->
     <div class="monitoring-grid">
         <div class="map-container">
             <div class="section-title">
-                <i class="fas fa-map-marked-alt"></i> مواقع المستخدمين - خريطة حقيقية
+                <i class="fas fa-map-marked-alt" aria-hidden="true"></i>
+                <span>مواقع المستخدمين - خريطة حقيقية</span>
                 <span class="hint">🖱️ اضغط على العلامة للتفاصيل</span>
             </div>
-            <div id="realMap"></div>
+            <div id="realMap" class="map-loading" role="region" aria-label="خريطة مواقع المستخدمين"></div>
         </div>
 
         <div class="sessions-container">
             <div class="section-title">
-                <span><i class="fas fa-list-ul"></i> الجلسات النشطة</span>
+                <span><i class="fas fa-list-ul" aria-hidden="true"></i> الجلسات النشطة</span>
                 <span class="badge purple" id="sessionBadge">📊 جاري التحميل...</span>
             </div>
             <div class="sessions-scroll" id="sessionsScroll">
                 <table class="sessions-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>ID الجلسة</th>
                             <th>المستخدم</th>
                             <th>الدور</th>
                             <th>الجهاز</th>
@@ -562,7 +947,12 @@
                         </tr>
                     </thead>
                     <tbody id="sessionsBody">
-                        <tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">⏳ جاري التحميل...</td></tr>
+                        <tr><td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                جاري التحميل...
+                            </div>
+                        </td></tr>
                     </tbody>
                 </table>
             </div>
@@ -571,8 +961,8 @@
 
     <!-- USER PANEL -->
     <div class="panel-overlay" id="panelOverlay"></div>
-    <div class="user-panel" id="userPanel">
-        <button class="close-btn" id="closePanelBtn">✕</button>
+    <div class="user-panel" id="userPanel" role="dialog" aria-modal="true" aria-labelledby="panelName">
+        <button class="close-btn" id="closePanelBtn" type="button" aria-label="إغلاق">✕</button>
         <div class="user-avatar" id="panelAvatar">👤</div>
         <div class="user-name" id="panelName">-</div>
         <div class="user-role" id="panelRole">-</div>
@@ -587,30 +977,53 @@
         <div class="detail-row"><span class="label">📧 البريد</span><span class="value" id="panelEmail">-</span></div>
     </div>
 
-    <!-- LEAFLET CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- TOAST STACK -->
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
     <script>
-    (function() {
+    (function () {
         'use strict';
 
-        console.log('🔄 monitoring.html v10.0 - loading...');
-
+        /* ============================================================
+           🔒 STATE
+           ============================================================ */
+        var VERSION = '11.0';
         var _isDestroyed = false;
         var _map = null;
         var _markers = [];
+        var _tileLayers = null;
+        var _currentLayer = 'satellite';
         var _resizeTimer = null;
-        var _pageTimeouts = [];
+        var _pageTimeouts = new Set();
+        var _pageIntervals = new Set();
         var _resizeHandler = null;
         var _usersData = [];
         var _sessionsData = [];
+        var _leafletReady = false;
+        var _leafletLoading = false;
+        var _leafletCallbacks = [];
+        var _autoRefreshInterval = null;
+        var AUTO_REFRESH_MS = 30000; // 30 ثانية
 
+        console.log('🔄 monitoring.html v' + VERSION + ' - loading...');
+
+        /* ============================================================
+           🧹 CLEANUP
+           ============================================================ */
         function _monitoringCleanup() {
             if (_isDestroyed) return;
             _isDestroyed = true;
 
-            _pageTimeouts.forEach(function(id) { try { clearTimeout(id); } catch (e) {} });
-            _pageTimeouts = [];
+            _pageTimeouts.forEach(function (id) { try { clearTimeout(id); } catch (e) {} });
+            _pageTimeouts.clear();
+
+            _pageIntervals.forEach(function (id) { try { clearInterval(id); } catch (e) {} });
+            _pageIntervals.clear();
+
+            if (_autoRefreshInterval) {
+                try { clearInterval(_autoRefreshInterval); } catch (e) {}
+                _autoRefreshInterval = null;
+            }
 
             if (_resizeTimer) { try { clearTimeout(_resizeTimer); } catch (e) {} _resizeTimer = null; }
 
@@ -619,25 +1032,36 @@
                 _resizeHandler = null;
             }
 
+            try { window.removeEventListener('beforeunload', _monitoringCleanup); } catch (e) {}
+            try { window.removeEventListener('pagehide', _monitoringCleanup); } catch (e) {}
+            try { window.removeEventListener('storage', _storageHandler); } catch (e) {}
+            try { window.removeEventListener('beforeprint', updatePrintDate); } catch (e) {}
+
             if (_map) {
                 try {
-                    _markers.forEach(function(m) { try { _map.removeLayer(m); } catch (e) {} });
+                    _markers.forEach(function (m) { try { _map.removeLayer(m); } catch (e) {} });
                     _markers = [];
+                    if (_tileLayers) {
+                        Object.keys(_tileLayers).forEach(function (k) {
+                            try { _map.removeLayer(_tileLayers[k]); } catch (e) {}
+                        });
+                    }
                     _map.off();
                     _map.remove();
                 } catch (e) {}
                 _map = null;
             }
+            _tileLayers = null;
+
+            ['refreshAll', 'switchMapType', 'showToast', 'initMap', 'printMonitoring', 'detectDevice']
+                .forEach(function (k) { try { delete window[k]; } catch (e) {} });
 
             try {
-                delete window.refreshAll;
-                delete window.switchMapType;
-                delete window.showToast;
-                delete window.initMap;
-                delete window.printMonitoring;
+                var idx = (window._pageCleanup || []).indexOf(_monitoringCleanup);
+                if (idx > -1) window._pageCleanup.splice(idx, 1);
             } catch (e) {}
 
-            console.log('🧹 Monitoring v10.0 cleanup done');
+            console.log('🧹 Monitoring v' + VERSION + ' cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
@@ -645,9 +1069,122 @@
         window.addEventListener('beforeunload', _monitoringCleanup);
         window.addEventListener('pagehide', _monitoringCleanup);
 
-        // ============================================================
-        // 🖥️ كشف نوع الجهاز
-        // ============================================================
+        /* ============================================================
+           🔧 HELPERS
+           ============================================================ */
+        function $(id) { return document.getElementById(id); }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, function (m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+
+        function safeTimeout(fn, ms) {
+            if (_isDestroyed) return null;
+            var id = setTimeout(function () {
+                _pageTimeouts.delete(id);
+                if (!_isDestroyed) fn();
+            }, ms);
+            _pageTimeouts.add(id);
+            return id;
+        }
+
+        function safeInterval(fn, ms) {
+            if (_isDestroyed) return null;
+            var id = setInterval(function () { if (!_isDestroyed) fn(); }, ms);
+            _pageIntervals.add(id);
+            return id;
+        }
+
+        function getToken() {
+            try {
+                return (
+                    localStorage.getItem('marine_token') ||
+                    localStorage.getItem('marine_auth_token') ||
+                    localStorage.getItem('authToken') ||
+                    localStorage.getItem('token') || null
+                );
+            } catch (e) { return null; }
+        }
+
+        function authHeaders() {
+            var h = { 'Accept': 'application/json' };
+            var t = getToken();
+            if (t) h['Authorization'] = 'Bearer ' + t;
+            return h;
+        }
+
+        function getInitials(name) {
+            if (!name) return '👤';
+            var parts = String(name).trim().split(/\s+/).filter(Boolean);
+            if (parts.length >= 2) return (parts[0][0] || '') + (parts[1][0] || '');
+            return String(name).slice(0, 2);
+        }
+
+        function getRoleLabel(role) {
+            var map = {
+                'admin': '👑 مسؤول',
+                'manager': '📋 مدير',
+                'editor': '✏️ محرر',
+                'maintenance_unit': '🔧 صيانة',
+                'viewer': '👁️ مشاهد'
+            };
+            return map[role] || role || '👤 مستخدم';
+        }
+
+        function getRoleColor(role) {
+            var map = {
+                'admin': '#f5d76e',
+                'manager': '#60a5fa',
+                'editor': '#a78bfa',
+                'maintenance_unit': '#34d399',
+                'viewer': '#9ca3af'
+            };
+            return map[role] || '#9ca3af';
+        }
+
+        function truncateId(id) {
+            if (!id) return '—';
+            var s = String(id);
+            if (s.length <= 14) return s;
+            return s.substring(0, 9) + '…' + s.substring(s.length - 4);
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '—';
+            try {
+                var d = new Date(iso);
+                if (isNaN(d.getTime())) return '—';
+                return d.toLocaleString('ar-TN', {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            } catch (e) { return '—'; }
+        }
+
+        function formatDuration(startTime) {
+            if (!startTime) return '—';
+            try {
+                var start = new Date(startTime).getTime();
+                if (isNaN(start)) return '—';
+                var diff = Math.floor((Date.now() - start) / 1000);
+                if (diff < 0) return '—';
+                if (diff < 60) return diff + ' ث';
+                if (diff < 3600) return Math.floor(diff / 60) + ' د';
+                if (diff < 86400) {
+                    var h = Math.floor(diff / 3600);
+                    var m = Math.floor((diff % 3600) / 60);
+                    return h + ' س ' + m + ' د';
+                }
+                return Math.floor(diff / 86400) + ' يوم';
+            } catch (e) { return '—'; }
+        }
+
+        /* ============================================================
+           📱 DEVICE DETECTION
+           ============================================================ */
         function detectDevice(userAgent) {
             var ua = String(userAgent || navigator.userAgent || '').toLowerCase();
             var device = 'unknown';
@@ -687,115 +1224,79 @@
             return { type: device, label: deviceLabel, icon: icon, browser: browser, os: os };
         }
 
-        // ============================================================
-        // 🔧 HELPERS
-        // ============================================================
-        function $(id) { return document.getElementById(id); }
-        function escapeHtml(str) {
-            if (str === null || str === undefined) return '';
-            return String(str).replace(/[&<>"']/g, function(m) {
-                return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
-            });
-        }
-        function getToken() {
-            return (
-                localStorage.getItem('marine_token') ||
-                localStorage.getItem('marine_auth_token') ||
-                localStorage.getItem('authToken') ||
-                localStorage.getItem('token') || null
-            );
-        }
-        function authHeaders() {
-            var token = getToken();
-            var h = { 'Accept': 'application/json' };
-            if (token) h['Authorization'] = 'Bearer ' + token;
-            return h;
-        }
-        function getInitials(name) {
-            if (!name) return '👤';
-            var parts = String(name).trim().split(/\s+/);
-            if (parts.length >= 2) return parts[0][0] + parts[1][0];
-            return String(name).slice(0, 2);
-        }
-        function getRoleLabel(role) {
-            var map = {
-                'admin': '👑 مسؤول',
-                'manager': '📋 مدير',
-                'editor': '✏️ محرر',
-                'maintenance_unit': '🔧 صيانة',
-                'viewer': '👁️ مشاهد'
-            };
-            return map[role] || role || '👤 مستخدم';
-        }
-        function getRoleColor(role) {
-            var map = {
-                'admin': '#f5d76e',
-                'manager': '#60a5fa',
-                'editor': '#a78bfa',
-                'maintenance_unit': '#34d399',
-                'viewer': '#9ca3af'
-            };
-            return map[role] || '#9ca3af';
-        }
-        function truncateId(id) {
-            if (!id) return '—';
-            var s = String(id);
-            if (s.length <= 12) return s;
-            return s.substring(0, 8) + '…' + s.substring(s.length - 3);
-        }
+        /* ============================================================
+           🍞 TOASTS (STACK-BASED)
+           ============================================================ */
         function showToast(msg, type) {
             if (_isDestroyed) return;
-            var old = document.querySelector('.toast');
-            if (old) old.remove();
+            var stack = $('toastStack');
+            if (!stack) return;
+
+            // Limit visible toasts to 4
+            while (stack.children.length >= 4) {
+                stack.removeChild(stack.firstChild);
+            }
+
+            var icons = {
+                success: '✅', info: 'ℹ️', error: '❌', warning: '⚠️'
+            };
             var n = document.createElement('div');
             n.className = 'toast toast-' + (type || 'info');
-            n.textContent = msg;
-            document.body.appendChild(n);
-            var id = setTimeout(function() {
-                n.style.opacity = '0';
-                n.style.transform = 'translateY(20px)';
-                n.style.transition = 'all 0.4s';
-                var id2 = setTimeout(function() { n.remove(); }, 400);
-                _pageTimeouts.push(id2);
-            }, 2500);
-            _pageTimeouts.push(id);
+            n.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span><span>' + escapeHtml(msg) + '</span>';
+            stack.appendChild(n);
+
+            safeTimeout(function () {
+                n.classList.add('hiding');
+                safeTimeout(function () { try { n.remove(); } catch (e) {} }, 400);
+            }, 3000);
         }
 
-        // ============================================================
-        // 🎨 LOGO
-        // ============================================================
+        /* ============================================================
+           🎨 LOGO
+           ============================================================ */
         function applyLogo() {
             try {
                 var cachedLogo = localStorage.getItem('marine_logo');
-                if (!cachedLogo) return;
                 var iconDiv = $('monHeaderIcon');
                 var img = $('globalLogo');
-                if (img) { img.src = cachedLogo; img.style.display = 'block'; }
-                if (iconDiv) iconDiv.classList.add('has-logo');
+                if (!iconDiv || !img) return;
+
+                if (!cachedLogo) {
+                    img.style.display = 'none';
+                    iconDiv.classList.remove('has-logo');
+                    return;
+                }
+
+                img.onload = function () {
+                    img.style.display = 'block';
+                    iconDiv.classList.add('has-logo');
+                };
+                img.onerror = function () {
+                    img.style.display = 'none';
+                    iconDiv.classList.remove('has-logo');
+                };
+                img.src = cachedLogo;
             } catch (e) {}
         }
-        function syncLogoFromServer() {
-            try {
-                var local = localStorage.getItem('marine_logo');
-                if (local) applyLogo();
-            } catch (e) {}
+
+        function _storageHandler(e) {
+            if (e.key === 'marine_logo') applyLogo();
         }
         applyLogo();
-        syncLogoFromServer();
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'marine_logo' && e.newValue) applyLogo();
-        });
+        window.addEventListener('storage', _storageHandler);
 
-        // ============================================================
-        // 🖨️ PRINT
-        // ============================================================
+        /* ============================================================
+           🖨️ PRINT
+           ============================================================ */
         function updatePrintDate() {
             try {
                 var now = new Date();
-                var dateStr = now.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                var dateStr = now.toLocaleDateString('ar-TN', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
                 var timeStr = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
                 var header = $('monHeader');
-                if (header) header.setAttribute('data-print-date', dateStr + ' - ' + timeStr);
+                if (header) header.setAttribute('data-print-date', dateStr + ' — ' + timeStr);
             } catch (e) {}
         }
         updatePrintDate();
@@ -804,189 +1305,261 @@
         function printMonitoring() {
             try {
                 updatePrintDate();
-                if (!confirm('🖨️ قبل الطباعة:\n\n• الاتجاه: أفقي (Landscape)\n• خلفيات ورسوم: مفعّل ✅\n\nمتابعة؟')) return;
                 window.print();
-            } catch (e) { window.print(); }
+            } catch (e) {
+                showToast('تعذّر بدء الطباعة', 'error');
+            }
         }
 
-        // ============================================================
-        // 📊 STATS
-        // ============================================================
+        /* ============================================================
+           📊 STATS
+           ============================================================ */
         function updateStats() {
             if (_isDestroyed) return;
 
             var total = _usersData.length;
-            var active = _usersData.filter(function(u) { return u.active !== false; }).length;
-            var inactive = _usersData.filter(function(u) { return u.active === false; }).length;
-            var admins = _usersData.filter(function(u) { return u.role === 'admin'; }).length;
-            var noLocation = _usersData.filter(function(u) { return u.lat === null || u.lng === null; }).length;
-            var activeSessions = _sessionsData.length;
+            var active = _usersData.filter(function (u) { return u.active !== false; }).length;
+            var inactive = _usersData.filter(function (u) { return u.active === false; }).length;
+            var admins = _usersData.filter(function (u) {
+                return u.role === 'admin' || u.role === 'manager';
+            }).length;
+            var noLocation = _usersData.filter(function (u) {
+                return u.lat === null || u.lng === null;
+            }).length;
+            var activeSessions = _sessionsData.filter(function (s) {
+                return s.status === 'active';
+            }).length;
 
             var e;
             e = $('totalUsers'); if (e) e.textContent = total;
             e = $('activeNow'); if (e) e.textContent = active;
-            e = $('readyUsers'); if (e) e.textContent = admins;
-            e = $('busyUsers'); if (e) e.textContent = inactive;
-            e = $('offlineUsers'); if (e) e.textContent = noLocation;
-            e = $('totalSessions'); if (e) e.textContent = activeSessions;
+            e = $('adminUsers'); if (e) e.textContent = admins;
+            e = $('inactiveUsers'); if (e) e.textContent = inactive;
+            e = $('noLocationUsers'); if (e) e.textContent = noLocation;
+            e = $('totalSessions'); if (e) e.textContent = _sessionsData.length;
 
             var badge = $('sessionBadge');
             if (badge) {
-                if (activeSessions > 0) {
-                    badge.textContent = '🟢 ' + activeSessions + ' جلسة نشطة';
-                    badge.className = 'badge success';
-                } else {
+                if (_sessionsData.length === 0) {
                     badge.textContent = '📊 لا توجد جلسات';
                     badge.className = 'badge purple';
+                } else {
+                    badge.textContent = '🟢 ' + activeSessions + ' نشطة من ' + _sessionsData.length;
+                    badge.className = activeSessions > 0 ? 'badge success' : 'badge warning';
                 }
             }
         }
 
-        // ============================================================
-        // 📥 LOAD USERS
-        // ============================================================
+        /* ============================================================
+           📥 DATA LOADING
+           ============================================================ */
+        async function fetchJSON(url) {
+            var res = await fetch(url, {
+                headers: authHeaders(),
+                credentials: 'include',
+                cache: 'no-store'
+            });
+            if (!res.ok) {
+                var err = new Error('HTTP ' + res.status);
+                err.status = res.status;
+                throw err;
+            }
+            return res.json();
+        }
+
+        function normalizeUsers(data) {
+            var users = [];
+            if (Array.isArray(data)) users = data;
+            else if (data && Array.isArray(data.users)) users = data.users;
+            else if (data && Array.isArray(data.data)) users = data.data;
+
+            return users.map(function (u) {
+                var lat = (typeof u.lat === 'number') ? u.lat
+                    : (typeof u.latitude === 'number') ? u.latitude : null;
+                var lng = (typeof u.lng === 'number') ? u.lng
+                    : (typeof u.longitude === 'number') ? u.longitude : null;
+
+                // Validate lat/lng ranges
+                if (lat !== null && (lat < -90 || lat > 90)) lat = null;
+                if (lng !== null && (lng < -180 || lng > 180)) lng = null;
+
+                return {
+                    id: u.id || u._id || '',
+                    name: u.name || u.username || 'مستخدم',
+                    username: u.username || '',
+                    email: u.email || '',
+                    role: u.role || 'viewer',
+                    active: u.active !== false && u.isActive !== false,
+                    lat: lat,
+                    lng: lng,
+                    location: u.location || '—',
+                    lastActive: u.lastLogin || u.lastActive || null,
+                    userAgent: u.userAgent || u.device || null
+                };
+            });
+        }
+
+        function normalizeSessions(data) {
+            var sessions = [];
+            if (Array.isArray(data)) sessions = data;
+            else if (data && Array.isArray(data.sessions)) sessions = data.sessions;
+            else if (data && Array.isArray(data.data)) sessions = data.data;
+
+            var now = Date.now();
+            return sessions.map(function (s) {
+                var ua = s.userAgent || s.device || '';
+                var deviceInfo = detectDevice(ua);
+                var created = s.createdAt || s.startedAt || null;
+                var lastAct = s.lastActivity || s.lastActive || created;
+
+                // Determine status dynamically
+                var status = 'active';
+                if (s.status) status = s.status;
+                else if (s.endedAt) status = 'ended';
+                else if (lastAct) {
+                    var idle = (now - new Date(lastAct).getTime()) / 1000;
+                    if (idle > 3600) status = 'ended';
+                    else if (idle > 600) status = 'idle';
+                }
+
+                return {
+                    id: s.sessionId || s.id || '',
+                    userId: s.userId || '',
+                    user: s.name || s.username || 'مستخدم',
+                    username: s.username || '',
+                    email: s.email || '',
+                    role: s.role || 'viewer',
+                    duration: formatDuration(created),
+                    status: status,
+                    createdAt: created,
+                    lastActivity: lastAct,
+                    userAgent: ua,
+                    device: deviceInfo
+                };
+            });
+        }
+
         async function loadUsers() {
             if (_isDestroyed) return [];
             try {
-                var res = await fetch('/api/monitoring/users', {
-                    headers: authHeaders(),
-                    credentials: 'include',
-                    cache: 'no-store'
-                });
-
-                if (!res.ok) {
-                    console.warn('[MONITORING] users API', res.status);
-                    _usersData = [];
-                    return [];
-                }
-
-                var data = await res.json();
-                var users = [];
-                if (Array.isArray(data)) users = data;
-                else if (data && Array.isArray(data.users)) users = data.users;
-                else if (data && Array.isArray(data.data)) users = data.data;
-
-                _usersData = users.map(function(u) {
-                    return {
-                        id: u.id || u._id || '',
-                        name: u.name || u.username || 'مستخدم',
-                        username: u.username || '',
-                        email: u.email || '',
-                        role: u.role || 'viewer',
-                        active: u.active !== false && u.isActive !== false,
-                        lat: (typeof u.lat === 'number') ? u.lat : (typeof u.latitude === 'number') ? u.latitude : null,
-                        lng: (typeof u.lng === 'number') ? u.lng : (typeof u.longitude === 'number') ? u.longitude : null,
-                        location: u.location || '—',
-                        lastActive: u.lastLogin || u.lastActive || null,
-                        userAgent: u.userAgent || u.device || null
-                    };
-                });
-
-                console.log('✅ [MONITORING] Loaded', _usersData.length, 'users');
+                var data = await fetchJSON('/api/monitoring/users');
+                _usersData = normalizeUsers(data);
+                console.log('✅ Loaded', _usersData.length, 'users');
                 return _usersData;
             } catch (err) {
-                console.warn('[MONITORING] Load users error:', err.message);
+                console.warn('[MONITORING] users error:', err.message);
                 _usersData = [];
-                return [];
+                throw err;
             }
         }
 
-        // ============================================================
-        // 📥 LOAD SESSIONS
-        // ============================================================
         async function loadSessions() {
             if (_isDestroyed) return [];
             try {
-                var res = await fetch('/api/monitoring/sessions', {
-                    headers: authHeaders(),
-                    credentials: 'include',
-                    cache: 'no-store'
-                });
-
-                if (!res.ok) {
-                    console.warn('[MONITORING] sessions API', res.status);
-                    _sessionsData = [];
-                    return [];
-                }
-
-                var data = await res.json();
-                var sessions = [];
-                if (Array.isArray(data)) sessions = data;
-                else if (data && Array.isArray(data.sessions)) sessions = data.sessions;
-                else if (data && Array.isArray(data.data)) sessions = data.data;
-
-                _sessionsData = sessions.map(function(s) {
-                    var deviceInfo = detectDevice(s.userAgent || s.device || '');
-                    return {
-                        id: s.userId || s.id || '',
-                        sessionId: s.sessionId || '',
-                        user: s.name || s.username || 'مستخدم',
-                        username: s.username || '',
-                        email: s.email || '',
-                        role: s.role || 'viewer',
-                        duration: formatDuration(s.createdAt),
-                        status: 'active',
-                        createdAt: s.createdAt,
-                        userAgent: s.userAgent || s.device || '',
-                        device: deviceInfo
-                    };
-                });
-
-                console.log('✅ [MONITORING] Loaded', _sessionsData.length, 'sessions');
+                var data = await fetchJSON('/api/monitoring/sessions');
+                _sessionsData = normalizeSessions(data);
+                console.log('✅ Loaded', _sessionsData.length, 'sessions');
                 return _sessionsData;
             } catch (err) {
-                console.warn('[MONITORING] Load sessions error:', err.message);
+                console.warn('[MONITORING] sessions error:', err.message);
                 _sessionsData = [];
-                return [];
+                throw err;
             }
         }
 
-        function formatDuration(startTime) {
-            if (!startTime) return '—';
-            try {
-                var start = new Date(startTime).getTime();
-                var now = Date.now();
-                var diff = Math.floor((now - start) / 1000);
-                if (diff < 0) return '—';
-                if (diff < 60) return diff + ' ث';
-                if (diff < 3600) return Math.floor(diff / 60) + ' د';
-                if (diff < 86400) {
-                    var h = Math.floor(diff / 3600);
-                    var m = Math.floor((diff % 3600) / 60);
-                    return h + ' س ' + m + ' د';
+        /* ============================================================
+           🗺️ LEAFLET LOADER (DYNAMIC + PROMISE-BASED)
+           ============================================================ */
+        function loadLeaflet() {
+            return new Promise(function (resolve, reject) {
+                if (typeof L !== 'undefined' && L.map) {
+                    _leafletReady = true;
+                    return resolve();
                 }
-                return Math.floor(diff / 86400) + ' يوم';
-            } catch (e) { return '—'; }
+
+                if (_leafletLoading) {
+                    _leafletCallbacks.push({ resolve: resolve, reject: reject });
+                    return;
+                }
+
+                _leafletLoading = true;
+
+                // Inject CSS into <head>
+                if (!document.querySelector('link[data-leaflet-css]')) {
+                    var link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                    link.setAttribute('data-leaflet-css', '1');
+                    link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+                    link.crossOrigin = '';
+                    document.head.appendChild(link);
+                }
+
+                // Inject JS
+                var script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+                script.crossOrigin = '';
+                script.async = true;
+
+                var timeoutId = setTimeout(function () {
+                    if (!_leafletReady) {
+                        _leafletLoading = false;
+                        var err = new Error('Leaflet load timeout');
+                        _leafletCallbacks.forEach(function (cb) { try { cb.reject(err); } catch (e) {} });
+                        _leafletCallbacks = [];
+                        reject(err);
+                    }
+                }, 15000);
+                _pageTimeouts.add(timeoutId);
+
+                script.onload = function () {
+                    clearTimeout(timeoutId);
+                    _pageTimeouts.delete(timeoutId);
+                    _leafletReady = true;
+                    _leafletLoading = false;
+                    resolve();
+                    _leafletCallbacks.forEach(function (cb) { try { cb.resolve(); } catch (e) {} });
+                    _leafletCallbacks = [];
+                };
+
+                script.onerror = function () {
+                    clearTimeout(timeoutId);
+                    _pageTimeouts.delete(timeoutId);
+                    _leafletLoading = false;
+                    var err = new Error('Leaflet failed to load');
+                    reject(err);
+                    _leafletCallbacks.forEach(function (cb) { try { cb.reject(err); } catch (e) {} });
+                    _leafletCallbacks = [];
+                };
+
+                document.head.appendChild(script);
+            });
         }
 
-        // ============================================================
-        // 🗺️ MAP
-        // ============================================================
-        function initMap() {
+        /* ============================================================
+           🗺️ MAP INIT
+           ============================================================ */
+        async function initMap() {
             if (_isDestroyed) return;
-
-            if (_map) {
-                console.log('ℹ️ Map already initialized');
-                return;
-            }
-
-            if (typeof L === 'undefined') {
-                var id = setTimeout(function() { if (!_isDestroyed) initMap(); }, 300);
-                _pageTimeouts.push(id);
-                return;
-            }
+            if (_map) return;
 
             var container = $('realMap');
-            if (!container) {
-                var id2 = setTimeout(function() { if (!_isDestroyed) initMap(); }, 500);
-                _pageTimeouts.push(id2);
-                return;
-            }
+            if (!container) return;
 
             try {
-                _map = L.map('realMap').setView([34.5, 9.5], 7);
+                await loadLeaflet();
+                if (_isDestroyed) return;
 
-                var tileLayers = {
+                container.classList.remove('map-loading', 'map-error');
+
+                _map = L.map('realMap', {
+                    zoomControl: true,
+                    attributionControl: true,
+                    preferCanvas: true
+                }).setView([34.5, 9.5], 6);
+
+                _tileLayers = {
                     satellite: L.tileLayer(
                         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                         { attribution: '&copy; Esri', maxZoom: 19 }
@@ -1001,95 +1574,110 @@
                     )
                 };
 
-                tileLayers.satellite.addTo(_map);
-                _map._tileLayers = tileLayers;
-                _map._currentLayer = 'satellite';
-
-                var bounds = L.latLngBounds(L.latLng(32.5, 8.0), L.latLng(37.5, 12.0));
-                _map.fitBounds(bounds, { padding: [20, 20] });
+                _tileLayers.satellite.addTo(_map);
+                _currentLayer = 'satellite';
 
                 addMarkers();
+
+                safeTimeout(function () {
+                    if (_map && !_isDestroyed) {
+                        try { _map.invalidateSize(); } catch (e) {}
+                    }
+                }, 100);
+
                 console.log('✅ Map initialized');
-            } catch (error) {
-                console.error('❌ Map error:', error);
+            } catch (err) {
+                console.error('❌ Map init error:', err);
+                container.classList.remove('map-loading');
+                container.classList.add('map-error');
+                showToast('تعذّر تحميل الخريطة', 'error');
             }
+        }
+
+        function fitMapToMarkers() {
+            if (!_map || _markers.length === 0) return;
+            try {
+                var group = L.featureGroup(_markers);
+                var bounds = group.getBounds();
+                if (bounds.isValid()) {
+                    _map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+                }
+            } catch (e) {}
         }
 
         function addMarkers() {
             if (_isDestroyed || !_map) return;
 
-            _markers.forEach(function(m) { try { _map.removeLayer(m); } catch (e) {} });
+            _markers.forEach(function (m) { try { _map.removeLayer(m); } catch (e) {} });
             _markers = [];
 
-            var usersWithLocation = _usersData.filter(function(u) {
+            var usersWithLocation = _usersData.filter(function (u) {
                 return typeof u.lat === 'number' && typeof u.lng === 'number' &&
-                       !isNaN(u.lat) && !isNaN(u.lng);
+                    !isNaN(u.lat) && !isNaN(u.lng);
             });
 
             if (usersWithLocation.length === 0) {
-                console.log('ℹ️ No users with location data');
+                console.log('ℹ️ No users with location');
                 return;
             }
 
-            usersWithLocation.forEach(function(user) {
+            usersWithLocation.forEach(function (user) {
                 var color = getRoleColor(user.role);
-                var iconHtml = escapeHtml(getInitials(user.name));
+                var initials = escapeHtml(getInitials(user.name));
                 var device = detectDevice(user.userAgent || '');
 
                 var icon = L.divIcon({
                     className: 'custom-marker',
                     html: '<div style="background:' + color +
-                        ';width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0a1628;border:3px solid rgba(255,255,255,0.3);box-shadow:0 0 20px ' +
-                        color + '44;">' + iconHtml + '</div>',
+                        ';width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0a1628;border:3px solid rgba(255,255,255,0.35);box-shadow:0 0 20px ' +
+                        color + '66;cursor:pointer;">' + initials + '</div>',
                     iconSize: [38, 38],
                     iconAnchor: [19, 19],
                     popupAnchor: [0, -25]
                 });
 
                 var popupContent =
-                    '<div style="text-align:right;font-family:Cairo,sans-serif;">' +
+                    '<div style="text-align:right;">' +
                     '<div class="popup-user-name">' + escapeHtml(user.name) + '</div>' +
                     '<div class="popup-user-detail"><i class="fas fa-user-tag"></i> ' + escapeHtml(getRoleLabel(user.role)) + '</div>' +
-                    '<div class="popup-user-detail"><i class="fas fa-at"></i> ' + escapeHtml(user.username) + '</div>' +
+                    (user.username ? '<div class="popup-user-detail"><i class="fas fa-at"></i> ' + escapeHtml(user.username) + '</div>' : '') +
                     (user.id ? '<div class="popup-user-id">ID: ' + escapeHtml(truncateId(user.id)) + '</div>' : '') +
                     (device.type !== 'unknown' ? '<div class="popup-user-detail"><i class="fas ' + device.icon + '"></i> ' + escapeHtml(device.label) + '</div>' : '') +
+                    (user.lastActive ? '<div class="popup-user-detail"><i class="fas fa-clock"></i> ' + escapeHtml(formatDate(user.lastActive)) + '</div>' : '') +
                     '</div>';
 
-                var marker = L.marker([user.lat, user.lng], { icon: icon })
-                    .bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
+                var marker = L.marker([user.lat, user.lng], { icon: icon, title: user.name })
+                    .bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup', closeButton: true });
 
-                marker.on('click', function() {
+                marker.on('click', function () {
                     if (!_isDestroyed) showPanel(user);
                 });
 
                 marker.addTo(_map);
                 _markers.push(marker);
             });
+
+            fitMapToMarkers();
         }
 
         function switchMapType(type) {
-            if (_isDestroyed || !_map || !_map._tileLayers) return;
+            if (_isDestroyed || !_map || !_tileLayers || !_tileLayers[type]) return;
 
-            if (_map._currentLayer) {
-                try { _map.removeLayer(_map._tileLayers[_map._currentLayer]); } catch (e) {}
-            }
+            try { _map.removeLayer(_tileLayers[_currentLayer]); } catch (e) {}
+            try { _tileLayers[type].addTo(_map); } catch (e) { return; }
+            _currentLayer = type;
 
-            try {
-                _map._tileLayers[type].addTo(_map);
-                _map._currentLayer = type;
-            } catch (e) { return; }
-
-            document.querySelectorAll('.map-type-btn').forEach(function(b) {
+            document.querySelectorAll('.map-type-btn').forEach(function (b) {
                 b.classList.toggle('active', b.dataset.type === type);
             });
 
             var labels = { 'satellite': '🛰️ قمر صناعي', 'standard': '🗺️ عادية', 'terrain': '⛰️ تضاريس' };
-            showToast('🗺️ تم التبديل إلى ' + labels[type], 'info');
+            showToast('تم التبديل إلى ' + labels[type], 'info');
         }
 
-        // ============================================================
-        // 📋 RENDER SESSIONS
-        // ============================================================
+        /* ============================================================
+           📋 SESSIONS RENDER
+           ============================================================ */
         function renderSessions() {
             if (_isDestroyed) return;
             var tbody = $('sessionsBody');
@@ -1097,15 +1685,15 @@
 
             if (_sessionsData.length === 0) {
                 tbody.innerHTML =
-                    '<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">' +
-                    '<i class="fas fa-inbox" style="font-size:24px;opacity:0.3;display:block;margin-bottom:8px;"></i>' +
+                    '<tr><td colspan="6"><div class="empty-state">' +
+                    '<i class="fas fa-inbox"></i>' +
                     'لا توجد جلسات نشطة' +
-                    '</td></tr>';
+                    '</div></td></tr>';
                 return;
             }
 
             var html = '';
-            _sessionsData.forEach(function(s) {
+            _sessionsData.forEach(function (s) {
                 var roleColor = getRoleColor(s.role);
                 var device = s.device || detectDevice(s.userAgent || '');
                 var deviceClass = device.type || 'unknown';
@@ -1118,23 +1706,31 @@
                     '<span class="device-icon ' + deviceClass + '"><i class="fas ' + device.icon + '"></i></span>' +
                     '<span>' + escapeHtml(device.label) + '</span>';
 
+                var statusMap = {
+                    'active': { cls: 'active', text: '🟢 نشطة' },
+                    'idle': { cls: 'idle', text: '🟡 خاملة' },
+                    'ended': { cls: 'ended', text: '⚫ منتهية' }
+                };
+                var st = statusMap[s.status] || statusMap.active;
+
                 html +=
                     '<tr>' +
-                        '<td class="user-id-cell">' + idDisplay + '</td>' +
-                        '<td class="user-name">' + escapeHtml(s.user) + '</td>' +
-                        '<td><span class="region-tag" style="color:' + roleColor + ';border:1px solid ' + roleColor + '44;">' +
-                            escapeHtml(getRoleLabel(s.role)) + '</span></td>' +
-                        '<td class="device-cell">' + deviceHtml + '</td>' +
-                        '<td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">' + escapeHtml(s.duration) + '</td>' +
-                        '<td><span class="status-badge active">🟢 نشطة</span></td>' +
+                    '<td class="user-id-cell">' + idDisplay + '</td>' +
+                    '<td class="user-name">' + escapeHtml(s.user) + '</td>' +
+                    '<td><span class="role-tag" style="color:' + roleColor +
+                    ';border:1px solid ' + roleColor + '44;">' +
+                    escapeHtml(getRoleLabel(s.role)) + '</span></td>' +
+                    '<td class="device-cell">' + deviceHtml + '</td>' +
+                    '<td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">' + escapeHtml(s.duration) + '</td>' +
+                    '<td><span class="status-badge ' + st.cls + '">' + st.text + '</span></td>' +
                     '</tr>';
             });
             tbody.innerHTML = html;
         }
 
-        // ============================================================
-        // 👤 USER PANEL
-        // ============================================================
+        /* ============================================================
+           👤 USER PANEL
+           ============================================================ */
         function showPanel(user) {
             if (_isDestroyed) return;
             var overlay = $('panelOverlay');
@@ -1154,7 +1750,7 @@
             if ($('panelBrowser')) $('panelBrowser').textContent = device.browser + ' · ' + device.os;
             if ($('panelLocation')) $('panelLocation').textContent = user.location || '—';
             if ($('panelCoords')) $('panelCoords').textContent =
-                (user.lat !== null && user.lng !== null) ? (user.lat + '°, ' + user.lng + '°') : '— لا يوجد موقع —';
+                (user.lat !== null && user.lng !== null) ? (user.lat.toFixed(4) + '°, ' + user.lng.toFixed(4) + '°') : '— لا يوجد موقع —';
 
             var se = $('panelStatus');
             if (se) {
@@ -1163,7 +1759,7 @@
             }
             var re = $('panelReadiness');
             if (re) { re.textContent = getRoleLabel(user.role); re.className = 'value gold'; }
-            if ($('panelLastActive')) $('panelLastActive').textContent = user.lastActive || '—';
+            if ($('panelLastActive')) $('panelLastActive').textContent = formatDate(user.lastActive);
             if ($('panelEmail')) $('panelEmail').textContent = user.email || '—';
         }
 
@@ -1175,59 +1771,66 @@
             if (panel) panel.classList.remove('visible');
         }
 
-        // ============================================================
-        // 🔄 REFRESH
-        // ============================================================
-        async function refreshAll() {
-            if (_isDestroyed) return;
+        /* ============================================================
+           🔄 REFRESH
+           ============================================================ */
+        var _isRefreshing = false;
+
+        async function refreshAll(silent) {
+            if (_isDestroyed || _isRefreshing) return;
+            _isRefreshing = true;
+
             var btn = $('refreshBtn');
-            if (!btn) return;
-            var orig = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            btn.disabled = true;
+            var orig = btn ? btn.innerHTML : '';
+            if (btn && !silent) {
+                btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
+            }
 
             try {
-                await Promise.all([loadUsers(), loadSessions()]);
+                var results = await Promise.allSettled([loadUsers(), loadSessions()]);
                 if (_isDestroyed) return;
+
                 updateStats();
                 renderSessions();
                 addMarkers();
-                showToast('✅ تم تحديث البيانات', 'success');
+
+                var failed = results.filter(function (r) { return r.status === 'rejected'; });
+                if (!silent) {
+                    if (failed.length === 0) showToast('تم تحديث البيانات بنجاح', 'success');
+                    else showToast('تعذّر تحديث بعض البيانات', 'warning');
+                }
+
+                // Update session badge if error
+                if (failed.length > 0) {
+                    var badge = $('sessionBadge');
+                    if (badge && _sessionsData.length === 0) {
+                        badge.textContent = '⚠️ فشل التحميل';
+                        badge.className = 'badge error';
+                    }
+                }
             } catch (err) {
-                console.warn('[REFRESH] Error:', err.message);
-                showToast('⚠️ تعذّر تحديث بعض البيانات', 'warning');
+                console.warn('[REFRESH]', err.message);
+                if (!silent) showToast('خطأ أثناء التحديث', 'error');
             } finally {
-                if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                if (btn && !silent) {
+                    btn.innerHTML = orig;
+                    btn.disabled = false;
+                }
+                _isRefreshing = false;
             }
         }
 
-        _resizeHandler = function() {
-            if (_isDestroyed) return;
-            if (_resizeTimer) clearTimeout(_resizeTimer);
-            _resizeTimer = setTimeout(function() {
-                if (_isDestroyed) return;
-                if (_map) { try { _map.invalidateSize(); } catch (e) {} }
-            }, 300);
-        };
-
-        // ============================================================
-        // 🚀 INIT
-        // ============================================================
+        /* ============================================================
+           🚀 INIT
+           ============================================================ */
         async function init() {
             if (_isDestroyed) return;
-            console.log('🚀 Initializing monitoring v10.0...');
+            console.log('🚀 Initializing monitoring v' + VERSION + '...');
 
-            await Promise.all([loadUsers(), loadSessions()]);
-            if (_isDestroyed) return;
-
-            updateStats();
-            renderSessions();
-
-            var id = setTimeout(function() { if (!_isDestroyed) initMap(); }, 300);
-            _pageTimeouts.push(id);
-
+            // Bind UI events first (so they work even if data fails)
             var refreshBtn = $('refreshBtn');
-            if (refreshBtn) refreshBtn.addEventListener('click', refreshAll);
+            if (refreshBtn) refreshBtn.addEventListener('click', function () { refreshAll(false); });
 
             var printBtn = $('printBtn');
             if (printBtn) printBtn.addEventListener('click', printMonitoring);
@@ -1238,23 +1841,58 @@
             var overlay = $('panelOverlay');
             if (overlay) overlay.addEventListener('click', closePanel);
 
-            document.querySelectorAll('.map-type-btn').forEach(function(b) {
-                b.addEventListener('click', function() {
+            document.querySelectorAll('.map-type-btn').forEach(function (b) {
+                b.addEventListener('click', function () {
                     if (!_isDestroyed) switchMapType(this.dataset.type);
                 });
             });
 
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !_isDestroyed) closePanel();
+            });
+
+            _resizeHandler = function () {
+                if (_isDestroyed) return;
+                if (_resizeTimer) clearTimeout(_resizeTimer);
+                _resizeTimer = setTimeout(function () {
+                    if (_isDestroyed || !_map) return;
+                    try { _map.invalidateSize(); } catch (e) {}
+                }, 250);
+            };
             window.addEventListener('resize', _resizeHandler);
 
-            console.log('✅ Monitoring v10.0 ready — ' + _usersData.length + ' users, ' + _sessionsData.length + ' sessions');
+            // Load data
+            try {
+                await Promise.all([loadUsers(), loadSessions()]);
+            } catch (err) {
+                console.warn('[INIT] initial load partially failed');
+            }
+            if (_isDestroyed) return;
+
+            updateStats();
+            renderSessions();
+
+            // Init map after data is loaded
+            await initMap();
+
+            // Auto-refresh
+            _autoRefreshInterval = safeInterval(function () {
+                refreshAll(true);
+            }, AUTO_REFRESH_MS);
+
+            console.log('✅ Monitoring v' + VERSION + ' ready — ' +
+                _usersData.length + ' users, ' + _sessionsData.length + ' sessions');
         }
 
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
+            document.addEventListener('DOMContentLoaded', init, { once: true });
         } else {
             init();
         }
 
+        /* ============================================================
+           🌐 EXPORTS (for external cleanup / debugging)
+           ============================================================ */
         window.refreshAll = refreshAll;
         window.switchMapType = switchMapType;
         window.showToast = showToast;
@@ -1264,7 +1902,4 @@
 
     })();
     </script>
-
-    <!-- LEAFLET JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </div>
