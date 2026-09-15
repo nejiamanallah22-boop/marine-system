@@ -1,6 +1,11 @@
 // routes/monitoring.js
 'use strict';
 
+// ============================================================
+// 🚨 DEBUG LOG — لرؤية هذا السطر في Render Logs
+// ============================================================
+console.log('🚨 [MONITORING] v2.0 LOADED — routes: /users /sessions /location /session/end /stats /health');
+
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
@@ -78,7 +83,6 @@ router.get('/users', auth, async (req, res) => {
             .limit(500);
 
         const normalized = users.map(u => ({
-            // ✅ استخدم حقل id (UUID) أولاً
             id: u.id || String(u._id),
             name: u.name || u.username || 'مستخدم',
             username: u.username || '',
@@ -183,7 +187,7 @@ router.post('/location', auth, async (req, res) => {
         user.lastLatLngUpdate = now;
         await user.save();
 
-        // ✅ تحديث/إنشاء الجلسة — استخدم _id الحقيقي
+        // ✅ تحديث/إنشاء الجلسة
         await Session.findOneAndUpdate(
             { userId: user._id, status: 'active' },
             {
@@ -194,7 +198,7 @@ router.post('/location', auth, async (req, res) => {
                     lng: user.lng
                 },
                 $setOnInsert: {
-                    userId: user._id,  // ⬅️ ObjectId الحقيقي
+                    userId: user._id,
                     createdAt: now,
                     status: 'active',
                     sessionId: crypto.randomUUID()
@@ -278,6 +282,7 @@ router.get('/stats', auth, async (req, res) => {
 router.get('/health', (req, res) => {
     res.json({
         ok: true,
+        version: '2.0',
         routes: [
             'GET  /api/monitoring/users',
             'GET  /api/monitoring/sessions',
