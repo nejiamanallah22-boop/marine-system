@@ -1,19 +1,17 @@
 /* ============================================================
-   🖨️ PRINT v9.1 — MAGAZINE / REPORT STYLE (FIXED)
-   طباعة احترافية بأسلوب مجلة/تقرير رسمي
+   🖨️ PRINT v9.0 — MAGAZINE / REPORT STYLE
+   طباعة احترافية بأسلوب مجلة تقرير رسمي — تملأ الصفحة بالكامل
    ============================================================ */
 
 @page {
-    size: A4 landscape;              /* ✅ Landscape أفضل للجداول */
-    margin: 18mm 14mm 22mm 14mm;     /* مساحة للتذييل */
+    size: A4;
+    margin: 24mm 16mm 20mm;
 }
-
-/* @page :first { margin-top: 12mm; } */
 
 @media print {
 
     /* ═══════════════════════════════════════════════
-       0. أساس نظيف
+       0. أساس نظيف — إزالة كل التأثيرات الرقمية الثقيلة
        ═══════════════════════════════════════════════ */
     *, *::before, *::after {
         animation: none !important;
@@ -32,13 +30,13 @@
         font-size: 10.5pt !important;
         line-height: 1.5 !important;
         margin: 0 !important;
-        padding: 0 0 20mm 0 !important;   /* ✅ مساحة للتذييل الثابت */
+        padding: 0 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
     /* ═══════════════════════════════════════════════
-       1. إخفاء كل عناصر الواجهة
+       1. إخفاء كل عناصر الواجهة التفاعلية
        ═══════════════════════════════════════════════ */
     button, .btn-action, .btn-filter, .chart-btn, .chart-switch,
     .filter-bar, nav, .sidebar, .navbar, .main-header, .menu-toggle,
@@ -59,7 +57,6 @@
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
-        overflow: visible !important;
     }
     #page-fleet::before, #page-logs::before, #page-efficiency::before,
     body::before, body::after {
@@ -67,7 +64,8 @@
     }
 
     /* ═══════════════════════════════════════════════
-       2. الترويسة — بأسلوب مجلة
+       2. صفحة الغلاف / الترويسة — بأسلوب مجلة
+       تظهر مرة واحدة أعلى المستند، ضخمة وواضحة
        ═══════════════════════════════════════════════ */
     .eff-header, .fleet-header, .logs-header {
         display: block !important;
@@ -77,7 +75,7 @@
         border: none !important;
         border-bottom: 3px double #0a1628 !important;
         padding: 0 0 6mm !important;
-        margin: 0 0 8mm !important;
+        margin: 0 0 10mm !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
     }
@@ -89,6 +87,7 @@
         gap: 2mm !important;
     }
 
+    /* الشعار كخاتم علوي صغير أنيق */
     .header-icon, #fleetHeaderIcon, #logsHeaderIcon, #effHeaderIcon {
         width: 16mm !important;
         height: 16mm !important;
@@ -127,29 +126,27 @@
         margin: 0 !important;
     }
 
-    /* ✅ حذفنا !important من content */
+    /* خط تاريخ الطباعة تحت العنوان، بأسلوب "صادر بتاريخ" */
     .eff-header::after, .fleet-header::after, .logs-header::after {
-        content: "تاريخ الإصدار: " attr(data-print-date);
-        display: block;
-        margin-top: 4mm;
-        font-size: 8.5pt;
-        color: #9ca3af;
-        font-weight: 600;
-        letter-spacing: 0.3px;
+        content: "تاريخ الإصدار: " attr(data-print-date) !important;
+        display: block !important;
+        margin-top: 4mm !important;
+        font-size: 8.5pt !important;
+        color: #9ca3af !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.3px !important;
     }
 
     /* ═══════════════════════════════════════════════
-       3. الأرقام الرئيسية
+       3. الأرقام الرئيسية — كأرقام غلاف مجلة، بارزة جدًا
        ═══════════════════════════════════════════════ */
     .stats-grid {
         display: grid !important;
         gap: 0 !important;
-        margin: 0 0 8mm !important;
+        margin: 0 0 10mm !important;
         padding: 5mm 0 !important;
         border-top: 0.75pt solid #d1d5db !important;
         border-bottom: 0.75pt solid #d1d5db !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
     }
     #page-fleet .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
     #page-logs .stats-grid,
@@ -158,15 +155,14 @@
     .stat-card {
         background: none !important;
         border: none !important;
-        /* ✅ في RTL، الفاصل بين البطاقات يكون على اليمين */
-        border-right: 0.5pt solid #e5e7eb !important;
+        border-left: 0.5pt solid #e5e7eb !important;
         border-radius: 0 !important;
         padding: 0 3mm !important;
         text-align: center !important;
         display: block !important;
         min-height: 0 !important;
     }
-    .stat-card:first-child { border-right: none !important; }
+    .stat-card:last-child { border-left: none !important; }
     .stat-card::before, .stat-card::after { display: none !important; }
     .stat-card .icon-bg { display: none !important; }
 
@@ -191,17 +187,17 @@
     }
 
     /* ═══════════════════════════════════════════════
-       4. الأقسام
+       4. الأقسام — بأسلوب فصول تقرير/مجلة
+       عنوان كبير + خط ذهبي رفيع + جدول أنيق
        ═══════════════════════════════════════════════ */
     .eff-section, .fleet-section, .logs-section {
         background: none !important;
         border: none !important;
         border-radius: 0 !important;
-        margin: 0 0 7mm !important;
+        margin: 0 0 9mm !important;
         padding: 0 !important;
         page-break-inside: auto !important;
         break-inside: auto !important;
-        overflow: visible !important;
     }
     .eff-section[style*="display: none"] { display: none !important; }
 
@@ -226,7 +222,7 @@
     .logs-section .section-header h3 {
         color: #0a1628 !important;
         -webkit-text-fill-color: #0a1628 !important;
-        font-size: 13pt !important;
+        font-size: 13.5pt !important;
         font-weight: 800 !important;
         margin: 0 !important;
         display: flex !important;
@@ -250,13 +246,11 @@
         border-radius: 10px !important;
     }
 
-    .section-content {
-        padding: 0 !important;
-        overflow: visible !important;   /* ✅ مهم للقطع */
-    }
+    .section-content { padding: 0 !important; }
 
     /* ═══════════════════════════════════════════════
-       5. الجداول
+       5. الجداول — أسلوب مجلة: خطوط أفقية رفيعة فقط
+       بلا صناديق ثقيلة، توزيع مريح، عناوين واضحة
        ═══════════════════════════════════════════════ */
     .table-wrapper {
         padding: 0 !important;
@@ -268,7 +262,7 @@
         width: 100% !important;
         border-collapse: collapse !important;
         font-size: 9.5pt !important;
-        table-layout: fixed !important;   /* ✅ يمنع التمدد */
+        table-layout: auto !important;
         background: none !important;
         min-width: 0 !important;
     }
@@ -290,6 +284,8 @@
     }
     thead th i { display: none !important; }
 
+    tfoot { display: table-footer-group !important; }
+
     tbody tr {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
@@ -298,7 +294,7 @@
     tbody tr:nth-child(even) { background: #f8f9fb !important; }
 
     tbody td {
-        padding: 2mm 2.5mm !important;
+        padding: 2.2mm 2.5mm !important;
         border: none !important;
         border-bottom: 0.5pt solid #e5e7eb !important;
         color: #1f2937 !important;
@@ -320,33 +316,31 @@
         padding-right: 3mm !important;
     }
 
+    /* حالات الصفوف — شريط جانبي رفيع بدل الخلفية الملوّنة الثقيلة */
     .row-high {
         background: #f4faf7 !important;
         border-right: 2.5pt solid #047857 !important;
     }
     .row-high td:first-child, .row-high .eff-cell {
-        color: #047857 !important;
-        -webkit-text-fill-color: #047857 !important;
+        color: #047857 !important; -webkit-text-fill-color: #047857 !important;
     }
     .row-mid {
         background: #fffaf0 !important;
         border-right: 2.5pt solid #b45309 !important;
     }
     .row-mid td:first-child, .row-mid .eff-cell {
-        color: #b45309 !important;
-        -webkit-text-fill-color: #b45309 !important;
+        color: #b45309 !important; -webkit-text-fill-color: #b45309 !important;
     }
     .row-low, tbody tr.damaged {
         background: #fdf4f4 !important;
         border-right: 2.5pt solid #b91c1c !important;
     }
     .row-low td:first-child, .row-low .eff-cell, tbody tr.damaged td:first-child {
-        color: #b91c1c !important;
-        -webkit-text-fill-color: #b91c1c !important;
+        color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important;
     }
 
     /* ═══════════════════════════════════════════════
-       6. الشارات وأشرطة التقدم
+       6. الشارات وأشرطة التقدم — مبسّطة للطباعة الرمادية/الملونة
        ═══════════════════════════════════════════════ */
     .status-badge, .eff-status {
         display: inline-block !important;
@@ -387,42 +381,54 @@
     .progress-bar .progress-fill.low  { background: #b91c1c !important; }
 
     /* ═══════════════════════════════════════════════
-       7. تذييل متكرر
-       ✅ حذفنا @bottom-center (غير مدعوم)
-       ✅ حذفنا !important من content
+       7. تذييل متكرر في كل صفحة (position:fixed يتكرر
+       عند الطباعة في المتصفحات القائمة على Chromium)
        ═══════════════════════════════════════════════ */
-    #page-fleet::after, #page-logs::after, #page-efficiency::after {
-        display: block;
-        position: fixed;
-        bottom: 4mm;
-        left: 14mm;
-        right: 14mm;
-        text-align: center;
-        font-size: 7.5pt;
-        color: #9ca3af;
-        border-top: 0.5pt solid #e5e7eb;
-        padding-top: 2mm;
-        font-weight: 600;
+    .print-footer {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important; right: 0 !important;
+        text-align: center !important;
+        font-size: 7.5pt !important;
+        color: #9ca3af !important;
+        border-top: 0.5pt solid #e5e7eb !important;
+        padding-top: 2mm !important;
     }
-    #page-fleet::after      { content: "⚓ منظومة الوسائل البحرية — السجل العام للأسطول"; }
-    #page-logs::after       { content: "⚓ منظومة الوسائل البحرية — سجل الصيانة"; }
-    #page-efficiency::after { content: "⚓ منظومة الوسائل البحرية — تقرير جاهزية الأسطول"; }
+
+    #page-fleet::after, #page-logs::after, #page-efficiency::after {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important; right: 0 !important;
+        text-align: center !important;
+        font-size: 7.5pt !important;
+        color: #9ca3af !important;
+        border-top: 0.5pt solid #e5e7eb !important;
+        padding-top: 2mm !important;
+        font-weight: 600 !important;
+    }
+    #page-fleet::after      { content: "⚓ منظومة الوسائل البحرية  —  السجل العام للأسطول" !important; }
+    #page-logs::after       { content: "⚓ منظومة الوسائل البحرية  —  سجل الصيانة" !important; }
+    #page-efficiency::after { content: "⚓ منظومة الوسائل البحرية  —  تقرير جاهزية الأسطول" !important; }
+
+    /* ترقيم الصفحات (مدعوم في متصفحات Chromium عبر @page) */
+    @bottom-center {
+        content: counter(page) " / " counter(pages);
+        font-family: 'Cairo', sans-serif;
+        font-size: 8pt;
+        color: #9ca3af;
+    }
 
     /* ═══════════════════════════════════════════════
-       8. كسر شامل لقيود overflow
+       8. كسر شامل لأي قيود overflow متبقية من واجهة الشاشة
        ═══════════════════════════════════════════════ */
-    html body #page-efficiency .eff-section,
-    html body #page-fleet .eff-section,
-    html body #page-logs .eff-section,
     html body #page-efficiency .eff-section *,
     html body #page-fleet .eff-section *,
     html body #page-logs .eff-section *,
     html body .table-wrapper,
-    html body table,
-    html body tbody {
+    html body table, html body tbody {
         overflow: visible !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
     }
 }
 
