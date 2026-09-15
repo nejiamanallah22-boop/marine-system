@@ -1,10 +1,11 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.1.0
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.2.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
 // ⚙️ SETTINGS + 🖼️ LOGO (MongoDB-backed)
 // 📦 PROFESSIONAL SEED PROTECTION (one-time seed + auto cleanup)
-// ✨ v10.1: Unified Maintenance Routes + Enhanced formatMaintenance
+// ✨ v10.2: Unified Maintenance Routes + Enhanced formatMaintenance
+//          + User region/unit support
 // ============================================================
 
 'use strict';
@@ -15,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.1.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.2.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -597,6 +598,7 @@ async function ensureAdminExists() {
             name: ADMIN_NAME,
             email: ADMIN_EMAIL,
             role: 'admin',
+            region: '',                    // ✅ جديد
             isActive: true,
             tokenVersion: 0,
             loginAttempts: 0,
@@ -609,7 +611,7 @@ async function ensureAdminExists() {
 }
 
 // ============================================================
-// 📦 INITIAL DATA (v10.1.0) — Professional Seed Protection
+// 📦 INITIAL DATA (v10.2.0) — Professional Seed Protection
 // ============================================================
 
 const SEED_MARKER = 'initial-data-planted-v1';
@@ -1257,6 +1259,9 @@ function requireAdmin(req, res, next) {
     next();
 }
 
+// ============================================================
+// ✅ formatUser — v10.2 يدعم region
+// ============================================================
 function formatUser(user) {
     if (!user) return null;
     const normalizedRole = normalizeRole(user.role);
@@ -1268,6 +1273,7 @@ function formatUser(user) {
         email: user.email,
         role: normalizedRole,
         roleLabel: ROLE_LABELS[normalizedRole] || normalizedRole,
+        region: user.region || '',                    // ✅ جديد
         active: user.isActive,
         isActive: user.isActive,
         lastLogin: user.lastLogin,
@@ -1304,7 +1310,7 @@ function formatVessel(vessel) {
 }
 
 // ============================================================
-// 🔧 formatMaintenance — v10.1 ENHANCED (يدعم partsUsed + parts)
+// 🔧 formatMaintenance — v10.2 ENHANCED (يدعم partsUsed + parts)
 // ============================================================
 function formatMaintenance(log) {
     if (!log) return null;
@@ -1417,7 +1423,7 @@ function formatMaintenance(log) {
     app.get('/api/health', (req, res) => {
         return res.json({
             success: true, status: 'online', service: 'Marine System',
-            version: '10.1.0', timestamp: new Date().toISOString(),
+            version: '10.2.0', timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
@@ -2261,11 +2267,9 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // 🔧 MAINTENANCE — UNIFIED ROUTES (v10.1)
-    // يدعم كلا المسارين: /api/maintenance + /api/maintenance-logs
+    // 🔧 MAINTENANCE — UNIFIED ROUTES (v10.2)
     // ========================================================
 
-    // 📋 GET (both paths)
     async function handleGetMaintenance(req, res) {
         try {
             const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
@@ -2291,7 +2295,6 @@ function formatMaintenance(log) {
     app.get('/api/maintenance', authenticateAccessToken, requirePermission('maintenance:read'), handleGetMaintenance);
     app.get('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:read'), handleGetMaintenance);
 
-    // ➕ POST (both paths)
     async function handleCreateMaintenance(req, res) {
         try {
             const {
@@ -2308,7 +2311,6 @@ function formatMaintenance(log) {
                 return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
             }
 
-            // توحيد قطع الغيار
             const rawParts = partsUsed || parts || [];
             const normalizedParts = (Array.isArray(rawParts) ? rawParts : []).map(p => ({
                 partName: p.partName || p.name || '',
@@ -2368,7 +2370,6 @@ function formatMaintenance(log) {
     app.post('/api/maintenance', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, handleCreateMaintenance);
     app.post('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, handleCreateMaintenance);
 
-    // ✏️ PUT (both paths)
     async function handleUpdateMaintenance(req, res) {
         try {
             const idQuery = buildIdQuery(req.params.id);
@@ -2417,7 +2418,6 @@ function formatMaintenance(log) {
     app.put('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleUpdateMaintenance);
     app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleUpdateMaintenance);
 
-    // 🗑️ DELETE (both paths)
     async function handleDeleteMaintenance(req, res) {
         try {
             const idQuery = buildIdQuery(req.params.id);
@@ -2447,7 +2447,6 @@ function formatMaintenance(log) {
     app.delete('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, handleDeleteMaintenance);
     app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, handleDeleteMaintenance);
 
-    // ✅ POST COMPLETE — إكمال + تحديث المركب في السجل العام
     async function handleCompleteMaintenance(req, res) {
         try {
             const idQuery = buildIdQuery(req.params.id);
@@ -2460,7 +2459,6 @@ function formatMaintenance(log) {
             log.endDate = new Date();
             await log.save();
 
-            // ✅ تحديث المركب في السجل العام
             let vesselUpdated = false;
             try {
                 const vesselIdQuery = buildIdQuery(log.vesselId);
@@ -2513,7 +2511,7 @@ function formatMaintenance(log) {
     app.post('/api/maintenance-logs/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleCompleteMaintenance);
 
     // ========================================================
-    // USERS (admin only)
+    // USERS (admin only) — ✅ v10.2 يدعم region
     // ========================================================
 
     app.get('/api/users', authenticateAccessToken, requirePermission('users:manage'), async (req, res) => {
@@ -2527,7 +2525,8 @@ function formatMaintenance(log) {
 
     app.post('/api/users', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
-            const { username, password, email, role, active } = req.body;
+            // ✅ v10.2: استقبال region
+            const { username, password, email, role, region, active } = req.body;
             if (typeof username !== 'string' || !username.trim()) return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
             if (typeof password !== 'string' || !password) return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
             if (!isStrongPassword(password)) return res.status(400).json({ success: false, error: 'كلمة المرور يجب أن تكون 12 حرفاً على الأقل' });
@@ -2544,8 +2543,13 @@ function formatMaintenance(log) {
             if (emailExists) return res.status(400).json({ success: false, error: 'البريد الإلكتروني موجود' });
 
             const newUser = await User.create({
-                id: randomId(8), username: cleanUsername, password: password,
-                email: cleanEmail, name: cleanUsername, role: finalRole,
+                id: randomId(8),
+                username: cleanUsername,
+                password: password,
+                email: cleanEmail,
+                name: cleanUsername,
+                role: finalRole,
+                region: typeof region === 'string' ? region.trim() : '',   // ✅ جديد
                 isActive: active !== undefined ? Boolean(active) : true,
                 tokenVersion: 0
             });
@@ -2567,7 +2571,8 @@ function formatMaintenance(log) {
             const targetUser = await User.findOne(idQuery);
             if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
 
-            const { username, email, role, active, password } = req.body;
+            // ✅ v10.2: استقبال region
+            const { username, email, role, region, active, password } = req.body;
             if (targetUser.username === 'admin' && username && username !== 'admin') return res.status(403).json({ success: false, error: 'لا يمكن تغيير اسم المستخدم الرئيسي' });
 
             if (normalizeRole(targetUser.role) === 'admin' && active === false) {
@@ -2582,6 +2587,11 @@ function formatMaintenance(log) {
                 const allowedRoles = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد', 'operator', 'super_admin'];
                 if (!allowedRoles.includes(role)) return res.status(400).json({ success: false, error: 'صلاحية غير صالحة' });
                 targetUser.role = normalizeRole(role);
+            }
+
+            // ✅ v10.2: تحديث region
+            if (region !== undefined) {
+                targetUser.region = typeof region === 'string' ? region.trim() : '';
             }
 
             if (active !== undefined) targetUser.isActive = Boolean(active);
@@ -2842,7 +2852,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.1.0</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.2.0</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -2892,11 +2902,12 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.1.0');
+            console.log('🚢 MARINE SYSTEM v10.2.0');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('📦 Seed Protection: ONE-TIME ONLY');
             console.log('🔧 Maintenance Routes: UNIFIED (maintenance + maintenance-logs)');
+            console.log('👤 User region/unit: ENABLED');
             console.log('🤖 AI Assistant + Smart Import: ' + (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'));
             console.log('📧 Email: ' + (
                 (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
