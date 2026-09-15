@@ -1,8 +1,8 @@
 /**
- * 👤 نموذج المستخدم - v2.0
+ * 👤 نموذج المستخدم - v2.1
  * @module models/User
  * 
- * ✨ v2.0: توافق كامل مع server.js v9.6
+ * ✨ v2.1: إضافة حقل region (الإقليم/الوحدة)
  */
 
 const mongoose = require('mongoose');
@@ -49,10 +49,17 @@ const UserSchema = new mongoose.Schema({
         minlength: [2, 'الاسم يجب أن يكون حرفين على الأقل']
     },
     
-    // ✅ الدور - يقبل العربية والإنجليزية
+    // ✅ الدور
     role: {
         type: String,
         default: 'viewer',
+        trim: true
+    },
+    
+    // ✅ الإقليم / الوحدة (جديد v2.1)
+    region: {
+        type: String,
+        default: '',
         trim: true
     },
     
@@ -61,7 +68,7 @@ const UserSchema = new mongoose.Schema({
         default: []
     },
     
-    // ✅ isActive (الحقل الرسمي)
+    // ✅ isActive
     isActive: {
         type: Boolean,
         default: true,
@@ -93,7 +100,6 @@ const UserSchema = new mongoose.Schema({
         default: null
     },
     
-    // ✅ tokenVersion - مهم لـ JWT invalidation
     tokenVersion: {
         type: Number,
         default: 0
@@ -118,7 +124,7 @@ const UserSchema = new mongoose.Schema({
 // ✅ Virtuals (للتوافق مع server.js)
 // ============================================================
 
-// ✅ `active` = `isActive` (للتوافق مع الواجهة)
+// ✅ `active` = `isActive`
 UserSchema.virtual('active').get(function() {
     return this.isActive;
 });
