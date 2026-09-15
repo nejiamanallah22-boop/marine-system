@@ -2,8 +2,8 @@
 <div id="page-maintenance">
     <style>
         /* ============================================================
-           🔧 MAINTENANCE PAGE — v13.0
-           Isolated IIFE — No global variable conflicts
+           🔧 MAINTENANCE PAGE — v13.1
+           Isolated IIFE — No global flags — SPA-safe
            ============================================================ */
 
         body { background: #0a0e1a; }
@@ -653,17 +653,10 @@
     (function() {
         'use strict';
 
-        // ✅ حماية من التهيئة المزدوجة
-        if (window.__maintenanceInitialized) {
-            console.warn('⚠️ Maintenance already initialized — skipping');
-            return;
-        }
-        window.__maintenanceInitialized = true;
-
-        console.log('🔧 Maintenance v13.0 - loading (isolated)...');
+        console.log('🔧 Maintenance v13.1 - loading (isolated, SPA-safe)...');
 
         // ============================================================
-        // STATE — local, no globals
+        // STATE — local, no globals, no persistent flags
         // ============================================================
         var M = {
             destroyed: false,
@@ -742,7 +735,7 @@
         }
 
         // ============================================================
-        // HTTP — uses parent's apiFetch if available, or own fetch
+        // HTTP
         // ============================================================
         function getToken() {
             return localStorage.getItem('marine_token') ||
@@ -756,7 +749,6 @@
         }
 
         function fetchJSON(url, options) {
-            // ✅ استخدم apiFetch من index.html إن وُجد
             if (typeof window.apiFetch === 'function') {
                 return window.apiFetch(url, options || {});
             }
@@ -773,7 +765,7 @@
         }
 
         // ============================================================
-        // RBAC — uses parent's capabilities if available
+        // RBAC
         // ============================================================
         function canCreate() {
             if (window.capabilities && typeof window.capabilities.canCreateMaintenance === 'boolean')
@@ -843,11 +835,20 @@
         // ============================================================
         async function loadVessels() {
             if (M.destroyed) return [];
-            if (!getToken()) { M.vessels = []; return []; }
+            if (!getToken()) {
+                console.warn('⚠️ [loadVessels] لا يوجد token');
+                M.vessels = [];
+                return [];
+            }
             try {
+                console.log('📡 [loadVessels] جاري الجلب من /api/vessels...');
                 var res = await fetchJSON(apiBase() + '/api/vessels', { method: 'GET' });
                 if (M.destroyed) return [];
-                if (!res.ok) { M.vessels = []; return []; }
+                if (!res.ok) {
+                    console.warn('⚠️ [loadVessels] HTTP', res.status);
+                    M.vessels = [];
+                    return [];
+                }
                 var data = await res.json();
                 var list = Array.isArray(data) ? data :
                            (data.vessels || data.data || []);
@@ -867,11 +868,20 @@
         // ============================================================
         async function loadMaintenance() {
             if (M.destroyed) return [];
-            if (!getToken()) { M.data = []; return []; }
+            if (!getToken()) {
+                console.warn('⚠️ [loadMaintenance] لا يوجد token');
+                M.data = [];
+                return [];
+            }
             try {
+                console.log('📡 [loadMaintenance] جاري الجلب من /api/maintenance...');
                 var res = await fetchJSON(apiBase() + '/api/maintenance', { method: 'GET' });
                 if (M.destroyed) return [];
-                if (!res.ok) { M.data = []; return []; }
+                if (!res.ok) {
+                    console.warn('⚠️ [loadMaintenance] HTTP', res.status);
+                    M.data = [];
+                    return [];
+                }
                 var data = await res.json();
                 var records = Array.isArray(data) ? data :
                               (data.records || data.data || []);
@@ -1446,7 +1456,6 @@
                     });
 
                     if (!res.ok) {
-                        // fallback: PUT
                         await fetchJSON(apiBase() + '/api/maintenance/' + encodeURIComponent(id), {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
@@ -1582,7 +1591,7 @@
                 try { l.target.removeEventListener(l.event, l.handler, l.options); } catch (e) {}
             });
             M.listeners = [];
-            console.log('🧹 Maintenance v13.0 cleanup');
+            console.log('🧹 Maintenance v13.1 cleanup');
         }
         window._pageCleanup = window._pageCleanup || [];
         window._pageCleanup.push(cleanup);
@@ -1590,12 +1599,16 @@
         window.addEventListener('pagehide', cleanup);
 
         // ============================================================
-        // INIT
+        // INIT — runs every time page loads (SPA-safe)
         // ============================================================
         async function init() {
-            if (M.destroyed || M.initialized) return;
+            if (M.destroyed) return;
+            if (M.initialized) {
+                console.log('ℹ️ Maintenance already initialized in this mount — skipping');
+                return;
+            }
             M.initialized = true;
-            console.log('🚀 Maintenance v13.0 init...');
+            console.log('🚀 Maintenance v13.1 init...');
 
             try {
                 // Logo
@@ -1640,15 +1653,16 @@
                     }
                 });
 
-                console.log('✅ Maintenance v13.0 ready — ' + M.data.length + ' records');
+                console.log('✅ Maintenance v13.1 ready — ' + M.data.length + ' records');
             } catch (err) {
                 console.error('❌ Init:', err);
                 showToast('❌ خطأ في التحميل', 'error');
             }
         }
 
+        // تشغيل التهيئة
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
+            document.addEventListener('DOMContentLoaded', init, { once: true });
         } else {
             init();
         }
