@@ -2,8 +2,8 @@
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           🎨 EFFICIENCY PAGE — ULTRA PRO v11.1
-           (Working Filters + Fixed Chart + Vivid Colors + Pro Print)
+           🎨 EFFICIENCY PAGE — ULTRA PRO v11.4
+           (Print handled centrally by /css/print.css)
            ============================================================ */
 
         #page-efficiency {
@@ -408,6 +408,8 @@
 
         /* ============================================================
            SECTIONS
+           ⚠️ overflow: visible — يسمح بالقطع للطباعة
+           ⚠️ page-break-inside مضبوط في /css/print.css
            ============================================================ */
         .eff-section {
             background: linear-gradient(135deg,
@@ -418,10 +420,9 @@
             border: 1px solid var(--c-border-soft);
             border-radius: var(--radius);
             margin: 0 24px 20px;
-            overflow: hidden;
+            overflow: visible;                     /* ✅ يسمح بالقطع للطباعة */
             box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
             transition: all var(--transition);
-            page-break-inside: avoid;
         }
         .eff-section[style*="display: none"] { display: none !important; }
         .eff-section:hover {
@@ -440,6 +441,7 @@
             position: relative;
             flex-wrap: wrap;
             gap: 10px;
+            border-radius: var(--radius) var(--radius) 0 0;   /* ✅ للحفاظ على زوايا أنيقة */
         }
         .eff-section .section-header::after {
             content: '';
@@ -490,7 +492,7 @@
             border: 1px solid rgba(230, 179, 30, 0.25);
         }
 
-        .section-content { padding: 0; }
+        .section-content { padding: 0; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
 
         /* ============================================================
            TABLE
@@ -858,7 +860,7 @@
         }
 
         /* ============================================================
-           🖨️ ملاحظة: أنماط الطباعة تُدار مركزياً من /css/print.css
+           🖨️ PRINT — يُدار مركزياً من /css/print.css
            ============================================================ */
     </style>
 
@@ -2076,7 +2078,7 @@
                 if (!generalBody) return false;
                 initialized = true;
 
-                console.log('🎨 Efficiency v11.2: Initializing...');
+                console.log('🎨 Efficiency v11.4: Initializing...');
 
                 applyLogo();
                 syncLogoFromServer();
@@ -2131,7 +2133,7 @@
                             }
                         }
 
-                        console.log('🎨 Efficiency v11.2: Ready');
+                        console.log('🎨 Efficiency v11.4: Ready');
                     }
                 });
             }
