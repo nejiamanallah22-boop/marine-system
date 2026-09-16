@@ -1,35 +1,43 @@
 /* ============================================================
-   🖨️ PRINT v12.1 — INSTITUTIONAL / OFFICIAL REPORT GRADE
+   🖨️ PRINT v13.0 — FINAL OFFICIAL INSTITUTIONAL GRADE
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ إضافة: التسلسل المؤسسي الرسمي على صفحة الغلاف
-       الجمهورية التونسية
-       وزارة الداخلية
-       كتابة الدولة للأمن
-       الإدارة العامة للحرس الوطني
-       الإدارة العامة لحرس الحدود
-       إدارة إسناد الوحدات البحرية
+   التخطيط النهائي:
+   
+   صفحة الغلاف:
+   ┌────────────────────────────────────────────────┐
+   │ العوينة في: [التاريخ]      الجمهورية التونسية  │
+   │                            وزارة الداخلية      │
+   │                            كتابة الدولة للأمن  │
+   │                            الإدارة العامة      │
+   │                             للحرس الوطني       │
+   │                            الإدارة العامة      │
+   │                             لحرس الحدود        │
+   │                            إدارة إسناد         │
+   │                             الوحدات البحرية    │
+   │                            ع/ /دد              │
+   │                                                │
+   │              تقرير جاهزية الأسطول              │
+   │           تحليل متقدم لنسب الجاهزية            │
+   │                                                │
+   │ ─────────────────────────────────────────      │
+   │      تقرير رسمي · رقم مرجعي: [التاريخ]         │
+   └────────────────────────────────────────────────┘
    ============================================================ */
 
-/* ═══════════════════════════════════════════════════════════
-   📐 PAGE SETUP
-   ═══════════════════════════════════════════════════════════ */
 @page {
     size: A4;
-    margin: 22mm 18mm 20mm;
+    margin: 20mm 18mm 18mm;
 }
 
 @page :first {
     margin: 0;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   🖨️ PRINT ROOT
-   ═══════════════════════════════════════════════════════════ */
 @media print {
 
-    /* ─────────────────────────────────────────────
+    /* ═════════════════════════════════════════════
        0) إعادة تعيين شاملة
-       ───────────────────────────────────────────── */
+       ═════════════════════════════════════════════ */
     *, *::before, *::after {
         animation: none !important;
         transition: none !important;
@@ -53,9 +61,9 @@
         color-adjust: exact !important;
     }
 
-    /* ─────────────────────────────────────────────
+    /* ═════════════════════════════════════════════
        1) إخفاء واجهة الشاشة
-       ───────────────────────────────────────────── */
+       ═════════════════════════════════════════════ */
     button, .btn-action, .btn-filter, .btn-sm, .btn-save,
     .btn-icon, .action-btns, .retry-btn, .chart-btn, .chart-switch,
     .filter-bar, nav, .sidebar, .navbar, .main-header, .menu-toggle,
@@ -85,137 +93,166 @@
         display: none !important;
     }
 
-    /* ─────────────────────────────────────────────
-       2) صفحة الغلاف المؤسسية
-       ───────────────────────────────────────────── */
-    .eff-header, .fleet-header, .logs-header {
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        align-items: center !important;
+    /* ═════════════════════════════════════════════
+       2) صفحة الغلاف
+       ═════════════════════════════════════════════ */
+    .eff-header,
+    .fleet-header,
+    .logs-header {
+        display: block !important;
         box-sizing: border-box !important;
-        text-align: center !important;
         background: #ffffff !important;
         border: none !important;
-        padding: 30mm 20mm 25mm !important;
+        padding: 15mm !important;
         margin: 0 !important;
         min-height: 297mm !important;
         width: 210mm !important;
         page-break-after: always !important;
         break-after: page !important;
         position: relative !important;
+        text-align: center !important;
     }
 
-    /* إطار مؤسسي رفيع محيط بالغلاف */
-    .eff-header::before, .fleet-header::before, .logs-header::before {
+    /* إطار مؤسسي رفيع */
+    .eff-header::before,
+    .fleet-header::before,
+    .logs-header::before {
         content: "" !important;
         position: absolute !important;
-        top: 12mm !important;
-        left: 12mm !important;
-        right: 12mm !important;
-        bottom: 12mm !important;
+        top: 10mm !important;
+        left: 10mm !important;
+        right: 10mm !important;
+        bottom: 10mm !important;
         border: 0.75pt solid #12121a !important;
         pointer-events: none !important;
     }
 
-    .eff-header-left, .fleet-header-left, .logs-header-left {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 0 !important;
+    /* منطقة الرأس — عمودان */
+    .eff-header-left,
+    .fleet-header-left,
+    .logs-header-left {
+        display: block !important;
+        position: relative !important;
         width: 100% !important;
-        justify-content: center !important;
-        flex: 1 !important;
+        min-height: 45mm !important;
+        padding: 0 !important;
+        margin: 0 0 10mm !important;
     }
 
-    /* ✅✅✅ التسلسل المؤسسي الرسمي — 6 أسطر في الأعلى */
+    /* ───────────────────────────────
+       🟢 اليسار: العوينة في: [التاريخ]
+       ─────────────────────────────── */
     .eff-header-left::before,
     .fleet-header-left::before,
     .logs-header-left::before {
-        content: "الجمهورية التونسية\A\A وزارة الداخلية\A كتابة الدولة للأمن\A الإدارة العامة للحرس الوطني\A الإدارة العامة لحرس الحدود\A إدارة إسناد الوحدات البحرية" !important;
+        content: "العوينة في:  " attr(data-print-date) !important;
         display: block !important;
-        white-space: pre-line !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        direction: rtl !important;
+        text-align: left !important;
         font-size: 10.5pt !important;
         font-weight: 700 !important;
-        color: #333340 !important;
-        -webkit-text-fill-color: #333340 !important;
-        margin-bottom: 14mm !important;
-        text-align: center !important;
-        line-height: 1.8 !important;
-        direction: rtl !important;
-        letter-spacing: 0.3px !important;
-        page-break-inside: avoid !important;
-    }
-
-    /* الشعار */
-    .header-icon, #fleetHeaderIcon, #logsHeaderIcon, #effHeaderIcon {
-        width: 30mm !important;
-        height: 30mm !important;
-        border: 1.25pt solid #12121a !important;
-        border-radius: 50% !important;
-        background: #ffffff !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        overflow: hidden !important;
-        margin: 0 auto 10mm !important;
-    }
-    .header-icon img, #globalLogo {
-        display: block !important;
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-    }
-    .header-icon i {
-        color: #12121a !important;
-        font-size: 22pt !important;
-    }
-
-    /* العنوان الرئيسي */
-    .eff-header-left h2, .fleet-header-left h2, .logs-header-left h2 {
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
-        font-size: 26pt !important;
-        font-weight: 900 !important;
-        margin: 0 !important;
-        letter-spacing: -0.8px !important;
-        line-height: 1.15 !important;
+        line-height: 1.5 !important;
+        letter-spacing: 0.2px !important;
+        white-space: nowrap !important;
     }
 
-    .eff-header-left p, .fleet-header-left p, .logs-header-left p {
+    /* ───────────────────────────────
+       🔴 اليمين: التسلسل الوزاري
+       ─────────────────────────────── */
+    .eff-header-left::after,
+    .fleet-header-left::after,
+    .logs-header-left::after {
+        content: "الجمهورية التونسية\A وزارة الداخلية\A كتابة الدولة للأمن\A الإدارة العامة للحرس الوطني\A الإدارة العامة لحرس الحدود\A إدارة إسناد الوحدات البحرية\A ع/ /دد" !important;
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        white-space: pre-line !important;
+        direction: rtl !important;
+        text-align: right !important;
+        font-size: 10.5pt !important;
+        font-weight: 700 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        line-height: 1.55 !important;
+        letter-spacing: 0.2px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* ⚪ الشعار — مخفي */
+    .header-icon,
+    #fleetHeaderIcon,
+    #logsHeaderIcon,
+    #effHeaderIcon {
+        display: none !important;
+    }
+
+    /* ───────────────────────────────
+       العنوان الرئيسي (وسط)
+       ─────────────────────────────── */
+    .eff-header-left h2,
+    .fleet-header-left h2,
+    .logs-header-left h2 {
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 24pt !important;
+        font-weight: 900 !important;
+        margin: 55mm 0 0 0 !important;
+        letter-spacing: -0.5px !important;
+        line-height: 1.2 !important;
+        display: block !important;
+        text-align: center !important;
+    }
+
+    .eff-header-left p,
+    .fleet-header-left p,
+    .logs-header-left p {
         display: block !important;
         color: #55555f !important;
         -webkit-text-fill-color: #55555f !important;
-        font-size: 12pt !important;
+        font-size: 11pt !important;
         font-weight: 500 !important;
-        margin: 6mm 0 0 !important;
+        margin: 4mm 0 0 !important;
+        text-align: center !important;
     }
 
-    /* السطر المرجعي أسفل الغلاف */
-    .eff-header::after, .fleet-header::after, .logs-header::after {
+    /* ───────────────────────────────
+       السطر المرجعي أسفل الغلاف
+       ─────────────────────────────── */
+    .eff-header::after,
+    .fleet-header::after,
+    .logs-header::after {
         content: "تقرير رسمي  ·  رقم مرجعي: " attr(data-print-date) !important;
         display: block !important;
-        position: static !important;
-        width: 100% !important;
+        position: absolute !important;
+        bottom: 15mm !important;
+        left: 15mm !important;
+        right: 15mm !important;
         text-align: center !important;
-        font-size: 9pt !important;
+        font-size: 8.5pt !important;
         color: #6b6b78 !important;
         -webkit-text-fill-color: #6b6b78 !important;
         font-weight: 600 !important;
-        letter-spacing: 0.4px !important;
+        letter-spacing: 0.3px !important;
         border-top: 0.5pt solid #d8d6d0 !important;
-        padding-top: 6mm !important;
-        margin-top: 14mm !important;
+        padding-top: 4mm !important;
+        margin: 0 !important;
     }
 
-    /* ─────────────────────────────────────────────
+    /* ═════════════════════════════════════════════
        3) لوحة المؤشرات
-       ───────────────────────────────────────────── */
+       ═════════════════════════════════════════════ */
     .stats-grid {
         display: grid !important;
         gap: 0 !important;
-        margin: 0 0 10mm !important;
-        padding: 6mm 0 !important;
+        margin: 0 0 8mm !important;
+        padding: 5mm 0 !important;
         border-top: 1pt solid #12121a !important;
         border-bottom: 1pt solid #12121a !important;
         page-break-inside: avoid !important;
@@ -272,13 +309,13 @@
         font-weight: 700 !important;
         display: block !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.6px !important;
+        letter-spacing: 0.5px !important;
         white-space: normal !important;
     }
 
-    /* ─────────────────────────────────────────────
-       4) الأقسام — فصول مرقّمة
-       ───────────────────────────────────────────── */
+    /* ═════════════════════════════════════════════
+       4) الأقسام المرقّمة
+       ═════════════════════════════════════════════ */
     #page-efficiency, #page-fleet, #page-logs {
         counter-reset: section-num !important;
     }
@@ -287,7 +324,7 @@
         background: none !important;
         border: none !important;
         border-radius: 0 !important;
-        margin: 0 0 10mm !important;
+        margin: 0 0 8mm !important;
         padding: 0 !important;
         page-break-inside: auto !important;
         break-inside: auto !important;
@@ -295,7 +332,6 @@
         counter-increment: section-num !important;
     }
 
-    /* الأقسام المخفية لا تزيد العدّاد */
     .eff-section[style*="display: none"],
     .fleet-section[style*="display: none"],
     .logs-section[style*="display: none"] {
@@ -308,12 +344,12 @@
     .logs-section .section-header {
         display: flex !important;
         align-items: baseline !important;
-        gap: 3.5mm !important;
+        gap: 3mm !important;
         background: none !important;
         border: none !important;
         border-bottom: 1.25pt solid #12121a !important;
-        padding: 0 0 2.5mm !important;
-        margin: 0 0 4mm !important;
+        padding: 0 0 2mm !important;
+        margin: 0 0 3mm !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
         page-break-inside: avoid !important;
@@ -344,7 +380,7 @@
     .logs-section .section-header h3 {
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
-        font-size: 13pt !important;
+        font-size: 12.5pt !important;
         font-weight: 800 !important;
         margin: 0 !important;
         display: flex !important;
@@ -370,9 +406,9 @@
 
     .section-content { padding: 0 !important; }
 
-    /* ─────────────────────────────────────────────
+    /* ═════════════════════════════════════════════
        5) الجداول
-       ───────────────────────────────────────────── */
+       ═════════════════════════════════════════════ */
     .table-wrapper {
         padding: 0 !important;
         margin: 0 !important;
@@ -401,14 +437,14 @@
         background: #f7f6f3 !important;
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
-        padding: 2.5mm 3mm !important;
+        padding: 2.2mm 3mm !important;
         font-size: 7.5pt !important;
         font-weight: 800 !important;
         text-align: center !important;
         border-top: 1pt solid #12121a !important;
         border-bottom: 1pt solid #12121a !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 0.4px !important;
         white-space: nowrap !important;
     }
 
@@ -423,7 +459,7 @@
     tbody tr:nth-child(even) { background: #fbfaf8 !important; }
 
     tbody td {
-        padding: 2.5mm 3mm !important;
+        padding: 2.2mm 3mm !important;
         border: none !important;
         border-bottom: 0.5pt solid #e3e1db !important;
         color: #23232b !important;
@@ -544,7 +580,7 @@
     .progress-bar .progress-fill.low  { background: #9b2c2c !important; }
 
     /* ─────────────────────────────────────────────
-       8) تذييل في نهاية المستند
+       8) التذييل
        ───────────────────────────────────────────── */
     #page-fleet::after,
     #page-logs::after,
@@ -556,7 +592,7 @@
         -webkit-text-fill-color: #7c7c88 !important;
         border-top: 0.75pt solid #12121a !important;
         padding-top: 3mm !important;
-        margin-top: 8mm !important;
+        margin-top: 6mm !important;
         font-weight: 600 !important;
         letter-spacing: 0.3px !important;
         page-break-before: avoid !important;
@@ -578,7 +614,7 @@
     .print-only,
     .print-summary-section {
         display: block !important;
-        margin: 0 0 8mm !important;
+        margin: 0 0 6mm !important;
         page-break-inside: avoid !important;
         page-break-after: avoid !important;
     }
@@ -587,7 +623,7 @@
         background: #12121a !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        padding: 3mm 5mm !important;
+        padding: 2.5mm 5mm !important;
         font-size: 10pt !important;
         font-weight: 800 !important;
         text-align: center !important;
@@ -607,7 +643,7 @@
         background: #f7f6f3 !important;
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
-        padding: 2.5mm 3mm !important;
+        padding: 2.2mm 3mm !important;
         font-size: 8pt !important;
         font-weight: 800 !important;
         border-bottom: 1pt solid #12121a !important;
@@ -615,7 +651,7 @@
     }
 
     .print-summary-table tbody td {
-        padding: 2.5mm 3mm !important;
+        padding: 2.2mm 3mm !important;
         border-bottom: 0.5pt solid #e3e1db !important;
         color: #23232b !important;
         -webkit-text-fill-color: #23232b !important;
@@ -659,9 +695,6 @@
     }
 }
 
-/* ═══════════════════════════════════════════════════════════
-   🌐 SCREEN — إخفاء عناصر الطباعة
-   ═══════════════════════════════════════════════════════════ */
 @media screen {
     .print-only,
     .print-summary-section {
