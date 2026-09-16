@@ -1,53 +1,18 @@
 /* ============================================================
-   🖨️ PRINT v14.0 — OFFICIAL INSTITUTIONAL GRADE
+   🖨️ PRINT v14.1 — OFFICIAL INSTITUTIONAL GRADE
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ التخطيط النهائي:
-   
-   ┌──────────────────────────────────────────────────┐
-   │ العوينة في: [التاريخ]      الجمهورية التونسية    │
-   │                            وزارة الداخلية        │
-   │                            كتابة الدولة للأمن    │
-   │                            الإدارة العامة        │
-   │                             للحرس الوطني         │
-   │                            الإدارة العامة        │
-   │                             لحرس الحدود          │
-   │                            إدارة إسناد           │
-   │                             الوحدات البحرية      │
-   │                            ع/ /دد                │
-   │                                                  │
-   │              تقرير جاهزية الأسطول                │
-   │                                                  │
-   │  [إجمالي] [صالح] [صيانة] [معطبة] [نسبة]         │
-   │  ────────────────────────────────                │
-   │  ① النجاعة العامة للأسطول                       │
-   │  ┌────────────────────────────────┐              │
-   │  │ الفئة | صالح | معطب | النجاعة  │              │
-   │  └────────────────────────────────┘              │
-   │  ② الحرس البحري بالشمال                         │
-   │  ...                                             │
-   └──────────────────────────────────────────────────┘
-   
-   ✅ لا صفحة فارغة بعد الغلاف
-   ✅ لا عنوان بمفرده في صفحة
-   ✅ المحتوى يبدأ فوراً تحت الترويسة
+   ✅ التغييرات:
+   • "العوينة في:" فارغة (خط سفلي للكتابة اليدوية)
+   • خط أكبر (13pt للعوينة / 12pt للتسلسل)
    ============================================================ */
 
-/* ═══════════════════════════════════════════════════════════
-   📐 إعدادات الصفحة
-   ═══════════════════════════════════════════════════════════ */
 @page {
     size: A4;
     margin: 15mm 15mm 15mm;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   🖨️ قواعد الطباعة الرئيسية
-   ═══════════════════════════════════════════════════════════ */
 @media print {
 
-    /* ─────────────────────────────────────────────
-       0) إعادة تعيين شاملة
-       ───────────────────────────────────────────── */
     *, *::before, *::after {
         animation: none !important;
         transition: none !important;
@@ -56,7 +21,6 @@
         text-shadow: none !important;
         filter: none !important;
         box-shadow: none !important;
-        /* ✅ كسر كل قيود القطع في كل العناصر */
         page-break-before: auto !important;
         page-break-after: auto !important;
         page-break-inside: auto !important;
@@ -78,9 +42,7 @@
         color-adjust: exact !important;
     }
 
-    /* ─────────────────────────────────────────────
-       1) إخفاء واجهة الشاشة بالكامل
-       ───────────────────────────────────────────── */
+    /* إخفاء واجهة الشاشة */
     button, .btn-action, .btn-filter, .btn-sm, .btn-save,
     .btn-icon, .action-btns, .retry-btn, .chart-btn, .chart-switch,
     .filter-bar, nav, .sidebar, .navbar, .main-header, .menu-toggle,
@@ -114,7 +76,6 @@
 
     /* ═════════════════════════════════════════════
        2) الترويسة المؤسسية — أعلى الصفحة الأولى
-       (مضغوطة، لا تأخذ صفحة كاملة)
        ═════════════════════════════════════════════ */
     .eff-header,
     .fleet-header,
@@ -137,14 +98,12 @@
         border-bottom: 1pt solid #12121a !important;
     }
 
-    /* إطار مؤسسي رفيع — معطّل لأن الترويسة ليست صفحة كاملة */
     .eff-header::before,
     .fleet-header::before,
     .logs-header::before {
         display: none !important;
     }
 
-    /* منطقة الرأس — عمودان (يمين + يسار) */
     .eff-header-left,
     .fleet-header-left,
     .logs-header-left {
@@ -152,18 +111,19 @@
         position: relative !important;
         width: 100% !important;
         height: auto !important;
-        min-height: 38mm !important;
+        min-height: 42mm !important;
         padding: 0 !important;
         margin: 0 !important;
     }
 
     /* ───────────────────────────────
-       🟢 يسار: العوينة في: [التاريخ]
+       🟢 يسار: العوينة في: (فارغة للكتابة)
+       ✅ خط أكبر 13pt
        ─────────────────────────────── */
     .eff-header-left::before,
     .fleet-header-left::before,
     .logs-header-left::before {
-        content: "العوينة في:  " attr(data-print-date) !important;
+        content: "العوينة في: ______________" !important;
         display: block !important;
         position: absolute !important;
         top: 0 !important;
@@ -171,18 +131,19 @@
         right: auto !important;
         direction: rtl !important;
         text-align: left !important;
-        font-size: 10pt !important;
+        font-size: 13pt !important;
         font-weight: 700 !important;
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
         line-height: 1.5 !important;
-        letter-spacing: 0.2px !important;
+        letter-spacing: 0.3px !important;
         white-space: nowrap !important;
         width: auto !important;
     }
 
     /* ───────────────────────────────
        🔴 يمين: التسلسل الوزاري
+       ✅ خط أكبر 12pt
        ─────────────────────────────── */
     .eff-header-left::after,
     .fleet-header-left::after,
@@ -196,20 +157,18 @@
         white-space: pre-line !important;
         direction: rtl !important;
         text-align: right !important;
-        font-size: 10pt !important;
+        font-size: 12pt !important;
         font-weight: 700 !important;
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
-        line-height: 1.5 !important;
-        letter-spacing: 0.2px !important;
+        line-height: 1.6 !important;
+        letter-spacing: 0.3px !important;
         margin: 0 !important;
         padding: 0 !important;
         width: auto !important;
     }
 
-    /* ───────────────────────────────
-       العنوان الرئيسي — تحت الترويسة
-       ─────────────────────────────── */
+    /* العنوان الرئيسي */
     .eff-header-left h2,
     .fleet-header-left h2,
     .logs-header-left h2 {
@@ -217,7 +176,7 @@
         -webkit-text-fill-color: #0a0a12 !important;
         font-size: 20pt !important;
         font-weight: 900 !important;
-        margin: 42mm 0 0 0 !important;
+        margin: 46mm 0 0 0 !important;
         letter-spacing: -0.4px !important;
         line-height: 1.2 !important;
         display: block !important;
@@ -232,7 +191,7 @@
         display: block !important;
         color: #55555f !important;
         -webkit-text-fill-color: #55555f !important;
-        font-size: 10.5pt !important;
+        font-size: 11pt !important;
         font-weight: 500 !important;
         margin: 2mm 0 0 0 !important;
         text-align: center !important;
@@ -240,7 +199,6 @@
         break-after: avoid !important;
     }
 
-    /* إخفاء السطر المرجعي القديم */
     .eff-header::after,
     .fleet-header::after,
     .logs-header::after {
@@ -248,7 +206,7 @@
     }
 
     /* ═════════════════════════════════════════════
-       3) لوحة المؤشرات — تحت العنوان مباشرة
+       3) لوحة المؤشرات
        ═════════════════════════════════════════════ */
     .stats-grid {
         display: grid !important;
@@ -319,7 +277,6 @@
 
     /* ═════════════════════════════════════════════
        4) الأقسام المرقّمة
-       ✅ العنوان يبقى مع محتواه
        ═════════════════════════════════════════════ */
     #page-efficiency, #page-fleet, #page-logs {
         counter-reset: section-num !important;
@@ -344,7 +301,6 @@
         counter-increment: none !important;
     }
 
-    /* ✅ رأس القسم — لا يبقى وحده أبداً */
     .eff-section .section-header,
     .fleet-section .section-header,
     .logs-section .section-header {
@@ -413,7 +369,6 @@
 
     .section-content { padding: 0 !important; }
 
-    /* ✅ ضمان: الجدول لا يبدأ صفحة جديدة بدون عنوانه */
     .eff-section .table-wrapper,
     .fleet-section .table-wrapper,
     .logs-section .table-wrapper {
@@ -503,7 +458,6 @@
         padding-right: 3.5mm !important;
     }
 
-    /* ✅ ضمان: أول صفين مع العنوان */
     tbody tr:first-child,
     tbody tr:nth-child(2) {
         page-break-before: avoid !important;
@@ -551,7 +505,7 @@
     }
 
     /* ─────────────────────────────────────────────
-       7) الشارات وأشرطة التقدم
+       7) الشارات
        ───────────────────────────────────────────── */
     .status-badge,
     .eff-status {
@@ -634,7 +588,7 @@
     }
 
     /* ─────────────────────────────────────────────
-       9) ملخص الطباعة (fleet)
+       9) ملخص الطباعة
        ───────────────────────────────────────────── */
     .print-only,
     .print-summary-section {
