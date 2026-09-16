@@ -1,18 +1,35 @@
 /* ============================================================
-   🖨️ PRINT v9.0 — MAGAZINE / REPORT STYLE
-   طباعة احترافية بأسلوب مجلة تقرير رسمي — تملأ الصفحة بالكامل
+   🖨️ PRINT v12.1 — INSTITUTIONAL / OFFICIAL REPORT GRADE
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ✅ إضافة: التسلسل المؤسسي الرسمي على صفحة الغلاف
+       الجمهورية التونسية
+       وزارة الداخلية
+       كتابة الدولة للأمن
+       الإدارة العامة للحرس الوطني
+       الإدارة العامة لحرس الحدود
+       إدارة إسناد الوحدات البحرية
    ============================================================ */
 
+/* ═══════════════════════════════════════════════════════════
+   📐 PAGE SETUP
+   ═══════════════════════════════════════════════════════════ */
 @page {
     size: A4;
-    margin: 24mm 16mm 20mm;
+    margin: 22mm 18mm 20mm;
 }
 
+@page :first {
+    margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🖨️ PRINT ROOT
+   ═══════════════════════════════════════════════════════════ */
 @media print {
 
-    /* ═══════════════════════════════════════════════
-       0. أساس نظيف — إزالة كل التأثيرات الرقمية الثقيلة
-       ═══════════════════════════════════════════════ */
+    /* ─────────────────────────────────────────────
+       0) إعادة تعيين شاملة
+       ───────────────────────────────────────────── */
     *, *::before, *::after {
         animation: none !important;
         transition: none !important;
@@ -25,25 +42,28 @@
 
     html, body {
         background: #ffffff !important;
-        color: #1a1a2e !important;
+        color: #12121a !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-        font-size: 10.5pt !important;
+        font-size: 10pt !important;
         line-height: 1.5 !important;
         margin: 0 !important;
         padding: 0 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        color-adjust: exact !important;
     }
 
-    /* ═══════════════════════════════════════════════
-       1. إخفاء كل عناصر الواجهة التفاعلية
-       ═══════════════════════════════════════════════ */
-    button, .btn-action, .btn-filter, .chart-btn, .chart-switch,
+    /* ─────────────────────────────────────────────
+       1) إخفاء واجهة الشاشة
+       ───────────────────────────────────────────── */
+    button, .btn-action, .btn-filter, .btn-sm, .btn-save,
+    .btn-icon, .action-btns, .retry-btn, .chart-btn, .chart-switch,
     .filter-bar, nav, .sidebar, .navbar, .main-header, .menu-toggle,
     .notification-wrapper, .user-wrapper, .search-wrapper,
     .back-to-top, .toast-container, .toast, .eff-notification,
-    .chart-section, .empty-state .spinner, .no-print,
-    #loginOverlay, #authLoadingOverlay, #forgotPasswordModal {
+    .chart-section, .empty-state .spinner, .eff-spinner,
+    .no-print, #loginOverlay, #authLoadingOverlay, #forgotPasswordModal,
+    .input-grid, #inputArea {
         display: none !important;
     }
 
@@ -57,48 +77,88 @@
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
+        min-height: 0 !important;
     }
+
     #page-fleet::before, #page-logs::before, #page-efficiency::before,
     body::before, body::after {
         display: none !important;
     }
 
-    /* ═══════════════════════════════════════════════
-       2. صفحة الغلاف / الترويسة — بأسلوب مجلة
-       تظهر مرة واحدة أعلى المستند، ضخمة وواضحة
-       ═══════════════════════════════════════════════ */
+    /* ─────────────────────────────────────────────
+       2) صفحة الغلاف المؤسسية
+       ───────────────────────────────────────────── */
     .eff-header, .fleet-header, .logs-header {
-        display: block !important;
-        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
         text-align: center !important;
-        background: none !important;
+        background: #ffffff !important;
         border: none !important;
-        border-bottom: 3px double #0a1628 !important;
-        padding: 0 0 6mm !important;
-        margin: 0 0 10mm !important;
-        page-break-after: avoid !important;
-        break-after: avoid !important;
+        padding: 30mm 20mm 25mm !important;
+        margin: 0 !important;
+        min-height: 297mm !important;
+        width: 210mm !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        position: relative !important;
+    }
+
+    /* إطار مؤسسي رفيع محيط بالغلاف */
+    .eff-header::before, .fleet-header::before, .logs-header::before {
+        content: "" !important;
+        position: absolute !important;
+        top: 12mm !important;
+        left: 12mm !important;
+        right: 12mm !important;
+        bottom: 12mm !important;
+        border: 0.75pt solid #12121a !important;
+        pointer-events: none !important;
     }
 
     .eff-header-left, .fleet-header-left, .logs-header-left {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        gap: 2mm !important;
+        gap: 0 !important;
+        width: 100% !important;
+        justify-content: center !important;
+        flex: 1 !important;
     }
 
-    /* الشعار كخاتم علوي صغير أنيق */
+    /* ✅✅✅ التسلسل المؤسسي الرسمي — 6 أسطر في الأعلى */
+    .eff-header-left::before,
+    .fleet-header-left::before,
+    .logs-header-left::before {
+        content: "الجمهورية التونسية\A\A وزارة الداخلية\A كتابة الدولة للأمن\A الإدارة العامة للحرس الوطني\A الإدارة العامة لحرس الحدود\A إدارة إسناد الوحدات البحرية" !important;
+        display: block !important;
+        white-space: pre-line !important;
+        font-size: 10.5pt !important;
+        font-weight: 700 !important;
+        color: #333340 !important;
+        -webkit-text-fill-color: #333340 !important;
+        margin-bottom: 14mm !important;
+        text-align: center !important;
+        line-height: 1.8 !important;
+        direction: rtl !important;
+        letter-spacing: 0.3px !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* الشعار */
     .header-icon, #fleetHeaderIcon, #logsHeaderIcon, #effHeaderIcon {
-        width: 16mm !important;
-        height: 16mm !important;
-        border: 1.5px solid #e6b31e !important;
+        width: 30mm !important;
+        height: 30mm !important;
+        border: 1.25pt solid #12121a !important;
         border-radius: 50% !important;
-        background: #0a1628 !important;
+        background: #ffffff !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         overflow: hidden !important;
-        margin: 0 auto 3mm !important;
+        margin: 0 auto 10mm !important;
     }
     .header-icon img, #globalLogo {
         display: block !important;
@@ -106,48 +166,62 @@
         height: 100% !important;
         object-fit: cover !important;
     }
-    .header-icon i { color: #f7d774 !important; font-size: 14pt !important; }
-
-    .eff-header-left h2, .fleet-header-left h2, .logs-header-left h2 {
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
+    .header-icon i {
+        color: #12121a !important;
         font-size: 22pt !important;
+    }
+
+    /* العنوان الرئيسي */
+    .eff-header-left h2, .fleet-header-left h2, .logs-header-left h2 {
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 26pt !important;
         font-weight: 900 !important;
         margin: 0 !important;
-        letter-spacing: -0.3px !important;
+        letter-spacing: -0.8px !important;
+        line-height: 1.15 !important;
     }
 
     .eff-header-left p, .fleet-header-left p, .logs-header-left p {
         display: block !important;
-        color: #6b7280 !important;
-        -webkit-text-fill-color: #6b7280 !important;
-        font-size: 10.5pt !important;
+        color: #55555f !important;
+        -webkit-text-fill-color: #55555f !important;
+        font-size: 12pt !important;
         font-weight: 500 !important;
-        margin: 0 !important;
+        margin: 6mm 0 0 !important;
     }
 
-    /* خط تاريخ الطباعة تحت العنوان، بأسلوب "صادر بتاريخ" */
+    /* السطر المرجعي أسفل الغلاف */
     .eff-header::after, .fleet-header::after, .logs-header::after {
-        content: "تاريخ الإصدار: " attr(data-print-date) !important;
+        content: "تقرير رسمي  ·  رقم مرجعي: " attr(data-print-date) !important;
         display: block !important;
-        margin-top: 4mm !important;
-        font-size: 8.5pt !important;
-        color: #9ca3af !important;
+        position: static !important;
+        width: 100% !important;
+        text-align: center !important;
+        font-size: 9pt !important;
+        color: #6b6b78 !important;
+        -webkit-text-fill-color: #6b6b78 !important;
         font-weight: 600 !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: 0.4px !important;
+        border-top: 0.5pt solid #d8d6d0 !important;
+        padding-top: 6mm !important;
+        margin-top: 14mm !important;
     }
 
-    /* ═══════════════════════════════════════════════
-       3. الأرقام الرئيسية — كأرقام غلاف مجلة، بارزة جدًا
-       ═══════════════════════════════════════════════ */
+    /* ─────────────────────────────────────────────
+       3) لوحة المؤشرات
+       ───────────────────────────────────────────── */
     .stats-grid {
         display: grid !important;
         gap: 0 !important;
         margin: 0 0 10mm !important;
-        padding: 5mm 0 !important;
-        border-top: 0.75pt solid #d1d5db !important;
-        border-bottom: 0.75pt solid #d1d5db !important;
+        padding: 6mm 0 !important;
+        border-top: 1pt solid #12121a !important;
+        border-bottom: 1pt solid #12121a !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
+
     #page-fleet .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
     #page-logs .stats-grid,
     #page-efficiency .stats-grid { grid-template-columns: repeat(5, 1fr) !important; }
@@ -155,1260 +229,442 @@
     .stat-card {
         background: none !important;
         border: none !important;
-        border-left: 0.5pt solid #e5e7eb !important;
         border-radius: 0 !important;
-        padding: 0 3mm !important;
+        padding: 0 4mm !important;
         text-align: center !important;
         display: block !important;
         min-height: 0 !important;
+        position: relative !important;
+        overflow: visible !important;
     }
-    .stat-card:last-child { border-left: none !important; }
-    .stat-card::before, .stat-card::after { display: none !important; }
+
+    .stat-card:not(:last-child)::after {
+        content: "" !important;
+        position: absolute !important;
+        top: 10% !important;
+        bottom: 10% !important;
+        left: 0 !important;
+        width: 0.5pt !important;
+        background: #d8d6d0 !important;
+    }
+
+    .stat-card::before { display: none !important; }
     .stat-card .icon-bg { display: none !important; }
 
-    .stat-card .number, .stat-card .eff-stat-value {
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
+    .stat-card .number,
+    .stat-card .eff-stat-value {
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
         font-size: 20pt !important;
-        font-weight: 900 !important;
+        font-weight: 800 !important;
         line-height: 1 !important;
         display: block !important;
-        margin-bottom: 1.5mm !important;
+        margin-bottom: 2mm !important;
+        letter-spacing: -0.3px !important;
+        font-variant-numeric: tabular-nums !important;
+        background: none !important;
     }
+
     .stat-card .label {
-        color: #6b7280 !important;
-        -webkit-text-fill-color: #6b7280 !important;
+        color: #6b6b78 !important;
+        -webkit-text-fill-color: #6b6b78 !important;
         font-size: 7.5pt !important;
         font-weight: 700 !important;
         display: block !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.4px !important;
+        letter-spacing: 0.6px !important;
         white-space: normal !important;
     }
 
-    /* ═══════════════════════════════════════════════
-       4. الأقسام — بأسلوب فصول تقرير/مجلة
-       عنوان كبير + خط ذهبي رفيع + جدول أنيق
-       ═══════════════════════════════════════════════ */
+    /* ─────────────────────────────────────────────
+       4) الأقسام — فصول مرقّمة
+       ───────────────────────────────────────────── */
+    #page-efficiency, #page-fleet, #page-logs {
+        counter-reset: section-num !important;
+    }
+
     .eff-section, .fleet-section, .logs-section {
         background: none !important;
         border: none !important;
         border-radius: 0 !important;
-        margin: 0 0 9mm !important;
+        margin: 0 0 10mm !important;
         padding: 0 !important;
         page-break-inside: auto !important;
         break-inside: auto !important;
+        overflow: visible !important;
+        counter-increment: section-num !important;
     }
-    .eff-section[style*="display: none"] { display: none !important; }
+
+    /* الأقسام المخفية لا تزيد العدّاد */
+    .eff-section[style*="display: none"],
+    .fleet-section[style*="display: none"],
+    .logs-section[style*="display: none"] {
+        display: none !important;
+        counter-increment: none !important;
+    }
 
     .eff-section .section-header,
     .fleet-section .section-header,
     .logs-section .section-header {
         display: flex !important;
-        justify-content: space-between !important;
         align-items: baseline !important;
+        gap: 3.5mm !important;
         background: none !important;
         border: none !important;
-        border-bottom: 1.5pt solid #e6b31e !important;
-        padding: 0 0 2mm !important;
-        margin: 0 0 3mm !important;
+        border-bottom: 1.25pt solid #12121a !important;
+        padding: 0 0 2.5mm !important;
+        margin: 0 0 4mm !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
         page-break-inside: avoid !important;
     }
 
+    .eff-section .section-header::before,
+    .fleet-section .section-header::before,
+    .logs-section .section-header::before {
+        content: counter(section-num, decimal-leading-zero) !important;
+        font-size: 9pt !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        background: #12121a !important;
+        width: 6.5mm !important;
+        height: 6.5mm !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+        letter-spacing: 0 !important;
+        line-height: 1 !important;
+    }
+
     .eff-section .section-header h3,
     .fleet-section .section-header h3,
     .logs-section .section-header h3 {
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        font-size: 13.5pt !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 13pt !important;
         font-weight: 800 !important;
         margin: 0 !important;
         display: flex !important;
         align-items: center !important;
         gap: 2mm !important;
+        flex: 1 !important;
     }
-    .eff-section .section-header h3 i {
-        color: #c99a0e !important;
-        font-size: 10.5pt !important;
-    }
+
+    .eff-section .section-header h3 i { display: none !important; }
 
     .eff-section .section-header .badge,
     .badge {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        border: 0.75pt solid #0a1628 !important;
+        background: #f2f1ed !important;
+        color: #45454f !important;
+        -webkit-text-fill-color: #45454f !important;
+        border: 0.5pt solid #d8d6d0 !important;
         font-size: 7.5pt !important;
         font-weight: 700 !important;
-        padding: 0.6mm 3mm !important;
-        border-radius: 10px !important;
+        padding: 1mm 3mm !important;
+        border-radius: 3px !important;
+        flex-shrink: 0 !important;
     }
 
     .section-content { padding: 0 !important; }
 
-    /* ═══════════════════════════════════════════════
-       5. الجداول — أسلوب مجلة: خطوط أفقية رفيعة فقط
-       بلا صناديق ثقيلة، توزيع مريح، عناوين واضحة
-       ═══════════════════════════════════════════════ */
+    /* ─────────────────────────────────────────────
+       5) الجداول
+       ───────────────────────────────────────────── */
     .table-wrapper {
         padding: 0 !important;
         margin: 0 !important;
         overflow: visible !important;
+        page-break-inside: auto !important;
     }
 
-    #page-efficiency table, #page-fleet table, #page-logs table {
+    #page-efficiency table,
+    #page-fleet table,
+    #page-logs table {
         width: 100% !important;
         border-collapse: collapse !important;
-        font-size: 9.5pt !important;
+        font-size: 9pt !important;
         table-layout: auto !important;
         background: none !important;
         min-width: 0 !important;
+        page-break-inside: auto !important;
     }
 
-    thead { display: table-header-group !important; }
-    thead th {
+    thead {
+        display: table-header-group !important;
         background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        padding: 2mm 2.5mm !important;
-        font-size: 8pt !important;
+    }
+
+    thead th {
+        background: #f7f6f3 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        padding: 2.5mm 3mm !important;
+        font-size: 7.5pt !important;
         font-weight: 800 !important;
         text-align: center !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #0a1628 !important;
+        border-top: 1pt solid #12121a !important;
+        border-bottom: 1pt solid #12121a !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: 0.5px !important;
         white-space: nowrap !important;
     }
-    thead th i { display: none !important; }
 
-    tfoot { display: table-footer-group !important; }
+    thead th i { display: none !important; }
+    thead th:first-child { text-align: right !important; }
 
     tbody tr {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
         background: none !important;
     }
-    tbody tr:nth-child(even) { background: #f8f9fb !important; }
+    tbody tr:nth-child(even) { background: #fbfaf8 !important; }
 
     tbody td {
-        padding: 2.2mm 2.5mm !important;
+        padding: 2.5mm 3mm !important;
         border: none !important;
-        border-bottom: 0.5pt solid #e5e7eb !important;
-        color: #1f2937 !important;
-        -webkit-text-fill-color: #1f2937 !important;
+        border-bottom: 0.5pt solid #e3e1db !important;
+        color: #23232b !important;
+        -webkit-text-fill-color: #23232b !important;
         text-align: center !important;
         font-size: 9pt !important;
+        font-weight: 400 !important;
         vertical-align: middle !important;
-        line-height: 1.3 !important;
+        line-height: 1.35 !important;
         white-space: normal !important;
         word-break: break-word !important;
+        font-variant-numeric: tabular-nums !important;
+        background: transparent !important;
     }
-    tbody tr:last-child td { border-bottom: none !important; }
 
-    tbody td:first-child {
-        font-weight: 800 !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
+    tbody tr:last-child td {
+        border-bottom: 1pt solid #12121a !important;
+    }
+
+    tbody td:first-child,
+    tbody td.vessel-name {
+        font-weight: 700 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
         text-align: right !important;
-        padding-right: 3mm !important;
+        padding-right: 4mm !important;
     }
 
-    /* حالات الصفوف — شريط جانبي رفيع بدل الخلفية الملوّنة الثقيلة */
+    /* ─────────────────────────────────────────────
+       6) شرائط جانبية ملوّنة
+       ───────────────────────────────────────────── */
     .row-high {
         background: #f4faf7 !important;
-        border-right: 2.5pt solid #047857 !important;
+        border-right: 3pt solid #1d6b4a !important;
     }
-    .row-high td:first-child, .row-high .eff-cell {
-        color: #047857 !important; -webkit-text-fill-color: #047857 !important;
-    }
-    .row-mid {
-        background: #fffaf0 !important;
-        border-right: 2.5pt solid #b45309 !important;
-    }
-    .row-mid td:first-child, .row-mid .eff-cell {
-        color: #b45309 !important; -webkit-text-fill-color: #b45309 !important;
-    }
-    .row-low, tbody tr.damaged {
-        background: #fdf4f4 !important;
-        border-right: 2.5pt solid #b91c1c !important;
-    }
-    .row-low td:first-child, .row-low .eff-cell, tbody tr.damaged td:first-child {
-        color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important;
+    .row-high td:first-child,
+    .row-high .eff-cell {
+        color: #1d6b4a !important;
+        -webkit-text-fill-color: #1d6b4a !important;
+        font-weight: 800 !important;
     }
 
-    /* ═══════════════════════════════════════════════
-       6. الشارات وأشرطة التقدم — مبسّطة للطباعة الرمادية/الملونة
-       ═══════════════════════════════════════════════ */
-    .status-badge, .eff-status {
-        display: inline-block !important;
-        padding: 0.6mm 2.8mm !important;
-        border-radius: 10px !important;
-        font-size: 7.5pt !important;
+    .row-mid {
+        background: #fffaf0 !important;
+        border-right: 3pt solid #9a6b0e !important;
+    }
+    .row-mid td:first-child,
+    .row-mid .eff-cell {
+        color: #9a6b0e !important;
+        -webkit-text-fill-color: #9a6b0e !important;
         font-weight: 800 !important;
+    }
+
+    .row-low,
+    tbody tr.damaged {
+        background: #fdf4f4 !important;
+        border-right: 3pt solid #9b2c2c !important;
+    }
+    .row-low td:first-child,
+    .row-low .eff-cell,
+    tbody tr.damaged td:first-child {
+        color: #9b2c2c !important;
+        -webkit-text-fill-color: #9b2c2c !important;
+        font-weight: 800 !important;
+    }
+
+    /* ─────────────────────────────────────────────
+       7) الشارات وأشرطة التقدم
+       ───────────────────────────────────────────── */
+    .status-badge,
+    .eff-status {
+        display: inline-block !important;
+        padding: 0.7mm 3mm !important;
+        border-radius: 3px !important;
+        font-size: 7.5pt !important;
+        font-weight: 700 !important;
         border: 0.75pt solid currentColor !important;
         background: #ffffff !important;
         white-space: nowrap !important;
+        letter-spacing: 0.2px !important;
     }
+
     .status-badge.excellent, .status-badge.good,
     .status-badge.active, .status-badge.completed, .status-good {
-        color: #047857 !important; -webkit-text-fill-color: #047857 !important;
+        color: #1d6b4a !important;
+        -webkit-text-fill-color: #1d6b4a !important;
+        background: #f4faf7 !important;
     }
+
     .status-badge.medium, .status-badge.pending,
     .status-badge.in-progress, .status-mid {
-        color: #b45309 !important; -webkit-text-fill-color: #b45309 !important;
+        color: #9a6b0e !important;
+        -webkit-text-fill-color: #9a6b0e !important;
+        background: #fffaf0 !important;
     }
-    .status-badge.low, .status-badge.critical, .status-badge.damaged,
-    .status-badge.overdue, .status-badge.cancelled, .status-bad {
-        color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important;
+
+    .status-badge.low, .status-badge.critical,
+    .status-badge.damaged, .status-badge.overdue,
+    .status-badge.cancelled, .status-bad {
+        color: #9b2c2c !important;
+        -webkit-text-fill-color: #9b2c2c !important;
+        background: #fdf4f4 !important;
     }
 
     .progress-bar {
-        background: #e5e7eb !important;
-        height: 2.2mm !important;
-        min-width: 14mm !important;
+        background: #e9e7e1 !important;
+        height: 2mm !important;
+        min-width: 16mm !important;
         border-radius: 1mm !important;
-        border: none !important;
+        border: 0.3pt solid #d8d6d0 !important;
         overflow: hidden !important;
         display: inline-block !important;
         vertical-align: middle !important;
     }
     .progress-bar .progress-fill::after { display: none !important; }
-    .progress-bar .progress-fill.high { background: #047857 !important; }
-    .progress-bar .progress-fill.mid  { background: #b45309 !important; }
-    .progress-bar .progress-fill.low  { background: #b91c1c !important; }
+    .progress-bar .progress-fill.high { background: #1d6b4a !important; }
+    .progress-bar .progress-fill.mid  { background: #9a6b0e !important; }
+    .progress-bar .progress-fill.low  { background: #9b2c2c !important; }
 
-    /* ═══════════════════════════════════════════════
-       7. تذييل متكرر في كل صفحة (position:fixed يتكرر
-       عند الطباعة في المتصفحات القائمة على Chromium)
-       ═══════════════════════════════════════════════ */
-    .print-footer {
+    /* ─────────────────────────────────────────────
+       8) تذييل في نهاية المستند
+       ───────────────────────────────────────────── */
+    #page-fleet::after,
+    #page-logs::after,
+    #page-efficiency::after {
         display: block !important;
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important; right: 0 !important;
         text-align: center !important;
-        font-size: 7.5pt !important;
-        color: #9ca3af !important;
-        border-top: 0.5pt solid #e5e7eb !important;
-        padding-top: 2mm !important;
-    }
-
-    #page-fleet::after, #page-logs::after, #page-efficiency::after {
-        display: block !important;
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important; right: 0 !important;
-        text-align: center !important;
-        font-size: 7.5pt !important;
-        color: #9ca3af !important;
-        border-top: 0.5pt solid #e5e7eb !important;
-        padding-top: 2mm !important;
+        font-size: 8pt !important;
+        color: #7c7c88 !important;
+        -webkit-text-fill-color: #7c7c88 !important;
+        border-top: 0.75pt solid #12121a !important;
+        padding-top: 3mm !important;
+        margin-top: 8mm !important;
         font-weight: 600 !important;
-    }
-    #page-fleet::after      { content: "⚓ منظومة الوسائل البحرية  —  السجل العام للأسطول" !important; }
-    #page-logs::after       { content: "⚓ منظومة الوسائل البحرية  —  سجل الصيانة" !important; }
-    #page-efficiency::after { content: "⚓ منظومة الوسائل البحرية  —  تقرير جاهزية الأسطول" !important; }
-
-    /* ترقيم الصفحات (مدعوم في متصفحات Chromium عبر @page) */
-    @bottom-center {
-        content: counter(page) " / " counter(pages);
-        font-family: 'Cairo', sans-serif;
-        font-size: 8pt;
-        color: #9ca3af;
+        letter-spacing: 0.3px !important;
+        page-break-before: avoid !important;
     }
 
-    /* ═══════════════════════════════════════════════
-       8. كسر شامل لأي قيود overflow متبقية من واجهة الشاشة
-       ═══════════════════════════════════════════════ */
+    #page-fleet::after {
+        content: "منظومة الوسائل البحرية  —  السجل العام للأسطول  —  وثيقة رسمية" !important;
+    }
+    #page-logs::after {
+        content: "منظومة الوسائل البحرية  —  سجل الصيانة  —  وثيقة رسمية" !important;
+    }
+    #page-efficiency::after {
+        content: "منظومة الوسائل البحرية  —  تقرير جاهزية الأسطول  —  وثيقة رسمية" !important;
+    }
+
+    /* ─────────────────────────────────────────────
+       9) ملخص الطباعة (fleet)
+       ───────────────────────────────────────────── */
+    .print-only,
+    .print-summary-section {
+        display: block !important;
+        margin: 0 0 8mm !important;
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+    }
+
+    .print-summary-title {
+        background: #12121a !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        padding: 3mm 5mm !important;
+        font-size: 10pt !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .print-summary-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 9pt !important;
+        border: 1pt solid #12121a !important;
+        background: #ffffff !important;
+        min-width: 0 !important;
+    }
+
+    .print-summary-table thead th {
+        background: #f7f6f3 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        padding: 2.5mm 3mm !important;
+        font-size: 8pt !important;
+        font-weight: 800 !important;
+        border-bottom: 1pt solid #12121a !important;
+        text-transform: uppercase !important;
+    }
+
+    .print-summary-table tbody td {
+        padding: 2.5mm 3mm !important;
+        border-bottom: 0.5pt solid #e3e1db !important;
+        color: #23232b !important;
+        -webkit-text-fill-color: #23232b !important;
+        font-size: 9pt !important;
+        font-weight: 600 !important;
+        text-align: center !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+
+    .print-summary-table tbody tr.total-row td {
+        background: #f7f6f3 !important;
+        font-weight: 800 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        border-top: 1pt solid #12121a !important;
+    }
+
+    .print-summary-table .cat-name {
+        text-align: right !important;
+        font-weight: 800 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        padding-right: 4mm !important;
+    }
+
+    /* ─────────────────────────────────────────────
+       10) كسر شامل لأي قيود overflow
+       ───────────────────────────────────────────── */
+    html body #page-efficiency .eff-section,
+    html body #page-fleet .eff-section,
+    html body #page-logs .eff-section,
     html body #page-efficiency .eff-section *,
     html body #page-fleet .eff-section *,
     html body #page-logs .eff-section *,
     html body .table-wrapper,
-    html body table, html body tbody {
+    html body table,
+    html body tbody {
         overflow: visible !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
     }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   🌐 SCREEN — إخفاء عناصر الطباعة
+   ═══════════════════════════════════════════════════════════ */
 @media screen {
-    .print-footer, .print-only { display: none; }
-}
-/* ============================================================
-   🚢 FLEET + LOGS — قواعد إضافية لأن بنيتهما مختلفة
-   (تُضاف في نهاية print.css بعد القواعد الموجودة)
-   ============================================================ */
-
-@media print {
-
-    /* ═══════════════════════════════════════════════════
-       FLEET — جدول مباشر بدون .eff-section
-       ═══════════════════════════════════════════════════ */
-
-    /* الحاوية الرئيسية للجدول في fleet.html */
-    #page-fleet .table-wrapper {
-        background: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-    }
-
-    /* أضف عنوان القسم قبل الجدول بـ ::before */
-    #page-fleet .table-wrapper::before {
-        content: "📋 السجل التفصيلي للمراكب";
-        display: block;
-        color: #0a1628;
-        font-size: 13.5pt;
-        font-weight: 800;
-        border-bottom: 1.5pt solid #e6b31e;
-        padding: 0 0 2mm;
-        margin: 0 0 3mm;
-        page-break-after: avoid;
-        break-after: avoid;
-    }
-
-    #page-fleet .table-wrapper table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 9pt !important;
-        table-layout: auto !important;
-        background: none !important;
-        min-width: 0 !important;
-    }
-
-    #page-fleet thead th {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        padding: 2mm 2mm !important;
-        font-size: 7.5pt !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #0a1628 !important;
-        text-transform: uppercase !important;
-        white-space: nowrap !important;
-    }
-
-    #page-fleet thead th i { display: none !important; }
-
-    #page-fleet tbody tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        background: none !important;
-    }
-
-    #page-fleet tbody tr:nth-child(even) {
-        background: #f8f9fb !important;
-    }
-
-    #page-fleet tbody tr.damaged {
-        background: #fdf4f4 !important;
-        border-right: 2.5pt solid #b91c1c !important;
-    }
-
-    #page-fleet tbody td {
-        padding: 1.8mm 2mm !important;
-        border: none !important;
-        border-bottom: 0.5pt solid #e5e7eb !important;
-        color: #1f2937 !important;
-        -webkit-text-fill-color: #1f2937 !important;
-        text-align: center !important;
-        font-size: 8.5pt !important;
-        vertical-align: middle !important;
-        line-height: 1.3 !important;
-        white-space: normal !important;
-        word-break: break-word !important;
-    }
-
-    #page-fleet tbody td:first-child,
-    #page-fleet tbody td.vessel-name {
-        font-weight: 800 !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        text-align: right !important;
-        padding-right: 3mm !important;
-    }
-
-    /* إخفاء عمود الإجراء في الطباعة */
-    #page-fleet thead th:last-child,
-    #page-fleet tbody td:last-child {
-        display: none !important;
-    }
-
-    /* ═══════════════════════════════════════════════════
-       LOGS — جدول مباشر بدون .eff-section
-       ═══════════════════════════════════════════════════ */
-
-    #page-logs .table-wrapper {
-        background: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-    }
-
-    #page-logs .table-wrapper::before {
-        content: "📋 سجل عمليات الصيانة والتدخلات";
-        display: block;
-        color: #0a1628;
-        font-size: 13.5pt;
-        font-weight: 800;
-        border-bottom: 1.5pt solid #e6b31e;
-        padding: 0 0 2mm;
-        margin: 0 0 3mm;
-        page-break-after: avoid;
-        break-after: avoid;
-    }
-
-    #page-logs .table-wrapper table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 9pt !important;
-        table-layout: auto !important;
-        background: none !important;
-        min-width: 0 !important;
-    }
-
-    #page-logs thead th {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        padding: 2mm 2mm !important;
-        font-size: 8pt !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #0a1628 !important;
-        text-transform: uppercase !important;
-        white-space: nowrap !important;
-    }
-
-    #page-logs thead th i { display: none !important; }
-
-    #page-logs tbody tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        background: none !important;
-    }
-
-    #page-logs tbody tr:nth-child(even) {
-        background: #f8f9fb !important;
-    }
-
-    #page-logs tbody td {
-        padding: 2mm 2mm !important;
-        border: none !important;
-        border-bottom: 0.5pt solid #e5e7eb !important;
-        color: #1f2937 !important;
-        -webkit-text-fill-color: #1f2937 !important;
-        text-align: center !important;
-        font-size: 9pt !important;
-        vertical-align: middle !important;
-        line-height: 1.3 !important;
-        white-space: normal !important;
-        word-break: break-word !important;
-    }
-
-    #page-logs tbody td:first-child {
-        font-weight: 700 !important;
-        color: #6b7280 !important;
-        -webkit-text-fill-color: #6b7280 !important;
-    }
-
-    #page-logs tbody td.vessel-name,
-    #page-logs tbody td:nth-child(2) {
-        font-weight: 800 !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        text-align: right !important;
-        padding-right: 3mm !important;
-    }
-
-    /* إخفاء عمود الإجراء في الطباعة */
-    #page-logs thead th:last-child,
-    #page-logs tbody td:last-child {
-        display: none !important;
-    }
-
-    /* ═══════════════════════════════════════════════════
-       إخفاء الحقول التفاعلية في كل الصفحات
-       ═══════════════════════════════════════════════════ */
-    #page-fleet .input-grid,
-    #page-fleet #inputArea,
-    #page-fleet .filter-bar,
-    #page-fleet .fleet-header-actions,
-    #page-fleet .action-btns,
-    #page-logs .filter-bar,
-    #page-logs .logs-header-actions,
-    #page-logs .action-btns,
-    #page-logs .search-input {
-        display: none !important;
-    }
-
-    /* ═══════════════════════════════════════════════════
-       إزالة !important من content (قاعدة عامة)
-       ═══════════════════════════════════════════════════ */
-    #page-fleet::after,
-    #page-logs::after,
-    #page-efficiency::after {
-        display: block;
-        position: fixed;
-        bottom: 4mm;
-        left: 14mm;
-        right: 14mm;
-        text-align: center;
-        font-size: 7.5pt;
-        color: #9ca3af;
-        border-top: 0.5pt solid #e5e7eb;
-        padding-top: 2mm;
-        font-weight: 600;
-    }
-
-    #page-fleet::after      { content: "⚓ منظومة الوسائل البحرية — السجل العام للأسطول"; }
-    #page-logs::after       { content: "⚓ منظومة الوسائل البحرية — سجل الصيانة"; }
-    #page-efficiency::after { content: "⚓ منظومة الوسائل البحرية — تقرير جاهزية الأسطول"; }
-
-    /* body padding للتذييل */
-    html, body {
-        padding-bottom: 20mm !important;
-    }
-
-    /* إخفاء @bottom-center (Chrome لا يدعمه) */
-    /* وأيضاً إخفاء `.print-footer` لأنه غير موجود */
-}
-/* ============================================================
-   🚢 FLEET + LOGS — PRINT OVERRIDE
-   يعامل الجدول المباشر كأنه .eff-section
-   ============================================================ */
-
-@media print {
-
-    /* ═══════════════════════════════════════════════════
-       FLEET — السجل العام
-       ═══════════════════════════════════════════════════ */
-
-    #page-fleet .table-wrapper {
-        background: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-    }
-
-    /* عنوان القسم — يُضاف تلقائياً بـ ::before */
-    #page-fleet .table-wrapper::before {
-        content: "📋 السجل التفصيلي للمراكب";
-        display: block;
-        color: #0a1628;
-        font-size: 13.5pt;
-        font-weight: 800;
-        border-bottom: 1.5pt solid #e6b31e;
-        padding: 0 0 2mm;
-        margin: 0 0 3mm;
-        page-break-after: avoid;
-        break-after: avoid;
-    }
-
-    #page-fleet table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 8.5pt !important;
-        table-layout: auto !important;
-        background: none !important;
-        min-width: 0 !important;
-    }
-
-    #page-fleet thead th {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        padding: 2mm 2mm !important;
-        font-size: 7.5pt !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #0a1628 !important;
-        text-transform: uppercase !important;
-        white-space: nowrap !important;
-    }
-
-    #page-fleet thead th i { display: none !important; }
-
-    #page-fleet tbody tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        background: none !important;
-    }
-
-    #page-fleet tbody tr:nth-child(even) { background: #f8f9fb !important; }
-
-    #page-fleet tbody tr.damaged {
-        background: #fdf4f4 !important;
-        border-right: 2.5pt solid #b91c1c !important;
-    }
-
-    #page-fleet tbody td {
-        padding: 1.8mm 2mm !important;
-        border: none !important;
-        border-bottom: 0.5pt solid #e5e7eb !important;
-        color: #1f2937 !important;
-        -webkit-text-fill-color: #1f2937 !important;
-        text-align: center !important;
-        font-size: 8pt !important;
-        vertical-align: middle !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-
-    #page-fleet tbody td:first-child,
-    #page-fleet tbody td.vessel-name {
-        font-weight: 800 !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        text-align: right !important;
-        padding-right: 3mm !important;
-    }
-
-    /* إخفاء عمود "إجراء" */
-    #page-fleet thead th:last-child,
-    #page-fleet tbody td:last-child {
-        display: none !important;
-    }
-
-
-    /* ═══════════════════════════════════════════════════
-       LOGS — سجل الصيانة
-       ═══════════════════════════════════════════════════ */
-
-    #page-logs .table-wrapper {
-        background: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-    }
-
-    #page-logs .table-wrapper::before {
-        content: "📋 سجل عمليات الصيانة";
-        display: block;
-        color: #0a1628;
-        font-size: 13.5pt;
-        font-weight: 800;
-        border-bottom: 1.5pt solid #e6b31e;
-        padding: 0 0 2mm;
-        margin: 0 0 3mm;
-        page-break-after: avoid;
-        break-after: avoid;
-    }
-
-    #page-logs table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 9pt !important;
-        table-layout: auto !important;
-        background: none !important;
-        min-width: 0 !important;
-    }
-
-    #page-logs thead th {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        padding: 2mm 2mm !important;
-        font-size: 8pt !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #0a1628 !important;
-        text-transform: uppercase !important;
-        white-space: nowrap !important;
-    }
-
-    #page-logs thead th i { display: none !important; }
-
-    #page-logs tbody tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        background: none !important;
-    }
-
-    #page-logs tbody tr:nth-child(even) { background: #f8f9fb !important; }
-
-    #page-logs tbody td {
-        padding: 2mm 2mm !important;
-        border: none !important;
-        border-bottom: 0.5pt solid #e5e7eb !important;
-        color: #1f2937 !important;
-        -webkit-text-fill-color: #1f2937 !important;
-        text-align: center !important;
-        font-size: 9pt !important;
-        vertical-align: middle !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-
-    #page-logs tbody td:nth-child(2) {
-        font-weight: 800 !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        text-align: right !important;
-        padding-right: 3mm !important;
-    }
-
-    /* إخفاء عمود "إجراء" */
-    #page-logs thead th:last-child,
-    #page-logs tbody td:last-child {
-        display: none !important;
-    }
-
-
-    /* ═══════════════════════════════════════════════════
-       إخفاء عناصر UI الإضافية في fleet/logs
-       ═══════════════════════════════════════════════════ */
-    #page-fleet .input-grid,
-    #page-fleet #inputArea,
-    #page-fleet .fleet-header-actions,
-    #page-fleet .action-btns,
-    #page-logs .filter-bar,
-    #page-logs .logs-header-actions,
-    #page-logs .action-btns,
-    #page-logs .search-input {
-        display: none !important;
-    }
-}
-/* ============================================================
-   📋 LOGS — قواعد إضافية للبنية الخاصة
-   ============================================================ */
-
-@media print {
-
-    /* إخفاء الفلاتر والأزرار */
-    #page-logs .filter-bar,
-    #page-logs .logs-header-actions,
-    #page-logs .action-btn,
-    #page-logs .action-btns,
-    #page-logs .toast,
-    #page-logs .log-modal {
-        display: none !important;
-    }
-
-    /* إظهار جدول الصيانة بشكل أنيق */
-    #page-logs .table-wrapper {
-        background: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-    }
-
-    /* 🎯 العنوان والباج — نفس نمط الجاهزية */
-    #page-logs .table-header {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: baseline !important;
-        background: none !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #e6b31e !important;
-        padding: 0 0 2mm !important;
-        margin: 0 0 3mm !important;
-        page-break-after: avoid !important;
-        break-after: avoid !important;
-    }
-
-    #page-logs .table-header h3 {
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        font-size: 13.5pt !important;
-        font-weight: 800 !important;
-        margin: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 2mm !important;
-    }
-
-    #page-logs .table-header h3 i {
-        color: #c99a0e !important;
-        font-size: 10.5pt !important;
-    }
-
-    #page-logs .table-header .badge {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        border: 0.75pt solid #0a1628 !important;
-        font-size: 7.5pt !important;
-        font-weight: 700 !important;
-        padding: 0.6mm 3mm !important;
-        border-radius: 10px !important;
-    }
-
-    /* التمرير — إلغاء */
-    #page-logs .table-scroll {
-        overflow: visible !important;
-        padding: 0 !important;
-    }
-
-    /* الجدول */
-    #page-logs table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 9pt !important;
-        table-layout: auto !important;
-        background: none !important;
-        min-width: 0 !important;
-    }
-
-    #page-logs thead {
-        display: table-header-group !important;
-    }
-
-    #page-logs thead th {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        padding: 2mm 2mm !important;
-        font-size: 8pt !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #0a1628 !important;
-        text-transform: uppercase !important;
-        white-space: nowrap !important;
-    }
-
-    #page-logs thead th i { display: none !important; }
-
-    #page-logs tbody tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        background: none !important;
-    }
-
-    #page-logs tbody tr:nth-child(even) {
-        background: #f8f9fb !important;
-    }
-
-    #page-logs tbody td {
-        padding: 2mm 2mm !important;
-        border: none !important;
-        border-bottom: 0.5pt solid #e5e7eb !important;
-        color: #1f2937 !important;
-        -webkit-text-fill-color: #1f2937 !important;
-        text-align: center !important;
-        font-size: 9pt !important;
-        vertical-align: middle !important;
-        line-height: 1.3 !important;
-        word-break: break-word !important;
-    }
-
-    #page-logs tbody td:nth-child(2) {
-        font-weight: 800 !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        text-align: right !important;
-        padding-right: 3mm !important;
-    }
-
-    /* إخفاء عمود "إجراء" */
-    #page-logs thead th:last-child,
-    #page-logs tbody td:last-child {
-        display: none !important;
-    }
-
-    /* Status badges */
-    #page-logs .status-badge {
-        display: inline-block !important;
-        padding: 0.6mm 2.8mm !important;
-        border-radius: 10px !important;
-        font-size: 7.5pt !important;
-        font-weight: 800 !important;
-        border: 0.75pt solid currentColor !important;
-        background: #ffffff !important;
-        white-space: nowrap !important;
-    }
-
-    #page-logs .status-badge.completed,
-    #page-logs .status-badge.active {
-        color: #047857 !important;
-        -webkit-text-fill-color: #047857 !important;
-    }
-
-    #page-logs .status-badge.pending {
-        color: #1d4ed8 !important;
-        -webkit-text-fill-color: #1d4ed8 !important;
-    }
-
-    #page-logs .status-badge.cancelled {
-        color: #b91c1c !important;
-        -webkit-text-fill-color: #b91c1c !important;
-    }
-}
-/* ============================================================
-   🔧 MAINTENANCE — قواعد إضافية
-   ============================================================ */
-
-@media print {
-
-    /* إخفاء الفلاتر والأزرار */
-    #page-maintenance .filter-bar,
-    #page-maintenance .maint-header-actions,
-    #page-maintenance .action-btn,
-    #page-maintenance .add-part-btn,
-    #page-maintenance .toast,
-    #page-maintenance .maint-modal,
-    #page-maintenance .modal-footer,
-    #page-maintenance .btn-submit {
-        display: none !important;
-    }
-
-    /* ══════════════════════════════════════════════
-       قسم المراكب المعطبة
-       ══════════════════════════════════════════════ */
-    #page-maintenance .damaged-section {
-        background: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        padding: 0 !important;
-        margin: 0 0 8mm !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-    }
-
-    #page-maintenance .damaged-section::before {
-        display: none !important;
-    }
-
-    #page-maintenance .damaged-header {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: baseline !important;
-        background: none !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #e6b31e !important;
-        padding: 0 0 2mm !important;
-        margin: 0 0 3mm !important;
-        page-break-after: avoid !important;
-        break-after: avoid !important;
-    }
-
-    #page-maintenance .damaged-header h3 {
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        font-size: 13pt !important;
-        font-weight: 800 !important;
-        margin: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 2mm !important;
-    }
-
-    #page-maintenance .damaged-header h3 i {
-        color: #b91c1c !important;
-        animation: none !important;
-    }
-
-    #page-maintenance .damaged-header .damaged-count {
-        background: none !important;
-        color: #b91c1c !important;
-        -webkit-text-fill-color: #b91c1c !important;
-        border: 0.75pt solid #b91c1c !important;
-        font-size: 7.5pt !important;
-        font-weight: 700 !important;
-        padding: 0.6mm 3mm !important;
-        border-radius: 10px !important;
-    }
-
-    #page-maintenance .damaged-table-wrapper {
-        overflow: visible !important;
-        padding: 0 !important;
-    }
-
-    #page-maintenance .damaged-table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 8.5pt !important;
-        table-layout: auto !important;
-        background: none !important;
-        min-width: 0 !important;
-    }
-
-    #page-maintenance .damaged-table thead {
-        background: none !important;
-        display: table-header-group !important;
-    }
-
-    #page-maintenance .damaged-table thead th {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        padding: 2mm 2mm !important;
-        font-size: 7.5pt !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #0a1628 !important;
-        white-space: nowrap !important;
-    }
-
-    #page-maintenance .damaged-table thead th i { display: none !important; }
-
-    #page-maintenance .damaged-table tbody tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        background: none !important;
-        border-right: none !important;
-    }
-
-    #page-maintenance .damaged-table tbody tr:nth-child(even) {
-        background: #f8f9fb !important;
-    }
-
-    #page-maintenance .damaged-table tbody tr.critical {
-        background: #fef2f2 !important;
-        border-right: 2.5pt solid #b91c1c !important;
-    }
-
-    #page-maintenance .damaged-table tbody tr.warning {
-        background: #fffbeb !important;
-        border-right: 2.5pt solid #b45309 !important;
-    }
-
-    #page-maintenance .damaged-table tbody td {
-        padding: 1.8mm 2mm !important;
-        border: none !important;
-        border-bottom: 0.5pt solid #e5e7eb !important;
-        color: #1f2937 !important;
-        -webkit-text-fill-color: #1f2937 !important;
-        text-align: center !important;
-        font-size: 8pt !important;
-        vertical-align: middle !important;
-        background: transparent !important;
-        line-height: 1.3 !important;
-    }
-
-    #page-maintenance .damaged-table .vessel-name-damaged {
-        font-weight: 800 !important;
-        color: #b91c1c !important;
-        -webkit-text-fill-color: #b91c1c !important;
-        text-align: right !important;
-        padding-right: 3mm !important;
-    }
-
-    #page-maintenance .damaged-table .damage-type {
-        color: #b45309 !important;
-        -webkit-text-fill-color: #b45309 !important;
-        font-weight: 700 !important;
-    }
-
-    #page-maintenance .damaged-table .damage-date {
-        color: #6b7280 !important;
-        -webkit-text-fill-color: #6b7280 !important;
-        font-size: 7.5pt !important;
-    }
-
-    /* Urgency badges */
-    #page-maintenance .urgency-badge {
-        display: inline-block !important;
-        padding: 0.5mm 2.5mm !important;
-        border-radius: 8px !important;
-        font-size: 7pt !important;
-        font-weight: 700 !important;
-        border: 0.75pt solid currentColor !important;
-        background: #ffffff !important;
-        white-space: nowrap !important;
-    }
-
-    #page-maintenance .urgency-badge.critical {
-        color: #b91c1c !important;
-        -webkit-text-fill-color: #b91c1c !important;
-    }
-
-    #page-maintenance .urgency-badge.warning {
-        color: #b45309 !important;
-        -webkit-text-fill-color: #b45309 !important;
-    }
-
-    #page-maintenance .urgency-badge.normal {
-        color: #6b7280 !important;
-        -webkit-text-fill-color: #6b7280 !important;
-    }
-
-    /* إخفاء عمود "إجراء" في الجدول المعطبة */
-    #page-maintenance .damaged-table thead th:last-child,
-    #page-maintenance .damaged-table tbody td:last-child {
-        display: none !important;
-    }
-
-    /* ══════════════════════════════════════════════
-       سجلات الصيانة (الجدول الرئيسي)
-       ══════════════════════════════════════════════ */
-    #page-maintenance .table-wrapper {
-        background: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
-    }
-
-    #page-maintenance .table-header {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: baseline !important;
-        background: none !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #e6b31e !important;
-        padding: 0 0 2mm !important;
-        margin: 0 0 3mm !important;
-        page-break-after: avoid !important;
-        break-after: avoid !important;
-    }
-
-    #page-maintenance .table-header h3 {
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        font-size: 13pt !important;
-        font-weight: 800 !important;
-        margin: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 2mm !important;
-    }
-
-    #page-maintenance .table-header h3 i {
-        color: #c99a0e !important;
-    }
-
-    #page-maintenance .table-header .badge {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        border: 0.75pt solid #0a1628 !important;
-        font-size: 7.5pt !important;
-        font-weight: 700 !important;
-        padding: 0.6mm 3mm !important;
-        border-radius: 10px !important;
-    }
-
-    #page-maintenance .table-scroll {
-        overflow: visible !important;
-        padding: 0 !important;
-    }
-
-    #page-maintenance table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        font-size: 8.5pt !important;
-        table-layout: auto !important;
-        background: none !important;
-        min-width: 0 !important;
-    }
-
-    #page-maintenance thead {
-        display: table-header-group !important;
-    }
-
-    #page-maintenance thead th {
-        background: none !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        padding: 2mm 2mm !important;
-        font-size: 7.5pt !important;
-        font-weight: 800 !important;
-        text-align: center !important;
-        border: none !important;
-        border-bottom: 1.5pt solid #0a1628 !important;
-        white-space: nowrap !important;
-    }
-
-    #page-maintenance thead th i { display: none !important; }
-
-    #page-maintenance tbody tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        background: none !important;
-    }
-
-    #page-maintenance tbody tr:nth-child(even) {
-        background: #f8f9fb !important;
-    }
-
-    #page-maintenance tbody td {
-        padding: 1.8mm 2mm !important;
-        border: none !important;
-        border-bottom: 0.5pt solid #e5e7eb !important;
-        color: #1f2937 !important;
-        -webkit-text-fill-color: #1f2937 !important;
-        text-align: center !important;
-        font-size: 8pt !important;
-        vertical-align: middle !important;
-        background: transparent !important;
-        line-height: 1.3 !important;
-    }
-
-    #page-maintenance tbody td.vessel-name {
-        font-weight: 800 !important;
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        text-align: right !important;
-        padding-right: 3mm !important;
-    }
-
-    /* Status badges */
-    #page-maintenance .status-badge {
-        display: inline-block !important;
-        padding: 0.6mm 2.8mm !important;
-        border-radius: 10px !important;
-        font-size: 7pt !important;
-        font-weight: 800 !important;
-        border: 0.75pt solid currentColor !important;
-        background: #ffffff !important;
-        white-space: nowrap !important;
-    }
-
-    #page-maintenance .status-badge.completed {
-        color: #047857 !important;
-        -webkit-text-fill-color: #047857 !important;
-    }
-
-    #page-maintenance .status-badge.active {
-        color: #b45309 !important;
-        -webkit-text-fill-color: #b45309 !important;
-    }
-
-    #page-maintenance .status-badge.pending {
-        color: #1d4ed8 !important;
-        -webkit-text-fill-color: #1d4ed8 !important;
-    }
-
-    #page-maintenance .status-badge.cancelled {
-        color: #b91c1c !important;
-        -webkit-text-fill-color: #b91c1c !important;
-    }
-
-    /* إخفاء عمود "إجراء" في الجدول الرئيسي */
-    #page-maintenance .table-wrapper thead th:last-child,
-    #page-maintenance .table-wrapper tbody td:last-child {
-        display: none !important;
+    .print-only,
+    .print-summary-section {
+        display: none;
     }
 }
