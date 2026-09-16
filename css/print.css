@@ -1,12 +1,9 @@
 /* ============================================================
-   🖨️ PRINT v15.1 — OFFICIAL INSTITUTIONAL GRADE
+   🖨️ PRINT v15.2 — OFFICIAL INSTITUTIONAL GRADE
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ المحتوى يبدأ من أقصى اليمين (هامش يمين 3mm فقط)
-   ✅ دعم كامل لكل الصفحات:
-       • efficiency.html
-       • fleet.html
-       • logs.html
-       • maintenance.html
+   ✅ الإصلاحات:
+   • العنوان الرئيسي يتمركز تحت العمودين (يمين + يسار)
+   • المحتوى يبدأ من أقصى اليمين (هامش يمين 3mm)
    ============================================================ */
 
 /* ═══════════════════════════════════════════════════════════
@@ -126,6 +123,10 @@
         display: none !important;
     }
 
+    /* ───────────────────────────────
+       الحاوية الرئيسية للترويسة
+       ارتفاع أكبر لاستيعاب العنوان المتمركز
+       ─────────────────────────────── */
     .eff-header-left,
     .fleet-header-left,
     .logs-header-left,
@@ -133,8 +134,8 @@
         display: block !important;
         position: relative !important;
         width: 100% !important;
-        height: auto !important;
-        min-height: 42mm !important;
+        height: 68mm !important;
+        min-height: 68mm !important;
         padding: 0 !important;
         margin: 0 !important;
     }
@@ -191,16 +192,25 @@
         width: auto !important;
     }
 
-    /* العنوان الرئيسي */
+    /* ═════════════════════════════════════════════
+       ✅ العنوان الرئيسي — يتمركز تحت العمودين
+       (position: absolute + left/right: 0)
+       ═════════════════════════════════════════════ */
     .eff-header-left h2,
     .fleet-header-left h2,
     .logs-header-left h2,
     .maint-header-left h2 {
+        position: absolute !important;
+        top: 50mm !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
         font-size: 20pt !important;
         font-weight: 900 !important;
-        margin: 46mm 0 0 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         letter-spacing: -0.4px !important;
         line-height: 1.2 !important;
         display: block !important;
@@ -209,16 +219,23 @@
         break-after: avoid !important;
     }
 
+    /* ✅ العنوان الفرعي — يتمركز تحت العنوان الرئيسي */
     .eff-header-left p,
     .fleet-header-left p,
     .logs-header-left p,
     .maint-header-left p {
+        position: absolute !important;
+        top: 60mm !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
         display: block !important;
         color: #55555f !important;
         -webkit-text-fill-color: #55555f !important;
         font-size: 11pt !important;
         font-weight: 500 !important;
-        margin: 2mm 0 0 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         text-align: center !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
@@ -636,7 +653,7 @@
     }
 
     /* ─────────────────────────────────────────────
-       9) FLEET — السجل العام (بنية مختلفة)
+       9) FLEET — السجل العام
        ───────────────────────────────────────────── */
     #page-fleet .table-wrapper::before {
         content: "📋 السجل التفصيلي للمراكب" !important;
@@ -655,7 +672,7 @@
     }
 
     /* ─────────────────────────────────────────────
-       10) LOGS — سجل الصيانة (بنية .table-header)
+       10) LOGS — سجل الصيانة
        ───────────────────────────────────────────── */
     #page-logs .table-header {
         display: flex !important;
