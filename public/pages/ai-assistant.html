@@ -1841,4 +1841,382 @@
 
         const isOpen = body.classList.toggle('open');
         btn.classList.toggle('open', isOpen);
-        btn.textContent
+        btn.textContent = isOpen ? '📂 إغلاق' : '📂 فتح';
+    }
+
+    function importReset() {
+        importState.file = null;
+        importState.vessels = [];
+
+        document.getElementById('importFileInput').value = '';
+        document.getElementById('importResults').style.display = 'none';
+        document.getElementById('importFinal').style.display = 'none';
+        document.getElementById('importStatus').style.display = 'none';
+        document.getElementById('dropZone').style.display = 'block';
+        document.getElementById('importTableBody').innerHTML = '';
+    }
+
+    function importSetStatus(text) {
+        const statusEl = document.getElementById('importStatus');
+        const textEl = document.getElementById('importStatusText');
+        const dropEl = document.getElementById('dropZone');
+
+        if (text) {
+            textEl.textContent = text;
+            statusEl.style.display = 'flex';
+            dropEl.style.display = 'none';
+        } else {
+            statusEl.style.display = 'none';
+            dropEl.style.display = 'block';
+        }
+    }
+
+    function importHandleFile(file) {
+        if (!file) return;
+
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            toast('⚠️ الملف أكبر من 10 MB', 'error');
+            return;
+        }
+
+        importState.file = file;
+        importAnalyze();
+    }
+
+    async function importAnalyze() {
+        if (!importState.file || importState.isAnalyzing) return;
+
+        importState.isAnalyzing = true;
+        importSetStatus('🔍 جاري تحليل الملف واستخراج المراكب...');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', importState.file);
+
+            const fetcher = (typeof window.apiFetch === 'function') ? window.apiFetch : fetch;
+
+            const res = await fetcher('/api/import/analyze', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || ('خطأ ' + res.status));
+            }
+
+            importState.vessels = Array.isArray(data.vessels) ? data.vessels : [];
+
+            if (importState.vessels.length === 0) {
+                throw new Error('لم يتم التعرف على أي مركب في الملف');
+            }
+
+            importRenderResults(data);
+            toast('✅ تم استخراج ' + importState.vessels.length + ' مركب', 'success');
+
+        } catch (error) {
+            console.error('❌ Import analyze error:', error);
+            importSetStatus(null);
+            toast('❌ ' + error.message, 'error');
+        } finally {
+            importState.isAnalyzing = false;
+        }
+    }
+
+    function importRenderResults(data) {
+        importSetStatus(null);
+
+        document.getElementById('resultsCount').textContent = importState.vessels.length;
+        document.getElementById('resultsFile').textContent = ' — ' + (data.fileName || '');
+        document.getElementById('importResults').style.display = 'block';
+
+        const warningsEl = document.getElementById('importWarnings');
+        const warnings = Array.isArray(data.warnings) ? data.warnings : [];
+        if (warnings.length > 0) {
+            warningsEl.innerHTML = '⚠️ <strong>تحذيرات:</strong><ul>' +
+                warnings.map(w => '<li>' + escapeHTML(w) + '</li>').join('') +
+                '</ul>';
+            warningsEl.style.display = 'block';
+        } else {
+            warningsEl.style.display = 'none';
+        }
+
+        importRenderTable();
+    }
+
+    function importRenderTable() {
+        const tbody = document.getElementById('importTableBody');
+        tbody.innerHTML = '';
+
+        importState.vessels.forEach((v, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td>' + (i + 1) + '</td>' +
+                '<td><input type="text" value="' + escapeHTML(v.name || '') + '" data-field="name" data-idx="' + i + '"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.num || '') + '" data-field="num" data-idx="' + i + '" style="min-width:60px;"></td>' +
+                '<td><input type="number" value="' + (v.len || 0) + '" data-field="len" data-idx="' + i + '" style="min-width:60px;"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.region || '') + '" data-field="region" data-idx="' + i + '"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.port || '') + '" data-field="port" data-idx="' + i + '"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.cat || '') + '" data-field="cat" data-idx="' + i + '" style="min-width:70px;"></td>' +
+                '<td>' +
+                    '<select data-field="status" data-idx="' + i + '">' +
+                        '<option value="صالح"' + (v.status === 'صالح' ? ' selected' : '') + '>صالح</option>' +
+                        '<option value="صيانة"' + (v.status === 'صيانة' ? ' selected' : '') + '>صيانة</option>' +
+                        '<option value="معطب"' + (v.status === 'معطب' ? ' selected' : '') + '>معطب</option>' +
+                    '</select>' +
+                '</td>' +
+                '<td><input type="text" value="' + escapeHTML(v.break || '') + '" data-field="break" data-idx="' + i + '"></td>' +
+                '<td><input type="text" value="' + escapeHTML(v.repairUnit || '') + '" data-field="repairUnit" data-idx="' + i + '"></td>' +
+                '<td><button class="row-delete" onclick="importDeleteRow(' + i + ')">🗑️</button></td>';
+
+            tbody.appendChild(tr);
+        });
+
+        tbody.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('change', function() {
+                const idx = Number(this.dataset.idx);
+                const field = this.dataset.field;
+                if (importState.vessels[idx]) {
+                    if (field === 'len') {
+                        importState.vessels[idx][field] = Number(this.value) || 0;
+                    } else {
+                        importState.vessels[idx][field] = this.value;
+                    }
+                }
+            });
+        });
+    }
+
+    function importDeleteRow(idx) {
+        importState.vessels.splice(idx, 1);
+
+        if (importState.vessels.length === 0) {
+            importReset();
+            toast('تم حذف جميع الصفوف', 'info');
+            return;
+        }
+
+        document.getElementById('resultsCount').textContent = importState.vessels.length;
+        importRenderTable();
+    }
+
+    async function importConfirm() {
+        if (importState.isSaving) return;
+        if (importState.vessels.length === 0) {
+            toast('⚠️ لا توجد مراكب للحفظ', 'warning');
+            return;
+        }
+
+        if (!confirm('هل تريد حفظ ' + importState.vessels.length + ' مركب في التطبيق؟')) {
+            return;
+        }
+
+        importState.isSaving = true;
+        const btn = document.getElementById('importConfirmBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ جاري الحفظ...';
+        }
+
+        try {
+            const fetcher = (typeof window.apiFetch === 'function') ? window.apiFetch : fetch;
+
+            const res = await fetcher('/api/import/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vessels: importState.vessels })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || ('خطأ ' + res.status));
+            }
+
+            const results = data.results || {};
+            const finalEl = document.getElementById('importFinal');
+            finalEl.className = 'import-final success';
+            finalEl.innerHTML =
+                '<div class="big-icon">✅</div>' +
+                '<div><strong>تم الاستيراد بنجاح!</strong></div>' +
+                '<div class="stats-line">' +
+                    '✅ تم إنشاء: <strong>' + (results.created || 0) + '</strong> مركب<br>' +
+                    '⏭️ تم تخطي: <strong>' + (results.skipped || 0) + '</strong> (مكرر أو فارغ)<br>' +
+                    (results.errors && results.errors.length > 0
+                        ? '⚠️ أخطاء: <strong>' + results.errors.length + '</strong>'
+                        : '') +
+                '</div>' +
+                '<div style="margin-top:14px;">' +
+                    '<button class="import-btn import-btn-secondary" onclick="importReset()">📥 استيراد ملف آخر</button>' +
+                '</div>';
+            finalEl.style.display = 'block';
+
+            document.getElementById('importResults').style.display = 'none';
+
+            if (state.autoSpeak && state.speechSynthesis) {
+                setTimeout(() => {
+                    speakText('تم استيراد ' + (results.created || 0) + ' مركب بنجاح', null);
+                }, 300);
+            }
+
+            toast('✅ تم استيراد ' + (results.created || 0) + ' مركب', 'success');
+
+        } catch (error) {
+            console.error('❌ Import confirm error:', error);
+            toast('❌ ' + error.message, 'error');
+        } finally {
+            importState.isSaving = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '✅ حفظ الكل في التطبيق';
+            }
+        }
+    }
+
+    function importInit() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('importFileInput');
+
+        if (!dropZone || !fileInput) return;
+
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('dragover');
+            });
+        });
+
+        dropZone.addEventListener('drop', e => {
+            const files = e.dataTransfer?.files;
+            if (files && files.length > 0) {
+                importHandleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                importHandleFile(this.files[0]);
+            }
+        });
+    }
+
+    // ============================================================
+    // التهيئة
+    // ============================================================
+
+    function init() {
+        showWelcome();
+        refreshStatus();
+        loadVoices();
+        updateQuickSpeakBtn();
+        importInit();
+
+        const input = getInput();
+        if (input) {
+            input.addEventListener('input', function() {
+                updateCharCounter();
+                autoResize(this);
+            });
+            input.addEventListener('keydown', handleKey);
+        }
+
+        updateCharCounter();
+
+        const voiceBtn = document.getElementById('voiceToggleBtn');
+        if (voiceBtn) {
+            voiceBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleVoicePanel();
+            });
+        }
+
+        const replayBtn = document.getElementById('replayBtn');
+        if (replayBtn) {
+            replayBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                speakLastReply();
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('voicePanel');
+            const btn = document.getElementById('voiceToggleBtn');
+            if (!panel || !panel.classList.contains('open')) return;
+            if (panel.contains(e.target) || (btn && btn.contains(e.target))) return;
+            panel.classList.remove('open');
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const panel = document.getElementById('voicePanel');
+                if (panel) panel.classList.remove('open');
+                stopSpeaking();
+            }
+        });
+
+        const voiceSelect = document.getElementById('voiceSelect');
+        if (voiceSelect) {
+            voiceSelect.addEventListener('change', function() {
+                const idx = Number(this.value);
+                if (state.voices[idx]) state.preferredVoice = state.voices[idx];
+            });
+        }
+
+        const langSelect = document.getElementById('sttLang');
+        if (langSelect) {
+            langSelect.addEventListener('change', function() {
+                if (state.recognition) state.recognition.lang = this.value;
+                if (state.isListening) {
+                    try { state.recognition.stop(); } catch (e) {}
+                }
+            });
+        }
+
+        console.log('✅ AI Assistant v2.5 ready — autoSpeak:', state.autoSpeak);
+    }
+
+    // ============================================================
+    // تصدير عام
+    // ============================================================
+
+    window.aiSendMessage = sendMessage;
+    window.aiSendQuick = sendQuick;
+    window.aiRetry = retry;
+    window.aiClearChat = clearChat;
+    window.aiHandleKey = handleKey;
+    window.aiRefreshStatus = refreshStatus;
+    window.aiToggleMic = toggleMic;
+    window.aiSpeak = function(btn) {
+        const bubble = btn.closest('.bubble');
+        const rawText = bubble ? bubble.dataset.rawText : '';
+        speakText(rawText || bubble?.textContent || '', btn);
+    };
+    window.aiSpeakLast = speakLastReply;
+    window.aiToggleAutoSpeak = toggleAutoSpeak;
+    window.aiToggleVoicePanel = toggleVoicePanel;
+    window.aiStopSpeaking = stopSpeaking;
+
+    window.importToggle = importToggle;
+    window.importReset = importReset;
+    window.importConfirm = importConfirm;
+    window.importDeleteRow = importDeleteRow;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+</div>
