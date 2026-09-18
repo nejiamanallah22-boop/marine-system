@@ -1,13 +1,9 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.6.0
-// 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
-// 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
-// ⚙️ SETTINGS + 🖼️ LOGO (MongoDB-backed)
-// 📦 PROFESSIONAL SEED PROTECTION
-// 📌 OWNERSHIP SIGNATURE — 5 layers
-// 👤 USER INFO BADGE
-// 📍 FORCE GPS — Mandatory location sharing (v3)
-// ✨ v10.6.0: Fixed signature position + guaranteed GPS
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.6.1
+// 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
+// 🤖 AI + IMPORT + SETTINGS + LOGO
+// 📌 OWNERSHIP SIGNATURE + 👤 USER BADGE + 📍 FORCE GPS
+// ✨ v10.6.1: GPS modal stays until user clicks
 // ============================================================
 
 'use strict';
@@ -18,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.6.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.6.1 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -217,7 +213,7 @@ app.set('trust proxy', isProduction ? 1 : 0);
 // ============================================================
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.6.0');
+    res.setHeader('X-System-Version', '10.6.1');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -435,10 +431,7 @@ async function sendEmail(to, subject, html) {
                 return null;
             }
             const data = await response.json();
-            const msgId = data?.Messages?.[0]?.To?.[0]?.MessageID
-                       || data?.Messages?.[0]?.To?.[0]?.MessageUUID
-                       || 'unknown';
-            console.log('✅ Email sent via Mailjet API:', msgId, '→', to);
+            console.log('✅ Email sent via Mailjet API →', to);
             return data;
         } catch (error) {
             console.error('❌ Mailjet error:', error.message);
@@ -564,7 +557,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.6.0',
+            version: '10.6.1',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -902,7 +895,7 @@ function csrfProtection(req, res, next) {
 }
 
 // ============================================================
-// 🔐 JWT HELPERS
+// 🔐 JWT
 // ============================================================
 function generateAccessToken(user, sessionId) {
     return jwt.sign(
@@ -1023,7 +1016,7 @@ setInterval(() => {
 }, 10 * 60 * 1000).unref();
 
 // ============================================================
-// 🔑 PASSWORD RESET TOKENS
+// 🔑 PASSWORD RESET
 // ============================================================
 const passwordResetTokens = [];
 
@@ -1380,7 +1373,7 @@ function formatMaintenance(log) {
 
     app.get('/api/health', (req, res) => {
         return res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.6.0',
+            success: true, status: 'online', service: 'Marine System', version: '10.6.1',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
@@ -2869,7 +2862,7 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // 🤖 AI + IMPORT ROUTES
+    // 🤖 AI + IMPORT
     // ========================================================
     aiAndImportRoutes(app, {
         User, Vessel, Maintenance, Notification,
@@ -2896,7 +2889,7 @@ function formatMaintenance(log) {
     }
 
     // ========================================================
-    // 📌 OWNERSHIP SIGNATURE — متمركزة أسفل، باهتة، مخفية على الجوال
+    // 📌 OWNERSHIP SIGNATURE — طبقة خلفية + وسط أسفل + مخفية على الجوال
     // ========================================================
     const OWNERSHIP_META = `
 <meta name="author" content="أمان الله ناجي">
@@ -2907,7 +2900,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.6.0 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.6.1 - Aman Allah Naji">
 <meta property="og:site_name" content="منظومة الوسائل البحرية">
 <meta property="og:author" content="أمان الله ناجي">
 <meta name="twitter:creator" content="@amanallah_naji">
@@ -2966,7 +2959,7 @@ function formatMaintenance(log) {
             'background:linear-gradient(135deg,#060911,#0a1020);color:#f7d774;font-size:20px;font-weight:900;padding:12px 24px;border-radius:8px;text-shadow:0 0 20px #e6b31e;');
         console.log('%c👨‍💻 تصميم وتطوير: أمان الله ناجي — إدارة إسناد الوحدات البحرية',
             'background:#0a1020;color:#e6b31e;font-size:13px;font-weight:700;padding:8px 24px;border-radius:0 0 8px 8px;');
-        console.log('%c🚢 System Version: 10.6.0 | © ' + new Date().getFullYear() + ' All Rights Reserved',
+        console.log('%c🚢 System Version: 10.6.1 | © ' + new Date().getFullYear() + ' All Rights Reserved',
             'color:#64748b;font-size:11px;');
     } catch(e){}
 })();
@@ -3030,7 +3023,7 @@ function formatMaintenance(log) {
     console.log('📌 Ownership signature middleware registered');
 
     // ========================================================
-    // 👤 USER INFO BADGE — شريط معلومات المستخدم
+    // 👤 USER INFO BADGE
     // ========================================================
     const USER_BADGE_CSS = `
 <style id="user-info-badge-style">
@@ -3223,7 +3216,7 @@ function formatMaintenance(log) {
     console.log('👤 User info badge middleware registered');
 
     // ========================================================
-    // 📍 FORCE GPS — مبسّط ومضمون (v3)
+    // 📍 FORCE GPS — v4 (Modal يبقى حتى الضغط)
     // ========================================================
     const FORCE_GPS_CSS = `
 <style id="force-gps-style">
@@ -3339,6 +3332,7 @@ function formatMaintenance(log) {
     </div>
 </div>`;
 
+    // ✅ الإصلاح الجوهري: userClicked يمنع إخفاء الـ Modal تلقائياً
     const FORCE_GPS_SCRIPT = `
 <script>
 (function(){
@@ -3350,6 +3344,7 @@ function formatMaintenance(log) {
     var watchId = null;
     var lastSent = 0;
     var asking = false;
+    var userClicked = false;   /* ✅ لن نخفي الـ Modal بدون ضغط المستخدم */
 
     function log(m) { try { console.log('[GPS]', m); } catch(e) {} }
     function getModal() { return document.getElementById(MODAL_ID); }
@@ -3387,7 +3382,8 @@ function formatMaintenance(log) {
                 if (ok) {
                     lastSent = Date.now();
                     log('sent OK');
-                    if (!firstSuccess) {
+                    /* ✅ لا نخفي الـ Modal إلا إذا ضغط المستخدم */
+                    if (!firstSuccess && userClicked) {
                         firstSuccess = true;
                         setStatus('✅ تم تسجيل موقعك بنجاح', 'success');
                         setTimeout(hideModal, 600);
@@ -3419,6 +3415,7 @@ function formatMaintenance(log) {
     function requestLocation() {
         if (asking) return;
         asking = true;
+        userClicked = true;   /* ✅ المستخدم ضغط الزر */
         var btn = document.getElementById('fgAllowBtn');
         if (btn) btn.disabled = true;
         setStatus('⏳ جاري طلب الوصول...');
@@ -3435,7 +3432,14 @@ function formatMaintenance(log) {
                 asking = false;
                 if (btn) btn.disabled = false;
                 sendLocation(pos.coords, function(ok) {
-                    if (ok) { hideModal(); startWatching(); }
+                    if (ok) {
+                        firstSuccess = true;
+                        setStatus('✅ تم تسجيل موقعك بنجاح', 'success');
+                        setTimeout(hideModal, 600);
+                        startWatching();
+                    } else {
+                        setStatus('⚠️ فشل إرسال الموقع. حاول مجدداً.', 'error');
+                    }
                 });
             },
             function(err) {
@@ -3456,8 +3460,9 @@ function formatMaintenance(log) {
         if (!navigator.geolocation) return;
         navigator.geolocation.getCurrentPosition(
             function(pos) {
+                /* ✅ إرسال صامت — لكن لا نخفي الـ Modal */
                 sendLocation(pos.coords, function(ok) {
-                    if (ok) { hideModal(); startWatching(); }
+                    if (ok) log('silent location sent (modal stays until click)');
                 });
             },
             function(err) { log('silent err: ' + err.code); },
@@ -3468,9 +3473,16 @@ function formatMaintenance(log) {
     function init() {
         var btn = document.getElementById('fgAllowBtn');
         if (btn) btn.addEventListener('click', requestLocation);
-        showModal();
-        trySilent();
-        setInterval(function() { if (!firstSuccess) showModal(); }, 1000);
+
+        showModal();          /* ✅ يظهر فوراً */
+        trySilent();          /* ✅ إرسال صامت بدون إخفاء */
+
+        /* ✅ ضمان الظهور كل ثانية حتى يضغط المستخدم */
+        setInterval(function() {
+            if (!firstSuccess) showModal();
+        }, 1000);
+
+        /* ✅ إرسال دوري بعد النجاح */
         setInterval(function() {
             if (watchId === null) return;
             if (Date.now() - lastSent < SEND_INTERVAL) return;
@@ -3481,7 +3493,8 @@ function formatMaintenance(log) {
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
             );
         }, SEND_INTERVAL);
-        log('Force GPS initialized');
+
+        log('Force GPS initialized — modal is mandatory until user clicks');
     }
 
     if (document.readyState === 'loading') {
@@ -3536,7 +3549,7 @@ function formatMaintenance(log) {
         next();
     });
 
-    console.log('📍 Force GPS v3 middleware registered');
+    console.log('📍 Force GPS v4 middleware registered (modal stays until click)');
 
     // ========================================================
     // 📁 STATIC FILES
@@ -3580,7 +3593,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.6.0</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.6.1</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -3627,15 +3640,15 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.6.0');
+            console.log('🚢 MARINE SYSTEM v10.6.1');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('📦 Seed Protection: ONE-TIME ONLY');
             console.log('🔧 Maintenance Routes: UNIFIED');
             console.log('👤 User region/unit: ENABLED');
-            console.log('📌 Ownership Signature: 5 LAYERS ACTIVE');
+            console.log('📌 Ownership Signature: ACTIVE');
             console.log('👤 User Info Badge: ENABLED');
-            console.log('📍 Force GPS: MANDATORY (v3)');
+            console.log('📍 Force GPS: MANDATORY (v4 — stays until click)');
             console.log('🤖 AI Assistant + Smart Import: ' +
                 (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'));
             console.log('📧 Email: ' + (
@@ -3649,8 +3662,6 @@ function formatMaintenance(log) {
             console.log(`👤 Admin: ${ADMIN_USERNAME}`);
             console.log(`🍃 MongoDB: ${mongoConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
             console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED ✅' : 'MEMORY ⚠️'}`);
-            console.log(`🍪 Cookie SameSite: ${COOKIE_SAMESITE}`);
-            console.log(`🍪 Cookie Secure: ${isProduction}`);
             console.log('=========================================');
             console.log('👨‍💻 Developer: أمان الله ناجي');
             console.log('🏛️  Organization: إدارة إسناد الوحدات البحرية');
