@@ -2,8 +2,9 @@
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           🎨 EFFICIENCY PAGE — ULTRA PRO v11.4
+           🎨 EFFICIENCY PAGE — ULTRA PRO v11.5
            (Print handled centrally by /css/print.css)
+           ✨ v11.5: Flexible matching + Scroll controls + Chart print
            ============================================================ */
 
         #page-efficiency {
@@ -408,8 +409,6 @@
 
         /* ============================================================
            SECTIONS
-           ⚠️ overflow: visible — يسمح بالقطع للطباعة
-           ⚠️ page-break-inside مضبوط في /css/print.css
            ============================================================ */
         .eff-section {
             background: linear-gradient(135deg,
@@ -805,6 +804,83 @@
         }
 
         /* ============================================================
+           ✅ أزرار التمرير (أعلى / أسفل)
+           ============================================================ */
+        .scroll-nav {
+            position: fixed;
+            right: 24px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
+            pointer-events: none;
+            transform: translateY(10px);
+        }
+        .scroll-nav.visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        .scroll-nav-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            border: 1px solid var(--c-border-mid);
+            background: linear-gradient(135deg,
+                rgba(24, 34, 56, 0.95) 0%,
+                rgba(18, 26, 44, 0.98) 100%);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            color: var(--c-gold-2);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4),
+                        0 0 0 1px rgba(255,255,255,0.05) inset;
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+        }
+        .scroll-nav-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg,
+                rgba(255,255,255,0.2) 0%,
+                transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .scroll-nav-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            border-color: var(--c-gold-2);
+            color: #060911;
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            box-shadow: 0 12px 32px var(--c-gold-glow),
+                        0 0 0 1px rgba(255,255,255,0.15) inset;
+        }
+        .scroll-nav-btn:hover::before {
+            opacity: 1;
+        }
+        .scroll-nav-btn:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+        .scroll-nav-btn i {
+            position: relative;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ============================================================
            RESPONSIVE
            ============================================================ */
         @media (max-width: 1100px) {
@@ -839,6 +915,17 @@
             .chart-box { min-height: 300px; }
             .chart-box canvas { height: 260px !important; }
             .section-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .scroll-nav {
+                right: 16px;
+                bottom: 80px;
+                gap: 8px;
+            }
+            .scroll-nav-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 16px;
+                border-radius: 12px;
+            }
         }
         @media (max-width: 640px) {
             .stats-grid { gap: 10px; padding: 0 14px 14px; }
@@ -860,8 +947,66 @@
         }
 
         /* ============================================================
-           🖨️ PRINT — يُدار مركزياً من /css/print.css
+           🖨️ PRINT — إظهار الرسم البياني
+           (يتجاوز القاعدة العامة في print.css)
            ============================================================ */
+        @media print {
+            #page-efficiency .chart-section {
+                display: block !important;
+                visibility: visible !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin: 6mm 0 !important;
+                padding: 0 !important;
+                border: 1px solid #12121a !important;
+                background: #ffffff !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+            }
+
+            #page-efficiency .chart-section .chart-switch {
+                display: none !important;
+            }
+
+            #page-efficiency .chart-section .charts-container {
+                padding: 4mm !important;
+                display: block !important;
+            }
+
+            #page-efficiency .chart-box {
+                background: #ffffff !important;
+                border: none !important;
+                padding: 0 !important;
+                min-height: auto !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            #page-efficiency .chart-box h4 {
+                color: #0a0a12 !important;
+                -webkit-text-fill-color: #0a0a12 !important;
+                font-size: 12pt !important;
+                font-weight: 800 !important;
+                margin: 0 0 3mm 0 !important;
+                padding: 0 0 1.5mm 0 !important;
+                border-bottom: 1pt solid #12121a !important;
+                text-align: center !important;
+            }
+
+            #page-efficiency .chart-box img.print-chart-image {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                margin: 0 auto !important;
+            }
+
+            #page-efficiency .chart-box canvas {
+                display: none !important;
+            }
+
+            .scroll-nav { display: none !important; }
+        }
     </style>
 
     <!-- HEADER -->
@@ -880,7 +1025,7 @@
             <button type="button" class="btn-action primary" onclick="refreshEfficiency()">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button type="button" class="btn-action secondary" onclick="window.print()">
+            <button type="button" class="btn-action secondary" onclick="printEfficiencyReport()">
                 <i class="fas fa-print"></i> طباعة
             </button>
         </div>
@@ -1223,6 +1368,26 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════
+         ✅ أزرار التمرير (أعلى / أسفل)
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="scroll-nav" id="scrollNav" aria-hidden="true">
+        <button type="button"
+                class="scroll-nav-btn"
+                id="scrollToTop"
+                title="أعلى الصفحة"
+                aria-label="أعلى الصفحة">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+        <button type="button"
+                class="scroll-nav-btn"
+                id="scrollToBottom"
+                title="أسفل الصفحة"
+                aria-label="أسفل الصفحة">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+
     <script>
         (function () {
             'use strict';
@@ -1230,18 +1395,18 @@
             const FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 
             const FIXED_REGIONS = [
-                { key: 'الشمال', match: 'الشمال' },
-                { key: 'الساحل', match: 'الساحل' },
-                { key: 'الوسط',  match: 'الوسط'  },
-                { key: 'الجنوب', match: 'الجنوب' }
+                { key: 'الشمال', match: 'الشمال', keywords: ['الشمال'] },
+                { key: 'الساحل', match: 'الساحل', keywords: ['الساحل'] },
+                { key: 'الوسط',  match: 'الوسط',  keywords: ['الوسط'] },
+                { key: 'الجنوب', match: 'الجنوب', keywords: ['الجنوب'] }
             ];
 
             const FIXED_UNITS = [
-                { key: 'تونس',    match: 'وحدة الصيانة والإسناد البحري تونس' },
-                { key: 'جرجيس',   match: 'وحدة الصيانة والإسناد البحري جرجيس' },
-                { key: 'صفاقس',   match: 'وحدة الصيانة والإسناد البحري صفاقس' },
-                { key: 'المنستير', match: 'وحدة الصيانة والإسناد البحري المنستير' },
-                { key: 'قبيبة',   match: 'المجمع الأمني بقبيبة' }
+                { key: 'تونس',     match: 'وحدة الصيانة والإسناد البحري تونس',     keywords: ['تونس'] },
+                { key: 'جرجيس',    match: 'وحدة الصيانة والإسناد البحري جرجيس',    keywords: ['جرجيس'] },
+                { key: 'صفاقس',    match: 'وحدة الصيانة والإسناد البحري صفاقس',    keywords: ['صفاقس'] },
+                { key: 'المنستير', match: 'وحدة الصيانة والإسناد البحري المنستير', keywords: ['المنستير'] },
+                { key: 'قبيبة',    match: 'المجمع الأمني بقبيبة',                  keywords: ['قبيبة'] }
             ];
 
             let currentChart = 'pie';
@@ -1293,12 +1458,67 @@
                 if (candidates.length === 0) return '';
                 if (candidates.length === 1) return candidates[0];
 
-                // إذا تعددت القيم، نفضّل الحالة المحددة (غير صالح)
                 for (const c of candidates) {
                     const n = normalizeStatusName(c);
                     if (n === 'معطب' || n === 'صيانة') return c;
                 }
                 return candidates[0];
+            }
+
+            /* ═══════════════════════════════════════════════════════════
+               ✅ دالة مطابقة مرنة للوحدة
+               تبحث عن الكلمة المفتاحية في أي حقل متاح
+               ═══════════════════════════════════════════════════════════ */
+            function findUnitMatch(v) {
+                if (!v) return null;
+
+                const candidates = [
+                    v.repairUnit,
+                    v.maintenanceUnit,
+                    v.maintenance,
+                    v.unit,
+                    v.region,
+                    v.area,
+                    v.port,
+                    v.zone,
+                    v.location
+                ].map(normText).filter(Boolean);
+
+                if (candidates.length === 0) return null;
+
+                for (const u of FIXED_UNITS) {
+                    for (const cand of candidates) {
+                        if (u.keywords.some(kw => cand.includes(kw))) {
+                            return u.match;
+                        }
+                    }
+                }
+                return null;
+            }
+
+            /* ═══════════════════════════════════════════════════════════
+               ✅ دالة مطابقة مرنة للإقليم
+               ═══════════════════════════════════════════════════════════ */
+            function findRegionMatch(v) {
+                if (!v) return null;
+
+                const candidates = [
+                    v.reg,
+                    v.region,
+                    v.area,
+                    v.zone
+                ].map(normText).filter(Boolean);
+
+                if (candidates.length === 0) return null;
+
+                for (const r of FIXED_REGIONS) {
+                    for (const cand of candidates) {
+                        if (r.keywords.some(kw => cand.includes(kw))) {
+                            return r.match;
+                        }
+                    }
+                }
+                return null;
             }
 
             function categoryFromLength(len) {
@@ -1341,18 +1561,16 @@
                 });
 
                 (vessels || []).forEach(v => {
-                    // ✅ إصلاح: نستخدم || بدل !== undefined للتعامل مع السلاسل الفارغة
                     let catRaw = v.cat || v.category || v.type || v.cls;
                     if (!catRaw && v.len !== undefined && v.len !== null && v.len !== '') {
                         catRaw = categoryFromLength(v.len);
                     }
                     const cat = normalizeCategoryName(catRaw) || 'زوارق مزدوجة';
 
-                    // ✅ إصلاح: استخدام الدالة الموحدة لحل تناقض status/stat
                     const status = normalizeStatusName(resolveVesselStatus(v));
 
-                    const reg = normText(v.reg || v.region || v.area);
-                    const unit = normText(v.repairUnit || v.maintenanceUnit || v.maintenance || v.unit);
+                    const regionMatch = findRegionMatch(v);
+                    const unitMatch = findUnitMatch(v);
 
                     if (!stats.general[cat]) {
                         stats.general[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
@@ -1363,8 +1581,8 @@
                     else if (status === 'معطب') g.damaged++;
                     else if (status === 'صيانة') g.maintenance++;
 
-                    if (reg && stats.regions[reg]) {
-                        const r = stats.regions[reg];
+                    if (regionMatch && stats.regions[regionMatch]) {
+                        const r = stats.regions[regionMatch];
                         r.total++;
                         if (status === 'صالح') r.active++;
                         else if (status === 'معطب') r.damaged++;
@@ -1380,8 +1598,8 @@
                         else if (status === 'صيانة') rc.maintenance++;
                     }
 
-                    if (unit && stats.units[unit]) {
-                        const u = stats.units[unit];
+                    if (unitMatch && stats.units[unitMatch]) {
+                        const u = stats.units[unitMatch];
                         u.total++;
                         if (status === 'صالح') u.active++;
                         else if (status === 'معطب') u.damaged++;
@@ -2099,13 +2317,138 @@
                 } catch (e) {}
             }
 
+            /* ═══════════════════════════════════════════════════════════
+               ✅ أزرار التمرير (أعلى / أسفل)
+               ═══════════════════════════════════════════════════════════ */
+            function initScrollButtons() {
+                const nav = document.getElementById('scrollNav');
+                const btnTop = document.getElementById('scrollToTop');
+                const btnBottom = document.getElementById('scrollToBottom');
+                if (!nav || !btnTop || !btnBottom) return;
+
+                const SCROLL_THRESHOLD = 200;
+
+                function updateVisibility() {
+                    const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+                    const docHeight = document.documentElement.scrollHeight;
+                    const winHeight = window.innerHeight;
+                    const hasScroll = docHeight > (winHeight + 100);
+
+                    if (!hasScroll) {
+                        nav.classList.remove('visible');
+                        return;
+                    }
+
+                    if (y > SCROLL_THRESHOLD) {
+                        nav.classList.add('visible');
+                    } else {
+                        nav.classList.remove('visible');
+                    }
+
+                    btnTop.style.opacity = y > 50 ? '1' : '0.35';
+                    btnTop.style.pointerEvents = y > 50 ? 'auto' : 'none';
+
+                    const atBottom = (y + winHeight) >= (docHeight - 50);
+                    btnBottom.style.opacity = atBottom ? '0.35' : '1';
+                    btnBottom.style.pointerEvents = atBottom ? 'none' : 'auto';
+                }
+
+                btnTop.addEventListener('click', function () {
+                    try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } catch (e) {
+                        window.scrollTo(0, 0);
+                    }
+                });
+
+                btnBottom.addEventListener('click', function () {
+                    const target = document.documentElement.scrollHeight;
+                    try {
+                        window.scrollTo({ top: target, behavior: 'smooth' });
+                    } catch (e) {
+                        window.scrollTo(0, target);
+                    }
+                });
+
+                window.addEventListener('scroll', updateVisibility, { passive: true });
+                window.addEventListener('resize', updateVisibility, { passive: true });
+
+                updateVisibility();
+                setTimeout(updateVisibility, 500);
+                setTimeout(updateVisibility, 1500);
+            }
+
+            /* ═══════════════════════════════════════════════════════════
+               🖨️ تحويل canvas إلى صورة قبل الطباعة
+               (المتصفحات لا تطبع canvas بشكل موثوق)
+               ═══════════════════════════════════════════════════════════ */
+            function prepareChartForPrint() {
+                try {
+                    const canvas = document.getElementById('efficiencyChart');
+                    if (!canvas || canvas.width === 0 || canvas.height === 0) return;
+
+                    const box = canvas.parentElement;
+                    if (!box) return;
+
+                    const oldImg = box.querySelector('img.print-chart-image');
+                    if (oldImg) oldImg.remove();
+
+                    const dataUrl = canvas.toDataURL('image/png', 1.0);
+                    if (!dataUrl || dataUrl === 'data:,') return;
+
+                    const img = document.createElement('img');
+                    img.className = 'print-chart-image';
+                    img.src = dataUrl;
+                    img.alt = 'توزيع الجاهزية حسب الإقليم والوحدة';
+                    img.style.display = 'none';
+
+                    canvas.parentNode.insertBefore(img, canvas.nextSibling);
+                } catch (e) {
+                    console.warn('⚠️ prepareChartForPrint:', e.message);
+                }
+            }
+
+            function cleanupAfterPrint() {
+                try {
+                    document.querySelectorAll('img.print-chart-image').forEach(img => img.remove());
+                } catch (e) {}
+            }
+
+            window.printEfficiencyReport = function () {
+                prepareChartForPrint();
+                setTimeout(() => {
+                    window.print();
+                    setTimeout(cleanupAfterPrint, 1000);
+                }, 150);
+            };
+
+            window.addEventListener('beforeprint', prepareChartForPrint);
+            window.addEventListener('afterprint', cleanupAfterPrint);
+
+            try {
+                if (window.matchMedia) {
+                    const mql = window.matchMedia('print');
+                    if (mql.addEventListener) {
+                        mql.addEventListener('change', (e) => {
+                            if (e.matches) prepareChartForPrint();
+                            else cleanupAfterPrint();
+                        });
+                    } else if (mql.addListener) {
+                        mql.addListener((e) => {
+                            if (e.matches) prepareChartForPrint();
+                            else cleanupAfterPrint();
+                        });
+                    }
+                }
+            } catch (e) {}
+
             async function initEfficiencyPage() {
                 if (initialized) return true;
                 const generalBody = document.getElementById('generalBody');
                 if (!generalBody) return false;
                 initialized = true;
 
-                console.log('🎨 Efficiency v11.4: Initializing...');
+                console.log('🎨 Efficiency v11.5: Initializing...');
 
                 applyLogo();
                 syncLogoFromServer();
@@ -2160,7 +2503,7 @@
                             }
                         }
 
-                        console.log('🎨 Efficiency v11.4: Ready');
+                        console.log('🎨 Efficiency v11.5: Ready');
                     }
                 });
             }
@@ -2169,6 +2512,12 @@
                 document.addEventListener('DOMContentLoaded', tryInit, { once: true });
             } else {
                 tryInit();
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initScrollButtons, { once: true });
+            } else {
+                initScrollButtons();
             }
 
             const retry = setInterval(() => {
