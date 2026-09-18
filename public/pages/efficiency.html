@@ -2,8 +2,8 @@
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           🎨 EFFICIENCY PAGE — ULTRA PRO v11.7
-           ✨ v11.7: قبيبة = إقليم (وليس وحدة)
+           🎨 EFFICIENCY PAGE — ULTRA PRO v13.0
+           ✨ Same filter logic as fleet.js (exact region match)
            ============================================================ */
 
         #page-efficiency {
@@ -203,9 +203,7 @@
             box-shadow: 0 12px 32px var(--c-gold-glow);
         }
         .eff-header-actions .btn-action.secondary {
-            background: linear-gradient(135deg,
-                rgba(148, 163, 184, 0.08) 0%,
-                rgba(148, 163, 184, 0.04) 100%);
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(148, 163, 184, 0.04) 100%);
             border: 1px solid var(--c-border-mid);
             color: var(--c-text-2);
         }
@@ -227,9 +225,7 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg,
-                rgba(24, 34, 56, 0.85) 0%,
-                rgba(18, 26, 44, 0.95) 100%);
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.85) 0%, rgba(18, 26, 44, 0.95) 100%);
             backdrop-filter: blur(20px) saturate(160%);
             -webkit-backdrop-filter: blur(20px) saturate(160%);
             border: 1px solid var(--c-border-soft);
@@ -267,10 +263,7 @@
         .stat-card:hover {
             transform: translateY(-5px);
             border-color: var(--c-border-strong);
-            box-shadow:
-                0 1px 0 rgba(255,255,255,0.1) inset,
-                0 20px 48px rgba(0,0,0,0.45),
-                0 0 40px currentColor;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 20px 48px rgba(0,0,0,0.45), 0 0 40px currentColor;
         }
         .stat-card:hover::after { opacity: 0.15; }
 
@@ -281,28 +274,17 @@
         .stat-card:nth-child(5) { color: #a78bfa; }
 
         .stat-card .number {
-            font-size: 30px;
-            font-weight: 900;
-            line-height: 1;
+            font-size: 30px; font-weight: 900; line-height: 1;
             color: currentColor;
             text-shadow: 0 0 24px currentColor, 0 0 8px currentColor;
             letter-spacing: -1px;
-            position: relative;
-            z-index: 1;
-            white-space: nowrap;
-            margin-bottom: 8px;
+            position: relative; z-index: 1;
+            white-space: nowrap; margin-bottom: 8px;
         }
         .stat-card .label {
-            font-size: 11px;
-            color: rgba(203, 213, 225, 0.75);
-            font-weight: 700;
-            position: relative;
-            z-index: 1;
-            line-height: 1.3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
+            font-size: 11px; color: rgba(203, 213, 225, 0.75); font-weight: 700;
+            position: relative; z-index: 1; line-height: 1.3;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
         }
 
         /* FILTER */
@@ -312,9 +294,7 @@
             align-items: center;
             gap: 12px 16px;
             padding: 16px 24px;
-            background: linear-gradient(135deg,
-                rgba(18, 26, 44, 0.6) 0%,
-                rgba(24, 34, 56, 0.5) 100%);
+            background: linear-gradient(135deg, rgba(18, 26, 44, 0.6) 0%, rgba(24, 34, 56, 0.5) 100%);
             backdrop-filter: blur(20px);
             border: 1px solid var(--c-border-soft);
             border-radius: var(--radius);
@@ -322,23 +302,16 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset;
         }
         .filter-bar label {
-            font-size: 11px;
-            color: var(--c-text-3);
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-transform: uppercase;
-            white-space: nowrap;
+            font-size: 11px; color: var(--c-text-3); font-weight: 700;
+            display: flex; align-items: center; gap: 6px;
+            text-transform: uppercase; white-space: nowrap;
         }
         .filter-bar label i { color: var(--c-gold-2); }
         .filter-bar select {
             padding: 9px 16px;
             border-radius: 10px;
             border: 1px solid var(--c-border-mid);
-            background: linear-gradient(135deg,
-                rgba(10, 16, 32, 0.8) 0%,
-                rgba(18, 26, 44, 0.6) 100%);
+            background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
             color: var(--c-text-1);
             font-size: 12px;
             min-width: 140px;
@@ -348,63 +321,38 @@
             transition: all var(--transition);
         }
         .filter-bar select:focus {
-            outline: none;
-            border-color: var(--c-gold-2);
+            outline: none; border-color: var(--c-gold-2);
             box-shadow: 0 0 0 3px var(--c-gold-glow);
         }
-        .filter-bar select option {
-            background: #0a1020;
-            color: var(--c-text-1);
-            padding: 8px;
-        }
+        .filter-bar select option { background: #0a1020; color: var(--c-text-1); padding: 8px; }
         .filter-bar .btn-filter {
-            padding: 9px 20px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-            position: relative;
-            overflow: hidden;
+            padding: 9px 20px; border: none; border-radius: 10px;
+            font-weight: 700; font-size: 12px; cursor: pointer;
+            transition: all var(--transition); font-family: var(--font);
+            display: inline-flex; align-items: center; gap: 8px;
+            white-space: nowrap; position: relative; overflow: hidden;
         }
         .filter-bar .btn-filter::before {
             content: '';
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
             pointer-events: none;
         }
         .filter-bar .btn-filter.primary {
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911;
-            box-shadow: 0 6px 20px var(--c-gold-glow);
+            color: #060911; box-shadow: 0 6px 20px var(--c-gold-glow);
         }
-        .filter-bar .btn-filter.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px var(--c-gold-glow);
-        }
+        .filter-bar .btn-filter.primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px var(--c-gold-glow); }
         .filter-bar .btn-filter.outline {
-            background: transparent;
-            border: 1px solid var(--c-border-mid);
-            color: var(--c-text-3);
+            background: transparent; border: 1px solid var(--c-border-mid); color: var(--c-text-3);
         }
         .filter-bar .btn-filter.outline:hover {
-            background: rgba(148, 163, 184, 0.06);
-            color: var(--c-text-1);
-            border-color: var(--c-border-strong);
+            background: rgba(148, 163, 184, 0.06); color: var(--c-text-1); border-color: var(--c-border-strong);
         }
 
         /* SECTIONS */
         .eff-section {
-            background: linear-gradient(135deg,
-                rgba(24, 34, 56, 0.55) 0%,
-                rgba(18, 26, 44, 0.75) 100%);
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
             backdrop-filter: blur(20px) saturate(160%);
             -webkit-backdrop-filter: blur(20px) saturate(160%);
             border: 1px solid var(--c-border-soft);
@@ -420,235 +368,104 @@
             box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 16px 48px rgba(0,0,0,0.4);
         }
         .eff-section .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             padding: 16px 24px;
             border-bottom: 1px solid var(--c-border-soft);
-            background: linear-gradient(135deg,
-                rgba(255,255,255,0.025) 0%,
-                rgba(255,255,255,0.005) 100%);
-            position: relative;
-            flex-wrap: wrap;
-            gap: 10px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.005) 100%);
+            position: relative; flex-wrap: wrap; gap: 10px;
             border-radius: var(--radius) var(--radius) 0 0;
         }
         .eff-section .section-header::after {
             content: '';
-            position: absolute;
-            bottom: -1px; right: 0;
+            position: absolute; bottom: -1px; right: 0;
             width: 120px; height: 2px;
             background: linear-gradient(90deg, transparent, var(--c-gold-2));
             box-shadow: 0 0 12px var(--c-gold-glow);
         }
         .eff-section .section-header h3 {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--c-text-1);
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 16px; font-weight: 800; color: var(--c-text-1);
+            margin: 0; display: flex; align-items: center; gap: 10px;
         }
         .eff-section .section-header h3 i {
             color: var(--c-gold-2);
             filter: drop-shadow(0 0 8px var(--c-gold-glow));
         }
         .eff-section .section-header .badge {
-            font-size: 11px;
-            padding: 6px 18px;
-            border-radius: 20px;
-            font-weight: 700;
-            white-space: nowrap;
+            font-size: 11px; padding: 6px 18px; border-radius: 20px;
+            font-weight: 700; white-space: nowrap;
         }
-        .badge.success {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--c-emerald-1);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-        }
-        .badge.warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--c-amber-1);
-            border: 1px solid rgba(245, 158, 11, 0.25);
-        }
-        .badge.danger {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--c-red-1);
-            border: 1px solid rgba(239, 68, 68, 0.25);
-        }
-        .badge.gold {
-            background: rgba(230, 179, 30, 0.15);
-            color: var(--c-gold-1);
-            border: 1px solid rgba(230, 179, 30, 0.25);
-        }
+        .badge.success { background: rgba(16, 185, 129, 0.15); color: var(--c-emerald-1); border: 1px solid rgba(16, 185, 129, 0.25); }
+        .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--c-amber-1); border: 1px solid rgba(245, 158, 11, 0.25); }
+        .badge.danger  { background: rgba(239, 68, 68, 0.15); color: var(--c-red-1); border: 1px solid rgba(239, 68, 68, 0.25); }
+        .badge.gold    { background: rgba(230, 179, 30, 0.15); color: var(--c-gold-1); border: 1px solid rgba(230, 179, 30, 0.25); }
 
         .section-content { padding: 0; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
 
         /* TABLE */
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 0;
-            padding: 0;
-        }
+        .table-wrapper { overflow-x: auto; border-radius: 0; padding: 0; }
         .table-wrapper table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 13px;
-            min-width: 700px;
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            font-size: 13px; min-width: 700px;
         }
         thead {
-            background: linear-gradient(135deg,
-                rgba(15, 23, 42, 0.95) 0%,
-                rgba(30, 41, 59, 0.8) 100%);
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%);
             position: relative;
         }
         thead::after {
             content: '';
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
+            position: absolute; bottom: 0; left: 0; right: 0;
             height: 3px;
-            background: linear-gradient(90deg,
-                transparent 0%, #f7d774 20%, #e6b31e 50%, #f7d774 80%, transparent 100%);
+            background: linear-gradient(90deg, transparent 0%, #f7d774 20%, #e6b31e 50%, #f7d774 80%, transparent 100%);
             box-shadow: 0 0 20px rgba(230, 179, 30, 0.5);
         }
         thead th {
-            padding: 14px 16px;
-            text-align: center;
-            font-weight: 800;
-            font-size: 10.5px;
-            text-transform: uppercase;
-            color: #cbd5e1;
-            letter-spacing: 1px;
-            white-space: nowrap;
+            padding: 14px 16px; text-align: center; font-weight: 800; font-size: 10.5px;
+            text-transform: uppercase; color: #cbd5e1; letter-spacing: 1px; white-space: nowrap;
         }
-        thead th i {
-            margin-left: 6px;
-            color: #f7d774;
-            font-size: 11px;
-            filter: drop-shadow(0 0 6px rgba(247, 215, 116, 0.8));
-        }
+        thead th i { margin-left: 6px; color: #f7d774; font-size: 11px; filter: drop-shadow(0 0 6px rgba(247, 215, 116, 0.8)); }
         tbody td {
             padding: 14px 16px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.06);
-            vertical-align: middle;
-            color: #cbd5e1;
-            font-size: 13px;
-            text-align: center;
-            font-weight: 600;
-            transition: all var(--transition);
+            vertical-align: middle; color: #cbd5e1; font-size: 13px;
+            text-align: center; font-weight: 600; transition: all var(--transition);
         }
         tbody tr { transition: all var(--transition); }
         tbody tr:hover { background: rgba(148, 163, 184, 0.08); }
         tbody tr:last-child td { border-bottom: none; }
         tbody td:first-child {
-            font-weight: 800 !important;
-            color: #f1f5f9 !important;
-            font-size: 14px;
-            text-align: right;
-            padding-right: 22px;
+            font-weight: 800 !important; color: #f1f5f9 !important;
+            font-size: 14px; text-align: right; padding-right: 22px;
         }
 
         /* ROW STATES */
-        .row-high {
-            background: linear-gradient(90deg,
-                rgba(16, 185, 129, 0.18) 0%,
-                rgba(16, 185, 129, 0.05) 50%,
-                transparent 100%) !important;
-            border-right: 5px solid #10b981;
-        }
-        .row-high td:first-child {
-            color: #6ee7b7 !important;
-            text-shadow: 0 0 20px rgba(110, 231, 183, 0.6);
-        }
-        .row-high .eff-cell {
-            color: #6ee7b7 !important;
-            font-weight: 900 !important;
-            font-size: 16px !important;
-            text-shadow: 0 0 20px rgba(110, 231, 183, 0.6);
-        }
-        .row-mid {
-            background: linear-gradient(90deg,
-                rgba(245, 158, 11, 0.18) 0%,
-                rgba(245, 158, 11, 0.05) 50%,
-                transparent 100%) !important;
-            border-right: 5px solid #f59e0b;
-        }
-        .row-mid td:first-child {
-            color: #fcd34d !important;
-            text-shadow: 0 0 20px rgba(252, 211, 77, 0.6);
-        }
-        .row-mid .eff-cell {
-            color: #fcd34d !important;
-            font-weight: 900 !important;
-            font-size: 16px !important;
-        }
-        .row-low {
-            background: linear-gradient(90deg,
-                rgba(239, 68, 68, 0.18) 0%,
-                rgba(239, 68, 68, 0.05) 50%,
-                transparent 100%) !important;
-            border-right: 5px solid #ef4444;
-        }
-        .row-low td:first-child {
-            color: #fca5a5 !important;
-            text-shadow: 0 0 20px rgba(252, 165, 165, 0.6);
-        }
-        .row-low .eff-cell {
-            color: #fca5a5 !important;
-            font-weight: 900 !important;
-            font-size: 16px !important;
-        }
+        .row-high { background: linear-gradient(90deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 100%) !important; border-right: 5px solid #10b981; }
+        .row-high td:first-child { color: #6ee7b7 !important; text-shadow: 0 0 20px rgba(110, 231, 183, 0.6); }
+        .row-high .eff-cell { color: #6ee7b7 !important; font-weight: 900 !important; font-size: 16px !important; text-shadow: 0 0 20px rgba(110, 231, 183, 0.6); }
+        .row-mid { background: linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.05) 50%, transparent 100%) !important; border-right: 5px solid #f59e0b; }
+        .row-mid td:first-child { color: #fcd34d !important; text-shadow: 0 0 20px rgba(252, 211, 77, 0.6); }
+        .row-mid .eff-cell { color: #fcd34d !important; font-weight: 900 !important; font-size: 16px !important; }
+        .row-low { background: linear-gradient(90deg, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0.05) 50%, transparent 100%) !important; border-right: 5px solid #ef4444; }
+        .row-low td:first-child { color: #fca5a5 !important; text-shadow: 0 0 20px rgba(252, 165, 165, 0.6); }
+        .row-low .eff-cell { color: #fca5a5 !important; font-weight: 900 !important; font-size: 16px !important; }
 
         /* STATUS BADGES */
         .status-badge {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 800;
-            display: inline-block;
-            white-space: nowrap;
-            letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
+            padding: 6px 16px; border-radius: 20px;
+            font-size: 11.5px; font-weight: 800;
+            display: inline-block; white-space: nowrap;
+            letter-spacing: 0.5px; position: relative; overflow: hidden;
         }
         .status-badge::before {
             content: '';
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
             pointer-events: none;
         }
-        .status-badge.excellent {
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: #ffffff;
-            border: 1px solid #6ee7b7;
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
-        }
-        .status-badge.good {
-            background: linear-gradient(135deg, #047857, #059669);
-            color: #ffffff;
-            border: 1px solid #34d399;
-        }
-        .status-badge.medium {
-            background: linear-gradient(135deg, #b45309, #f59e0b);
-            color: #ffffff;
-            border: 1px solid #fcd34d;
-            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
-        }
-        .status-badge.low {
-            background: linear-gradient(135deg, #b91c1c, #ef4444);
-            color: #ffffff;
-            border: 1px solid #fca5a5;
-            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
-        }
-        .status-badge.critical {
-            background: linear-gradient(135deg, #7f1d1d, #dc2626, #ef4444);
-            color: #ffffff;
-            border: 1px solid #fca5a5;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6);
-            animation: criticalPulse 2s ease-in-out infinite;
-        }
+        .status-badge.excellent { background: linear-gradient(135deg, #059669, #10b981); color: #ffffff; border: 1px solid #6ee7b7; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); }
+        .status-badge.good { background: linear-gradient(135deg, #047857, #059669); color: #ffffff; border: 1px solid #34d399; }
+        .status-badge.medium { background: linear-gradient(135deg, #b45309, #f59e0b); color: #ffffff; border: 1px solid #fcd34d; box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4); }
+        .status-badge.low { background: linear-gradient(135deg, #b91c1c, #ef4444); color: #ffffff; border: 1px solid #fca5a5; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4); }
+        .status-badge.critical { background: linear-gradient(135deg, #7f1d1d, #dc2626, #ef4444); color: #ffffff; border: 1px solid #fca5a5; box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6); animation: criticalPulse 2s ease-in-out infinite; }
         @keyframes criticalPulse {
             0%, 100% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6); }
             50% { box-shadow: 0 4px 32px rgba(239, 68, 68, 0.9); }
@@ -656,27 +473,20 @@
 
         /* PROGRESS BAR */
         .progress-bar {
-            width: 100%;
-            height: 10px;
+            width: 100%; height: 10px;
             background: rgba(10, 16, 32, 0.9);
-            border-radius: 10px;
-            overflow: hidden;
-            min-width: 100px;
-            position: relative;
+            border-radius: 10px; overflow: hidden;
+            min-width: 100px; position: relative;
             box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 2px 6px rgba(0,0,0,0.4) inset;
         }
         .progress-bar .progress-fill {
-            height: 100%;
-            border-radius: 10px;
+            height: 100%; border-radius: 10px;
             transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 0%;
-            position: relative;
-            overflow: hidden;
+            width: 0%; position: relative; overflow: hidden;
         }
         .progress-bar .progress-fill::after {
             content: '';
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
             animation: progressShine 2s ease-in-out infinite;
         }
@@ -684,18 +494,9 @@
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
         }
-        .progress-bar .progress-fill.high {
-            background: linear-gradient(90deg, #047857, #10b981, #34d399);
-            box-shadow: 0 0 16px rgba(16, 185, 129, 0.7);
-        }
-        .progress-bar .progress-fill.mid {
-            background: linear-gradient(90deg, #b45309, #f59e0b, #fcd34d);
-            box-shadow: 0 0 16px rgba(245, 158, 11, 0.7);
-        }
-        .progress-bar .progress-fill.low {
-            background: linear-gradient(90deg, #b91c1c, #ef4444, #fca5a5);
-            box-shadow: 0 0 16px rgba(239, 68, 68, 0.7);
-        }
+        .progress-bar .progress-fill.high { background: linear-gradient(90deg, #047857, #10b981, #34d399); box-shadow: 0 0 16px rgba(16, 185, 129, 0.7); }
+        .progress-bar .progress-fill.mid { background: linear-gradient(90deg, #b45309, #f59e0b, #fcd34d); box-shadow: 0 0 16px rgba(245, 158, 11, 0.7); }
+        .progress-bar .progress-fill.low { background: linear-gradient(90deg, #b91c1c, #ef4444, #fca5a5); box-shadow: 0 0 16px rgba(239, 68, 68, 0.7); }
 
         /* CHART */
         .chart-section {
@@ -703,145 +504,70 @@
             border: 1px solid var(--c-border-soft);
             border-radius: var(--radius);
             overflow: hidden;
-            background: linear-gradient(135deg,
-                rgba(24, 34, 56, 0.55) 0%,
-                rgba(18, 26, 44, 0.75) 100%);
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
             backdrop-filter: blur(20px);
             box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
         }
-        .chart-switch {
-            display: flex;
-            gap: 10px;
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--c-border-soft);
-            flex-wrap: wrap;
-        }
+        .chart-switch { display: flex; gap: 10px; padding: 16px 24px; border-bottom: 1px solid var(--c-border-soft); flex-wrap: wrap; }
         .chart-btn {
             padding: 8px 20px;
             border: 1px solid var(--c-border-mid);
             border-radius: 10px;
-            background: linear-gradient(135deg,
-                rgba(148, 163, 184, 0.06),
-                rgba(148, 163, 184, 0.02));
-            color: var(--c-text-3);
-            cursor: pointer;
-            font-family: var(--font);
-            font-size: 12px;
-            font-weight: 700;
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.06), rgba(148, 163, 184, 0.02));
+            color: var(--c-text-3); cursor: pointer;
+            font-family: var(--font); font-size: 12px; font-weight: 700;
             transition: all var(--transition);
         }
-        .chart-btn:hover {
-            background: rgba(148, 163, 184, 0.12);
-            color: var(--c-text-1);
-            border-color: var(--c-border-strong);
-            transform: translateY(-1px);
-        }
-        .chart-btn.active {
-            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            border-color: var(--c-gold-2);
-            color: #060911;
-            box-shadow: 0 6px 20px var(--c-gold-glow);
-        }
+        .chart-btn:hover { background: rgba(148, 163, 184, 0.12); color: var(--c-text-1); border-color: var(--c-border-strong); transform: translateY(-1px); }
+        .chart-btn.active { background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2)); border-color: var(--c-gold-2); color: #060911; box-shadow: 0 6px 20px var(--c-gold-glow); }
         .chart-btn i { margin-left: 6px; }
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            padding: 24px;
-        }
+        .charts-container { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 24px; }
         .chart-box {
-            background: linear-gradient(135deg,
-                rgba(10, 16, 32, 0.6) 0%,
-                rgba(18, 26, 44, 0.4) 100%);
+            background: linear-gradient(135deg, rgba(10, 16, 32, 0.6) 0%, rgba(18, 26, 44, 0.4) 100%);
             border-radius: var(--radius-sm);
             padding: 20px;
             border: 1px solid var(--c-border-soft);
             min-height: 380px;
         }
-        .chart-box h4 {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--c-text-2);
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        .chart-box canvas {
-            width: 100% !important;
-            height: 320px !important;
-            display: block;
-        }
+        .chart-box h4 { font-size: 14px; font-weight: 800; color: var(--c-text-2); margin-bottom: 16px; text-align: center; }
+        .chart-box canvas { width: 100% !important; height: 320px !important; display: block; }
 
         /* EMPTY */
-        .empty-state {
-            text-align: center;
-            padding: 48px 24px;
-            color: var(--c-text-4);
-        }
-        .empty-state h3 {
-            font-size: 14px; font-weight: 700;
-            color: var(--c-text-3); margin-bottom: 4px;
-        }
+        .empty-state { text-align: center; padding: 48px 24px; color: var(--c-text-4); }
+        .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--c-text-3); margin-bottom: 4px; }
 
         /* SCROLL NAV */
         .scroll-nav {
-            position: fixed;
-            right: 24px;
-            bottom: 100px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 9998;
-            opacity: 0;
-            visibility: hidden;
+            position: fixed; right: 24px; bottom: 100px;
+            display: flex; flex-direction: column; gap: 10px;
+            z-index: 9998; opacity: 0; visibility: hidden;
             transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
-            pointer-events: none;
-            transform: translateY(10px);
+            pointer-events: none; transform: translateY(10px);
         }
-        .scroll-nav.visible {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
-            transform: translateY(0);
-        }
+        .scroll-nav.visible { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0); }
         .scroll-nav-btn {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
+            width: 48px; height: 48px; border-radius: 14px;
             border: 1px solid var(--c-border-mid);
-            background: linear-gradient(135deg,
-                rgba(24, 34, 56, 0.95) 0%,
-                rgba(18, 26, 44, 0.98) 100%);
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.95) 0%, rgba(18, 26, 44, 0.98) 100%);
             backdrop-filter: blur(20px) saturate(160%);
             -webkit-backdrop-filter: blur(20px) saturate(160%);
-            color: var(--c-gold-2);
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            color: var(--c-gold-2); font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4),
-                        0 0 0 1px rgba(255,255,255,0.05) inset;
-            position: relative;
-            overflow: hidden;
-            padding: 0;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
+            position: relative; overflow: hidden; padding: 0;
         }
         .scroll-nav-btn::before {
             content: '';
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
+            opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
         }
         .scroll-nav-btn:hover {
             transform: translateY(-3px) scale(1.05);
-            border-color: var(--c-gold-2);
-            color: #060911;
+            border-color: var(--c-gold-2); color: #060911;
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            box-shadow: 0 12px 32px var(--c-gold-glow),
-                        0 0 0 1px rgba(255,255,255,0.15) inset;
+            box-shadow: 0 12px 32px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.15) inset;
         }
         .scroll-nav-btn:hover::before { opacity: 1; }
         .scroll-nav-btn:active { transform: translateY(-1px) scale(0.98); }
@@ -917,35 +643,10 @@
                 overflow: visible !important;
             }
             #page-efficiency .chart-section .chart-switch { display: none !important; }
-            #page-efficiency .chart-section .charts-container {
-                padding: 4mm !important;
-                display: block !important;
-            }
-            #page-efficiency .chart-box {
-                background: #ffffff !important;
-                border: none !important;
-                padding: 0 !important;
-                min-height: auto !important;
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-            }
-            #page-efficiency .chart-box h4 {
-                color: #0a0a12 !important;
-                -webkit-text-fill-color: #0a0a12 !important;
-                font-size: 12pt !important;
-                font-weight: 800 !important;
-                margin: 0 0 3mm 0 !important;
-                padding: 0 0 1.5mm 0 !important;
-                border-bottom: 1pt solid #12121a !important;
-                text-align: center !important;
-            }
-            #page-efficiency .chart-box img.print-chart-image {
-                display: block !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                height: auto !important;
-                margin: 0 auto !important;
-            }
+            #page-efficiency .chart-section .charts-container { padding: 4mm !important; display: block !important; }
+            #page-efficiency .chart-box { background: #ffffff !important; border: none !important; padding: 0 !important; min-height: auto !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+            #page-efficiency .chart-box h4 { color: #0a0a12 !important; -webkit-text-fill-color: #0a0a12 !important; font-size: 12pt !important; font-weight: 800 !important; margin: 0 0 3mm 0 !important; padding: 0 0 1.5mm 0 !important; border-bottom: 1pt solid #12121a !important; text-align: center !important; }
+            #page-efficiency .chart-box img.print-chart-image { display: block !important; width: 100% !important; max-width: 100% !important; height: auto !important; margin: 0 auto !important; }
             #page-efficiency .chart-box canvas { display: none !important; }
             .scroll-nav { display: none !important; }
         }
@@ -960,7 +661,7 @@
             </div>
             <div class="header-text">
                 <h2>جاهزية الأسطول</h2>
-                <p>تحليل متقدم لنسب الجاهزية والأداء</p>
+                <p>تحليل متقدم لنسب الجاهزية حسب الأقاليم</p>
             </div>
         </div>
         <div class="eff-header-actions">
@@ -1001,16 +702,8 @@
     <div class="filter-bar">
         <label><i class="fas fa-map-marker-alt"></i> الإقليم</label>
         <select id="fRegEff" onchange="renderEfficiency()">
-            <option value="الكل">🌍 جميع الأقاليم والوحدات</option>
-            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="قبيبة">🏛️ المجمع الأمني بقبيبة</option>
-            <option value="unit-تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="unit-المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="unit-صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="unit-جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="الكل">🌍 جميع الأقاليم</option>
+            <!-- filled dynamically -->
         </select>
 
         <label><i class="fas fa-filter"></i> الفئة</label>
@@ -1039,7 +732,7 @@
         </button>
     </div>
 
-    <!-- جدول 1 -->
+    <!-- جدول النجاعة العامة -->
     <div class="eff-section" data-section-key="general">
         <div class="section-header">
             <h3><i class="fas fa-chart-line"></i> النجاعة العامة للأسطول</h3>
@@ -1064,230 +757,8 @@
         </div>
     </div>
 
-    <!-- جدول 2: الشمال -->
-    <div class="eff-section" data-section-key="region-الشمال">
-        <div class="section-header">
-            <h3><i class="fas fa-map-pin"></i> الحرس البحري بالشمال</h3>
-            <span class="badge gold" id="badge-region-الشمال">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-region-الشمال"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 3: الساحل -->
-    <div class="eff-section" data-section-key="region-الساحل">
-        <div class="section-header">
-            <h3><i class="fas fa-map-pin"></i> الحرس البحري بالساحل</h3>
-            <span class="badge gold" id="badge-region-الساحل">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-region-الساحل"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 4: الوسط -->
-    <div class="eff-section" data-section-key="region-الوسط">
-        <div class="section-header">
-            <h3><i class="fas fa-map-pin"></i> الحرس البحري بالوسط</h3>
-            <span class="badge gold" id="badge-region-الوسط">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-region-الوسط"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 5: الجنوب -->
-    <div class="eff-section" data-section-key="region-الجنوب">
-        <div class="section-header">
-            <h3><i class="fas fa-map-pin"></i> الحرس البحري بالجنوب</h3>
-            <span class="badge gold" id="badge-region-الجنوب">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-region-الجنوب"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ✅ جدول 6: المجمع الأمني بقبيبة — إقليم مستقل -->
-    <div class="eff-section" data-section-key="region-قبيبة">
-        <div class="section-header">
-            <h3><i class="fas fa-building"></i> المجمع الأمني بقبيبة</h3>
-            <span class="badge gold" id="badge-region-قبيبة">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-region-قبيبة"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 7: وحدة تونس -->
-    <div class="eff-section" data-section-key="unit-تونس">
-        <div class="section-header">
-            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس</h3>
-            <span class="badge gold" id="badge-unit-تونس">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-unit-تونس"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 8: وحدة جرجيس -->
-    <div class="eff-section" data-section-key="unit-جرجيس">
-        <div class="section-header">
-            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس</h3>
-            <span class="badge gold" id="badge-unit-جرجيس">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-unit-جرجيس"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 9: وحدة صفاقس -->
-    <div class="eff-section" data-section-key="unit-صفاقس">
-        <div class="section-header">
-            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس</h3>
-            <span class="badge gold" id="badge-unit-صفاقس">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-unit-صفاقس"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 10: وحدة المنستير -->
-    <div class="eff-section" data-section-key="unit-المنستير">
-        <div class="section-header">
-            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير</h3>
-            <span class="badge gold" id="badge-unit-المنستير">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-unit-المنستير"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <!-- الأقاليم — تُبنى ديناميكياً -->
+    <div id="regionsContainer"></div>
 
     <!-- CHARTS -->
     <div class="chart-section">
@@ -1304,7 +775,7 @@
         </div>
         <div class="charts-container">
             <div class="chart-box">
-                <h4>📊 توزيع الجاهزية حسب الإقليم والوحدة</h4>
+                <h4>📊 توزيع الجاهزية حسب الأقاليم</h4>
                 <canvas id="efficiencyChart" height="250"></canvas>
             </div>
         </div>
@@ -1312,18 +783,10 @@
 
     <!-- SCROLL NAV -->
     <div class="scroll-nav" id="scrollNav" aria-hidden="true">
-        <button type="button"
-                class="scroll-nav-btn"
-                id="scrollToTop"
-                title="أعلى الصفحة"
-                aria-label="أعلى الصفحة">
+        <button type="button" class="scroll-nav-btn" id="scrollToTop" title="أعلى الصفحة" aria-label="أعلى الصفحة">
             <i class="fas fa-chevron-up"></i>
         </button>
-        <button type="button"
-                class="scroll-nav-btn"
-                id="scrollToBottom"
-                title="أسفل الصفحة"
-                aria-label="أسفل الصفحة">
+        <button type="button" class="scroll-nav-btn" id="scrollToBottom" title="أسفل الصفحة" aria-label="أسفل الصفحة">
             <i class="fas fa-chevron-down"></i>
         </button>
     </div>
@@ -1334,25 +797,9 @@
 
             const FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 
-            /* ✅ v11.7 — قبيبة أصبحت إقليماً (وليس وحدة) */
-            const FIXED_REGIONS = [
-                { key: 'الشمال', match: 'الشمال', keywords: ['الشمال'] },
-                { key: 'الساحل', match: 'الساحل', keywords: ['الساحل'] },
-                { key: 'الوسط',  match: 'الوسط',  keywords: ['الوسط'] },
-                { key: 'الجنوب', match: 'الجنوب', keywords: ['الجنوب'] },
-                { key: 'قبيبة',  match: 'قبيبة',  keywords: ['قبيبة'] }
-            ];
-
-            /* ✅ v11.7 — قبيبة أُزيلت من الوحدات */
-            const FIXED_UNITS = [
-                { key: 'تونس',     match: 'وحدة الصيانة والإسناد البحري تونس',     keywords: ['تونس'] },
-                { key: 'جرجيس',    match: 'وحدة الصيانة والإسناد البحري جرجيس',    keywords: ['جرجيس'] },
-                { key: 'صفاقس',    match: 'وحدة الصيانة والإسناد البحري صفاقس',    keywords: ['صفاقس'] },
-                { key: 'المنستير', match: 'وحدة الصيانة والإسناد البحري المنستير', keywords: ['المنستير'] }
-            ];
-
             let currentChart = 'pie';
             let vesselStats = null;
+            let regionList = [];       // ✅ قائمة ديناميكية
             let initialized = false;
             let loadingVessels = false;
             let chartRetryTimer = null;
@@ -1383,44 +830,11 @@
                 return s;
             }
 
+            /* ✅ نفضّل status على stat — نفس منطق fleet.js */
             function resolveVesselStatus(v) {
                 if (!v) return '';
-                const isValid = (x) => x !== undefined && x !== null && String(x).trim() !== '';
-                const candidates = [];
-                if (isValid(v.status)) candidates.push(String(v.status).trim());
-                if (isValid(v.stat))   candidates.push(String(v.stat).trim());
-                if (isValid(v.state))  candidates.push(String(v.state).trim());
-                if (candidates.length === 0) return '';
-                if (candidates.length === 1) return candidates[0];
-                for (const c of candidates) {
-                    const n = normalizeStatusName(c);
-                    if (n === 'معطب' || n === 'صيانة') return c;
-                }
-                return candidates[0];
-            }
-
-            function findUnitMatch(v) {
-                if (!v) return null;
-                const candidates = [v.repairUnit, v.maintenanceUnit].map(normText).filter(Boolean);
-                if (candidates.length === 0) return null;
-                for (const u of FIXED_UNITS) {
-                    for (const cand of candidates) {
-                        if (u.keywords.some(kw => cand.includes(kw))) return u.match;
-                    }
-                }
-                return null;
-            }
-
-            function findRegionMatch(v) {
-                if (!v) return null;
-                const candidates = [v.region, v.reg].map(normText).filter(Boolean);
-                if (candidates.length === 0) return null;
-                for (const r of FIXED_REGIONS) {
-                    for (const cand of candidates) {
-                        if (r.keywords.some(kw => cand.includes(kw))) return r.match;
-                    }
-                }
-                return null;
+                const s = v.status || v.stat || v.state;
+                return normText(s);
             }
 
             function categoryFromLength(len) {
@@ -1441,18 +855,35 @@
                 return map;
             }
 
+            /* ═══════════════════════════════════════════════════════════
+               ✅ الإقليم: مطابقة صارمة مثل fleet.js
+               region = v.region || v.reg (exact)
+               ═══════════════════════════════════════════════════════════ */
+            function getRegionKey(v) {
+                if (!v) return '';
+                return normText(v.region || v.reg || '');
+            }
+
+            /* ═══════════════════════════════════════════════════════════
+               ✅ بناء الإحصائيات — كل مركب يُحسب لإقليمه فقط
+               ═══════════════════════════════════════════════════════════ */
             function buildStatsFromVessels(vessels) {
-                const stats = { general: createEmptyCategoriesMap(), regions: {}, units: {} };
+                const stats = {
+                    general: createEmptyCategoriesMap(),
+                    regions: {}
+                };
 
-                FIXED_REGIONS.forEach(r => {
-                    stats.regions[r.match] = {
-                        active: 0, damaged: 0, maintenance: 0, total: 0,
-                        categories: createEmptyCategoriesMap()
-                    };
+                // ✅ جمع الأقاليم الفريدة من البيانات (مثل fleet.js)
+                const regionsSet = new Set();
+                (vessels || []).forEach(v => {
+                    const reg = getRegionKey(v);
+                    if (reg) regionsSet.add(reg);
                 });
+                regionList = Array.from(regionsSet).sort();
 
-                FIXED_UNITS.forEach(u => {
-                    stats.units[u.match] = {
+                // تهيئة كل إقليم
+                regionList.forEach(reg => {
+                    stats.regions[reg] = {
                         active: 0, damaged: 0, maintenance: 0, total: 0,
                         categories: createEmptyCategoriesMap()
                     };
@@ -1465,9 +896,9 @@
                     }
                     const cat = normalizeCategoryName(catRaw) || 'زوارق مزدوجة';
                     const status = normalizeStatusName(resolveVesselStatus(v));
-                    const regionMatch = findRegionMatch(v);
-                    const unitMatch = findUnitMatch(v);
+                    const reg = getRegionKey(v);
 
+                    // الإجمالي العام
                     if (!stats.general[cat]) {
                         stats.general[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
                     }
@@ -1477,34 +908,22 @@
                     else if (status === 'معطب') g.damaged++;
                     else if (status === 'صيانة') g.maintenance++;
 
-                    if (regionMatch && stats.regions[regionMatch]) {
-                        const r = stats.regions[regionMatch];
+                    // الإقليم — مطابقة صارمة
+                    if (reg && stats.regions[reg]) {
+                        const r = stats.regions[reg];
                         r.total++;
                         if (status === 'صالح') r.active++;
                         else if (status === 'معطب') r.damaged++;
                         else if (status === 'صيانة') r.maintenance++;
 
-                        if (!r.categories[cat]) r.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
+                        if (!r.categories[cat]) {
+                            r.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
+                        }
                         const rc = r.categories[cat];
                         rc.total++;
                         if (status === 'صالح') rc.active++;
                         else if (status === 'معطب') rc.damaged++;
                         else if (status === 'صيانة') rc.maintenance++;
-                    }
-
-                    if (unitMatch && stats.units[unitMatch]) {
-                        const u = stats.units[unitMatch];
-                        u.total++;
-                        if (status === 'صالح') u.active++;
-                        else if (status === 'معطب') u.damaged++;
-                        else if (status === 'صيانة') u.maintenance++;
-
-                        if (!u.categories[cat]) u.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
-                        const uc = u.categories[cat];
-                        uc.total++;
-                        if (status === 'صالح') uc.active++;
-                        else if (status === 'معطب') uc.damaged++;
-                        else if (status === 'صيانة') uc.maintenance++;
                     }
                 });
 
@@ -1515,9 +934,9 @@
                 if (loadingVessels) return null;
                 loadingVessels = true;
                 try {
-                    const token = localStorage.getItem('marine_token')
-                        || localStorage.getItem('token')
-                        || localStorage.getItem('authToken');
+                    const token = localStorage.getItem('marine_auth_token')
+                        || localStorage.getItem('marine_token')
+                        || localStorage.getItem('token');
                     const headers = { 'Accept': 'application/json' };
                     if (token) headers['Authorization'] = 'Bearer ' + token;
                     const res = await fetch('/api/vessels', { headers, credentials: 'include', cache: 'no-store' });
@@ -1545,14 +964,15 @@
                 return              { cls: 'critical',  text: 'حرجة',   row: 'row-low',  prog: 'low'  };
             }
 
+            /* ✅ النسبة: صالح ÷ (صالح + صيانة + معطوب) */
             function buildCategoryRows(categoriesMap) {
                 const categoryFilter = document.getElementById('fCatEff').value;
                 const statusFilter = document.getElementById('fStatusEff').value;
 
                 let rows = FIXED_CATEGORIES.map(cat => {
                     const c = (categoriesMap && categoriesMap[cat]) || { active: 0, damaged: 0, maintenance: 0, total: 0 };
-                    const totalForEff = (c.active || 0) + (c.damaged || 0);
-                    const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
+                    const denom = (c.active || 0) + (c.maintenance || 0) + (c.damaged || 0);
+                    const eff = denom > 0 ? ((c.active || 0) / denom) * 100 : 0;
                     return { category: cat, active: c.active || 0, damaged: c.damaged || 0, maintenance: c.maintenance || 0, total: c.total || 0, efficiency: eff };
                 });
 
@@ -1560,8 +980,8 @@
                     Object.keys(categoriesMap).forEach(cat => {
                         if (FIXED_CATEGORIES.indexOf(cat) === -1) {
                             const c = categoriesMap[cat];
-                            const totalForEff = (c.active || 0) + (c.damaged || 0);
-                            const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
+                            const denom = (c.active || 0) + (c.maintenance || 0) + (c.damaged || 0);
+                            const eff = denom > 0 ? ((c.active || 0) / denom) * 100 : 0;
                             rows.push({ category: cat, active: c.active || 0, damaged: c.damaged || 0, maintenance: c.maintenance || 0, total: c.total || 0, efficiency: eff });
                         }
                     });
@@ -1603,12 +1023,15 @@
                 tbody.innerHTML = buildCategoryRows(vesselStats.general);
                 const badge = document.getElementById('generalBadge');
                 if (!badge) return;
-                let totalActive = 0, totalDamaged = 0;
-                FIXED_CATEGORIES.forEach(cat => {
+                let totalActive = 0, totalMaint = 0, totalDamaged = 0;
+                const allCats = Object.keys(vesselStats.general);
+                allCats.forEach(cat => {
                     const c = vesselStats.general[cat];
-                    if (c) { totalActive += c.active || 0; totalDamaged += c.damaged || 0; }
+                    totalActive += c.active || 0;
+                    totalMaint += c.maintenance || 0;
+                    totalDamaged += c.damaged || 0;
                 });
-                const sum = totalActive + totalDamaged;
+                const sum = totalActive + totalMaint + totalDamaged;
                 const avg = sum > 0 ? (totalActive / sum) * 100 : 0;
                 if (avg >= 80) { badge.textContent = '✅ أداء ممتاز'; badge.className = 'badge success'; }
                 else if (avg >= 70) { badge.textContent = '📈 أداء جيد'; badge.className = 'badge gold'; }
@@ -1616,56 +1039,80 @@
                 else { badge.textContent = '🚨 أداء منخفض'; badge.className = 'badge danger'; }
             }
 
-            function renderRegionTable(prefix, key, data) {
-                const tbodyId = 'body-' + prefix + '-' + key;
-                const badgeId = 'badge-' + prefix + '-' + key;
-                const tbody = document.getElementById(tbodyId);
-                const badgeEl = document.getElementById(badgeId);
-                if (!tbody) return;
-                tbody.innerHTML = buildCategoryRows(data.categories || {});
-                if (badgeEl) {
-                    const totalForEff = (data.active || 0) + (data.damaged || 0);
-                    const eff = totalForEff > 0 ? ((data.active || 0) / totalForEff) * 100 : 0;
-                    const info = getStatusInfo(eff);
-                    badgeEl.textContent = eff.toFixed(0) + '% جاهزية';
-                    badgeEl.className = 'badge ' + (
-                        info.cls === 'excellent' || info.cls === 'good' ? 'success' :
-                        info.cls === 'medium' ? 'warning' : 'danger'
-                    );
+            /* ✅ بناء الأقاليم ديناميكياً */
+            function renderRegionSections() {
+                const container = document.getElementById('regionsContainer');
+                if (!container) return;
+
+                if (regionList.length === 0) {
+                    container.innerHTML = '';
+                    return;
                 }
+
+                let html = '';
+                regionList.forEach(reg => {
+                    const data = vesselStats.regions[reg] || { active: 0, maintenance: 0, damaged: 0, total: 0, categories: {} };
+                    const denom = (data.active || 0) + (data.maintenance || 0) + (data.damaged || 0);
+                    const eff = denom > 0 ? ((data.active || 0) / denom) * 100 : 0;
+                    const info = getStatusInfo(eff);
+                    const badgeClass = (info.cls === 'excellent' || info.cls === 'good') ? 'success'
+                                     : (info.cls === 'medium') ? 'warning' : 'danger';
+
+                    html += `
+                        <div class="eff-section" data-section-key="region-${reg}">
+                            <div class="section-header">
+                                <h3><i class="fas fa-map-pin"></i> ${reg}</h3>
+                                <span class="badge ${badgeClass}">${eff.toFixed(1)}% جاهزية</span>
+                            </div>
+                            <div class="section-content">
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                                <th><i class="fas fa-check-circle"></i> صالح</th>
+                                                <th><i class="fas fa-times-circle"></i> معطب</th>
+                                                <th><i class="fas fa-percent"></i> النجاعة</th>
+                                                <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                                <th><i class="fas fa-circle"></i> الحالة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>${buildCategoryRows(data.categories || {})}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
             }
 
-            function renderAllTables() {
-                renderGeneralTable();
-                FIXED_REGIONS.forEach(r => {
-                    const data = vesselStats.regions[r.match] || { active: 0, damaged: 0, maintenance: 0, total: 0, categories: {} };
-                    renderRegionTable('region', r.key, data);
+            /* ✅ ملء قائمة الأقاليم في الفلتر */
+            function populateRegionFilter() {
+                const sel = document.getElementById('fRegEff');
+                if (!sel) return;
+                const currentValue = sel.value;
+                sel.innerHTML = '<option value="الكل">🌍 جميع الأقاليم</option>';
+                regionList.forEach(reg => {
+                    const opt = document.createElement('option');
+                    opt.value = reg;
+                    opt.textContent = '🗺️ ' + reg;
+                    sel.appendChild(opt);
                 });
-                FIXED_UNITS.forEach(u => {
-                    const data = vesselStats.units[u.match] || { active: 0, damaged: 0, maintenance: 0, total: 0, categories: {} };
-                    renderRegionTable('unit', u.key, data);
-                });
+                // استعادة القيمة إن وُجدت
+                if (Array.from(sel.options).some(o => o.value === currentValue)) {
+                    sel.value = currentValue;
+                }
             }
 
             function applyRegionFilter() {
                 const filter = document.getElementById('fRegEff').value;
                 const sections = document.querySelectorAll('.eff-section[data-section-key]');
-
                 sections.forEach(sec => {
                     const key = sec.getAttribute('data-section-key');
-
                     if (key === 'general') { sec.style.display = ''; return; }
                     if (filter === 'الكل') { sec.style.display = ''; return; }
-
-                    if (filter.indexOf('unit-') === 0) {
-                        if (key.indexOf('unit-') === 0) {
-                            sec.style.display = (filter === key) ? '' : 'none';
-                        } else {
-                            sec.style.display = 'none';
-                        }
-                        return;
-                    }
-
                     if (key.indexOf('region-') === 0) {
                         const regionKey = key.replace('region-', '');
                         sec.style.display = (filter === regionKey) ? '' : 'none';
@@ -1675,20 +1122,18 @@
                 });
             }
 
+            /* ✅ النسبة العامة: صالح ÷ (صالح + صيانة + معطوب) */
             function renderStatsCards() {
                 let total = 0, active = 0, maintenance = 0, damaged = 0;
-                FIXED_CATEGORIES.forEach(cat => {
-                    const c = vesselStats.general[cat];
-                    if (c) { total += c.total || 0; active += c.active || 0; maintenance += c.maintenance || 0; damaged += c.damaged || 0; }
-                });
                 Object.keys(vesselStats.general).forEach(cat => {
-                    if (FIXED_CATEGORIES.indexOf(cat) === -1) {
-                        const c = vesselStats.general[cat];
-                        total += c.total || 0; active += c.active || 0; maintenance += c.maintenance || 0; damaged += c.damaged || 0;
-                    }
+                    const c = vesselStats.general[cat];
+                    total += c.total || 0;
+                    active += c.active || 0;
+                    maintenance += c.maintenance || 0;
+                    damaged += c.damaged || 0;
                 });
-                const totalForEff = active + damaged;
-                const efficiency = totalForEff > 0 ? ((active / totalForEff) * 100).toFixed(1) : 0;
+                const denom = active + maintenance + damaged;
+                const efficiency = denom > 0 ? ((active / denom) * 100).toFixed(1) : 0;
                 const totalEl = document.getElementById('totalVessels');
                 const activeEl = document.getElementById('activeVessels');
                 const maintEl = document.getElementById('maintenanceVessels');
@@ -1705,7 +1150,9 @@
                 if (!vesselStats) vesselStats = buildStatsFromVessels([]);
                 if (!document.getElementById('generalBody')) return;
                 renderStatsCards();
-                renderAllTables();
+                renderGeneralTable();
+                renderRegionSections();
+                populateRegionFilter();
                 applyRegionFilter();
                 if (chartRetryTimer) clearTimeout(chartRetryTimer);
                 requestAnimationFrame(() => {
@@ -1770,24 +1217,15 @@
                 const ctx = canvas.getContext('2d');
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                 ctx.clearRect(0, 0, width, height);
-
                 if (!vesselStats) vesselStats = buildStatsFromVessels([]);
 
                 const data = [];
-                FIXED_REGIONS.forEach(r => {
-                    const d = vesselStats.regions[r.match];
+                regionList.forEach(reg => {
+                    const d = vesselStats.regions[reg];
                     if (d) {
-                        const totalForEff = (d.active || 0) + (d.damaged || 0);
-                        const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
-                        data.push({ label: r.key, value: eff, color: getColor(r.key) });
-                    }
-                });
-                FIXED_UNITS.forEach(u => {
-                    const d = vesselStats.units[u.match];
-                    if (d) {
-                        const totalForEff = (d.active || 0) + (d.damaged || 0);
-                        const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
-                        data.push({ label: u.key, value: eff, color: getColor(u.key) });
+                        const denom = (d.active || 0) + (d.maintenance || 0) + (d.damaged || 0);
+                        const eff = denom > 0 ? ((d.active || 0) / denom) * 100 : 0;
+                        data.push({ label: reg, value: eff, color: getColor(reg) });
                     }
                 });
 
@@ -1816,14 +1254,6 @@
                 ctx.fillStyle = 'rgba(148, 163, 184, 0.65)';
                 ctx.font = '13px Cairo, sans-serif';
                 ctx.fillText('قم بإضافة مراكب إلى النظام لعرض إحصائيات الجاهزية', cx, cy + 58);
-                ctx.fillStyle = 'rgba(230, 179, 30, 0.25)';
-                for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.arc(cx + i * 22, cy + 95, 4, 0, 2 * Math.PI); ctx.fill(); }
-                const lineGrad = ctx.createLinearGradient(cx - 150, 0, cx + 150, 0);
-                lineGrad.addColorStop(0, 'rgba(230, 179, 30, 0)');
-                lineGrad.addColorStop(0.5, 'rgba(230, 179, 30, 0.5)');
-                lineGrad.addColorStop(1, 'rgba(230, 179, 30, 0)');
-                ctx.strokeStyle = lineGrad; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(cx - 150, cy - 105); ctx.lineTo(cx + 150, cy - 105); ctx.stroke();
             }
 
             function getColor(name) {
@@ -1990,9 +1420,9 @@
             }
 
             function syncLogoFromServer() {
-                const token = localStorage.getItem('marine_token')
-                    || localStorage.getItem('token')
-                    || localStorage.getItem('authToken') || null;
+                const token = localStorage.getItem('marine_auth_token')
+                    || localStorage.getItem('marine_token')
+                    || localStorage.getItem('token') || null;
                 const headers = { 'Accept': 'application/json' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
                 fetch('/api/logo', { headers, credentials: 'include' })
@@ -2015,6 +1445,7 @@
                 } catch (e) {}
             }
 
+            /* ✅ أزرار التمرير */
             function initScrollButtons() {
                 const nav = document.getElementById('scrollNav');
                 const btnTop = document.getElementById('scrollToTop');
@@ -2062,7 +1493,7 @@
                     const img = document.createElement('img');
                     img.className = 'print-chart-image';
                     img.src = dataUrl;
-                    img.alt = 'توزيع الجاهزية حسب الإقليم والوحدة';
+                    img.alt = 'توزيع الجاهزية حسب الأقاليم';
                     img.style.display = 'none';
                     canvas.parentNode.insertBefore(img, canvas.nextSibling);
                 } catch (e) { console.warn('⚠️ prepareChartForPrint:', e.message); }
@@ -2096,7 +1527,7 @@
                 const generalBody = document.getElementById('generalBody');
                 if (!generalBody) return false;
                 initialized = true;
-                console.log('🎨 Efficiency v11.7: Initializing...');
+                console.log('🎨 Efficiency v13.0: Initializing...');
                 applyLogo();
                 syncLogoFromServer();
                 updatePrintDate();
@@ -2107,7 +1538,8 @@
                     if (vessels) {
                         vesselStats = buildStatsFromVessels(vessels);
                         renderEfficiency();
-                        console.log('✅ Efficiency: Data loaded —', vessels.length, 'vessels');
+                        console.log('✅ Efficiency: Data loaded —', vessels.length, 'vessels |', regionList.length, 'regions');
+                        console.log('📍 Regions:', regionList);
                     }
                 } catch (err) {
                     console.warn('⚠️ Efficiency: Data load failed —', err.message);
@@ -2139,7 +1571,7 @@
                                 ro.observe(chartParent);
                             }
                         }
-                        console.log('🎨 Efficiency v11.7: Ready');
+                        console.log('🎨 Efficiency v13.0: Ready');
                     }
                 });
             }
