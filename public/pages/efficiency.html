@@ -420,7 +420,7 @@
             border: 1px solid var(--c-border-soft);
             border-radius: var(--radius);
             margin: 0 24px 20px;
-            overflow: visible;                     /* ✅ يسمح بالقطع للطباعة */
+            overflow: visible;
             box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
             transition: all var(--transition);
         }
@@ -441,7 +441,7 @@
             position: relative;
             flex-wrap: wrap;
             gap: 10px;
-            border-radius: var(--radius) var(--radius) 0 0;   /* ✅ للحفاظ على زوايا أنيقة */
+            border-radius: var(--radius) var(--radius) 0 0;
         }
         .eff-section .section-header::after {
             content: '';
@@ -1267,12 +1267,38 @@
             }
 
             function normalizeStatusName(status) {
-                const s = normText(status).toLowerCase();
+                const s = normText(status);
                 if (!s) return '';
-                if (s.includes('صالح') || s === 'active' || s === 'ready') return 'صالح';
-                if (s.includes('معطب') || s.includes('عطب') || s === 'damaged') return 'معطب';
-                if (s.includes('صيانة') || s === 'maintenance' || s === 'repair') return 'صيانة';
-                return normText(status);
+                const lower = s.toLowerCase();
+                if (s.includes('صالح') || lower === 'active' || lower === 'ready' || lower === 'operational') return 'صالح';
+                if (s.includes('معطب') || s.includes('عطب') || lower === 'damaged' || lower === 'broken' || lower === 'out_of_service') return 'معطب';
+                if (s.includes('صيانة') || s.includes('صيانه') || lower === 'maintenance' || lower === 'repair') return 'صيانة';
+                return s;
+            }
+
+            /* ═══════════════════════════════════════════════════════════
+               ✅ دالة موحدة لحل مشكلة الحقل المزدوج (status vs stat)
+               - تفضّل الحقل الذي يعطي حالة محددة (معطب/صيانة) على 'صالح'
+               - تحمي من تناقض البيانات بين الحقلين
+               ═══════════════════════════════════════════════════════════ */
+            function resolveVesselStatus(v) {
+                if (!v) return '';
+                const isValid = (x) => x !== undefined && x !== null && String(x).trim() !== '';
+
+                const candidates = [];
+                if (isValid(v.status)) candidates.push(String(v.status).trim());
+                if (isValid(v.stat))   candidates.push(String(v.stat).trim());
+                if (isValid(v.state))  candidates.push(String(v.state).trim());
+
+                if (candidates.length === 0) return '';
+                if (candidates.length === 1) return candidates[0];
+
+                // إذا تعددت القيم، نفضّل الحالة المحددة (غير صالح)
+                for (const c of candidates) {
+                    const n = normalizeStatusName(c);
+                    if (n === 'معطب' || n === 'صيانة') return c;
+                }
+                return candidates[0];
             }
 
             function categoryFromLength(len) {
@@ -1315,15 +1341,16 @@
                 });
 
                 (vessels || []).forEach(v => {
-                    let catRaw = v.cat !== undefined ? v.cat : (v.category || v.type || v.cls);
+                    // ✅ إصلاح: نستخدم || بدل !== undefined للتعامل مع السلاسل الفارغة
+                    let catRaw = v.cat || v.category || v.type || v.cls;
                     if (!catRaw && v.len !== undefined && v.len !== null && v.len !== '') {
                         catRaw = categoryFromLength(v.len);
                     }
                     const cat = normalizeCategoryName(catRaw) || 'زوارق مزدوجة';
 
-                    const status = normalizeStatusName(
-                        v.stat !== undefined ? v.stat : (v.status || v.state)
-                    );
+                    // ✅ إصلاح: استخدام الدالة الموحدة لحل تناقض status/stat
+                    const status = normalizeStatusName(resolveVesselStatus(v));
+
                     const reg = normText(v.reg || v.region || v.area);
                     const unit = normText(v.repairUnit || v.maintenanceUnit || v.maintenance || v.unit);
 
