@@ -7,7 +7,15 @@ const mongoose = require('mongoose');
 const LogSchema = new mongoose.Schema({
     action: {
         type: String,
-        enum: ['login', 'logout', 'create', 'update', 'delete', 'view', 'export', 'import', 'approve', 'reject'],
+        enum: [
+            'login', 'logout',
+            'create', 'update', 'delete', 'view',
+            'export', 'import',
+            'approve', 'reject',
+            'seed',      // ✅ إضافة: لحماية الـ Seed Protection
+            'cleanup',   // ✅ إضافة: لتنظيف بيانات الـ Demo
+            'complete'   // ✅ إضافة: لإكمال مهام الصيانة
+        ],
         required: true
     },
     resource: {
@@ -57,7 +65,7 @@ const LogSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['success', 'error', 'warning', 'info'],
+        enum: ['success', 'error', 'warning', 'info', 'skipped'],  // ✅ 'skipped' للـ seed
         default: 'success'
     },
     error: {
@@ -87,6 +95,9 @@ LogSchema.index({ user: 1 });
 LogSchema.index({ createdAt: -1 });
 LogSchema.index({ 'details.vesselId': 1 });
 LogSchema.index({ 'details.maintenanceId': 1 });
+
+// ✅ فهرس لسرعة البحث عن seed/cleanup markers
+LogSchema.index({ action: 1, resource: 1, resourceName: 1 });
 
 // ============================================================
 // 🛠️ دوال النموذج (Methods)
@@ -178,7 +189,7 @@ LogSchema.statics.getStats = async function(startDate, endDate) {
     const match = {};
     if (startDate) match.createdAt = { $gte: startDate };
     if (endDate) match.createdAt = { ...match.createdAt, $lte: endDate };
-    
+
     return await this.aggregate([
         { $match: match },
         {
