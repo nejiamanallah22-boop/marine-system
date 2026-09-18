@@ -632,9 +632,27 @@
                 return map;
             }
 
+            /* ═══════════════════════════════════════════════════════════
+               ✅ v13.1 — قراءة الإقليم من كل الحقول المحتملة
+               - region / reg  (الإقليم الرسمي)
+               - repairUnit / maintenanceUnit  (وحدة الصيانة)
+               - maintenance / unit  (احتياط)
+               ═══════════════════════════════════════════════════════════ */
             function getRegionKey(v) {
                 if (!v) return '';
-                return normText(v.region || v.reg || '');
+                const candidates = [
+                    v.region,
+                    v.reg,
+                    v.repairUnit,
+                    v.maintenanceUnit,
+                    v.maintenance,
+                    v.unit
+                ];
+                for (const c of candidates) {
+                    const val = normText(c);
+                    if (val) return val;
+                }
+                return '';
             }
 
             function buildStatsFromVessels(vessels) {
@@ -1265,7 +1283,7 @@
                 const generalBody = document.getElementById('generalBody');
                 if (!generalBody) return false;
                 initialized = true;
-                console.log('🎨 Efficiency v13.0: Initializing...');
+                console.log('🎨 Efficiency v13.1: Initializing...');
                 applyLogo();
                 syncLogoFromServer();
                 vesselStats = buildStatsFromVessels([]);
@@ -1307,7 +1325,7 @@
                                 ro.observe(chartParent);
                             }
                         }
-                        console.log('🎨 Efficiency v13.0: Ready');
+                        console.log('🎨 Efficiency v13.1: Ready');
                     }
                 });
             }
