@@ -2,9 +2,8 @@
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           🎨 EFFICIENCY PAGE — ULTRA PRO v11.5
-           (Print handled centrally by /css/print.css)
-           ✨ v11.5: Flexible matching + Scroll controls + Chart print
+           🎨 EFFICIENCY PAGE — ULTRA PRO v11.6
+           ✨ v11.6: Strict unit/region matching (fix المنستير)
            ============================================================ */
 
         #page-efficiency {
@@ -74,9 +73,7 @@
             background-clip: padding-box;
         }
 
-        /* ============================================================
-           HEADER
-           ============================================================ */
+        /* HEADER */
         .eff-header {
             display: flex;
             justify-content: space-between;
@@ -219,9 +216,7 @@
             border-color: var(--c-border-strong);
         }
 
-        /* ============================================================
-           STATS — 5 بطاقات
-           ============================================================ */
+        /* STATS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -310,9 +305,7 @@
             max-width: 100%;
         }
 
-        /* ============================================================
-           FILTER BAR
-           ============================================================ */
+        /* FILTER */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
@@ -407,9 +400,7 @@
             border-color: var(--c-border-strong);
         }
 
-        /* ============================================================
-           SECTIONS
-           ============================================================ */
+        /* SECTIONS */
         .eff-section {
             background: linear-gradient(135deg,
                 rgba(24, 34, 56, 0.55) 0%,
@@ -493,9 +484,7 @@
 
         .section-content { padding: 0; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
 
-        /* ============================================================
-           TABLE
-           ============================================================ */
+        /* TABLE */
         .table-wrapper {
             overflow-x: auto;
             border-radius: 0;
@@ -560,9 +549,7 @@
             padding-right: 22px;
         }
 
-        /* ============================================================
-           ROW STATES
-           ============================================================ */
+        /* ROW STATES */
         .row-high {
             background: linear-gradient(90deg,
                 rgba(16, 185, 129, 0.18) 0%,
@@ -613,9 +600,7 @@
             font-size: 16px !important;
         }
 
-        /* ============================================================
-           STATUS BADGES
-           ============================================================ */
+        /* STATUS BADGES */
         .status-badge {
             padding: 6px 16px;
             border-radius: 20px;
@@ -669,9 +654,7 @@
             50% { box-shadow: 0 4px 32px rgba(239, 68, 68, 0.9); }
         }
 
-        /* ============================================================
-           PROGRESS BAR
-           ============================================================ */
+        /* PROGRESS BAR */
         .progress-bar {
             width: 100%;
             height: 10px;
@@ -714,9 +697,7 @@
             box-shadow: 0 0 16px rgba(239, 68, 68, 0.7);
         }
 
-        /* ============================================================
-           CHART
-           ============================================================ */
+        /* CHART */
         .chart-section {
             margin: 0 24px 28px;
             border: 1px solid var(--c-border-soft);
@@ -790,9 +771,7 @@
             display: block;
         }
 
-        /* ============================================================
-           EMPTY / LOADING
-           ============================================================ */
+        /* EMPTY */
         .empty-state {
             text-align: center;
             padding: 48px 24px;
@@ -803,9 +782,7 @@
             color: var(--c-text-3); margin-bottom: 4px;
         }
 
-        /* ============================================================
-           ✅ أزرار التمرير (أعلى / أسفل)
-           ============================================================ */
+        /* SCROLL NAV */
         .scroll-nav {
             position: fixed;
             right: 24px;
@@ -853,9 +830,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg,
-                rgba(255,255,255,0.2) 0%,
-                transparent 50%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
@@ -868,21 +843,11 @@
             box-shadow: 0 12px 32px var(--c-gold-glow),
                         0 0 0 1px rgba(255,255,255,0.15) inset;
         }
-        .scroll-nav-btn:hover::before {
-            opacity: 1;
-        }
-        .scroll-nav-btn:active {
-            transform: translateY(-1px) scale(0.98);
-        }
-        .scroll-nav-btn i {
-            position: relative;
-            z-index: 1;
-            pointer-events: none;
-        }
+        .scroll-nav-btn:hover::before { opacity: 1; }
+        .scroll-nav-btn:active { transform: translateY(-1px) scale(0.98); }
+        .scroll-nav-btn i { position: relative; z-index: 1; pointer-events: none; }
 
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
+        /* RESPONSIVE */
         @media (max-width: 1100px) {
             .stats-grid { gap: 12px; padding: 0 20px 18px; }
             .stat-card { padding: 18px 12px 16px; }
@@ -915,17 +880,8 @@
             .chart-box { min-height: 300px; }
             .chart-box canvas { height: 260px !important; }
             .section-header { flex-direction: column; align-items: flex-start; gap: 8px; }
-            .scroll-nav {
-                right: 16px;
-                bottom: 80px;
-                gap: 8px;
-            }
-            .scroll-nav-btn {
-                width: 42px;
-                height: 42px;
-                font-size: 16px;
-                border-radius: 12px;
-            }
+            .scroll-nav { right: 16px; bottom: 80px; gap: 8px; }
+            .scroll-nav-btn { width: 42px; height: 42px; font-size: 16px; border-radius: 12px; }
         }
         @media (max-width: 640px) {
             .stats-grid { gap: 10px; padding: 0 14px 14px; }
@@ -946,10 +902,7 @@
             .stat-card .label { font-size: 9.5px; }
         }
 
-        /* ============================================================
-           🖨️ PRINT — إظهار الرسم البياني
-           (يتجاوز القاعدة العامة في print.css)
-           ============================================================ */
+        /* PRINT */
         @media print {
             #page-efficiency .chart-section {
                 display: block !important;
@@ -963,16 +916,11 @@
                 box-shadow: none !important;
                 overflow: visible !important;
             }
-
-            #page-efficiency .chart-section .chart-switch {
-                display: none !important;
-            }
-
+            #page-efficiency .chart-section .chart-switch { display: none !important; }
             #page-efficiency .chart-section .charts-container {
                 padding: 4mm !important;
                 display: block !important;
             }
-
             #page-efficiency .chart-box {
                 background: #ffffff !important;
                 border: none !important;
@@ -981,7 +929,6 @@
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
             }
-
             #page-efficiency .chart-box h4 {
                 color: #0a0a12 !important;
                 -webkit-text-fill-color: #0a0a12 !important;
@@ -992,7 +939,6 @@
                 border-bottom: 1pt solid #12121a !important;
                 text-align: center !important;
             }
-
             #page-efficiency .chart-box img.print-chart-image {
                 display: block !important;
                 width: 100% !important;
@@ -1000,11 +946,7 @@
                 height: auto !important;
                 margin: 0 auto !important;
             }
-
-            #page-efficiency .chart-box canvas {
-                display: none !important;
-            }
-
+            #page-efficiency .chart-box canvas { display: none !important; }
             .scroll-nav { display: none !important; }
         }
     </style>
@@ -1368,9 +1310,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════
-         ✅ أزرار التمرير (أعلى / أسفل)
-         ═══════════════════════════════════════════════════════════ -->
+    <!-- SCROLL NAV -->
     <div class="scroll-nav" id="scrollNav" aria-hidden="true">
         <button type="button"
                 class="scroll-nav-btn"
@@ -1441,11 +1381,6 @@
                 return s;
             }
 
-            /* ═══════════════════════════════════════════════════════════
-               ✅ دالة موحدة لحل مشكلة الحقل المزدوج (status vs stat)
-               - تفضّل الحقل الذي يعطي حالة محددة (معطب/صيانة) على 'صالح'
-               - تحمي من تناقض البيانات بين الحقلين
-               ═══════════════════════════════════════════════════════════ */
             function resolveVesselStatus(v) {
                 if (!v) return '';
                 const isValid = (x) => x !== undefined && x !== null && String(x).trim() !== '';
@@ -1466,22 +1401,16 @@
             }
 
             /* ═══════════════════════════════════════════════════════════
-               ✅ دالة مطابقة مرنة للوحدة
-               تبحث عن الكلمة المفتاحية في أي حقل متاح
+               ✅ v11.6 — مطابقة الوحدة صارمة
+               فقط: repairUnit / maintenanceUnit
+               ❌ لا نبحث في region, port, zone, area, location, unit
                ═══════════════════════════════════════════════════════════ */
             function findUnitMatch(v) {
                 if (!v) return null;
 
                 const candidates = [
                     v.repairUnit,
-                    v.maintenanceUnit,
-                    v.maintenance,
-                    v.unit,
-                    v.region,
-                    v.area,
-                    v.port,
-                    v.zone,
-                    v.location
+                    v.maintenanceUnit
                 ].map(normText).filter(Boolean);
 
                 if (candidates.length === 0) return null;
@@ -1497,16 +1426,15 @@
             }
 
             /* ═══════════════════════════════════════════════════════════
-               ✅ دالة مطابقة مرنة للإقليم
+               ✅ v11.6 — مطابقة الإقليم صارمة
+               فقط: region / reg
                ═══════════════════════════════════════════════════════════ */
             function findRegionMatch(v) {
                 if (!v) return null;
 
                 const candidates = [
-                    v.reg,
                     v.region,
-                    v.area,
-                    v.zone
+                    v.reg
                 ].map(normText).filter(Boolean);
 
                 if (candidates.length === 0) return null;
@@ -2317,9 +2245,6 @@
                 } catch (e) {}
             }
 
-            /* ═══════════════════════════════════════════════════════════
-               ✅ أزرار التمرير (أعلى / أسفل)
-               ═══════════════════════════════════════════════════════════ */
             function initScrollButtons() {
                 const nav = document.getElementById('scrollNav');
                 const btnTop = document.getElementById('scrollToTop');
@@ -2378,10 +2303,6 @@
                 setTimeout(updateVisibility, 1500);
             }
 
-            /* ═══════════════════════════════════════════════════════════
-               🖨️ تحويل canvas إلى صورة قبل الطباعة
-               (المتصفحات لا تطبع canvas بشكل موثوق)
-               ═══════════════════════════════════════════════════════════ */
             function prepareChartForPrint() {
                 try {
                     const canvas = document.getElementById('efficiencyChart');
@@ -2448,7 +2369,7 @@
                 if (!generalBody) return false;
                 initialized = true;
 
-                console.log('🎨 Efficiency v11.5: Initializing...');
+                console.log('🎨 Efficiency v11.6: Initializing...');
 
                 applyLogo();
                 syncLogoFromServer();
@@ -2503,7 +2424,7 @@
                             }
                         }
 
-                        console.log('🎨 Efficiency v11.5: Ready');
+                        console.log('🎨 Efficiency v11.6: Ready');
                     }
                 });
             }
