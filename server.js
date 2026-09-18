@@ -1,9 +1,9 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.6.1
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.7.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
-// 📌 OWNERSHIP SIGNATURE + 👤 USER BADGE + 📍 FORCE GPS
-// ✨ v10.6.1: GPS modal stays until user clicks
+// 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v5
+// ✨ v10.7.0: Login verification + No auto-send + fetch API
 // ============================================================
 
 'use strict';
@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.6.1 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.7.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -115,7 +115,7 @@ try {
 }
 
 // ============================================================
-// 🚀 REDIS CLIENT
+// 🚀 REDIS
 // ============================================================
 let redisClient = null;
 let RedisStore = null;
@@ -209,11 +209,11 @@ app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
 
 // ============================================================
-// 📌 OWNERSHIP HEADERS — ASCII فقط
+// 📌 OWNERSHIP HEADERS
 // ============================================================
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.6.1');
+    res.setHeader('X-System-Version', '10.7.0');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -557,7 +557,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.6.1',
+            version: '10.7.0',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -1373,7 +1373,7 @@ function formatMaintenance(log) {
 
     app.get('/api/health', (req, res) => {
         return res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.6.1',
+            success: true, status: 'online', service: 'Marine System', version: '10.7.0',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
@@ -2889,7 +2889,7 @@ function formatMaintenance(log) {
     }
 
     // ========================================================
-    // 📌 OWNERSHIP SIGNATURE — طبقة خلفية + وسط أسفل + مخفية على الجوال
+    // 📌 OWNERSHIP SIGNATURE
     // ========================================================
     const OWNERSHIP_META = `
 <meta name="author" content="أمان الله ناجي">
@@ -2900,7 +2900,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.6.1 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.7.0 - Aman Allah Naji">
 <meta property="og:site_name" content="منظومة الوسائل البحرية">
 <meta property="og:author" content="أمان الله ناجي">
 <meta name="twitter:creator" content="@amanallah_naji">
@@ -2959,7 +2959,7 @@ function formatMaintenance(log) {
             'background:linear-gradient(135deg,#060911,#0a1020);color:#f7d774;font-size:20px;font-weight:900;padding:12px 24px;border-radius:8px;text-shadow:0 0 20px #e6b31e;');
         console.log('%c👨‍💻 تصميم وتطوير: أمان الله ناجي — إدارة إسناد الوحدات البحرية',
             'background:#0a1020;color:#e6b31e;font-size:13px;font-weight:700;padding:8px 24px;border-radius:0 0 8px 8px;');
-        console.log('%c🚢 System Version: 10.6.1 | © ' + new Date().getFullYear() + ' All Rights Reserved',
+        console.log('%c🚢 System Version: 10.7.0 | © ' + new Date().getFullYear() + ' All Rights Reserved',
             'color:#64748b;font-size:11px;');
     } catch(e){}
 })();
@@ -3216,7 +3216,7 @@ function formatMaintenance(log) {
     console.log('👤 User info badge middleware registered');
 
     // ========================================================
-    // 📍 FORCE GPS — v4 (Modal يبقى حتى الضغط)
+    // 📍 FORCE GPS v5 — Login verification + fetch API + No auto-send
     // ========================================================
     const FORCE_GPS_CSS = `
 <style id="force-gps-style">
@@ -3311,7 +3311,7 @@ function formatMaintenance(log) {
 </style>`;
 
     const FORCE_GPS_HTML = `
-<div id="force-gps-modal" role="dialog" aria-modal="true" aria-label="مطلوب الوصول إلى الموقع">
+<div id="force-gps-modal" class="gps-ok" role="dialog" aria-modal="true" aria-label="مطلوب الوصول إلى الموقع">
     <div class="fg-box">
         <div class="fg-icon">📍</div>
         <h2 class="fg-title">مطلوب الوصول إلى موقعك</h2>
@@ -3332,7 +3332,6 @@ function formatMaintenance(log) {
     </div>
 </div>`;
 
-    // ✅ الإصلاح الجوهري: userClicked يمنع إخفاء الـ Modal تلقائياً
     const FORCE_GPS_SCRIPT = `
 <script>
 (function(){
@@ -3344,9 +3343,16 @@ function formatMaintenance(log) {
     var watchId = null;
     var lastSent = 0;
     var asking = false;
-    var userClicked = false;   /* ✅ لن نخفي الـ Modal بدون ضغط المستخدم */
+    var userClicked = false;
+    var loginVerified = false;
+    var lastVerifyAt = 0;
 
-    function log(m) { try { console.log('[GPS]', m); } catch(e) {} }
+    function log() {
+        try { console.log.apply(console, ['[GPS]'].concat(Array.prototype.slice.call(arguments))); } catch(e) {}
+    }
+    function warn() {
+        try { console.warn.apply(console, ['[GPS]'].concat(Array.prototype.slice.call(arguments))); } catch(e) {}
+    }
     function getModal() { return document.getElementById(MODAL_ID); }
     function showModal() { var m = getModal(); if (m) m.classList.remove('gps-ok'); }
     function hideModal() { var m = getModal(); if (m) m.classList.add('gps-ok'); }
@@ -3354,9 +3360,7 @@ function formatMaintenance(log) {
         var el = document.getElementById('fgStatus');
         if (el) { el.textContent = t || ''; el.className = 'fg-status' + (c ? ' ' + c : ''); }
     }
-    function getCsrf() {
-        try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? m[1] : ''; } catch(e) { return ''; }
-    }
+
     function getToken() {
         try {
             return localStorage.getItem('marine_auth_token')
@@ -3365,39 +3369,72 @@ function formatMaintenance(log) {
                 || '';
         } catch(e) { return ''; }
     }
+    function getCsrf() {
+        try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch(e) { return ''; }
+    }
 
-    function sendLocation(coords, callback) {
-        if (!coords) { if (callback) callback(false); return; }
-        if (coords.accuracy && coords.accuracy > MIN_ACCURACY) { if (callback) callback(false); return; }
+    /* ✅ تحقق فعلي من السيرفر */
+    function verifyLogin(callback) {
+        var token = getToken();
+        if (!token) { callback(false); return; }
+        if (loginVerified && (Date.now() - lastVerifyAt < 60000)) { callback(true); return; }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/auth/me', true);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.withCredentials = true;
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
+            if (xhr.status === 200) {
+                loginVerified = true;
+                lastVerifyAt = Date.now();
+                log('✅ login verified');
+                callback(true);
+            } else {
+                loginVerified = false;
+                log('❌ login failed:', xhr.status);
+                callback(false);
+            }
+        };
+        xhr.onerror = function() { callback(false); };
+        xhr.send();
+    }
+
+    /* ✅ استخدام fetch */
+    async function postLocation(coords) {
+        var token = getToken();
+        var csrf = getCsrf();
+
         try {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/api/locations', true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            var tok = getToken(); if (tok) xhr.setRequestHeader('Authorization', 'Bearer ' + tok);
-            var csrf = getCsrf(); if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf);
-            xhr.withCredentials = true;
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState !== 4) return;
-                var ok = xhr.status >= 200 && xhr.status < 300;
-                if (ok) {
-                    lastSent = Date.now();
-                    log('sent OK');
-                    /* ✅ لا نخفي الـ Modal إلا إذا ضغط المستخدم */
-                    if (!firstSuccess && userClicked) {
-                        firstSuccess = true;
-                        setStatus('✅ تم تسجيل موقعك بنجاح', 'success');
-                        setTimeout(hideModal, 600);
-                    }
-                } else { log('send fail: ' + xhr.status); }
-                if (callback) callback(ok);
-            };
-            xhr.onerror = function() { if (callback) callback(false); };
-            xhr.send(JSON.stringify({
-                latitude: coords.latitude,
-                longitude: coords.longitude,
-                accuracy: coords.accuracy || null
-            }));
-        } catch(e) { if (callback) callback(false); }
+            var res = await fetch('/api/locations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                    'X-CSRF-Token': csrf || ''
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    latitude: coords.latitude,
+                    longitude: coords.longitude,
+                    accuracy: coords.accuracy || null
+                })
+            });
+
+            log('POST /api/locations →', res.status);
+            if (res.ok) {
+                lastSent = Date.now();
+                return { ok: true };
+            }
+            var txt = '';
+            try { txt = await res.text(); } catch(e) {}
+            log('response:', txt.substring(0, 200));
+            return { ok: false, status: res.status, body: txt };
+        } catch(e) {
+            warn('fetch error:', e.message);
+            return { ok: false, status: 0, error: e.message };
+        }
     }
 
     function startWatching() {
@@ -3405,8 +3442,11 @@ function formatMaintenance(log) {
         if (!navigator.geolocation) return;
         try {
             watchId = navigator.geolocation.watchPosition(
-                function(pos) { sendLocation(pos.coords); },
-                function(err) { log('watch err: ' + err.message); },
+                function(pos) {
+                    if (!loginVerified) return;
+                    postLocation(pos.coords);
+                },
+                function(err) { log('watch err:', err.message); },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
             );
         } catch(e) {}
@@ -3415,10 +3455,9 @@ function formatMaintenance(log) {
     function requestLocation() {
         if (asking) return;
         asking = true;
-        userClicked = true;   /* ✅ المستخدم ضغط الزر */
+        userClicked = true;
         var btn = document.getElementById('fgAllowBtn');
         if (btn) btn.disabled = true;
-        setStatus('⏳ جاري طلب الوصول...');
 
         if (!navigator.geolocation) {
             asking = false;
@@ -3427,74 +3466,96 @@ function formatMaintenance(log) {
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            function(pos) {
+        setStatus('⏳ جاري التحقق من الجلسة...');
+
+        verifyLogin(function(loggedIn) {
+            if (!loggedIn) {
                 asking = false;
                 if (btn) btn.disabled = false;
-                sendLocation(pos.coords, function(ok) {
-                    if (ok) {
+                setStatus('⚠️ يجب تسجيل الدخول أولاً', 'error');
+                setTimeout(function() { hideModal(); }, 2000);
+                return;
+            }
+
+            setStatus('📍 جاري طلب الموقع من المتصفح...');
+            navigator.geolocation.getCurrentPosition(
+                async function(pos) {
+                    setStatus('📡 جاري إرسال الموقع...');
+                    var result = await postLocation(pos.coords);
+                    asking = false;
+                    if (btn) btn.disabled = false;
+
+                    if (result.ok) {
                         firstSuccess = true;
                         setStatus('✅ تم تسجيل موقعك بنجاح', 'success');
                         setTimeout(hideModal, 600);
                         startWatching();
+                    } else if (result.status === 401) {
+                        loginVerified = false;
+                        setStatus('⚠️ جلسة منتهية. يرجى تسجيل الدخول مرة أخرى.', 'error');
+                        setTimeout(hideModal, 2500);
                     } else {
-                        setStatus('⚠️ فشل إرسال الموقع. حاول مجدداً.', 'error');
+                        setStatus('⚠️ فشل الإرسال (كود: ' + (result.status || 'شبكة') + ')', 'error');
                     }
-                });
-            },
-            function(err) {
-                asking = false;
-                if (btn) btn.disabled = false;
-                var msg = 'حدث خطأ';
-                if (err.code === 1) msg = '⚠️ رفضت الوصول. يجب السماح للمتابعة.';
-                else if (err.code === 2) msg = '⚠️ تعذّر تحديد الموقع. تحقق من GPS.';
-                else if (err.code === 3) msg = '⚠️ انتهت المهلة. حاول مجدداً.';
-                setStatus(msg, 'error');
-                showModal();
-            },
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-        );
+                },
+                function(err) {
+                    asking = false;
+                    if (btn) btn.disabled = false;
+                    var msg = 'حدث خطأ';
+                    if (err.code === 1) msg = '⚠️ رفضت الوصول. يجب السماح للمتابعة.';
+                    else if (err.code === 2) msg = '⚠️ تعذّر تحديد الموقع. تحقق من GPS.';
+                    else if (err.code === 3) msg = '⚠️ انتهت المهلة. حاول مجدداً.';
+                    setStatus(msg, 'error');
+                },
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+            );
+        });
     }
 
-    function trySilent() {
-        if (!navigator.geolocation) return;
-        navigator.geolocation.getCurrentPosition(
-            function(pos) {
-                /* ✅ إرسال صامت — لكن لا نخفي الـ Modal */
-                sendLocation(pos.coords, function(ok) {
-                    if (ok) log('silent location sent (modal stays until click)');
-                });
-            },
-            function(err) { log('silent err: ' + err.code); },
-            { enableHighAccuracy: false, timeout: 2500, maximumAge: 120000 }
-        );
+    function startPeriodicSend() {
+        setInterval(function() {
+            if (!firstSuccess) return;
+            if (watchId === null) return;
+            if (Date.now() - lastSent < SEND_INTERVAL) return;
+            if (!navigator.geolocation) return;
+            if (!loginVerified) return;
+            navigator.geolocation.getCurrentPosition(
+                function(pos) { postLocation(pos.coords); },
+                function() {},
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+        }, SEND_INTERVAL);
     }
 
     function init() {
         var btn = document.getElementById('fgAllowBtn');
         if (btn) btn.addEventListener('click', requestLocation);
 
-        showModal();          /* ✅ يظهر فوراً */
-        trySilent();          /* ✅ إرسال صامت بدون إخفاء */
+        hideModal();
 
-        /* ✅ ضمان الظهور كل ثانية حتى يضغط المستخدم */
+        /* ✅ فحص دوري: يظهر الـ Modal فقط إذا كانت الجلسة صالحة */
         setInterval(function() {
-            if (!firstSuccess) showModal();
-        }, 1000);
+            if (firstSuccess) return;
 
-        /* ✅ إرسال دوري بعد النجاح */
-        setInterval(function() {
-            if (watchId === null) return;
-            if (Date.now() - lastSent < SEND_INTERVAL) return;
-            if (!navigator.geolocation) return;
-            navigator.geolocation.getCurrentPosition(
-                function(pos) { sendLocation(pos.coords); },
-                function() {},
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-            );
-        }, SEND_INTERVAL);
+            var token = getToken();
+            if (!token) {
+                hideModal();
+                return;
+            }
 
-        log('Force GPS initialized — modal is mandatory until user clicks');
+            if (loginVerified && Date.now() - lastVerifyAt < 60000) {
+                showModal();
+                return;
+            }
+
+            verifyLogin(function(valid) {
+                if (valid) showModal();
+                else hideModal();
+            });
+        }, 2000);
+
+        startPeriodicSend();
+        log('Force GPS initialized — waiting for valid session');
     }
 
     if (document.readyState === 'loading') {
@@ -3549,7 +3610,7 @@ function formatMaintenance(log) {
         next();
     });
 
-    console.log('📍 Force GPS v4 middleware registered (modal stays until click)');
+    console.log('📍 Force GPS v5 middleware registered (login-verified, no auto-send)');
 
     // ========================================================
     // 📁 STATIC FILES
@@ -3593,7 +3654,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.6.1</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.7.0</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -3640,7 +3701,7 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.6.1');
+            console.log('🚢 MARINE SYSTEM v10.7.0');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('📦 Seed Protection: ONE-TIME ONLY');
@@ -3648,7 +3709,7 @@ function formatMaintenance(log) {
             console.log('👤 User region/unit: ENABLED');
             console.log('📌 Ownership Signature: ACTIVE');
             console.log('👤 User Info Badge: ENABLED');
-            console.log('📍 Force GPS: MANDATORY (v4 — stays until click)');
+            console.log('📍 Force GPS: MANDATORY v5 (login-verified)');
             console.log('🤖 AI Assistant + Smart Import: ' +
                 (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'));
             console.log('📧 Email: ' + (
