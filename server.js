@@ -1,11 +1,11 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.2.0
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.3.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
 // ⚙️ SETTINGS + 🖼️ LOGO (MongoDB-backed)
 // 📦 PROFESSIONAL SEED PROTECTION (one-time seed + auto cleanup)
-// ✨ v10.2: Unified Maintenance Routes + Enhanced formatMaintenance
-//          + User region/unit support
+// ✨ v10.3: Redis TLS auto-upgrade + Smart reconnect + Log enums fix
+//          + createIndexes() cleanup + notify() closure fix
 // ============================================================
 
 'use strict';
@@ -16,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.2.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.3.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -117,11 +117,30 @@ try {
 }
 
 // ============================================================
-// 🚀 REDIS CLIENT — v10.3 (Fixed TLS + Logging)
+// 🚀 REDIS CLIENT — v10.3 (Auto TLS upgrade + Smart reconnect)
 // ============================================================
 let redisClient = null;
 let RedisStore = null;
 let redisAvailable = false;
+
+function normalizeRedisUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+    if (rawUrl.startsWith('rediss://')) return rawUrl;
+
+    const tlsHosts = [
+        'upstash.io',
+        'redislabs.com',
+        'redis-cloud.com',
+        'aivencloud.com',
+        'digitalocean.com'
+    ];
+    const isTLSHost = tlsHosts.some(h => rawUrl.includes(h));
+    if (isTLSHost && rawUrl.startsWith('redis://')) {
+        console.log('🔐 Auto-upgrade: redis:// → rediss:// for TLS host');
+        return rawUrl.replace(/^redis:\/\//, 'rediss://');
+    }
+    return rawUrl;
+}
 
 async function initRedis() {
     if (!process.env.REDIS_URL) {
@@ -140,23 +159,24 @@ async function initRedis() {
 
         RedisStore = ConnectRedis ? (ConnectRedis.default || ConnectRedis) : null;
 
-        const isTLS = process.env.REDIS_URL.startsWith('rediss://');
-        const hostPart = process.env.REDIS_URL.split('@')[1] || 'unknown';
+        const finalUrl = normalizeRedisUrl(process.env.REDIS_URL);
+        const isTLS = finalUrl.startsWith('rediss://');
+        const hostPart = finalUrl.split('@')[1] || 'unknown';
         console.log('🔄 Redis: connecting to', hostPart, '| TLS:', isTLS);
 
         redisClient = createClient({
-            url: process.env.REDIS_URL,
+            url: finalUrl,
             socket: {
                 tls: isTLS,
                 rejectUnauthorized: false,
                 reconnectStrategy: (retries) => {
-                    if (retries > 10) {
-                        console.error('❌ Redis: reconnect limit reached');
+                    if (retries > 5) {
+                        console.error('❌ Redis: reconnect limit reached — falling back to Memory Store');
                         return new Error('Redis reconnect limit');
                     }
-                    return Math.min(retries * 100, 3000);
+                    return Math.min(retries * 200, 2000);
                 },
-                connectTimeout: 10000
+                connectTimeout: 8000
             }
         });
 
@@ -167,32 +187,36 @@ async function initRedis() {
             redisAvailable = false;
         });
 
-        redisClient.on('connect', () => {
-            console.log('🔄 Redis: connecting...');
-        });
-
+        redisClient.on('connect', () => console.log('🔄 Redis: connecting...'));
         redisClient.on('ready', () => {
             console.log('✅ Redis: connected and ready');
             redisAvailable = true;
         });
-
-        redisClient.on('reconnecting', () => {
-            console.log('🔄 Redis: reconnecting...');
+        redisClient.on('reconnecting', () => console.log('🔄 Redis: reconnecting...'));
+        redisClient.on('end', () => {
+            console.log('🔌 Redis: connection closed');
+            redisAvailable = false;
         });
 
-        await redisClient.connect();
+        await Promise.race([
+            redisClient.connect(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connect timeout (15s)')), 15000))
+        ]);
+
         redisAvailable = true;
         return redisClient;
 
     } catch (e) {
-        console.warn('⚠️ Redis غير متاح:', e.message);
+        console.warn('⚠️ Redis غير متاح — سيتم استخدام Memory Store:', e.message);
         redisAvailable = false;
+        try {
+            if (redisClient && redisClient.isOpen) await redisClient.quit();
+        } catch (_) {}
         redisClient = null;
         return null;
     }
 }
 
-// ✅ مساعدات للوصول من الوحدات الأخرى
 function getRedisClient() {
     return redisAvailable ? redisClient : null;
 }
@@ -205,7 +229,6 @@ const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-// ✅ قراءة sameSite من متغير البيئة (الافتراضي: lax)
 const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
 
 app.disable('x-powered-by');
@@ -368,7 +391,6 @@ async function setupEmailService() {
         console.log('✅ Mailjet API configured — SMTP disabled');
         return null;
     }
-
     try {
         if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             const transporter = nodemailer.createTransport({
@@ -429,13 +451,11 @@ async function sendEmail(to, subject, html) {
                     }]
                 })
             });
-
             if (!response.ok) {
                 const errText = await response.text();
                 console.error('❌ Mailjet API error:', response.status, errText.slice(0, 300));
                 return null;
             }
-
             const data = await response.json();
             const msgId = data?.Messages?.[0]?.To?.[0]?.MessageID
                        || data?.Messages?.[0]?.To?.[0]?.MessageUUID
@@ -602,11 +622,11 @@ async function connectMongoDB() {
     }
 }
 
+// ✅ v10.3: username index مُعرَّف في model — لا نُكرره
 async function createIndexes() {
     try {
-        await User.collection.createIndex({ username: 1 }, { unique: true });
         await Vessel.collection.createIndex({ id: 1 }, { unique: true, sparse: true });
-        await Maintenance.collection.createIndex({ id: 1, sparse: true });
+        await Maintenance.collection.createIndex({ id: 1 }, { sparse: true });
         console.log('✅ Indexes ensured');
     } catch (error) {
         console.warn('⚠️ Index warning:', error.message);
@@ -714,6 +734,7 @@ async function ensureInitialData() {
                         timestamp: new Date().toISOString()
                     }
                 });
+                console.log('✅ Seed marker created (existing data detected)');
             } catch (e) {
                 console.warn('⚠️ Could not create seed marker:', e.message);
             }
@@ -943,7 +964,7 @@ async function buildSessionStore() {
             sessionStore = new RedisStore({
                 client: redisClient,
                 prefix: 'marine:sess:',
-                ttl: 30 * 24 * 60 * 60  // 30 يوم
+                ttl: 30 * 24 * 60 * 60
             });
             console.log('✅ Redis session store enabled');
         } catch (e) {
@@ -1543,10 +1564,8 @@ function formatMaintenance(log) {
         process.exit(1);
     }
 
-    // ✅ Redis + Session Store
     await buildSessionStore();
 
-    // ✅ Session middleware
     app.use(session({
         secret: SESSION_SECRET,
         resave: false,
@@ -1564,7 +1583,6 @@ function formatMaintenance(log) {
         proxy: isProduction
     }));
 
-    // ✅ CSRF token على كل طلب
     app.use((req, res, next) => {
         ensureCsrfToken(req, res);
         next();
@@ -1573,7 +1591,6 @@ function formatMaintenance(log) {
     // ========================================================
     // PUBLIC ENDPOINTS
     // ========================================================
-
     app.get('/api/csrf-token', (req, res) => {
         const token = ensureCsrfToken(req, res);
         return res.json({
@@ -1588,7 +1605,7 @@ function formatMaintenance(log) {
             success: true,
             status: 'online',
             service: 'Marine System',
-            version: '10.2.0',
+            version: '10.3.0',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
@@ -1693,12 +1710,11 @@ function formatMaintenance(log) {
 
             const newCsrfToken = ensureCsrfToken(req, res);
 
-            // ✅ استخدام __Secure- بدل __Host- (لأن path=/api/auth)
             const refreshCookieName = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             res.cookie(refreshCookieName, refreshToken, {
                 httpOnly: true,
                 secure: isProduction,
-                sameSite: COOKIE_SAMESITE,        // ✅ من env
+                sameSite: COOKIE_SAMESITE,
                 maxAge: REFRESH_TOKEN_MAX_AGE,
                 path: '/api/auth'
             });
@@ -1795,11 +1811,10 @@ function formatMaintenance(log) {
 
             const newCsrfToken = ensureCsrfToken(req, res);
 
-            // ✅ نفس اسم الكوكي + نفس الإعدادات
             res.cookie(cookieName, newRefreshToken, {
                 httpOnly: true,
                 secure: isProduction,
-                sameSite: COOKIE_SAMESITE,        // ✅ من env
+                sameSite: COOKIE_SAMESITE,
                 maxAge: REFRESH_TOKEN_MAX_AGE,
                 path: '/api/auth'
             });
@@ -1903,27 +1918,20 @@ function formatMaintenance(log) {
                 });
             });
 
-            // ✅ أسماء موحدة مع login/refresh
             const refreshCookieName = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             const sessionCookieName = isProduction ? '__Secure-marine.sid' : 'marine.sid';
 
             res.clearCookie(refreshCookieName, {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: COOKIE_SAMESITE,
-                path: '/api/auth'
+                httpOnly: true, secure: isProduction,
+                sameSite: COOKIE_SAMESITE, path: '/api/auth'
             });
             res.clearCookie(sessionCookieName, {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: COOKIE_SAMESITE,
-                path: '/'
+                httpOnly: true, secure: isProduction,
+                sameSite: COOKIE_SAMESITE, path: '/'
             });
             res.clearCookie('marine_csrf', {
-                httpOnly: false,
-                secure: isProduction,
-                sameSite: COOKIE_SAMESITE,
-                path: '/'
+                httpOnly: false, secure: isProduction,
+                sameSite: COOKIE_SAMESITE, path: '/'
             });
 
             return res.status(200).json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
@@ -2010,29 +2018,25 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // 📝 NOTES (Note Verbale)
+    // 📝 NOTES
     // ========================================================
     app.get('/api/notes', authenticateAccessToken, async (req, res) => {
         try {
             if (!Note) return res.json([]);
-
             const notes = await Note.find().sort({ createdAt: -1 }).limit(500).lean();
-
-            return res.json(
-                notes.map(n => ({
-                    id: n._id.toString(),
-                    title: n.title,
-                    content: n.content,
-                    type: n.type,
-                    number: n.number,
-                    status: n.status,
-                    weekNumber: n.weekNumber,
-                    year: n.year,
-                    createdByName: n.createdByName || 'مستخدم',
-                    createdAt: n.createdAt,
-                    updatedAt: n.updatedAt
-                }))
-            );
+            return res.json(notes.map(n => ({
+                id: n._id.toString(),
+                title: n.title,
+                content: n.content,
+                type: n.type,
+                number: n.number,
+                status: n.status,
+                weekNumber: n.weekNumber,
+                year: n.year,
+                createdByName: n.createdByName || 'مستخدم',
+                createdAt: n.createdAt,
+                updatedAt: n.updatedAt
+            })));
         } catch (error) {
             return res.status(500).json({ success: false, error: 'فشل تحميل الملاحظات' });
         }
@@ -2041,13 +2045,10 @@ function formatMaintenance(log) {
     app.get('/api/notes/:id', authenticateAccessToken, async (req, res) => {
         try {
             if (!Note) return res.status(404).json({ success: false, error: 'الموديل غير متاح' });
-
             const note = await Note.findById(req.params.id);
             if (!note) return res.status(404).json({ success: false, error: 'الملاحظة غير موجودة' });
-
             note.views = (note.views || 0) + 1;
             await note.save();
-
             return res.json({
                 success: true,
                 note: {
@@ -2341,7 +2342,7 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // 📊 MONITORING (admin only)
+    // 📊 MONITORING
     // ========================================================
     app.get('/api/monitoring/users', authenticateAccessToken, requirePermission('monitoring:view'), async (req, res) => {
         try {
@@ -2362,7 +2363,6 @@ function formatMaintenance(log) {
         try {
             const sessions = [];
 
-            // ✅ اقرأ من Redis إن متوفر
             if (isRedisAvailable()) {
                 try {
                     const keys = await redisClient.keys('marine:refresh:*');
@@ -2389,7 +2389,6 @@ function formatMaintenance(log) {
                 }
             }
 
-            // ✅ اقرأ من الذاكرة (fallback)
             for (const [sessionId, record] of refreshSessions) {
                 if (record.expiresAt > Date.now()) {
                     const user = await User.findOne({ id: record.userId });
@@ -2955,7 +2954,7 @@ function formatMaintenance(log) {
     app.post('/api/maintenance-logs/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleCompleteMaintenance);
 
     // ========================================================
-    // 👥 USERS (admin only)
+    // 👥 USERS
     // ========================================================
     app.get('/api/users', authenticateAccessToken, requirePermission('users:manage'), async (req, res) => {
         try {
@@ -3376,7 +3375,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.2.0</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.3.0</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -3423,7 +3422,7 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.2.0');
+            console.log('🚢 MARINE SYSTEM v10.3.0');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('📦 Seed Protection: ONE-TIME ONLY');
@@ -3468,12 +3467,11 @@ module.exports = app;
 module.exports.csrfProtection = csrfProtection;
 module.exports.authenticateAccessToken = authenticateAccessToken;
 module.exports.requirePermission = requirePermission;
-module.exports.requireOneOf = requireOneOf;   // ✅ إصلاح: كان requirePermission
+module.exports.requireOneOf = requireOneOf;
 module.exports.requireAdmin = requireAdmin;
 module.exports.hasPermission = hasPermission;
 module.exports.normalizeRole = normalizeRole;
 module.exports.addSystemLog = addSystemLog;
 
-// ✅ Redis helpers للوحدات الأخرى
 module.exports.getRedisClient = getRedisClient;
 module.exports.isRedisAvailable = isRedisAvailable;
