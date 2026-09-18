@@ -1,11 +1,11 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.4.0
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.4.1
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
 // ⚙️ SETTINGS + 🖼️ LOGO (MongoDB-backed)
 // 📦 PROFESSIONAL SEED PROTECTION (one-time seed + auto cleanup)
 // 📌 OWNERSHIP SIGNATURE — 5 طبقات (Headers + Meta + Console + Visual + DB)
-// ✨ v10.4: Digital signature system by Aman Allah Naji
+// ✨ v10.4.1: HTTP headers ASCII-only fix
 // ============================================================
 
 'use strict';
@@ -16,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.4.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.4.1 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -117,7 +117,7 @@ try {
 }
 
 // ============================================================
-// 🚀 REDIS CLIENT — v10.4 (Auto TLS upgrade + Smart reconnect)
+// 🚀 REDIS CLIENT — v10.4.1
 // ============================================================
 let redisClient = null;
 let RedisStore = null;
@@ -236,13 +236,14 @@ app.set('trust proxy', isProduction ? 1 : 0);
 
 // ============================================================
 // 📌 OWNERSHIP HEADERS — ترويسات الملكية (الطبقة 1)
+// ⚠️ HTTP Headers: ASCII فقط (لا عربية ولا رموز غير ASCII)
 // ============================================================
 app.use((req, res, next) => {
-    res.setHeader('X-System-Name', 'Marine System - منظومة الوسائل البحرية');
-    res.setHeader('X-System-Version', '10.4.0');
+    res.setHeader('X-System-Name', 'Marine System');
+    res.setHeader('X-System-Version', '10.4.1');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
-    res.setHeader('X-Copyright', '© 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
+    res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
     next();
 });
 
@@ -605,7 +606,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.4.0',
+            version: '10.4.1',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -665,7 +666,6 @@ async function connectMongoDB() {
     }
 }
 
-// ✅ username index مُعرَّف في model — لا نُكرره
 async function createIndexes() {
     try {
         await Vessel.collection.createIndex({ id: 1 }, { unique: true, sparse: true });
@@ -1648,7 +1648,7 @@ function formatMaintenance(log) {
             success: true,
             status: 'online',
             service: 'Marine System',
-            version: '10.4.0',
+            version: '10.4.1',
             developer: 'أمان الله ناجي',
             organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
@@ -3390,7 +3390,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.4 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.4.1 - Aman Allah Naji">
 <meta property="og:site_name" content="منظومة الوسائل البحرية">
 <meta property="og:author" content="أمان الله ناجي">
 <meta name="twitter:creator" content="@amanallah_naji">
@@ -3456,7 +3456,7 @@ function formatMaintenance(log) {
             'background:linear-gradient(135deg,#060911,#0a1020);color:#f7d774;font-size:20px;font-weight:900;padding:12px 24px;border-radius:8px;text-shadow:0 0 20px #e6b31e;');
         console.log('%c👨‍💻 تصميم وتطوير: أمان الله ناجي — إدارة إسناد الوحدات البحرية',
             'background:#0a1020;color:#e6b31e;font-size:13px;font-weight:700;padding:8px 24px;border-radius:0 0 8px 8px;');
-        console.log('%c🚢 System Version: 10.4.0 | © ' + new Date().getFullYear() + ' All Rights Reserved',
+        console.log('%c🚢 System Version: 10.4.1 | © ' + new Date().getFullYear() + ' All Rights Reserved',
             'color:#64748b;font-size:11px;');
     } catch(e){}
 })();
@@ -3486,7 +3486,6 @@ function formatMaintenance(log) {
             return next();
         }
 
-        // 1) اعتراض res.send
         const originalSend = res.send.bind(res);
         res.send = function (body) {
             try {
@@ -3497,7 +3496,6 @@ function formatMaintenance(log) {
             return originalSend(body);
         };
 
-        // 2) اعتراض res.sendFile (المستخدمة للصفحات)
         const originalSendFile = res.sendFile.bind(res);
         res.sendFile = function (filePath, options, callback) {
             if (typeof options === 'function') { callback = options; options = {}; }
@@ -3563,7 +3561,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.4.0</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.4.1</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -3610,7 +3608,7 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.4.0');
+            console.log('🚢 MARINE SYSTEM v10.4.1');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('📦 Seed Protection: ONE-TIME ONLY');
