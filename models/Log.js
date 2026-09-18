@@ -12,9 +12,9 @@ const LogSchema = new mongoose.Schema({
             'create', 'update', 'delete', 'view',
             'export', 'import',
             'approve', 'reject',
-            'seed',      // ✅ إضافة: لحماية الـ Seed Protection
-            'cleanup',   // ✅ إضافة: لتنظيف بيانات الـ Demo
-            'complete'   // ✅ إضافة: لإكمال مهام الصيانة
+            'seed',      // ✅ لحماية الـ Seed Protection
+            'cleanup',   // ✅ لتنظيف بيانات الـ Demo
+            'complete'   // ✅ لإكمال مهام الصيانة
         ],
         required: true
     },
@@ -39,22 +39,10 @@ const LogSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    userName: {
-        type: String,
-        trim: true
-    },
-    userEmail: {
-        type: String,
-        trim: true
-    },
-    ipAddress: {
-        type: String,
-        trim: true
-    },
-    userAgent: {
-        type: String,
-        trim: true
-    },
+    userName: { type: String, trim: true },
+    userEmail: { type: String, trim: true },
+    ipAddress: { type: String, trim: true },
+    userAgent: { type: String, trim: true },
     details: {
         type: mongoose.Schema.Types.Mixed,
         default: {}
@@ -65,17 +53,11 @@ const LogSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['success', 'error', 'warning', 'info', 'skipped'],  // ✅ 'skipped' للـ seed
+        enum: ['success', 'error', 'warning', 'info', 'skipped'],
         default: 'success'
     },
-    error: {
-        type: String,
-        trim: true
-    },
-    duration: {
-        type: Number,
-        min: 0
-    },
+    error: { type: String, trim: true },
+    duration: { type: Number, min: 0 },
     metadata: {
         type: mongoose.Schema.Types.Mixed,
         default: {}
@@ -95,12 +77,10 @@ LogSchema.index({ user: 1 });
 LogSchema.index({ createdAt: -1 });
 LogSchema.index({ 'details.vesselId': 1 });
 LogSchema.index({ 'details.maintenanceId': 1 });
-
-// ✅ فهرس لسرعة البحث عن seed/cleanup markers
 LogSchema.index({ action: 1, resource: 1, resourceName: 1 });
 
 // ============================================================
-// 🛠️ دوال النموذج (Methods)
+// 🛠️ Methods
 // ============================================================
 
 LogSchema.methods.getSummary = function() {
@@ -115,7 +95,7 @@ LogSchema.methods.getSummary = function() {
 };
 
 // ============================================================
-// 📌 دوال ثابتة (Statics)
+// 📌 Statics
 // ============================================================
 
 LogSchema.statics.logAction = async function(data) {
@@ -154,10 +134,7 @@ LogSchema.statics.logLogout = function(user, req) {
 
 LogSchema.statics.logResourceAction = function(action, resource, resourceId, resourceModel, user, req, details = {}) {
     return this.logAction({
-        action,
-        resource,
-        resourceId,
-        resourceModel,
+        action, resource, resourceId, resourceModel,
         user: user._id,
         userName: user.name,
         userEmail: user.email,
@@ -167,22 +144,15 @@ LogSchema.statics.logResourceAction = function(action, resource, resourceId, res
 };
 
 LogSchema.statics.getUserLogs = function(userId, limit = 50) {
-    return this.find({ user: userId })
-        .sort({ createdAt: -1 })
-        .limit(limit);
+    return this.find({ user: userId }).sort({ createdAt: -1 }).limit(limit);
 };
 
 LogSchema.statics.getResourceLogs = function(resource, resourceId, limit = 50) {
-    return this.find({ resource, resourceId })
-        .sort({ createdAt: -1 })
-        .limit(limit);
+    return this.find({ resource, resourceId }).sort({ createdAt: -1 }).limit(limit);
 };
 
 LogSchema.statics.getRecent = function(limit = 100) {
-    return this.find()
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .populate('user', 'name email');
+    return this.find().sort({ createdAt: -1 }).limit(limit).populate('user', 'name email');
 };
 
 LogSchema.statics.getStats = async function(startDate, endDate) {
@@ -192,12 +162,7 @@ LogSchema.statics.getStats = async function(startDate, endDate) {
 
     return await this.aggregate([
         { $match: match },
-        {
-            $group: {
-                _id: '$action',
-                count: { $sum: 1 }
-            }
-        },
+        { $group: { _id: '$action', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
     ]);
 };
@@ -207,7 +172,6 @@ LogSchema.statics.getStats = async function(startDate, endDate) {
 // ============================================================
 
 LogSchema.pre('save', async function(next) {
-    // جلب اسم المستخدم إذا لم يكن موجوداً
     if (!this.userName && this.user) {
         try {
             const User = mongoose.model('User');
@@ -224,7 +188,7 @@ LogSchema.pre('save', async function(next) {
 });
 
 // ============================================================
-// 🚀 تصدير النموذج
+// 🚀 التصدير
 // ============================================================
 
 module.exports = mongoose.model('Log', LogSchema);
