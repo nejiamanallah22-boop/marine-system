@@ -1,11 +1,11 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.3.0
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.4.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
 // 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
 // ⚙️ SETTINGS + 🖼️ LOGO (MongoDB-backed)
 // 📦 PROFESSIONAL SEED PROTECTION (one-time seed + auto cleanup)
-// ✨ v10.3: Redis TLS auto-upgrade + Smart reconnect + Log enums fix
-//          + createIndexes() cleanup + notify() closure fix
+// 📌 OWNERSHIP SIGNATURE — 5 طبقات (Headers + Meta + Console + Visual + DB)
+// ✨ v10.4: Digital signature system by Aman Allah Naji
 // ============================================================
 
 'use strict';
@@ -16,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.3.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.4.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -117,7 +117,7 @@ try {
 }
 
 // ============================================================
-// 🚀 REDIS CLIENT — v10.3 (Auto TLS upgrade + Smart reconnect)
+// 🚀 REDIS CLIENT — v10.4 (Auto TLS upgrade + Smart reconnect)
 // ============================================================
 let redisClient = null;
 let RedisStore = null;
@@ -233,6 +233,18 @@ const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
 
 app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
+
+// ============================================================
+// 📌 OWNERSHIP HEADERS — ترويسات الملكية (الطبقة 1)
+// ============================================================
+app.use((req, res, next) => {
+    res.setHeader('X-System-Name', 'Marine System - منظومة الوسائل البحرية');
+    res.setHeader('X-System-Version', '10.4.0');
+    res.setHeader('X-Developer', 'Aman Allah Naji');
+    res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
+    res.setHeader('X-Copyright', '© 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
+    next();
+});
 
 function generateSecret(bytes = 64) {
     return crypto.randomBytes(bytes).toString('hex');
@@ -574,6 +586,36 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
+// 📌 DB OWNERSHIP SIGNATURE — بصمة قاعدة البيانات (الطبقة 5)
+// ============================================================
+async function registerOwnershipSignature() {
+    try {
+        if (!SystemLogo) {
+            console.warn('⚠️ SystemLogo model not available — skipping DB signature');
+            return;
+        }
+        const existing = await SystemLogo.findOne({ key: 'developer_signature' });
+        if (existing) {
+            console.log('📌 Developer signature already in DB');
+            return;
+        }
+        await SystemLogo.create({
+            key: 'developer_signature',
+            developer: 'أمان الله ناجي',
+            organization: 'إدارة إسناد الوحدات البحرية',
+            organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
+            systemName: 'منظومة الوسائل البحرية',
+            version: '10.4.0',
+            firstDeployment: new Date(),
+            signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
+        });
+        console.log('📌 Developer signature registered in DB');
+    } catch (e) {
+        console.warn('⚠️ DB signature:', e.message);
+    }
+}
+
+// ============================================================
 // 🍃 MONGODB CONNECTION
 // ============================================================
 let mongoConnected = false;
@@ -611,6 +653,7 @@ async function connectMongoDB() {
 
         await createIndexes();
         await ensureAdminExists();
+        await registerOwnershipSignature();
         await cleanupDemoVessels();
         await ensureInitialData();
 
@@ -622,7 +665,7 @@ async function connectMongoDB() {
     }
 }
 
-// ✅ v10.3: username index مُعرَّف في model — لا نُكرره
+// ✅ username index مُعرَّف في model — لا نُكرره
 async function createIndexes() {
     try {
         await Vessel.collection.createIndex({ id: 1 }, { unique: true, sparse: true });
@@ -1605,7 +1648,9 @@ function formatMaintenance(log) {
             success: true,
             status: 'online',
             service: 'Marine System',
-            version: '10.3.0',
+            version: '10.4.0',
+            developer: 'أمان الله ناجي',
+            organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
@@ -3334,6 +3379,149 @@ function formatMaintenance(log) {
     }
 
     // ========================================================
+    // 📌 OWNERSHIP SIGNATURE INJECTION — الطبقات 2, 3, 4
+    // ========================================================
+    const OWNERSHIP_META = `
+<meta name="author" content="أمان الله ناجي">
+<meta name="creator" content="أمان الله ناجي">
+<meta name="designer" content="أمان الله ناجي">
+<meta name="developer" content="أمان الله ناجي">
+<meta name="publisher" content="إدارة إسناد الوحدات البحرية">
+<meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
+<meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
+<meta name="application-name" content="منظومة الوسائل البحرية">
+<meta name="generator" content="Marine System v10.4 - Aman Allah Naji">
+<meta property="og:site_name" content="منظومة الوسائل البحرية">
+<meta property="og:author" content="أمان الله ناجي">
+<meta name="twitter:creator" content="@amanallah_naji">
+`;
+
+    const OWNERSHIP_CSS = `
+<style id="ownership-signature-style">
+#dev-signature {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    padding: 8px 14px !important;
+    background: rgba(6, 9, 17, 0.75) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(230, 179, 30, 0.25) !important;
+    border-radius: 10px !important;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif !important;
+    z-index: 9999 !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    opacity: 0.65 !important;
+    transition: opacity 0.3s ease !important;
+    direction: rtl !important;
+    text-align: right !important;
+    line-height: 1.3 !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+}
+#dev-signature:hover { opacity: 1 !important; }
+#dev-signature .sig-icon { color: #e6b31e !important; font-size: 13px !important; margin-left: 4px !important; }
+#dev-signature .sig-name {
+    color: #f7d774 !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    display: block !important;
+}
+#dev-signature .sig-role {
+    color: #64748b !important;
+    font-size: 9px !important;
+    display: block !important;
+    margin-top: 2px !important;
+}
+@media print { #dev-signature { display: none !important; } }
+@media (max-width: 480px) {
+    #dev-signature { padding: 6px 10px !important; bottom: 12px !important; right: 12px !important; }
+    #dev-signature .sig-name { font-size: 10px !important; }
+    #dev-signature .sig-role { font-size: 8px !important; }
+}
+</style>`;
+
+    const OWNERSHIP_HTML = `
+<div id="dev-signature" role="contentinfo" aria-label="توقيع المطور">
+    <span class="sig-icon">⚓</span>
+    <span class="sig-name">أمان الله ناجي</span>
+    <span class="sig-role">إدارة إسناد الوحدات البحرية</span>
+</div>`;
+
+    const OWNERSHIP_CONSOLE = `
+<script>
+(function(){
+    try {
+        console.log('%c⚓ منظومة الوسائل البحرية',
+            'background:linear-gradient(135deg,#060911,#0a1020);color:#f7d774;font-size:20px;font-weight:900;padding:12px 24px;border-radius:8px;text-shadow:0 0 20px #e6b31e;');
+        console.log('%c👨‍💻 تصميم وتطوير: أمان الله ناجي — إدارة إسناد الوحدات البحرية',
+            'background:#0a1020;color:#e6b31e;font-size:13px;font-weight:700;padding:8px 24px;border-radius:0 0 8px 8px;');
+        console.log('%c🚢 System Version: 10.4.0 | © ' + new Date().getFullYear() + ' All Rights Reserved',
+            'color:#64748b;font-size:11px;');
+    } catch(e){}
+})();
+<\/script>`;
+
+    function injectOwnership(html) {
+        try {
+            if (typeof html !== 'string') return html;
+            if (!html.includes('</body>')) return html;
+            if (html.includes('ownership-signature-style')) return html;
+
+            if (html.includes('</head>')) {
+                html = html.replace('</head>', OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + '\n</head>');
+            } else {
+                html = OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + html;
+            }
+            html = html.replace('</body>', OWNERSHIP_HTML + '\n</body>');
+            return html;
+        } catch (e) {
+            return html;
+        }
+    }
+
+    app.use((req, res, next) => {
+        if (req.path.startsWith('/api/') ||
+            /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i.test(req.path)) {
+            return next();
+        }
+
+        // 1) اعتراض res.send
+        const originalSend = res.send.bind(res);
+        res.send = function (body) {
+            try {
+                if (typeof body === 'string' && body.includes('</body>')) {
+                    body = injectOwnership(body);
+                }
+            } catch (e) {}
+            return originalSend(body);
+        };
+
+        // 2) اعتراض res.sendFile (المستخدمة للصفحات)
+        const originalSendFile = res.sendFile.bind(res);
+        res.sendFile = function (filePath, options, callback) {
+            if (typeof options === 'function') { callback = options; options = {}; }
+            try {
+                if (typeof filePath === 'string' && /\.html?$/i.test(filePath) && fs.existsSync(filePath)) {
+                    let content = fs.readFileSync(filePath, 'utf8');
+                    if (content.includes('</body>')) {
+                        content = injectOwnership(content);
+                    }
+                    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+                    return originalSend(content);
+                }
+            } catch (e) {
+                console.warn('⚠️ Ownership injection failed, serving raw file:', e.message);
+            }
+            return originalSendFile(filePath, options, callback);
+        };
+
+        next();
+    });
+
+    console.log('📌 Ownership signature middleware registered');
+
+    // ========================================================
     // 📁 STATIC FILES
     // ========================================================
     const pagesDir = path.join(__dirname, 'pages');
@@ -3375,7 +3563,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.3.0</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.4.0</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -3422,12 +3610,14 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.3.0');
+            console.log('🚢 MARINE SYSTEM v10.4.0');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('📦 Seed Protection: ONE-TIME ONLY');
             console.log('🔧 Maintenance Routes: UNIFIED');
             console.log('👤 User region/unit: ENABLED');
+            console.log('📌 Ownership Signature: 5 LAYERS ACTIVE');
+            console.log('   └─ Headers + Meta + Console + Visual + DB');
             console.log('🤖 AI Assistant + Smart Import: ' +
                 (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'));
             console.log('📧 Email: ' + (
@@ -3439,14 +3629,10 @@ function formatMaintenance(log) {
                 (ALLOW_ADMIN_RESET ? 'ENABLED' : 'DISABLED'));
             console.log('✅ RBAC v4: 5 roles');
             console.log('✅ ID matching: _id OR id');
-            console.log('✅ Notifications: ' +
-                (Notification ? 'ENABLED' : 'DISABLED'));
-            console.log('✅ Notes: ' +
-                (Note ? 'ENABLED' : 'DISABLED'));
-            console.log('✅ Settings: ' +
-                (UserSettings ? 'ENABLED' : 'DISABLED'));
-            console.log('✅ Logo: ' +
-                (SystemLogo ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Notifications: ' + (Notification ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Notes: ' + (Note ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Settings: ' + (UserSettings ? 'ENABLED' : 'DISABLED'));
+            console.log('✅ Logo: ' + (SystemLogo ? 'ENABLED' : 'DISABLED'));
             console.log('=========================================');
             console.log(`📍 Port: ${PORT}`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -3455,6 +3641,9 @@ function formatMaintenance(log) {
             console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED ✅' : 'MEMORY ⚠️'}`);
             console.log(`🍪 Cookie SameSite: ${COOKIE_SAMESITE}`);
             console.log(`🍪 Cookie Secure: ${isProduction}`);
+            console.log('=========================================');
+            console.log('👨‍💻 Developer: أمان الله ناجي');
+            console.log('🏛️  Organization: إدارة إسناد الوحدات البحرية');
             console.log('=========================================');
         });
     }
