@@ -551,7 +551,9 @@ app.use((req, res, next) => {
         }
     });
     next();
-});// ============================================================
+});
+
+// ============================================================
 // 🍃 MONGODB CONNECTION
 // ============================================================
 let mongoConnected = false;
@@ -1232,7 +1234,9 @@ async function notify({
         console.error('❌ notify() error:', e.message);
         return null;
     }
-    // ============================================================
+}
+
+// ============================================================
 // 🔐 AUTH MIDDLEWARE
 // ============================================================
 function extractBearerToken(req) {
@@ -1609,7 +1613,8 @@ function formatMaintenance(log) {
             }
         });
     });
-}    // ========================================================
+
+    // ========================================================
     // 🔐 LOGIN
     // ========================================================
     app.post('/api/auth/login', async (req, res) => {
@@ -3455,6 +3460,7 @@ function formatMaintenance(log) {
         });
     }
 })();
+
 // ============================================================
 // 📤 MODULE EXPORTS
 // ============================================================
@@ -3462,7 +3468,7 @@ module.exports = app;
 module.exports.csrfProtection = csrfProtection;
 module.exports.authenticateAccessToken = authenticateAccessToken;
 module.exports.requirePermission = requirePermission;
-module.exports.requireOneOf = requirePermission;
+module.exports.requireOneOf = requireOneOf;   // ✅ إصلاح: كان requirePermission
 module.exports.requireAdmin = requireAdmin;
 module.exports.hasPermission = hasPermission;
 module.exports.normalizeRole = normalizeRole;
@@ -3471,4 +3477,3 @@ module.exports.addSystemLog = addSystemLog;
 // ✅ Redis helpers للوحدات الأخرى
 module.exports.getRedisClient = getRedisClient;
 module.exports.isRedisAvailable = isRedisAvailable;
- 
