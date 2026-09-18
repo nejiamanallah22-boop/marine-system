@@ -2,8 +2,8 @@
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           🎨 EFFICIENCY PAGE — ULTRA PRO v11.3
-           (Print handled centrally by /css/print.css)
+           🎨 EFFICIENCY PAGE — ULTRA PRO v12.0
+           ✨ Regions only + Fixed readiness + Scroll + Print chart
            ============================================================ */
 
         #page-efficiency {
@@ -73,9 +73,7 @@
             background-clip: padding-box;
         }
 
-        /* ============================================================
-           HEADER
-           ============================================================ */
+        /* HEADER */
         .eff-header {
             display: flex;
             justify-content: space-between;
@@ -218,9 +216,7 @@
             border-color: var(--c-border-strong);
         }
 
-        /* ============================================================
-           STATS — 5 بطاقات
-           ============================================================ */
+        /* STATS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -309,9 +305,7 @@
             max-width: 100%;
         }
 
-        /* ============================================================
-           FILTER BAR
-           ============================================================ */
+        /* FILTER */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
@@ -406,10 +400,7 @@
             border-color: var(--c-border-strong);
         }
 
-        /* ============================================================
-           SECTIONS
-           ⚠️ IMPORTANT: page-break-inside مضبوط في /css/print.css فقط
-           ============================================================ */
+        /* SECTIONS */
         .eff-section {
             background: linear-gradient(135deg,
                 rgba(24, 34, 56, 0.55) 0%,
@@ -419,10 +410,9 @@
             border: 1px solid var(--c-border-soft);
             border-radius: var(--radius);
             margin: 0 24px 20px;
-            overflow: hidden;
+            overflow: visible;
             box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
             transition: all var(--transition);
-            /* ✅ تم حذف page-break-inside: avoid — يُدار من print.css */
         }
         .eff-section[style*="display: none"] { display: none !important; }
         .eff-section:hover {
@@ -441,6 +431,7 @@
             position: relative;
             flex-wrap: wrap;
             gap: 10px;
+            border-radius: var(--radius) var(--radius) 0 0;
         }
         .eff-section .section-header::after {
             content: '';
@@ -491,16 +482,10 @@
             border: 1px solid rgba(230, 179, 30, 0.25);
         }
 
-        .section-content { padding: 0; }
+        .section-content { padding: 0; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
 
-        /* ============================================================
-           TABLE
-           ============================================================ */
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 0;
-            padding: 0;
-        }
+        /* TABLE */
+        .table-wrapper { overflow-x: auto; border-radius: 0; padding: 0; }
         .table-wrapper table {
             width: 100%;
             border-collapse: separate;
@@ -560,62 +545,27 @@
             padding-right: 22px;
         }
 
-        /* ============================================================
-           ROW STATES
-           ============================================================ */
+        /* ROW STATES */
         .row-high {
-            background: linear-gradient(90deg,
-                rgba(16, 185, 129, 0.18) 0%,
-                rgba(16, 185, 129, 0.05) 50%,
-                transparent 100%) !important;
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 100%) !important;
             border-right: 5px solid #10b981;
         }
-        .row-high td:first-child {
-            color: #6ee7b7 !important;
-            text-shadow: 0 0 20px rgba(110, 231, 183, 0.6);
-        }
-        .row-high .eff-cell {
-            color: #6ee7b7 !important;
-            font-weight: 900 !important;
-            font-size: 16px !important;
-            text-shadow: 0 0 20px rgba(110, 231, 183, 0.6);
-        }
+        .row-high td:first-child { color: #6ee7b7 !important; text-shadow: 0 0 20px rgba(110, 231, 183, 0.6); }
+        .row-high .eff-cell { color: #6ee7b7 !important; font-weight: 900 !important; font-size: 16px !important; text-shadow: 0 0 20px rgba(110, 231, 183, 0.6); }
         .row-mid {
-            background: linear-gradient(90deg,
-                rgba(245, 158, 11, 0.18) 0%,
-                rgba(245, 158, 11, 0.05) 50%,
-                transparent 100%) !important;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.05) 50%, transparent 100%) !important;
             border-right: 5px solid #f59e0b;
         }
-        .row-mid td:first-child {
-            color: #fcd34d !important;
-            text-shadow: 0 0 20px rgba(252, 211, 77, 0.6);
-        }
-        .row-mid .eff-cell {
-            color: #fcd34d !important;
-            font-weight: 900 !important;
-            font-size: 16px !important;
-        }
+        .row-mid td:first-child { color: #fcd34d !important; text-shadow: 0 0 20px rgba(252, 211, 77, 0.6); }
+        .row-mid .eff-cell { color: #fcd34d !important; font-weight: 900 !important; font-size: 16px !important; }
         .row-low {
-            background: linear-gradient(90deg,
-                rgba(239, 68, 68, 0.18) 0%,
-                rgba(239, 68, 68, 0.05) 50%,
-                transparent 100%) !important;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0.05) 50%, transparent 100%) !important;
             border-right: 5px solid #ef4444;
         }
-        .row-low td:first-child {
-            color: #fca5a5 !important;
-            text-shadow: 0 0 20px rgba(252, 165, 165, 0.6);
-        }
-        .row-low .eff-cell {
-            color: #fca5a5 !important;
-            font-weight: 900 !important;
-            font-size: 16px !important;
-        }
+        .row-low td:first-child { color: #fca5a5 !important; text-shadow: 0 0 20px rgba(252, 165, 165, 0.6); }
+        .row-low .eff-cell { color: #fca5a5 !important; font-weight: 900 !important; font-size: 16px !important; }
 
-        /* ============================================================
-           STATUS BADGES
-           ============================================================ */
+        /* STATUS BADGES */
         .status-badge {
             padding: 6px 16px;
             border-radius: 20px;
@@ -634,44 +584,17 @@
             background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
             pointer-events: none;
         }
-        .status-badge.excellent {
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: #ffffff;
-            border: 1px solid #6ee7b7;
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
-        }
-        .status-badge.good {
-            background: linear-gradient(135deg, #047857, #059669);
-            color: #ffffff;
-            border: 1px solid #34d399;
-        }
-        .status-badge.medium {
-            background: linear-gradient(135deg, #b45309, #f59e0b);
-            color: #ffffff;
-            border: 1px solid #fcd34d;
-            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
-        }
-        .status-badge.low {
-            background: linear-gradient(135deg, #b91c1c, #ef4444);
-            color: #ffffff;
-            border: 1px solid #fca5a5;
-            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
-        }
-        .status-badge.critical {
-            background: linear-gradient(135deg, #7f1d1d, #dc2626, #ef4444);
-            color: #ffffff;
-            border: 1px solid #fca5a5;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6);
-            animation: criticalPulse 2s ease-in-out infinite;
-        }
+        .status-badge.excellent { background: linear-gradient(135deg, #059669, #10b981); color: #ffffff; border: 1px solid #6ee7b7; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); }
+        .status-badge.good { background: linear-gradient(135deg, #047857, #059669); color: #ffffff; border: 1px solid #34d399; }
+        .status-badge.medium { background: linear-gradient(135deg, #b45309, #f59e0b); color: #ffffff; border: 1px solid #fcd34d; box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4); }
+        .status-badge.low { background: linear-gradient(135deg, #b91c1c, #ef4444); color: #ffffff; border: 1px solid #fca5a5; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4); }
+        .status-badge.critical { background: linear-gradient(135deg, #7f1d1d, #dc2626, #ef4444); color: #ffffff; border: 1px solid #fca5a5; box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6); animation: criticalPulse 2s ease-in-out infinite; }
         @keyframes criticalPulse {
             0%, 100% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6); }
             50% { box-shadow: 0 4px 32px rgba(239, 68, 68, 0.9); }
         }
 
-        /* ============================================================
-           PROGRESS BAR
-           ============================================================ */
+        /* PROGRESS BAR */
         .progress-bar {
             width: 100%;
             height: 10px;
@@ -701,47 +624,26 @@
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
         }
-        .progress-bar .progress-fill.high {
-            background: linear-gradient(90deg, #047857, #10b981, #34d399);
-            box-shadow: 0 0 16px rgba(16, 185, 129, 0.7);
-        }
-        .progress-bar .progress-fill.mid {
-            background: linear-gradient(90deg, #b45309, #f59e0b, #fcd34d);
-            box-shadow: 0 0 16px rgba(245, 158, 11, 0.7);
-        }
-        .progress-bar .progress-fill.low {
-            background: linear-gradient(90deg, #b91c1c, #ef4444, #fca5a5);
-            box-shadow: 0 0 16px rgba(239, 68, 68, 0.7);
-        }
+        .progress-bar .progress-fill.high { background: linear-gradient(90deg, #047857, #10b981, #34d399); box-shadow: 0 0 16px rgba(16, 185, 129, 0.7); }
+        .progress-bar .progress-fill.mid { background: linear-gradient(90deg, #b45309, #f59e0b, #fcd34d); box-shadow: 0 0 16px rgba(245, 158, 11, 0.7); }
+        .progress-bar .progress-fill.low { background: linear-gradient(90deg, #b91c1c, #ef4444, #fca5a5); box-shadow: 0 0 16px rgba(239, 68, 68, 0.7); }
 
-        /* ============================================================
-           CHART
-           ============================================================ */
+        /* CHART */
         .chart-section {
             margin: 0 24px 28px;
             border: 1px solid var(--c-border-soft);
             border-radius: var(--radius);
             overflow: hidden;
-            background: linear-gradient(135deg,
-                rgba(24, 34, 56, 0.55) 0%,
-                rgba(18, 26, 44, 0.75) 100%);
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
             backdrop-filter: blur(20px);
             box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
         }
-        .chart-switch {
-            display: flex;
-            gap: 10px;
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--c-border-soft);
-            flex-wrap: wrap;
-        }
+        .chart-switch { display: flex; gap: 10px; padding: 16px 24px; border-bottom: 1px solid var(--c-border-soft); flex-wrap: wrap; }
         .chart-btn {
             padding: 8px 20px;
             border: 1px solid var(--c-border-mid);
             border-radius: 10px;
-            background: linear-gradient(135deg,
-                rgba(148, 163, 184, 0.06),
-                rgba(148, 163, 184, 0.02));
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.06), rgba(148, 163, 184, 0.02));
             color: var(--c-text-3);
             cursor: pointer;
             font-family: var(--font);
@@ -749,63 +651,81 @@
             font-weight: 700;
             transition: all var(--transition);
         }
-        .chart-btn:hover {
-            background: rgba(148, 163, 184, 0.12);
-            color: var(--c-text-1);
-            border-color: var(--c-border-strong);
-            transform: translateY(-1px);
-        }
-        .chart-btn.active {
-            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            border-color: var(--c-gold-2);
-            color: #060911;
-            box-shadow: 0 6px 20px var(--c-gold-glow);
-        }
+        .chart-btn:hover { background: rgba(148, 163, 184, 0.12); color: var(--c-text-1); border-color: var(--c-border-strong); transform: translateY(-1px); }
+        .chart-btn.active { background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2)); border-color: var(--c-gold-2); color: #060911; box-shadow: 0 6px 20px var(--c-gold-glow); }
         .chart-btn i { margin-left: 6px; }
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            padding: 24px;
-        }
+        .charts-container { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 24px; }
         .chart-box {
-            background: linear-gradient(135deg,
-                rgba(10, 16, 32, 0.6) 0%,
-                rgba(18, 26, 44, 0.4) 100%);
+            background: linear-gradient(135deg, rgba(10, 16, 32, 0.6) 0%, rgba(18, 26, 44, 0.4) 100%);
             border-radius: var(--radius-sm);
             padding: 20px;
             border: 1px solid var(--c-border-soft);
             min-height: 380px;
         }
-        .chart-box h4 {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--c-text-2);
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        .chart-box canvas {
-            width: 100% !important;
-            height: 320px !important;
-            display: block;
-        }
+        .chart-box h4 { font-size: 14px; font-weight: 800; color: var(--c-text-2); margin-bottom: 16px; text-align: center; }
+        .chart-box canvas { width: 100% !important; height: 320px !important; display: block; }
 
-        /* ============================================================
-           EMPTY / LOADING
-           ============================================================ */
-        .empty-state {
-            text-align: center;
-            padding: 48px 24px;
-            color: var(--c-text-4);
-        }
-        .empty-state h3 {
-            font-size: 14px; font-weight: 700;
-            color: var(--c-text-3); margin-bottom: 4px;
-        }
+        /* EMPTY */
+        .empty-state { text-align: center; padding: 48px 24px; color: var(--c-text-4); }
+        .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--c-text-3); margin-bottom: 4px; }
 
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
+        /* SCROLL NAV */
+        .scroll-nav {
+            position: fixed;
+            right: 24px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
+            pointer-events: none;
+            transform: translateY(10px);
+        }
+        .scroll-nav.visible { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0); }
+        .scroll-nav-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            border: 1px solid var(--c-border-mid);
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.95) 0%, rgba(18, 26, 44, 0.98) 100%);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            color: var(--c-gold-2);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+        }
+        .scroll-nav-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .scroll-nav-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            border-color: var(--c-gold-2);
+            color: #060911;
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            box-shadow: 0 12px 32px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.15) inset;
+        }
+        .scroll-nav-btn:hover::before { opacity: 1; }
+        .scroll-nav-btn:active { transform: translateY(-1px) scale(0.98); }
+        .scroll-nav-btn i { position: relative; z-index: 1; pointer-events: none; }
+
+        /* RESPONSIVE */
         @media (max-width: 1100px) {
             .stats-grid { gap: 12px; padding: 0 20px 18px; }
             .stat-card { padding: 18px 12px 16px; }
@@ -838,6 +758,8 @@
             .chart-box { min-height: 300px; }
             .chart-box canvas { height: 260px !important; }
             .section-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .scroll-nav { right: 16px; bottom: 80px; gap: 8px; }
+            .scroll-nav-btn { width: 42px; height: 42px; font-size: 16px; border-radius: 12px; }
         }
         @media (max-width: 640px) {
             .stats-grid { gap: 10px; padding: 0 14px 14px; }
@@ -858,9 +780,28 @@
             .stat-card .label { font-size: 9.5px; }
         }
 
-        /* ============================================================
-           🖨️ PRINT — يُدار مركزياً من /css/print.css
-           ============================================================ */
+        /* PRINT */
+        @media print {
+            #page-efficiency .chart-section {
+                display: block !important;
+                visibility: visible !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin: 6mm 0 !important;
+                padding: 0 !important;
+                border: 1px solid #12121a !important;
+                background: #ffffff !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+            }
+            #page-efficiency .chart-section .chart-switch { display: none !important; }
+            #page-efficiency .chart-section .charts-container { padding: 4mm !important; display: block !important; }
+            #page-efficiency .chart-box { background: #ffffff !important; border: none !important; padding: 0 !important; min-height: auto !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+            #page-efficiency .chart-box h4 { color: #0a0a12 !important; -webkit-text-fill-color: #0a0a12 !important; font-size: 12pt !important; font-weight: 800 !important; margin: 0 0 3mm 0 !important; padding: 0 0 1.5mm 0 !important; border-bottom: 1pt solid #12121a !important; text-align: center !important; }
+            #page-efficiency .chart-box img.print-chart-image { display: block !important; width: 100% !important; max-width: 100% !important; height: auto !important; margin: 0 auto !important; }
+            #page-efficiency .chart-box canvas { display: none !important; }
+            .scroll-nav { display: none !important; }
+        }
     </style>
 
     <!-- HEADER -->
@@ -872,14 +813,14 @@
             </div>
             <div class="header-text">
                 <h2>جاهزية الأسطول</h2>
-                <p>تحليل متقدم لنسب الجاهزية والأداء</p>
+                <p>تحليل متقدم لنسب الجاهزية حسب الأقاليم</p>
             </div>
         </div>
         <div class="eff-header-actions">
             <button type="button" class="btn-action primary" onclick="refreshEfficiency()">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button type="button" class="btn-action secondary" onclick="window.print()">
+            <button type="button" class="btn-action secondary" onclick="printEfficiencyReport()">
                 <i class="fas fa-print"></i> طباعة
             </button>
         </div>
@@ -913,16 +854,12 @@
     <div class="filter-bar">
         <label><i class="fas fa-map-marker-alt"></i> الإقليم</label>
         <select id="fRegEff" onchange="renderEfficiency()">
-            <option value="الكل">🌍 جميع الأقاليم والوحدات</option>
+            <option value="الكل">🌍 جميع الأقاليم</option>
             <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
             <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
             <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
             <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="unit-تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="unit-المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="unit-صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="unit-جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="unit-قبيبة">🏛️ المجمع الأمني بقبيبة</option>
+            <option value="قبيبة">🏛️ المجمع الأمني بقبيبة</option>
         </select>
 
         <label><i class="fas fa-filter"></i> الفئة</label>
@@ -1076,111 +1013,11 @@
         </div>
     </div>
 
-    <!-- جدول 6: وحدة تونس -->
-    <div class="eff-section" data-section-key="unit-تونس">
-        <div class="section-header">
-            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس</h3>
-            <span class="badge gold" id="badge-unit-تونس">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-unit-تونس"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 7: وحدة جرجيس -->
-    <div class="eff-section" data-section-key="unit-جرجيس">
-        <div class="section-header">
-            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس</h3>
-            <span class="badge gold" id="badge-unit-جرجيس">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-unit-جرجيس"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 8: وحدة صفاقس -->
-    <div class="eff-section" data-section-key="unit-صفاقس">
-        <div class="section-header">
-            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس</h3>
-            <span class="badge gold" id="badge-unit-صفاقس">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-unit-صفاقس"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 9: وحدة المنستير -->
-    <div class="eff-section" data-section-key="unit-المنستير">
-        <div class="section-header">
-            <h3><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير</h3>
-            <span class="badge gold" id="badge-unit-المنستير">0% جاهزية</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-unit-المنستير"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- جدول 10: المجمع الأمني بقبيبة -->
-    <div class="eff-section" data-section-key="unit-قبيبة">
+    <!-- جدول 6: قبيبة -->
+    <div class="eff-section" data-section-key="region-قبيبة">
         <div class="section-header">
             <h3><i class="fas fa-building"></i> المجمع الأمني بقبيبة</h3>
-            <span class="badge gold" id="badge-unit-قبيبة">0% جاهزية</span>
+            <span class="badge gold" id="badge-region-قبيبة">0% جاهزية</span>
         </div>
         <div class="section-content">
             <div class="table-wrapper">
@@ -1195,7 +1032,7 @@
                             <th><i class="fas fa-circle"></i> الحالة</th>
                         </tr>
                     </thead>
-                    <tbody id="body-unit-قبيبة"></tbody>
+                    <tbody id="body-region-قبيبة"></tbody>
                 </table>
             </div>
         </div>
@@ -1216,10 +1053,20 @@
         </div>
         <div class="charts-container">
             <div class="chart-box">
-                <h4>📊 توزيع الجاهزية حسب الإقليم والوحدة</h4>
+                <h4>📊 توزيع الجاهزية حسب الأقاليم</h4>
                 <canvas id="efficiencyChart" height="250"></canvas>
             </div>
         </div>
+    </div>
+
+    <!-- SCROLL NAV -->
+    <div class="scroll-nav" id="scrollNav" aria-hidden="true">
+        <button type="button" class="scroll-nav-btn" id="scrollToTop" title="أعلى الصفحة" aria-label="أعلى الصفحة">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+        <button type="button" class="scroll-nav-btn" id="scrollToBottom" title="أسفل الصفحة" aria-label="أسفل الصفحة">
+            <i class="fas fa-chevron-down"></i>
+        </button>
     </div>
 
     <script>
@@ -1228,19 +1075,13 @@
 
             const FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 
+            /* ✅ v12.0 — الأقاليم فقط، لا وحدات صيانة */
             const FIXED_REGIONS = [
-                { key: 'الشمال', match: 'الشمال' },
-                { key: 'الساحل', match: 'الساحل' },
-                { key: 'الوسط',  match: 'الوسط'  },
-                { key: 'الجنوب', match: 'الجنوب' }
-            ];
-
-            const FIXED_UNITS = [
-                { key: 'تونس',    match: 'وحدة الصيانة والإسناد البحري تونس' },
-                { key: 'جرجيس',   match: 'وحدة الصيانة والإسناد البحري جرجيس' },
-                { key: 'صفاقس',   match: 'وحدة الصيانة والإسناد البحري صفاقس' },
-                { key: 'المنستير', match: 'وحدة الصيانة والإسناد البحري المنستير' },
-                { key: 'قبيبة',   match: 'المجمع الأمني بقبيبة' }
+                { key: 'الشمال', match: 'الشمال', keywords: ['الشمال'] },
+                { key: 'الساحل', match: 'الساحل', keywords: ['الساحل'] },
+                { key: 'الوسط',  match: 'الوسط',  keywords: ['الوسط'] },
+                { key: 'الجنوب', match: 'الجنوب', keywords: ['الجنوب'] },
+                { key: 'قبيبة',  match: 'قبيبة',  keywords: ['قبيبة'] }
             ];
 
             let currentChart = 'pie';
@@ -1266,12 +1107,42 @@
             }
 
             function normalizeStatusName(status) {
-                const s = normText(status).toLowerCase();
+                const s = normText(status);
                 if (!s) return '';
-                if (s.includes('صالح') || s === 'active' || s === 'ready') return 'صالح';
-                if (s.includes('معطب') || s.includes('عطب') || s === 'damaged') return 'معطب';
-                if (s.includes('صيانة') || s === 'maintenance' || s === 'repair') return 'صيانة';
-                return normText(status);
+                const lower = s.toLowerCase();
+                if (s.includes('صالح') || lower === 'active' || lower === 'ready' || lower === 'operational') return 'صالح';
+                if (s.includes('معطب') || s.includes('عطب') || lower === 'damaged' || lower === 'broken' || lower === 'out_of_service') return 'معطب';
+                if (s.includes('صيانة') || s.includes('صيانه') || lower === 'maintenance' || lower === 'repair') return 'صيانة';
+                return s;
+            }
+
+            function resolveVesselStatus(v) {
+                if (!v) return '';
+                const isValid = (x) => x !== undefined && x !== null && String(x).trim() !== '';
+                const candidates = [];
+                if (isValid(v.status)) candidates.push(String(v.status).trim());
+                if (isValid(v.stat))   candidates.push(String(v.stat).trim());
+                if (isValid(v.state))  candidates.push(String(v.state).trim());
+                if (candidates.length === 0) return '';
+                if (candidates.length === 1) return candidates[0];
+                for (const c of candidates) {
+                    const n = normalizeStatusName(c);
+                    if (n === 'معطب' || n === 'صيانة') return c;
+                }
+                return candidates[0];
+            }
+
+            /* ✅ v12.0 — مطابقة الإقليم فقط */
+            function findRegionMatch(v) {
+                if (!v) return null;
+                const candidates = [v.region, v.reg].map(normText).filter(Boolean);
+                if (candidates.length === 0) return null;
+                for (const r of FIXED_REGIONS) {
+                    for (const cand of candidates) {
+                        if (r.keywords.some(kw => cand.includes(kw))) return r.match;
+                    }
+                }
+                return null;
             }
 
             function categoryFromLength(len) {
@@ -1292,12 +1163,9 @@
                 return map;
             }
 
+            /* ✅ v12.0 — احتساب كل مركب حسب إقليمه فقط */
             function buildStatsFromVessels(vessels) {
-                const stats = {
-                    general: createEmptyCategoriesMap(),
-                    regions: {},
-                    units: {}
-                };
+                const stats = { general: createEmptyCategoriesMap(), regions: {} };
 
                 FIXED_REGIONS.forEach(r => {
                     stats.regions[r.match] = {
@@ -1306,26 +1174,16 @@
                     };
                 });
 
-                FIXED_UNITS.forEach(u => {
-                    stats.units[u.match] = {
-                        active: 0, damaged: 0, maintenance: 0, total: 0,
-                        categories: createEmptyCategoriesMap()
-                    };
-                });
-
                 (vessels || []).forEach(v => {
-                    let catRaw = v.cat !== undefined ? v.cat : (v.category || v.type || v.cls);
+                    let catRaw = v.cat || v.category || v.type || v.cls;
                     if (!catRaw && v.len !== undefined && v.len !== null && v.len !== '') {
                         catRaw = categoryFromLength(v.len);
                     }
                     const cat = normalizeCategoryName(catRaw) || 'زوارق مزدوجة';
+                    const status = normalizeStatusName(resolveVesselStatus(v));
+                    const regionMatch = findRegionMatch(v);
 
-                    const status = normalizeStatusName(
-                        v.stat !== undefined ? v.stat : (v.status || v.state)
-                    );
-                    const reg = normText(v.reg || v.region || v.area);
-                    const unit = normText(v.repairUnit || v.maintenanceUnit || v.maintenance || v.unit);
-
+                    // الإجمالي العام
                     if (!stats.general[cat]) {
                         stats.general[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
                     }
@@ -1335,8 +1193,9 @@
                     else if (status === 'معطب') g.damaged++;
                     else if (status === 'صيانة') g.maintenance++;
 
-                    if (reg && stats.regions[reg]) {
-                        const r = stats.regions[reg];
+                    // الإقليم
+                    if (regionMatch && stats.regions[regionMatch]) {
+                        const r = stats.regions[regionMatch];
                         r.total++;
                         if (status === 'صالح') r.active++;
                         else if (status === 'معطب') r.damaged++;
@@ -1351,23 +1210,6 @@
                         else if (status === 'معطب') rc.damaged++;
                         else if (status === 'صيانة') rc.maintenance++;
                     }
-
-                    if (unit && stats.units[unit]) {
-                        const u = stats.units[unit];
-                        u.total++;
-                        if (status === 'صالح') u.active++;
-                        else if (status === 'معطب') u.damaged++;
-                        else if (status === 'صيانة') u.maintenance++;
-
-                        if (!u.categories[cat]) {
-                            u.categories[cat] = { active: 0, damaged: 0, maintenance: 0, total: 0 };
-                        }
-                        const uc = u.categories[cat];
-                        uc.total++;
-                        if (status === 'صالح') uc.active++;
-                        else if (status === 'معطب') uc.damaged++;
-                        else if (status === 'صيانة') uc.maintenance++;
-                    }
                 });
 
                 return stats;
@@ -1376,35 +1218,23 @@
             async function loadVessels() {
                 if (loadingVessels) return null;
                 loadingVessels = true;
-
                 try {
                     const token = localStorage.getItem('marine_token')
                         || localStorage.getItem('token')
                         || localStorage.getItem('authToken');
-
                     const headers = { 'Accept': 'application/json' };
                     if (token) headers['Authorization'] = 'Bearer ' + token;
-
-                    const res = await fetch('/api/vessels', {
-                        headers: headers,
-                        credentials: 'include',
-                        cache: 'no-store'
-                    });
-
+                    const res = await fetch('/api/vessels', { headers, credentials: 'include', cache: 'no-store' });
                     if (!res.ok) throw new Error('فشل تحميل البيانات (' + res.status + ')');
-
                     const text = await res.text();
                     let payload = null;
                     try { payload = text ? JSON.parse(text) : null; } catch (e) {}
-
                     let vessels = [];
                     if (Array.isArray(payload)) vessels = payload;
                     else if (payload && Array.isArray(payload.vessels)) vessels = payload.vessels;
                     else if (payload && Array.isArray(payload.data)) vessels = payload.data;
                     else if (payload && Array.isArray(payload.items)) vessels = payload.items;
-
                     try { window.allVessels = vessels; window.vesselsData = vessels; } catch (e) {}
-
                     return vessels;
                 } finally {
                     loadingVessels = false;
@@ -1419,46 +1249,30 @@
                 return              { cls: 'critical',  text: 'حرجة',   row: 'row-low',  prog: 'low'  };
             }
 
+            /* ✅ v12.0 — النسبة تشمل: صالح + صيانة + معطوب */
             function buildCategoryRows(categoriesMap) {
                 const categoryFilter = document.getElementById('fCatEff').value;
                 const statusFilter = document.getElementById('fStatusEff').value;
 
                 let rows = FIXED_CATEGORIES.map(cat => {
                     const c = (categoriesMap && categoriesMap[cat]) || { active: 0, damaged: 0, maintenance: 0, total: 0 };
-                    const totalForEff = (c.active || 0) + (c.damaged || 0);
+                    const totalForEff = (c.active || 0) + (c.maintenance || 0) + (c.damaged || 0);
                     const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
-                    return {
-                        category: cat,
-                        active: c.active || 0,
-                        damaged: c.damaged || 0,
-                        maintenance: c.maintenance || 0,
-                        total: c.total || 0,
-                        efficiency: eff
-                    };
+                    return { category: cat, active: c.active || 0, damaged: c.damaged || 0, maintenance: c.maintenance || 0, total: c.total || 0, efficiency: eff };
                 });
 
                 if (categoriesMap) {
                     Object.keys(categoriesMap).forEach(cat => {
                         if (FIXED_CATEGORIES.indexOf(cat) === -1) {
                             const c = categoriesMap[cat];
-                            const totalForEff = (c.active || 0) + (c.damaged || 0);
+                            const totalForEff = (c.active || 0) + (c.maintenance || 0) + (c.damaged || 0);
                             const eff = totalForEff > 0 ? ((c.active || 0) / totalForEff) * 100 : 0;
-                            rows.push({
-                                category: cat,
-                                active: c.active || 0,
-                                damaged: c.damaged || 0,
-                                maintenance: c.maintenance || 0,
-                                total: c.total || 0,
-                                efficiency: eff
-                            });
+                            rows.push({ category: cat, active: c.active || 0, damaged: c.damaged || 0, maintenance: c.maintenance || 0, total: c.total || 0, efficiency: eff });
                         }
                     });
                 }
 
-                if (categoryFilter !== 'الكل') {
-                    rows = rows.filter(r => r.category === categoryFilter);
-                }
-
+                if (categoryFilter !== 'الكل') rows = rows.filter(r => r.category === categoryFilter);
                 if (statusFilter !== 'الكل') {
                     rows = rows.filter(r => {
                         if (statusFilter === 'صالح') return r.active > 0;
@@ -1469,13 +1283,7 @@
                 }
 
                 if (rows.length === 0) {
-                    return `
-                        <tr>
-                            <td colspan="6" class="empty-state" style="padding:20px;">
-                                <h3 style="font-size:13px;">لا توجد فئات مطابقة</h3>
-                            </td>
-                        </tr>
-                    `;
+                    return `<tr><td colspan="6" class="empty-state" style="padding:20px;"><h3 style="font-size:13px;">لا توجد فئات مطابقة</h3></td></tr>`;
                 }
 
                 return rows.map(item => {
@@ -1487,11 +1295,7 @@
                             <td>${item.active}</td>
                             <td>${item.damaged}</td>
                             <td class="eff-cell">${percentText}</td>
-                            <td>
-                                <div class="progress-bar">
-                                    <div class="progress-fill ${info.prog}" style="width:${Math.min(item.efficiency, 100)}%;"></div>
-                                </div>
-                            </td>
+                            <td><div class="progress-bar"><div class="progress-fill ${info.prog}" style="width:${Math.min(item.efficiency, 100)}%;"></div></div></td>
                             <td><span class="status-badge ${info.cls}">${info.text}</span></td>
                         </tr>
                     `;
@@ -1501,44 +1305,41 @@
             function renderGeneralTable() {
                 const tbody = document.getElementById('generalBody');
                 if (!tbody) return;
-
                 tbody.innerHTML = buildCategoryRows(vesselStats.general);
-
                 const badge = document.getElementById('generalBadge');
                 if (!badge) return;
-
-                let totalActive = 0, totalDamaged = 0;
+                let totalActive = 0, totalMaint = 0, totalDamaged = 0;
                 FIXED_CATEGORIES.forEach(cat => {
                     const c = vesselStats.general[cat];
-                    if (c) {
-                        totalActive += c.active || 0;
-                        totalDamaged += c.damaged || 0;
+                    if (c) { totalActive += c.active || 0; totalMaint += c.maintenance || 0; totalDamaged += c.damaged || 0; }
+                });
+                Object.keys(vesselStats.general).forEach(cat => {
+                    if (FIXED_CATEGORIES.indexOf(cat) === -1) {
+                        const c = vesselStats.general[cat];
+                        totalActive += c.active || 0; totalMaint += c.maintenance || 0; totalDamaged += c.damaged || 0;
                     }
                 });
-                const sum = totalActive + totalDamaged;
+                const sum = totalActive + totalMaint + totalDamaged;
                 const avg = sum > 0 ? (totalActive / sum) * 100 : 0;
-
                 if (avg >= 80) { badge.textContent = '✅ أداء ممتاز'; badge.className = 'badge success'; }
                 else if (avg >= 70) { badge.textContent = '📈 أداء جيد'; badge.className = 'badge gold'; }
                 else if (avg >= 50) { badge.textContent = '⚠️ أداء متوسط'; badge.className = 'badge warning'; }
                 else { badge.textContent = '🚨 أداء منخفض'; badge.className = 'badge danger'; }
             }
 
+            /* ✅ v12.0 — نسبة الإقليم: صالح ÷ (صالح + صيانة + معطوب) */
             function renderRegionTable(prefix, key, data) {
                 const tbodyId = 'body-' + prefix + '-' + key;
                 const badgeId = 'badge-' + prefix + '-' + key;
                 const tbody = document.getElementById(tbodyId);
                 const badgeEl = document.getElementById(badgeId);
-
                 if (!tbody) return;
-
                 tbody.innerHTML = buildCategoryRows(data.categories || {});
-
                 if (badgeEl) {
-                    const totalForEff = (data.active || 0) + (data.damaged || 0);
+                    const totalForEff = (data.active || 0) + (data.maintenance || 0) + (data.damaged || 0);
                     const eff = totalForEff > 0 ? ((data.active || 0) / totalForEff) * 100 : 0;
                     const info = getStatusInfo(eff);
-                    badgeEl.textContent = eff.toFixed(0) + '% جاهزية';
+                    badgeEl.textContent = eff.toFixed(1) + '% جاهزية';
                     badgeEl.className = 'badge ' + (
                         info.cls === 'excellent' || info.cls === 'good' ? 'success' :
                         info.cls === 'medium' ? 'warning' : 'danger'
@@ -1549,38 +1350,18 @@
             function renderAllTables() {
                 renderGeneralTable();
                 FIXED_REGIONS.forEach(r => {
-                    const data = vesselStats.regions[r.match] || {
-                        active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
-                    };
+                    const data = vesselStats.regions[r.match] || { active: 0, damaged: 0, maintenance: 0, total: 0, categories: {} };
                     renderRegionTable('region', r.key, data);
-                });
-                FIXED_UNITS.forEach(u => {
-                    const data = vesselStats.units[u.match] || {
-                        active: 0, damaged: 0, maintenance: 0, total: 0, categories: {}
-                    };
-                    renderRegionTable('unit', u.key, data);
                 });
             }
 
             function applyRegionFilter() {
                 const filter = document.getElementById('fRegEff').value;
                 const sections = document.querySelectorAll('.eff-section[data-section-key]');
-
                 sections.forEach(sec => {
                     const key = sec.getAttribute('data-section-key');
-
                     if (key === 'general') { sec.style.display = ''; return; }
                     if (filter === 'الكل') { sec.style.display = ''; return; }
-
-                    if (filter.indexOf('unit-') === 0) {
-                        if (key.indexOf('unit-') === 0) {
-                            sec.style.display = (filter === key) ? '' : 'none';
-                        } else {
-                            sec.style.display = 'none';
-                        }
-                        return;
-                    }
-
                     if (key.indexOf('region-') === 0) {
                         const regionKey = key.replace('region-', '');
                         sec.style.display = (filter === regionKey) ? '' : 'none';
@@ -1590,37 +1371,26 @@
                 });
             }
 
+            /* ✅ v12.0 — نسبة البطاقة الرئيسية: صالح ÷ الإجمالي */
             function renderStatsCards() {
                 let total = 0, active = 0, maintenance = 0, damaged = 0;
-
                 FIXED_CATEGORIES.forEach(cat => {
                     const c = vesselStats.general[cat];
-                    if (c) {
-                        total += c.total || 0;
-                        active += c.active || 0;
-                        maintenance += c.maintenance || 0;
-                        damaged += c.damaged || 0;
-                    }
+                    if (c) { total += c.total || 0; active += c.active || 0; maintenance += c.maintenance || 0; damaged += c.damaged || 0; }
                 });
                 Object.keys(vesselStats.general).forEach(cat => {
                     if (FIXED_CATEGORIES.indexOf(cat) === -1) {
                         const c = vesselStats.general[cat];
-                        total += c.total || 0;
-                        active += c.active || 0;
-                        maintenance += c.maintenance || 0;
-                        damaged += c.damaged || 0;
+                        total += c.total || 0; active += c.active || 0; maintenance += c.maintenance || 0; damaged += c.damaged || 0;
                     }
                 });
-
-                const totalForEff = active + damaged;
+                const totalForEff = active + maintenance + damaged;
                 const efficiency = totalForEff > 0 ? ((active / totalForEff) * 100).toFixed(1) : 0;
-
                 const totalEl = document.getElementById('totalVessels');
                 const activeEl = document.getElementById('activeVessels');
                 const maintEl = document.getElementById('maintenanceVessels');
                 const damagedEl = document.getElementById('damagedVessels');
                 const effEl = document.getElementById('efficiencyPercent');
-
                 if (totalEl) totalEl.textContent = total;
                 if (activeEl) activeEl.textContent = active;
                 if (maintEl) maintEl.textContent = maintenance;
@@ -1631,18 +1401,13 @@
             function renderEfficiency() {
                 if (!vesselStats) vesselStats = buildStatsFromVessels([]);
                 if (!document.getElementById('generalBody')) return;
-
                 renderStatsCards();
                 renderAllTables();
                 applyRegionFilter();
-
                 if (chartRetryTimer) clearTimeout(chartRetryTimer);
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
-                        chartRetryTimer = setTimeout(() => {
-                            drawChart(currentChart);
-                            chartRetryTimer = null;
-                        }, 50);
+                        chartRetryTimer = setTimeout(() => { drawChart(currentChart); chartRetryTimer = null; }, 50);
                     });
                 });
             }
@@ -1662,7 +1427,6 @@
                 const old = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
-
                 try {
                     const vessels = await loadVessels();
                     if (vessels) vesselStats = buildStatsFromVessels(vessels);
@@ -1687,52 +1451,36 @@
             function drawChart(type) {
                 const canvas = document.getElementById('efficiencyChart');
                 if (!canvas) return;
-
                 const parent = canvas.parentElement;
                 const width = parent ? parent.clientWidth - 40 : 0;
                 const height = 320;
-
                 if (width <= 0) {
                     if (chartRetryTimer) clearTimeout(chartRetryTimer);
                     chartRetryTimer = setTimeout(() => { chartRetryTimer = null; drawChart(type); }, 200);
                     return;
                 }
-
                 const dpr = window.devicePixelRatio || 1;
                 canvas.width = width * dpr;
                 canvas.height = height * dpr;
                 canvas.style.width = width + 'px';
                 canvas.style.height = height + 'px';
-
                 const ctx = canvas.getContext('2d');
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                 ctx.clearRect(0, 0, width, height);
-
                 if (!vesselStats) vesselStats = buildStatsFromVessels([]);
 
                 const data = [];
                 FIXED_REGIONS.forEach(r => {
                     const d = vesselStats.regions[r.match];
                     if (d) {
-                        const totalForEff = (d.active || 0) + (d.damaged || 0);
+                        const totalForEff = (d.active || 0) + (d.maintenance || 0) + (d.damaged || 0);
                         const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
                         data.push({ label: r.key, value: eff, color: getColor(r.key) });
                     }
                 });
-                FIXED_UNITS.forEach(u => {
-                    const d = vesselStats.units[u.match];
-                    if (d) {
-                        const totalForEff = (d.active || 0) + (d.damaged || 0);
-                        const eff = totalForEff > 0 ? ((d.active || 0) / totalForEff) * 100 : 0;
-                        data.push({ label: u.key, value: eff, color: getColor(u.key) });
-                    }
-                });
 
                 const allZero = data.length === 0 || data.every(d => d.value === 0);
-                if (allZero) {
-                    drawEmptyChartState(ctx, width, height);
-                    return;
-                }
+                if (allZero) { drawEmptyChartState(ctx, width, height); return; }
 
                 if (type === 'pie') drawPieChart(ctx, data, width, height);
                 else if (type === 'bar') drawBarChart(ctx, data, width, height);
@@ -1740,48 +1488,22 @@
             }
 
             function drawEmptyChartState(ctx, width, height) {
-                const cx = width / 2;
-                const cy = height / 2;
-
+                const cx = width / 2, cy = height / 2;
                 const grad = ctx.createRadialGradient(cx, cy - 20, 10, cx, cy - 20, 130);
                 grad.addColorStop(0, 'rgba(230, 179, 30, 0.08)');
                 grad.addColorStop(1, 'rgba(230, 179, 30, 0)');
                 ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(cx, cy - 20, 130, 0, 2 * Math.PI);
-                ctx.fill();
-
+                ctx.beginPath(); ctx.arc(cx, cy - 20, 130, 0, 2 * Math.PI); ctx.fill();
                 ctx.font = '64px "Cairo", "Segoe UI Emoji", sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillStyle = 'rgba(230, 179, 30, 0.6)';
                 ctx.fillText('📊', cx, cy - 45);
-
                 ctx.fillStyle = 'rgba(203, 213, 225, 0.95)';
                 ctx.font = 'bold 17px Cairo, sans-serif';
                 ctx.fillText('لا توجد بيانات لعرضها', cx, cy + 30);
-
                 ctx.fillStyle = 'rgba(148, 163, 184, 0.65)';
                 ctx.font = '13px Cairo, sans-serif';
                 ctx.fillText('قم بإضافة مراكب إلى النظام لعرض إحصائيات الجاهزية', cx, cy + 58);
-
-                ctx.fillStyle = 'rgba(230, 179, 30, 0.25)';
-                for (let i = -2; i <= 2; i++) {
-                    ctx.beginPath();
-                    ctx.arc(cx + i * 22, cy + 95, 4, 0, 2 * Math.PI);
-                    ctx.fill();
-                }
-
-                const lineGrad = ctx.createLinearGradient(cx - 150, 0, cx + 150, 0);
-                lineGrad.addColorStop(0, 'rgba(230, 179, 30, 0)');
-                lineGrad.addColorStop(0.5, 'rgba(230, 179, 30, 0.5)');
-                lineGrad.addColorStop(1, 'rgba(230, 179, 30, 0)');
-                ctx.strokeStyle = lineGrad;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(cx - 150, cy - 105);
-                ctx.lineTo(cx + 150, cy - 105);
-                ctx.stroke();
             }
 
             function getColor(name) {
@@ -1792,65 +1514,38 @@
             }
 
             function drawPieChart(ctx, data, width, height) {
-                const cx = width / 2 - 100;
-                const cy = height / 2;
+                const cx = width / 2 - 100, cy = height / 2;
                 const radius = Math.min(width / 2 - 40, height / 2 - 40);
                 let startAngle = -Math.PI / 2;
                 const total = data.reduce((sum, d) => sum + d.value, 0);
                 if (total === 0) return;
-
                 data.forEach((item) => {
                     if (item.value === 0) return;
                     const sliceAngle = (item.value / total) * 2 * Math.PI;
                     const endAngle = startAngle + sliceAngle;
-
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy);
-                    ctx.arc(cx, cy, radius, startAngle, endAngle);
-                    ctx.closePath();
-
-                    ctx.fillStyle = item.color;
-                    ctx.shadowColor = item.color;
-                    ctx.shadowBlur = 20;
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-
-                    ctx.strokeStyle = 'rgba(6,9,17,0.9)';
-                    ctx.lineWidth = 3;
-                    ctx.stroke();
-
+                    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, startAngle, endAngle); ctx.closePath();
+                    ctx.fillStyle = item.color; ctx.shadowColor = item.color; ctx.shadowBlur = 20; ctx.fill(); ctx.shadowBlur = 0;
+                    ctx.strokeStyle = 'rgba(6,9,17,0.9)'; ctx.lineWidth = 3; ctx.stroke();
                     const midAngle = startAngle + sliceAngle / 2;
                     const lx = cx + Math.cos(midAngle) * radius * 0.72;
                     const ly = cy + Math.sin(midAngle) * radius * 0.72;
-
                     if (sliceAngle > 0.3) {
-                        ctx.fillStyle = '#fff';
-                        ctx.font = 'bold 11px Cairo, sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.shadowColor = 'rgba(0,0,0,0.8)';
-                        ctx.shadowBlur = 4;
+                        ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Cairo, sans-serif';
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
                         ctx.fillText(`${item.value.toFixed(0)}%`, lx, ly);
                         ctx.shadowBlur = 0;
                     }
-
                     startAngle = endAngle;
                 });
-
                 let legendY = 40;
                 const legendX = width - 160;
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'top';
-
+                ctx.textAlign = 'left'; ctx.textBaseline = 'top';
                 data.forEach((item, i) => {
                     const y = legendY + i * 26;
-                    ctx.fillStyle = item.color;
-                    ctx.shadowColor = item.color;
-                    ctx.shadowBlur = 8;
-                    ctx.fillRect(legendX, y, 14, 14);
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = 'rgba(203,213,225,0.9)';
-                    ctx.font = '11px Cairo, sans-serif';
+                    ctx.fillStyle = item.color; ctx.shadowColor = item.color; ctx.shadowBlur = 8;
+                    ctx.fillRect(legendX, y, 14, 14); ctx.shadowBlur = 0;
+                    ctx.fillStyle = 'rgba(203,213,225,0.9)'; ctx.font = '11px Cairo, sans-serif';
                     ctx.fillText(item.label, legendX + 22, y + 1);
                 });
             }
@@ -1862,51 +1557,29 @@
                 const maxVal = Math.max(...data.map(d => d.value), 100);
                 const barWidth = Math.min(chartWidth / data.length * 0.6, 44);
                 const gap = chartWidth / data.length;
-
                 for (let i = 0; i <= 4; i++) {
                     const y = padding.top + chartHeight - (i / 4) * chartHeight;
-                    ctx.strokeStyle = 'rgba(148,163,184,0.08)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(padding.left, y);
-                    ctx.lineTo(width - padding.right, y);
-                    ctx.stroke();
-                    ctx.fillStyle = 'rgba(148,163,184,0.4)';
-                    ctx.font = '10px Cairo, sans-serif';
-                    ctx.textAlign = 'right';
-                    ctx.textBaseline = 'middle';
+                    ctx.strokeStyle = 'rgba(148,163,184,0.08)'; ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(width - padding.right, y); ctx.stroke();
+                    ctx.fillStyle = 'rgba(148,163,184,0.4)'; ctx.font = '10px Cairo, sans-serif';
+                    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
                     ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 8, y);
                 }
-
                 data.forEach((item, i) => {
                     const x = padding.left + i * gap + (gap - barWidth) / 2;
                     const barHeight = (item.value / maxVal) * chartHeight;
                     const y = padding.top + chartHeight - barHeight;
-
                     const gradient = ctx.createLinearGradient(x, y, x, padding.top + chartHeight);
-                    gradient.addColorStop(0, item.color);
-                    gradient.addColorStop(1, item.color + '22');
-
-                    ctx.fillStyle = gradient;
-                    ctx.shadowColor = item.color;
-                    ctx.shadowBlur = 15;
-                    ctx.fillRect(x, y, barWidth, barHeight);
-                    ctx.shadowBlur = 0;
-
-                    ctx.fillStyle = 'rgba(241,245,249,0.9)';
-                    ctx.font = 'bold 11px Cairo, sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'bottom';
+                    gradient.addColorStop(0, item.color); gradient.addColorStop(1, item.color + '22');
+                    ctx.fillStyle = gradient; ctx.shadowColor = item.color; ctx.shadowBlur = 15;
+                    ctx.fillRect(x, y, barWidth, barHeight); ctx.shadowBlur = 0;
+                    ctx.fillStyle = 'rgba(241,245,249,0.9)'; ctx.font = 'bold 11px Cairo, sans-serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
                     ctx.fillText(`${item.value.toFixed(0)}%`, x + barWidth / 2, y - 6);
-
-                    ctx.fillStyle = 'rgba(148,163,184,0.7)';
-                    ctx.font = '10px Cairo, sans-serif';
+                    ctx.fillStyle = 'rgba(148,163,184,0.7)'; ctx.font = '10px Cairo, sans-serif';
                     ctx.textBaseline = 'top';
-                    ctx.save();
-                    ctx.translate(x + barWidth / 2, padding.top + chartHeight + 8);
-                    ctx.rotate(-Math.PI / 5);
-                    ctx.fillText(item.label, 0, 0);
-                    ctx.restore();
+                    ctx.save(); ctx.translate(x + barWidth / 2, padding.top + chartHeight + 8); ctx.rotate(-Math.PI / 5);
+                    ctx.fillText(item.label, 0, 0); ctx.restore();
                 });
             }
 
@@ -1915,115 +1588,68 @@
                 const chartWidth = width - padding.left - padding.right;
                 const chartHeight = height - padding.top - padding.bottom;
                 const maxVal = Math.max(...data.map(d => d.value), 100);
-
                 const points = data.map((d, i) => ({
                     x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
                     y: padding.top + chartHeight - (d.value / maxVal) * chartHeight,
-                    value: d.value,
-                    label: d.label,
-                    color: d.color
+                    value: d.value, label: d.label, color: d.color
                 }));
-
                 for (let i = 0; i <= 4; i++) {
                     const y = padding.top + chartHeight - (i / 4) * chartHeight;
-                    ctx.strokeStyle = 'rgba(148,163,184,0.08)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(padding.left, y);
-                    ctx.lineTo(width - padding.right, y);
-                    ctx.stroke();
-                    ctx.fillStyle = 'rgba(148,163,184,0.4)';
-                    ctx.font = '10px Cairo, sans-serif';
-                    ctx.textAlign = 'right';
-                    ctx.textBaseline = 'middle';
+                    ctx.strokeStyle = 'rgba(148,163,184,0.08)'; ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(width - padding.right, y); ctx.stroke();
+                    ctx.fillStyle = 'rgba(148,163,184,0.4)'; ctx.font = '10px Cairo, sans-serif';
+                    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
                     ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 8, y);
                 }
-
                 ctx.beginPath();
-                points.forEach((p, i) => {
-                    if (i === 0) ctx.moveTo(p.x, p.y);
-                    else ctx.lineTo(p.x, p.y);
-                });
+                points.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
                 ctx.lineTo(points[points.length - 1].x, padding.top + chartHeight);
                 ctx.lineTo(points[0].x, padding.top + chartHeight);
                 ctx.closePath();
-
                 const areaGrad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartHeight);
                 areaGrad.addColorStop(0, 'rgba(230,179,30,0.35)');
                 areaGrad.addColorStop(1, 'rgba(230,179,30,0.02)');
-                ctx.fillStyle = areaGrad;
-                ctx.fill();
-
-                ctx.strokeStyle = '#e6b31e';
-                ctx.lineWidth = 3;
-                ctx.shadowColor = '#e6b31e';
-                ctx.shadowBlur = 15;
+                ctx.fillStyle = areaGrad; ctx.fill();
+                ctx.strokeStyle = '#e6b31e'; ctx.lineWidth = 3;
+                ctx.shadowColor = '#e6b31e'; ctx.shadowBlur = 15;
                 ctx.beginPath();
-                points.forEach((p, i) => {
-                    if (i === 0) ctx.moveTo(p.x, p.y);
-                    else ctx.lineTo(p.x, p.y);
-                });
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-
+                points.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+                ctx.stroke(); ctx.shadowBlur = 0;
                 points.forEach(p => {
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#e6b31e';
-                    ctx.shadowColor = '#e6b31e';
-                    ctx.shadowBlur = 20;
-                    ctx.fill();
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#e6b31e'; ctx.shadowColor = '#e6b31e'; ctx.shadowBlur = 20; ctx.fill();
                     ctx.shadowBlur = 0;
-                    ctx.strokeStyle = '#060911';
-                    ctx.lineWidth = 3;
-                    ctx.stroke();
-
-                    ctx.fillStyle = 'rgba(241,245,249,0.9)';
-                    ctx.font = 'bold 10px Cairo, sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'bottom';
+                    ctx.strokeStyle = '#060911'; ctx.lineWidth = 3; ctx.stroke();
+                    ctx.fillStyle = 'rgba(241,245,249,0.9)'; ctx.font = 'bold 10px Cairo, sans-serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
                     ctx.fillText(`${p.value.toFixed(0)}%`, p.x, p.y - 10);
                 });
-
                 points.forEach(p => {
-                    ctx.fillStyle = 'rgba(148,163,184,0.7)';
-                    ctx.font = '10px Cairo, sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'top';
-                    ctx.save();
-                    ctx.translate(p.x, padding.top + chartHeight + 8);
-                    ctx.rotate(-Math.PI / 5);
-                    ctx.fillText(p.label, 0, 0);
-                    ctx.restore();
+                    ctx.fillStyle = 'rgba(148,163,184,0.7)'; ctx.font = '10px Cairo, sans-serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                    ctx.save(); ctx.translate(p.x, padding.top + chartHeight + 8); ctx.rotate(-Math.PI / 5);
+                    ctx.fillText(p.label, 0, 0); ctx.restore();
                 });
             }
 
             function showNotification(message, type) {
                 const old = document.querySelector('.eff-notification');
                 if (old) old.remove();
-
                 const notif = document.createElement('div');
                 notif.className = 'eff-notification';
                 notif.style.cssText = `
-                    position: fixed;
-                    bottom: 24px; right: 24px;
+                    position: fixed; bottom: 24px; right: 24px;
                     background: ${type === 'success'
                         ? 'linear-gradient(135deg, rgba(16,185,129,0.95), rgba(5,150,105,0.9))'
                         : 'linear-gradient(135deg, rgba(239,68,68,0.95), rgba(185,28,28,0.9))'};
                     backdrop-filter: blur(20px);
                     border: 1px solid ${type === 'success' ? 'rgba(110,231,183,0.5)' : 'rgba(252,165,165,0.5)'};
-                    padding: 14px 24px;
-                    border-radius: 14px;
-                    color: #fff;
-                    font-family: Cairo, sans-serif;
-                    font-size: 14px;
-                    font-weight: 700;
-                    z-index: 9999;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+                    padding: 14px 24px; border-radius: 14px; color: #fff;
+                    font-family: Cairo, sans-serif; font-size: 14px; font-weight: 700;
+                    z-index: 9999; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
                 `;
                 notif.textContent = message;
                 document.body.appendChild(notif);
-
                 setTimeout(() => {
                     notif.style.opacity = '0';
                     notif.style.transform = 'translateY(20px)';
@@ -2049,8 +1675,7 @@
                     || localStorage.getItem('authToken') || null;
                 const headers = { 'Accept': 'application/json' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
-
-                fetch('/api/logo', { headers: headers, credentials: 'include' })
+                fetch('/api/logo', { headers, credentials: 'include' })
                     .then(r => r.ok ? r.json() : null)
                     .then(data => {
                         if (data && data.success && data.logo && data.logo.dataUrl) {
@@ -2063,29 +1688,101 @@
             function updatePrintDate() {
                 try {
                     const now = new Date();
-                    const fullDate = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                    }) + ' - ' + now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
+                    const fullDate = now.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                        + ' - ' + now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
                     const header = document.querySelector('.eff-header');
                     if (header) header.setAttribute('data-print-date', fullDate);
                 } catch (e) {}
             }
+
+            /* ✅ أزرار التمرير */
+            function initScrollButtons() {
+                const nav = document.getElementById('scrollNav');
+                const btnTop = document.getElementById('scrollToTop');
+                const btnBottom = document.getElementById('scrollToBottom');
+                if (!nav || !btnTop || !btnBottom) return;
+                const SCROLL_THRESHOLD = 200;
+                function updateVisibility() {
+                    const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+                    const docHeight = document.documentElement.scrollHeight;
+                    const winHeight = window.innerHeight;
+                    const hasScroll = docHeight > (winHeight + 100);
+                    if (!hasScroll) { nav.classList.remove('visible'); return; }
+                    if (y > SCROLL_THRESHOLD) nav.classList.add('visible');
+                    else nav.classList.remove('visible');
+                    btnTop.style.opacity = y > 50 ? '1' : '0.35';
+                    btnTop.style.pointerEvents = y > 50 ? 'auto' : 'none';
+                    const atBottom = (y + winHeight) >= (docHeight - 50);
+                    btnBottom.style.opacity = atBottom ? '0.35' : '1';
+                    btnBottom.style.pointerEvents = atBottom ? 'none' : 'auto';
+                }
+                btnTop.addEventListener('click', function () {
+                    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+                });
+                btnBottom.addEventListener('click', function () {
+                    const target = document.documentElement.scrollHeight;
+                    try { window.scrollTo({ top: target, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, target); }
+                });
+                window.addEventListener('scroll', updateVisibility, { passive: true });
+                window.addEventListener('resize', updateVisibility, { passive: true });
+                updateVisibility();
+                setTimeout(updateVisibility, 500);
+                setTimeout(updateVisibility, 1500);
+            }
+
+            function prepareChartForPrint() {
+                try {
+                    const canvas = document.getElementById('efficiencyChart');
+                    if (!canvas || canvas.width === 0 || canvas.height === 0) return;
+                    const box = canvas.parentElement;
+                    if (!box) return;
+                    const oldImg = box.querySelector('img.print-chart-image');
+                    if (oldImg) oldImg.remove();
+                    const dataUrl = canvas.toDataURL('image/png', 1.0);
+                    if (!dataUrl || dataUrl === 'data:,') return;
+                    const img = document.createElement('img');
+                    img.className = 'print-chart-image';
+                    img.src = dataUrl;
+                    img.alt = 'توزيع الجاهزية حسب الأقاليم';
+                    img.style.display = 'none';
+                    canvas.parentNode.insertBefore(img, canvas.nextSibling);
+                } catch (e) { console.warn('⚠️ prepareChartForPrint:', e.message); }
+            }
+
+            function cleanupAfterPrint() {
+                try { document.querySelectorAll('img.print-chart-image').forEach(img => img.remove()); } catch (e) {}
+            }
+
+            window.printEfficiencyReport = function () {
+                prepareChartForPrint();
+                setTimeout(() => { window.print(); setTimeout(cleanupAfterPrint, 1000); }, 150);
+            };
+
+            window.addEventListener('beforeprint', prepareChartForPrint);
+            window.addEventListener('afterprint', cleanupAfterPrint);
+
+            try {
+                if (window.matchMedia) {
+                    const mql = window.matchMedia('print');
+                    if (mql.addEventListener) {
+                        mql.addEventListener('change', (e) => { if (e.matches) prepareChartForPrint(); else cleanupAfterPrint(); });
+                    } else if (mql.addListener) {
+                        mql.addListener((e) => { if (e.matches) prepareChartForPrint(); else cleanupAfterPrint(); });
+                    }
+                }
+            } catch (e) {}
 
             async function initEfficiencyPage() {
                 if (initialized) return true;
                 const generalBody = document.getElementById('generalBody');
                 if (!generalBody) return false;
                 initialized = true;
-
-                console.log('🎨 Efficiency v11.3: Initializing...');
-
+                console.log('🎨 Efficiency v12.0: Initializing...');
                 applyLogo();
                 syncLogoFromServer();
                 updatePrintDate();
-
                 vesselStats = buildStatsFromVessels([]);
                 renderEfficiency();
-
                 try {
                     const vessels = await loadVessels();
                     if (vessels) {
@@ -2097,7 +1794,6 @@
                     console.warn('⚠️ Efficiency: Data load failed —', err.message);
                     showNotification('تعذر تحميل البيانات: ' + err.message, 'error');
                 }
-
                 setTimeout(() => drawChart('pie'), 300);
                 setTimeout(() => drawChart('pie'), 800);
                 return true;
@@ -2108,31 +1804,23 @@
                 initEfficiencyPage().then(started => {
                     if (started) {
                         window.addEventListener('beforeprint', updatePrintDate);
-                        window.addEventListener('storage', e => {
-                            if (e.key === 'marine_logo' && e.newValue) applyLogo();
-                        });
-
+                        window.addEventListener('storage', e => { if (e.key === 'marine_logo' && e.newValue) applyLogo(); });
                         let resizeTimer = null;
                         window.addEventListener('resize', () => {
                             clearTimeout(resizeTimer);
                             resizeTimer = setTimeout(() => drawChart(currentChart), 200);
                         });
-
                         if (typeof ResizeObserver !== 'undefined') {
                             const chartParent = document.getElementById('efficiencyChart')?.parentElement;
                             if (chartParent) {
                                 const ro = new ResizeObserver(() => {
                                     if (chartRetryTimer) return;
-                                    chartRetryTimer = setTimeout(() => {
-                                        chartRetryTimer = null;
-                                        drawChart(currentChart);
-                                    }, 100);
+                                    chartRetryTimer = setTimeout(() => { chartRetryTimer = null; drawChart(currentChart); }, 100);
                                 });
                                 ro.observe(chartParent);
                             }
                         }
-
-                        console.log('🎨 Efficiency v11.3: Ready');
+                        console.log('🎨 Efficiency v12.0: Ready');
                     }
                 });
             }
@@ -2141,6 +1829,11 @@
                 document.addEventListener('DOMContentLoaded', tryInit, { once: true });
             } else {
                 tryInit();
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initScrollButtons, { once: true });
+            } else {
+                initScrollButtons();
             }
 
             const retry = setInterval(() => {
@@ -2154,9 +1847,7 @@
                     if (initialized) { observer.disconnect(); return; }
                     tryInit();
                 });
-                observer.observe(document.body || document.documentElement, {
-                    childList: true, subtree: true
-                });
+                observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
                 setTimeout(() => observer.disconnect(), 10000);
             }
 
