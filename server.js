@@ -3518,7 +3518,278 @@ function formatMaintenance(log) {
     });
 
     console.log('📌 Ownership signature middleware registered');
+    
+    // ========================================================
+    // 👤 USER INFO BADGE — شريط معلومات المستخدم (الوحدة + الإقليم)
+    // ========================================================
+    const USER_BADGE_CSS = `
+<style id="user-info-badge-style">
+#user-info-badge {
+    position: fixed !important;
+    top: 42px !important;
+    left: 20px !important;
+    display: none;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 14px !important;
+    background: rgba(6, 9, 17, 0.88) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(230, 179, 30, 0.3) !important;
+    border-radius: 12px !important;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif !important;
+    z-index: 9998 !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.45) !important;
+    direction: rtl !important;
+    max-width: 360px !important;
+    transition: opacity 0.4s ease !important;
+}
+#user-info-badge.uib-visible {
+    display: flex !important;
+    animation: uibSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+@keyframes uibSlideIn {
+    0% { opacity: 0; transform: translateX(-20px); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+#user-info-badge .uib-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #f7d774 0%, #e6b31e 50%, #b8860b 100%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #060911 !important;
+    font-weight: 900 !important;
+    font-size: 15px !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 4px 12px rgba(230, 179, 30, 0.4) !important;
+}
+#user-info-badge .uib-info {
+    display: flex !important;
+    flex-direction: column !important;
+    line-height: 1.35 !important;
+    min-width: 0 !important;
+}
+#user-info-badge .uib-name {
+    color: #f7d774 !important;
+    font-weight: 800 !important;
+    font-size: 12.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+#user-info-badge .uib-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    font-size: 10.5px !important;
+    margin-top: 1px !important;
+}
+#user-info-badge .uib-role {
+    color: #e6b31e !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+#user-info-badge .uib-role::before {
+    content: '👤 ' !important;
+    font-size: 10px !important;
+}
+#user-info-badge .uib-region {
+    color: #60a5fa !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+#user-info-badge .uib-region::before {
+    content: '📍 ' !important;
+    font-size: 10px !important;
+}
+#user-info-badge .uib-sep {
+    color: #475569 !important;
+    font-size: 9px !important;
+}
+@media print {
+    #user-info-badge { display: none !important; }
+}
+@media (max-width: 768px) {
+    #user-info-badge {
+        top: 36px !important;
+        left: 10px !important;
+        padding: 6px 10px !important;
+        max-width: 260px !important;
+        gap: 8px !important;
+    }
+    #user-info-badge .uib-avatar { width: 28px !important; height: 28px !important; font-size: 13px !important; }
+    #user-info-badge .uib-name { font-size: 11px !important; }
+    #user-info-badge .uib-meta { font-size: 9px !important; gap: 5px !important; }
+}
+</style>`;
 
+    const USER_BADGE_HTML = `
+<div id="user-info-badge" role="status" aria-live="polite" aria-label="معلومات المستخدم الحالي">
+    <div class="uib-avatar">م</div>
+    <div class="uib-info">
+        <span class="uib-name">—</span>
+        <span class="uib-meta">
+            <span class="uib-role"></span>
+            <span class="uib-region"></span>
+        </span>
+    </div>
+</div>`;
+
+    const USER_BADGE_SCRIPT = `
+<script>
+(function(){
+    'use strict';
+    
+    function readUser() {
+        var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
+        var stores = [window.localStorage, window.sessionStorage];
+        for (var s = 0; s < stores.length; s++) {
+            var store = stores[s];
+            if (!store) continue;
+            for (var i = 0; i < keys.length; i++) {
+                try {
+                    var raw = store.getItem(keys[i]);
+                    if (raw) {
+                        var parsed = JSON.parse(raw);
+                        if (parsed && (parsed.name || parsed.username || parsed.role)) {
+                            return parsed;
+                        }
+                    }
+                } catch(e) {}
+            }
+        }
+        return null;
+    }
+    
+    function updateBadge() {
+        try {
+            var badge = document.getElementById('user-info-badge');
+            if (!badge) return;
+            
+            var user = readUser();
+            if (!user) {
+                badge.classList.remove('uib-visible');
+                return;
+            }
+            
+            var name = user.name || user.username || 'مستخدم';
+            var roleLabel = user.roleLabel || user.role || '';
+            var region = user.region || '';
+            
+            var avatar = badge.querySelector('.uib-avatar');
+            if (avatar) {
+                var initial = String(name).trim().charAt(0) || 'م';
+                avatar.textContent = initial.toUpperCase();
+            }
+            
+            var nameEl = badge.querySelector('.uib-name');
+            if (nameEl) nameEl.textContent = name;
+            
+            var roleEl = badge.querySelector('.uib-role');
+            var regionEl = badge.querySelector('.uib-region');
+            var metaEl = badge.querySelector('.uib-meta');
+            
+            if (roleEl) {
+                roleEl.textContent = roleLabel;
+                roleEl.style.display = roleLabel ? '' : 'none';
+            }
+            if (regionEl) {
+                regionEl.textContent = region;
+                regionEl.style.display = region ? '' : 'none';
+            }
+            
+            if (metaEl) {
+                var existingSep = metaEl.querySelector('.uib-sep');
+                if (existingSep) existingSep.remove();
+                if (roleLabel && region) {
+                    var sep = document.createElement('span');
+                    sep.className = 'uib-sep';
+                    sep.textContent = '•';
+                    if (roleEl && regionEl) {
+                        metaEl.insertBefore(sep, regionEl);
+                    }
+                }
+            }
+            
+            badge.classList.add('uib-visible');
+        } catch(e) {}
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateBadge);
+    } else {
+        updateBadge();
+    }
+    
+    window.addEventListener('storage', function(e) {
+        if (['marine_user', 'currentUser', 'user', 'marine_token', 'token', 'marine_auth_token'].indexOf(e.key) !== -1) {
+            updateBadge();
+        }
+    });
+    
+    setInterval(updateBadge, 1500);
+    window.addEventListener('pageshow', updateBadge);
+    document.addEventListener('marine:login', updateBadge);
+})();
+<\/script>`;
+
+    app.use((req, res, next) => {
+        if (req.path.startsWith('/api/') ||
+            /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i.test(req.path)) {
+            return next();
+        }
+
+        const originalSend = res.send.bind(res);
+        res.send = function (body) {
+            try {
+                if (typeof body === 'string' && body.includes('</body>') &&
+                    !body.includes('user-info-badge-style')) {
+                    if (body.includes('</head>')) {
+                        body = body.replace('</head>', USER_BADGE_CSS + '\n</head>');
+                    }
+                    if (/<body[^>]*>/i.test(body)) {
+                        body = body.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
+                    }
+                    body = body.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
+                }
+            } catch (e) {}
+            return originalSend(body);
+        };
+
+        const originalSendFile = res.sendFile.bind(res);
+        res.sendFile = function (filePath, options, callback) {
+            if (typeof options === 'function') { callback = options; options = {}; }
+            try {
+                if (typeof filePath === 'string' && /\.html?$/i.test(filePath) && fs.existsSync(filePath)) {
+                    let content = fs.readFileSync(filePath, 'utf8');
+                    if (content.includes('</body>') && !content.includes('user-info-badge-style')) {
+                        if (content.includes('</head>')) {
+                            content = content.replace('</head>', USER_BADGE_CSS + '\n</head>');
+                        }
+                        if (/<body[^>]*>/i.test(content)) {
+                            content = content.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
+                        }
+                        content = content.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
+                    }
+                    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+                    return originalSend(content);
+                }
+            } catch (e) {
+                console.warn('⚠️ User badge injection failed:', e.message);
+            }
+            return originalSendFile(filePath, options, callback);
+        };
+
+        next();
+    });
+
+    console.log('👤 User info badge middleware registered');
     // ========================================================
     // 📁 STATIC FILES
     // ========================================================
