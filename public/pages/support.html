@@ -2,14 +2,12 @@
 <div id="page-support">
     <style>
         /* ============================================================
-           🛟 SUPPORT PAGE - FIXED v9.1
-           Fragment + Full JS + Cleanup
+           🛟 SUPPORT PAGE - PROFESSIONAL v10.0
+           ✅ CSRF Token + Users List + Modal + Filters
            ============================================================ */
 
         #page-support {
-            width: 100%;
-            padding: 0;
-            margin: 0;
+            width: 100%; padding: 0; margin: 0;
             min-height: 100vh;
             font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
             background: #0a0e1a;
@@ -18,20 +16,17 @@
             z-index: 1;
         }
 
-        #page-support *,
-        #page-support *::before,
-        #page-support *::after {
+        #page-support *, #page-support *::before, #page-support *::after {
             box-sizing: border-box;
         }
 
         #page-support::before {
             content: '';
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(ellipse at 20% 50%, rgba(96,165,250,0.04) 0%, transparent 60%),
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(96,165,250,0.04) 0%, transparent 60%),
                 radial-gradient(ellipse at 80% 50%, rgba(74,222,128,0.03) 0%, transparent 60%);
             z-index: -1;
             pointer-events: none;
@@ -49,11 +44,11 @@
 
         .support-container {
             padding: 20px;
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        /* ===== الهيدر ===== */
+        /* ===== HEADER ===== */
         .support-header {
             background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(74,222,128,0.05));
             border-radius: 20px;
@@ -67,10 +62,8 @@
         .support-header::before {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 100%;
+            top: -50%; right: -50%;
+            width: 100%; height: 100%;
             background: radial-gradient(circle, rgba(96,165,250,0.03) 0%, transparent 70%);
             pointer-events: none;
         }
@@ -92,20 +85,16 @@
         }
 
         .support-header .title-icon {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             background: linear-gradient(135deg, rgba(96,165,250,0.2), rgba(74,222,128,0.1));
             border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             font-size: 24px;
             border: 1px solid rgba(255,255,255,0.06);
         }
 
         .support-header .title {
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 24px; font-weight: bold;
             color: rgba(255,255,255,0.95);
         }
 
@@ -125,8 +114,7 @@
         }
 
         .support-header .developer-badge .name {
-            font-size: 15px;
-            font-weight: bold;
+            font-size: 15px; font-weight: bold;
             color: #fbbf24;
         }
 
@@ -141,11 +129,6 @@
             margin-top: 4px;
         }
 
-        .support-header .developer-badge .contact i {
-            margin-left: 4px;
-            width: 16px;
-        }
-
         .support-header .developer-badge .contact a {
             color: #60a5fa;
             text-decoration: none;
@@ -155,10 +138,10 @@
             text-decoration: underline;
         }
 
-        /* ===== إحصائيات ===== */
+        /* ===== STATS ===== */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
             margin-bottom: 24px;
         }
@@ -175,11 +158,11 @@
         .stat-item:hover {
             background: rgba(255,255,255,0.04);
             border-color: rgba(255,255,255,0.08);
+            transform: translateY(-2px);
         }
 
         .stat-item .number {
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 24px; font-weight: bold;
         }
 
         .stat-item .label {
@@ -190,13 +173,13 @@
 
         .stat-item.total .number { color: #60a5fa; }
         .stat-item.open .number { color: #fbbf24; }
-        .stat-item.progress .number { color: #60a5fa; }
+        .stat-item.progress .number { color: #06b6d4; }
         .stat-item.closed .number { color: #4ade80; }
 
-        /* ===== الشبكة ===== */
+        /* ===== GRID ===== */
         .support-grid {
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
+            grid-template-columns: 1.3fr 0.7fr;
             gap: 24px;
         }
 
@@ -217,15 +200,14 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .support-card .card-header h4 {
             color: rgba(255,255,255,0.7);
-            font-size: 15px;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 15px; margin: 0;
+            display: flex; align-items: center; gap: 8px;
         }
 
         .support-card .card-header .badge-count {
@@ -236,7 +218,39 @@
             color: rgba(255,255,255,0.3);
         }
 
-        /* ===== تذاكر ===== */
+        /* ===== FILTERS ===== */
+        .tickets-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .tickets-filters select,
+        .tickets-filters input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .tickets-filters select:focus,
+        .tickets-filters input:focus {
+            outline: none;
+            border-color: rgba(96,165,250,0.3);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .tickets-filters select option {
+            background: #1a1a2e;
+        }
+
+        /* ===== TICKETS ===== */
         .ticket-item {
             background: rgba(255,255,255,0.02);
             padding: 14px 16px;
@@ -250,24 +264,34 @@
         .ticket-item:hover {
             background: rgba(255,255,255,0.04);
             transform: translateX(-3px);
+            border-right-color: rgba(96,165,250,0.5);
         }
 
         .ticket-item .ticket-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
+        }
+
+        .ticket-item .ticket-id {
+            font-size: 10px;
+            color: rgba(96,165,250,0.7);
+            font-family: monospace;
+            font-weight: bold;
         }
 
         .ticket-item .ticket-subject {
             font-weight: bold;
             color: rgba(255,255,255,0.85);
             font-size: 14px;
+            flex: 1;
         }
 
         .ticket-item .ticket-message {
             font-size: 13px;
             color: rgba(255,255,255,0.35);
-            margin: 4px 0;
+            margin: 6px 0;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -281,12 +305,24 @@
             margin-top: 8px;
             font-size: 11px;
             color: rgba(255,255,255,0.2);
+            flex-wrap: wrap;
+            gap: 6px;
         }
 
         .ticket-item .ticket-footer .user-info {
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .ticket-item .ticket-footer .user-badge {
+            background: rgba(96,165,250,0.1);
+            color: #60a5fa;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: bold;
         }
 
         .ticket-item .ticket-status {
@@ -294,6 +330,7 @@
             border-radius: 12px;
             font-size: 10px;
             font-weight: bold;
+            white-space: nowrap;
         }
 
         .ticket-status.open {
@@ -302,8 +339,8 @@
         }
 
         .ticket-status.progress {
-            background: rgba(96,165,250,0.15);
-            color: #60a5fa;
+            background: rgba(6,182,212,0.15);
+            color: #06b6d4;
         }
 
         .ticket-status.closed {
@@ -315,12 +352,13 @@
             font-size: 10px;
             padding: 2px 8px;
             border-radius: 8px;
+            white-space: nowrap;
         }
 
-        .ticket-priority.low { color: #4ade80; }
-        .ticket-priority.medium { color: #fbbf24; }
-        .ticket-priority.high { color: #f97316; }
-        .ticket-priority.urgent { color: #f87171; }
+        .ticket-priority.low { color: #4ade80; background: rgba(74,222,128,0.1); }
+        .ticket-priority.medium { color: #fbbf24; background: rgba(251,191,36,0.1); }
+        .ticket-priority.high { color: #f97316; background: rgba(249,115,22,0.1); }
+        .ticket-priority.urgent { color: #f87171; background: rgba(248,113,113,0.1); }
 
         .no-tickets {
             text-align: center;
@@ -335,7 +373,7 @@
             opacity: 0.3;
         }
 
-        /* ===== نموذج ===== */
+        /* ===== FORM ===== */
         .support-form .form-group {
             margin-bottom: 14px;
         }
@@ -373,11 +411,35 @@
 
         .support-form .form-group textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 90px;
         }
 
         .support-form .form-group select option {
             background: #1a1a2e;
+        }
+
+        /* ✅ NEW: User selector */
+        .support-form .user-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .support-form .user-selector .current-user-badge {
+            background: rgba(96,165,250,0.15);
+            color: #60a5fa;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .support-form .user-selector select {
+            flex: 1;
         }
 
         .support-form .btn-submit {
@@ -410,27 +472,127 @@
             box-shadow: none;
         }
 
-        /* ===== Scroll ===== */
+        /* ===== MODAL ===== */
+        .ticket-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 99998;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .ticket-modal.active {
+            display: flex;
+        }
+
+        .ticket-modal .modal-content {
+            background: linear-gradient(135deg, #1a1f2e, #0f1420);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid rgba(96,165,250,0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: modalIn 0.3s ease-out;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .ticket-modal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .ticket-modal .modal-title {
+            font-size: 17px;
+            font-weight: bold;
+            color: #60a5fa;
+        }
+
+        .ticket-modal .modal-close {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: rgba(255,255,255,0.6);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .ticket-modal .modal-close:hover {
+            background: rgba(239,68,68,0.2);
+            color: #f87171;
+        }
+
+        .ticket-modal .modal-body {
+            font-size: 13px;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.75);
+        }
+
+        .ticket-modal .modal-body .field {
+            margin-bottom: 14px;
+        }
+
+        .ticket-modal .modal-body .field-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.35);
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .ticket-modal .modal-body .field-value {
+            color: rgba(255,255,255,0.85);
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .ticket-modal .modal-body textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* ===== SCROLL ===== */
         .tickets-scroll {
-            max-height: 380px;
+            max-height: 500px;
             overflow-y: auto;
             padding-left: 4px;
         }
 
         .tickets-scroll::-webkit-scrollbar { width: 4px; }
-        .tickets-scroll::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.02);
-            border-radius: 10px;
-        }
         .tickets-scroll::-webkit-scrollbar-thumb {
             background: rgba(255,255,255,0.08);
             border-radius: 10px;
         }
-        .tickets-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255,255,255,0.15);
-        }
 
-        /* ===== Responsive ===== */
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
             .support-grid {
                 grid-template-columns: 1fr;
@@ -451,8 +613,13 @@
             .support-container { padding: 12px; }
             .support-header { padding: 20px; }
             .support-header .title { font-size: 18px; }
+            .support-header .developer-badge { padding: 10px 14px; min-width: 0; }
+            .support-header .developer-badge .name { font-size: 13px; }
+            .support-header .developer-badge .contact { font-size: 10px; }
             .stats-row { grid-template-columns: repeat(2, 1fr); }
-            .support-card { padding: 16px; }
+            .support-card { padding: 14px; }
+            .ticket-modal .modal-content { padding: 18px; }
+            .tickets-filters { flex-direction: column; }
         }
 
         /* ===== Animations ===== */
@@ -463,24 +630,6 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        .pulse-dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            margin-left: 4px;
-        }
-
-        .pulse-dot.online {
-            background: #4ade80;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
         }
 
         /* ===== Toast ===== */
@@ -525,7 +674,7 @@
     </style>
 
     <div class="support-container">
-        <!-- ===== الهيدر ===== -->
+        <!-- ===== HEADER ===== -->
         <div class="support-header">
             <div class="header-content">
                 <div class="title-section">
@@ -546,7 +695,7 @@
             </div>
         </div>
 
-        <!-- ===== إحصائيات ===== -->
+        <!-- ===== STATS ===== -->
         <div class="stats-row" id="ticketStats">
             <div class="stat-item total">
                 <div class="number" id="statTotal">0</div>
@@ -566,13 +715,29 @@
             </div>
         </div>
 
-        <!-- ===== المحتوى ===== -->
+        <!-- ===== CONTENT ===== -->
         <div class="support-grid">
-            <!-- قائمة التذاكر -->
+            <!-- Tickets List -->
             <div class="support-card">
                 <div class="card-header">
                     <h4><i class="fas fa-ticket-alt" style="color:#fbbf24;"></i> تذاكر الدعم</h4>
                     <span class="badge-count" id="ticketCount">0 تذكرة</span>
+                </div>
+                <div class="tickets-filters">
+                    <select id="filterStatus">
+                        <option value="all">📋 كل الحالات</option>
+                        <option value="مفتوحة">🟡 مفتوحة</option>
+                        <option value="قيد المعالجة">🔵 قيد المعالجة</option>
+                        <option value="مغلقة">🟢 مغلقة</option>
+                    </select>
+                    <select id="filterPriority">
+                        <option value="all">🎯 كل الأولويات</option>
+                        <option value="منخفضة">🟢 منخفضة</option>
+                        <option value="متوسطة">🟡 متوسطة</option>
+                        <option value="عالية">🟠 عالية</option>
+                        <option value="عاجلة">🔴 عاجلة</option>
+                    </select>
+                    <input type="text" id="filterSearch" placeholder="🔍 بحث..." maxlength="50">
                 </div>
                 <div class="tickets-scroll" id="ticketsScroll">
                     <div id="ticketsList">
@@ -584,13 +749,26 @@
                 </div>
             </div>
 
-            <!-- نموذج الإرسال -->
+            <!-- New Ticket Form -->
             <div class="support-card">
                 <div class="card-header">
                     <h4><i class="fas fa-pen" style="color:#60a5fa;"></i> إنشاء تذكرة جديدة</h4>
                     <span class="badge-count">📨 جديد</span>
                 </div>
                 <form class="support-form" id="ticketForm">
+                    <!-- ✅ NEW: User Selector -->
+                    <div class="form-group">
+                        <label for="ticketSender">👤 المرسل</label>
+                        <div class="user-selector">
+                            <span class="current-user-badge" id="currentUserBadge">
+                                <i class="fas fa-user"></i>
+                                <span id="currentUserName">—</span>
+                            </span>
+                            <select id="ticketSender" title="اختر المرسل">
+                                <option value="">— تحميل المستخدمين... —</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label for="ticketSubject">✏️ الموضوع</label>
                         <input type="text" id="ticketSubject" placeholder="أدخل موضوع التذكرة..." required maxlength="120">
@@ -616,17 +794,25 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         JAVASCRIPT - v9.1 (Fragment + Full Logic + Cleanup)
-         ============================================================ -->
+    <!-- ===== MODAL ===== -->
+    <div class="ticket-modal" id="ticketModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">تفاصيل التذكرة</div>
+                <button type="button" class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
     <script>
     (function() {
         'use strict';
 
-        console.log('🛟 Support Page v9.1 - Loading...');
+        console.log('🛟 Support Page v10.0 - Loading...');
 
         // ============================================================
-        // ✅ v9.1: CLEANUP
+        // CLEANUP
         // ============================================================
         var _isDestroyed = false;
         var _pageIntervals = [];
@@ -637,22 +823,12 @@
             if (_isDestroyed) return;
             _isDestroyed = true;
 
-            _pageIntervals.forEach(function(id) {
-                try { clearInterval(id); } catch (e) {}
-            });
+            _pageIntervals.forEach(function(id) { try { clearInterval(id); } catch (e) {} });
             _pageIntervals = [];
-
-            _pageTimeouts.forEach(function(id) {
-                try { clearTimeout(id); } catch (e) {}
-            });
+            _pageTimeouts.forEach(function(id) { try { clearTimeout(id); } catch (e) {} });
             _pageTimeouts = [];
-
             _eventListeners.forEach(function(item) {
-                try {
-                    if (item.el && item.fn) {
-                        item.el.removeEventListener(item.type, item.fn);
-                    }
-                } catch (e) {}
+                try { if (item.el && item.fn) item.el.removeEventListener(item.type, item.fn); } catch (e) {}
             });
             _eventListeners = [];
 
@@ -679,17 +855,28 @@
         function getToken() {
             return localStorage.getItem('marine_token') ||
                    localStorage.getItem('token') ||
+                   localStorage.getItem('marine_auth_token') ||
                    sessionStorage.getItem('token') ||
                    null;
         }
 
+        /* ✅ CSRF Token from cookie */
+        function getCsrfToken() {
+            try {
+                var match = document.cookie.match(/marine_csrf=([^;]+)/);
+                return match ? decodeURIComponent(match[1]) : '';
+            } catch (e) { return ''; }
+        }
+
         function getAuthHeaders() {
             var token = getToken();
+            var csrf = getCsrfToken();
             var headers = {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             };
             if (token) headers['Authorization'] = 'Bearer ' + token;
+            if (csrf) headers['X-CSRF-Token'] = csrf;
             return headers;
         }
 
@@ -715,6 +902,26 @@
                     minute: '2-digit'
                 });
             } catch (e) { return '-'; }
+        }
+
+        /* ✅ Normalize status (Arabic/English) */
+        function normalizeStatus(status) {
+            if (!status) return 'مفتوحة';
+            var s = String(status).toLowerCase().trim();
+            if (s === 'open' || s === 'مفتوحة' || s === 'مفتوح') return 'مفتوحة';
+            if (s === 'progress' || s === 'in-progress' || s === 'قيد المعالجة') return 'قيد المعالجة';
+            if (s === 'closed' || s === 'مغلقة' || s === 'مغلق') return 'مغلقة';
+            return 'مفتوحة';
+        }
+
+        function normalizePriority(priority) {
+            if (!priority) return 'متوسطة';
+            var p = String(priority).toLowerCase().trim();
+            if (p === 'low' || p === 'منخفضة' || p === 'منخفض') return 'منخفضة';
+            if (p === 'medium' || p === 'متوسطة' || p === 'متوسط') return 'متوسطة';
+            if (p === 'high' || p === 'عالية' || p === 'عالي') return 'عالية';
+            if (p === 'urgent' || p === 'critical' || p === 'عاجلة' || p === 'عاجل') return 'عاجلة';
+            return 'متوسطة';
         }
 
         // ============================================================
@@ -758,6 +965,103 @@
         // STATE
         // ============================================================
         var tickets = [];
+        var allUsers = [];
+        var currentUser = null;
+
+        // ============================================================
+        // LOAD CURRENT USER
+        // ============================================================
+        function loadCurrentUser() {
+            try {
+                var keys = ['marine_user', 'currentUser', 'user'];
+                for (var i = 0; i < keys.length; i++) {
+                    var raw = localStorage.getItem(keys[i]) || sessionStorage.getItem(keys[i]);
+                    if (raw) {
+                        var parsed = JSON.parse(raw);
+                        if (parsed && (parsed.name || parsed.username)) {
+                            currentUser = parsed;
+                            break;
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            var badge = document.getElementById('currentUserName');
+            if (badge) {
+                badge.textContent = currentUser ? (currentUser.name || currentUser.username) : 'زائر';
+            }
+        }
+
+        // ============================================================
+        // LOAD USERS
+        // ============================================================
+        function loadUsers() {
+            if (_isDestroyed) return;
+
+            var select = document.getElementById('ticketSender');
+            if (!select) return;
+
+            var token = getToken();
+            if (!token) {
+                // Show only current user
+                select.innerHTML = '';
+                if (currentUser) {
+                    var opt = document.createElement('option');
+                    opt.value = currentUser.username || currentUser.name || 'me';
+                    opt.textContent = '👤 ' + (currentUser.name || currentUser.username);
+                    select.appendChild(opt);
+                }
+                return;
+            }
+
+            fetch('/api/users', { headers: getAuthHeaders() })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function(data) {
+                    if (_isDestroyed) return;
+                    allUsers = Array.isArray(data) ? data : (data.users || []);
+
+                    select.innerHTML = '';
+
+                    // Add current user as default
+                    if (currentUser) {
+                        var myOpt = document.createElement('option');
+                        myOpt.value = currentUser.username || currentUser.name || 'me';
+                        myOpt.textContent = '👤 ' + (currentUser.name || currentUser.username) + ' (أنا)';
+                        myOpt.selected = true;
+                        select.appendChild(myOpt);
+                    }
+
+                    // Add other users
+                    allUsers.forEach(function(u) {
+                        var myName = currentUser ? (currentUser.username || currentUser.name) : '';
+                        if (u.username === myName || u.name === myName) return;
+
+                        var opt = document.createElement('option');
+                        opt.value = u.username || u.name || u.id;
+                        opt.textContent = '👤 ' + (u.name || u.username) +
+                                        (u.roleLabel ? ' — ' + u.roleLabel : '');
+                        select.appendChild(opt);
+                    });
+
+                    console.log('✅ Loaded', allUsers.length, 'users');
+                })
+                .catch(function(err) {
+                    if (_isDestroyed) return;
+                    console.warn('⚠️ Could not load users:', err.message);
+
+                    // Fallback: only current user
+                    select.innerHTML = '';
+                    if (currentUser) {
+                        var opt = document.createElement('option');
+                        opt.value = currentUser.username || currentUser.name || 'me';
+                        opt.textContent = '👤 ' + (currentUser.name || currentUser.username);
+                        select.appendChild(opt);
+                    }
+                });
+        }
 
         // ============================================================
         // STATS
@@ -781,6 +1085,29 @@
         }
 
         // ============================================================
+        // FILTER TICKETS
+        // ============================================================
+        function getFilteredTickets() {
+            var statusFilter = document.getElementById('filterStatus');
+            var priorityFilter = document.getElementById('filterPriority');
+            var searchFilter = document.getElementById('filterSearch');
+
+            var status = statusFilter ? statusFilter.value : 'all';
+            var priority = priorityFilter ? priorityFilter.value : 'all';
+            var search = searchFilter ? searchFilter.value.trim().toLowerCase() : '';
+
+            return tickets.filter(function(t) {
+                if (status !== 'all' && t.status !== status) return false;
+                if (priority !== 'all' && t.priority !== priority) return false;
+                if (search) {
+                    var text = (t.subject + ' ' + t.message + ' ' + (t.sender || '')).toLowerCase();
+                    if (text.indexOf(search) === -1) return false;
+                }
+                return true;
+            });
+        }
+
+        // ============================================================
         // RENDER TICKETS
         // ============================================================
         function renderTickets() {
@@ -789,8 +1116,11 @@
             var list = document.getElementById('ticketsList');
             if (!list) return;
 
-            if (!tickets.length) {
-                list.innerHTML = '<div class="no-tickets"><i class="fas fa-inbox"></i> لا توجد تذاكر</div>';
+            var filtered = getFilteredTickets();
+
+            if (!filtered.length) {
+                var msg = tickets.length === 0 ? 'لا توجد تذاكر' : 'لا توجد تذاكر مطابقة';
+                list.innerHTML = '<div class="no-tickets"><i class="fas fa-inbox"></i> ' + msg + '</div>';
                 return;
             }
 
@@ -808,12 +1138,12 @@
             };
 
             var html = '';
-            tickets.forEach(function(t) {
+            filtered.forEach(function(t) {
                 var sClass = statusClass[t.status] || 'open';
                 var pClass = priorityClass[t.priority] || 'medium';
 
                 html +=
-                    '<div class="ticket-item fade-in">' +
+                    '<div class="ticket-item fade-in" data-ticket-id="' + escapeHtml(t.id) + '">' +
                         '<div class="ticket-header">' +
                             '<div class="ticket-subject">' + escapeHtml(t.subject) + '</div>' +
                             '<span class="ticket-status ' + sClass + '">' + escapeHtml(t.status) + '</span>' +
@@ -821,14 +1151,76 @@
                         '<div class="ticket-message">' + escapeHtml(t.message) + '</div>' +
                         '<div class="ticket-footer">' +
                             '<div class="user-info">' +
-                                '<i class="fas fa-user"></i> ' + escapeHtml(t.user || 'مستخدم') +
-                                ' &nbsp;|&nbsp; <i class="fas fa-clock"></i> ' + formatDate(t.createdAt) +
+                                '<span class="user-badge">👤 ' + escapeHtml(t.sender || t.user || 'مستخدم') + '</span>' +
+                                '<i class="fas fa-clock"></i> ' + formatDate(t.createdAt) +
                             '</div>' +
                             '<span class="ticket-priority ' + pClass + '">' + escapeHtml(t.priority) + '</span>' +
                         '</div>' +
                     '</div>';
             });
             list.innerHTML = html;
+
+            // ✅ Add click handlers for opening modal
+            list.querySelectorAll('.ticket-item').forEach(function(item) {
+                var handler = function() {
+                    var tid = this.getAttribute('data-ticket-id');
+                    openTicketModal(tid);
+                };
+                item.addEventListener('click', handler);
+                _eventListeners.push({ el: item, type: 'click', fn: handler });
+            });
+        }
+
+        // ============================================================
+        // TICKET MODAL
+        // ============================================================
+        function openTicketModal(ticketId) {
+            var ticket = tickets.find(function(t) { return t.id === ticketId; });
+            if (!ticket) return;
+
+            var modal = document.getElementById('ticketModal');
+            var title = document.getElementById('modalTitle');
+            var body = document.getElementById('modalBody');
+            if (!modal || !body) return;
+
+            if (title) title.textContent = '🎫 ' + ticket.subject;
+
+            body.innerHTML =
+                '<div class="field">' +
+                    '<span class="field-label">👤 المرسل</span>' +
+                    '<span class="field-value">' + escapeHtml(ticket.sender || ticket.user || 'مستخدم') + '</span>' +
+                '</div>' +
+                '<div class="field">' +
+                    '<span class="field-label">📋 الموضوع</span>' +
+                    '<span class="field-value">' + escapeHtml(ticket.subject) + '</span>' +
+                '</div>' +
+                '<div class="field">' +
+                    '<span class="field-label">📝 الوصف</span>' +
+                    '<div class="field-value" style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;line-height:1.7">' +
+                        escapeHtml(ticket.message) +
+                    '</div>' +
+                '</div>' +
+                '<div class="field" style="display:flex;gap:10px;flex-wrap:wrap">' +
+                    '<div style="flex:1">' +
+                        '<span class="field-label">🎯 الأولوية</span>' +
+                        '<span class="field-value">' + escapeHtml(ticket.priority) + '</span>' +
+                    '</div>' +
+                    '<div style="flex:1">' +
+                        '<span class="field-label">📊 الحالة</span>' +
+                        '<span class="field-value">' + escapeHtml(ticket.status) + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="field">' +
+                    '<span class="field-label">📅 التاريخ</span>' +
+                    '<span class="field-value">' + formatDate(ticket.createdAt) + '</span>' +
+                '</div>';
+
+            modal.classList.add('active');
+        }
+
+        function closeTicketModal() {
+            var modal = document.getElementById('ticketModal');
+            if (modal) modal.classList.remove('active');
         }
 
         // ============================================================
@@ -837,9 +1229,32 @@
         function loadTickets() {
             if (_isDestroyed) return;
 
+            // Load from localStorage first
+            try {
+                var stored = localStorage.getItem('marine_support_tickets');
+                if (stored) {
+                    var parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed)) {
+                        tickets = parsed.map(function(t) {
+                            return {
+                                id: t.id || ('T-' + Date.now() + Math.random()),
+                                subject: t.subject || '',
+                                message: t.message || '',
+                                priority: normalizePriority(t.priority),
+                                status: normalizeStatus(t.status),
+                                sender: t.sender || t.user || 'مستخدم',
+                                user: t.sender || t.user || 'مستخدم',
+                                createdAt: t.createdAt || new Date().toISOString()
+                            };
+                        });
+                        renderTickets();
+                        updateStats();
+                    }
+                }
+            } catch (e) {}
+
             var token = getToken();
             if (!token) {
-                console.log('ℹ️ No token — using local tickets only');
                 renderTickets();
                 updateStats();
                 return;
@@ -853,16 +1268,40 @@
                 })
                 .then(function(data) {
                     if (_isDestroyed) return;
-                    tickets = Array.isArray(data) ? data : (data.tickets || []);
+                    var remoteTickets = Array.isArray(data) ? data : (data.tickets || []);
+                    remoteTickets = remoteTickets.map(function(t) {
+                        return {
+                            id: t.id || t._id || ('T-' + Date.now()),
+                            subject: t.subject || t.title || '',
+                            message: t.message || t.description || '',
+                            priority: normalizePriority(t.priority),
+                            status: normalizeStatus(t.status),
+                            sender: t.sender || t.user || t.createdByName || 'مستخدم',
+                            user: t.sender || t.user || t.createdByName || 'مستخدم',
+                            createdAt: t.createdAt || new Date().toISOString()
+                        };
+                    });
+
+                    tickets = remoteTickets;
+                    saveTicketsLocally();
                     renderTickets();
                     updateStats();
                 })
                 .catch(function(err) {
                     if (_isDestroyed) return;
-                    console.warn('⚠️ Could not load tickets from server:', err.message);
+                    console.warn('⚠️ Could not load tickets:', err.message);
                     renderTickets();
                     updateStats();
                 });
+        }
+
+        // ============================================================
+        // SAVE TICKETS LOCALLY
+        // ============================================================
+        function saveTicketsLocally() {
+            try {
+                localStorage.setItem('marine_support_tickets', JSON.stringify(tickets.slice(0, 100)));
+            } catch (e) {}
         }
 
         // ============================================================
@@ -872,6 +1311,7 @@
             if (event && event.preventDefault) event.preventDefault();
             if (_isDestroyed) return;
 
+            var senderEl = document.getElementById('ticketSender');
             var subjectEl = document.getElementById('ticketSubject');
             var messageEl = document.getElementById('ticketMessage');
             var priorityEl = document.getElementById('ticketPriority');
@@ -879,6 +1319,7 @@
 
             if (!subjectEl || !messageEl || !priorityEl) return;
 
+            var sender = (senderEl && senderEl.value) || (currentUser && (currentUser.name || currentUser.username)) || 'مستخدم';
             var subject = subjectEl.value.trim();
             var message = messageEl.value.trim();
             var priority = priorityEl.value;
@@ -892,7 +1333,8 @@
                 message: message,
                 priority: priority,
                 status: 'مفتوحة',
-                user: (window.currentUser && window.currentUser.name) || 'مستخدم',
+                sender: sender,
+                user: sender,
                 createdAt: new Date().toISOString()
             };
 
@@ -903,13 +1345,17 @@
 
             var token = getToken();
 
-            // ✅ Try to send to server, fallback to local
             var promise;
             if (token) {
                 promise = fetch('/api/support/tickets', {
                     method: 'POST',
                     headers: getAuthHeaders(),
-                    body: JSON.stringify(newTicket)
+                    body: JSON.stringify({
+                        title: subject,
+                        description: message,
+                        priority: priority,
+                        sender: sender
+                    })
                 })
                 .then(function(res) {
                     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -923,6 +1369,7 @@
                 .then(function() {
                     if (_isDestroyed) return;
                     tickets.unshift(newTicket);
+                    saveTicketsLocally();
                     renderTickets();
                     updateStats();
 
@@ -935,8 +1382,8 @@
                 .catch(function(err) {
                     if (_isDestroyed) return;
                     console.warn('⚠️ Server error, saving locally:', err.message);
-                    // ✅ Fallback: keep ticket locally
                     tickets.unshift(newTicket);
+                    saveTicketsLocally();
                     renderTickets();
                     updateStats();
 
@@ -959,15 +1406,47 @@
         // ============================================================
         function init() {
             if (_isDestroyed) return;
-            console.log('🚀 Initializing Support page...');
+            console.log('🚀 Initializing Support page v10.0...');
 
-            // ✅ Event listeners
+            // Load current user
+            loadCurrentUser();
+
+            // Load users list
+            loadUsers();
+
+            // Form submit
             var form = document.getElementById('ticketForm');
             if (form) {
                 addSafeListener(form, 'submit', sendTicket);
             }
 
-            // ✅ Load tickets
+            // Filters
+            var filterStatus = document.getElementById('filterStatus');
+            if (filterStatus) addSafeListener(filterStatus, 'change', renderTickets);
+
+            var filterPriority = document.getElementById('filterPriority');
+            if (filterPriority) addSafeListener(filterPriority, 'change', renderTickets);
+
+            var filterSearch = document.getElementById('filterSearch');
+            if (filterSearch) addSafeListener(filterSearch, 'input', renderTickets);
+
+            // Modal close
+            var modalClose = document.getElementById('modalClose');
+            if (modalClose) addSafeListener(modalClose, 'click', closeTicketModal);
+
+            var modal = document.getElementById('ticketModal');
+            if (modal) {
+                addSafeListener(modal, 'click', function(e) {
+                    if (e.target === modal) closeTicketModal();
+                });
+            }
+
+            // ESC to close modal
+            addSafeListener(document, 'keydown', function(e) {
+                if (e.key === 'Escape') closeTicketModal();
+            });
+
+            // Load tickets
             loadTickets();
 
             console.log('✅ Support page ready');
@@ -994,8 +1473,10 @@
         window.renderTickets = renderTickets;
         window.updateStats = updateStats;
         window.showToast = showToast;
+        window.openTicketModal = openTicketModal;
+        window.closeTicketModal = closeTicketModal;
 
-        console.log('✅ Support Page v9.1 ready');
+        console.log('✅ Support Page v10.0 ready');
 
     })();
     </script>
