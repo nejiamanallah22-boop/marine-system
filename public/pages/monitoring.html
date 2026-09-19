@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>🛰️ المراقبة الحية — منظومة الوسائل البحرية</title>
 
-<!-- ✅ Leaflet من jsdelivr (أكثر موثوقية من unpkg) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- ✅ Leaflet من jsdelivr + fallback محلي -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+      onerror="this.onerror=null;this.href='/public/lib/leaflet/leaflet.css';" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+        onerror="var s=document.createElement('script');s.src='/public/lib/leaflet/leaflet.js';document.head.appendChild(s);"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -191,6 +193,16 @@
         background: #4ade80;
         box-shadow: 0 0 10px #4ade80;
         animation: pulse 1.5s infinite;
+    }
+
+    .top-bar .live-badge.offline {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+    }
+    .top-bar .live-badge.offline .dot {
+        background: #fca5a5;
+        box-shadow: 0 0 10px #fca5a5;
     }
 
     @keyframes pulse {
@@ -591,7 +603,7 @@
         <i class="fas fa-satellite-dish"></i>
         <div class="text">
             <span class="title">المراقبة الحية</span>
-            <span class="subtitle">Live Tracking v13.1</span>
+            <span class="subtitle">Live Tracking v13.2</span>
         </div>
     </div>
 
@@ -610,7 +622,7 @@
         </div>
     </div>
 
-    <div class="live-badge">
+    <div class="live-badge" id="liveBadge">
         <span class="dot"></span>
         <span id="lastUpdate">مباشر</span>
     </div>
@@ -691,38 +703,75 @@
 (function() {
     'use strict';
 
-    console.log('🛰️ monitoring.html v13.1 - Loading...');
+    // ============================================================
+    // DEBUG HELPER (v13.2)
+    // ============================================================
+    var DEBUG = /[?&]debug=1/.test(location.search) || 
+                location.hostname === 'localhost' || 
+                location.hostname === '127.0.0.1';
+    function log() { if (DEBUG) try { console.log.apply(console, arguments); } catch(e){} }
+    function warn() { try { console.warn.apply(console, arguments); } catch(e){} }
+    function error() { try { console.error.apply(console, arguments); } catch(e){} }
+
+    log('🛰️ monitoring.html v13.2 - Loading...');
 
     // ============================================================
-    // CLEANUP
+    // CLEANUP (v13.2 - FIXED #2: proper map cleanup + AbortController)
     // ============================================================
     var _isDestroyed = false;
     var _intervals = [];
     var _timeouts = [];
     var _listeners = [];
+    var _abortControllers = [];
 
     function _cleanup() {
         if (_isDestroyed) return;
         _isDestroyed = true;
+
+        // إلغاء جميع الطلبات الجارية
+        _abortControllers.forEach(function(c) {
+            try { c.abort(); } catch(e){}
+        });
+        _abortControllers = [];
+
         _intervals.forEach(function(id) { try { clearInterval(id); } catch(e){} });
         _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e){} });
         _listeners.forEach(function(l) {
             try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e){}
         });
         _intervals = []; _timeouts = []; _listeners = [];
+
+        // ✅ FIX #2: geolocation cleanup
         try {
             if (window._geoWatchId != null && navigator.geolocation) {
                 navigator.geolocation.clearWatch(window._geoWatchId);
-                console.log('📍 Geolocation stopped');
+                window._geoWatchId = null;
+                log('📍 Geolocation stopped');
             }
         } catch(e){}
+
+        // ✅ FIX #2: map cleanup (كان يستخدم window.map خطأً)
         try {
-            if (window.map && typeof window.map.remove === 'function') {
-                window.map.remove();
-                window.map = null;
+            if (typeof map !== 'undefined' && map && typeof map.remove === 'function') {
+                map.remove();
+                map = null;
+                log('🗺️ Map removed');
             }
         } catch(e){}
-        console.log('🧹 Monitoring v13.1 cleanup done');
+
+        // ✅ FIX #2: markers cleanup
+        try {
+            if (typeof userMarkers !== 'undefined' && userMarkers) {
+                userMarkers.forEach(function(m) {
+                    try { if (m && m.remove) m.remove(); } catch(e){}
+                });
+                userMarkers.clear();
+            }
+            myMarker = null;
+            myAccuracyCircle = null;
+        } catch(e){}
+
+        log('🧹 Monitoring v13.2 cleanup done');
     }
 
     window._pageCleanup = window._pageCleanup || [];
@@ -744,6 +793,7 @@
     var locations = [];
     var mapInitialized = false;
     var firstFitDone = false;
+    var initDone = false; // ✅ FIX #3
 
     // ============================================================
     // HELPERS
@@ -774,13 +824,25 @@
         return h;
     }
 
+    // ✅ FIX #5: fetchJSON with AbortController
     function fetchJSON(url, opts) {
         opts = opts || {};
         opts.headers = Object.assign({}, authHeaders(), opts.headers || {});
         opts.credentials = 'include';
+
+        var controller = new AbortController();
+        opts.signal = controller.signal;
+        _abortControllers.push(controller);
+
         return fetch(url, opts).then(function(res) {
+            var idx = _abortControllers.indexOf(controller);
+            if (idx > -1) _abortControllers.splice(idx, 1);
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.json();
+        }).catch(function(err) {
+            var idx = _abortControllers.indexOf(controller);
+            if (idx > -1) _abortControllers.splice(idx, 1);
+            throw err;
         });
     }
 
@@ -791,10 +853,14 @@
         });
     }
 
+    // ✅ FIX #9: formatTimeAgo with proper undefined handling
     function formatTimeAgo(iso) {
         try {
+            if (!iso) return '—';
             var d = new Date(iso);
+            if (isNaN(d.getTime())) return '—';
             var diff = Date.now() - d.getTime();
+            if (diff < 0) return 'الآن';
             var s = Math.floor(diff / 1000);
             if (s < 30) return 'الآن';
             if (s < 60) return s + ' ث';
@@ -804,9 +870,8 @@
         } catch(e) { return '—'; }
     }
 
-    // ✅ v13.1: قراءة المستخدم من localStorage أو من JWT مباشرة
+    // ✅ FIX #4: prioritize sub over id (matches server)
     function readMyUser() {
-        // 1. جرب localStorage
         try {
             var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
             var stores = [localStorage, sessionStorage];
@@ -821,17 +886,19 @@
             }
         } catch(e) {}
 
-        // 2. ✅ fallback: فك JWT مباشرة
+        // ✅ fallback: decode JWT
         try {
             var token = getToken();
             if (token) {
                 var parts = token.split('.');
                 if (parts.length === 3) {
                     var payload = JSON.parse(atob(parts[1]));
-                    if (payload && (payload.id || payload.sub)) {
+                    if (payload && (payload.sub || payload.id)) {
+                        // ✅ الأولوية لـ sub (المطابق لـ user.id في الخادم)
+                        var realId = payload.sub || payload.id;
                         return {
-                            id: payload.id || payload.sub,
-                            _id: payload.id || payload.sub,
+                            id: realId,
+                            _id: realId,
                             username: payload.username || '',
                             name: payload.name || payload.username || '',
                             role: payload.role || 'viewer',
@@ -841,35 +908,37 @@
                 }
             }
         } catch(e) {
-            console.warn('⚠️ JWT parse error:', e.message);
+            warn('⚠️ JWT parse error:', e.message);
         }
-
         return null;
     }
 
     // ============================================================
-    // INIT MAP — SATELLITE
+    // MAP
     // ============================================================
+    var TILE_ERROR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+    function showMapError(title, details) {
+        var ld = document.getElementById('loadingScreen');
+        if (!ld) return;
+        ld.classList.remove('hidden');
+        ld.innerHTML =
+            '<div class="error-screen">' +
+            '<h2>❌ ' + escapeHtml(title) + '</h2>' +
+            '<p>' + escapeHtml(details || '') + '</p>' +
+            '<p style="font-size:11px;color:#94a3b8">تحقق من الإنترنت أو عطّل مانع الإعلانات (AdBlocker)</p>' +
+            '<button onclick="location.reload()">🔄 إعادة المحاولة</button>' +
+            '</div>';
+    }
+
     function initMap() {
         if (mapInitialized || _isDestroyed) return;
-
-        // ✅ v13.1: التحقق من وجود Leaflet أولاً
         if (typeof L === 'undefined') {
-            console.error('❌❌❌ Leaflet NOT LOADED!');
-            var ld = document.getElementById('loadingScreen');
-            if (ld) {
-                ld.innerHTML =
-                    '<div class="error-screen">' +
-                    '<h2>❌ فشل تحميل الخريطة</h2>' +
-                    '<p>مكتبة Leaflet لم تُحمّل بعد</p>' +
-                    '<p style="font-size:11px;color:#94a3b8">تحقق من الإنترنت أو عطّل مانع الإعلانات</p>' +
-                    '<button onclick="location.reload()">🔄 إعادة المحاولة</button>' +
-                    '</div>';
-            }
+            error('❌ Leaflet NOT LOADED!');
+            showMapError('فشل تحميل الخريطة', 'مكتبة Leaflet لم تُحمّل بعد');
             return;
         }
-
-        console.log('✅ Leaflet detected, version:', L.version || 'unknown');
+        log('✅ Leaflet detected, version:', L.version || 'unknown');
 
         var el = document.getElementById('map');
         if (!el) return;
@@ -890,7 +959,9 @@
                     maxZoom: 19,
                     maxNativeZoom: 18,
                     attribution: '© Esri, Maxar, Earthstar Geographics',
-                    crossOrigin: true
+                    crossOrigin: true,
+                    errorTileUrl: TILE_ERROR,  // ✅ FIX #12
+                    keepBuffer: 4
                 }
             );
 
@@ -902,7 +973,9 @@
                     maxNativeZoom: 18,
                     attribution: '© Esri',
                     pane: 'shadowPane',
-                    opacity: 0.9
+                    opacity: 0.9,
+                    errorTileUrl: TILE_ERROR,
+                    keepBuffer: 4
                 }
             );
 
@@ -912,26 +985,19 @@
             L.control.zoom({ position: 'topleft' }).addTo(map);
 
             mapInitialized = true;
-            console.log('🛰️ Satellite map initialized');
+            log('🛰️ Satellite map initialized');
         } catch(e) {
-            console.warn('❌ Map init error:', e.message);
-            var ld2 = document.getElementById('loadingScreen');
-            if (ld2) {
-                ld2.innerHTML =
-                    '<div class="error-screen">' +
-                    '<h2>❌ فشل تهيئة الخريطة</h2>' +
-                    '<p>' + escapeHtml(e.message) + '</p>' +
-                    '<button onclick="location.reload()">🔄 إعادة المحاولة</button>' +
-                    '</div>';
-            }
+            warn('❌ Map init error:', e.message);
+            showMapError('فشل تهيئة الخريطة', e.message);
         }
     }
 
     // ============================================================
     // SEND LOCATION
     // ============================================================
-    function sendLocationToServer(coords) {
+    function sendLocationToServer(coords, retryCount) {
         if (_isDestroyed) return;
+        retryCount = retryCount || 0;
         fetchJSON('/api/locations', {
             method: 'POST',
             body: JSON.stringify({
@@ -941,30 +1007,40 @@
             })
         })
         .then(function() {
-            console.log('📍 Location sent:', coords.latitude.toFixed(5), coords.longitude.toFixed(5), '±' + Math.round(coords.accuracy || 0) + 'm');
+            log('📍 Location sent:', coords.latitude.toFixed(5), coords.longitude.toFixed(5), '±' + Math.round(coords.accuracy || 0) + 'm');
         })
         .catch(function(err) {
-            console.warn('[GEO] send error:', err.message);
+            warn('[GEO] send error:', err.message);
+            // ✅ FIX #20: retry once after 5s
+            if (retryCount < 1 && !_isDestroyed) {
+                _timeouts.push(setTimeout(function() {
+                    if (!_isDestroyed) sendLocationToServer(coords, retryCount + 1);
+                }, 5000));
+            }
         });
     }
 
     function startGeolocation() {
         if (!navigator.geolocation || _isDestroyed) return;
-        if (window._geoWatchId != null) return; // already watching
+        if (window._geoWatchId != null) return;
 
-        window._geoWatchId = navigator.geolocation.watchPosition(
-            function(pos) {
-                myLocation = pos.coords;
-                sendLocationToServer(pos.coords);
-                updateMyMarker(pos.coords);
-            },
-            function(err) {
-                console.warn('[GEO] watch error:', err.code, err.message);
-            },
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
-        );
-
-        console.log('📍 Geolocation started, watchId:', window._geoWatchId);
+        try {
+            window._geoWatchId = navigator.geolocation.watchPosition(
+                function(pos) {
+                    if (_isDestroyed) return;
+                    myLocation = pos.coords;
+                    sendLocationToServer(pos.coords);
+                    updateMyMarker(pos.coords);
+                },
+                function(err) {
+                    warn('[GEO] watch error:', err.code, err.message);
+                },
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
+            );
+            log('📍 Geolocation started, watchId:', window._geoWatchId);
+        } catch(e) {
+            warn('[GEO] watch exception:', e.message);
+        }
     }
 
     // ============================================================
@@ -1018,18 +1094,18 @@
                 myAccuracyCircle.setRadius(coords.accuracy || 50);
             }
         } catch(e) {
-            console.warn('[MAP] my marker error:', e.message);
+            warn('[MAP] my marker error:', e.message);
         }
     }
 
     // ============================================================
-    // ADD OTHER USERS
+    // OTHER USERS
     // ============================================================
     function addMarkers(locs, allUsers) {
         if (!map || !mapInitialized || _isDestroyed) return;
         if (typeof L === 'undefined') return;
 
-        console.log('🗺️ addMarkers: rendering', locs.length, 'locations');
+        log('🗺️ addMarkers: rendering', locs.length, 'locations');
 
         userMarkers.forEach(function(m) {
             try { map.removeLayer(m); } catch(e){}
@@ -1047,7 +1123,7 @@
                 isMe = myIdStr && locIdStr && (myIdStr === locIdStr);
             } catch(e) { isMe = false; }
 
-            if (isMe) return; // myMarker already exists
+            if (isMe) return;
 
             var lat = Number(loc.latitude);
             var lng = Number(loc.longitude);
@@ -1085,22 +1161,22 @@
                 points.push([lat, lng]);
                 rendered++;
             } catch(e) {
-                console.warn('⚠️ marker error:', e.message);
+                warn('⚠️ marker error:', e.message);
             }
         });
 
-        console.log('✅ Rendered', rendered, 'other markers');
+        log('✅ Rendered', rendered, 'other markers');
 
-        // Fit bounds once
+        // ✅ FIX #18: maxZoom 15 بدل 13
         if (!firstFitDone && (rendered > 0 || myLocation)) {
             try {
                 var allPoints = [];
                 if (myLocation) allPoints.push([myLocation.latitude, myLocation.longitude]);
                 points.forEach(function(p) { allPoints.push(p); });
                 if (allPoints.length > 1) {
-                    map.fitBounds(allPoints, { padding: [80, 80], maxZoom: 13 });
+                    map.fitBounds(allPoints, { padding: [80, 80], maxZoom: 15 });
                 } else if (allPoints.length === 1) {
-                    map.setView(allPoints[0], 13);
+                    map.setView(allPoints[0], 15);
                 }
                 firstFitDone = true;
             } catch(e) {}
@@ -1135,7 +1211,7 @@
             addMarkers(locations, users);
         })
         .catch(function(err) {
-            console.warn('[MONITORING] error:', err.message);
+            warn('[MONITORING] error:', err.message);
         });
     }
 
@@ -1152,13 +1228,29 @@
                 renderSessionsList();
             })
             .catch(function(err) {
-                console.warn('[MONITORING] sessions error:', err.message);
+                warn('[MONITORING] sessions error:', err.message);
             });
     }
 
     // ============================================================
-    // RENDER USERS
+    // RENDER USERS (FIX #8: event delegation)
     // ============================================================
+    function handleUserCardClick(uid) {
+        if (String(uid) === String(myId) && myLocation && map) {
+            map.flyTo([myLocation.latitude, myLocation.longitude], 15, { duration: 1.2 });
+            if (myMarker) _timeouts.push(setTimeout(function() { myMarker.openPopup(); }, 400));
+        } else if (userMarkers.has(uid) && map) {
+            var m = userMarkers.get(uid);
+            var ll = m.getLatLng();
+            map.flyTo(ll, 15, { duration: 1.2 });
+            _timeouts.push(setTimeout(function() { m.openPopup(); }, 400));
+        }
+        if (window.innerWidth < 768) {
+            var panel = document.getElementById('sidePanel');
+            if (panel) panel.classList.remove('open');
+        }
+    }
+
     function renderUsersList() {
         var el = document.getElementById('usersList');
         if (!el) return;
@@ -1228,25 +1320,19 @@
 
         el.innerHTML = html;
 
-        el.querySelectorAll('.user-card').forEach(function(item) {
-            var handler = function() {
-                var uid = this.getAttribute('data-user-id');
-                if (String(uid) === String(myId) && myLocation && map) {
-                    map.flyTo([myLocation.latitude, myLocation.longitude], 15, { duration: 1.2 });
-                    if (myMarker) setTimeout(function() { myMarker.openPopup(); }, 400);
-                } else if (userMarkers.has(uid) && map) {
-                    var m = userMarkers.get(uid);
-                    var ll = m.getLatLng();
-                    map.flyTo(ll, 15, { duration: 1.2 });
-                    setTimeout(function() { m.openPopup(); }, 400);
-                }
-                if (window.innerWidth < 768) {
-                    document.getElementById('sidePanel').classList.remove('open');
+        // ✅ FIX #8: event delegation - يُضاف مرة واحدة فقط
+        if (!el._delegationAttached) {
+            el._delegationAttached = true;
+            var delegHandler = function(e) {
+                var card = e.target.closest('.user-card');
+                if (card) {
+                    var uid = card.getAttribute('data-user-id');
+                    if (uid) handleUserCardClick(uid);
                 }
             };
-            item.addEventListener('click', handler);
-            _listeners.push({ el: item, type: 'click', fn: handler });
-        });
+            el.addEventListener('click', delegHandler);
+            _listeners.push({ el: el, type: 'click', fn: delegHandler });
+        }
     }
 
     // ============================================================
@@ -1281,10 +1367,30 @@
     }
 
     // ============================================================
+    // ONLINE/OFFLINE (FIX #19)
+    // ============================================================
+    function updateOnlineStatus() {
+        var badge = document.getElementById('liveBadge');
+        var el = document.getElementById('lastUpdate');
+        if (navigator.onLine) {
+            if (badge) badge.classList.remove('offline');
+            if (el) el.textContent = 'مباشر';
+        } else {
+            if (badge) badge.classList.add('offline');
+            if (el) el.textContent = '⚠️ غير متصل';
+        }
+    }
+
+    // ============================================================
     // REFRESH
     // ============================================================
     function refreshAll() {
         if (_isDestroyed) return;
+        // ✅ FIX #19: skip if offline
+        if (!navigator.onLine) {
+            updateOnlineStatus();
+            return;
+        }
         loadUsers();
         loadSessions();
         var el = document.getElementById('lastUpdate');
@@ -1301,12 +1407,12 @@
         }
         navigator.geolocation.getCurrentPosition(
             function(pos) {
+                if (_isDestroyed) return;
                 myLocation = pos.coords;
                 sendLocationToServer(pos.coords);
                 updateMyMarker(pos.coords);
                 if (map) map.flyTo([pos.coords.latitude, pos.coords.longitude], 16, { duration: 1.5 });
-                if (myMarker) setTimeout(function() { myMarker.openPopup(); }, 500);
-                // ✅ ابدأ watch بعد السماح
+                if (myMarker) _timeouts.push(setTimeout(function() { myMarker.openPopup(); }, 500));
                 startGeolocation();
             },
             function(err) {
@@ -1321,47 +1427,40 @@
     }
 
     // ============================================================
-    // INIT
+    // INIT (FIX #3: idempotent)
     // ============================================================
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing v13.1...');
-
-        // ✅ v13.1: التحقق من Leaflet أولاً
-        if (typeof L === 'undefined') {
-            console.error('❌❌❌ Leaflet NOT LOADED!');
-            var ld = document.getElementById('loadingScreen');
-            if (ld) {
-                ld.innerHTML =
-                    '<div class="error-screen">' +
-                    '<h2>❌ فشل تحميل الخريطة</h2>' +
-                    '<p>مكتبة Leaflet لم تُحمّل</p>' +
-                    '<p style="font-size:11px;color:#94a3b8">تحقق من الإنترنت أو عطّل مانع الإعلانات (AdBlocker)</p>' +
-                    '<p style="font-size:11px;color:#94a3b8">ثم أعد تحميل الصفحة</p>' +
-                    '<button onclick="location.reload()">🔄 إعادة المحاولة</button>' +
-                    '</div>';
-            }
+        if (initDone) {
+            warn('⚠️ Already initialized, skipping');
             return;
         }
+        initDone = true;
 
-        console.log('✅ Leaflet detected:', L.version || 'unknown');
+        log('🚀 Initializing v13.2...');
 
-        // اقرأ المستخدم (مع fallback من JWT)
+        if (typeof L === 'undefined') {
+            error('❌❌❌ Leaflet NOT LOADED!');
+            showMapError('فشل تحميل الخريطة', 'مكتبة Leaflet لم تُحمّل');
+            return;
+        }
+        log('✅ Leaflet detected:', L.version || 'unknown');
+
+        // قراءة المستخدم
         var me = readMyUser();
         myId = me ? String(me.id || me._id || '') : null;
-        console.log('👤 My ID:', myId, '| User:', me ? (me.name || me.username) : 'NONE');
+        // ✅ FIX #14: 'null' كنص
+        if (myId === 'null' || myId === 'undefined' || myId === '') myId = null;
+        log('👤 My ID:', myId, '| User:', me ? (me.name || me.username) : 'NONE');
 
-        // Init map
         initMap();
-
-        // ⚠️ لا تطلب الموقع تلقائياً — انتظر نقرة المستخدم
-        // هذا يتجنب خطأ "User denied Geolocation" عند فتح الصفحة
 
         // UI Events
         var toggleBtn = document.getElementById('togglePanelBtn');
         if (toggleBtn) {
             var tHandler = function() {
-                document.getElementById('sidePanel').classList.toggle('open');
+                var p = document.getElementById('sidePanel');
+                if (p) p.classList.toggle('open');
             };
             toggleBtn.addEventListener('click', tHandler);
             _listeners.push({ el: toggleBtn, type: 'click', fn: tHandler });
@@ -1370,11 +1469,23 @@
         var closeBtn = document.getElementById('closePanelBtn');
         if (closeBtn) {
             var cHandler = function() {
-                document.getElementById('sidePanel').classList.remove('open');
+                var p = document.getElementById('sidePanel');
+                if (p) p.classList.remove('open');
             };
             closeBtn.addEventListener('click', cHandler);
             _listeners.push({ el: closeBtn, type: 'click', fn: cHandler });
         }
+
+        // ✅ FIX #11: click outside to close panel
+        var documentClickHandler = function(e) {
+            var panel = document.getElementById('sidePanel');
+            if (!panel || !panel.classList.contains('open')) return;
+            if (panel.contains(e.target)) return;
+            if (e.target.closest('#togglePanelBtn')) return;
+            panel.classList.remove('open');
+        };
+        document.addEventListener('click', documentClickHandler);
+        _listeners.push({ el: document, type: 'click', fn: documentClickHandler });
 
         var locateBtn = document.getElementById('locateMeBtn');
         if (locateBtn) {
@@ -1395,6 +1506,11 @@
             _listeners.push({ el: refreshBtn, type: 'click', fn: rHandler });
         }
 
+        // Online/offline
+        window.addEventListener('online', function() { updateOnlineStatus(); refreshAll(); });
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
         // Hide loading
         _timeouts.push(setTimeout(function() {
             var ld = document.getElementById('loadingScreen');
@@ -1405,7 +1521,7 @@
         refreshAll();
         _intervals.push(setInterval(refreshAll, 10000));
 
-        console.log('✅ Monitoring v13.1 ready');
+        log('✅ Monitoring v13.2 ready');
     }
 
     // ============================================================
@@ -1425,10 +1541,11 @@
         getLocations: function() { return locations; },
         getSessions: function() { return sessions; },
         getMyId: function() { return myId; },
-        locateMe: locateMe
+        locateMe: locateMe,
+        isDestroyed: function() { return _isDestroyed; }
     };
 
-    console.log('✅ monitoring.html v13.1 ready');
+    log('✅ monitoring.html v13.2 ready');
 
 })();
 </script>
