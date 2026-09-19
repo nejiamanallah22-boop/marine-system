@@ -1102,10 +1102,10 @@
         /* ============================================================
            🔒 STATE
            ============================================================ */
-        var VERSION = '12.0';
+        var VERSION = '12.1';
         var _isDestroyed = false;
         var _map = null;
-        var _myLocationMarker = null; // 🆕 علامة موقعي الفعلية
+        var _myLocationMarker = null;
         var _myLocationAccuracyCircle = null;
         var _markers = [];
         var _tileLayers = null;
@@ -1133,10 +1133,10 @@
         var _geoLastLng = null;
         var _geoLastAccuracy = null;
         var _geoHeartbeatId = null;
-        var _geoStatus = 'idle'; // idle | searching | active | denied | error
-        var _GEO_SEND_THROTTLE = 30000;   // إرسال كل 30 ثانية كحد أدنى
-        var _GEO_HEARTBEAT_MS = 60000;    // heartbeat كل دقيقة
-        var _GEO_MIN_DISTANCE = 20;       // متر
+        var _geoStatus = 'idle';
+        var _GEO_SEND_THROTTLE = 30000;
+        var _GEO_HEARTBEAT_MS = 60000;
+        var _GEO_MIN_DISTANCE = 20;
         var _GEO_HIGH_ACCURACY = true;
 
         console.log('🔄 monitoring.html v' + VERSION + ' - loading...');
@@ -1147,7 +1147,6 @@
         function _monitoringCleanup() {
             if (_isDestroyed) return;
 
-            // 🆕 إيقاف تتبع الموقع أولاً
             stopGeolocationTracking();
             endSessionBeacon();
 
@@ -1263,10 +1262,25 @@
             } catch (e) { return null; }
         }
 
+        function getCsrfToken() {
+            try {
+                var m = document.cookie.match(/marine_csrf=([^;]+)/);
+                return m ? decodeURIComponent(m[1]) : '';
+            } catch (e) { return ''; }
+        }
+
         function authHeaders() {
             var h = { 'Accept': 'application/json' };
             var t = getToken();
             if (t) h['Authorization'] = 'Bearer ' + t;
+            return h;
+        }
+
+        function postHeaders() {
+            var h = authHeaders();
+            h['Content-Type'] = 'application/json';
+            var csrf = getCsrfToken();
+            if (csrf) h['X-CSRF-Token'] = csrf;
             return h;
         }
 
@@ -1491,23 +1505,25 @@
                    location.hostname === '127.0.0.1';
         }
 
+        /* ✅ v12.1: endpoint الصحيح + الأسماء الصحيحة + CSRF */
         async function sendLocationToServer(lat, lng, accuracy) {
             if (_isDestroyed) return;
             try {
-                var res = await fetch('/api/monitoring/location', {
+                var res = await fetch('/api/locations', {
                     method: 'POST',
-                    headers: Object.assign({}, authHeaders(), {
-                        'Content-Type': 'application/json'
-                    }),
+                    headers: postHeaders(),
                     credentials: 'include',
                     body: JSON.stringify({
-                        lat: lat,
-                        lng: lng,
-                        accuracy: accuracy || null,
-                        userAgent: navigator.userAgent
+                        latitude: lat,
+                        longitude: lng,
+                        accuracy: accuracy || null
                     })
                 });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
+                if (!res.ok) {
+                    var txt = '';
+                    try { txt = await res.text(); } catch (e) {}
+                    throw new Error('HTTP ' + res.status + ' ' + String(txt).substring(0, 100));
+                }
                 console.log('📍 Location sent:', lat.toFixed(4), lng.toFixed(4));
             } catch (err) {
                 console.warn('[GEO] send error:', err.message);
@@ -1534,18 +1550,7 @@
             _geoLastLng = lng;
             _geoLastAccuracy = acc;
 
-            // 🆕 تحديث علامة موقعي على الخريطة
             updateMyLocationMarker(lat, lng, acc);
-
-            // 🆕 تحديث بيانات المستخدم الحالي محلياً
-            if (_myUser) {
-                _myUser.lat = lat;
-                _myUser.lng = lng;
-                _myUser.accuracy = acc;
-                _myUser.lastActive = new Date().toISOString();
-                // أعد رسم الجدول ليظهر الموقع المحدث
-                renderSessions();
-            }
 
             if (shouldSend) {
                 _geoLastSent = now;
@@ -1608,7 +1613,6 @@
                 return;
             }
 
-            // Heartbeat دوري
             _geoHeartbeatId = safeInterval(function () {
                 if (_geoLastLat !== null && _geoLastLng !== null) {
                     sendLocationToServer(_geoLastLat, _geoLastLng, _geoLastAccuracy);
@@ -1629,7 +1633,6 @@
             console.log('📍 Geolocation tracking stopped');
         }
 
-        // 🆕 إرسال إغلاق الجلسة عند مغادرة الصفحة
         function endSessionBeacon() {
             if (_isDestroyed) return;
             try {
@@ -1725,38 +1728,114 @@
             return res.json();
         }
 
-        function normalizeUsers(data) {
-            var users = [];
-            if (Array.isArray(data)) users = data;
-            else if (data && Array.isArray(data.users)) users = data.users;
-            else if (data && Array.isArray(data.data)) users = data.data;
+        /* ✅ v12.1: دمج المستخدمين + المواقع الحية */
+        async function loadUsers() {
+            if (_isDestroyed) return [];
 
-            return users.map(function (u) {
-                var lat = (typeof u.lat === 'number') ? u.lat
-                    : (typeof u.latitude === 'number') ? u.latitude : null;
-                var lng = (typeof u.lng === 'number') ? u.lng
-                    : (typeof u.longitude === 'number') ? u.longitude : null;
+            try {
+                var results = await Promise.allSettled([
+                    fetchJSON('/api/monitoring/users'),
+                    fetchJSON('/api/locations')
+                ]);
 
-                if (lat !== null && (lat < -90 || lat > 90)) lat = null;
-                if (lng !== null && (lng < -180 || lng > 180)) lng = null;
+                var usersData = null;
+                var locationsData = null;
 
-                var id = u.id || u._id || '';
-                return {
-                    id: id,
-                    name: u.name || u.username || 'مستخدم',
-                    username: u.username || '',
-                    email: u.email || '',
-                    role: u.role || 'viewer',
-                    active: u.active !== false && u.isActive !== false,
-                    lat: lat,
-                    lng: lng,
-                    accuracy: (typeof u.accuracy === 'number') ? u.accuracy : null,
-                    location: u.location || '—',
-                    lastActive: u.lastLogin || u.lastActive || null,
-                    userAgent: u.userAgent || u.device || null,
-                    isMe: _myId !== null && String(id) === String(_myId)
-                };
-            });
+                if (results[0].status === 'fulfilled') usersData = results[0].value;
+                else console.warn('[MONITORING] users fetch failed:', results[0].reason && results[0].reason.message);
+
+                if (results[1].status === 'fulfilled') locationsData = results[1].value;
+                else console.warn('[MONITORING] locations fetch failed:', results[1].reason && results[1].reason.message);
+
+                var users = [];
+                if (Array.isArray(usersData)) users = usersData;
+                else if (usersData && Array.isArray(usersData.users)) users = usersData.users;
+                else if (usersData && Array.isArray(usersData.data)) users = usersData.data;
+
+                var locationsMap = {};
+                var locationsList = [];
+                if (Array.isArray(locationsData)) locationsList = locationsData;
+                else if (locationsData && Array.isArray(locationsData.locations)) locationsList = locationsData.locations;
+
+                locationsList.forEach(function (loc) {
+                    if (loc && loc.userId) {
+                        locationsMap[String(loc.userId)] = {
+                            lat: Number(loc.latitude),
+                            lng: Number(loc.longitude),
+                            accuracy: Number(loc.accuracy) || null,
+                            timestamp: loc.timestamp || null
+                        };
+                    }
+                });
+
+                console.log('📍 Locations available:', Object.keys(locationsMap).length);
+
+                _usersData = users.map(function (u) {
+                    var id = u.id || u._id || '';
+                    var loc = locationsMap[String(id)];
+
+                    var lat = loc ? loc.lat : null;
+                    var lng = loc ? loc.lng : null;
+                    var accuracy = loc ? loc.accuracy : null;
+                    var lastActive = loc && loc.timestamp ? loc.timestamp : (u.lastLogin || u.lastActive || null);
+
+                    if (lat !== null && (isNaN(lat) || lat < -90 || lat > 90)) lat = null;
+                    if (lng !== null && (isNaN(lng) || lng < -180 || lng > 180)) lng = null;
+
+                    return {
+                        id: id,
+                        name: u.name || u.username || 'مستخدم',
+                        username: u.username || '',
+                        email: u.email || '',
+                        role: u.role || 'viewer',
+                        active: u.active !== false && u.isActive !== false,
+                        lat: lat,
+                        lng: lng,
+                        accuracy: accuracy,
+                        location: u.location || (lat !== null && lng !== null ? 'متاح' : '—'),
+                        lastActive: lastActive,
+                        userAgent: u.userAgent || u.device || null,
+                        isMe: _myId !== null && String(id) === String(_myId)
+                    };
+                });
+
+                // إذا كان المستخدم الحالي غير موجود في DB لكن لدينا موقعه محلياً
+                var myEntry = _usersData.find(function (u) { return u.isMe; });
+                if (!myEntry && _geoLastLat !== null && _geoLastLng !== null && _myId) {
+                    var payload = decodeJWT(getToken()) || {};
+                    var myLocal = {
+                        id: _myId,
+                        name: payload.name || payload.username || 'أنا',
+                        username: payload.username || '',
+                        email: '',
+                        role: payload.role || 'viewer',
+                        active: true,
+                        lat: _geoLastLat,
+                        lng: _geoLastLng,
+                        accuracy: _geoLastAccuracy,
+                        location: 'متاح',
+                        lastActive: new Date().toISOString(),
+                        userAgent: navigator.userAgent,
+                        isMe: true
+                    };
+                    _usersData.push(myLocal);
+                    myEntry = myLocal;
+                }
+                _myUser = myEntry || null;
+
+                var withLocation = _usersData.filter(function (u) {
+                    return typeof u.lat === 'number' && typeof u.lng === 'number';
+                }).length;
+
+                console.log('✅ Loaded', _usersData.length, 'users |',
+                    withLocation, 'with location | me:', _myUser ? _myUser.name : 'unknown');
+
+                return _usersData;
+            } catch (err) {
+                console.warn('[MONITORING] users error:', err.message);
+                _usersData = [];
+                throw err;
+            }
         }
 
         function normalizeSessions(data) {
@@ -1798,21 +1877,6 @@
                     isMe: _myId !== null && String(uid) === String(_myId)
                 };
             });
-        }
-
-        async function loadUsers() {
-            if (_isDestroyed) return [];
-            try {
-                var data = await fetchJSON('/api/monitoring/users');
-                _usersData = normalizeUsers(data);
-                _myUser = _usersData.find(function (u) { return u.isMe; }) || null;
-                console.log('✅ Loaded', _usersData.length, 'users, me:', _myUser ? _myUser.name : 'unknown');
-                return _usersData;
-            } catch (err) {
-                console.warn('[MONITORING] users error:', err.message);
-                _usersData = [];
-                throw err;
-            }
         }
 
         async function loadSessions() {
@@ -1939,7 +2003,6 @@
 
                 addMarkers();
 
-                // 🆕 إذا كان لدينا موقع محلي، أضفه فوراً
                 if (_geoLastLat !== null && _geoLastLng !== null) {
                     updateMyLocationMarker(_geoLastLat, _geoLastLng, _geoLastAccuracy);
                 }
@@ -1971,14 +2034,13 @@
         }
 
         /* ============================================================
-           🆕 MY LOCATION MARKER (العلامة الحية لموقعي)
+           🆕 MY LOCATION MARKER
            ============================================================ */
         function updateMyLocationMarker(lat, lng, accuracy) {
             if (_isDestroyed || !_map) return;
 
             var latlng = [lat, lng];
 
-            // إنشاء أو تحديث العلامة
             if (!_myLocationMarker) {
                 var myIcon = L.divIcon({
                     className: 'custom-marker marker-me',
@@ -2018,7 +2080,6 @@
                 _myLocationMarker.setLatLng(latlng);
             }
 
-            // دائرة الدقة
             if (_myLocationAccuracyCircle) {
                 try { _map.removeLayer(_myLocationAccuracyCircle); } catch (e) {}
             }
@@ -2035,13 +2096,11 @@
             }
         }
 
-        // 🆕 زر "موقعي" — الانتقال لموقعي
         function recenterToMe() {
             if (_isDestroyed) return;
 
             if (_geoLastLat === null || _geoLastLng === null) {
                 showToast('لم يتم تحديد موقعك بعد', 'warning');
-                // حاول مرة أخرى
                 if (navigator.geolocation) {
                     setGeoStatus('searching', 'جاري تحديد موقعك...');
                     navigator.geolocation.getCurrentPosition(onGeoSuccess, onGeoError, {
@@ -2073,13 +2132,20 @@
             _markers = [];
 
             var usersWithLocation = _usersData.filter(function (u) {
-                if (u.isMe) return false; // موقعي له علامة خاصة
-                return typeof u.lat === 'number' && typeof u.lng === 'number' &&
-                       !isNaN(u.lat) && !isNaN(u.lng);
+                if (u.isMe) return false;
+                if (typeof u.lat !== 'number' || typeof u.lng !== 'number') return false;
+                if (isNaN(u.lat) || isNaN(u.lng)) return false;
+                return true;
             });
 
+            console.log('🗺️ addMarkers: rendering', usersWithLocation.length,
+                'of', _usersData.length, 'users');
+
             if (usersWithLocation.length === 0) {
-                console.log('ℹ️ No other users with location');
+                console.log('ℹ️ No other users with location to display');
+                if (_geoLastLat !== null && _geoLastLng !== null && _map) {
+                    try { _map.setView([_geoLastLat, _geoLastLng], 10); } catch (e) {}
+                }
                 return;
             }
 
@@ -2105,6 +2171,7 @@
                     (user.username ? '<div class="popup-user-detail"><i class="fas fa-at"></i> ' + escapeHtml(user.username) + '</div>' : '') +
                     (user.id ? '<div class="popup-user-id">ID: ' + escapeHtml(truncateId(user.id)) + '</div>' : '') +
                     (device.type !== 'unknown' ? '<div class="popup-user-detail"><i class="fas ' + device.icon + '"></i> ' + escapeHtml(device.label) + '</div>' : '') +
+                    (user.accuracy ? '<div class="popup-user-detail"><i class="fas fa-crosshairs"></i> دقة: ' + Math.round(user.accuracy) + ' م</div>' : '') +
                     (user.lastActive ? '<div class="popup-user-detail"><i class="fas fa-clock"></i> ' + escapeHtml(formatDate(user.lastActive)) + '</div>' : '') +
                     '</div>';
 
@@ -2119,8 +2186,7 @@
                 _markers.push(marker);
             });
 
-            // إذا لا يوجد موقعي، ضع كل شيء في الإطار
-            if (_geoLastLat === null) {
+            if (_markers.length > 0) {
                 fitMapToMarkers();
             }
         }
@@ -2307,14 +2373,12 @@
             if (_isDestroyed) return;
             console.log('🚀 Initializing monitoring v' + VERSION + '...');
 
-            // 🆕 استخراج myId من JWT
             var payload = decodeJWT(getToken());
             if (payload) {
                 _myId = payload.id || payload.userId || payload.sub || payload._id || null;
                 console.log('👤 My ID:', _myId);
             }
 
-            // Bind UI events
             var refreshBtn = $('refreshBtn');
             if (refreshBtn) refreshBtn.addEventListener('click', function () { refreshAll(false); });
 
@@ -2351,14 +2415,11 @@
             };
             window.addEventListener('resize', _resizeHandler);
 
-            // 🆕 إغلاق الجلسة عند مغادرة الصفحة
             window.addEventListener('beforeunload', endSessionBeacon);
             window.addEventListener('pagehide', endSessionBeacon);
 
-            // 🆕 بدء تتبع الموقع فوراً (قبل تحميل البيانات)
             startGeolocationTracking();
 
-            // Load data
             try {
                 await Promise.all([loadUsers(), loadSessions()]);
             } catch (err) {
@@ -2369,10 +2430,8 @@
             updateStats();
             renderSessions();
 
-            // Init map
             await initMap();
 
-            // Auto-refresh
             _autoRefreshInterval = safeInterval(function () {
                 refreshAll(true);
             }, AUTO_REFRESH_MS);
