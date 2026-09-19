@@ -5,13 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>🛰️ المراقبة الحية — منظومة الوسائل البحرية</title>
 
-<!-- ✅ Leaflet — نسخة واحدة فقط -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- ✅ Leaflet Fullscreen (اختياري) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@2.4.0/Control.FullScreen.css" />
-<script src="https://unpkg.com/leaflet.fullscreen@2.4.0/Control.FullScreen.js"></script>
+<!-- ✅ Leaflet من jsdelivr (أكثر موثوقية من unpkg) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -28,9 +24,7 @@
         overflow: hidden;
     }
 
-    /* ============================================================
-       MAP — FULL SCREEN
-       ============================================================ */
+    /* ===== MAP ===== */
     #map {
         position: absolute;
         inset: 0;
@@ -45,7 +39,6 @@
         font-family: 'Cairo', sans-serif !important;
     }
 
-    /* ✅ إصلاح ألوان Leaflet */
     .leaflet-control-zoom a {
         background: rgba(15, 20, 32, 0.95) !important;
         color: #f7d774 !important;
@@ -69,19 +62,16 @@
         color: rgba(255, 255, 255, 0.4) !important;
         font-size: 10px !important;
         padding: 2px 8px !important;
-        border-radius: 6px 0 0 0 !important;
     }
 
-    .leaflet-control-attribution a {
-        color: #60a5fa !important;
-    }
+    .leaflet-control-attribution a { color: #60a5fa !important; }
 
     .leaflet-popup-content-wrapper {
         background: linear-gradient(135deg, rgba(15, 20, 32, 0.98), rgba(10, 14, 26, 0.98)) !important;
         color: #e8edf5 !important;
         border: 1px solid rgba(247, 215, 116, 0.3) !important;
         border-radius: 14px !important;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(247, 215, 116, 0.1) !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
         backdrop-filter: blur(20px);
         padding: 0 !important;
     }
@@ -105,9 +95,7 @@
         padding: 6px 10px !important;
     }
 
-    /* ============================================================
-       TOP BAR — Glassmorphism
-       ============================================================ */
+    /* ===== TOP BAR ===== */
     .top-bar {
         position: absolute;
         top: 16px;
@@ -123,7 +111,7 @@
         -webkit-backdrop-filter: blur(20px);
         border: 1px solid rgba(247, 215, 116, 0.2);
         border-radius: 100px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 60px rgba(247, 215, 116, 0.05);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
         max-width: calc(100vw - 32px);
         flex-wrap: wrap;
         justify-content: center;
@@ -153,7 +141,6 @@
         font-size: 14px;
         font-weight: 900;
         color: #f7d774;
-        letter-spacing: 0.3px;
     }
 
     .top-bar .brand .text .subtitle {
@@ -161,10 +148,7 @@
         color: rgba(255, 255, 255, 0.4);
     }
 
-    .top-bar .stats {
-        display: flex;
-        gap: 14px;
-    }
+    .top-bar .stats { display: flex; gap: 14px; }
 
     .top-bar .stat {
         display: flex;
@@ -178,7 +162,6 @@
         font-weight: 900;
         color: #f7d774;
         line-height: 1;
-        text-shadow: 0 0 20px rgba(247, 215, 116, 0.5);
     }
 
     .top-bar .stat .label {
@@ -215,9 +198,7 @@
         50% { opacity: 0.4; transform: scale(0.85); }
     }
 
-    /* ============================================================
-       SIDE PANEL — Slide from right
-       ============================================================ */
+    /* ===== SIDE PANEL ===== */
     .side-panel {
         position: absolute;
         top: 0;
@@ -237,9 +218,7 @@
         flex-direction: column;
     }
 
-    .side-panel.open {
-        transform: translateX(0);
-    }
+    .side-panel.open { transform: translateX(0); }
 
     .side-panel .panel-header {
         padding: 20px 22px;
@@ -259,10 +238,7 @@
         gap: 10px;
     }
 
-    .side-panel .panel-header h2 i {
-        font-size: 18px;
-        color: #60a5fa;
-    }
+    .side-panel .panel-header h2 i { font-size: 18px; color: #60a5fa; }
 
     .side-panel .close-btn {
         background: rgba(255, 255, 255, 0.05);
@@ -291,23 +267,13 @@
         padding: 16px 20px 24px;
     }
 
-    .side-panel .panel-body::-webkit-scrollbar {
-        width: 6px;
-    }
-
+    .side-panel .panel-body::-webkit-scrollbar { width: 6px; }
     .side-panel .panel-body::-webkit-scrollbar-thumb {
         background: rgba(247, 215, 116, 0.3);
         border-radius: 10px;
     }
 
-    .side-panel .panel-body::-webkit-scrollbar-thumb:hover {
-        background: rgba(247, 215, 116, 0.5);
-    }
-
-    /* Section */
-    .panel-section {
-        margin-bottom: 24px;
-    }
+    .panel-section { margin-bottom: 24px; }
 
     .panel-section .section-title {
         display: flex;
@@ -327,10 +293,7 @@
         gap: 8px;
     }
 
-    .panel-section .section-title h3 i {
-        color: #60a5fa;
-        font-size: 13px;
-    }
+    .panel-section .section-title h3 i { color: #60a5fa; font-size: 13px; }
 
     .panel-section .section-title .count {
         background: rgba(96, 165, 250, 0.15);
@@ -341,7 +304,6 @@
         font-weight: 800;
     }
 
-    /* User item */
     .user-card {
         background: rgba(255, 255, 255, 0.025);
         border: 1px solid rgba(255, 255, 255, 0.06);
@@ -372,27 +334,17 @@
         transform: translateX(-4px);
     }
 
-    .user-card:hover::before {
-        opacity: 1;
-    }
+    .user-card:hover::before { opacity: 1; }
 
     .user-card.me {
         background: rgba(247, 215, 116, 0.05);
         border-color: rgba(247, 215, 116, 0.25);
     }
 
-    .user-card.me::before {
-        background: #f7d774;
-        opacity: 1;
-    }
+    .user-card.me::before { background: #f7d774; opacity: 1; }
 
-    .user-card.offline {
-        opacity: 0.55;
-    }
-
-    .user-card.offline::before {
-        background: rgba(148, 163, 184, 0.5);
-    }
+    .user-card.offline { opacity: 0.55; }
+    .user-card.offline::before { background: rgba(148, 163, 184, 0.5); }
 
     .user-card .card-top {
         display: flex;
@@ -413,14 +365,8 @@
         line-height: 1.3;
     }
 
-    .user-card .user-name .icon {
-        font-size: 14px;
-        flex-shrink: 0;
-    }
-
-    .user-card.me .user-name {
-        color: #f7d774;
-    }
+    .user-card .user-name .icon { font-size: 14px; flex-shrink: 0; }
+    .user-card.me .user-name { color: #f7d774; }
 
     .user-card .status-dot {
         width: 8px;
@@ -436,9 +382,7 @@
         animation: pulse 2s infinite;
     }
 
-    .user-card .status-dot.offline {
-        background: #64748b;
-    }
+    .user-card .status-dot.offline { background: #64748b; }
 
     .user-card .user-meta {
         display: flex;
@@ -455,20 +399,9 @@
         white-space: nowrap;
     }
 
-    .user-card .tag.role {
-        background: rgba(96, 165, 250, 0.12);
-        color: #60a5fa;
-    }
-
-    .user-card .tag.region {
-        background: rgba(247, 215, 116, 0.12);
-        color: #f7d774;
-    }
-
-    .user-card .tag.time {
-        background: rgba(148, 163, 184, 0.12);
-        color: #94a3b8;
-    }
+    .user-card .tag.role { background: rgba(96, 165, 250, 0.12); color: #60a5fa; }
+    .user-card .tag.region { background: rgba(247, 215, 116, 0.12); color: #f7d774; }
+    .user-card .tag.time { background: rgba(148, 163, 184, 0.12); color: #94a3b8; }
 
     .user-card .coords {
         font-family: 'Courier New', monospace;
@@ -480,12 +413,8 @@
         gap: 6px;
     }
 
-    .user-card .coords i {
-        color: #60a5fa;
-        font-size: 9px;
-    }
+    .user-card .coords i { color: #60a5fa; font-size: 9px; }
 
-    /* Empty state */
     .empty-state {
         text-align: center;
         padding: 30px 16px;
@@ -499,14 +428,9 @@
         color: #60a5fa;
     }
 
-    .empty-state p {
-        font-size: 12px;
-        font-weight: 600;
-    }
+    .empty-state p { font-size: 12px; font-weight: 600; }
 
-    /* ============================================================
-       FLOATING BUTTONS
-       ============================================================ */
+    /* ===== FLOAT BUTTONS ===== */
     .float-btn {
         position: absolute;
         z-index: 1050;
@@ -532,36 +456,17 @@
         border-color: rgba(247, 215, 116, 0.5);
     }
 
-    .float-btn:active {
-        transform: translateY(-1px) scale(1.02);
-    }
+    .float-btn:active { transform: translateY(-1px) scale(1.02); }
 
-    .float-btn.toggle-panel {
-        top: 90px;
-        right: 20px;
-    }
+    .float-btn.toggle-panel { top: 90px; right: 20px; }
+    .float-btn.locate-me { bottom: 100px; right: 20px; }
+    .float-btn.refresh { bottom: 20px; right: 20px; }
 
-    .float-btn.locate-me {
-        bottom: 100px;
-        right: 20px;
-    }
+    .float-btn.refresh.spinning i { animation: spin 1s linear infinite; }
 
-    .float-btn.refresh {
-        bottom: 20px;
-        right: 20px;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .float-btn.refresh.spinning i {
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    /* ============================================================
-       LEGEND
-       ============================================================ */
+    /* ===== LEGEND ===== */
     .legend {
         position: absolute;
         bottom: 20px;
@@ -594,19 +499,10 @@
         flex-shrink: 0;
     }
 
-    .legend .dot.gold {
-        background: #f7d774;
-        box-shadow: 0 0 10px rgba(247, 215, 116, 0.6);
-    }
+    .legend .dot.gold { background: #f7d774; box-shadow: 0 0 10px rgba(247, 215, 116, 0.6); }
+    .legend .dot.blue { background: #60a5fa; box-shadow: 0 0 10px rgba(96, 165, 250, 0.6); }
 
-    .legend .dot.blue {
-        background: #60a5fa;
-        box-shadow: 0 0 10px rgba(96, 165, 250, 0.6);
-    }
-
-    /* ============================================================
-       LOADING
-       ============================================================ */
+    /* ===== LOADING ===== */
     .loading {
         position: fixed;
         inset: 0;
@@ -620,16 +516,7 @@
         transition: opacity 0.5s;
     }
 
-    .loading.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .loading .satellite {
-        width: 80px;
-        height: 80px;
-        position: relative;
-    }
+    .loading.hidden { opacity: 0; pointer-events: none; }
 
     .loading .satellite i {
         font-size: 56px;
@@ -647,7 +534,6 @@
         color: #f7d774;
         font-size: 14px;
         font-weight: 800;
-        letter-spacing: 0.5px;
     }
 
     .loading .subtext {
@@ -655,33 +541,37 @@
         font-size: 11px;
     }
 
-    /* ============================================================
-       RESPONSIVE
-       ============================================================ */
+    /* ===== ERROR ===== */
+    .error-screen {
+        text-align: center;
+        padding: 40px 20px;
+        color: #f87171;
+    }
+
+    .error-screen h2 { font-size: 20px; margin-bottom: 10px; }
+    .error-screen p { font-size: 13px; color: #cbd5e1; margin: 6px 0; }
+    .error-screen button {
+        margin-top: 20px;
+        padding: 10px 24px;
+        border: none;
+        border-radius: 8px;
+        background: #f7d774;
+        color: #000;
+        font-weight: bold;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
     @media (max-width: 768px) {
-        .top-bar {
-            top: 12px;
-            padding: 10px 16px;
-            gap: 10px;
-        }
+        .top-bar { top: 12px; padding: 10px 16px; gap: 10px; }
         .top-bar .brand .text .title { font-size: 12px; }
         .top-bar .stat .value { font-size: 15px; }
         .top-bar .stat .label { font-size: 8px; }
-        .top-bar .live-badge { font-size: 9px; padding: 3px 8px; }
-
         .side-panel { width: 100%; }
-
-        .float-btn {
-            width: 46px;
-            height: 46px;
-            font-size: 17px;
-        }
+        .float-btn { width: 46px; height: 46px; font-size: 17px; }
         .float-btn.toggle-panel { top: 80px; right: 12px; }
         .float-btn.locate-me { bottom: 90px; right: 12px; }
         .float-btn.refresh { bottom: 12px; right: 12px; }
-
-        .legend { font-size: 10px; padding: 8px 12px; }
-        .legend .dot { width: 10px; height: 10px; }
     }
 
     @media (max-width: 480px) {
@@ -701,7 +591,7 @@
         <i class="fas fa-satellite-dish"></i>
         <div class="text">
             <span class="title">المراقبة الحية</span>
-            <span class="subtitle">Live Tracking v13.0</span>
+            <span class="subtitle">Live Tracking v13.1</span>
         </div>
     </div>
 
@@ -748,7 +638,6 @@
         </button>
     </div>
     <div class="panel-body">
-        <!-- Users Section -->
         <div class="panel-section">
             <div class="section-title">
                 <h3><i class="fas fa-users"></i> المستخدمون</h3>
@@ -762,7 +651,6 @@
             </div>
         </div>
 
-        <!-- Sessions Section -->
         <div class="panel-section">
             <div class="section-title">
                 <h3><i class="fas fa-key"></i> الجلسات النشطة</h3>
@@ -803,7 +691,7 @@
 (function() {
     'use strict';
 
-    console.log('🛰️ monitoring.html v13.0 - Loading...');
+    console.log('🛰️ monitoring.html v13.1 - Loading...');
 
     // ============================================================
     // CLEANUP
@@ -816,29 +704,25 @@
     function _cleanup() {
         if (_isDestroyed) return;
         _isDestroyed = true;
-
         _intervals.forEach(function(id) { try { clearInterval(id); } catch(e){} });
         _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e){} });
         _listeners.forEach(function(l) {
             try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e){}
         });
         _intervals = []; _timeouts = []; _listeners = [];
-
         try {
             if (window._geoWatchId != null && navigator.geolocation) {
                 navigator.geolocation.clearWatch(window._geoWatchId);
                 console.log('📍 Geolocation stopped');
             }
         } catch(e){}
-
         try {
             if (window.map && typeof window.map.remove === 'function') {
                 window.map.remove();
                 window.map = null;
             }
         } catch(e){}
-
-        console.log('🧹 Monitoring v13.0 cleanup done');
+        console.log('🧹 Monitoring v13.1 cleanup done');
     }
 
     window._pageCleanup = window._pageCleanup || [];
@@ -920,25 +804,73 @@
         } catch(e) { return '—'; }
     }
 
+    // ✅ v13.1: قراءة المستخدم من localStorage أو من JWT مباشرة
     function readMyUser() {
+        // 1. جرب localStorage
         try {
-            var keys = ['marine_user', 'currentUser', 'user'];
-            for (var i = 0; i < keys.length; i++) {
-                var raw = localStorage.getItem(keys[i]) || sessionStorage.getItem(keys[i]);
-                if (raw) {
-                    var p = JSON.parse(raw);
-                    if (p && (p.id || p._id)) return p;
+            var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
+            var stores = [localStorage, sessionStorage];
+            for (var s = 0; s < stores.length; s++) {
+                for (var i = 0; i < keys.length; i++) {
+                    var raw = stores[s].getItem(keys[i]);
+                    if (raw) {
+                        var p = JSON.parse(raw);
+                        if (p && (p.id || p._id || p.username)) return p;
+                    }
                 }
             }
         } catch(e) {}
+
+        // 2. ✅ fallback: فك JWT مباشرة
+        try {
+            var token = getToken();
+            if (token) {
+                var parts = token.split('.');
+                if (parts.length === 3) {
+                    var payload = JSON.parse(atob(parts[1]));
+                    if (payload && (payload.id || payload.sub)) {
+                        return {
+                            id: payload.id || payload.sub,
+                            _id: payload.id || payload.sub,
+                            username: payload.username || '',
+                            name: payload.name || payload.username || '',
+                            role: payload.role || 'viewer',
+                            sid: payload.sid || null
+                        };
+                    }
+                }
+            }
+        } catch(e) {
+            console.warn('⚠️ JWT parse error:', e.message);
+        }
+
         return null;
     }
 
     // ============================================================
-    // 🛰️ INIT MAP — SATELLITE VIEW
+    // INIT MAP — SATELLITE
     // ============================================================
     function initMap() {
         if (mapInitialized || _isDestroyed) return;
+
+        // ✅ v13.1: التحقق من وجود Leaflet أولاً
+        if (typeof L === 'undefined') {
+            console.error('❌❌❌ Leaflet NOT LOADED!');
+            var ld = document.getElementById('loadingScreen');
+            if (ld) {
+                ld.innerHTML =
+                    '<div class="error-screen">' +
+                    '<h2>❌ فشل تحميل الخريطة</h2>' +
+                    '<p>مكتبة Leaflet لم تُحمّل بعد</p>' +
+                    '<p style="font-size:11px;color:#94a3b8">تحقق من الإنترنت أو عطّل مانع الإعلانات</p>' +
+                    '<button onclick="location.reload()">🔄 إعادة المحاولة</button>' +
+                    '</div>';
+            }
+            return;
+        }
+
+        console.log('✅ Leaflet detected, version:', L.version || 'unknown');
+
         var el = document.getElementById('map');
         if (!el) return;
 
@@ -951,7 +883,7 @@
                 preferCanvas: false
             });
 
-            // ✅ SATELLITE — Esri World Imagery (مجاني، دقة عالية)
+            // 🛰️ SATELLITE
             var satellite = L.tileLayer(
                 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 {
@@ -962,7 +894,7 @@
                 }
             );
 
-            // ✅ LABELS overlay — Esri Reference (أسماء المدن)
+            // LABELS
             var labels = L.tileLayer(
                 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
                 {
@@ -977,24 +909,21 @@
             satellite.addTo(map);
             labels.addTo(map);
 
-            // Zoom control on left
             L.control.zoom({ position: 'topleft' }).addTo(map);
-
-            // Fullscreen control
-            try {
-                if (typeof L.Control.FullScreen === 'function') {
-                    L.control.fullscreen({
-                        position: 'topleft',
-                        title: 'ملء الشاشة',
-                        titleCancel: 'خروج'
-                    }).addTo(map);
-                }
-            } catch(e) {}
 
             mapInitialized = true;
             console.log('🛰️ Satellite map initialized');
         } catch(e) {
             console.warn('❌ Map init error:', e.message);
+            var ld2 = document.getElementById('loadingScreen');
+            if (ld2) {
+                ld2.innerHTML =
+                    '<div class="error-screen">' +
+                    '<h2>❌ فشل تهيئة الخريطة</h2>' +
+                    '<p>' + escapeHtml(e.message) + '</p>' +
+                    '<button onclick="location.reload()">🔄 إعادة المحاولة</button>' +
+                    '</div>';
+            }
         }
     }
 
@@ -1021,6 +950,7 @@
 
     function startGeolocation() {
         if (!navigator.geolocation || _isDestroyed) return;
+        if (window._geoWatchId != null) return; // already watching
 
         window._geoWatchId = navigator.geolocation.watchPosition(
             function(pos) {
@@ -1038,14 +968,26 @@
     }
 
     // ============================================================
-    // MY MARKER — GOLDEN GLOWING
+    // MY MARKER
     // ============================================================
     function updateMyMarker(coords) {
         if (!map || !mapInitialized || _isDestroyed) return;
+        if (typeof L === 'undefined') return;
+
         try {
             var ll = [coords.latitude, coords.longitude];
+            var popupHtml =
+                '<div style="text-align:center;padding:4px 0">' +
+                '<div style="font-size:22px;line-height:1">🟡</div>' +
+                '<div style="font-weight:900;color:#f7d774;font-size:14px;margin-top:4px">موقعك الحالي</div>' +
+                '<div style="color:rgba(255,255,255,0.5);font-size:11px;font-family:monospace;margin-top:4px">' +
+                    coords.latitude.toFixed(5) + ', ' + coords.longitude.toFixed(5) +
+                '</div>' +
+                '<div style="color:rgba(255,255,255,0.4);font-size:10px;margin-top:2px">' +
+                    'الدقة: ±' + Math.round(coords.accuracy || 0) + ' م' +
+                '</div>' +
+                '</div>';
 
-            // Golden outer glow marker
             if (!myMarker) {
                 myMarker = L.circleMarker(ll, {
                     radius: 12,
@@ -1055,36 +997,12 @@
                     opacity: 1,
                     fillOpacity: 0.95
                 }).addTo(map);
-
-                myMarker.bindPopup(
-                    '<div style="text-align:center;padding:4px 0">' +
-                    '<div style="font-size:22px;line-height:1">🟡</div>' +
-                    '<div style="font-weight:900;color:#f7d774;font-size:14px;margin-top:4px">موقعك الحالي</div>' +
-                    '<div style="color:rgba(255,255,255,0.5);font-size:11px;font-family:monospace;margin-top:4px">' +
-                        coords.latitude.toFixed(5) + ', ' + coords.longitude.toFixed(5) +
-                    '</div>' +
-                    '<div style="color:rgba(255,255,255,0.4);font-size:10px;margin-top:2px">' +
-                        'الدقة: ±' + Math.round(coords.accuracy || 0) + ' م' +
-                    '</div>' +
-                    '</div>'
-                );
+                myMarker.bindPopup(popupHtml);
             } else {
                 myMarker.setLatLng(ll);
-                myMarker.setPopupContent(
-                    '<div style="text-align:center;padding:4px 0">' +
-                    '<div style="font-size:22px;line-height:1">🟡</div>' +
-                    '<div style="font-weight:900;color:#f7d774;font-size:14px;margin-top:4px">موقعك الحالي</div>' +
-                    '<div style="color:rgba(255,255,255,0.5);font-size:11px;font-family:monospace;margin-top:4px">' +
-                        coords.latitude.toFixed(5) + ', ' + coords.longitude.toFixed(5) +
-                    '</div>' +
-                    '<div style="color:rgba(255,255,255,0.4);font-size:10px;margin-top:2px">' +
-                        'الدقة: ±' + Math.round(coords.accuracy || 0) + ' م' +
-                    '</div>' +
-                    '</div>'
-                );
+                myMarker.setPopupContent(popupHtml);
             }
 
-            // Accuracy circle
             if (!myAccuracyCircle) {
                 myAccuracyCircle = L.circle(ll, {
                     radius: coords.accuracy || 50,
@@ -1099,17 +1017,17 @@
                 myAccuracyCircle.setLatLng(ll);
                 myAccuracyCircle.setRadius(coords.accuracy || 50);
             }
-
         } catch(e) {
             console.warn('[MAP] my marker error:', e.message);
         }
     }
 
     // ============================================================
-    // ✅ ADD OTHER USERS' MARKERS
+    // ADD OTHER USERS
     // ============================================================
     function addMarkers(locs, allUsers) {
         if (!map || !mapInitialized || _isDestroyed) return;
+        if (typeof L === 'undefined') return;
 
         console.log('🗺️ addMarkers: rendering', locs.length, 'locations');
 
@@ -1173,7 +1091,7 @@
 
         console.log('✅ Rendered', rendered, 'other markers');
 
-        // Fit bounds on first load
+        // Fit bounds once
         if (!firstFitDone && (rendered > 0 || myLocation)) {
             try {
                 var allPoints = [];
@@ -1239,7 +1157,7 @@
     }
 
     // ============================================================
-    // RENDER USERS LIST
+    // RENDER USERS
     // ============================================================
     function renderUsersList() {
         var el = document.getElementById('usersList');
@@ -1258,7 +1176,6 @@
             }
         });
 
-        // Sort: me first, then with location, then others
         var sorted = users.slice().sort(function(a, b) {
             var aId = String(a.id || a._id);
             var bId = String(b.id || b._id);
@@ -1316,16 +1233,13 @@
                 var uid = this.getAttribute('data-user-id');
                 if (String(uid) === String(myId) && myLocation && map) {
                     map.flyTo([myLocation.latitude, myLocation.longitude], 15, { duration: 1.2 });
-                    if (myMarker) {
-                        setTimeout(function() { myMarker.openPopup(); }, 400);
-                    }
+                    if (myMarker) setTimeout(function() { myMarker.openPopup(); }, 400);
                 } else if (userMarkers.has(uid) && map) {
                     var m = userMarkers.get(uid);
                     var ll = m.getLatLng();
                     map.flyTo(ll, 15, { duration: 1.2 });
                     setTimeout(function() { m.openPopup(); }, 400);
                 }
-                // Close panel on mobile
                 if (window.innerWidth < 768) {
                     document.getElementById('sidePanel').classList.remove('open');
                 }
@@ -1336,7 +1250,7 @@
     }
 
     // ============================================================
-    // RENDER SESSIONS LIST
+    // RENDER SESSIONS
     // ============================================================
     function renderSessionsList() {
         var el = document.getElementById('sessionsList');
@@ -1367,7 +1281,7 @@
     }
 
     // ============================================================
-    // REFRESH ALL
+    // REFRESH
     // ============================================================
     function refreshAll() {
         if (_isDestroyed) return;
@@ -1381,25 +1295,29 @@
     // LOCATE ME
     // ============================================================
     function locateMe() {
-        if (myLocation && map) {
-            map.flyTo([myLocation.latitude, myLocation.longitude], 16, { duration: 1.5 });
-            if (myMarker) setTimeout(function() { myMarker.openPopup(); }, 500);
-        } else {
-            if (!navigator.geolocation) {
-                alert('المتصفح لا يدعم تحديد الموقع');
-                return;
-            }
-            navigator.geolocation.getCurrentPosition(
-                function(pos) {
-                    myLocation = pos.coords;
-                    updateMyMarker(pos.coords);
-                    sendLocationToServer(pos.coords);
-                    if (map) map.flyTo([pos.coords.latitude, pos.coords.longitude], 16, { duration: 1.5 });
-                },
-                function(err) { alert('تعذّر تحديد الموقع: ' + err.message); },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-            );
+        if (!navigator.geolocation) {
+            alert('المتصفح لا يدعم تحديد الموقع');
+            return;
         }
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                myLocation = pos.coords;
+                sendLocationToServer(pos.coords);
+                updateMyMarker(pos.coords);
+                if (map) map.flyTo([pos.coords.latitude, pos.coords.longitude], 16, { duration: 1.5 });
+                if (myMarker) setTimeout(function() { myMarker.openPopup(); }, 500);
+                // ✅ ابدأ watch بعد السماح
+                startGeolocation();
+            },
+            function(err) {
+                var msg = 'تعذّر تحديد الموقع';
+                if (err.code === 1) msg = '⚠️ يجب السماح بالوصول إلى الموقع من إعدادات المتصفح';
+                else if (err.code === 2) msg = '⚠️ تعذّر تحديد موقعك، تحقق من GPS';
+                else if (err.code === 3) msg = '⚠️ انتهت المهلة، حاول مجدداً';
+                alert(msg);
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
     }
 
     // ============================================================
@@ -1407,14 +1325,37 @@
     // ============================================================
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing v13.0...');
+        console.log('🚀 Initializing v13.1...');
 
+        // ✅ v13.1: التحقق من Leaflet أولاً
+        if (typeof L === 'undefined') {
+            console.error('❌❌❌ Leaflet NOT LOADED!');
+            var ld = document.getElementById('loadingScreen');
+            if (ld) {
+                ld.innerHTML =
+                    '<div class="error-screen">' +
+                    '<h2>❌ فشل تحميل الخريطة</h2>' +
+                    '<p>مكتبة Leaflet لم تُحمّل</p>' +
+                    '<p style="font-size:11px;color:#94a3b8">تحقق من الإنترنت أو عطّل مانع الإعلانات (AdBlocker)</p>' +
+                    '<p style="font-size:11px;color:#94a3b8">ثم أعد تحميل الصفحة</p>' +
+                    '<button onclick="location.reload()">🔄 إعادة المحاولة</button>' +
+                    '</div>';
+            }
+            return;
+        }
+
+        console.log('✅ Leaflet detected:', L.version || 'unknown');
+
+        // اقرأ المستخدم (مع fallback من JWT)
         var me = readMyUser();
         myId = me ? String(me.id || me._id || '') : null;
-        console.log('👤 My ID:', myId);
+        console.log('👤 My ID:', myId, '| User:', me ? (me.name || me.username) : 'NONE');
 
+        // Init map
         initMap();
-        startGeolocation();
+
+        // ⚠️ لا تطلب الموقع تلقائياً — انتظر نقرة المستخدم
+        // هذا يتجنب خطأ "User denied Geolocation" عند فتح الصفحة
 
         // UI Events
         var toggleBtn = document.getElementById('togglePanelBtn');
@@ -1437,9 +1378,8 @@
 
         var locateBtn = document.getElementById('locateMeBtn');
         if (locateBtn) {
-            var lHandler = locateMe;
-            locateBtn.addEventListener('click', lHandler);
-            _listeners.push({ el: locateBtn, type: 'click', fn: lHandler });
+            locateBtn.addEventListener('click', locateMe);
+            _listeners.push({ el: locateBtn, type: 'click', fn: locateMe });
         }
 
         var refreshBtn = document.getElementById('refreshBtn');
@@ -1463,11 +1403,9 @@
 
         // First load
         refreshAll();
-
-        // Auto refresh every 10s
         _intervals.push(setInterval(refreshAll, 10000));
 
-        console.log('✅ Monitoring v13.0 ready');
+        console.log('✅ Monitoring v13.1 ready');
     }
 
     // ============================================================
@@ -1485,10 +1423,12 @@
         refresh: refreshAll,
         getUsers: function() { return users; },
         getLocations: function() { return locations; },
-        getSessions: function() { return sessions; }
+        getSessions: function() { return sessions; },
+        getMyId: function() { return myId; },
+        locateMe: locateMe
     };
 
-    console.log('✅ monitoring.html v13.0 ready');
+    console.log('✅ monitoring.html v13.1 ready');
 
 })();
 </script>
