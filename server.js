@@ -320,7 +320,7 @@ async function sendEmail(to, subj, html) {
                     method: 'POST',
                     headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ Messages: [{
-                        From: { Email: process.env.EMAIL_FROM || 'nejiamanallah22@gmail.com',
+                        From: { Email: process.env.EMAIL_FROM || 'nejiamanallah222@gmail.com',
                                 Name: process.env.EMAIL_FROM_NAME || 'منظومة الوسائل البحرية' },
                         To: [{ Email: to }], Subject: subj, HTMLPart: html
                     }]})
