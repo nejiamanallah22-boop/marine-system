@@ -5,11 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>🛰️ المراقبة الحية — منظومة الوسائل البحرية</title>
 
-<!-- ✅ Leaflet من jsdelivr + fallback محلي -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
-      onerror="this.onerror=null;this.href='/public/lib/leaflet/leaflet.css';" />
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
-        onerror="var s=document.createElement('script');s.src='/public/lib/leaflet/leaflet.js';document.head.appendChild(s);"></script>
+<!-- ✅ Leaflet محلي أولاً + Fallback متعدد CDNs -->
+<link rel="stylesheet" href="/public/vendor/leaflet/leaflet.css"
+      onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';" />
+<script src="/public/vendor/leaflet/leaflet.js"></script>
+<script>
+(function() {
+    // ✅ FIX: تصريح مسبق لتفادي undefined
+    window._geoWatchId = null;
+    window._leafletSource = null;
+    window._leafletFailed = false;
+
+    if (typeof L !== 'undefined') {
+        window._leafletSource = 'local';
+        console.log('✅ Leaflet from LOCAL');
+        return;
+    }
+    console.warn('⚠️ Local Leaflet failed, trying CDNs...');
+    var cdns = [
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
+    ];
+    var i = 0;
+    function tryNext() {
+        if (i >= cdns.length) {
+            window._leafletFailed = true;
+            console.error('❌ All CDNs failed - check AdBlocker/network');
+            return;
+        }
+        var s = document.createElement('script');
+        s.src = cdns[i++];
+        s.onload = function() {
+            window._leafletSource = s.src;
+            console.log('✅ Leaflet from:', s.src);
+        };
+        s.onerror = tryNext;
+        document.head.appendChild(s);
+    }
+    tryNext();
+})();
+</script>
 
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -133,22 +169,9 @@
         filter: drop-shadow(0 0 8px rgba(247, 215, 116, 0.6));
     }
 
-    .top-bar .brand .text {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.1;
-    }
-
-    .top-bar .brand .text .title {
-        font-size: 14px;
-        font-weight: 900;
-        color: #f7d774;
-    }
-
-    .top-bar .brand .text .subtitle {
-        font-size: 9.5px;
-        color: rgba(255, 255, 255, 0.4);
-    }
+    .top-bar .brand .text { display: flex; flex-direction: column; line-height: 1.1; }
+    .top-bar .brand .text .title { font-size: 14px; font-weight: 900; color: #f7d774; }
+    .top-bar .brand .text .subtitle { font-size: 9.5px; color: rgba(255, 255, 255, 0.4); }
 
     .top-bar .stats { display: flex; gap: 14px; }
 
@@ -184,6 +207,7 @@
         font-size: 10px;
         font-weight: 700;
         color: #4ade80;
+        transition: all 0.3s;
     }
 
     .top-bar .live-badge .dot {
@@ -203,6 +227,7 @@
     .top-bar .live-badge.offline .dot {
         background: #fca5a5;
         box-shadow: 0 0 10px #fca5a5;
+        animation: none;
     }
 
     @keyframes pulse {
@@ -542,16 +567,8 @@
         50% { transform: translateX(10px) rotate(5deg); }
     }
 
-    .loading .text {
-        color: #f7d774;
-        font-size: 14px;
-        font-weight: 800;
-    }
-
-    .loading .subtext {
-        color: rgba(255, 255, 255, 0.3);
-        font-size: 11px;
-    }
+    .loading .text { color: #f7d774; font-size: 14px; font-weight: 800; }
+    .loading .subtext { color: rgba(255, 255, 255, 0.3); font-size: 11px; }
 
     /* ===== ERROR ===== */
     .error-screen {
@@ -561,7 +578,20 @@
     }
 
     .error-screen h2 { font-size: 20px; margin-bottom: 10px; }
-    .error-screen p { font-size: 13px; color: #cbd5e1; margin: 6px 0; }
+    .error-screen p { font-size: 13px; color: #cbd5e1; margin: 6px 0; line-height: 1.7; }
+    .error-screen .diag {
+        font-size: 11px;
+        color: #94a3b8;
+        background: rgba(0,0,0,0.3);
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 12px;
+        text-align: right;
+        direction: ltr;
+        font-family: monospace;
+        max-width: 400px;
+        word-break: break-all;
+    }
     .error-screen button {
         margin-top: 20px;
         padding: 10px 24px;
@@ -572,7 +602,27 @@
         font-weight: bold;
         cursor: pointer;
         font-family: inherit;
+        font-size: 14px;
     }
+    .error-screen button:hover { background: #fcd34d; }
+
+    /* ✅ NEW: مؤشر "خامل" عند إخفاء التبويب */
+    .idle-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1200;
+        padding: 12px 20px;
+        background: rgba(15, 20, 32, 0.95);
+        border: 1px solid rgba(247, 215, 116, 0.3);
+        border-radius: 12px;
+        color: #f7d774;
+        font-size: 12px;
+        font-weight: 700;
+        display: none;
+    }
+    .idle-indicator.show { display: block; }
 
     @media (max-width: 768px) {
         .top-bar { top: 12px; padding: 10px 16px; gap: 10px; }
@@ -603,7 +653,7 @@
         <i class="fas fa-satellite-dish"></i>
         <div class="text">
             <span class="title">المراقبة الحية</span>
-            <span class="subtitle">Live Tracking v13.2</span>
+            <span class="subtitle">Live Tracking v13.4</span>
         </div>
     </div>
 
@@ -690,6 +740,11 @@
     </div>
 </div>
 
+<!-- ===== IDLE INDICATOR (NEW) ===== -->
+<div class="idle-indicator" id="idleIndicator">
+    <i class="fas fa-pause-circle"></i> التحديث متوقف (التبويب غير نشط)
+</div>
+
 <!-- ===== LOADING ===== -->
 <div class="loading" id="loadingScreen">
     <div class="satellite">
@@ -704,80 +759,24 @@
     'use strict';
 
     // ============================================================
-    // DEBUG HELPER (v13.2)
+    // DEBUG HELPER
     // ============================================================
-    var DEBUG = /[?&]debug=1/.test(location.search) || 
-                location.hostname === 'localhost' || 
+    var DEBUG = /[?&]debug=1/.test(location.search) ||
+                location.hostname === 'localhost' ||
                 location.hostname === '127.0.0.1';
     function log() { if (DEBUG) try { console.log.apply(console, arguments); } catch(e){} }
     function warn() { try { console.warn.apply(console, arguments); } catch(e){} }
     function error() { try { console.error.apply(console, arguments); } catch(e){} }
 
-    log('🛰️ monitoring.html v13.2 - Loading...');
+    console.log('🛰️ monitoring.html v13.4 - Loading...');
 
     // ============================================================
-    // CLEANUP (v13.2 - FIXED #2: proper map cleanup + AbortController)
+    // CONSTANTS
     // ============================================================
-    var _isDestroyed = false;
-    var _intervals = [];
-    var _timeouts = [];
-    var _listeners = [];
-    var _abortControllers = [];
-
-    function _cleanup() {
-        if (_isDestroyed) return;
-        _isDestroyed = true;
-
-        // إلغاء جميع الطلبات الجارية
-        _abortControllers.forEach(function(c) {
-            try { c.abort(); } catch(e){}
-        });
-        _abortControllers = [];
-
-        _intervals.forEach(function(id) { try { clearInterval(id); } catch(e){} });
-        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e){} });
-        _listeners.forEach(function(l) {
-            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e){}
-        });
-        _intervals = []; _timeouts = []; _listeners = [];
-
-        // ✅ FIX #2: geolocation cleanup
-        try {
-            if (window._geoWatchId != null && navigator.geolocation) {
-                navigator.geolocation.clearWatch(window._geoWatchId);
-                window._geoWatchId = null;
-                log('📍 Geolocation stopped');
-            }
-        } catch(e){}
-
-        // ✅ FIX #2: map cleanup (كان يستخدم window.map خطأً)
-        try {
-            if (typeof map !== 'undefined' && map && typeof map.remove === 'function') {
-                map.remove();
-                map = null;
-                log('🗺️ Map removed');
-            }
-        } catch(e){}
-
-        // ✅ FIX #2: markers cleanup
-        try {
-            if (typeof userMarkers !== 'undefined' && userMarkers) {
-                userMarkers.forEach(function(m) {
-                    try { if (m && m.remove) m.remove(); } catch(e){}
-                });
-                userMarkers.clear();
-            }
-            myMarker = null;
-            myAccuracyCircle = null;
-        } catch(e){}
-
-        log('🧹 Monitoring v13.2 cleanup done');
-    }
-
-    window._pageCleanup = window._pageCleanup || [];
-    window._pageCleanup.push(_cleanup);
-    window.addEventListener('beforeunload', _cleanup);
-    window.addEventListener('pagehide', _cleanup);
+    var REFRESH_INTERVAL_MS = 15000;   // ✅ FIX #5: زيادة من 10s → 15s
+    var IDLE_REFRESH_PAUSE = true;     // ✅ NEW: إيقاف التحديث عند إخفاء التبويب
+    var FETCH_TIMEOUT_MS = 20000;      // ✅ FIX #4: timeout للطلب
+    var MAX_FETCH_TIMEOUT_MS = 30000;  // حد أقصى للـ cleanup
 
     // ============================================================
     // STATE
@@ -793,7 +792,92 @@
     var locations = [];
     var mapInitialized = false;
     var firstFitDone = false;
-    var initDone = false; // ✅ FIX #3
+    var initDone = false;
+    var _isIdle = false;               // ✅ NEW
+    var _refreshIntervalId = null;     // ✅ NEW
+
+    var _isDestroyed = false;
+    var _intervals = [];
+    var _timeouts = [];
+    var _listeners = [];
+    var _abortControllers = [];
+    var _resizeObserver = null;
+
+    // ============================================================
+    // CLEANUP
+    // ============================================================
+    function _cleanup() {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+
+        // 1. Abort inflight requests
+        try {
+            _abortControllers.forEach(function(c) {
+                try { c.abort(); } catch(e){}
+            });
+        } catch(e) {}
+        _abortControllers = [];
+
+        // 2. Clear intervals & timeouts
+        _intervals.forEach(function(id) { try { clearInterval(id); } catch(e){} });
+        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e){} });
+        _intervals = []; _timeouts = [];
+        _refreshIntervalId = null;
+
+        // 3. Remove listeners
+        _listeners.forEach(function(l) {
+            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e){}
+        });
+        _listeners = [];
+
+        // 4. Stop geolocation
+        try {
+            if (window._geoWatchId != null && navigator.geolocation) {
+                navigator.geolocation.clearWatch(window._geoWatchId);
+                window._geoWatchId = null;
+                log('📍 Geolocation stopped');
+            }
+        } catch(e){}
+
+        // 5. ResizeObserver
+        try {
+            if (_resizeObserver) {
+                _resizeObserver.disconnect();
+                _resizeObserver = null;
+            }
+        } catch(e){}
+
+        // 6. Remove user markers
+        try {
+            userMarkers.forEach(function(m) {
+                try {
+                    if (map && m && typeof map.removeLayer === 'function') {
+                        map.removeLayer(m);
+                    }
+                } catch(e){}
+            });
+            userMarkers.clear();
+        } catch(e){}
+        myMarker = null;
+        myAccuracyCircle = null;
+
+        // 7. Remove map
+        try {
+            if (map && typeof map.remove === 'function') {
+                map.remove();
+                map = null;
+                mapInitialized = false;
+                log('🗺️ Map removed');
+            }
+        } catch(e){}
+
+        log('🧹 Monitoring v13.4 cleanup done');
+    }
+
+    window._pageCleanup = window._pageCleanup || [];
+    window._pageCleanup.push(_cleanup);
+    window.addEventListener('beforeunload', _cleanup);
+    window.addEventListener('pagehide', _cleanup);
 
     // ============================================================
     // HELPERS
@@ -824,7 +908,7 @@
         return h;
     }
 
-    // ✅ FIX #5: fetchJSON with AbortController
+    // ✅ FIX #4: fetchJSON مع timeout فعلي + إجهاض حقيقي
     function fetchJSON(url, opts) {
         opts = opts || {};
         opts.headers = Object.assign({}, authHeaders(), opts.headers || {});
@@ -832,16 +916,42 @@
 
         var controller = new AbortController();
         opts.signal = controller.signal;
-        _abortControllers.push(controller);
+
+        var entry = { controller: controller, aborted: false };
+        _abortControllers.push(entry);
+
+        // ✅ FIX: timeout فعلي (abort حقيقي)
+        var timeoutId = setTimeout(function() {
+            if (!entry.aborted) {
+                entry.aborted = true;
+                try { controller.abort(); } catch(e){}
+            }
+        }, FETCH_TIMEOUT_MS);
+        _timeouts.push(timeoutId);
+
+        // ✅ FIX: حماية إضافية بعد الحد الأقصى
+        var maxCleanupId = setTimeout(function() {
+            var idx = _abortControllers.indexOf(entry);
+            if (idx > -1) _abortControllers.splice(idx, 1);
+        }, MAX_FETCH_TIMEOUT_MS);
+        _timeouts.push(maxCleanupId);
+
+        function finish() {
+            clearTimeout(timeoutId);
+            clearTimeout(maxCleanupId);
+            var idx = _abortControllers.indexOf(entry);
+            if (idx > -1) _abortControllers.splice(idx, 1);
+        }
 
         return fetch(url, opts).then(function(res) {
-            var idx = _abortControllers.indexOf(controller);
-            if (idx > -1) _abortControllers.splice(idx, 1);
+            finish();
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.json();
         }).catch(function(err) {
-            var idx = _abortControllers.indexOf(controller);
-            if (idx > -1) _abortControllers.splice(idx, 1);
+            finish();
+            if (err && err.name === 'AbortError') {
+                throw new Error('Request timeout or aborted');
+            }
             throw err;
         });
     }
@@ -853,7 +963,6 @@
         });
     }
 
-    // ✅ FIX #9: formatTimeAgo with proper undefined handling
     function formatTimeAgo(iso) {
         try {
             if (!iso) return '—';
@@ -870,8 +979,34 @@
         } catch(e) { return '—'; }
     }
 
-    // ✅ FIX #4: prioritize sub over id (matches server)
+    // ✅ FIX #1: readMyUser — الأولوية لـ sub دائماً
     function readMyUser() {
+        // 1) JWT أولاً (sub هو المعرّف الحقيقي)
+        try {
+            var token = getToken();
+            if (token) {
+                var parts = token.split('.');
+                if (parts.length === 3) {
+                    var payload = JSON.parse(atob(parts[1]));
+                    if (payload && (payload.sub || payload.id)) {
+                        var realId = payload.sub || payload.id;
+                        return {
+                            id: realId,
+                            _id: realId,
+                            username: payload.username || '',
+                            name: payload.name || payload.username || '',
+                            role: payload.role || 'viewer',
+                            sid: payload.sid || null,
+                            _source: 'jwt'
+                        };
+                    }
+                }
+            }
+        } catch(e) {
+            warn('⚠️ JWT parse error:', e.message);
+        }
+
+        // 2) localStorage/sessionStorage كـ fallback
         try {
             var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
             var stores = [localStorage, sessionStorage];
@@ -880,45 +1015,32 @@
                     var raw = stores[s].getItem(keys[i]);
                     if (raw) {
                         var p = JSON.parse(raw);
-                        if (p && (p.id || p._id || p.username)) return p;
+                        if (p && (p.id || p._id || p.username)) {
+                            p._source = 'storage';
+                            return p;
+                        }
                     }
                 }
             }
         } catch(e) {}
 
-        // ✅ fallback: decode JWT
-        try {
-            var token = getToken();
-            if (token) {
-                var parts = token.split('.');
-                if (parts.length === 3) {
-                    var payload = JSON.parse(atob(parts[1]));
-                    if (payload && (payload.sub || payload.id)) {
-                        // ✅ الأولوية لـ sub (المطابق لـ user.id في الخادم)
-                        var realId = payload.sub || payload.id;
-                        return {
-                            id: realId,
-                            _id: realId,
-                            username: payload.username || '',
-                            name: payload.name || payload.username || '',
-                            role: payload.role || 'viewer',
-                            sid: payload.sid || null
-                        };
-                    }
-                }
-            }
-        } catch(e) {
-            warn('⚠️ JWT parse error:', e.message);
-        }
         return null;
     }
 
-    // ============================================================
-    // MAP
-    // ============================================================
-    var TILE_ERROR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+    // ✅ FIX #14: sanitize myId
+    function sanitizeId(id) {
+        if (id == null) return null;
+        var s = String(id).trim();
+        if (!s || s === 'null' || s === 'undefined' || s === 'NaN') return null;
+        return s;
+    }
 
-    function showMapError(title, details) {
+    // ============================================================
+    // MAP ERROR / LOADING
+    // ============================================================
+    var TILE_ERROR = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
+
+    function showMapError(title, details, diag) {
         var ld = document.getElementById('loadingScreen');
         if (!ld) return;
         ld.classList.remove('hidden');
@@ -926,20 +1048,35 @@
             '<div class="error-screen">' +
             '<h2>❌ ' + escapeHtml(title) + '</h2>' +
             '<p>' + escapeHtml(details || '') + '</p>' +
-            '<p style="font-size:11px;color:#94a3b8">تحقق من الإنترنت أو عطّل مانع الإعلانات (AdBlocker)</p>' +
+            '<p style="font-size:12px;color:#94a3b8">تحقق من الاتصال بالإنترنت أو عطّل مانع الإعلانات (AdBlocker)</p>' +
+            (diag ? '<div class="diag">' + escapeHtml(diag) + '</div>' : '') +
             '<button onclick="location.reload()">🔄 إعادة المحاولة</button>' +
             '</div>';
     }
 
+    function hideLoading() {
+        var ld = document.getElementById('loadingScreen');
+        if (ld) ld.classList.add('hidden');
+    }
+
+    // ============================================================
+    // MAP INIT
+    // ============================================================
     function initMap() {
         if (mapInitialized || _isDestroyed) return;
+
         if (typeof L === 'undefined') {
-            error('❌ Leaflet NOT LOADED!');
-            showMapError('فشل تحميل الخريطة', 'مكتبة Leaflet لم تُحمّل بعد');
+            error('❌❌❌ Leaflet NOT LOADED!');
+            var diag = [
+                'window._leafletSource: ' + (window._leafletSource || 'unknown'),
+                'window._leafletFailed: ' + (window._leafletFailed || false),
+                'navigator.onLine: ' + navigator.onLine
+            ].join(' | ');
+            showMapError('فشل تحميل الخريطة', 'مكتبة Leaflet لم تُحمّل بعد', diag);
             return;
         }
-        log('✅ Leaflet detected, version:', L.version || 'unknown');
 
+        log('✅ Leaflet detected, version:', L.version || 'unknown');
         var el = document.getElementById('map');
         if (!el) return;
 
@@ -952,7 +1089,6 @@
                 preferCanvas: false
             });
 
-            // 🛰️ SATELLITE
             var satellite = L.tileLayer(
                 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 {
@@ -960,19 +1096,23 @@
                     maxNativeZoom: 18,
                     attribution: '© Esri, Maxar, Earthstar Geographics',
                     crossOrigin: true,
-                    errorTileUrl: TILE_ERROR,  // ✅ FIX #12
+                    errorTileUrl: TILE_ERROR,
                     keepBuffer: 4
                 }
             );
 
-            // LABELS
+            // ✅ FIX #6: pane مخصص للـ labels (ليس shadowPane)
+            map.createPane('labelsPane');
+            map.getPane('labelsPane').style.zIndex = 650;
+            map.getPane('labelsPane').style.pointerEvents = 'none';
+
             var labels = L.tileLayer(
                 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
                 {
                     maxZoom: 19,
                     maxNativeZoom: 18,
                     attribution: '© Esri',
-                    pane: 'shadowPane',
+                    pane: 'labelsPane',
                     opacity: 0.9,
                     errorTileUrl: TILE_ERROR,
                     keepBuffer: 4
@@ -988,7 +1128,7 @@
             log('🛰️ Satellite map initialized');
         } catch(e) {
             warn('❌ Map init error:', e.message);
-            showMapError('فشل تهيئة الخريطة', e.message);
+            showMapError('فشل تهيئة الخريطة', e.message, e.stack || '');
         }
     }
 
@@ -1011,11 +1151,11 @@
         })
         .catch(function(err) {
             warn('[GEO] send error:', err.message);
-            // ✅ FIX #20: retry once after 5s
             if (retryCount < 1 && !_isDestroyed) {
-                _timeouts.push(setTimeout(function() {
+                var tid = setTimeout(function() {
                     if (!_isDestroyed) sendLocationToServer(coords, retryCount + 1);
-                }, 5000));
+                }, 5000);
+                _timeouts.push(tid);
             }
         });
     }
@@ -1108,7 +1248,7 @@
         log('🗺️ addMarkers: rendering', locs.length, 'locations');
 
         userMarkers.forEach(function(m) {
-            try { map.removeLayer(m); } catch(e){}
+            try { if (map && m) map.removeLayer(m); } catch(e){}
         });
         userMarkers.clear();
 
@@ -1167,16 +1307,30 @@
 
         log('✅ Rendered', rendered, 'other markers');
 
-        // ✅ FIX #18: maxZoom 15 بدل 13
+        // fitBounds مع حماية من النقاط المتقاربة
         if (!firstFitDone && (rendered > 0 || myLocation)) {
             try {
                 var allPoints = [];
                 if (myLocation) allPoints.push([myLocation.latitude, myLocation.longitude]);
                 points.forEach(function(p) { allPoints.push(p); });
+
                 if (allPoints.length > 1) {
-                    map.fitBounds(allPoints, { padding: [80, 80], maxZoom: 15 });
+                    var maxDist = 0;
+                    for (var i = 0; i < allPoints.length; i++) {
+                        for (var j = i + 1; j < allPoints.length; j++) {
+                            var dx = allPoints[i][0] - allPoints[j][0];
+                            var dy = allPoints[i][1] - allPoints[j][1];
+                            var d = Math.sqrt(dx * dx + dy * dy);
+                            if (d > maxDist) maxDist = d;
+                        }
+                    }
+                    if (maxDist < 0.01) {
+                        map.setView(allPoints[0], 14);
+                    } else {
+                        map.fitBounds(allPoints, { padding: [80, 80], maxZoom: 15 });
+                    }
                 } else if (allPoints.length === 1) {
-                    map.setView(allPoints[0], 15);
+                    map.setView(allPoints[0], 14);
                 }
                 firstFitDone = true;
             } catch(e) {}
@@ -1232,18 +1386,45 @@
             });
     }
 
+    // ✅ FIX #1: verifyMyId — لا نستبدل إذا كانت المصادر متسقة
+    function verifyMyIdFromServer() {
+        if (_isDestroyed) return;
+        fetchJSON('/api/auth/me')
+            .then(function(data) {
+                if (_isDestroyed) return;
+                if (data && data.user && data.user.id) {
+                    var serverId = String(data.user.id);
+                    if (serverId !== myId) {
+                        log('🔄 myId corrected from server:', myId, '→', serverId);
+                        myId = serverId;
+                        renderUsersList();
+                        addMarkers(locations, users);
+                    }
+                }
+            })
+            .catch(function() {});
+    }
+
     // ============================================================
-    // RENDER USERS (FIX #8: event delegation)
+    // RENDER USERS
     // ============================================================
     function handleUserCardClick(uid) {
         if (String(uid) === String(myId) && myLocation && map) {
             map.flyTo([myLocation.latitude, myLocation.longitude], 15, { duration: 1.2 });
-            if (myMarker) _timeouts.push(setTimeout(function() { myMarker.openPopup(); }, 400));
+            if (myMarker) {
+                var tid = setTimeout(function() {
+                    if (!_isDestroyed && myMarker) myMarker.openPopup();
+                }, 400);
+                _timeouts.push(tid);
+            }
         } else if (userMarkers.has(uid) && map) {
             var m = userMarkers.get(uid);
             var ll = m.getLatLng();
             map.flyTo(ll, 15, { duration: 1.2 });
-            _timeouts.push(setTimeout(function() { m.openPopup(); }, 400));
+            var tid2 = setTimeout(function() {
+                if (!_isDestroyed && m) m.openPopup();
+            }, 400);
+            _timeouts.push(tid2);
         }
         if (window.innerWidth < 768) {
             var panel = document.getElementById('sidePanel');
@@ -1320,11 +1501,11 @@
 
         el.innerHTML = html;
 
-        // ✅ FIX #8: event delegation - يُضاف مرة واحدة فقط
+        // Event delegation — attached once
         if (!el._delegationAttached) {
             el._delegationAttached = true;
             var delegHandler = function(e) {
-                var card = e.target.closest('.user-card');
+                var card = e.target.closest ? e.target.closest('.user-card') : null;
                 if (card) {
                     var uid = card.getAttribute('data-user-id');
                     if (uid) handleUserCardClick(uid);
@@ -1367,14 +1548,13 @@
     }
 
     // ============================================================
-    // ONLINE/OFFLINE (FIX #19)
+    // ONLINE/OFFLINE
     // ============================================================
     function updateOnlineStatus() {
         var badge = document.getElementById('liveBadge');
         var el = document.getElementById('lastUpdate');
         if (navigator.onLine) {
             if (badge) badge.classList.remove('offline');
-            if (el) el.textContent = 'مباشر';
         } else {
             if (badge) badge.classList.add('offline');
             if (el) el.textContent = '⚠️ غير متصل';
@@ -1382,11 +1562,48 @@
     }
 
     // ============================================================
+    // IDLE MANAGEMENT (NEW)
+    // ============================================================
+    function setupVisibilityHandling() {
+        if (!IDLE_REFRESH_PAUSE) return;
+
+        var visHandler = function() {
+            _isIdle = document.hidden;
+            var indicator = document.getElementById('idleIndicator');
+
+            if (_isIdle) {
+                // إيقاف التحديث الدوري
+                if (_refreshIntervalId) {
+                    clearInterval(_refreshIntervalId);
+                    _refreshIntervalId = null;
+                    log('⏸️ Refresh paused (tab hidden)');
+                }
+                if (indicator) indicator.classList.add('show');
+            } else {
+                // استئناف التحديث
+                if (!_refreshIntervalId && !_isDestroyed) {
+                    refreshAll(); // تحديث فوري عند العودة
+                    _refreshIntervalId = setInterval(refreshAll, REFRESH_INTERVAL_MS);
+                    log('▶️ Refresh resumed (tab visible)');
+                }
+                if (indicator) indicator.classList.remove('show');
+            }
+        };
+
+        document.addEventListener('visibilitychange', visHandler);
+        _listeners.push({ el: document, type: 'visibilitychange', fn: visHandler });
+        _isIdle = document.hidden;
+    }
+
+    // ============================================================
     // REFRESH
     // ============================================================
     function refreshAll() {
         if (_isDestroyed) return;
-        // ✅ FIX #19: skip if offline
+        if (_isIdle) {
+            log('⏸️ refreshAll skipped (idle)');
+            return;
+        }
         if (!navigator.onLine) {
             updateOnlineStatus();
             return;
@@ -1412,7 +1629,12 @@
                 sendLocationToServer(pos.coords);
                 updateMyMarker(pos.coords);
                 if (map) map.flyTo([pos.coords.latitude, pos.coords.longitude], 16, { duration: 1.5 });
-                if (myMarker) _timeouts.push(setTimeout(function() { myMarker.openPopup(); }, 500));
+                if (myMarker) {
+                    var tid = setTimeout(function() {
+                        if (!_isDestroyed && myMarker) myMarker.openPopup();
+                    }, 500);
+                    _timeouts.push(tid);
+                }
                 startGeolocation();
             },
             function(err) {
@@ -1427,7 +1649,42 @@
     }
 
     // ============================================================
-    // INIT (FIX #3: idempotent)
+    // RESIZE HANDLERS
+    // ============================================================
+    function setupResizeHandlers() {
+        var resizeHandler = function() {
+            if (!map || _isDestroyed) return;
+            var tid = setTimeout(function() {
+                if (map && !_isDestroyed) {
+                    try { map.invalidateSize(); } catch(e) {}
+                }
+            }, 200);
+            _timeouts.push(tid);
+        };
+        window.addEventListener('resize', resizeHandler);
+        _listeners.push({ el: window, type: 'resize', fn: resizeHandler });
+
+        if (window.ResizeObserver) {
+            var panel = document.getElementById('sidePanel');
+            if (panel) {
+                try {
+                    _resizeObserver = new ResizeObserver(function() {
+                        if (!map || _isDestroyed) return;
+                        var tid = setTimeout(function() {
+                            if (map && !_isDestroyed) map.invalidateSize();
+                        }, 250);
+                        _timeouts.push(tid);
+                    });
+                    _resizeObserver.observe(panel);
+                } catch(e) {
+                    warn('ResizeObserver error:', e.message);
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    // INIT
     // ============================================================
     function init() {
         if (_isDestroyed) return;
@@ -1437,21 +1694,29 @@
         }
         initDone = true;
 
-        log('🚀 Initializing v13.2...');
+        log('🚀 Initializing v13.4...');
 
         if (typeof L === 'undefined') {
+            if (!window._leafletFailed) {
+                log('⏳ Waiting for Leaflet to load...');
+                var waitId = setTimeout(function() {
+                    initDone = false;
+                    init();
+                }, 500);
+                _timeouts.push(waitId);
+                return;
+            }
             error('❌❌❌ Leaflet NOT LOADED!');
-            showMapError('فشل تحميل الخريطة', 'مكتبة Leaflet لم تُحمّل');
+            showMapError('فشل تحميل الخريطة', 'مكتبة Leaflet لم تُحمّل',
+                'onLine: ' + navigator.onLine + ' | failed: ' + window._leafletFailed);
             return;
         }
+
         log('✅ Leaflet detected:', L.version || 'unknown');
 
-        // قراءة المستخدم
         var me = readMyUser();
-        myId = me ? String(me.id || me._id || '') : null;
-        // ✅ FIX #14: 'null' كنص
-        if (myId === 'null' || myId === 'undefined' || myId === '') myId = null;
-        log('👤 My ID:', myId, '| User:', me ? (me.name || me.username) : 'NONE');
+        myId = sanitizeId(me ? (me.id || me._id) : null);
+        log('👤 My ID:', myId, '| Source:', me ? me._source : 'NONE');
 
         initMap();
 
@@ -1460,7 +1725,15 @@
         if (toggleBtn) {
             var tHandler = function() {
                 var p = document.getElementById('sidePanel');
-                if (p) p.classList.toggle('open');
+                if (p) {
+                    p.classList.toggle('open');
+                    if (map) {
+                        var tid = setTimeout(function() {
+                            if (map && !_isDestroyed) map.invalidateSize();
+                        }, 400);
+                        _timeouts.push(tid);
+                    }
+                }
             };
             toggleBtn.addEventListener('click', tHandler);
             _listeners.push({ el: toggleBtn, type: 'click', fn: tHandler });
@@ -1476,12 +1749,12 @@
             _listeners.push({ el: closeBtn, type: 'click', fn: cHandler });
         }
 
-        // ✅ FIX #11: click outside to close panel
         var documentClickHandler = function(e) {
             var panel = document.getElementById('sidePanel');
             if (!panel || !panel.classList.contains('open')) return;
             if (panel.contains(e.target)) return;
-            if (e.target.closest('#togglePanelBtn')) return;
+            var tBtn = e.target.closest && e.target.closest('#togglePanelBtn');
+            if (tBtn) return;
             panel.classList.remove('open');
         };
         document.addEventListener('click', documentClickHandler);
@@ -1498,30 +1771,44 @@
             var rHandler = function() {
                 refreshBtn.classList.add('spinning');
                 refreshAll();
-                _timeouts.push(setTimeout(function() {
+                var tid = setTimeout(function() {
                     refreshBtn.classList.remove('spinning');
-                }, 800));
+                }, 800);
+                _timeouts.push(tid);
             };
             refreshBtn.addEventListener('click', rHandler);
             _listeners.push({ el: refreshBtn, type: 'click', fn: rHandler });
         }
 
         // Online/offline
-        window.addEventListener('online', function() { updateOnlineStatus(); refreshAll(); });
-        window.addEventListener('offline', updateOnlineStatus);
+        var onlineH = function() { updateOnlineStatus(); refreshAll(); };
+        var offlineH = function() { updateOnlineStatus(); };
+        window.addEventListener('online', onlineH);
+        window.addEventListener('offline', offlineH);
+        _listeners.push({ el: window, type: 'online', fn: onlineH });
+        _listeners.push({ el: window, type: 'offline', fn: offlineH });
         updateOnlineStatus();
 
+        // ✅ Visibility handling (NEW)
+        setupVisibilityHandling();
+
+        // Resize handlers
+        setupResizeHandlers();
+
         // Hide loading
-        _timeouts.push(setTimeout(function() {
-            var ld = document.getElementById('loadingScreen');
-            if (ld) ld.classList.add('hidden');
-        }, 600));
+        var hideId = setTimeout(hideLoading, 600);
+        _timeouts.push(hideId);
 
         // First load
         refreshAll();
-        _intervals.push(setInterval(refreshAll, 10000));
+        // ✅ FIX: حفظ interval ID للتحكم في الإيقاف/الاستئناف
+        _refreshIntervalId = setInterval(refreshAll, REFRESH_INTERVAL_MS);
+        _intervals.push(_refreshIntervalId);
 
-        log('✅ Monitoring v13.2 ready');
+        // Verify myId from server
+        verifyMyIdFromServer();
+
+        log('✅ Monitoring v13.4 ready');
     }
 
     // ============================================================
@@ -1529,10 +1816,12 @@
     // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            _timeouts.push(setTimeout(init, 100));
+            var tid = setTimeout(init, 100);
+            _timeouts.push(tid);
         });
     } else {
-        _timeouts.push(setTimeout(init, 100));
+        var tid0 = setTimeout(init, 100);
+        _timeouts.push(tid0);
     }
 
     window.monitoringDebug = {
@@ -1541,11 +1830,15 @@
         getLocations: function() { return locations; },
         getSessions: function() { return sessions; },
         getMyId: function() { return myId; },
+        getMyUser: readMyUser,
         locateMe: locateMe,
-        isDestroyed: function() { return _isDestroyed; }
+        isDestroyed: function() { return _isDestroyed; },
+        isIdle: function() { return _isIdle; },
+        getMap: function() { return map; },
+        cleanup: _cleanup
     };
 
-    log('✅ monitoring.html v13.2 ready');
+    console.log('✅ monitoring.html v13.4 ready');
 
 })();
 </script>
