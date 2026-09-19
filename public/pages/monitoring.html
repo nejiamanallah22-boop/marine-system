@@ -2,16 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🛰️ المراقبة الحية — منظومة الوسائل البحرية</title>
 
-<!-- ✅ Leaflet محلي أولاً + Fallback متعدد CDNs -->
 <link rel="stylesheet" href="/public/vendor/leaflet/leaflet.css"
       onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';" />
 <script src="/public/vendor/leaflet/leaflet.js"></script>
 <script>
 (function() {
-    // ✅ FIX: تصريح مسبق لتفادي undefined
     window._geoWatchId = null;
     window._leafletSource = null;
     window._leafletFailed = false;
@@ -21,7 +19,6 @@
         console.log('✅ Leaflet from LOCAL');
         return;
     }
-    console.warn('⚠️ Local Leaflet failed, trying CDNs...');
     var cdns = [
         'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
@@ -29,17 +26,10 @@
     ];
     var i = 0;
     function tryNext() {
-        if (i >= cdns.length) {
-            window._leafletFailed = true;
-            console.error('❌ All CDNs failed - check AdBlocker/network');
-            return;
-        }
+        if (i >= cdns.length) { window._leafletFailed = true; return; }
         var s = document.createElement('script');
         s.src = cdns[i++];
-        s.onload = function() {
-            window._leafletSource = s.src;
-            console.log('✅ Leaflet from:', s.src);
-        };
+        s.onload = function() { window._leafletSource = s.src; };
         s.onerror = tryNext;
         document.head.appendChild(s);
     }
@@ -53,16 +43,25 @@
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    /* ✅ مهم جداً: هذا الملف يُحمّل كصفحة فرعية داخل النظام الرئيسي */
+    /* لذلك يجب ألا يأخذ 100vh من الشاشة كاملة */
     html, body {
         font-family: 'Cairo', 'Segoe UI', sans-serif;
         background: #050811;
         color: #e8edf5;
-        height: 100vh;
-        width: 100vw;
+        height: 100%;
+        width: 100%;
         overflow: hidden;
     }
 
-    /* ===== MAP ===== */
+    /* ✅ حاوية نسبية لاحتواء الخريطة */
+    .monitoring-wrapper {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 64px); /* اطرح ارتفاع الهيدر */
+        overflow: hidden;
+    }
+
     #map {
         position: absolute;
         inset: 0;
@@ -72,163 +71,77 @@
         background: #050811;
     }
 
-    .leaflet-container {
-        background: #050811 !important;
-        font-family: 'Cairo', sans-serif !important;
-    }
+    .leaflet-container { background: #050811 !important; font-family: 'Cairo', sans-serif !important; }
 
     .leaflet-control-zoom a {
         background: rgba(15, 20, 32, 0.95) !important;
         color: #f7d774 !important;
         border: 1px solid rgba(247, 215, 116, 0.3) !important;
-        backdrop-filter: blur(10px);
-        width: 36px !important;
-        height: 36px !important;
-        line-height: 36px !important;
-        font-size: 18px !important;
-        font-weight: bold;
-        transition: all 0.2s;
+        width: 36px !important; height: 36px !important;
+        line-height: 36px !important; font-size: 18px !important;
     }
-
-    .leaflet-control-zoom a:hover {
-        background: rgba(247, 215, 116, 0.2) !important;
-        color: #fff !important;
-    }
-
     .leaflet-control-attribution {
         background: rgba(5, 8, 17, 0.85) !important;
         color: rgba(255, 255, 255, 0.4) !important;
         font-size: 10px !important;
-        padding: 2px 8px !important;
     }
-
-    .leaflet-control-attribution a { color: #60a5fa !important; }
-
     .leaflet-popup-content-wrapper {
         background: linear-gradient(135deg, rgba(15, 20, 32, 0.98), rgba(10, 14, 26, 0.98)) !important;
         color: #e8edf5 !important;
         border: 1px solid rgba(247, 215, 116, 0.3) !important;
         border-radius: 14px !important;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
-        backdrop-filter: blur(20px);
-        padding: 0 !important;
     }
-
     .leaflet-popup-content {
-        margin: 0 !important;
-        padding: 14px 16px !important;
+        margin: 0 !important; padding: 14px 16px !important;
         font-family: 'Cairo', sans-serif !important;
-        direction: rtl !important;
-        min-width: 200px;
+        direction: rtl !important; min-width: 200px;
     }
-
-    .leaflet-popup-tip {
-        background: rgba(15, 20, 32, 0.98) !important;
-        border: 1px solid rgba(247, 215, 116, 0.3) !important;
-    }
-
-    .leaflet-popup-close-button {
-        color: #f7d774 !important;
-        font-size: 20px !important;
-        padding: 6px 10px !important;
-    }
+    .leaflet-popup-tip { background: rgba(15, 20, 32, 0.98) !important; }
+    .leaflet-popup-close-button { color: #f7d774 !important; }
 
     /* ===== TOP BAR ===== */
     .top-bar {
-        position: absolute;
-        top: 16px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        gap: 16px;
+        position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+        z-index: 1000; display: flex; align-items: center; gap: 16px;
         padding: 12px 24px;
         background: linear-gradient(135deg, rgba(15, 20, 32, 0.85), rgba(10, 14, 26, 0.85));
         backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
         border: 1px solid rgba(247, 215, 116, 0.2);
         border-radius: 100px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-        max-width: calc(100vw - 32px);
-        flex-wrap: wrap;
-        justify-content: center;
+        max-width: calc(100vw - 32px); flex-wrap: wrap; justify-content: center;
     }
-
     .top-bar .brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding-left: 16px;
-        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex; align-items: center; gap: 10px;
+        padding-left: 16px; border-left: 1px solid rgba(255,255,255,0.1);
     }
-
     .top-bar .brand i {
-        font-size: 22px;
-        color: #f7d774;
-        filter: drop-shadow(0 0 8px rgba(247, 215, 116, 0.6));
+        font-size: 22px; color: #f7d774;
+        filter: drop-shadow(0 0 8px rgba(247,215,116,0.6));
     }
-
     .top-bar .brand .text { display: flex; flex-direction: column; line-height: 1.1; }
     .top-bar .brand .text .title { font-size: 14px; font-weight: 900; color: #f7d774; }
-    .top-bar .brand .text .subtitle { font-size: 9.5px; color: rgba(255, 255, 255, 0.4); }
-
+    .top-bar .brand .text .subtitle { font-size: 9.5px; color: rgba(255,255,255,0.4); }
     .top-bar .stats { display: flex; gap: 14px; }
-
-    .top-bar .stat {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-width: 50px;
-    }
-
-    .top-bar .stat .value {
-        font-size: 18px;
-        font-weight: 900;
-        color: #f7d774;
-        line-height: 1;
-    }
-
-    .top-bar .stat .label {
-        font-size: 9px;
-        color: rgba(255, 255, 255, 0.4);
-        margin-top: 2px;
-        font-weight: 600;
-    }
-
+    .top-bar .stat { display: flex; flex-direction: column; align-items: center; min-width: 50px; }
+    .top-bar .stat .value { font-size: 18px; font-weight: 900; color: #f7d774; line-height: 1; }
+    .top-bar .stat .label { font-size: 9px; color: rgba(255,255,255,0.4); margin-top: 2px; font-weight: 600; }
     .top-bar .live-badge {
-        display: flex;
-        align-items: center;
-        gap: 6px;
+        display: flex; align-items: center; gap: 6px;
         padding: 4px 12px;
         background: rgba(74, 222, 128, 0.12);
         border: 1px solid rgba(74, 222, 128, 0.3);
-        border-radius: 20px;
-        font-size: 10px;
-        font-weight: 700;
-        color: #4ade80;
-        transition: all 0.3s;
+        border-radius: 20px; font-size: 10px; font-weight: 700; color: #4ade80;
     }
-
     .top-bar .live-badge .dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #4ade80;
-        box-shadow: 0 0 10px #4ade80;
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #4ade80; box-shadow: 0 0 10px #4ade80;
         animation: pulse 1.5s infinite;
     }
-
     .top-bar .live-badge.offline {
         background: rgba(239, 68, 68, 0.12);
-        border-color: rgba(239, 68, 68, 0.3);
-        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.3); color: #fca5a5;
     }
-    .top-bar .live-badge.offline .dot {
-        background: #fca5a5;
-        box-shadow: 0 0 10px #fca5a5;
-        animation: none;
-    }
+    .top-bar .live-badge.offline .dot { background: #fca5a5; animation: none; }
 
     @keyframes pulse {
         0%, 100% { opacity: 1; transform: scale(1); }
@@ -237,546 +150,380 @@
 
     /* ===== SIDE PANEL ===== */
     .side-panel {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 360px;
-        max-width: 92vw;
-        z-index: 1100;
-        background: linear-gradient(180deg, rgba(10, 14, 26, 0.96), rgba(5, 8, 17, 0.98));
+        position: absolute; top: 0; right: 0; bottom: 0;
+        width: 360px; max-width: 92vw; z-index: 1100;
+        background: linear-gradient(180deg, rgba(10,14,26,0.96), rgba(5,8,17,0.98));
         backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border-left: 1px solid rgba(247, 215, 116, 0.15);
-        box-shadow: -10px 0 60px rgba(0, 0, 0, 0.7);
+        border-left: 1px solid rgba(247,215,116,0.15);
+        box-shadow: -10px 0 60px rgba(0,0,0,0.7);
         transform: translateX(100%);
         transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        flex-direction: column;
+        display: flex; flex-direction: column;
     }
-
     .side-panel.open { transform: translateX(0); }
-
     .side-panel .panel-header {
         padding: 20px 22px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-shrink: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
     }
-
     .side-panel .panel-header h2 {
-        font-size: 16px;
-        font-weight: 900;
-        color: #f7d774;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        font-size: 16px; font-weight: 900; color: #f7d774;
+        display: flex; align-items: center; gap: 10px;
     }
-
     .side-panel .panel-header h2 i { font-size: 18px; color: #60a5fa; }
-
     .side-panel .close-btn {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.6);
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.6);
+        width: 34px; height: 34px; border-radius: 10px;
+        cursor: pointer; font-size: 16px;
+        display: flex; align-items: center; justify-content: center;
     }
-
     .side-panel .close-btn:hover {
         background: rgba(239, 68, 68, 0.2);
         color: #fca5a5;
         border-color: rgba(239, 68, 68, 0.3);
     }
-
-    .side-panel .panel-body {
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px 20px 24px;
-    }
-
+    .side-panel .panel-body { flex: 1; overflow-y: auto; padding: 16px 20px 24px; }
     .side-panel .panel-body::-webkit-scrollbar { width: 6px; }
     .side-panel .panel-body::-webkit-scrollbar-thumb {
-        background: rgba(247, 215, 116, 0.3);
-        border-radius: 10px;
+        background: rgba(247,215,116,0.3); border-radius: 10px;
     }
-
     .panel-section { margin-bottom: 24px; }
-
     .panel-section .section-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 12px; padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-
     .panel-section .section-title h3 {
-        font-size: 12px;
-        font-weight: 800;
-        color: rgba(255, 255, 255, 0.65);
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.65);
+        display: flex; align-items: center; gap: 8px;
     }
-
     .panel-section .section-title h3 i { color: #60a5fa; font-size: 13px; }
-
     .panel-section .section-title .count {
-        background: rgba(96, 165, 250, 0.15);
-        color: #60a5fa;
-        padding: 2px 10px;
-        border-radius: 12px;
-        font-size: 10px;
-        font-weight: 800;
+        background: rgba(96, 165, 250, 0.15); color: #60a5fa;
+        padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: 800;
     }
 
     .user-card {
-        background: rgba(255, 255, 255, 0.025);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 14px;
-        padding: 14px 16px;
-        margin-bottom: 10px;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        position: relative;
-        overflow: hidden;
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+        cursor: pointer; transition: all 0.25s;
+        position: relative; overflow: hidden;
     }
-
     .user-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 3px;
-        background: #60a5fa;
-        opacity: 0.5;
-        transition: opacity 0.2s;
+        content: ''; position: absolute; top: 0; right: 0; bottom: 0;
+        width: 3px; background: #60a5fa; opacity: 0.5;
     }
-
     .user-card:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(96, 165, 250, 0.3);
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(96,165,250,0.3);
         transform: translateX(-4px);
     }
-
-    .user-card:hover::before { opacity: 1; }
-
     .user-card.me {
-        background: rgba(247, 215, 116, 0.05);
-        border-color: rgba(247, 215, 116, 0.25);
+        background: rgba(247,215,116,0.05);
+        border-color: rgba(247,215,116,0.25);
     }
-
     .user-card.me::before { background: #f7d774; opacity: 1; }
-
     .user-card.offline { opacity: 0.55; }
-    .user-card.offline::before { background: rgba(148, 163, 184, 0.5); }
-
     .user-card .card-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 8px;
-        margin-bottom: 6px;
+        display: flex; justify-content: space-between; align-items: flex-start;
+        gap: 8px; margin-bottom: 6px;
     }
-
     .user-card .user-name {
-        font-size: 13.5px;
-        font-weight: 800;
-        color: rgba(255, 255, 255, 0.95);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex: 1;
-        line-height: 1.3;
+        font-size: 13.5px; font-weight: 800; color: rgba(255,255,255,0.95);
+        display: flex; align-items: center; gap: 6px; flex: 1; line-height: 1.3;
     }
-
-    .user-card .user-name .icon { font-size: 14px; flex-shrink: 0; }
     .user-card.me .user-name { color: #f7d774; }
-
     .user-card .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        flex-shrink: 0;
-        margin-top: 4px;
+        width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
     }
-
     .user-card .status-dot.online {
-        background: #4ade80;
-        box-shadow: 0 0 10px #4ade80;
+        background: #4ade80; box-shadow: 0 0 10px #4ade80;
         animation: pulse 2s infinite;
     }
-
     .user-card .status-dot.offline { background: #64748b; }
-
-    .user-card .user-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 6px;
-    }
-
+    .user-card .user-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .user-card .tag {
-        font-size: 9.5px;
-        padding: 2px 8px;
-        border-radius: 8px;
-        font-weight: 700;
-        white-space: nowrap;
+        font-size: 9.5px; padding: 2px 8px; border-radius: 8px;
+        font-weight: 700; white-space: nowrap;
     }
-
-    .user-card .tag.role { background: rgba(96, 165, 250, 0.12); color: #60a5fa; }
-    .user-card .tag.region { background: rgba(247, 215, 116, 0.12); color: #f7d774; }
-    .user-card .tag.time { background: rgba(148, 163, 184, 0.12); color: #94a3b8; }
-
+    .user-card .tag.role { background: rgba(96,165,250,0.12); color: #60a5fa; }
+    .user-card .tag.region { background: rgba(247,215,116,0.12); color: #f7d774; }
+    .user-card .tag.time { background: rgba(148,163,184,0.12); color: #94a3b8; }
     .user-card .coords {
-        font-family: 'Courier New', monospace;
-        font-size: 10px;
-        color: rgba(255, 255, 255, 0.35);
-        margin-top: 8px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
+        font-family: 'Courier New', monospace; font-size: 10px;
+        color: rgba(255,255,255,0.35); margin-top: 8px;
+        display: flex; align-items: center; gap: 6px;
     }
-
     .user-card .coords i { color: #60a5fa; font-size: 9px; }
 
     .empty-state {
-        text-align: center;
-        padding: 30px 16px;
-        color: rgba(255, 255, 255, 0.25);
+        text-align: center; padding: 30px 16px;
+        color: rgba(255,255,255,0.25);
     }
-
     .empty-state i {
-        font-size: 32px;
-        margin-bottom: 10px;
-        opacity: 0.4;
-        color: #60a5fa;
+        font-size: 32px; margin-bottom: 10px; opacity: 0.4; color: #60a5fa;
     }
-
     .empty-state p { font-size: 12px; font-weight: 600; }
+
+    /* ===== DEVICE CARD (NEW) ===== */
+    .device-card {
+        background: rgba(96, 165, 250, 0.04);
+        border: 1px solid rgba(96, 165, 250, 0.15);
+        border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+        font-size: 11px; transition: all 0.2s;
+    }
+    .device-card:hover {
+        background: rgba(96, 165, 250, 0.08);
+        border-color: rgba(96, 165, 250, 0.35);
+    }
+    .device-card .device-header {
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 8px; margin-bottom: 8px; padding-bottom: 6px;
+        border-bottom: 1px dashed rgba(255,255,255,0.06);
+    }
+    .device-card .device-name {
+        font-weight: 800; font-size: 12px; color: #e8edf5;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .device-card .device-name i { color: #60a5fa; font-size: 13px; }
+    .device-card .device-name i.mobile { color: #4ade80; }
+    .device-card .device-name i.desktop { color: #f7d774; }
+    .device-card .device-name i.tablet { color: #a78bfa; }
+    .device-card .device-badge {
+        font-size: 9px; padding: 2px 8px; border-radius: 8px;
+        font-weight: 800;
+        background: rgba(74, 222, 128, 0.12);
+        color: #4ade80;
+        border: 1px solid rgba(74, 222, 128, 0.25);
+    }
+    .device-card .device-badge.offline {
+        background: rgba(148, 163, 184, 0.12);
+        color: #94a3b8;
+        border-color: rgba(148, 163, 184, 0.25);
+    }
+    .device-card .device-row {
+        display: flex; justify-content: space-between; gap: 8px;
+        padding: 3px 0; color: rgba(255,255,255,0.55);
+    }
+    .device-card .device-row .label {
+        color: rgba(255,255,255,0.35); font-weight: 600; flex-shrink: 0;
+    }
+    .device-card .device-row .value {
+        font-family: 'Courier New', monospace; font-size: 10px;
+        color: #60a5fa; text-align: left; direction: ltr;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        max-width: 180px;
+    }
+    .device-card .device-ip {
+        color: #f7d774 !important; font-weight: 700;
+    }
 
     /* ===== FLOAT BUTTONS ===== */
     .float-btn {
-        position: absolute;
-        z-index: 1050;
-        width: 52px;
-        height: 52px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, rgba(15, 20, 32, 0.95), rgba(10, 14, 26, 0.95));
+        position: absolute; z-index: 1050;
+        width: 52px; height: 52px; border-radius: 16px;
+        background: linear-gradient(135deg, rgba(15,20,32,0.95), rgba(10,14,26,0.95));
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(247, 215, 116, 0.25);
-        color: #f7d774;
-        font-size: 20px;
+        border: 1px solid rgba(247,215,116,0.25);
+        color: #f7d774; font-size: 20px;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-        transition: all 0.3s ease;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        transition: all 0.3s;
     }
-
     .float-btn:hover {
         transform: translateY(-3px) scale(1.05);
-        box-shadow: 0 12px 40px rgba(247, 215, 116, 0.25);
-        border-color: rgba(247, 215, 116, 0.5);
+        border-color: rgba(247,215,116,0.5);
     }
-
-    .float-btn:active { transform: translateY(-1px) scale(1.02); }
-
     .float-btn.toggle-panel { top: 90px; right: 20px; }
     .float-btn.locate-me { bottom: 100px; right: 20px; }
     .float-btn.refresh { bottom: 20px; right: 20px; }
-
     .float-btn.refresh.spinning i { animation: spin 1s linear infinite; }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ===== LEGEND ===== */
     .legend {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        z-index: 1050;
+        position: absolute; bottom: 20px; left: 20px; z-index: 1050;
         padding: 12px 16px;
-        background: linear-gradient(135deg, rgba(15, 20, 32, 0.9), rgba(10, 14, 26, 0.9));
+        background: linear-gradient(135deg, rgba(15,20,32,0.9), rgba(10,14,26,0.9));
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255,255,255,0.08);
         border-radius: 14px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-        font-size: 11px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+        font-size: 11px; display: flex; flex-direction: column; gap: 6px;
     }
-
     .legend .item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: rgba(255, 255, 255, 0.7);
+        display: flex; align-items: center; gap: 8px;
+        color: rgba(255,255,255,0.7);
     }
-
     .legend .dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 2px solid #fff;
-        flex-shrink: 0;
+        width: 12px; height: 12px; border-radius: 50%;
+        border: 2px solid #fff; flex-shrink: 0;
     }
-
-    .legend .dot.gold { background: #f7d774; box-shadow: 0 0 10px rgba(247, 215, 116, 0.6); }
-    .legend .dot.blue { background: #60a5fa; box-shadow: 0 0 10px rgba(96, 165, 250, 0.6); }
+    .legend .dot.gold { background: #f7d774; box-shadow: 0 0 10px rgba(247,215,116,0.6); }
+    .legend .dot.blue { background: #60a5fa; box-shadow: 0 0 10px rgba(96,165,250,0.6); }
 
     /* ===== LOADING ===== */
     .loading {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
+        position: absolute; inset: 0; z-index: 9999;
         background: linear-gradient(135deg, #050811, #0a0e1a);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 20px;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 20px;
         transition: opacity 0.5s;
     }
-
     .loading.hidden { opacity: 0; pointer-events: none; }
-
     .loading .satellite i {
-        font-size: 56px;
-        color: #f7d774;
-        filter: drop-shadow(0 0 20px rgba(247, 215, 116, 0.6));
+        font-size: 56px; color: #f7d774;
+        filter: drop-shadow(0 0 20px rgba(247,215,116,0.6));
         animation: satellite-orbit 3s ease-in-out infinite;
     }
-
     @keyframes satellite-orbit {
         0%, 100% { transform: translateX(-10px) rotate(-5deg); }
         50% { transform: translateX(10px) rotate(5deg); }
     }
-
     .loading .text { color: #f7d774; font-size: 14px; font-weight: 800; }
-    .loading .subtext { color: rgba(255, 255, 255, 0.3); font-size: 11px; }
+    .loading .subtext { color: rgba(255,255,255,0.3); font-size: 11px; }
 
     /* ===== ERROR ===== */
     .error-screen {
-        text-align: center;
-        padding: 40px 20px;
-        color: #f87171;
+        text-align: center; padding: 40px 20px; color: #f87171;
     }
-
     .error-screen h2 { font-size: 20px; margin-bottom: 10px; }
-    .error-screen p { font-size: 13px; color: #cbd5e1; margin: 6px 0; line-height: 1.7; }
-    .error-screen .diag {
-        font-size: 11px;
-        color: #94a3b8;
-        background: rgba(0,0,0,0.3);
-        padding: 10px;
-        border-radius: 8px;
-        margin-top: 12px;
-        text-align: right;
-        direction: ltr;
-        font-family: monospace;
-        max-width: 400px;
-        word-break: break-all;
-    }
+    .error-screen p { font-size: 13px; color: #cbd5e1; margin: 6px 0; }
     .error-screen button {
-        margin-top: 20px;
-        padding: 10px 24px;
-        border: none;
-        border-radius: 8px;
-        background: #f7d774;
-        color: #000;
-        font-weight: bold;
-        cursor: pointer;
-        font-family: inherit;
-        font-size: 14px;
+        margin-top: 20px; padding: 10px 24px; border: none;
+        border-radius: 8px; background: #f7d774; color: #000;
+        font-weight: bold; cursor: pointer; font-family: inherit;
     }
-    .error-screen button:hover { background: #fcd34d; }
 
-    /* ✅ NEW: مؤشر "خامل" عند إخفاء التبويب */
+    /* ===== IDLE ===== */
     .idle-indicator {
-        position: absolute;
-        top: 50%;
-        left: 50%;
+        position: absolute; top: 50%; left: 50%;
         transform: translate(-50%, -50%);
-        z-index: 1200;
-        padding: 12px 20px;
-        background: rgba(15, 20, 32, 0.95);
-        border: 1px solid rgba(247, 215, 116, 0.3);
-        border-radius: 12px;
-        color: #f7d774;
-        font-size: 12px;
-        font-weight: 700;
-        display: none;
+        z-index: 1200; padding: 12px 20px;
+        background: rgba(15,20,32,0.95);
+        border: 1px solid rgba(247,215,116,0.3);
+        border-radius: 12px; color: #f7d774;
+        font-size: 12px; font-weight: 700; display: none;
     }
     .idle-indicator.show { display: block; }
 
     @media (max-width: 768px) {
+        .monitoring-wrapper { height: calc(100vh - 56px); }
         .top-bar { top: 12px; padding: 10px 16px; gap: 10px; }
-        .top-bar .brand .text .title { font-size: 12px; }
-        .top-bar .stat .value { font-size: 15px; }
-        .top-bar .stat .label { font-size: 8px; }
         .side-panel { width: 100%; }
         .float-btn { width: 46px; height: 46px; font-size: 17px; }
-        .float-btn.toggle-panel { top: 80px; right: 12px; }
-        .float-btn.locate-me { bottom: 90px; right: 12px; }
-        .float-btn.refresh { bottom: 12px; right: 12px; }
-    }
-
-    @media (max-width: 480px) {
-        .top-bar .brand .text { display: none; }
-        .top-bar .brand { padding-left: 8px; }
     }
 </style>
 </head>
 <body>
 
-<!-- ===== MAP ===== -->
-<div id="map"></div>
+<!-- ✅ الحاوية الرئيسية للمراقبة -->
+<div class="monitoring-wrapper" id="monitoringWrapper">
+    <div id="map"></div>
 
-<!-- ===== TOP BAR ===== -->
-<div class="top-bar">
-    <div class="brand">
-        <i class="fas fa-satellite-dish"></i>
-        <div class="text">
-            <span class="title">المراقبة الحية</span>
-            <span class="subtitle">Live Tracking v13.4</span>
-        </div>
-    </div>
-
-    <div class="stats">
-        <div class="stat">
-            <span class="value" id="statUsers">0</span>
-            <span class="label">مستخدمون</span>
-        </div>
-        <div class="stat">
-            <span class="value" id="statLocations">0</span>
-            <span class="label">مواقع</span>
-        </div>
-        <div class="stat">
-            <span class="value" id="statSessions">0</span>
-            <span class="label">جلسات</span>
-        </div>
-    </div>
-
-    <div class="live-badge" id="liveBadge">
-        <span class="dot"></span>
-        <span id="lastUpdate">مباشر</span>
-    </div>
-</div>
-
-<!-- ===== FLOATING BUTTONS ===== -->
-<button class="float-btn toggle-panel" id="togglePanelBtn" title="عرض القائمة">
-    <i class="fas fa-users"></i>
-</button>
-
-<button class="float-btn locate-me" id="locateMeBtn" title="موقعي">
-    <i class="fas fa-location-crosshairs"></i>
-</button>
-
-<button class="float-btn refresh" id="refreshBtn" title="تحديث">
-    <i class="fas fa-rotate"></i>
-</button>
-
-<!-- ===== SIDE PANEL ===== -->
-<aside class="side-panel" id="sidePanel">
-    <div class="panel-header">
-        <h2><i class="fas fa-users-line"></i> المستخدمون النشطون</h2>
-        <button class="close-btn" id="closePanelBtn" title="إغلاق">
-            <i class="fas fa-xmark"></i>
-        </button>
-    </div>
-    <div class="panel-body">
-        <div class="panel-section">
-            <div class="section-title">
-                <h3><i class="fas fa-users"></i> المستخدمون</h3>
-                <span class="count" id="usersCount">0</span>
+    <div class="top-bar">
+        <div class="brand">
+            <i class="fas fa-satellite-dish"></i>
+            <div class="text">
+                <span class="title">المراقبة الحية</span>
+                <span class="subtitle">Live Tracking v13.5</span>
             </div>
-            <div id="usersList">
-                <div class="empty-state">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>جاري التحميل...</p>
+        </div>
+        <div class="stats">
+            <div class="stat"><span class="value" id="statUsers">0</span><span class="label">مستخدمون</span></div>
+            <div class="stat"><span class="value" id="statLocations">0</span><span class="label">مواقع</span></div>
+            <div class="stat"><span class="value" id="statSessions">0</span><span class="label">أجهزة</span></div>
+        </div>
+        <div class="live-badge" id="liveBadge">
+            <span class="dot"></span>
+            <span id="lastUpdate">مباشر</span>
+        </div>
+    </div>
+
+    <button class="float-btn toggle-panel" id="togglePanelBtn" title="عرض القائمة">
+        <i class="fas fa-users"></i>
+    </button>
+    <button class="float-btn locate-me" id="locateMeBtn" title="موقعي">
+        <i class="fas fa-location-crosshairs"></i>
+    </button>
+    <button class="float-btn refresh" id="refreshBtn" title="تحديث">
+        <i class="fas fa-rotate"></i>
+    </button>
+
+    <aside class="side-panel" id="sidePanel">
+        <div class="panel-header">
+            <h2><i class="fas fa-users-line"></i> المستخدمون النشطون</h2>
+            <button class="close-btn" id="closePanelBtn"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="panel-body">
+
+            <!-- ===== سجل الأجهزة (NEW) ===== -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <h3><i class="fas fa-microchip"></i> سجل الأجهزة</h3>
+                    <span class="count" id="devicesCount">0</span>
+                </div>
+                <div id="devicesList">
+                    <div class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>جاري التحميل...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">
+                    <h3><i class="fas fa-users"></i> المستخدمون</h3>
+                    <span class="count" id="usersCount">0</span>
+                </div>
+                <div id="usersList">
+                    <div class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>جاري التحميل...</p>
+                    </div>
                 </div>
             </div>
         </div>
+    </aside>
 
-        <div class="panel-section">
-            <div class="section-title">
-                <h3><i class="fas fa-key"></i> الجلسات النشطة</h3>
-                <span class="count" id="sessionsCount">0</span>
-            </div>
-            <div id="sessionsList">
-                <div class="empty-state">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>جاري التحميل...</p>
-                </div>
-            </div>
-        </div>
+    <div class="legend">
+        <div class="item"><span class="dot gold"></span><span>موقعك</span></div>
+        <div class="item"><span class="dot blue"></span><span>المستخدمون الآخرون</span></div>
     </div>
-</aside>
 
-<!-- ===== LEGEND ===== -->
-<div class="legend">
-    <div class="item">
-        <span class="dot gold"></span>
-        <span>موقعك</span>
+    <div class="idle-indicator" id="idleIndicator">
+        <i class="fas fa-pause-circle"></i> التحديث متوقف (التبويب غير نشط)
     </div>
-    <div class="item">
-        <span class="dot blue"></span>
-        <span>المستخدمون الآخرون</span>
-    </div>
-</div>
 
-<!-- ===== IDLE INDICATOR (NEW) ===== -->
-<div class="idle-indicator" id="idleIndicator">
-    <i class="fas fa-pause-circle"></i> التحديث متوقف (التبويب غير نشط)
-</div>
-
-<!-- ===== LOADING ===== -->
-<div class="loading" id="loadingScreen">
-    <div class="satellite">
-        <i class="fas fa-satellite"></i>
+    <div class="loading" id="loadingScreen">
+        <div class="satellite"><i class="fas fa-satellite"></i></div>
+        <div class="text">جاري تهيئة الأقمار الصناعية...</div>
+        <div class="subtext">Initializing Satellite View</div>
     </div>
-    <div class="text">جاري تهيئة الأقمار الصناعية...</div>
-    <div class="subtext">Initializing Satellite View</div>
 </div>
 
 <script>
 (function() {
     'use strict';
 
-    // ============================================================
-    // DEBUG HELPER
-    // ============================================================
     var DEBUG = /[?&]debug=1/.test(location.search) ||
                 location.hostname === 'localhost' ||
                 location.hostname === '127.0.0.1';
     function log() { if (DEBUG) try { console.log.apply(console, arguments); } catch(e){} }
     function warn() { try { console.warn.apply(console, arguments); } catch(e){} }
-    function error() { try { console.error.apply(console, arguments); } catch(e){} }
 
-    console.log('🛰️ monitoring.html v13.4 - Loading...');
+    console.log('🛰️ monitoring.html v13.5 - Loading...');
 
     // ============================================================
     // CONSTANTS
     // ============================================================
-    var REFRESH_INTERVAL_MS = 15000;   // ✅ FIX #5: زيادة من 10s → 15s
-    var IDLE_REFRESH_PAUSE = true;     // ✅ NEW: إيقاف التحديث عند إخفاء التبويب
-    var FETCH_TIMEOUT_MS = 20000;      // ✅ FIX #4: timeout للطلب
-    var MAX_FETCH_TIMEOUT_MS = 30000;  // حد أقصى للـ cleanup
+    var REFRESH_INTERVAL_MS = 15000;
+    var IDLE_REFRESH_PAUSE = true;
+    var FETCH_TIMEOUT_MS = 20000;
+    var MAX_FETCH_TIMEOUT_MS = 30000;
 
     // ============================================================
     // STATE
@@ -788,15 +535,15 @@
     var myLocation = null;
     var myId = null;
     var users = [];
-    var sessions = [];
     var locations = [];
+    var devices = [];
     var mapInitialized = false;
     var firstFitDone = false;
     var initDone = false;
-    var _isIdle = false;               // ✅ NEW
-    var _refreshIntervalId = null;     // ✅ NEW
-
+    var _isIdle = false;
+    var _refreshIntervalId = null;
     var _isDestroyed = false;
+
     var _intervals = [];
     var _timeouts = [];
     var _listeners = [];
@@ -804,86 +551,11 @@
     var _resizeObserver = null;
 
     // ============================================================
-    // CLEANUP
-    // ============================================================
-    function _cleanup() {
-        if (_isDestroyed) return;
-        _isDestroyed = true;
-
-        // 1. Abort inflight requests
-        try {
-            _abortControllers.forEach(function(c) {
-                try { c.abort(); } catch(e){}
-            });
-        } catch(e) {}
-        _abortControllers = [];
-
-        // 2. Clear intervals & timeouts
-        _intervals.forEach(function(id) { try { clearInterval(id); } catch(e){} });
-        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e){} });
-        _intervals = []; _timeouts = [];
-        _refreshIntervalId = null;
-
-        // 3. Remove listeners
-        _listeners.forEach(function(l) {
-            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e){}
-        });
-        _listeners = [];
-
-        // 4. Stop geolocation
-        try {
-            if (window._geoWatchId != null && navigator.geolocation) {
-                navigator.geolocation.clearWatch(window._geoWatchId);
-                window._geoWatchId = null;
-                log('📍 Geolocation stopped');
-            }
-        } catch(e){}
-
-        // 5. ResizeObserver
-        try {
-            if (_resizeObserver) {
-                _resizeObserver.disconnect();
-                _resizeObserver = null;
-            }
-        } catch(e){}
-
-        // 6. Remove user markers
-        try {
-            userMarkers.forEach(function(m) {
-                try {
-                    if (map && m && typeof map.removeLayer === 'function') {
-                        map.removeLayer(m);
-                    }
-                } catch(e){}
-            });
-            userMarkers.clear();
-        } catch(e){}
-        myMarker = null;
-        myAccuracyCircle = null;
-
-        // 7. Remove map
-        try {
-            if (map && typeof map.remove === 'function') {
-                map.remove();
-                map = null;
-                mapInitialized = false;
-                log('🗺️ Map removed');
-            }
-        } catch(e){}
-
-        log('🧹 Monitoring v13.4 cleanup done');
-    }
-
-    window._pageCleanup = window._pageCleanup || [];
-    window._pageCleanup.push(_cleanup);
-    window.addEventListener('beforeunload', _cleanup);
-    window.addEventListener('pagehide', _cleanup);
-
-    // ============================================================
-    // HELPERS
+    // ✅ BRIDGE: قراءة البيانات من النظام الرئيسي
     // ============================================================
     function getToken() {
         try {
+            // جرّب كل المصادر الممكنة
             return localStorage.getItem('marine_auth_token')
                 || localStorage.getItem('marine_token')
                 || localStorage.getItem('token')
@@ -908,7 +580,138 @@
         return h;
     }
 
-    // ✅ FIX #4: fetchJSON مع timeout فعلي + إجهاض حقيقي
+    // ✅ يقرأ المستخدم من كل المصادر الممكنة
+    function readMyUser() {
+        // 1) من window.parent (النظام الرئيسي)
+        try {
+            if (window.parent && window.parent !== window) {
+                var parentUser = window.parent.currentUser;
+                if (parentUser && (parentUser.id || parentUser._id)) {
+                    log('👤 Got user from parent window');
+                    return parentUser;
+                }
+            }
+        } catch(e) {
+            // Cross-origin — تجاهل
+        }
+
+        // 2) من JWT (sub = المعرّف الحقيقي)
+        try {
+            var token = getToken();
+            if (token) {
+                var parts = token.split('.');
+                if (parts.length === 3) {
+                    var payload = JSON.parse(atob(parts[1]));
+                    if (payload && (payload.sub || payload.id)) {
+                        var realId = payload.sub || payload.id;
+                        log('👤 Got user from JWT payload');
+                        return {
+                            id: realId,
+                            _id: realId,
+                            username: payload.username || '',
+                            name: payload.name || payload.username || '',
+                            role: payload.role || 'viewer',
+                            _source: 'jwt'
+                        };
+                    }
+                }
+            }
+        } catch(e) {
+            warn('⚠️ JWT parse error:', e.message);
+        }
+
+        // 3) من localStorage
+        try {
+            var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
+            var stores = [localStorage, sessionStorage];
+            for (var s = 0; s < stores.length; s++) {
+                for (var i = 0; i < keys.length; i++) {
+                    var raw = stores[s].getItem(keys[i]);
+                    if (raw) {
+                        var p = JSON.parse(raw);
+                        if (p && (p.id || p._id || p.username)) {
+                            p._source = 'storage';
+                            log('👤 Got user from storage');
+                            return p;
+                        }
+                    }
+                }
+            }
+        } catch(e) {}
+
+        warn('⚠️ Could not read user info from any source');
+        return null;
+    }
+
+    function sanitizeId(id) {
+        if (id == null) return null;
+        var s = String(id).trim();
+        if (!s || s === 'null' || s === 'undefined' || s === 'NaN') return null;
+        return s;
+    }
+
+    // ============================================================
+    // CLEANUP
+    // ============================================================
+    function _cleanup() {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+
+        try {
+            _abortControllers.forEach(function(c) {
+                try { c.abort(); } catch(e){}
+            });
+        } catch(e) {}
+        _abortControllers = [];
+
+        _intervals.forEach(function(id) { try { clearInterval(id); } catch(e){} });
+        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e){} });
+        _intervals = []; _timeouts = [];
+        _refreshIntervalId = null;
+
+        _listeners.forEach(function(l) {
+            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e){}
+        });
+        _listeners = [];
+
+        try {
+            if (window._geoWatchId != null && navigator.geolocation) {
+                navigator.geolocation.clearWatch(window._geoWatchId);
+                window._geoWatchId = null;
+            }
+        } catch(e){}
+
+        try {
+            if (_resizeObserver) { _resizeObserver.disconnect(); _resizeObserver = null; }
+        } catch(e){}
+
+        try {
+            userMarkers.forEach(function(m) {
+                try {
+                    if (map && m && typeof map.removeLayer === 'function') map.removeLayer(m);
+                } catch(e){}
+            });
+            userMarkers.clear();
+        } catch(e){}
+        myMarker = null; myAccuracyCircle = null;
+
+        try {
+            if (map && typeof map.remove === 'function') {
+                map.remove(); map = null; mapInitialized = false;
+            }
+        } catch(e){}
+
+        log('🧹 Monitoring v13.5 cleanup done');
+    }
+
+    window._pageCleanup = window._pageCleanup || [];
+    window._pageCleanup.push(_cleanup);
+    window.addEventListener('beforeunload', _cleanup);
+    window.addEventListener('pagehide', _cleanup);
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
     function fetchJSON(url, opts) {
         opts = opts || {};
         opts.headers = Object.assign({}, authHeaders(), opts.headers || {});
@@ -916,24 +719,21 @@
 
         var controller = new AbortController();
         opts.signal = controller.signal;
-
         var entry = { controller: controller, aborted: false };
         _abortControllers.push(entry);
 
-        // ✅ FIX: timeout فعلي (abort حقيقي)
         var timeoutId = setTimeout(function() {
             if (!entry.aborted) {
                 entry.aborted = true;
                 try { controller.abort(); } catch(e){}
             }
         }, FETCH_TIMEOUT_MS);
-        _timeouts.push(timeoutId);
 
-        // ✅ FIX: حماية إضافية بعد الحد الأقصى
         var maxCleanupId = setTimeout(function() {
             var idx = _abortControllers.indexOf(entry);
             if (idx > -1) _abortControllers.splice(idx, 1);
         }, MAX_FETCH_TIMEOUT_MS);
+        _timeouts.push(timeoutId);
         _timeouts.push(maxCleanupId);
 
         function finish() {
@@ -949,9 +749,7 @@
             return res.json();
         }).catch(function(err) {
             finish();
-            if (err && err.name === 'AbortError') {
-                throw new Error('Request timeout or aborted');
-            }
+            if (err && err.name === 'AbortError') throw new Error('Request timeout');
             throw err;
         });
     }
@@ -979,60 +777,86 @@
         } catch(e) { return '—'; }
     }
 
-    // ✅ FIX #1: readMyUser — الأولوية لـ sub دائماً
-    function readMyUser() {
-        // 1) JWT أولاً (sub هو المعرّف الحقيقي)
+    // ============================================================
+    // DEVICE FINGERPRINT
+    // ============================================================
+    function getDeviceFingerprint() {
         try {
-            var token = getToken();
-            if (token) {
-                var parts = token.split('.');
-                if (parts.length === 3) {
-                    var payload = JSON.parse(atob(parts[1]));
-                    if (payload && (payload.sub || payload.id)) {
-                        var realId = payload.sub || payload.id;
-                        return {
-                            id: realId,
-                            _id: realId,
-                            username: payload.username || '',
-                            name: payload.name || payload.username || '',
-                            role: payload.role || 'viewer',
-                            sid: payload.sid || null,
-                            _source: 'jwt'
-                        };
+            var nav = navigator;
+            var ua = nav.userAgent || '';
+            var platform = nav.platform || 'unknown';
+
+            var type = 'desktop';
+            if (/iPad|Tablet|PlayBook|Silk/i.test(ua) ||
+                (/Android/i.test(ua) && !/Mobile/i.test(ua))) {
+                type = 'tablet';
+            } else if (/Mobile|Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+                type = 'mobile';
+            }
+
+            var os = 'unknown';
+            if (/Windows NT 10/i.test(ua)) os = 'Windows 10/11';
+            else if (/Windows NT/i.test(ua)) os = 'Windows';
+            else if (/Mac OS X/i.test(ua)) os = 'macOS';
+            else if (/Android/i.test(ua)) {
+                var m = ua.match(/Android\s([\d.]+)/);
+                os = 'Android ' + (m ? m[1] : '');
+            }
+            else if (/iPhone|iPad|iPod/i.test(ua)) {
+                var mi = ua.match(/OS\s([\d_]+)/);
+                os = 'iOS ' + (mi ? mi[1].replace(/_/g, '.') : '');
+            }
+            else if (/Linux/i.test(ua)) os = 'Linux';
+
+            var browser = 'unknown';
+            if (/Edg\//i.test(ua)) browser = 'Edge ' + (ua.match(/Edg\/([\d.]+)/) || ['',''])[1];
+            else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) browser = 'Opera';
+            else if (/Chrome\//i.test(ua) && !/Edg/i.test(ua)) {
+                browser = 'Chrome ' + (ua.match(/Chrome\/([\d.]+)/) || ['',''])[1].split('.')[0];
+            }
+            else if (/Firefox\//i.test(ua)) {
+                browser = 'Firefox ' + (ua.match(/Firefox\/([\d.]+)/) || ['',''])[1].split('.')[0];
+            }
+            else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) {
+                browser = 'Safari ' + (ua.match(/Version\/([\d.]+)/) || ['',''])[1].split('.')[0];
+            }
+
+            var model = 'unknown';
+            var mm = ua.match(/\(([^)]+)\)/);
+            if (mm) {
+                var parts = mm[1].split(';');
+                if (parts.length >= 2) {
+                    var candidate = parts[parts.length - 1].trim();
+                    if (candidate && !/like|khtml|gecko|wow/i.test(candidate)) {
+                        model = candidate;
                     }
                 }
             }
+
+            var deviceId = localStorage.getItem('_device_id');
+            if (!deviceId) {
+                deviceId = 'dev-' + Math.random().toString(36).substring(2, 10) +
+                           Date.now().toString(36);
+                localStorage.setItem('_device_id', deviceId);
+            }
+
+            return {
+                deviceId: deviceId,
+                type: type,
+                os: os,
+                browser: browser,
+                model: model,
+                platform: platform,
+                screen: nav.screen ? (nav.screen.width + '×' + nav.screen.height) : 'unknown',
+                language: nav.language || 'unknown',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'unknown',
+                userAgent: ua.substring(0, 200),
+                touch: ('ontouchstart' in window) || (nav.maxTouchPoints > 0)
+            };
         } catch(e) {
-            warn('⚠️ JWT parse error:', e.message);
+            warn('deviceFingerprint error:', e.message);
+            return null;
         }
-
-        // 2) localStorage/sessionStorage كـ fallback
-        try {
-            var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
-            var stores = [localStorage, sessionStorage];
-            for (var s = 0; s < stores.length; s++) {
-                for (var i = 0; i < keys.length; i++) {
-                    var raw = stores[s].getItem(keys[i]);
-                    if (raw) {
-                        var p = JSON.parse(raw);
-                        if (p && (p.id || p._id || p.username)) {
-                            p._source = 'storage';
-                            return p;
-                        }
-                    }
-                }
-            }
-        } catch(e) {}
-
-        return null;
-    }
-
-    // ✅ FIX #14: sanitize myId
-    function sanitizeId(id) {
-        if (id == null) return null;
-        var s = String(id).trim();
-        if (!s || s === 'null' || s === 'undefined' || s === 'NaN') return null;
-        return s;
     }
 
     // ============================================================
@@ -1048,8 +872,7 @@
             '<div class="error-screen">' +
             '<h2>❌ ' + escapeHtml(title) + '</h2>' +
             '<p>' + escapeHtml(details || '') + '</p>' +
-            '<p style="font-size:12px;color:#94a3b8">تحقق من الاتصال بالإنترنت أو عطّل مانع الإعلانات (AdBlocker)</p>' +
-            (diag ? '<div class="diag">' + escapeHtml(diag) + '</div>' : '') +
+            (diag ? '<div style="font-size:11px;color:#94a3b8;background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;margin-top:12px;direction:ltr;font-family:monospace">' + escapeHtml(diag) + '</div>' : '') +
             '<button onclick="location.reload()">🔄 إعادة المحاولة</button>' +
             '</div>';
     }
@@ -1066,17 +889,11 @@
         if (mapInitialized || _isDestroyed) return;
 
         if (typeof L === 'undefined') {
-            error('❌❌❌ Leaflet NOT LOADED!');
-            var diag = [
-                'window._leafletSource: ' + (window._leafletSource || 'unknown'),
-                'window._leafletFailed: ' + (window._leafletFailed || false),
-                'navigator.onLine: ' + navigator.onLine
-            ].join(' | ');
-            showMapError('فشل تحميل الخريطة', 'مكتبة Leaflet لم تُحمّل بعد', diag);
+            showMapError('فشل تحميل الخريطة', 'مكتبة Leaflet لم تُحمّل',
+                'source: ' + (window._leafletSource || 'none') + ' | failed: ' + window._leafletFailed);
             return;
         }
 
-        log('✅ Leaflet detected, version:', L.version || 'unknown');
         var el = document.getElementById('map');
         if (!el) return;
 
@@ -1085,23 +902,20 @@
                 center: [36.8, 10.18],
                 zoom: 9,
                 zoomControl: false,
-                attributionControl: true,
-                preferCanvas: false
+                attributionControl: true
             });
 
             var satellite = L.tileLayer(
                 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 {
-                    maxZoom: 19,
-                    maxNativeZoom: 18,
-                    attribution: '© Esri, Maxar, Earthstar Geographics',
+                    maxZoom: 19, maxNativeZoom: 18,
+                    attribution: '© Esri, Maxar',
                     crossOrigin: true,
                     errorTileUrl: TILE_ERROR,
                     keepBuffer: 4
                 }
             );
 
-            // ✅ FIX #6: pane مخصص للـ labels (ليس shadowPane)
             map.createPane('labelsPane');
             map.getPane('labelsPane').style.zIndex = 650;
             map.getPane('labelsPane').style.pointerEvents = 'none';
@@ -1109,8 +923,7 @@
             var labels = L.tileLayer(
                 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
                 {
-                    maxZoom: 19,
-                    maxNativeZoom: 18,
+                    maxZoom: 19, maxNativeZoom: 18,
                     attribution: '© Esri',
                     pane: 'labelsPane',
                     opacity: 0.9,
@@ -1121,14 +934,12 @@
 
             satellite.addTo(map);
             labels.addTo(map);
-
             L.control.zoom({ position: 'topleft' }).addTo(map);
 
             mapInitialized = true;
             log('🛰️ Satellite map initialized');
         } catch(e) {
-            warn('❌ Map init error:', e.message);
-            showMapError('فشل تهيئة الخريطة', e.message, e.stack || '');
+            showMapError('فشل تهيئة الخريطة', e.message);
         }
     }
 
@@ -1138,16 +949,23 @@
     function sendLocationToServer(coords, retryCount) {
         if (_isDestroyed) return;
         retryCount = retryCount || 0;
+
+        var deviceInfo = getDeviceFingerprint();
+        var payload = {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            accuracy: coords.accuracy || null,
+            device: deviceInfo
+        };
+
+        log('📤 Sending location + device:', payload);
+
         fetchJSON('/api/locations', {
             method: 'POST',
-            body: JSON.stringify({
-                latitude: coords.latitude,
-                longitude: coords.longitude,
-                accuracy: coords.accuracy || null
-            })
+            body: JSON.stringify(payload)
         })
         .then(function() {
-            log('📍 Location sent:', coords.latitude.toFixed(5), coords.longitude.toFixed(5), '±' + Math.round(coords.accuracy || 0) + 'm');
+            log('📍 Location sent OK');
         })
         .catch(function(err) {
             warn('[GEO] send error:', err.message);
@@ -1177,7 +995,7 @@
                 },
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
             );
-            log('📍 Geolocation started, watchId:', window._geoWatchId);
+            log('📍 Geolocation started');
         } catch(e) {
             warn('[GEO] watch exception:', e.message);
         }
@@ -1188,7 +1006,6 @@
     // ============================================================
     function updateMyMarker(coords) {
         if (!map || !mapInitialized || _isDestroyed) return;
-        if (typeof L === 'undefined') return;
 
         try {
             var ll = [coords.latitude, coords.longitude];
@@ -1201,17 +1018,13 @@
                 '</div>' +
                 '<div style="color:rgba(255,255,255,0.4);font-size:10px;margin-top:2px">' +
                     'الدقة: ±' + Math.round(coords.accuracy || 0) + ' م' +
-                '</div>' +
-                '</div>';
+                '</div></div>';
 
             if (!myMarker) {
                 myMarker = L.circleMarker(ll, {
-                    radius: 12,
-                    fillColor: '#f7d774',
-                    color: '#ffffff',
-                    weight: 3,
-                    opacity: 1,
-                    fillOpacity: 0.95
+                    radius: 12, fillColor: '#f7d774',
+                    color: '#ffffff', weight: 3,
+                    opacity: 1, fillOpacity: 0.95
                 }).addTo(map);
                 myMarker.bindPopup(popupHtml);
             } else {
@@ -1222,11 +1035,8 @@
             if (!myAccuracyCircle) {
                 myAccuracyCircle = L.circle(ll, {
                     radius: coords.accuracy || 50,
-                    color: '#f7d774',
-                    weight: 1,
-                    opacity: 0.4,
-                    fillColor: '#f7d774',
-                    fillOpacity: 0.08,
+                    color: '#f7d774', weight: 1, opacity: 0.4,
+                    fillColor: '#f7d774', fillOpacity: 0.08,
                     interactive: false
                 }).addTo(map);
             } else {
@@ -1241,11 +1051,11 @@
     // ============================================================
     // OTHER USERS
     // ============================================================
-    function addMarkers(locs, allUsers) {
+    function addMarkers(locs) {
         if (!map || !mapInitialized || _isDestroyed) return;
         if (typeof L === 'undefined') return;
 
-        log('🗺️ addMarkers: rendering', locs.length, 'locations');
+        log('🗺️ addMarkers called with', locs.length, 'locs, myId =', myId);
 
         userMarkers.forEach(function(m) {
             try { if (map && m) map.removeLayer(m); } catch(e){}
@@ -1253,31 +1063,37 @@
         userMarkers.clear();
 
         var rendered = 0;
+        var skipped = 0;
         var points = [];
 
         locs.forEach(function(loc) {
-            var isMe = false;
-            try {
-                var myIdStr = String(myId || '').trim();
-                var locIdStr = String(loc.userId || loc.id || '').trim();
-                isMe = myIdStr && locIdStr && (myIdStr === locIdStr);
-            } catch(e) { isMe = false; }
+            var myIdStr = String(myId || '').trim();
+            var locIdStr = String(loc.userId || loc.id || '').trim();
+            var isMe = myIdStr && locIdStr && (myIdStr === locIdStr);
 
-            if (isMe) return;
+            log('   → loc userId:', locIdStr, '| isMe:', isMe, '| lat:', loc.latitude, '| lng:', loc.longitude);
+
+            if (isMe) { skipped++; return; }
 
             var lat = Number(loc.latitude);
             var lng = Number(loc.longitude);
-            if (!isFinite(lat) || !isFinite(lng)) return;
+            if (!isFinite(lat) || !isFinite(lng)) {
+                warn('   ⚠️ invalid coords');
+                return;
+            }
 
             try {
                 var marker = L.circleMarker([lat, lng], {
-                    radius: 10,
-                    fillColor: '#60a5fa',
-                    color: '#ffffff',
-                    weight: 3,
-                    opacity: 1,
-                    fillOpacity: 0.9
+                    radius: 10, fillColor: '#60a5fa',
+                    color: '#ffffff', weight: 3,
+                    opacity: 1, fillOpacity: 0.9
                 });
+
+                var device = loc.device || {};
+                var devType = device.type === 'mobile' ? '📱 هاتف'
+                            : device.type === 'tablet' ? '📲 لوحي'
+                            : device.type === 'desktop' ? '💻 حاسوب'
+                            : '❓ غير معروف';
 
                 marker.bindPopup(
                     '<div style="text-align:center;padding:4px 0">' +
@@ -1287,13 +1103,18 @@
                     '</div>' +
                     (loc.roleLabel ? '<div style="color:#f7d774;font-size:11px;font-weight:700;margin-top:2px">' + escapeHtml(loc.roleLabel) + '</div>' : '') +
                     (loc.region ? '<div style="color:rgba(255,255,255,0.5);font-size:11px;margin-top:2px">📍 ' + escapeHtml(loc.region) + '</div>' : '') +
+                    (device.deviceId ?
+                    '<div style="margin-top:8px;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.1);text-align:right;font-size:10px;color:rgba(255,255,255,0.5);direction:rtl">' +
+                        '<div>🆔 <b style="color:#60a5fa;font-family:monospace">' + escapeHtml(device.deviceId) + '</b></div>' +
+                        '<div style="margin-top:3px">' + devType + ' — ' + escapeHtml(device.model || '?') + '</div>' +
+                        '<div style="margin-top:2px">💿 ' + escapeHtml(device.os || '?') + ' | 🌐 ' + escapeHtml(device.browser || '?') + '</div>' +
+                    '</div>' : '') +
                     '<div style="color:rgba(255,255,255,0.4);font-size:10px;font-family:monospace;margin-top:6px">' +
                         lat.toFixed(5) + ', ' + lng.toFixed(5) +
                     '</div>' +
                     '<div style="color:rgba(255,255,255,0.3);font-size:10px;margin-top:2px">' +
                         formatTimeAgo(loc.timestamp) +
-                    '</div>' +
-                    '</div>'
+                    '</div></div>'
                 );
 
                 marker.addTo(map);
@@ -1305,9 +1126,8 @@
             }
         });
 
-        log('✅ Rendered', rendered, 'other markers');
+        log('✅ Rendered', rendered, 'markers | skipped', skipped, '(me)');
 
-        // fitBounds مع حماية من النقاط المتقاربة
         if (!firstFitDone && (rendered > 0 || myLocation)) {
             try {
                 var allPoints = [];
@@ -1320,15 +1140,12 @@
                         for (var j = i + 1; j < allPoints.length; j++) {
                             var dx = allPoints[i][0] - allPoints[j][0];
                             var dy = allPoints[i][1] - allPoints[j][1];
-                            var d = Math.sqrt(dx * dx + dy * dy);
+                            var d = Math.sqrt(dx*dx + dy*dy);
                             if (d > maxDist) maxDist = d;
                         }
                     }
-                    if (maxDist < 0.01) {
-                        map.setView(allPoints[0], 14);
-                    } else {
-                        map.fitBounds(allPoints, { padding: [80, 80], maxZoom: 15 });
-                    }
+                    if (maxDist < 0.01) map.setView(allPoints[0], 14);
+                    else map.fitBounds(allPoints, { padding: [80, 80], maxZoom: 15 });
                 } else if (allPoints.length === 1) {
                     map.setView(allPoints[0], 14);
                 }
@@ -1342,9 +1159,16 @@
     // ============================================================
     function loadUsers() {
         if (_isDestroyed) return;
+
         Promise.all([
-            fetchJSON('/api/monitoring/users').catch(function() { return { users: [] }; }),
-            fetchJSON('/api/locations').catch(function() { return { locations: [] }; })
+            fetchJSON('/api/monitoring/users').catch(function(err) {
+                warn('❌ /api/monitoring/users failed:', err.message);
+                return { users: [] };
+            }),
+            fetchJSON('/api/locations').catch(function(err) {
+                warn('❌ /api/locations failed:', err.message);
+                return { locations: [] };
+            })
         ])
         .then(function(results) {
             if (_isDestroyed) return;
@@ -1354,6 +1178,21 @@
             users = Array.isArray(usersData) ? usersData : (usersData.users || []);
             locations = locsData.locations || [];
 
+            // ✅ LOG مفصّل للتشخيص
+            console.log('═══════════════════════════════════════════');
+            console.log('📡 MONITORING DATA RECEIVED');
+            console.log('   myId:', myId);
+            console.log('   users:', users.length);
+            console.log('   locations:', locations.length);
+            console.log('   locations detail:');
+            locations.forEach(function(l, i) {
+                console.log('     [' + i + '] userId=' + l.userId +
+                    ' isMe=' + (String(l.userId) === String(myId)) +
+                    ' lat=' + l.latitude + ' lng=' + l.longitude +
+                    ' device=' + (l.device ? l.device.deviceId : 'none'));
+            });
+            console.log('═══════════════════════════════════════════');
+
             var el1 = document.getElementById('statUsers');
             if (el1) el1.textContent = users.length;
             var el2 = document.getElementById('statLocations');
@@ -1362,31 +1201,17 @@
             if (el3) el3.textContent = users.length;
 
             renderUsersList();
-            addMarkers(locations, users);
+            renderDevicesList();
+            addMarkers(locations);
         })
         .catch(function(err) {
             warn('[MONITORING] error:', err.message);
         });
     }
 
-    function loadSessions() {
-        if (_isDestroyed) return;
-        fetchJSON('/api/monitoring/sessions')
-            .then(function(data) {
-                if (_isDestroyed) return;
-                sessions = (data && data.sessions) || [];
-                var el1 = document.getElementById('statSessions');
-                if (el1) el1.textContent = sessions.length;
-                var el2 = document.getElementById('sessionsCount');
-                if (el2) el2.textContent = sessions.length;
-                renderSessionsList();
-            })
-            .catch(function(err) {
-                warn('[MONITORING] sessions error:', err.message);
-            });
-    }
-
-    // ✅ FIX #1: verifyMyId — لا نستبدل إذا كانت المصادر متسقة
+    // ============================================================
+    // VERIFY MY ID
+    // ============================================================
     function verifyMyIdFromServer() {
         if (_isDestroyed) return;
         fetchJSON('/api/auth/me')
@@ -1395,10 +1220,11 @@
                 if (data && data.user && data.user.id) {
                     var serverId = String(data.user.id);
                     if (serverId !== myId) {
-                        log('🔄 myId corrected from server:', myId, '→', serverId);
+                        log('🔄 myId corrected:', myId, '→', serverId);
                         myId = serverId;
                         renderUsersList();
-                        addMarkers(locations, users);
+                        renderDevicesList();
+                        addMarkers(locations);
                     }
                 }
             })
@@ -1501,7 +1327,6 @@
 
         el.innerHTML = html;
 
-        // Event delegation — attached once
         if (!el._delegationAttached) {
             el._delegationAttached = true;
             var delegHandler = function(e) {
@@ -1517,38 +1342,108 @@
     }
 
     // ============================================================
-    // RENDER SESSIONS
+    // RENDER DEVICES
     // ============================================================
-    function renderSessionsList() {
-        var el = document.getElementById('sessionsList');
+    function renderDevicesList() {
+        var el = document.getElementById('devicesList');
         if (!el) return;
 
-        if (!sessions.length) {
-            el.innerHTML = '<div class="empty-state"><i class="fas fa-key"></i><p>لا توجد جلسات</p></div>';
+        var devicesMap = {};
+        locations.forEach(function(loc) {
+            var d = loc.device;
+            if (!d || !d.deviceId) return;
+            var key = String(d.deviceId);
+            if (!devicesMap[key] || new Date(loc.timestamp) > new Date(devicesMap[key].timestamp)) {
+                devicesMap[key] = {
+                    deviceId: key,
+                    type: d.type || 'unknown',
+                    os: d.os || 'unknown',
+                    browser: d.browser || 'unknown',
+                    model: d.model || 'unknown',
+                    screen: d.screen || 'unknown',
+                    ip: loc.ip || d.ip || '—',
+                    username: loc.name || loc.username || 'مستخدم',
+                    timestamp: loc.timestamp,
+                    isMe: String(loc.userId) === String(myId)
+                };
+            }
+        });
+
+        devices = Object.values(devicesMap);
+
+        var cnt = document.getElementById('devicesCount');
+        if (cnt) cnt.textContent = devices.length;
+        var statEl = document.getElementById('statSessions');
+        if (statEl) statEl.textContent = devices.length;
+
+        if (!devices.length) {
+            el.innerHTML = '<div class="empty-state"><i class="fas fa-microchip"></i><p>لا توجد أجهزة مسجّلة</p></div>';
             return;
         }
 
+        devices.sort(function(a, b) {
+            if (a.isMe && !b.isMe) return -1;
+            if (!a.isMe && b.isMe) return 1;
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+
         var html = '';
-        sessions.slice(0, 20).forEach(function(s) {
-            var active = s.expiresAt && s.expiresAt > Date.now();
+        devices.forEach(function(d) {
+            var icon = 'fa-desktop', iconCls = 'desktop', typeLabel = '💻 حاسوب';
+            if (d.type === 'mobile') {
+                icon = 'fa-mobile-screen-button'; iconCls = 'mobile'; typeLabel = '📱 هاتف';
+            } else if (d.type === 'tablet') {
+                icon = 'fa-tablet-screen-button'; iconCls = 'tablet'; typeLabel = '📲 لوحي';
+            }
+
+            var age = Date.now() - new Date(d.timestamp).getTime();
+            var isOnline = age < 60000;
+
             html +=
-                '<div class="user-card ' + (active ? '' : 'offline') + '">' +
-                    '<div class="card-top">' +
-                        '<div class="user-name">🔑 ' + escapeHtml(s.name || s.username || 'مستخدم') + '</div>' +
-                        '<span class="status-dot ' + (active ? 'online' : 'offline') + '"></span>' +
+                '<div class="device-card">' +
+                    '<div class="device-header">' +
+                        '<div class="device-name">' +
+                            '<i class="fas ' + icon + ' ' + iconCls + '"></i>' +
+                            '<span>' + escapeHtml(d.username) + '</span>' +
+                            (d.isMe ? ' <span style="color:#f7d774;font-size:9px">(أنت)</span>' : '') +
+                        '</div>' +
+                        '<span class="device-badge' + (isOnline ? '' : ' offline') + '">' +
+                            (isOnline ? '🟢 متصل' : '⚪ ' + formatTimeAgo(d.timestamp)) +
+                        '</span>' +
                     '</div>' +
-                    '<div class="user-meta">' +
-                        (s.role ? '<span class="tag role">' + escapeHtml(s.role) + '</span>' : '') +
-                        '<span class="tag time">' + (active ? '🟢 نشطة' : '⚪ منتهية') + '</span>' +
-                        '<span class="tag time">بدأت ' + formatTimeAgo(s.createdAt) + '</span>' +
+                    '<div class="device-row">' +
+                        '<span class="label">🆔 المعرّف:</span>' +
+                        '<span class="value">' + escapeHtml(d.deviceId) + '</span>' +
                     '</div>' +
+                    '<div class="device-row">' +
+                        '<span class="label">📟 النوع:</span>' +
+                        '<span class="value">' + typeLabel + ' — ' + escapeHtml(d.model) + '</span>' +
+                    '</div>' +
+                    '<div class="device-row">' +
+                        '<span class="label">💿 النظام:</span>' +
+                        '<span class="value">' + escapeHtml(d.os) + '</span>' +
+                    '</div>' +
+                    '<div class="device-row">' +
+                        '<span class="label">🌐 المتصفح:</span>' +
+                        '<span class="value">' + escapeHtml(d.browser) + '</span>' +
+                    '</div>' +
+                    '<div class="device-row">' +
+                        '<span class="label">🖥️ الشاشة:</span>' +
+                        '<span class="value">' + escapeHtml(d.screen) + '</span>' +
+                    '</div>' +
+                    (d.ip && d.ip !== '—' ?
+                    '<div class="device-row">' +
+                        '<span class="label">📍 IP:</span>' +
+                        '<span class="value device-ip">' + escapeHtml(d.ip) + '</span>' +
+                    '</div>' : '') +
                 '</div>';
         });
+
         el.innerHTML = html;
     }
 
     // ============================================================
-    // ONLINE/OFFLINE
+    // ONLINE STATUS
     // ============================================================
     function updateOnlineStatus() {
         var badge = document.getElementById('liveBadge');
@@ -1562,7 +1457,7 @@
     }
 
     // ============================================================
-    // IDLE MANAGEMENT (NEW)
+    // VISIBILITY
     // ============================================================
     function setupVisibilityHandling() {
         if (!IDLE_REFRESH_PAUSE) return;
@@ -1572,19 +1467,15 @@
             var indicator = document.getElementById('idleIndicator');
 
             if (_isIdle) {
-                // إيقاف التحديث الدوري
                 if (_refreshIntervalId) {
                     clearInterval(_refreshIntervalId);
                     _refreshIntervalId = null;
-                    log('⏸️ Refresh paused (tab hidden)');
                 }
                 if (indicator) indicator.classList.add('show');
             } else {
-                // استئناف التحديث
                 if (!_refreshIntervalId && !_isDestroyed) {
-                    refreshAll(); // تحديث فوري عند العودة
+                    refreshAll();
                     _refreshIntervalId = setInterval(refreshAll, REFRESH_INTERVAL_MS);
-                    log('▶️ Refresh resumed (tab visible)');
                 }
                 if (indicator) indicator.classList.remove('show');
             }
@@ -1600,16 +1491,11 @@
     // ============================================================
     function refreshAll() {
         if (_isDestroyed) return;
-        if (_isIdle) {
-            log('⏸️ refreshAll skipped (idle)');
-            return;
-        }
-        if (!navigator.onLine) {
-            updateOnlineStatus();
-            return;
-        }
+        if (_isIdle) return;
+        if (!navigator.onLine) { updateOnlineStatus(); return; }
+
         loadUsers();
-        loadSessions();
+
         var el = document.getElementById('lastUpdate');
         if (el) el.textContent = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
     }
@@ -1639,9 +1525,9 @@
             },
             function(err) {
                 var msg = 'تعذّر تحديد الموقع';
-                if (err.code === 1) msg = '⚠️ يجب السماح بالوصول إلى الموقع من إعدادات المتصفح';
-                else if (err.code === 2) msg = '⚠️ تعذّر تحديد موقعك، تحقق من GPS';
-                else if (err.code === 3) msg = '⚠️ انتهت المهلة، حاول مجدداً';
+                if (err.code === 1) msg = '⚠️ يجب السماح بالوصول إلى الموقع';
+                else if (err.code === 2) msg = '⚠️ تعذّر تحديد موقعك';
+                else if (err.code === 3) msg = '⚠️ انتهت المهلة';
                 alert(msg);
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -1649,7 +1535,7 @@
     }
 
     // ============================================================
-    // RESIZE HANDLERS
+    // RESIZE
     // ============================================================
     function setupResizeHandlers() {
         var resizeHandler = function() {
@@ -1676,9 +1562,7 @@
                         _timeouts.push(tid);
                     });
                     _resizeObserver.observe(panel);
-                } catch(e) {
-                    warn('ResizeObserver error:', e.message);
-                }
+                } catch(e) {}
             }
         }
     }
@@ -1688,17 +1572,13 @@
     // ============================================================
     function init() {
         if (_isDestroyed) return;
-        if (initDone) {
-            warn('⚠️ Already initialized, skipping');
-            return;
-        }
+        if (initDone) return;
         initDone = true;
 
-        log('🚀 Initializing v13.4...');
+        log('🚀 Initializing v13.5...');
 
         if (typeof L === 'undefined') {
             if (!window._leafletFailed) {
-                log('⏳ Waiting for Leaflet to load...');
                 var waitId = setTimeout(function() {
                     initDone = false;
                     init();
@@ -1706,17 +1586,15 @@
                 _timeouts.push(waitId);
                 return;
             }
-            error('❌❌❌ Leaflet NOT LOADED!');
-            showMapError('فشل تحميل الخريطة', 'مكتبة Leaflet لم تُحمّل',
-                'onLine: ' + navigator.onLine + ' | failed: ' + window._leafletFailed);
+            showMapError('فشل تحميل الخريطة', 'Leaflet لم تُحمّل',
+                'onLine: ' + navigator.onLine);
             return;
         }
 
-        log('✅ Leaflet detected:', L.version || 'unknown');
-
         var me = readMyUser();
         myId = sanitizeId(me ? (me.id || me._id) : null);
-        log('👤 My ID:', myId, '| Source:', me ? me._source : 'NONE');
+        console.log('👤 MY ID =', myId, '| Source:', me ? me._source : 'NONE');
+        console.log('👤 MY USER =', me);
 
         initMap();
 
@@ -1749,17 +1627,6 @@
             _listeners.push({ el: closeBtn, type: 'click', fn: cHandler });
         }
 
-        var documentClickHandler = function(e) {
-            var panel = document.getElementById('sidePanel');
-            if (!panel || !panel.classList.contains('open')) return;
-            if (panel.contains(e.target)) return;
-            var tBtn = e.target.closest && e.target.closest('#togglePanelBtn');
-            if (tBtn) return;
-            panel.classList.remove('open');
-        };
-        document.addEventListener('click', documentClickHandler);
-        _listeners.push({ el: document, type: 'click', fn: documentClickHandler });
-
         var locateBtn = document.getElementById('locateMeBtn');
         if (locateBtn) {
             locateBtn.addEventListener('click', locateMe);
@@ -1780,7 +1647,6 @@
             _listeners.push({ el: refreshBtn, type: 'click', fn: rHandler });
         }
 
-        // Online/offline
         var onlineH = function() { updateOnlineStatus(); refreshAll(); };
         var offlineH = function() { updateOnlineStatus(); };
         window.addEventListener('online', onlineH);
@@ -1789,26 +1655,23 @@
         _listeners.push({ el: window, type: 'offline', fn: offlineH });
         updateOnlineStatus();
 
-        // ✅ Visibility handling (NEW)
         setupVisibilityHandling();
-
-        // Resize handlers
         setupResizeHandlers();
 
-        // Hide loading
         var hideId = setTimeout(hideLoading, 600);
         _timeouts.push(hideId);
 
-        // First load
+        // ✅ ابدأ التتبع أولاً
+        startGeolocation();
+
+        // ✅ ثم حمّل البيانات
         refreshAll();
-        // ✅ FIX: حفظ interval ID للتحكم في الإيقاف/الاستئناف
         _refreshIntervalId = setInterval(refreshAll, REFRESH_INTERVAL_MS);
         _intervals.push(_refreshIntervalId);
 
-        // Verify myId from server
         verifyMyIdFromServer();
 
-        log('✅ Monitoring v13.4 ready');
+        log('✅ Monitoring v13.5 ready');
     }
 
     // ============================================================
@@ -1816,11 +1679,11 @@
     // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            var tid = setTimeout(init, 100);
+            var tid = setTimeout(init, 300);
             _timeouts.push(tid);
         });
     } else {
-        var tid0 = setTimeout(init, 100);
+        var tid0 = setTimeout(init, 300);
         _timeouts.push(tid0);
     }
 
@@ -1828,17 +1691,18 @@
         refresh: refreshAll,
         getUsers: function() { return users; },
         getLocations: function() { return locations; },
-        getSessions: function() { return sessions; },
+        getDevices: function() { return devices; },
         getMyId: function() { return myId; },
         getMyUser: readMyUser,
+        getToken: getToken,
+        getDeviceFingerprint: getDeviceFingerprint,
         locateMe: locateMe,
         isDestroyed: function() { return _isDestroyed; },
-        isIdle: function() { return _isIdle; },
         getMap: function() { return map; },
         cleanup: _cleanup
     };
 
-    console.log('✅ monitoring.html v13.4 ready');
+    console.log('✅ monitoring.html v13.5 ready — استخدم monitoringDebug في console');
 
 })();
 </script>
