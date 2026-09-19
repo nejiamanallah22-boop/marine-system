@@ -1,9 +1,9 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.0
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.9.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
 // 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v5
-// ✨ v10.8.0: Support tickets visible to ALL users + Monitoring locations
+// ✨ v10.9.0: Multi-device support (sessionKey) + cleaner locations
 // ============================================================
 
 'use strict';
@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.8.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.9.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -213,7 +213,7 @@ app.set('trust proxy', isProduction ? 1 : 0);
 // ============================================================
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.8.0');
+    res.setHeader('X-System-Version', '10.9.0');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -557,7 +557,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.8.0',
+            version: '10.9.0',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -1373,7 +1373,7 @@ function formatMaintenance(log) {
 
     app.get('/api/health', (req, res) => {
         return res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.8.0',
+            success: true, status: 'online', service: 'Marine System', version: '10.9.0',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
@@ -1627,7 +1627,11 @@ function formatMaintenance(log) {
             if (expressSessionId) sessionIds.add(expressSessionId);
             for (const sessionId of sessionIds) await revokeRefreshSession(sessionId);
 
-            try { liveLocations.delete(req.user.id); } catch(e) {}
+            // ✅ v10.9: حذف موقع هذه الجلسة تحديداً
+            try {
+                if (jwtSessionId) liveLocations.delete(jwtSessionId);
+                if (expressSessionId && expressSessionId !== jwtSessionId) liveLocations.delete(expressSessionId);
+            } catch(e) {}
 
             await addSystemLog({
                 userId: req.user?.id || null, userName: req.user?.name || '',
@@ -2074,23 +2078,48 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // 📍 LIVE LOCATIONS (server v10.8.0 — visible to ALL)
+    // 📍 LIVE LOCATIONS (v10.9.0 — multi-device via sessionKey)
     // ========================================================
-    const liveLocations = new Map();
+    const liveLocations = new Map();          // sessionKey -> location
     const LOCATION_MAX_AGE = 24 * 60 * 60 * 1000;
+    const MAX_SESSIONS_PER_USER = 5;          // ✅ حد أقصى 5 أجهزة لكل مستخدم
 
     function buildLocationsList() {
         const now = Date.now();
         const list = [];
-        for (const [userId, loc] of liveLocations) {
+        for (const [key, loc] of liveLocations) {
             if (now - new Date(loc.timestamp).getTime() > LOCATION_MAX_AGE) {
-                liveLocations.delete(userId);
+                liveLocations.delete(key);
                 continue;
             }
             list.push(loc);
         }
         list.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         return list;
+    }
+
+    function getLocationSessionKey(req) {
+        // ✅ استخدم sessionId من JWT — يدعم أجهزة متعددة
+        if (req.auth && req.auth.sid) return req.auth.sid;
+        // fallback: استخدم userId
+        return req.user.id;
+    }
+
+    // ✅ تنظيف الجلسات القديمة لنفس المستخدم (يمنع التراكم)
+    function pruneUserSessions(userId) {
+        const userKeys = [];
+        for (const [key, loc] of liveLocations) {
+            if (loc.userId === userId) userKeys.push(key);
+        }
+        if (userKeys.length <= MAX_SESSIONS_PER_USER) return;
+        // احذف الأقدم
+        userKeys.sort((a, b) => {
+            const ta = new Date(liveLocations.get(a).timestamp).getTime();
+            const tb = new Date(liveLocations.get(b).timestamp).getTime();
+            return ta - tb;
+        });
+        const toRemove = userKeys.slice(0, userKeys.length - MAX_SESSIONS_PER_USER);
+        for (const k of toRemove) liveLocations.delete(k);
     }
 
     app.get('/api/locations', authenticateAccessToken, (req, res) => {
@@ -2105,7 +2134,8 @@ function formatMaintenance(log) {
                     username: req.user.username,
                     name: req.user.name,
                     role: normalizeRole(req.user.role),
-                    roleLabel: ROLE_LABELS[normalizeRole(req.user.role)] || req.user.role
+                    roleLabel: ROLE_LABELS[normalizeRole(req.user.role)] || req.user.role,
+                    sessionKey: getLocationSessionKey(req)
                 }
             });
         } catch (error) {
@@ -2113,7 +2143,6 @@ function formatMaintenance(log) {
         }
     });
 
-    // ✅ v10.8.0 — endpoint بديل لصفحة المراقبة (بدون فلترة)
     app.get('/api/monitoring/locations',
         authenticateAccessToken,
         requirePermission('monitoring:view'),
@@ -2129,7 +2158,8 @@ function formatMaintenance(log) {
                         username: req.user.username,
                         name: req.user.name,
                         role: normalizeRole(req.user.role),
-                        roleLabel: ROLE_LABELS[normalizeRole(req.user.role)] || req.user.role
+                        roleLabel: ROLE_LABELS[normalizeRole(req.user.role)] || req.user.role,
+                        sessionKey: getLocationSessionKey(req)
                     }
                 });
             } catch (error) {
@@ -2138,6 +2168,7 @@ function formatMaintenance(log) {
         }
     );
 
+    // ✅ v10.9: POST — multi-device support
     app.post('/api/locations', authenticateAccessToken, csrfProtection, (req, res) => {
         try {
             const { latitude, longitude, accuracy, vesselId } = req.body;
@@ -2148,8 +2179,14 @@ function formatMaintenance(log) {
             }
 
             const role = normalizeRole(req.user.role);
+            const sessionKey = getLocationSessionKey(req);
+
+            // ✅ تنظيف الجلسات القديمة لنفس المستخدم
+            pruneUserSessions(req.user.id);
+
             const location = {
                 id: randomId(8),
+                sessionKey: sessionKey,             // ✅ جديد
                 userId: req.user.id,
                 username: req.user.username,
                 name: req.user.name || req.user.username,
@@ -2157,13 +2194,15 @@ function formatMaintenance(log) {
                 roleLabel: ROLE_LABELS[role] || role,
                 region: req.user.region || '',
                 vesselId: vesselId || null,
-                latitude: lat, longitude: lng,
+                latitude: lat,
+                longitude: lng,
                 accuracy: Number(accuracy) || null,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                userAgent: String(req.headers['user-agent'] || '').substring(0, 150)  // ✅ جديد
             };
 
-            liveLocations.set(req.user.id, location);
-            console.log('📍 Location updated:', location.name, '|', location.latitude, location.longitude, '| total:', liveLocations.size);
+            liveLocations.set(sessionKey, location);
+            console.log('📍 Location:', location.name, '| session:', String(sessionKey).substring(0, 8), '| total:', liveLocations.size);
             return res.status(201).json({ success: true, location });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'فشل حفظ الموقع' });
@@ -2171,15 +2210,59 @@ function formatMaintenance(log) {
     });
 
     app.delete('/api/locations/me', authenticateAccessToken, csrfProtection, (req, res) => {
-        liveLocations.delete(req.user.id);
-        return res.json({ success: true });
+        try {
+            const sessionKey = getLocationSessionKey(req);
+            liveLocations.delete(sessionKey);
+            return res.json({ success: true });
+        } catch (error) {
+            return res.status(500).json({ success: false, error: 'فشل الحذف' });
+        }
     });
 
+    // ✅ v10.9: endpoint لعرض الجلسات النشطة لكل مستخدم
+    app.get('/api/locations/sessions',
+        authenticateAccessToken,
+        requirePermission('monitoring:view'),
+        (req, res) => {
+            try {
+                const list = buildLocationsList();
+                const byUser = {};
+                list.forEach(loc => {
+                    if (!byUser[loc.userId]) {
+                        byUser[loc.userId] = {
+                            userId: loc.userId,
+                            name: loc.name,
+                            role: loc.role,
+                            roleLabel: loc.roleLabel,
+                            region: loc.region,
+                            sessions: []
+                        };
+                    }
+                    byUser[loc.userId].sessions.push({
+                        sessionKey: String(loc.sessionKey || loc.userId).substring(0, 12) + '...',
+                        latitude: loc.latitude,
+                        longitude: loc.longitude,
+                        accuracy: loc.accuracy,
+                        timestamp: loc.timestamp,
+                        userAgent: loc.userAgent || null
+                    });
+                });
+                return res.json({
+                    success: true,
+                    usersCount: Object.keys(byUser).length,
+                    totalSessions: list.length,
+                    users: Object.values(byUser)
+                });
+            } catch (error) {
+                return res.status(500).json({ success: false, error: 'فشل تحميل الجلسات' });
+            }
+        }
+    );
+
     // ========================================================
-    // 🎫 SUPPORT TICKETS (v10.8.0 — visible to ALL users)
+    // 🎫 SUPPORT TICKETS (visible to ALL users)
     // ========================================================
 
-    // ✅ GET — كل المستخدمين يرون كل التذاكر
     app.get('/api/support/tickets', authenticateAccessToken, async (req, res) => {
         try {
             const tickets = await Ticket.find()
@@ -2215,7 +2298,6 @@ function formatMaintenance(log) {
         }
     });
 
-    // ✅ POST — إنشاء تذكرة + حفظ sender + إشعار لكل المستخدمين
     app.post('/api/support/tickets', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             const { subject, title, message, description, priority, category, sender } = req.body;
@@ -2242,7 +2324,6 @@ function formatMaintenance(log) {
                 createdById = new mongoose.Types.ObjectId();
             }
 
-            // ✅ sender: من الـ body أو من بيانات المستخدم
             const finalSender = (
                 typeof sender === 'string' && sender.trim()
                     ? sender.trim()
@@ -2260,7 +2341,6 @@ function formatMaintenance(log) {
                 createdByName: req.user.name || req.user.username
             });
 
-            // ✅ إشعار لكل المستخدمين النشطين (باستثناء المُرسِل)
             try {
                 if (Notification) {
                     const allUsers = await User.find({ isActive: true })
@@ -2319,7 +2399,6 @@ function formatMaintenance(log) {
         }
     });
 
-    // ✅ Monitoring endpoint للتذاكر (v10.8.0)
     app.get('/api/monitoring/support-tickets',
         authenticateAccessToken,
         requirePermission('monitoring:view'),
@@ -3033,7 +3112,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.8.0 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.9.0 - Aman Allah Naji">
 <meta property="og:site_name" content="منظومة الوسائل البحرية">
 <meta property="og:author" content="أمان الله ناجي">
 <meta name="twitter:creator" content="@amanallah_naji">
@@ -3092,7 +3171,7 @@ function formatMaintenance(log) {
             'background:linear-gradient(135deg,#060911,#0a1020);color:#f7d774;font-size:20px;font-weight:900;padding:12px 24px;border-radius:8px;text-shadow:0 0 20px #e6b31e;');
         console.log('%c👨‍💻 تصميم وتطوير: أمان الله ناجي — إدارة إسناد الوحدات البحرية',
             'background:#0a1020;color:#e6b31e;font-size:13px;font-weight:700;padding:8px 24px;border-radius:0 0 8px 8px;');
-        console.log('%c🚢 System Version: 10.8.0 | © ' + new Date().getFullYear() + ' All Rights Reserved',
+        console.log('%c🚢 System Version: 10.9.0 | © ' + new Date().getFullYear() + ' All Rights Reserved',
             'color:#64748b;font-size:11px;');
     } catch(e){}
 })();
@@ -3349,7 +3428,7 @@ function formatMaintenance(log) {
     console.log('👤 User info badge middleware registered');
 
     // ========================================================
-    // 📍 FORCE GPS v5 — Login verification + fetch API + No auto-send
+    // 📍 FORCE GPS v5
     // ========================================================
     const FORCE_GPS_CSS = `
 <style id="force-gps-style">
@@ -3506,7 +3585,6 @@ function formatMaintenance(log) {
         try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch(e) { return ''; }
     }
 
-    /* ✅ تحقق فعلي من السيرفر */
     function verifyLogin(callback) {
         var token = getToken();
         if (!token) { callback(false); return; }
@@ -3534,7 +3612,6 @@ function formatMaintenance(log) {
         xhr.send();
     }
 
-    /* ✅ استخدام fetch */
     async function postLocation(coords) {
         var token = getToken();
         var csrf = getCsrf();
@@ -3666,7 +3743,6 @@ function formatMaintenance(log) {
 
         hideModal();
 
-        /* ✅ فحص دوري: يظهر الـ Modal فقط إذا كانت الجلسة صالحة */
         setInterval(function() {
             if (firstSuccess) return;
 
@@ -3787,7 +3863,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.8.0</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.9.0</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -3834,7 +3910,7 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.8.0');
+            console.log('🚢 MARINE SYSTEM v10.9.0');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('📦 Seed Protection: ONE-TIME ONLY');
@@ -3842,9 +3918,9 @@ function formatMaintenance(log) {
             console.log('👤 User region/unit: ENABLED');
             console.log('📌 Ownership Signature: ACTIVE');
             console.log('👤 User Info Badge: ENABLED');
-            console.log('📍 Force GPS: MANDATORY v5 (login-verified)');
+            console.log('📍 Force GPS: MANDATORY v5');
             console.log('🎫 Support Tickets: ALL USERS CAN SEE ALL');
-            console.log('🗺️  Monitoring Locations: ALL USERS VISIBLE');
+            console.log('🗺️  Monitoring: MULTI-DEVICE SUPPORT (sessionKey)');
             console.log('🤖 AI Assistant + Smart Import: ' +
                 (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'));
             console.log('📧 Email: ' + (
