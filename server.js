@@ -1,9 +1,13 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.7.0
-// 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
-// 🤖 AI + IMPORT + SETTINGS + LOGO
-// 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v5
-// ✨ v10.7.0: Login verification + No auto-send + fetch API
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.5.0
+// 🔐 JWT + REFRESH + CSRF + SESSION + RBAC (5 roles) + MongoDB
+// 🤖 AI ASSISTANT + 📥 SMART IMPORT (Gemini)
+// ⚙️ SETTINGS + 🖼️ LOGO (MongoDB-backed)
+// 📦 PROFESSIONAL SEED PROTECTION (one-time seed + auto cleanup)
+// 📌 OWNERSHIP SIGNATURE — 5 طبقات
+// 👤 USER INFO BADGE — شريط معلومات المستخدم
+// 📍 FORCE GPS — مشاركة إجبارية للموقع
+// ✨ v10.5.0: Live locations (Map) + Mandatory GPS
 // ============================================================
 
 'use strict';
@@ -14,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.7.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.5.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 process.cwd():', process.cwd());
@@ -115,7 +119,7 @@ try {
 }
 
 // ============================================================
-// 🚀 REDIS
+// 🚀 REDIS CLIENT
 // ============================================================
 let redisClient = null;
 let RedisStore = null;
@@ -124,7 +128,14 @@ let redisAvailable = false;
 function normalizeRedisUrl(rawUrl) {
     if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
     if (rawUrl.startsWith('rediss://')) return rawUrl;
-    const tlsHosts = ['upstash.io', 'redislabs.com', 'redis-cloud.com', 'aivencloud.com', 'digitalocean.com'];
+
+    const tlsHosts = [
+        'upstash.io',
+        'redislabs.com',
+        'redis-cloud.com',
+        'aivencloud.com',
+        'digitalocean.com'
+    ];
     const isTLSHost = tlsHosts.some(h => rawUrl.includes(h));
     if (isTLSHost && rawUrl.startsWith('redis://')) {
         console.log('🔐 Auto-upgrade: redis:// → rediss:// for TLS host');
@@ -138,12 +149,16 @@ async function initRedis() {
         console.log('ℹ️ REDIS_URL غير محدد — Memory Store');
         return null;
     }
+
     try {
         const { createClient } = require('redis');
         let ConnectRedis;
-        try { ConnectRedis = require('connect-redis'); } catch (e) {
+        try {
+            ConnectRedis = require('connect-redis');
+        } catch (e) {
             console.warn('⚠️ connect-redis غير مثبت');
         }
+
         RedisStore = ConnectRedis ? (ConnectRedis.default || ConnectRedis) : null;
 
         const finalUrl = normalizeRedisUrl(process.env.REDIS_URL);
@@ -171,6 +186,7 @@ async function initRedis() {
             if (redisAvailable) console.warn('⚠️ Redis error:', err.message);
             redisAvailable = false;
         });
+
         redisClient.on('connect', () => console.log('🔄 Redis: connecting...'));
         redisClient.on('ready', () => {
             console.log('✅ Redis: connected and ready');
@@ -186,41 +202,53 @@ async function initRedis() {
             redisClient.connect(),
             new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connect timeout (15s)')), 15000))
         ]);
+
         redisAvailable = true;
         return redisClient;
+
     } catch (e) {
         console.warn('⚠️ Redis غير متاح:', e.message);
         redisAvailable = false;
-        try { if (redisClient && redisClient.isOpen) await redisClient.quit(); } catch (_) {}
+        try {
+            if (redisClient && redisClient.isOpen) await redisClient.quit();
+        } catch (_) {}
         redisClient = null;
         return null;
     }
 }
 
-function getRedisClient() { return redisAvailable ? redisClient : null; }
-function isRedisAvailable() { return redisAvailable && redisClient && redisClient.isReady; }
+function getRedisClient() {
+    return redisAvailable ? redisClient : null;
+}
+
+function isRedisAvailable() {
+    return redisAvailable && redisClient && redisClient.isReady;
+}
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
+
 const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
 
 app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
 
 // ============================================================
-// 📌 OWNERSHIP HEADERS
+// 📌 OWNERSHIP HEADERS — ASCII فقط
 // ============================================================
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.7.0');
+    res.setHeader('X-System-Version', '10.5.0');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
     next();
 });
 
-function generateSecret(bytes = 64) { return crypto.randomBytes(bytes).toString('hex'); }
+function generateSecret(bytes = 64) {
+    return crypto.randomBytes(bytes).toString('hex');
+}
 
 if (isProduction) {
     const requiredSecrets = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'SESSION_SECRET'];
@@ -309,8 +337,13 @@ if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.l
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
 
-function randomId(bytes = 32) { return crypto.randomBytes(bytes).toString('hex'); }
-function hashToken(token) { return crypto.createHash('sha256').update(token).digest('hex'); }
+function randomId(bytes = 32) {
+    return crypto.randomBytes(bytes).toString('hex');
+}
+
+function hashToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 function safeEqual(a, b) {
     if (typeof a !== 'string' || typeof b !== 'string') return false;
@@ -323,7 +356,9 @@ function safeEqual(a, b) {
 function buildIdQuery(idParam) {
     const conditions = [];
     if (!idParam) return null;
-    if (mongoose.Types.ObjectId.isValid(idParam)) conditions.push({ _id: idParam });
+    if (mongoose.Types.ObjectId.isValid(idParam)) {
+        conditions.push({ _id: idParam });
+    }
     conditions.push({ id: idParam });
     return { $or: conditions };
 }
@@ -412,7 +447,10 @@ async function sendEmail(to, subject, html) {
             const auth = Buffer.from(`${mjApiKey}:${mjSecretKey}`).toString('base64');
             const response = await fetch('https://api.mailjet.com/v3.1/send', {
                 method: 'POST',
-                headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
+                headers: {
+                    'Authorization': `Basic ${auth}`,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                     Messages: [{
                         From: {
@@ -431,7 +469,10 @@ async function sendEmail(to, subject, html) {
                 return null;
             }
             const data = await response.json();
-            console.log('✅ Email sent via Mailjet API →', to);
+            const msgId = data?.Messages?.[0]?.To?.[0]?.MessageID
+                       || data?.Messages?.[0]?.To?.[0]?.MessageUUID
+                       || 'unknown';
+            console.log('✅ Email sent via Mailjet API:', msgId, '→', to);
             return data;
         } catch (error) {
             console.error('❌ Mailjet error:', error.message);
@@ -456,32 +497,34 @@ setTimeout(() => {
     initEmailService().then(t => { emailTransporter = t; }).catch(() => {});
 }, 100);
 
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
-            styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
-            imgSrc: ["'self'", 'data:', 'blob:', 'https:', 'https://unpkg.com'],
-            connectSrc: ["'self'", 'https://*.onrender.com', 'https://unpkg.com', 'https://*.googleapis.com', 'https://*.leafletjs.com', 'https://cdn.jsdelivr.net'],
-            fontSrc: ["'self'", 'https:', 'data:', 'https://fonts.gstatic.com'],
-            scriptSrcAttr: ["'unsafe-inline'"],
-            objectSrc: ["'none'"],
-            frameSrc: ["'none'"],
-            baseUri: ["'self'"],
-            formAction: ["'self'"],
-            ...(isProduction ? { upgradeInsecureRequests: [] } : {})
-        }
-    },
-    hsts: isProduction ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
-    frameguard: { action: 'deny' },
-    noSniff: true,
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    hidePoweredBy: true,
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: 'same-origin' },
-    crossOriginOpenerPolicy: { policy: 'same-origin' }
-}));
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
+                styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://cdnjs.cloudflare.com', 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
+                imgSrc: ["'self'", 'data:', 'blob:', 'https:', 'https://unpkg.com'],
+                connectSrc: ["'self'", 'https://*.onrender.com', 'https://unpkg.com', 'https://*.googleapis.com', 'https://*.leafletjs.com', 'https://cdn.jsdelivr.net'],
+                fontSrc: ["'self'", 'https:', 'data:', 'https://fonts.gstatic.com'],
+                scriptSrcAttr: ["'unsafe-inline'"],
+                objectSrc: ["'none'"],
+                frameSrc: ["'none'"],
+                baseUri: ["'self'"],
+                formAction: ["'self'"],
+                ...(isProduction ? { upgradeInsecureRequests: [] } : {})
+            }
+        },
+        hsts: isProduction ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
+        frameguard: { action: 'deny' },
+        noSniff: true,
+        referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+        hidePoweredBy: true,
+        crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: { policy: 'same-origin' },
+        crossOriginOpenerPolicy: { policy: 'same-origin' }
+    })
+);
 
 const allowedOrigins = (
     process.env.FRONTEND_URL ||
@@ -505,11 +548,13 @@ const apiLimiter = rateLimit({
     standardHeaders: true, legacyHeaders: false,
     message: { success: false, error: 'Too many requests.' }
 });
+
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, max: 20,
     standardHeaders: true, legacyHeaders: false,
     message: { success: false, error: 'Too many authentication attempts.' }
 });
+
 const forgotPasswordLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, max: 5,
     standardHeaders: true, legacyHeaders: false,
@@ -545,7 +590,10 @@ app.use((req, res, next) => {
 // ============================================================
 async function registerOwnershipSignature() {
     try {
-        if (!SystemLogo) return;
+        if (!SystemLogo) {
+            console.warn('⚠️ SystemLogo model not available — skipping DB signature');
+            return;
+        }
         const existing = await SystemLogo.findOne({ key: 'developer_signature' });
         if (existing) {
             console.log('📌 Developer signature already in DB');
@@ -557,7 +605,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.7.0',
+            version: '10.5.0',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -568,13 +616,16 @@ async function registerOwnershipSignature() {
 }
 
 // ============================================================
-// 🍃 MONGODB
+// 🍃 MONGODB CONNECTION
 // ============================================================
 let mongoConnected = false;
 
 async function connectMongoDB() {
     const uri = process.env.MONGODB_URI;
-    if (!uri) { console.error('❌ MONGODB_URI غير محدد'); return false; }
+    if (!uri) {
+        console.error('❌ MONGODB_URI غير محدد');
+        return false;
+    }
     try {
         await mongoose.connect(uri, {
             serverSelectionTimeoutMS: 15000,
@@ -605,6 +656,7 @@ async function connectMongoDB() {
         await registerOwnershipSignature();
         await cleanupDemoVessels();
         await ensureInitialData();
+
         return true;
     } catch (error) {
         console.error('❌ MongoDB connection failed:', error.message);
@@ -640,13 +692,15 @@ async function ensureAdminExists() {
             if (existingAdmin.lockedUntil) updateData.lockedUntil = null;
             if (existingAdmin.loginAttempts && existingAdmin.loginAttempts > 0) updateData.loginAttempts = 0;
             if (existingAdmin.isActive === false) updateData.isActive = true;
+
             const currentRole = String(existingAdmin.role || '').trim();
             if (currentRole !== 'admin') updateData.role = 'admin';
 
             if (ALLOW_ADMIN_RESET) {
                 let passwordMatches = false;
-                try { passwordMatches = await bcrypt.compare(ADMIN_PASSWORD, existingAdmin.password); }
-                catch (e) { passwordMatches = false; }
+                try {
+                    passwordMatches = await bcrypt.compare(ADMIN_PASSWORD, existingAdmin.password);
+                } catch (e) { passwordMatches = false; }
                 if (!passwordMatches) {
                     updateData.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
                     updateData.tokenVersion = (existingAdmin.tokenVersion || 0) + 1;
@@ -692,55 +746,156 @@ async function ensureInitialData() {
         let seedMarker = null;
         try {
             seedMarker = await Log.findOne({
-                action: 'seed', resource: 'system', resourceName: SEED_MARKER
+                action: 'seed',
+                resource: 'system',
+                resourceName: SEED_MARKER
             }).lean();
-        } catch (e) {}
+        } catch (e) {
+            console.warn('⚠️ Seed marker lookup failed:', e.message);
+        }
 
         if (seedMarker) {
-            console.log('ℹ️ Initial data already planted — skipping');
+            console.log('ℹ️ Initial data already planted (permanent marker) — skipping');
             return;
         }
 
         const vesselCount = await Vessel.countDocuments();
+
         if (vesselCount > 0) {
             console.log(`✅ Vessels exist (${vesselCount}) — marking as planted`);
             try {
                 await Log.create({
-                    action: 'seed', resource: 'system', resourceName: SEED_MARKER, status: 'success',
-                    details: { reason: 'existing-data-detected', vesselCount, timestamp: new Date().toISOString() }
+                    action: 'seed',
+                    resource: 'system',
+                    resourceName: SEED_MARKER,
+                    status: 'success',
+                    details: {
+                        reason: 'existing-data-detected',
+                        vesselCount,
+                        timestamp: new Date().toISOString()
+                    }
                 });
-            } catch (e) {}
+                console.log('✅ Seed marker created (existing data detected)');
+            } catch (e) {
+                console.warn('⚠️ Could not create seed marker:', e.message);
+            }
             return;
         }
 
         const seedEnabledInProd = process.env.SEED_DEFAULT_DATA === 'true';
+
         if (isProduction && !seedEnabledInProd) {
             console.log('ℹ️ Production mode — default seed DISABLED');
             try {
                 await Log.create({
-                    action: 'seed', resource: 'system', resourceName: SEED_MARKER, status: 'skipped',
-                    details: { reason: 'production-no-seed', timestamp: new Date().toISOString() }
+                    action: 'seed',
+                    resource: 'system',
+                    resourceName: SEED_MARKER,
+                    status: 'skipped',
+                    details: {
+                        reason: 'production-no-seed',
+                        timestamp: new Date().toISOString()
+                    }
                 });
             } catch (e) {}
             return;
         }
 
         console.log('📦 Creating initial vessels (ONE TIME ONLY)...');
+
         const nowIso = new Date().toISOString();
 
         const initialVessels = [
-            { id: randomId(8), name: 'الوحدة 101', num: '101', len: 11, region: 'الشمال', zone: 'تونس', port: 'الميناء الرئيسي', supp: '—', status: 'صالح', break: '—', cat: 'البروق', createdBy: 'system' },
-            { id: randomId(8), name: 'الوحدة 205', num: '205', len: 15, region: 'الساحل', zone: 'سوسة', port: 'ميناء سوسة', supp: '—', status: 'صيانة', break: 'محرك', fDate: nowIso, ref: 'M-2024-001', repairUnit: 'وحدة الصيانة تونس', cat: 'خوافر', createdBy: 'system' },
-            { id: randomId(8), name: 'الوحدة 312', num: '312', len: 8, region: 'الجنوب', zone: 'جرجيس', port: 'ميناء جرجيس', supp: '—', status: 'معطب', break: 'هيكل', fDate: nowIso, ref: 'M-2024-002', repairUnit: 'وحدة الصيانة جرجيس', cat: 'صقور', createdBy: 'system' }
+            {
+                id: randomId(8),
+                name: 'الوحدة 101',
+                num: '101',
+                len: 11,
+                region: 'الشمال',
+                zone: 'تونس',
+                port: 'الميناء الرئيسي',
+                supp: '—',
+                status: 'صالح',
+                break: '—',
+                cat: 'البروق',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                name: 'الوحدة 205',
+                num: '205',
+                len: 15,
+                region: 'الساحل',
+                zone: 'سوسة',
+                port: 'ميناء سوسة',
+                supp: '—',
+                status: 'صيانة',
+                break: 'محرك',
+                fDate: nowIso,
+                ref: 'M-2024-001',
+                repairUnit: 'وحدة الصيانة تونس',
+                cat: 'خوافر',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                name: 'الوحدة 312',
+                num: '312',
+                len: 8,
+                region: 'الجنوب',
+                zone: 'جرجيس',
+                port: 'ميناء جرجيس',
+                supp: '—',
+                status: 'معطب',
+                break: 'هيكل',
+                fDate: nowIso,
+                ref: 'M-2024-002',
+                repairUnit: 'وحدة الصيانة جرجيس',
+                cat: 'صقور',
+                createdBy: 'system'
+            }
         ];
 
         await Vessel.insertMany(initialVessels);
         console.log(`✅ ${initialVessels.length} vessels created`);
 
         const initialLogs = [
-            { id: randomId(8), vesselName: 'الوحدة 101', vesselNum: '101', type: 'صيانة دورية', status: 'مكتملة', date: nowIso, repairUnit: 'وحدة الصيانة تونس', cost: 500, notes: 'صيانة دورية', createdBy: 'system' },
-            { id: randomId(8), vesselName: 'الوحدة 205', vesselNum: '205', type: 'إصلاح محرك', status: 'قيد التنفيذ', date: nowIso, repairUnit: 'وحدة الصيانة صفاقس', cost: 1200, notes: 'استبدال المحرك', createdBy: 'system' },
-            { id: randomId(8), vesselName: 'الوحدة 312', vesselNum: '312', type: 'إصلاح هيكل', status: 'متأخرة', date: nowIso, repairUnit: 'وحدة الصيانة جرجيس', cost: 2000, notes: 'إصلاح الهيكل', createdBy: 'system' }
+            {
+                id: randomId(8),
+                vesselName: 'الوحدة 101',
+                vesselNum: '101',
+                type: 'صيانة دورية',
+                status: 'مكتملة',
+                date: nowIso,
+                repairUnit: 'وحدة الصيانة تونس',
+                cost: 500,
+                notes: 'صيانة دورية',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                vesselName: 'الوحدة 205',
+                vesselNum: '205',
+                type: 'إصلاح محرك',
+                status: 'قيد التنفيذ',
+                date: nowIso,
+                repairUnit: 'وحدة الصيانة صفاقس',
+                cost: 1200,
+                notes: 'استبدال المحرك',
+                createdBy: 'system'
+            },
+            {
+                id: randomId(8),
+                vesselName: 'الوحدة 312',
+                vesselNum: '312',
+                type: 'إصلاح هيكل',
+                status: 'متأخرة',
+                date: nowIso,
+                repairUnit: 'وحدة الصيانة جرجيس',
+                cost: 2000,
+                notes: 'إصلاح الهيكل',
+                createdBy: 'system'
+            }
         ];
 
         await Maintenance.insertMany(initialLogs);
@@ -748,22 +903,33 @@ async function ensureInitialData() {
 
         try {
             await Log.create({
-                action: 'seed', resource: 'system', resourceName: SEED_MARKER, status: 'success',
-                details: { vessels: initialVessels.length, maintenanceLogs: initialLogs.length, timestamp: new Date().toISOString() }
+                action: 'seed',
+                resource: 'system',
+                resourceName: SEED_MARKER,
+                status: 'success',
+                details: {
+                    vessels: initialVessels.length,
+                    maintenanceLogs: initialLogs.length,
+                    timestamp: new Date().toISOString()
+                }
             });
-            console.log('✅ Permanent seed marker created');
+            console.log('✅ Permanent seed marker created — will NEVER repeat');
         } catch (e) {
             console.warn('⚠️ Could not create permanent marker:', e.message);
         }
+
     } catch (error) {
         console.error('❌ Failed in ensureInitialData:', error.message);
+        console.error(error.stack);
     }
 }
 
 async function cleanupDemoVessels() {
     try {
         const cleanupMarker = await Log.findOne({
-            action: 'cleanup', resource: 'system', resourceName: 'demo-vessels-removed'
+            action: 'cleanup',
+            resource: 'system',
+            resourceName: 'demo-vessels-removed'
         }).lean();
 
         if (cleanupMarker) {
@@ -771,13 +937,19 @@ async function cleanupDemoVessels() {
             return;
         }
 
-        const demoVessels = await Vessel.find({ name: { $in: DEMO_VESSEL_NAMES }, createdBy: 'system' }).lean();
+        const demoVessels = await Vessel.find({
+            name: { $in: DEMO_VESSEL_NAMES },
+            createdBy: 'system'
+        }).lean();
 
         if (demoVessels.length === 0) {
             console.log('ℹ️ No demo vessels found — nothing to cleanup');
             try {
                 await Log.create({
-                    action: 'cleanup', resource: 'system', resourceName: 'demo-vessels-removed', status: 'success',
+                    action: 'cleanup',
+                    resource: 'system',
+                    resourceName: 'demo-vessels-removed',
+                    status: 'success',
                     details: { removed: 0, reason: 'none-found' }
                 });
             } catch (e) {}
@@ -785,20 +957,37 @@ async function cleanupDemoVessels() {
         }
 
         console.log(`🧹 Found ${demoVessels.length} demo vessels — removing...`);
+
         const demoIds = demoVessels.map(v => v.id).filter(Boolean);
         const demoObjectIds = demoVessels.map(v => v._id).filter(Boolean);
 
-        const vesselResult = await Vessel.deleteMany({ _id: { $in: demoObjectIds } });
-        const logResult = await Maintenance.deleteMany({ vesselId: { $in: demoIds } });
+        const vesselResult = await Vessel.deleteMany({
+            _id: { $in: demoObjectIds }
+        });
+
+        const logResult = await Maintenance.deleteMany({
+            vesselId: { $in: demoIds }
+        });
 
         console.log(`✅ Removed ${vesselResult.deletedCount} demo vessels + ${logResult.deletedCount} maintenance logs`);
 
         try {
             await Log.create({
-                action: 'cleanup', resource: 'system', resourceName: 'demo-vessels-removed', status: 'success',
-                details: { removedVessels: vesselResult.deletedCount, removedLogs: logResult.deletedCount, names: DEMO_VESSEL_NAMES, timestamp: new Date().toISOString() }
+                action: 'cleanup',
+                resource: 'system',
+                resourceName: 'demo-vessels-removed',
+                status: 'success',
+                details: {
+                    removedVessels: vesselResult.deletedCount,
+                    removedLogs: logResult.deletedCount,
+                    names: DEMO_VESSEL_NAMES,
+                    timestamp: new Date().toISOString()
+                }
             });
-        } catch (e) {}
+        } catch (e) {
+            console.warn('⚠️ Could not create cleanup marker:', e.message);
+        }
+
     } catch (error) {
         console.error('❌ Cleanup error:', error.message);
     }
@@ -895,24 +1084,45 @@ function csrfProtection(req, res, next) {
 }
 
 // ============================================================
-// 🔐 JWT
+// 🔐 JWT HELPERS
 // ============================================================
 function generateAccessToken(user, sessionId) {
     return jwt.sign(
         {
-            sub: user.id, id: user.id, username: user.username, role: user.role,
-            name: user.name, sid: sessionId, ver: user.tokenVersion || 0, type: 'access'
+            sub: user.id,
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            name: user.name,
+            sid: sessionId,
+            ver: user.tokenVersion || 0,
+            type: 'access'
         },
         JWT_SECRET,
-        { expiresIn: ACCESS_TOKEN_EXPIRES, issuer: 'marine-system', audience: 'marine-system-client', jwtid: randomId(16) }
+        {
+            expiresIn: ACCESS_TOKEN_EXPIRES,
+            issuer: 'marine-system',
+            audience: 'marine-system-client',
+            jwtid: randomId(16)
+        }
     );
 }
 
 function generateRefreshToken(user, sessionId) {
     return jwt.sign(
-        { sub: user.id, id: user.id, sid: sessionId, type: 'refresh' },
+        {
+            sub: user.id,
+            id: user.id,
+            sid: sessionId,
+            type: 'refresh'
+        },
         JWT_REFRESH_SECRET,
-        { expiresIn: REFRESH_TOKEN_EXPIRES, issuer: 'marine-system', audience: 'marine-system-client', jwtid: randomId(32) }
+        {
+            expiresIn: REFRESH_TOKEN_EXPIRES,
+            issuer: 'marine-system',
+            audience: 'marine-system-client',
+            jwtid: randomId(32)
+        }
     );
 }
 
@@ -938,7 +1148,9 @@ async function saveRefreshSession({ sessionId, userId, refreshToken }) {
                 JSON.stringify(record)
             );
             return;
-        } catch (e) {}
+        } catch (e) {
+            console.warn('⚠️ Redis refresh save failed:', e.message);
+        }
     }
     refreshSessions.set(sessionId, record);
 }
@@ -1016,7 +1228,7 @@ setInterval(() => {
 }, 10 * 60 * 1000).unref();
 
 // ============================================================
-// 🔑 PASSWORD RESET
+// 🔑 PASSWORD RESET TOKENS
 // ============================================================
 const passwordResetTokens = [];
 
@@ -1025,7 +1237,8 @@ function createPasswordResetToken(email) {
     if (existingIndex !== -1) passwordResetTokens.splice(existingIndex, 1);
     const token = randomId(32);
     passwordResetTokens.push({
-        email, tokenHash: hashToken(token),
+        email,
+        tokenHash: hashToken(token),
         expiresAt: Date.now() + 60 * 60 * 1000,
         createdAt: new Date().toISOString()
     });
@@ -1101,12 +1314,14 @@ function authenticateAccessToken(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET, {
-            issuer: 'marine-system', audience: 'marine-system-client'
+            issuer: 'marine-system',
+            audience: 'marine-system-client'
         });
 
         if (decoded.type !== 'access') {
             return res.status(401).json({ success: false, error: 'نوع التوكن غير صالح' });
         }
+
         if (isAccessTokenRevoked(decoded.jti)) {
             return res.status(401).json({ success: false, error: 'التوكن ملغى' });
         }
@@ -1148,29 +1363,38 @@ const ROLE_PERMISSIONS = {
         'vessels:read', 'vessels:create', 'vessels:update',
         'maintenance:read', 'maintenance:create', 'maintenance:update', 'maintenance:delete',
         'notes:read', 'notes:create', 'notes:update', 'notes:delete',
-        'notifications:read', 'logs:read'
+        'notifications:read',
+        'logs:read'
     ],
     editor: [
         'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
         'maintenance:read', 'maintenance:create', 'maintenance:update',
-        'notes:read', 'notes:create', 'notes:update', 'notifications:read'
+        'notes:read', 'notes:create', 'notes:update',
+        'notifications:read'
     ],
     maintenance_unit: [
         'dashboard:view',
         'vessels:read', 'vessels:create', 'vessels:update',
         'maintenance:read', 'maintenance:create', 'maintenance:update',
-        'notes:read', 'notes:create', 'notes:update', 'notifications:read'
+        'notes:read', 'notes:create', 'notes:update',
+        'notifications:read'
     ],
-    viewer: ['dashboard:view', 'vessels:read', 'maintenance:read', 'notes:read', 'notifications:read']
+    viewer: [
+        'dashboard:view',
+        'vessels:read',
+        'maintenance:read',
+        'notes:read',
+        'notifications:read'
+    ]
 };
 
 const SENSITIVE_PERMISSIONS = {
-    'users:manage': ['admin'],
+    'users:manage':    ['admin'],
     'monitoring:view': ['admin', 'manager', 'maintenance_unit'],
     'settings:manage': ['admin'],
-    'sensitive:view': ['admin', 'manager'],
-    'ready:view': ['admin', 'manager']
+    'sensitive:view':  ['admin', 'manager'],
+    'ready:view':      ['admin', 'manager']
 };
 
 const ROLE_LABELS = {
@@ -1182,9 +1406,13 @@ const ROLE_LABELS = {
 };
 
 const LEGACY_ROLE_MAP = {
-    'مسؤول': 'admin', 'مدير': 'manager', 'محرر': 'editor',
-    'مشغل': 'maintenance_unit', 'مشاهد': 'viewer',
-    'operator': 'maintenance_unit', 'super_admin': 'admin'
+    'مسؤول': 'admin',
+    'مدير': 'manager',
+    'محرر': 'editor',
+    'مشغل': 'maintenance_unit',
+    'مشاهد': 'viewer',
+    'operator': 'maintenance_unit',
+    'super_admin': 'admin'
 };
 
 function normalizeRole(role) {
@@ -1197,14 +1425,18 @@ function normalizeRole(role) {
 function hasPermission(user, permission) {
     if (!user) return false;
     const role = normalizeRole(user.role);
+
     if (SENSITIVE_PERMISSIONS[permission]) {
         return SENSITIVE_PERMISSIONS[permission].includes(role);
     }
+
     const permissions = ROLE_PERMISSIONS[role] || [];
     if (permissions.includes('*')) return true;
     if (permissions.includes(permission)) return true;
+
     const [resource] = permission.split(':');
     if (permissions.includes(`${resource}:*`)) return true;
+
     return false;
 }
 
@@ -1212,8 +1444,10 @@ function requirePermission(permission) {
     return (req, res, next) => {
         if (!req.user || !hasPermission(req.user, permission)) {
             return res.status(403).json({
-                success: false, error: 'ليس لديك الصلاحية الكافية',
-                code: 'PERMISSION_DENIED', required: permission
+                success: false,
+                error: 'ليس لديك الصلاحية الكافية',
+                code: 'PERMISSION_DENIED',
+                required: permission
             });
         }
         next();
@@ -1222,24 +1456,32 @@ function requirePermission(permission) {
 
 function requireOneOf(...permissions) {
     return (req, res, next) => {
-        if (!req.user) return res.status(401).json({ success: false, error: 'غير مصرح' });
+        if (!req.user) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
         const hasAny = permissions.some(p => hasPermission(req.user, p));
         if (!hasAny) {
             return res.status(403).json({
-                success: false, error: 'ليس لديك الصلاحية الكافية',
-                code: 'PERMISSION_DENIED', required: permissions
+                success: false,
+                error: 'ليس لديك الصلاحية الكافية',
+                code: 'PERMISSION_DENIED',
+                required: permissions
             });
         }
         next();
     };
 }
 
-function isAdminUser(user) { return user && normalizeRole(user.role) === 'admin'; }
+function isAdminUser(user) {
+    return user && normalizeRole(user.role) === 'admin';
+}
 
 function requireAdmin(req, res, next) {
     if (!isAdminUser(req.user)) {
         return res.status(403).json({
-            success: false, error: 'هذه العملية متاحة للمسؤول فقط', code: 'ADMIN_ONLY'
+            success: false,
+            error: 'هذه العملية متاحة للمسؤول فقط',
+            code: 'ADMIN_ONLY'
         });
     }
     next();
@@ -1272,22 +1514,32 @@ function formatVessel(vessel) {
     return {
         id: vessel.id,
         _id: vessel._id ? vessel._id.toString() : null,
-        name: vessel.name, num: vessel.num || '', len: vessel.len || 0,
-        region: vessel.region || '', zone: vessel.zone || '', port: vessel.port || '',
+        name: vessel.name,
+        num: vessel.num || '',
+        len: vessel.len || 0,
+        region: vessel.region || '',
+        zone: vessel.zone || '',
+        port: vessel.port || '',
         supp: vessel.supp || '',
         status: vessel.status || vessel.stat || 'صالح',
         stat: vessel.stat || vessel.status || 'صالح',
         break: vessel.break || '',
-        fDate: vessel.fDate || null, eDate: vessel.eDate || null,
-        ref: vessel.ref || '', repairUnit: vessel.repairUnit || '',
-        cat: vessel.cat || '', category: vessel.cat || vessel.category || '',
-        type: vessel.type || '', location: vessel.location || '',
-        createdAt: vessel.createdAt, updatedAt: vessel.updatedAt
+        fDate: vessel.fDate || null,
+        eDate: vessel.eDate || null,
+        ref: vessel.ref || '',
+        repairUnit: vessel.repairUnit || '',
+        cat: vessel.cat || '',
+        category: vessel.cat || vessel.category || '',
+        type: vessel.type || '',
+        location: vessel.location || '',
+        createdAt: vessel.createdAt,
+        updatedAt: vessel.updatedAt
     };
 }
 
 function formatMaintenance(log) {
     if (!log) return null;
+
     const isoDate = log.date || log.startDate || log.createdAt || new Date().toISOString();
     let displayDate = isoDate;
     try {
@@ -1306,25 +1558,38 @@ function formatMaintenance(log) {
     return {
         id: log.id,
         _id: log._id ? log._id.toString() : null,
+
         vesselId: log.vesselId || '',
         vesselName: log.vesselName || '—',
         vessel: log.vesselName || '—',
         vesselNum: log.vesselNum || '',
+
         repairUnit: log.repairUnit || '—',
         unit: log.repairUnit || '—',
         technician: log.supervisorName || log.supervisor || 'غير محدد',
         supervisorName: log.supervisorName || '',
         phone: typeof log.supervisor === 'string' ? log.supervisor : '',
+
         type: log.type || 'صيانة دورية',
         interventionType: log.type || 'صيانة دورية',
         faultType: log.faultType || 'أخرى',
         priority: log.priority || 'متوسط',
-        date: displayDate, isoDate: isoDate,
-        startDate: log.startDate, endDate: log.endDate,
-        createdAt: log.createdAt, updatedAt: log.updatedAt,
+
+        date: displayDate,
+        isoDate: isoDate,
+        startDate: log.startDate,
+        endDate: log.endDate,
+        createdAt: log.createdAt,
+        updatedAt: log.updatedAt,
+
         cost: Number(log.cost) || 0,
-        parts: parts, partsUsed: parts,
-        description: log.description || '', notes: log.notes || '',
+
+        parts: parts,
+        partsUsed: parts,
+
+        description: log.description || '',
+        notes: log.notes || '',
+
         status: log.status || 'قيد الانتظار'
     };
 }
@@ -1334,6 +1599,7 @@ function formatMaintenance(log) {
 // ============================================================
 (async () => {
     const mongoOk = await connectMongoDB();
+
     if (!mongoOk && isProduction) {
         console.error('❌ FATAL: MongoDB is required in production');
         process.exit(1);
@@ -1368,22 +1634,42 @@ function formatMaintenance(log) {
     // ========================================================
     app.get('/api/csrf-token', (req, res) => {
         const token = ensureCsrfToken(req, res);
-        return res.json({ success: true, token: token || null, expiresIn: CSRF_MAX_AGE });
+        return res.json({
+            success: true,
+            token: token || null,
+            expiresIn: CSRF_MAX_AGE
+        });
     });
 
     app.get('/api/health', (req, res) => {
         return res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.7.0',
-            developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
+            success: true,
+            status: 'online',
+            service: 'Marine System',
+            version: '10.5.0',
+            developer: 'أمان الله ناجي',
+            organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
-            email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) ? 'mailjet-api' : (process.env.EMAIL_HOST ? 'smtp' : 'not-configured'),
-            seed: { marker: SEED_MARKER, production: isProduction, enabled: process.env.SEED_DEFAULT_DATA === 'true' },
+            email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY)
+                ? 'mailjet-api'
+                : (process.env.EMAIL_HOST ? 'smtp' : 'not-configured'),
+            seed: {
+                marker: SEED_MARKER,
+                production: isProduction,
+                enabled: process.env.SEED_DEFAULT_DATA === 'true'
+            },
             models: {
-                User: !!User, Vessel: !!Vessel, Maintenance: !!Maintenance,
-                Log: !!Log, Ticket: !!Ticket, Note: !!Note,
-                Notification: !!Notification, UserSettings: !!UserSettings, SystemLogo: !!SystemLogo
+                User: !!User,
+                Vessel: !!Vessel,
+                Maintenance: !!Maintenance,
+                Log: !!Log,
+                Ticket: !!Ticket,
+                Note: !!Note,
+                Notification: !!Notification,
+                UserSettings: !!UserSettings,
+                SystemLogo: !!SystemLogo
             }
         });
     });
@@ -1401,6 +1687,7 @@ function formatMaintenance(log) {
             }
 
             const user = await User.findOne({ username: username.trim() });
+
             if (!user) {
                 await addSystemLog({
                     action: 'login', resource: 'user', status: 'error',
@@ -1426,13 +1713,16 @@ function formatMaintenance(log) {
             }
 
             const valid = await bcrypt.compare(password, user.password);
+
             if (!valid) {
                 user.loginAttempts = (user.loginAttempts || 0) + 1;
+
                 if (user.loginAttempts >= 5) {
                     user.lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
                     await user.save();
                     return res.status(403).json({ success: false, error: 'الحساب مقفل لمدة 30 دقيقة' });
                 }
+
                 await user.save();
                 return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
             }
@@ -1465,8 +1755,11 @@ function formatMaintenance(log) {
 
             const refreshCookieName = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             res.cookie(refreshCookieName, refreshToken, {
-                httpOnly: true, secure: isProduction,
-                sameSite: COOKIE_SAMESITE, maxAge: REFRESH_TOKEN_MAX_AGE, path: '/api/auth'
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: COOKIE_SAMESITE,
+                maxAge: REFRESH_TOKEN_MAX_AGE,
+                path: '/api/auth'
             });
 
             await addSystemLog({
@@ -1476,7 +1769,9 @@ function formatMaintenance(log) {
             });
 
             return res.json({
-                success: true, token: accessToken, expiresIn: ACCESS_TOKEN_MAX_AGE,
+                success: true,
+                token: accessToken,
+                expiresIn: ACCESS_TOKEN_MAX_AGE,
                 csrfToken: newCsrfToken,
                 session: {
                     csrfToken: newCsrfToken,
@@ -1497,21 +1792,27 @@ function formatMaintenance(log) {
         try {
             const cookieName = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             const refreshToken = req.cookies[cookieName];
-            if (!refreshToken) return res.status(401).json({ success: false, error: 'Refresh token غير موجود' });
+            if (!refreshToken) {
+                return res.status(401).json({ success: false, error: 'Refresh token غير موجود' });
+            }
 
             const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET, {
-                issuer: 'marine-system', audience: 'marine-system-client'
+                issuer: 'marine-system',
+                audience: 'marine-system-client'
             });
             if (decoded.type !== 'refresh') {
                 return res.status(401).json({ success: false, error: 'Refresh token غير صالح' });
             }
 
             const record = await getRefreshSession(decoded.sid);
-            if (!record) return res.status(401).json({ success: false, error: 'جلسة غير موجودة' });
+            if (!record) {
+                return res.status(401).json({ success: false, error: 'جلسة غير موجودة' });
+            }
             if (record.userId !== decoded.sub) {
                 await revokeRefreshSession(decoded.sid);
                 return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
             }
+
             if (!safeEqual(record.tokenHash, hashToken(refreshToken))) {
                 await revokeRefreshSession(decoded.sid);
                 const replayUser = await User.findOne({ id: decoded.sub });
@@ -1533,7 +1834,11 @@ function formatMaintenance(log) {
             const newAccessToken = generateAccessToken(user, newSessionId);
 
             await revokeRefreshSession(decoded.sid);
-            await saveRefreshSession({ sessionId: newSessionId, userId: user.id, refreshToken: newRefreshToken });
+            await saveRefreshSession({
+                sessionId: newSessionId,
+                userId: user.id,
+                refreshToken: newRefreshToken
+            });
 
             if (req.session) {
                 req.session.userId = user.id;
@@ -1548,13 +1853,19 @@ function formatMaintenance(log) {
             });
 
             const newCsrfToken = ensureCsrfToken(req, res);
+
             res.cookie(cookieName, newRefreshToken, {
-                httpOnly: true, secure: isProduction,
-                sameSite: COOKIE_SAMESITE, maxAge: REFRESH_TOKEN_MAX_AGE, path: '/api/auth'
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: COOKIE_SAMESITE,
+                maxAge: REFRESH_TOKEN_MAX_AGE,
+                path: '/api/auth'
             });
 
             return res.json({
-                success: true, token: newAccessToken, expiresIn: ACCESS_TOKEN_MAX_AGE,
+                success: true,
+                token: newAccessToken,
+                expiresIn: ACCESS_TOKEN_MAX_AGE,
                 csrfToken: newCsrfToken,
                 session: {
                     csrfToken: newCsrfToken,
@@ -1582,18 +1893,18 @@ function formatMaintenance(log) {
         const permissions = ROLE_PERMISSIONS[role] || [];
 
         const capabilities = {
-            canViewVessels: hasPermission(req.user, 'vessels:read'),
-            canCreateVessels: hasPermission(req.user, 'vessels:create'),
-            canUpdateVessels: hasPermission(req.user, 'vessels:update'),
-            canDeleteVessels: hasPermission(req.user, 'vessels:delete'),
-            canViewMaintenance: hasPermission(req.user, 'maintenance:read'),
-            canCreateMaintenance: hasPermission(req.user, 'maintenance:create'),
-            canUpdateMaintenance: hasPermission(req.user, 'maintenance:update'),
-            canDeleteMaintenance: hasPermission(req.user, 'maintenance:delete'),
-            canViewNotes: hasPermission(req.user, 'notes:read'),
-            canCreateNotes: hasPermission(req.user, 'notes:create'),
-            canUpdateNotes: hasPermission(req.user, 'notes:update'),
-            canDeleteNotes: hasPermission(req.user, 'notes:delete'),
+            canViewVessels:    hasPermission(req.user, 'vessels:read'),
+            canCreateVessels:  hasPermission(req.user, 'vessels:create'),
+            canUpdateVessels:  hasPermission(req.user, 'vessels:update'),
+            canDeleteVessels:  hasPermission(req.user, 'vessels:delete'),
+            canViewMaintenance:    hasPermission(req.user, 'maintenance:read'),
+            canCreateMaintenance:  hasPermission(req.user, 'maintenance:create'),
+            canUpdateMaintenance:  hasPermission(req.user, 'maintenance:update'),
+            canDeleteMaintenance:  hasPermission(req.user, 'maintenance:delete'),
+            canViewNotes:    hasPermission(req.user, 'notes:read'),
+            canCreateNotes:  hasPermission(req.user, 'notes:create'),
+            canUpdateNotes:  hasPermission(req.user, 'notes:update'),
+            canDeleteNotes:  hasPermission(req.user, 'notes:delete'),
             canViewNotifications: true,
             canManageUsers: hasPermission(req.user, 'users:manage'),
             canViewMonitoring: hasPermission(req.user, 'monitoring:view'),
@@ -1604,9 +1915,11 @@ function formatMaintenance(log) {
         };
 
         return res.json({
-            success: true, role,
+            success: true,
+            role,
             roleLabel: ROLE_LABELS[role] || role,
-            permissions, capabilities
+            permissions,
+            capabilities
         });
     });
 
@@ -1625,14 +1938,22 @@ function formatMaintenance(log) {
             const sessionIds = new Set();
             if (jwtSessionId) sessionIds.add(jwtSessionId);
             if (expressSessionId) sessionIds.add(expressSessionId);
-            for (const sessionId of sessionIds) await revokeRefreshSession(sessionId);
 
+            for (const sessionId of sessionIds) {
+                await revokeRefreshSession(sessionId);
+            }
+
+            // ✅ احذف موقع المستخدم عند تسجيل الخروج
             try { liveLocations.delete(req.user.id); } catch(e) {}
 
             await addSystemLog({
-                userId: req.user?.id || null, userName: req.user?.name || '',
-                action: 'logout', resource: 'user', status: 'success',
-                ip: clientIP, requestId: req.requestId
+                userId: req.user?.id || null,
+                userName: req.user?.name || '',
+                action: 'logout',
+                resource: 'user',
+                status: 'success',
+                ip: clientIP,
+                requestId: req.requestId
             });
 
             await new Promise(resolve => {
@@ -1646,9 +1967,18 @@ function formatMaintenance(log) {
             const refreshCookieName = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             const sessionCookieName = isProduction ? '__Secure-marine.sid' : 'marine.sid';
 
-            res.clearCookie(refreshCookieName, { httpOnly: true, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/api/auth' });
-            res.clearCookie(sessionCookieName, { httpOnly: true, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/' });
-            res.clearCookie('marine_csrf', { httpOnly: false, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/' });
+            res.clearCookie(refreshCookieName, {
+                httpOnly: true, secure: isProduction,
+                sameSite: COOKIE_SAMESITE, path: '/api/auth'
+            });
+            res.clearCookie(sessionCookieName, {
+                httpOnly: true, secure: isProduction,
+                sameSite: COOKIE_SAMESITE, path: '/'
+            });
+            res.clearCookie('marine_csrf', {
+                httpOnly: false, secure: isProduction,
+                sameSite: COOKIE_SAMESITE, path: '/'
+            });
 
             return res.status(200).json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
         } catch (error) {
@@ -1665,12 +1995,17 @@ function formatMaintenance(log) {
             if (typeof email !== 'string' || !email.trim()) {
                 return res.status(400).json({ success: false, error: 'البريد الإلكتروني مطلوب' });
             }
+
             const user = await User.findOne({ email: email.trim().toLowerCase() });
-            if (!user) return res.json({ success: true, message: 'إذا كان البريد مسجلاً فسيتم إرسال تعليمات إعادة التعيين' });
+            if (!user) {
+                return res.json({ success: true, message: 'إذا كان البريد مسجلاً فسيتم إرسال تعليمات إعادة التعيين' });
+            }
 
             const resetToken = createPasswordResetToken(user.email);
             const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${encodeURIComponent(resetToken)}&email=${encodeURIComponent(user.email)}`;
+
             const emailHtml = `<div dir="rtl" style="font-family:Arial,sans-serif"><h2>🔐 إعادة تعيين كلمة المرور</h2><p>مرحباً <strong>${String(user.name || user.username)}</strong></p><p>استخدم الرابط التالي:</p><p><a href="${resetLink}">إعادة تعيين كلمة المرور</a></p><p>الرابط صالح لمدة ساعة.</p></div>`;
+
             await sendEmail(user.email, 'إعادة تعيين كلمة المرور - منظومة الوسائل البحرية', emailHtml);
 
             const responsePayload = { success: true, message: 'تم إنشاء طلب إعادة تعيين كلمة المرور' };
@@ -1678,6 +2013,7 @@ function formatMaintenance(log) {
                 responsePayload.resetLink = resetLink;
                 responsePayload.devNote = 'DEV ONLY';
             }
+
             return res.json(responsePayload);
         } catch (error) {
             return res.status(500).json({ success: false, error: 'حدث خطأ في الخادم' });
@@ -1706,6 +2042,7 @@ function formatMaintenance(log) {
             if (!isStrongPassword(newPassword)) {
                 return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة' });
             }
+
             const user = await User.findOne({ email: email.toLowerCase() });
             if (!user) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
 
@@ -1715,7 +2052,9 @@ function formatMaintenance(log) {
 
             await revokeAllUserSessions(user.id);
 
-            const index = passwordResetTokens.findIndex(item => item.email === email && safeEqual(item.tokenHash, hashToken(token)));
+            const index = passwordResetTokens.findIndex(
+                item => item.email === email && safeEqual(item.tokenHash, hashToken(token))
+            );
             if (index !== -1) passwordResetTokens.splice(index, 1);
 
             return res.json({ success: true, message: 'تم إعادة تعيين كلمة المرور بنجاح' });
@@ -1732,11 +2071,17 @@ function formatMaintenance(log) {
             if (!Note) return res.json([]);
             const notes = await Note.find().sort({ createdAt: -1 }).limit(500).lean();
             return res.json(notes.map(n => ({
-                id: n._id.toString(), title: n.title, content: n.content,
-                type: n.type, number: n.number, status: n.status,
-                weekNumber: n.weekNumber, year: n.year,
+                id: n._id.toString(),
+                title: n.title,
+                content: n.content,
+                type: n.type,
+                number: n.number,
+                status: n.status,
+                weekNumber: n.weekNumber,
+                year: n.year,
                 createdByName: n.createdByName || 'مستخدم',
-                createdAt: n.createdAt, updatedAt: n.updatedAt
+                createdAt: n.createdAt,
+                updatedAt: n.updatedAt
             })));
         } catch (error) {
             return res.status(500).json({ success: false, error: 'فشل تحميل الملاحظات' });
@@ -1753,9 +2098,15 @@ function formatMaintenance(log) {
             return res.json({
                 success: true,
                 note: {
-                    id: note._id.toString(), title: note.title, content: note.content,
-                    type: note.type, number: note.number, status: note.status,
-                    createdByName: note.createdByName, createdAt: note.createdAt, views: note.views
+                    id: note._id.toString(),
+                    title: note.title,
+                    content: note.content,
+                    type: note.type,
+                    number: note.number,
+                    status: note.status,
+                    createdByName: note.createdByName,
+                    createdAt: note.createdAt,
+                    views: note.views
                 }
             });
         } catch (error) {
@@ -1768,6 +2119,7 @@ function formatMaintenance(log) {
             if (!Note) return res.status(500).json({ success: false, error: 'موديل الملاحظات غير متاح' });
 
             const { title, content, date, priority, type, weekNumber } = req.body;
+
             if (typeof title !== 'string' || !title.trim()) {
                 return res.status(400).json({ success: false, error: 'العنوان مطلوب' });
             }
@@ -1793,15 +2145,20 @@ function formatMaintenance(log) {
 
             var createdById;
             try {
-                createdById = mongoose.Types.ObjectId.isValid(req.user._id) ? req.user._id : new mongoose.Types.ObjectId();
+                createdById = mongoose.Types.ObjectId.isValid(req.user._id)
+                    ? req.user._id
+                    : new mongoose.Types.ObjectId();
             } catch (e) {
                 createdById = new mongoose.Types.ObjectId();
             }
 
             const note = await Note.create({
-                title: title.trim(), content: content.trim(),
-                type: noteType, weekNumber: weekNum,
-                year: new Date().getFullYear(), status: 'مسودة',
+                title: title.trim(),
+                content: content.trim(),
+                type: noteType,
+                weekNumber: weekNum,
+                year: new Date().getFullYear(),
+                status: 'مسودة',
                 createdBy: createdById,
                 createdByName: req.user.name || req.user.username
             });
@@ -1822,11 +2179,16 @@ function formatMaintenance(log) {
             });
 
             return res.status(201).json({
-                success: true, message: 'تم إضافة الملاحظة بنجاح',
+                success: true,
+                message: 'تم إضافة الملاحظة بنجاح',
                 note: {
-                    id: note._id.toString(), title: note.title, content: note.content,
-                    type: note.type, status: note.status,
-                    createdByName: note.createdByName, createdAt: note.createdAt
+                    id: note._id.toString(),
+                    title: note.title,
+                    content: note.content,
+                    type: note.type,
+                    status: note.status,
+                    createdByName: note.createdByName,
+                    createdAt: note.createdAt
                 }
             });
         } catch (error) {
@@ -1872,10 +2234,15 @@ function formatMaintenance(log) {
             });
 
             return res.json({
-                success: true, message: 'تم تحديث الملاحظة',
+                success: true,
+                message: 'تم تحديث الملاحظة',
                 note: {
-                    id: note._id.toString(), title: note.title, content: note.content,
-                    type: note.type, status: note.status, createdAt: note.createdAt
+                    id: note._id.toString(),
+                    title: note.title,
+                    content: note.content,
+                    type: note.type,
+                    status: note.status,
+                    createdAt: note.createdAt
                 }
             });
         } catch (error) {
@@ -1893,6 +2260,7 @@ function formatMaintenance(log) {
 
             const title = note.title;
             const noteId = note._id.toString();
+
             await Note.deleteOne({ _id: note._id });
 
             await addSystemLog({
@@ -1921,7 +2289,10 @@ function formatMaintenance(log) {
     // ========================================================
     app.get('/api/notifications', authenticateAccessToken, async (req, res) => {
         try {
-            if (!Notification) return res.json({ success: true, notifications: [], unreadCount: 0, total: 0 });
+            if (!Notification) {
+                return res.json({ success: true, notifications: [], unreadCount: 0, total: 0 });
+            }
+
             const limit = Math.min(parseInt(req.query.limit) || 20, 100);
             const userId = req.user.id;
 
@@ -1930,17 +2301,26 @@ function formatMaintenance(log) {
             }).sort({ createdAt: -1 }).limit(limit).lean();
 
             const unreadCount = await Notification.countDocuments({
-                $or: [{ userId: userId }, { userId: null }], isRead: false
+                $or: [{ userId: userId }, { userId: null }],
+                isRead: false
             });
 
             return res.json({
                 success: true,
                 notifications: notifications.map(n => ({
-                    id: n._id.toString(), type: n.type, category: n.category,
-                    title: n.title, message: n.message, link: n.link, icon: n.icon,
-                    isRead: n.isRead, actorName: n.actorName, createdAt: n.createdAt
+                    id: n._id.toString(),
+                    type: n.type,
+                    category: n.category,
+                    title: n.title,
+                    message: n.message,
+                    link: n.link,
+                    icon: n.icon,
+                    isRead: n.isRead,
+                    actorName: n.actorName,
+                    createdAt: n.createdAt
                 })),
-                unreadCount, total: notifications.length
+                unreadCount,
+                total: notifications.length
             });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'فشل تحميل الإشعارات' });
@@ -1951,7 +2331,8 @@ function formatMaintenance(log) {
         try {
             if (!Notification) return res.json({ success: true, unreadCount: 0 });
             const unreadCount = await Notification.countDocuments({
-                $or: [{ userId: req.user.id }, { userId: null }], isRead: false
+                $or: [{ userId: req.user.id }, { userId: null }],
+                isRead: false
             });
             return res.json({ success: true, unreadCount });
         } catch (error) {
@@ -2027,6 +2408,7 @@ function formatMaintenance(log) {
     app.get('/api/monitoring/sessions', authenticateAccessToken, requirePermission('monitoring:view'), async (req, res) => {
         try {
             const sessions = [];
+
             if (isRedisAvailable()) {
                 try {
                     const keys = await redisClient.keys('marine:refresh:*');
@@ -2052,6 +2434,7 @@ function formatMaintenance(log) {
                     console.warn('⚠️ Redis sessions read error:', e.message);
                 }
             }
+
             for (const [sessionId, record] of refreshSessions) {
                 if (record.expiresAt > Date.now()) {
                     const user = await User.findOne({ id: record.userId });
@@ -2067,7 +2450,12 @@ function formatMaintenance(log) {
                     });
                 }
             }
-            return res.json({ success: true, sessions, stats: { total: sessions.length } });
+
+            return res.json({
+                success: true,
+                sessions,
+                stats: { total: sessions.length }
+            });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'فشل تحميل الجلسات' });
         }
@@ -2084,17 +2472,26 @@ function formatMaintenance(log) {
             } else {
                 tickets = await Ticket.find({ createdByName: req.user.name }).sort({ createdAt: -1 }).limit(100);
             }
+
             const formatted = tickets.map(t => ({
-                id: t._id.toString(), title: t.title, subject: t.title,
-                description: t.description, message: t.description,
-                category: t.category, priority: t.priority, status: t.status,
+                id: t._id.toString(),
+                title: t.title,
+                subject: t.title,
+                description: t.description,
+                message: t.description,
+                category: t.category,
+                priority: t.priority,
+                status: t.status,
                 user: t.createdByName || 'مستخدم',
                 username: t.createdByName || 'user',
                 userId: t.createdBy?.toString() || null,
                 assignedTo: t.assignedToName || null,
                 replies: t.replies || [],
-                createdAt: t.createdAt, closedAt: t.closedAt, resolution: t.resolution
+                createdAt: t.createdAt,
+                closedAt: t.closedAt,
+                resolution: t.resolution
             }));
+
             return res.json(formatted);
         } catch (error) {
             return res.status(500).json({ success: false, error: 'فشل تحميل التذاكر' });
@@ -2122,25 +2519,37 @@ function formatMaintenance(log) {
 
             let createdById;
             try {
-                createdById = mongoose.Types.ObjectId.isValid(req.user._id) ? req.user._id : new mongoose.Types.ObjectId();
+                createdById = mongoose.Types.ObjectId.isValid(req.user._id)
+                    ? req.user._id
+                    : new mongoose.Types.ObjectId();
             } catch (e) {
                 createdById = new mongoose.Types.ObjectId();
             }
 
             const ticket = await Ticket.create({
-                title: finalSubject.trim(), description: finalMessage.trim(),
-                category: finalCategory, priority: finalPriority,
-                status: 'مفتوح', createdBy: createdById,
+                title: finalSubject.trim(),
+                description: finalMessage.trim(),
+                category: finalCategory,
+                priority: finalPriority,
+                status: 'مفتوح',
+                createdBy: createdById,
                 createdByName: req.user.name || req.user.username
             });
 
             return res.status(201).json({
-                success: true, message: 'تم إرسال التذكرة بنجاح',
+                success: true,
+                message: 'تم إرسال التذكرة بنجاح',
                 ticket: {
-                    id: ticket._id.toString(), title: ticket.title, subject: ticket.title,
-                    description: ticket.description, message: ticket.description,
-                    category: ticket.category, priority: ticket.priority,
-                    status: ticket.status, user: ticket.createdByName, createdAt: ticket.createdAt
+                    id: ticket._id.toString(),
+                    title: ticket.title,
+                    subject: ticket.title,
+                    description: ticket.description,
+                    message: ticket.description,
+                    category: ticket.category,
+                    priority: ticket.priority,
+                    status: ticket.status,
+                    user: ticket.createdByName,
+                    createdAt: ticket.createdAt
                 }
             });
         } catch (error) {
@@ -2162,30 +2571,47 @@ function formatMaintenance(log) {
 
     app.post('/api/vessels', authenticateAccessToken, requirePermission('vessels:create'), csrfProtection, async (req, res) => {
         try {
-            const { name, num, len, region, zone, port, supp, status, break: breakType, fDate, eDate, ref, repairUnit, cat } = req.body;
+            const {
+                name, num, len, region, zone, port, supp, status,
+                break: breakType, fDate, eDate, ref, repairUnit, cat
+            } = req.body;
+
             if (typeof name !== 'string' || !name.trim()) {
                 return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
             }
 
             const newVessel = await Vessel.create({
-                id: randomId(8), name: name.trim(), num: num || '',
-                len: Number(len) || 0, region: region || '', zone: zone || '',
-                port: port || '', supp: supp || '',
-                status: status || 'صالح', stat: status || 'صالح',
-                break: breakType || '', fDate: fDate || null, eDate: eDate || null,
-                ref: ref || '', repairUnit: repairUnit || '', cat: cat || '',
+                id: randomId(8),
+                name: name.trim(),
+                num: num || '',
+                len: Number(len) || 0,
+                region: region || '',
+                zone: zone || '',
+                port: port || '',
+                supp: supp || '',
+                status: status || 'صالح',
+                stat: status || 'صالح',
+                break: breakType || '',
+                fDate: fDate || null,
+                eDate: eDate || null,
+                ref: ref || '',
+                repairUnit: repairUnit || '',
+                cat: cat || '',
                 createdBy: req.user.id
             });
 
             if (newVessel.status === 'معطب' || newVessel.status === 'صيانة') {
                 await Maintenance.create({
-                    id: randomId(8), vesselId: newVessel.id,
-                    vesselName: newVessel.name, vesselNum: newVessel.num,
+                    id: randomId(8),
+                    vesselId: newVessel.id,
+                    vesselName: newVessel.name,
+                    vesselNum: newVessel.num,
                     type: breakType || 'صيانة دورية',
                     status: newVessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
                     date: fDate || new Date().toISOString(),
                     startDate: fDate ? new Date(fDate) : new Date(),
-                    repairUnit: repairUnit || '—', cost: 0,
+                    repairUnit: repairUnit || '—',
+                    cost: 0,
                     notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
                     createdBy: req.user.id
                 });
@@ -2207,7 +2633,8 @@ function formatMaintenance(log) {
             });
 
             return res.status(201).json({
-                success: true, message: 'تم إضافة المركب بنجاح',
+                success: true,
+                message: 'تم إضافة المركب بنجاح',
                 vessel: formatVessel(newVessel)
             });
         } catch (error) {
@@ -2223,7 +2650,11 @@ function formatMaintenance(log) {
             const vessel = await Vessel.findOne(idQuery);
             if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
 
-            const { name, num, len, region, zone, port, supp, status, stat, break: breakType, fDate, eDate, ref, repairUnit, cat } = req.body;
+            const {
+                name, num, len, region, zone, port, supp, status, stat,
+                break: breakType, fDate, eDate, ref, repairUnit, cat
+            } = req.body;
+
             const oldStatus = vessel.status || vessel.stat;
 
             if (typeof name === 'string' && name.trim()) vessel.name = name.trim();
@@ -2247,13 +2678,16 @@ function formatMaintenance(log) {
 
             if (vessel.status && (vessel.status === 'معطب' || vessel.status === 'صيانة') && oldStatus !== vessel.status) {
                 await Maintenance.create({
-                    id: randomId(8), vesselId: vessel.id,
-                    vesselName: vessel.name, vesselNum: vessel.num,
+                    id: randomId(8),
+                    vesselId: vessel.id,
+                    vesselName: vessel.name,
+                    vesselNum: vessel.num,
                     type: breakType || 'صيانة دورية',
                     status: vessel.status === 'معطب' ? 'متأخرة' : 'قيد التنفيذ',
                     date: fDate || new Date().toISOString(),
                     startDate: fDate ? new Date(fDate) : new Date(),
-                    repairUnit: repairUnit || '—', cost: 0,
+                    repairUnit: repairUnit || '—',
+                    cost: 0,
                     notes: breakType ? `عطب: ${breakType}` : 'صيانة دورية',
                     createdBy: req.user.id
                 });
@@ -2275,7 +2709,8 @@ function formatMaintenance(log) {
             });
 
             return res.json({
-                success: true, message: 'تم تحديث المركب بنجاح',
+                success: true,
+                message: 'تم تحديث المركب بنجاح',
                 vessel: formatVessel(vessel)
             });
         } catch (error) {
@@ -2293,6 +2728,7 @@ function formatMaintenance(log) {
 
             const vesselName = vessel.name;
             const vesselId = vessel.id;
+
             await Vessel.deleteOne({ _id: vessel._id });
 
             await addSystemLog({
@@ -2317,14 +2753,17 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // 🔧 MAINTENANCE
+    // 🔧 MAINTENANCE — UNIFIED ROUTES
     // ========================================================
     async function handleGetMaintenance(req, res) {
         try {
             const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
             const records = logs.map(l => formatMaintenance(l));
             return res.json({
-                success: true, records, data: records, total: records.length,
+                success: true,
+                records,
+                data: records,
+                total: records.length,
                 stats: {
                     total: records.length,
                     completed: records.filter(r => r.status === 'مكتملة').length,
@@ -2343,7 +2782,16 @@ function formatMaintenance(log) {
 
     async function handleCreateMaintenance(req, res) {
         try {
-            const { vesselId, vesselName, vesselNum, type, status, date, startDate, endDate, repairUnit, unit, cost, technician, supervisorName, supervisor, description, notes, partsUsed, parts, priority, faultType } = req.body;
+            const {
+                vesselId, vesselName, vesselNum,
+                type, status, date, startDate, endDate,
+                repairUnit, unit, cost,
+                technician, supervisorName, supervisor,
+                description, notes,
+                partsUsed, parts,
+                priority, faultType
+            } = req.body;
+
             if (typeof vesselName !== 'string' || !vesselName.trim()) {
                 return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
             }
@@ -2356,16 +2804,20 @@ function formatMaintenance(log) {
             })).filter(p => p.partName);
 
             const logEntry = await Maintenance.create({
-                id: randomId(8), vesselId: vesselId || '',
-                vesselName: vesselName.trim(), vesselNum: vesselNum || '',
-                type: type || 'صيانة دورية', priority: priority || 'متوسط',
+                id: randomId(8),
+                vesselId: vesselId || '',
+                vesselName: vesselName.trim(),
+                vesselNum: vesselNum || '',
+                type: type || 'صيانة دورية',
+                priority: priority || 'متوسط',
                 status: status || 'قيد التنفيذ',
                 date: date || new Date().toISOString(),
                 startDate: startDate ? new Date(startDate) : new Date(),
                 endDate: endDate ? new Date(endDate) : null,
                 repairUnit: repairUnit || unit || '—',
                 cost: Number(cost) || 0,
-                description: description || '', notes: notes || '',
+                description: description || '',
+                notes: notes || '',
                 supervisorName: supervisorName || technician || '',
                 supervisor: supervisor || null,
                 faultType: faultType || 'أخرى',
@@ -2389,7 +2841,8 @@ function formatMaintenance(log) {
             });
 
             return res.status(201).json({
-                success: true, message: 'تم إضافة سجل الصيانة',
+                success: true,
+                message: 'تم إضافة سجل الصيانة',
                 log: formatMaintenance(logEntry),
                 record: formatMaintenance(logEntry),
                 data: formatMaintenance(logEntry)
@@ -2410,7 +2863,11 @@ function formatMaintenance(log) {
             const log = await Maintenance.findOne(idQuery);
             if (!log) return res.status(404).json({ success: false, error: 'السجل غير موجود' });
 
-            const allowedFields = ['status', 'cost', 'notes', 'description', 'endDate', 'priority', 'repairUnit', 'supervisorName', 'type', 'faultType'];
+            const allowedFields = [
+                'status', 'cost', 'notes', 'description', 'endDate',
+                'priority', 'repairUnit', 'supervisorName', 'type', 'faultType'
+            ];
+
             allowedFields.forEach(field => {
                 if (req.body[field] !== undefined) log[field] = req.body[field];
             });
@@ -2436,7 +2893,8 @@ function formatMaintenance(log) {
             });
 
             return res.json({
-                success: true, message: 'تم تحديث السجل',
+                success: true,
+                message: 'تم تحديث السجل',
                 log: formatMaintenance(log),
                 record: formatMaintenance(log),
                 data: formatMaintenance(log)
@@ -2459,6 +2917,7 @@ function formatMaintenance(log) {
 
             const vesselName = log.vesselName;
             const logId = log.id;
+
             await Maintenance.deleteOne({ _id: log._id });
 
             await addSystemLog({
@@ -2568,18 +3027,32 @@ function formatMaintenance(log) {
 
             const cleanUsername = username.trim();
             const existing = await User.findOne({ username: cleanUsername });
-            if (existing) return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
+            if (existing) {
+                return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
+            }
 
-            const allowedRoles = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد', 'operator', 'super_admin'];
+            const allowedRoles = [
+                'admin', 'manager', 'editor', 'maintenance_unit', 'viewer',
+                'مسؤول', 'مدير', 'مشغل', 'مشاهد', 'operator', 'super_admin'
+            ];
             const finalRole = allowedRoles.includes(role) ? normalizeRole(role) : 'viewer';
 
-            const cleanEmail = typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : `${cleanUsername.toLowerCase()}@marine.com`;
+            const cleanEmail = typeof email === 'string' && email.trim()
+                ? email.trim().toLowerCase()
+                : `${cleanUsername.toLowerCase()}@marine.com`;
+
             const emailExists = await User.findOne({ email: cleanEmail });
-            if (emailExists) return res.status(400).json({ success: false, error: 'البريد الإلكتروني موجود' });
+            if (emailExists) {
+                return res.status(400).json({ success: false, error: 'البريد الإلكتروني موجود' });
+            }
 
             const newUser = await User.create({
-                id: randomId(8), username: cleanUsername, password: password,
-                email: cleanEmail, name: cleanUsername, role: finalRole,
+                id: randomId(8),
+                username: cleanUsername,
+                password: password,
+                email: cleanEmail,
+                name: cleanUsername,
+                role: finalRole,
                 region: typeof region === 'string' ? region.trim() : '',
                 isActive: active !== undefined ? Boolean(active) : true,
                 tokenVersion: 0
@@ -2601,7 +3074,8 @@ function formatMaintenance(log) {
             });
 
             return res.status(201).json({
-                success: true, message: 'تم إضافة المستخدم بنجاح',
+                success: true,
+                message: 'تم إضافة المستخدم بنجاح',
                 user: formatUser(newUser)
             });
         } catch (error) {
@@ -2625,23 +3099,35 @@ function formatMaintenance(log) {
 
             if (normalizeRole(targetUser.role) === 'admin' && active === false) {
                 const activeAdmins = await User.countDocuments({ role: 'admin', isActive: true });
-                if (activeAdmins <= 1) return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
+                if (activeAdmins <= 1) {
+                    return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
+                }
             }
 
             if (username) targetUser.username = username.trim();
             if (email) targetUser.email = email.trim().toLowerCase();
 
             if (role) {
-                const allowedRoles = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer', 'مسؤول', 'مدير', 'مشغل', 'مشاهد', 'operator', 'super_admin'];
-                if (!allowedRoles.includes(role)) return res.status(400).json({ success: false, error: 'صلاحية غير صالحة' });
+                const allowedRoles = [
+                    'admin', 'manager', 'editor', 'maintenance_unit', 'viewer',
+                    'مسؤول', 'مدير', 'مشغل', 'مشاهد', 'operator', 'super_admin'
+                ];
+                if (!allowedRoles.includes(role)) {
+                    return res.status(400).json({ success: false, error: 'صلاحية غير صالحة' });
+                }
                 targetUser.role = normalizeRole(role);
             }
 
-            if (region !== undefined) targetUser.region = typeof region === 'string' ? region.trim() : '';
+            if (region !== undefined) {
+                targetUser.region = typeof region === 'string' ? region.trim() : '';
+            }
+
             if (active !== undefined) targetUser.isActive = Boolean(active);
 
             if (password) {
-                if (!isStrongPassword(password)) return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة' });
+                if (!isStrongPassword(password)) {
+                    return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة' });
+                }
                 targetUser.password = password;
                 targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
                 await revokeAllUserSessions(targetUser.id);
@@ -2671,7 +3157,8 @@ function formatMaintenance(log) {
             });
 
             return res.json({
-                success: true, message: 'تم تحديث المستخدم بنجاح',
+                success: true,
+                message: 'تم تحديث المستخدم بنجاح',
                 user: formatUser(targetUser)
             });
         } catch (error) {
@@ -2686,11 +3173,15 @@ function formatMaintenance(log) {
 
             const targetUser = await User.findOne(idQuery);
             if (!targetUser) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-            if (targetUser.username === 'admin') return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
+            if (targetUser.username === 'admin') {
+                return res.status(403).json({ success: false, error: 'لا يمكن حذف المستخدم الرئيسي' });
+            }
 
             if (normalizeRole(targetUser.role) === 'admin') {
                 const adminCount = await User.countDocuments({ role: 'admin' });
-                if (adminCount <= 1) return res.status(403).json({ success: false, error: 'لا يمكن حذف آخر مسؤول' });
+                if (adminCount <= 1) {
+                    return res.status(403).json({ success: false, error: 'لا يمكن حذف آخر مسؤول' });
+                }
             }
 
             const deletedUsername = targetUser.username;
@@ -2731,29 +3222,39 @@ function formatMaintenance(log) {
 
             if (normalizeRole(targetUser.role) === 'admin' && active === false) {
                 const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
-                if (adminCount <= 1) return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
+                if (adminCount <= 1) {
+                    return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول نشط' });
+                }
             }
 
             targetUser.isActive = Boolean(active);
             targetUser.updatedAt = new Date();
+
             if (!targetUser.isActive) {
                 targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
                 await revokeAllUserSessions(targetUser.id);
             }
+
             await targetUser.save();
 
             await notify({
-                type: 'info', category: 'user',
+                type: 'info',
+                category: 'user',
                 title: targetUser.isActive ? 'تفعيل مستخدم' : 'تعطيل مستخدم',
                 message: (targetUser.isActive ? 'تم تفعيل "' : 'تم تعطيل "') + targetUser.username + '" بواسطة ' + (req.user.name || req.user.username),
-                link: '/pages/users.html', icon: 'user-cog',
+                link: '/pages/users.html',
+                icon: 'user-cog',
                 actorName: req.user.name || req.user.username
             });
 
             return res.json({
                 success: true,
                 message: `تم ${targetUser.isActive ? 'تفعيل' : 'تعطيل'} المستخدم بنجاح`,
-                user: { id: targetUser.id, username: targetUser.username, active: targetUser.isActive }
+                user: {
+                    id: targetUser.id,
+                    username: targetUser.username,
+                    active: targetUser.isActive
+                }
             });
         } catch (error) {
             return res.status(500).json({ success: false, error: 'خطأ' });
@@ -2773,9 +3274,12 @@ function formatMaintenance(log) {
                 id: log._id.toString(),
                 userId: log.user?.toString() || null,
                 userName: log.userName || null,
-                action: log.action, resource: log.resource,
+                action: log.action,
+                resource: log.resource,
                 resourceName: log.resourceName || null,
-                details: log.details, status: log.status, timestamp: log.createdAt
+                details: log.details,
+                status: log.status,
+                timestamp: log.createdAt
             })));
         } catch (error) {
             res.status(500).json({ success: false, error: 'فشل تحميل السجلات' });
@@ -2795,15 +3299,17 @@ function formatMaintenance(log) {
     });
 
     // ========================================================
-    // 📍 LIVE LOCATIONS
+    // 📍 LIVE LOCATIONS — كل المستخدمين
     // ========================================================
     const liveLocations = new Map();
     const LOCATION_MAX_AGE = 24 * 60 * 60 * 1000;
 
+    // ✅ GET — إرجاع كل المواقع
     app.get('/api/locations', authenticateAccessToken, (req, res) => {
         try {
             const now = Date.now();
             const list = [];
+
             for (const [userId, loc] of liveLocations) {
                 if (now - new Date(loc.timestamp).getTime() > LOCATION_MAX_AGE) {
                     liveLocations.delete(userId);
@@ -2811,30 +3317,38 @@ function formatMaintenance(log) {
                 }
                 list.push(loc);
             }
+
             list.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
             return res.json({
-                success: true, count: list.length, locations: list,
+                success: true,
+                count: list.length,
+                locations: list,
                 viewer: {
-                    id: req.user.id, username: req.user.username,
+                    id: req.user.id,
+                    username: req.user.username,
                     role: normalizeRole(req.user.role)
                 }
             });
         } catch (error) {
+            console.error('❌ GET locations error:', error.message);
             return res.status(500).json({ success: false, error: 'فشل تحميل المواقع' });
         }
     });
 
+    // ✅ POST — إرسال موقع المستخدم الحالي
     app.post('/api/locations', authenticateAccessToken, csrfProtection, (req, res) => {
         try {
             const { latitude, longitude, accuracy, vesselId } = req.body;
             const lat = Number(latitude);
             const lng = Number(longitude);
+
             if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
                 return res.status(400).json({ success: false, error: 'إحداثيات غير صالحة' });
             }
 
             const role = normalizeRole(req.user.role);
+
             const location = {
                 id: randomId(8),
                 userId: req.user.id,
@@ -2844,52 +3358,69 @@ function formatMaintenance(log) {
                 roleLabel: ROLE_LABELS[role] || role,
                 region: req.user.region || '',
                 vesselId: vesselId || null,
-                latitude: lat, longitude: lng,
+                latitude: lat,
+                longitude: lng,
                 accuracy: Number(accuracy) || null,
                 timestamp: new Date().toISOString()
             };
 
             liveLocations.set(req.user.id, location);
+
             return res.status(201).json({ success: true, location });
         } catch (error) {
+            console.error('❌ POST location error:', error.message);
             return res.status(500).json({ success: false, error: 'فشل حفظ الموقع' });
         }
     });
 
+    // ✅ DELETE — حذف موقعي
     app.delete('/api/locations/me', authenticateAccessToken, csrfProtection, (req, res) => {
         liveLocations.delete(req.user.id);
         return res.json({ success: true });
     });
 
     // ========================================================
-    // 🤖 AI + IMPORT
+    // 🤖 AI + 📥 IMPORT ROUTES
     // ========================================================
     aiAndImportRoutes(app, {
-        User, Vessel, Maintenance, Notification,
-        authenticateAccessToken, csrfProtection,
-        requirePermission, hasPermission,
-        randomId, addSystemLog, notify
+        User,
+        Vessel,
+        Maintenance,
+        Notification,
+        authenticateAccessToken,
+        csrfProtection,
+        requirePermission,
+        hasPermission,
+        randomId,
+        addSystemLog,
+        notify
     });
 
     // ========================================================
-    // ⚙️ SETTINGS + LOGO
+    // ⚙️ SETTINGS + 🖼️ LOGO ROUTES
     // ========================================================
     if (UserSettings && SystemLogo) {
         try {
             settingsRoutes(app, {
-                UserSettings, SystemLogo,
-                authenticateAccessToken, requireAdmin, requirePermission,
-                csrfProtection, addSystemLog, notify
+                UserSettings,
+                SystemLogo,
+                authenticateAccessToken,
+                requireAdmin,
+                requirePermission,
+                csrfProtection,
+                addSystemLog,
+                notify
             });
         } catch (e) {
             console.error('❌ Failed to register settings routes:', e.message);
+            console.error(e.stack);
         }
     } else {
         console.warn('⚠️ UserSettings or SystemLogo model missing — settings disabled');
     }
 
     // ========================================================
-    // 📌 OWNERSHIP SIGNATURE
+    // 📌 OWNERSHIP SIGNATURE INJECTION
     // ========================================================
     const OWNERSHIP_META = `
 <meta name="author" content="أمان الله ناجي">
@@ -2900,7 +3431,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.7.0 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.5.0 - Aman Allah Naji">
 <meta property="og:site_name" content="منظومة الوسائل البحرية">
 <meta property="og:author" content="أمان الله ناجي">
 <meta name="twitter:creator" content="@amanallah_naji">
@@ -2910,38 +3441,45 @@ function formatMaintenance(log) {
 <style id="ownership-signature-style">
 #dev-signature {
     position: fixed !important;
-    bottom: 6px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    padding: 3px 10px !important;
-    background: rgba(6, 9, 17, 0.35) !important;
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
-    border: 1px solid rgba(230, 179, 30, 0.1) !important;
-    border-radius: 20px !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    padding: 8px 14px !important;
+    background: rgba(6, 9, 17, 0.75) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(230, 179, 30, 0.25) !important;
+    border-radius: 10px !important;
     font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif !important;
-    z-index: 1 !important;
+    z-index: 9999 !important;
     pointer-events: none !important;
     user-select: none !important;
-    opacity: 0.4 !important;
+    opacity: 0.65 !important;
     transition: opacity 0.3s ease !important;
     direction: rtl !important;
-    line-height: 1.2 !important;
-    box-shadow: none !important;
-    max-width: 200px !important;
-    white-space: nowrap !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 5px !important;
+    text-align: right !important;
+    line-height: 1.3 !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
 }
-#dev-signature:hover { opacity: 0.8 !important; }
-#dev-signature .sig-icon { color: #e6b31e !important; font-size: 9px !important; }
-#dev-signature .sig-name { color: #f7d774 !important; font-weight: 700 !important; font-size: 9.5px !important; }
-#dev-signature .sig-role { display: none !important; }
-@media (max-width: 1024px) {
-    #dev-signature { display: none !important; }
+#dev-signature:hover { opacity: 1 !important; }
+#dev-signature .sig-icon { color: #e6b31e !important; font-size: 13px !important; margin-left: 4px !important; }
+#dev-signature .sig-name {
+    color: #f7d774 !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    display: block !important;
+}
+#dev-signature .sig-role {
+    color: #64748b !important;
+    font-size: 9px !important;
+    display: block !important;
+    margin-top: 2px !important;
 }
 @media print { #dev-signature { display: none !important; } }
+@media (max-width: 480px) {
+    #dev-signature { padding: 6px 10px !important; bottom: 12px !important; right: 12px !important; }
+    #dev-signature .sig-name { font-size: 10px !important; }
+    #dev-signature .sig-role { font-size: 8px !important; }
+}
 </style>`;
 
     const OWNERSHIP_HTML = `
@@ -2959,7 +3497,7 @@ function formatMaintenance(log) {
             'background:linear-gradient(135deg,#060911,#0a1020);color:#f7d774;font-size:20px;font-weight:900;padding:12px 24px;border-radius:8px;text-shadow:0 0 20px #e6b31e;');
         console.log('%c👨‍💻 تصميم وتطوير: أمان الله ناجي — إدارة إسناد الوحدات البحرية',
             'background:#0a1020;color:#e6b31e;font-size:13px;font-weight:700;padding:8px 24px;border-radius:0 0 8px 8px;');
-        console.log('%c🚢 System Version: 10.7.0 | © ' + new Date().getFullYear() + ' All Rights Reserved',
+        console.log('%c🚢 System Version: 10.5.0 | © ' + new Date().getFullYear() + ' All Rights Reserved',
             'color:#64748b;font-size:11px;');
     } catch(e){}
 })();
@@ -3012,7 +3550,7 @@ function formatMaintenance(log) {
                     return originalSend(content);
                 }
             } catch (e) {
-                console.warn('⚠️ Ownership injection failed:', e.message);
+                console.warn('⚠️ Ownership injection failed, serving raw file:', e.message);
             }
             return originalSendFile(filePath, options, callback);
         };
@@ -3023,7 +3561,7 @@ function formatMaintenance(log) {
     console.log('📌 Ownership signature middleware registered');
 
     // ========================================================
-    // 👤 USER INFO BADGE
+    // 👤 USER INFO BADGE — شريط معلومات المستخدم
     // ========================================================
     const USER_BADGE_CSS = `
 <style id="user-info-badge-style">
@@ -3058,35 +3596,74 @@ function formatMaintenance(log) {
     100% { opacity: 1; transform: translateX(0); }
 }
 #user-info-badge .uib-avatar {
-    width: 34px !important; height: 34px !important;
+    width: 34px !important;
+    height: 34px !important;
     border-radius: 50% !important;
     background: linear-gradient(135deg, #f7d774 0%, #e6b31e 50%, #b8860b 100%) !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    color: #060911 !important; font-weight: 900 !important; font-size: 15px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #060911 !important;
+    font-weight: 900 !important;
+    font-size: 15px !important;
     flex-shrink: 0 !important;
     box-shadow: 0 4px 12px rgba(230, 179, 30, 0.4) !important;
 }
 #user-info-badge .uib-info {
-    display: flex !important; flex-direction: column !important;
-    line-height: 1.35 !important; min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    line-height: 1.35 !important;
+    min-width: 0 !important;
 }
 #user-info-badge .uib-name {
-    color: #f7d774 !important; font-weight: 800 !important; font-size: 12.5px !important;
-    white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;
+    color: #f7d774 !important;
+    font-weight: 800 !important;
+    font-size: 12.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 #user-info-badge .uib-meta {
-    display: flex !important; align-items: center !important;
-    gap: 8px !important; flex-wrap: wrap !important;
-    font-size: 10.5px !important; margin-top: 1px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    font-size: 10.5px !important;
+    margin-top: 1px !important;
 }
-#user-info-badge .uib-role { color: #e6b31e !important; font-weight: 700 !important; white-space: nowrap !important; }
-#user-info-badge .uib-role::before { content: '👤 ' !important; font-size: 10px !important; }
-#user-info-badge .uib-region { color: #60a5fa !important; font-weight: 700 !important; white-space: nowrap !important; }
-#user-info-badge .uib-region::before { content: '📍 ' !important; font-size: 10px !important; }
-#user-info-badge .uib-sep { color: #475569 !important; font-size: 9px !important; }
-@media print { #user-info-badge { display: none !important; } }
+#user-info-badge .uib-role {
+    color: #e6b31e !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+#user-info-badge .uib-role::before {
+    content: '👤 ' !important;
+    font-size: 10px !important;
+}
+#user-info-badge .uib-region {
+    color: #60a5fa !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+#user-info-badge .uib-region::before {
+    content: '📍 ' !important;
+    font-size: 10px !important;
+}
+#user-info-badge .uib-sep {
+    color: #475569 !important;
+    font-size: 9px !important;
+}
+@media print {
+    #user-info-badge { display: none !important; }
+}
 @media (max-width: 768px) {
-    #user-info-badge { top: 36px !important; left: 10px !important; padding: 6px 10px !important; max-width: 260px !important; gap: 8px !important; }
+    #user-info-badge {
+        top: 36px !important;
+        left: 10px !important;
+        padding: 6px 10px !important;
+        max-width: 260px !important;
+        gap: 8px !important;
+    }
     #user-info-badge .uib-avatar { width: 28px !important; height: 28px !important; font-size: 13px !important; }
     #user-info-badge .uib-name { font-size: 11px !important; }
     #user-info-badge .uib-meta { font-size: 9px !important; gap: 5px !important; }
@@ -3109,6 +3686,7 @@ function formatMaintenance(log) {
 <script>
 (function(){
     'use strict';
+    
     function readUser() {
         var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
         var stores = [window.localStorage, window.sessionStorage];
@@ -3120,31 +3698,53 @@ function formatMaintenance(log) {
                     var raw = store.getItem(keys[i]);
                     if (raw) {
                         var parsed = JSON.parse(raw);
-                        if (parsed && (parsed.name || parsed.username || parsed.role)) return parsed;
+                        if (parsed && (parsed.name || parsed.username || parsed.role)) {
+                            return parsed;
+                        }
                     }
                 } catch(e) {}
             }
         }
         return null;
     }
+    
     function updateBadge() {
         try {
             var badge = document.getElementById('user-info-badge');
             if (!badge) return;
+            
             var user = readUser();
-            if (!user) { badge.classList.remove('uib-visible'); return; }
+            if (!user) {
+                badge.classList.remove('uib-visible');
+                return;
+            }
+            
             var name = user.name || user.username || 'مستخدم';
             var roleLabel = user.roleLabel || user.role || '';
             var region = user.region || '';
+            
             var avatar = badge.querySelector('.uib-avatar');
-            if (avatar) { var init = String(name).trim().charAt(0) || 'م'; avatar.textContent = init.toUpperCase(); }
+            if (avatar) {
+                var initial = String(name).trim().charAt(0) || 'م';
+                avatar.textContent = initial.toUpperCase();
+            }
+            
             var nameEl = badge.querySelector('.uib-name');
             if (nameEl) nameEl.textContent = name;
+            
             var roleEl = badge.querySelector('.uib-role');
             var regionEl = badge.querySelector('.uib-region');
             var metaEl = badge.querySelector('.uib-meta');
-            if (roleEl) { roleEl.textContent = roleLabel; roleEl.style.display = roleLabel ? '' : 'none'; }
-            if (regionEl) { regionEl.textContent = region; regionEl.style.display = region ? '' : 'none'; }
+            
+            if (roleEl) {
+                roleEl.textContent = roleLabel;
+                roleEl.style.display = roleLabel ? '' : 'none';
+            }
+            if (regionEl) {
+                regionEl.textContent = region;
+                regionEl.style.display = region ? '' : 'none';
+            }
+            
             if (metaEl) {
                 var existingSep = metaEl.querySelector('.uib-sep');
                 if (existingSep) existingSep.remove();
@@ -3152,18 +3752,28 @@ function formatMaintenance(log) {
                     var sep = document.createElement('span');
                     sep.className = 'uib-sep';
                     sep.textContent = '•';
-                    if (roleEl && regionEl) metaEl.insertBefore(sep, regionEl);
+                    if (roleEl && regionEl) {
+                        metaEl.insertBefore(sep, regionEl);
+                    }
                 }
             }
+            
             badge.classList.add('uib-visible');
         } catch(e) {}
     }
+    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', updateBadge);
-    } else { updateBadge(); }
+    } else {
+        updateBadge();
+    }
+    
     window.addEventListener('storage', function(e) {
-        if (['marine_user', 'currentUser', 'user', 'marine_token', 'token', 'marine_auth_token'].indexOf(e.key) !== -1) updateBadge();
+        if (['marine_user', 'currentUser', 'user', 'marine_token', 'token', 'marine_auth_token'].indexOf(e.key) !== -1) {
+            updateBadge();
+        }
     });
+    
     setInterval(updateBadge, 1500);
     window.addEventListener('pageshow', updateBadge);
 })();
@@ -3175,22 +3785,20 @@ function formatMaintenance(log) {
             return next();
         }
 
-        const injectBadge = (html) => {
-            if (typeof html !== 'string' || !html.includes('</body>')) return html;
-            if (html.includes('user-info-badge-style')) return html;
-            if (html.includes('</head>')) {
-                html = html.replace('</head>', USER_BADGE_CSS + '\n</head>');
-            }
-            if (/<body[^>]*>/i.test(html)) {
-                html = html.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
-            }
-            html = html.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
-            return html;
-        };
-
         const originalSend = res.send.bind(res);
         res.send = function (body) {
-            try { body = injectBadge(body); } catch(e) {}
+            try {
+                if (typeof body === 'string' && body.includes('</body>') &&
+                    !body.includes('user-info-badge-style')) {
+                    if (body.includes('</head>')) {
+                        body = body.replace('</head>', USER_BADGE_CSS + '\n</head>');
+                    }
+                    if (/<body[^>]*>/i.test(body)) {
+                        body = body.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
+                    }
+                    body = body.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
+                }
+            } catch (e) {}
             return originalSend(body);
         };
 
@@ -3200,7 +3808,15 @@ function formatMaintenance(log) {
             try {
                 if (typeof filePath === 'string' && /\.html?$/i.test(filePath) && fs.existsSync(filePath)) {
                     let content = fs.readFileSync(filePath, 'utf8');
-                    content = injectBadge(content);
+                    if (content.includes('</body>') && !content.includes('user-info-badge-style')) {
+                        if (content.includes('</head>')) {
+                            content = content.replace('</head>', USER_BADGE_CSS + '\n</head>');
+                        }
+                        if (/<body[^>]*>/i.test(content)) {
+                            content = content.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
+                        }
+                        content = content.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
+                    }
                     res.setHeader('Content-Type', 'text/html; charset=utf-8');
                     return originalSend(content);
                 }
@@ -3216,35 +3832,34 @@ function formatMaintenance(log) {
     console.log('👤 User info badge middleware registered');
 
     // ========================================================
-    // 📍 FORCE GPS v5 — Login verification + fetch API + No auto-send
+    // 📍 FORCE GPS — مشاركة إلزامية للموقع
     // ========================================================
     const FORCE_GPS_CSS = `
 <style id="force-gps-style">
 #force-gps-modal {
     position: fixed !important;
-    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-    width: 100vw !important; height: 100vh !important;
-    z-index: 2147483647 !important;
-    background: rgba(6, 9, 17, 0.98) !important;
+    inset: 0 !important;
+    z-index: 999999 !important;
+    background: rgba(6, 9, 17, 0.97) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     font-family: 'Cairo', 'Segoe UI', sans-serif !important;
     direction: rtl !important;
     padding: 20px !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
 }
-#force-gps-modal.gps-ok { display: none !important; }
+#force-gps-modal.hidden { display: none !important; }
 #force-gps-modal .fg-box {
-    max-width: 460px !important;
+    max-width: 480px !important;
     width: 100% !important;
     background: linear-gradient(135deg, rgba(18, 26, 44, 0.98) 0%, rgba(24, 34, 56, 0.95) 100%) !important;
     border: 2px solid rgba(230, 179, 30, 0.4) !important;
     border-radius: 20px !important;
-    padding: 32px 24px !important;
+    padding: 36px 28px !important;
     text-align: center !important;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8) !important;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7) !important;
     animation: fgSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 @keyframes fgSlideIn {
@@ -3252,34 +3867,46 @@ function formatMaintenance(log) {
     100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 #force-gps-modal .fg-icon {
-    width: 72px !important; height: 72px !important;
-    margin: 0 auto 18px !important;
+    width: 80px !important;
+    height: 80px !important;
+    margin: 0 auto 20px !important;
     border-radius: 50% !important;
     background: linear-gradient(135deg, #f7d774 0%, #e6b31e 50%, #b8860b 100%) !important;
-    display: flex !important; align-items: center !important; justify-content: center !important;
-    font-size: 34px !important; color: #060911 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 40px !important;
+    color: #060911 !important;
     box-shadow: 0 12px 40px rgba(230, 179, 30, 0.5) !important;
     animation: fgPulse 2s ease-in-out infinite !important;
 }
 @keyframes fgPulse {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.06); }
+    50% { transform: scale(1.05); }
 }
 #force-gps-modal .fg-title {
-    font-size: 20px !important; font-weight: 900 !important;
-    margin: 0 0 10px !important; color: #f7d774 !important;
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    color: #f7d774 !important;
+    margin: 0 0 12px !important;
 }
 #force-gps-modal .fg-desc {
-    font-size: 13.5px !important; color: #cbd5e1 !important;
-    line-height: 1.7 !important; margin: 0 0 22px !important;
+    font-size: 14px !important;
+    color: #cbd5e1 !important;
+    line-height: 1.7 !important;
+    margin: 0 0 24px !important;
 }
-#force-gps-modal .fg-desc strong { color: #fca5a5 !important; font-weight: 800 !important; }
+#force-gps-modal .fg-desc strong {
+    color: #fca5a5 !important;
+    font-weight: 800 !important;
+}
 #force-gps-modal .fg-btn {
     display: inline-flex !important;
     align-items: center !important;
     gap: 10px !important;
     padding: 14px 32px !important;
-    border: none !important; border-radius: 12px !important;
+    border: none !important;
+    border-radius: 12px !important;
     background: linear-gradient(135deg, #f7d774 0%, #e6b31e 50%, #b8860b 100%) !important;
     color: #060911 !important;
     font-family: inherit !important;
@@ -3289,29 +3916,41 @@ function formatMaintenance(log) {
     box-shadow: 0 8px 24px rgba(230, 179, 30, 0.5) !important;
     transition: all 0.3s ease !important;
 }
-#force-gps-modal .fg-btn:hover { transform: translateY(-2px) scale(1.02) !important; }
-#force-gps-modal .fg-btn:disabled { opacity: 0.6 !important; cursor: wait !important; }
+#force-gps-modal .fg-btn:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 12px 32px rgba(230, 179, 30, 0.7) !important;
+}
+#force-gps-modal .fg-btn:disabled {
+    opacity: 0.6 !important;
+    cursor: wait !important;
+    transform: none !important;
+}
 #force-gps-modal .fg-status {
-    margin-top: 14px !important; font-size: 12px !important;
-    color: #94a3b8 !important; min-height: 18px !important;
+    margin-top: 16px !important;
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    min-height: 20px !important;
 }
 #force-gps-modal .fg-status.error { color: #fca5a5 !important; }
 #force-gps-modal .fg-status.success { color: #6ee7b7 !important; }
 #force-gps-modal .fg-warn {
-    margin-top: 18px !important;
-    padding: 10px !important;
+    margin-top: 20px !important;
+    padding: 12px !important;
     background: rgba(239, 68, 68, 0.1) !important;
     border: 1px solid rgba(239, 68, 68, 0.3) !important;
     border-radius: 10px !important;
-    font-size: 11.5px !important;
+    font-size: 12px !important;
     color: #fca5a5 !important;
     line-height: 1.6 !important;
+}
+body.force-gps-locked {
+    overflow: hidden !important;
 }
 @media print { #force-gps-modal { display: none !important; } }
 </style>`;
 
     const FORCE_GPS_HTML = `
-<div id="force-gps-modal" class="gps-ok" role="dialog" aria-modal="true" aria-label="مطلوب الوصول إلى الموقع">
+<div id="force-gps-modal" class="hidden" role="dialog" aria-modal="true" aria-label="مطلوب الوصول إلى الموقع">
     <div class="fg-box">
         <div class="fg-icon">📍</div>
         <h2 class="fg-title">مطلوب الوصول إلى موقعك</h2>
@@ -3336,83 +3975,78 @@ function formatMaintenance(log) {
 <script>
 (function(){
     'use strict';
-    var MODAL_ID = 'force-gps-modal';
-    var SEND_INTERVAL = 30000;
-    var MIN_ACCURACY = 500;
-    var firstSuccess = false;
-    var watchId = null;
-    var lastSent = 0;
-    var asking = false;
-    var userClicked = false;
-    var loginVerified = false;
-    var lastVerifyAt = 0;
 
-    function log() {
-        try { console.log.apply(console, ['[GPS]'].concat(Array.prototype.slice.call(arguments))); } catch(e) {}
+    const MODAL_ID = 'force-gps-modal';
+    const SEND_INTERVAL_MS = 30 * 1000;
+    const MIN_ACCURACY_M = 500;
+
+    let geoWatchId = null;
+    let lastSent = 0;
+    let isGettingLocation = false;
+    let firstSuccess = false;
+
+    function isLoggedIn() {
+        try {
+            var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
+            var stores = [localStorage, sessionStorage];
+            for (var s = 0; s < stores.length; s++) {
+                for (var i = 0; i < keys.length; i++) {
+                    if (stores[s].getItem(keys[i])) return true;
+                }
+            }
+            if (localStorage.getItem('marine_auth_token')
+                || localStorage.getItem('marine_token')
+                || localStorage.getItem('token')) return true;
+        } catch(e) {}
+        return false;
     }
-    function warn() {
-        try { console.warn.apply(console, ['[GPS]'].concat(Array.prototype.slice.call(arguments))); } catch(e) {}
+
+    function showModal() {
+        var m = document.getElementById(MODAL_ID);
+        if (!m) return;
+        m.classList.remove('hidden');
+        document.body.classList.add('force-gps-locked');
     }
-    function getModal() { return document.getElementById(MODAL_ID); }
-    function showModal() { var m = getModal(); if (m) m.classList.remove('gps-ok'); }
-    function hideModal() { var m = getModal(); if (m) m.classList.add('gps-ok'); }
-    function setStatus(t, c) {
+
+    function hideModal() {
+        var m = document.getElementById(MODAL_ID);
+        if (!m) return;
+        m.classList.add('hidden');
+        document.body.classList.remove('force-gps-locked');
+    }
+
+    function setStatus(text, type) {
         var el = document.getElementById('fgStatus');
-        if (el) { el.textContent = t || ''; el.className = 'fg-status' + (c ? ' ' + c : ''); }
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = 'fg-status' + (type ? ' ' + type : '');
+    }
+
+    function getCsrf() {
+        try {
+            var m = document.cookie.match(/marine_csrf=([^;]+)/);
+            return m ? m[1] : '';
+        } catch(e) { return ''; }
     }
 
     function getToken() {
-        try {
-            return localStorage.getItem('marine_auth_token')
-                || localStorage.getItem('marine_token')
-                || localStorage.getItem('token')
-                || '';
-        } catch(e) { return ''; }
-    }
-    function getCsrf() {
-        try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch(e) { return ''; }
+        return localStorage.getItem('marine_auth_token')
+            || localStorage.getItem('marine_token')
+            || localStorage.getItem('token')
+            || '';
     }
 
-    /* ✅ تحقق فعلي من السيرفر */
-    function verifyLogin(callback) {
-        var token = getToken();
-        if (!token) { callback(false); return; }
-        if (loginVerified && (Date.now() - lastVerifyAt < 60000)) { callback(true); return; }
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/api/auth/me', true);
-        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-        xhr.setRequestHeader('Accept', 'application/json');
-        xhr.withCredentials = true;
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState !== 4) return;
-            if (xhr.status === 200) {
-                loginVerified = true;
-                lastVerifyAt = Date.now();
-                log('✅ login verified');
-                callback(true);
-            } else {
-                loginVerified = false;
-                log('❌ login failed:', xhr.status);
-                callback(false);
-            }
-        };
-        xhr.onerror = function() { callback(false); };
-        xhr.send();
-    }
-
-    /* ✅ استخدام fetch */
-    async function postLocation(coords) {
-        var token = getToken();
-        var csrf = getCsrf();
-
+    async function sendLocation(position) {
+        var coords = position.coords || position;
+        var accuracy = coords.accuracy;
+        if (accuracy && accuracy > MIN_ACCURACY_M) return;
         try {
             var res = await fetch('/api/locations', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token,
-                    'X-CSRF-Token': csrf || ''
+                    'Authorization': 'Bearer ' + getToken(),
+                    'X-CSRF-Token': getCsrf()
                 },
                 credentials: 'include',
                 body: JSON.stringify({
@@ -3421,146 +4055,126 @@ function formatMaintenance(log) {
                     accuracy: coords.accuracy || null
                 })
             });
-
-            log('POST /api/locations →', res.status);
             if (res.ok) {
                 lastSent = Date.now();
-                return { ok: true };
+                if (!firstSuccess) {
+                    firstSuccess = true;
+                    setStatus('✅ تم تسجيل موقعك بنجاح', 'success');
+                    setTimeout(hideModal, 800);
+                }
             }
-            var txt = '';
-            try { txt = await res.text(); } catch(e) {}
-            log('response:', txt.substring(0, 200));
-            return { ok: false, status: res.status, body: txt };
-        } catch(e) {
-            warn('fetch error:', e.message);
-            return { ok: false, status: 0, error: e.message };
-        }
-    }
-
-    function startWatching() {
-        if (watchId !== null) return;
-        if (!navigator.geolocation) return;
-        try {
-            watchId = navigator.geolocation.watchPosition(
-                function(pos) {
-                    if (!loginVerified) return;
-                    postLocation(pos.coords);
-                },
-                function(err) { log('watch err:', err.message); },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-            );
         } catch(e) {}
     }
 
-    function requestLocation() {
-        if (asking) return;
-        asking = true;
-        userClicked = true;
-        var btn = document.getElementById('fgAllowBtn');
-        if (btn) btn.disabled = true;
-
+    function startWatching() {
+        if (geoWatchId !== null) return;
         if (!navigator.geolocation) {
-            asking = false;
-            if (btn) btn.disabled = false;
             setStatus('❌ المتصفح لا يدعم تحديد الموقع', 'error');
             return;
         }
-
-        setStatus('⏳ جاري التحقق من الجلسة...');
-
-        verifyLogin(function(loggedIn) {
-            if (!loggedIn) {
-                asking = false;
-                if (btn) btn.disabled = false;
-                setStatus('⚠️ يجب تسجيل الدخول أولاً', 'error');
-                setTimeout(function() { hideModal(); }, 2000);
-                return;
-            }
-
-            setStatus('📍 جاري طلب الموقع من المتصفح...');
-            navigator.geolocation.getCurrentPosition(
-                async function(pos) {
-                    setStatus('📡 جاري إرسال الموقع...');
-                    var result = await postLocation(pos.coords);
-                    asking = false;
-                    if (btn) btn.disabled = false;
-
-                    if (result.ok) {
-                        firstSuccess = true;
-                        setStatus('✅ تم تسجيل موقعك بنجاح', 'success');
-                        setTimeout(hideModal, 600);
-                        startWatching();
-                    } else if (result.status === 401) {
-                        loginVerified = false;
-                        setStatus('⚠️ جلسة منتهية. يرجى تسجيل الدخول مرة أخرى.', 'error');
-                        setTimeout(hideModal, 2500);
-                    } else {
-                        setStatus('⚠️ فشل الإرسال (كود: ' + (result.status || 'شبكة') + ')', 'error');
-                    }
-                },
-                function(err) {
-                    asking = false;
-                    if (btn) btn.disabled = false;
-                    var msg = 'حدث خطأ';
-                    if (err.code === 1) msg = '⚠️ رفضت الوصول. يجب السماح للمتابعة.';
-                    else if (err.code === 2) msg = '⚠️ تعذّر تحديد الموقع. تحقق من GPS.';
-                    else if (err.code === 3) msg = '⚠️ انتهت المهلة. حاول مجدداً.';
-                    setStatus(msg, 'error');
-                },
-                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-            );
-        });
+        geoWatchId = navigator.geolocation.watchPosition(
+            function(pos) { sendLocation(pos); },
+            function(err) {
+                setStatus('⚠️ تعذّر قراءة الموقع: ' + err.message, 'error');
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+        );
     }
 
-    function startPeriodicSend() {
-        setInterval(function() {
-            if (!firstSuccess) return;
-            if (watchId === null) return;
-            if (Date.now() - lastSent < SEND_INTERVAL) return;
-            if (!navigator.geolocation) return;
-            if (!loginVerified) return;
-            navigator.geolocation.getCurrentPosition(
-                function(pos) { postLocation(pos.coords); },
-                function() {},
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-            );
-        }, SEND_INTERVAL);
-    }
-
-    function init() {
+    function requestOnce() {
+        if (isGettingLocation) return;
+        isGettingLocation = true;
         var btn = document.getElementById('fgAllowBtn');
-        if (btn) btn.addEventListener('click', requestLocation);
+        if (btn) { btn.disabled = true; }
+        setStatus('⏳ جاري طلب الوصول من المتصفح...');
 
-        hideModal();
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                isGettingLocation = false;
+                if (btn) { btn.disabled = false; }
+                sendLocation(pos);
+                startWatching();
+            },
+            function(err) {
+                isGettingLocation = false;
+                if (btn) { btn.disabled = false; }
+                var msg = 'حدث خطأ';
+                if (err.code === 1) msg = '⚠️ رفضت الوصول. يجب السماح للمتابعة.';
+                else if (err.code === 2) msg = '⚠️ تعذّر تحديد الموقع. تحقق من GPS.';
+                else if (err.code === 3) msg = '⚠️ انتهت المهلة. حاول مجدداً.';
+                setStatus(msg, 'error');
+            },
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+    }
 
-        /* ✅ فحص دوري: يظهر الـ Modal فقط إذا كانت الجلسة صالحة */
-        setInterval(function() {
-            if (firstSuccess) return;
+    setInterval(function() {
+        if (geoWatchId === null) return;
+        if (Date.now() - lastSent < SEND_INTERVAL_MS) return;
+        navigator.geolocation.getCurrentPosition(
+            function(pos) { sendLocation(pos); },
+            function() {},
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
+    }, SEND_INTERVAL_MS);
 
-            var token = getToken();
-            if (!token) {
-                hideModal();
-                return;
-            }
+    function checkPermissionAndInit() {
+        if (!navigator.geolocation) {
+            setStatus('❌ المتصفح لا يدعم تحديد الموقع', 'error');
+            showModal();
+            return;
+        }
 
-            if (loginVerified && Date.now() - lastVerifyAt < 60000) {
+        if (!isLoggedIn()) return;
+
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+                if (result.state === 'granted') {
+                    startWatching();
+                    navigator.geolocation.getCurrentPosition(
+                        function(pos) { sendLocation(pos); },
+                        function() {},
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                } else {
+                    showModal();
+                }
+                result.onchange = function() {
+                    if (result.state === 'granted') {
+                        hideModal();
+                        startWatching();
+                    } else if (result.state === 'denied') {
+                        showModal();
+                    }
+                };
+            }).catch(function() {
                 showModal();
-                return;
-            }
-
-            verifyLogin(function(valid) {
-                if (valid) showModal();
-                else hideModal();
             });
-        }, 2000);
+        } else {
+            showModal();
+        }
+    }
 
-        startPeriodicSend();
-        log('Force GPS initialized — waiting for valid session');
+    function bind() {
+        var btn = document.getElementById('fgAllowBtn');
+        if (btn) btn.addEventListener('click', requestOnce);
+
+        window.addEventListener('storage', function(e) {
+            if (!e.key) return;
+            if (['marine_user', 'currentUser', 'user', 'marine_token', 'token', 'marine_auth_token'].indexOf(e.key) !== -1) {
+                checkPermissionAndInit();
+            }
+        });
+
+        setInterval(checkPermissionAndInit, 3000);
+        setTimeout(checkPermissionAndInit, 500);
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else { init(); }
+        document.addEventListener('DOMContentLoaded', bind);
+    } else {
+        bind();
+    }
 })();
 <\/script>`;
 
@@ -3570,24 +4184,19 @@ function formatMaintenance(log) {
             return next();
         }
 
-        const injectGPS = (html) => {
-            if (typeof html !== 'string' || !html.includes('</body>')) return html;
-            if (html.includes('force-gps-style')) return html;
-            if (html.includes('</head>')) {
-                html = html.replace('</head>', FORCE_GPS_CSS + '\n</head>');
-            }
-            if (/<body[^>]*>/i.test(html)) {
-                html = html.replace(/(<body[^>]*>)/i, '$1' + FORCE_GPS_HTML);
-            } else {
-                html = FORCE_GPS_HTML + html;
-            }
-            html = html.replace('</body>', FORCE_GPS_SCRIPT + '\n</body>');
-            return html;
-        };
-
         const originalSend = res.send.bind(res);
         res.send = function (body) {
-            try { body = injectGPS(body); } catch(e) {}
+            try {
+                if (typeof body === 'string' && body.includes('</body>') && !body.includes('force-gps-style')) {
+                    if (body.includes('</head>')) {
+                        body = body.replace('</head>', FORCE_GPS_CSS + '\n</head>');
+                    }
+                    if (/<body[^>]*>/i.test(body)) {
+                        body = body.replace(/(<body[^>]*>)/i, '$1' + FORCE_GPS_HTML);
+                    }
+                    body = body.replace('</body>', FORCE_GPS_SCRIPT + '\n</body>');
+                }
+            } catch (e) {}
             return originalSend(body);
         };
 
@@ -3597,7 +4206,15 @@ function formatMaintenance(log) {
             try {
                 if (typeof filePath === 'string' && /\.html?$/i.test(filePath) && fs.existsSync(filePath)) {
                     let content = fs.readFileSync(filePath, 'utf8');
-                    content = injectGPS(content);
+                    if (content.includes('</body>') && !content.includes('force-gps-style')) {
+                        if (content.includes('</head>')) {
+                            content = content.replace('</head>', FORCE_GPS_CSS + '\n</head>');
+                        }
+                        if (/<body[^>]*>/i.test(content)) {
+                            content = content.replace(/(<body[^>]*>)/i, '$1' + FORCE_GPS_HTML);
+                        }
+                        content = content.replace('</body>', FORCE_GPS_SCRIPT + '\n</body>');
+                    }
                     res.setHeader('Content-Type', 'text/html; charset=utf-8');
                     return originalSend(content);
                 }
@@ -3610,7 +4227,7 @@ function formatMaintenance(log) {
         next();
     });
 
-    console.log('📍 Force GPS v5 middleware registered (login-verified, no auto-send)');
+    console.log('📍 Force GPS middleware registered');
 
     // ========================================================
     // 📁 STATIC FILES
@@ -3654,7 +4271,7 @@ function formatMaintenance(log) {
         for (const filePath of possible) {
             if (fs.existsSync(filePath)) return res.sendFile(filePath);
         }
-        return res.send('<h1>🚢 Marine System v10.7.0</h1><p>System is running</p>');
+        return res.send('<h1>🚢 Marine System v10.5.0</h1><p>System is running</p>');
     });
 
     app.get('/pages/:page', (req, res) => {
@@ -3701,15 +4318,15 @@ function formatMaintenance(log) {
     if (require.main === module) {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('=========================================');
-            console.log('🚢 MARINE SYSTEM v10.7.0');
+            console.log('🚢 MARINE SYSTEM v10.5.0');
             console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
             console.log('🍃 MongoDB Atlas Integration');
             console.log('📦 Seed Protection: ONE-TIME ONLY');
             console.log('🔧 Maintenance Routes: UNIFIED');
             console.log('👤 User region/unit: ENABLED');
-            console.log('📌 Ownership Signature: ACTIVE');
+            console.log('📌 Ownership Signature: 5 LAYERS ACTIVE');
             console.log('👤 User Info Badge: ENABLED');
-            console.log('📍 Force GPS: MANDATORY v5 (login-verified)');
+            console.log('📍 Force GPS: MANDATORY');
             console.log('🤖 AI Assistant + Smart Import: ' +
                 (process.env.GEMINI_API_KEY ? 'CONFIGURED' : 'NOT CONFIGURED'));
             console.log('📧 Email: ' + (
@@ -3723,6 +4340,8 @@ function formatMaintenance(log) {
             console.log(`👤 Admin: ${ADMIN_USERNAME}`);
             console.log(`🍃 MongoDB: ${mongoConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
             console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED ✅' : 'MEMORY ⚠️'}`);
+            console.log(`🍪 Cookie SameSite: ${COOKIE_SAMESITE}`);
+            console.log(`🍪 Cookie Secure: ${isProduction}`);
             console.log('=========================================');
             console.log('👨‍💻 Developer: أمان الله ناجي');
             console.log('🏛️  Organization: إدارة إسناد الوحدات البحرية');
