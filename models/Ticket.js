@@ -1,5 +1,6 @@
 // ============================================================
 // 🎫 models/Ticket.js - نموذج التذاكر
+// ✨ v2.0: إضافة حقل sender لعرض اسم المرسل لكل المستخدمين
 // ============================================================
 
 const mongoose = require('mongoose');
@@ -31,6 +32,12 @@ const TicketSchema = new mongoose.Schema({
         type: String,
         enum: ['منخفض', 'متوسط', 'عالي', 'حرج'],
         default: 'متوسط'
+    },
+    // ✅ جديد: حقل المرسل المستقل — يُحفظ مباشرة من POST
+    sender: {
+        type: String,
+        trim: true,
+        default: ''
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -96,7 +103,8 @@ const TicketSchema = new mongoose.Schema({
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toObject: { virtuals: true },
+    strict: true  // ✅ يمنع حفظ حقول غير معرّفة — مهم جداً
 });
 
 // ============================================================
@@ -108,6 +116,7 @@ TicketSchema.index({ priority: 1 });
 TicketSchema.index({ createdBy: 1 });
 TicketSchema.index({ assignedTo: 1 });
 TicketSchema.index({ createdAt: -1 });
+TicketSchema.index({ sender: 1 });  // ✅ فهرس للمرسل
 
 // ============================================================
 // 🌀 Virtuals
@@ -124,7 +133,12 @@ TicketSchema.virtual('replyCount').get(function() {
 TicketSchema.virtual('age').get(function() {
     const now = new Date();
     const diff = now - this.createdAt;
-    return Math.ceil(diff / (1000 * 60 * 60 * 24)); // بالأيام
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+});
+
+// ✅ Virtual: اسم المرسل النهائي (sender → createdByName → "مستخدم")
+TicketSchema.virtual('displaySender').get(function() {
+    return this.sender || this.createdByName || 'مستخدم';
 });
 
 // ============================================================
@@ -138,11 +152,11 @@ TicketSchema.methods.addReply = async function(userId, userName, message, isInte
         message: message,
         isInternal: isInternal
     });
-    
+
     if (this.status === 'مفتوح') {
         this.status = 'قيد المعالجة';
     }
-    
+
     await this.save();
     return this;
 };
@@ -186,26 +200,14 @@ TicketSchema.statics.findByUser = function(userId) {
 
 TicketSchema.statics.getStats = async function() {
     return await this.aggregate([
-        {
-            $group: {
-                _id: '$status',
-                count: { $sum: 1 }
-            }
-        }
+        { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
 };
 
 TicketSchema.statics.getPriorityStats = async function() {
     return await this.aggregate([
-        {
-            $match: { status: { $ne: 'مغلق' } }
-        },
-        {
-            $group: {
-                _id: '$priority',
-                count: { $sum: 1 }
-            }
-        }
+        { $match: { status: { $ne: 'مغلق' } } },
+        { $group: { _id: '$priority', count: { $sum: 1 } } }
     ]);
 };
 
@@ -214,18 +216,24 @@ TicketSchema.statics.getPriorityStats = async function() {
 // ============================================================
 
 TicketSchema.pre('save', async function(next) {
-    // جلب اسم المنشئ
+    // جلب اسم المنشئ إذا لم يكن موجوداً
     if (!this.createdByName && this.createdBy) {
         try {
             const User = mongoose.model('User');
             const user = await User.findById(this.createdBy);
             if (user) {
-                this.createdByName = user.name;
+                this.createdByName = user.name || user.username;
             }
         } catch (error) {
             console.error('Error fetching user name:', error);
         }
     }
+
+    // ✅ إذا لم يكن sender محدداً، استخدم createdByName
+    if (!this.sender && this.createdByName) {
+        this.sender = this.createdByName;
+    }
+
     next();
 });
 
