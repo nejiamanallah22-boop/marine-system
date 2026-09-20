@@ -1,6 +1,6 @@
 // ============================================================
-// 🚛 Vehicle Model — الوسائل البرية v1.1
-// نموذج احترافي كامل مع مصدر واحد للحقيقة
+// 🚛 Vehicle Model — الوسائل البرية v3.0
+// إقليم + منطقة (نفس هيكل fleet.html)
 // ============================================================
 
 'use strict';
@@ -11,71 +11,90 @@ const mongoose = require('mongoose');
 // 📋 VEHICLE TYPES — الأنواع
 // ============================================================
 const VEHICLE_TYPES = [
-    { value: 'سيارة',           label: '🚗 سيارة',                   icon: 'car' },
-    { value: 'كواد',            label: '🛺 كواد (دراجة رباعية)',     icon: 'motorcycle' },
-    { value: 'شاحنة',           label: '🚚 شاحنة',                   icon: 'truck' },
-    { value: 'شاحنة صهريج',     label: '🚛 شاحنة صهريج',             icon: 'truck-moving' },
-    { value: 'حافلة',           label: '🚌 حافلة',                   icon: 'bus' },
-    { value: 'بيك أب',          label: '🛻 بيك أب',                  icon: 'truck-pickup' },
-    { value: 'فان',             label: '🚐 فان',                     icon: 'shuttle-van' },
-    { value: 'جيب',             label: '🚙 جيب (4x4)',               icon: 'car-side' },
-    { value: 'دراجة',           label: '🏍️ دراجة',                   icon: 'motorcycle' },
-    { value: 'مدرعة',           label: '🛡️ مدرعة',                   icon: 'shield-halved' },
-    { value: 'إسعاف',           label: '🚑 إسعاف',                   icon: 'truck-medical' },
-    { value: 'إطفاء',           label: '🚒 إطفاء',                   icon: 'fire-extinguisher' },
-    { value: 'رافعة',           label: '🏗️ رافعة',                   icon: 'arrow-up-from-ground-water' },
-    { value: 'جرافة',           label: '🚜 جرافة',                   icon: 'tractor' },
-    { value: 'أخرى',            label: '⚙️ أخرى',                    icon: 'gear' }
+    { value: 'سيارة',           label: '🚗 سيارة' },
+    { value: 'كواد',            label: '🛺 كواد (دراجة رباعية)' },
+    { value: 'شاحنة',           label: '🚚 شاحنة' },
+    { value: 'شاحنة صهريج',     label: '🚛 شاحنة صهريج' },
+    { value: 'حافلة',           label: '🚌 حافلة' },
+    { value: 'بيك أب',          label: '🛻 بيك أب' },
+    { value: 'فان',             label: '🚐 فان' },
+    { value: 'جيب',             label: '🚙 جيب (4x4)' },
+    { value: 'دراجة',           label: '🏍️ دراجة' },
+    { value: 'مدرعة',           label: '🛡️ مدرعة' },
+    { value: 'إسعاف',           label: '🚑 إسعاف' },
+    { value: 'إطفاء',           label: '🚒 إطفاء' },
+    { value: 'رافعة',           label: '🏗️ رافعة' },
+    { value: 'جرافة',           label: '🚜 جرافة' },
+    { value: 'أخرى',            label: '⚙️ أخرى' }
 ];
 
 const VEHICLE_TYPES_VALUES = VEHICLE_TYPES.map(t => t.value);
 
 // ============================================================
-// 📋 REGIONS — المناطق / الأقاليم (قابلة للتعديل)
+// 📋 REGIONS — الأقاليم والإدارات (كما في fleet.html)
 // ============================================================
 const VEHICLE_REGIONS = [
-    { value: 'تونس',            label: '🏛️ تونس' },
-    { value: 'أريانة',          label: '🏙️ أريانة' },
-    { value: 'بن عروس',         label: '🏙️ بن عروس' },
-    { value: 'منوبة',           label: '🏙️ منوبة' },
-    { value: 'نابل',            label: '🌊 نابل' },
-    { value: 'زغوان',           label: '⛰️ زغوان' },
-    { value: 'بنزرت',           label: '⚓ بنزرت' },
-    { value: 'باجة',            label: '🌾 باجة' },
-    { value: 'جندوبة',          label: '🌲 جندوبة' },
-    { value: 'الكاف',           label: '⛰️ الكاف' },
-    { value: 'سليانة',          label: '🌾 سليانة' },
-    { value: 'القيروان',        label: '🕌 القيروان' },
-    { value: 'القصرين',         label: '⛰️ القصرين' },
-    { value: 'سيدي بوزيد',      label: '🌾 سيدي بوزيد' },
-    { value: 'سوسة',            label: '🌊 سوسة' },
-    { value: 'المنستير',        label: '🌊 المنستير' },
-    { value: 'المهدية',         label: '🌊 المهدية' },
-    { value: 'صفاقس',           label: '⚓ صفاقس' },
-    { value: 'قفصة',            label: '⛏️ قفصة' },
-    { value: 'توزر',            label: '🏜️ توزر' },
-    { value: 'قبلي',            label: '🏜️ قبلي' },
-    { value: 'قابس',            label: '🌊 قابس' },
-    { value: 'مدنين',           label: '🏝️ مدنين' },
-    { value: 'تطاوين',          label: '🏜️ تطاوين' },
-    { value: 'أخرى',            label: '📍 أخرى' }
+    // 🌊 الأقاليم البحرية الأربعة
+    { value: 'الشمال', label: '🗺️ الحرس البحري بالشمال', group: 'الأقاليم البحرية' },
+    { value: 'الساحل', label: '🗺️ الحرس البحري بالساحل', group: 'الأقاليم البحرية' },
+    { value: 'الوسط',  label: '🗺️ الحرس البحري بالوسط',  group: 'الأقاليم البحرية' },
+    { value: 'الجنوب', label: '🗺️ الحرس البحري بالجنوب', group: 'الأقاليم البحرية' },
+
+    // 🏛️ الإدارة المركزية (منطقة تونس)
+    { value: 'إدارة حرس السواحل',          label: '🚢 إدارة حرس السواحل',          group: 'الإدارة المركزية' },
+    { value: 'إدارة إسناد الوحدات البحرية', label: '🏛️ إدارة إسناد الوحدات البحرية', group: 'الإدارة المركزية' },
+
+    // 🛠️ وحدات الصيانة والإسناد
+    { value: 'وحدة الصيانة والإسناد البحري تونس',     label: '🛠️ وحدة الصيانة تونس',     group: 'وحدات الصيانة والإسناد' },
+    { value: 'وحدة الصيانة والإسناد البحري المنستير', label: '🛠️ وحدة الصيانة المنستير', group: 'وحدات الصيانة والإسناد' },
+    { value: 'وحدة الصيانة والإسناد البحري صفاقس',    label: '🛠️ وحدة الصيانة صفاقس',    group: 'وحدات الصيانة والإسناد' },
+    { value: 'وحدة الصيانة والإسناد البحري جرجيس',    label: '🛠️ وحدة الصيانة جرجيس',    group: 'وحدات الصيانة والإسناد' },
+
+    // 🏛️ أخرى
+    { value: 'المجمع الأمني بقبيبة', label: '🏛️ المجمع الأمني بقبيبة', group: 'أخرى' }
 ];
 
 const VEHICLE_REGIONS_VALUES = VEHICLE_REGIONS.map(r => r.value);
 
 // ============================================================
-// 📋 STATUS — الحالة
+// 📋 ZONES — المناطق (لكل إقليم منطقه)
+// ============================================================
+const VEHICLE_ZONES = {
+    'الشمال': ['تونس', 'بنزرت', 'طبرقة'],
+    'الساحل': ['سوسة', 'المنستير', 'نابل'],
+    'الوسط':  ['صفاقس', 'المهدية', 'قرقنة'],
+    'الجنوب': ['جرجيس', 'جربة', 'قابس'],
+    'إدارة حرس السواحل': ['تونس'],
+    'إدارة إسناد الوحدات البحرية': ['تونس'],
+    'وحدة الصيانة والإسناد البحري تونس': ['تونس'],
+    'وحدة الصيانة والإسناد البحري المنستير': ['المنستير'],
+    'وحدة الصيانة والإسناد البحري صفاقس': ['صفاقس'],
+    'وحدة الصيانة والإسناد البحري جرجيس': ['جرجيس'],
+    'المجمع الأمني بقبيبة': ['قبيبة']
+};
+
+// كل المناطق (للفلترة)
+const VEHICLE_ZONES_ALL = [
+    'تونس', 'بنزرت', 'طبرقة',
+    'سوسة', 'المنستير', 'نابل',
+    'صفاقس', 'المهدية', 'قرقنة',
+    'جرجيس', 'جربة', 'قابس',
+    'قبيبة'
+];
+
+// ============================================================
+// 📋 STATUS
 // ============================================================
 const VEHICLE_STATUS = [
-    { value: 'صالحة', label: '✅ صالحة', color: 'green' },
-    { value: 'معطبة', label: '🔴 معطبة', color: 'red' },
-    { value: 'صيانة', label: '🔧 صيانة', color: 'orange' }
+    { value: 'صالحة', label: '✅ صالحة' },
+    { value: 'معطبة', label: '🔴 معطبة' },
+    { value: 'صيانة', label: '🔧 صيانة' }
 ];
 
 const VEHICLE_STATUS_VALUES = VEHICLE_STATUS.map(s => s.value);
 
 // ============================================================
-// 📋 WORK CONDITION — حالة العمل
+// 📋 WORK CONDITION
 // ============================================================
 const VEHICLE_CONDITIONS = [
     { value: 'جديدة',  label: '✨ جديدة' },
@@ -120,15 +139,25 @@ const vehicleSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    // ✅ الإقليم / الإدارة
     region: {
         type: String,
         enum: {
             values: VEHICLE_REGIONS_VALUES,
-            message: 'منطقة غير صالحة: {VALUE}'
+            message: 'إقليم غير صالح: {VALUE}'
         },
-        default: 'تونس',
-        required: [true, 'المنطقة / الإقليم مطلوب'],
+        default: 'الشمال',
+        required: [true, 'الإقليم / الإدارة مطلوب'],
         index: true
+    },
+    // ✅ المنطقة (تابعة للإقليم)
+    zone: {
+        type: String,
+        trim: true,
+        default: '',
+        required: [true, 'المنطقة مطلوبة'],
+        index: true,
+        maxlength: 100
     },
     status: {
         type: String,
@@ -169,9 +198,8 @@ const vehicleSchema = new mongoose.Schema({
     collection: 'vehicles'
 });
 
-// Compound indexes للأداء
 vehicleSchema.index({ status: 1, type: 1 });
-vehicleSchema.index({ region: 1, status: 1 });
+vehicleSchema.index({ region: 1, zone: 1 });
 vehicleSchema.index({ createdAt: -1 });
 
 // ============================================================
@@ -206,6 +234,8 @@ module.exports.VEHICLE_TYPES = VEHICLE_TYPES;
 module.exports.VEHICLE_TYPES_VALUES = VEHICLE_TYPES_VALUES;
 module.exports.VEHICLE_REGIONS = VEHICLE_REGIONS;
 module.exports.VEHICLE_REGIONS_VALUES = VEHICLE_REGIONS_VALUES;
+module.exports.VEHICLE_ZONES = VEHICLE_ZONES;
+module.exports.VEHICLE_ZONES_ALL = VEHICLE_ZONES_ALL;
 module.exports.VEHICLE_STATUS = VEHICLE_STATUS;
 module.exports.VEHICLE_STATUS_VALUES = VEHICLE_STATUS_VALUES;
 module.exports.VEHICLE_CONDITIONS = VEHICLE_CONDITIONS;
