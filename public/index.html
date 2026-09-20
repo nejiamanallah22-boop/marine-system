@@ -1625,22 +1625,22 @@
             if (ROLE_PERMISSIONS[trimmed]) return trimmed;
             return LEGACY_ROLE_MAP[trimmed] || 'viewer';
         }
-
-                        const PAGE_PERMISSIONS = {
-            dashboard: 'dashboard:view',
-            fleet: 'vessels:read',
-            maintenance: 'maintenance:read',
-            efficiency: 'dashboard:view',
-            support: 'dashboard:view',
-            notes: 'dashboard:view',
-            monitoring: 'monitoring:view',
-            users: 'users:manage',
-            logs: 'logs:read',
-            activity: 'logs:read',
-            'ai-assistant': 'dashboard:view',
-            settings: 'settings:manage'
-        };
-
+const PAGE_PERMISSIONS = {
+    dashboard: 'dashboard:view',
+    fleet: 'vessels:read',
+    vehicles: 'vessels:read',
+    maintenance: 'maintenance:read',
+    efficiency: 'dashboard:view',
+    support: 'dashboard:view',
+    notes: 'dashboard:view',
+    monitoring: 'monitoring:view',
+    users: 'users:manage',
+    logs: 'logs:read',
+    activity: 'logs:read',
+    'ai-assistant': 'dashboard:view',
+    settings: 'settings:manage'
+};
+                
         const ADMIN_ONLY_PAGES = ['users', 'settings', 'monitoring'];
 
         function isAdmin() {
