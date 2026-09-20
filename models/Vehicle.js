@@ -1,6 +1,6 @@
 // ============================================================
-// 🚛 Vehicle Model — الوسائل البرية v1.0
-// مصدر واحد للحقيقة (Single Source of Truth)
+// 🚛 Vehicle Model — الوسائل البرية v1.1
+// نموذج احترافي كامل مع مصدر واحد للحقيقة
 // ============================================================
 
 'use strict';
@@ -8,7 +8,7 @@
 const mongoose = require('mongoose');
 
 // ============================================================
-// 📋 VEHICLE TYPES — القائمة الموحدة
+// 📋 VEHICLE TYPES — الأنواع
 // ============================================================
 const VEHICLE_TYPES = [
     { value: 'سيارة',           label: '🚗 سيارة',                   icon: 'car' },
@@ -31,7 +31,40 @@ const VEHICLE_TYPES = [
 const VEHICLE_TYPES_VALUES = VEHICLE_TYPES.map(t => t.value);
 
 // ============================================================
-// 📋 STATUS
+// 📋 REGIONS — المناطق / الأقاليم (قابلة للتعديل)
+// ============================================================
+const VEHICLE_REGIONS = [
+    { value: 'تونس',            label: '🏛️ تونس' },
+    { value: 'أريانة',          label: '🏙️ أريانة' },
+    { value: 'بن عروس',         label: '🏙️ بن عروس' },
+    { value: 'منوبة',           label: '🏙️ منوبة' },
+    { value: 'نابل',            label: '🌊 نابل' },
+    { value: 'زغوان',           label: '⛰️ زغوان' },
+    { value: 'بنزرت',           label: '⚓ بنزرت' },
+    { value: 'باجة',            label: '🌾 باجة' },
+    { value: 'جندوبة',          label: '🌲 جندوبة' },
+    { value: 'الكاف',           label: '⛰️ الكاف' },
+    { value: 'سليانة',          label: '🌾 سليانة' },
+    { value: 'القيروان',        label: '🕌 القيروان' },
+    { value: 'القصرين',         label: '⛰️ القصرين' },
+    { value: 'سيدي بوزيد',      label: '🌾 سيدي بوزيد' },
+    { value: 'سوسة',            label: '🌊 سوسة' },
+    { value: 'المنستير',        label: '🌊 المنستير' },
+    { value: 'المهدية',         label: '🌊 المهدية' },
+    { value: 'صفاقس',           label: '⚓ صفاقس' },
+    { value: 'قفصة',            label: '⛏️ قفصة' },
+    { value: 'توزر',            label: '🏜️ توزر' },
+    { value: 'قبلي',            label: '🏜️ قبلي' },
+    { value: 'قابس',            label: '🌊 قابس' },
+    { value: 'مدنين',           label: '🏝️ مدنين' },
+    { value: 'تطاوين',          label: '🏜️ تطاوين' },
+    { value: 'أخرى',            label: '📍 أخرى' }
+];
+
+const VEHICLE_REGIONS_VALUES = VEHICLE_REGIONS.map(r => r.value);
+
+// ============================================================
+// 📋 STATUS — الحالة
 // ============================================================
 const VEHICLE_STATUS = [
     { value: 'صالحة', label: '✅ صالحة', color: 'green' },
@@ -42,7 +75,7 @@ const VEHICLE_STATUS = [
 const VEHICLE_STATUS_VALUES = VEHICLE_STATUS.map(s => s.value);
 
 // ============================================================
-// 📋 WORK CONDITION
+// 📋 WORK CONDITION — حالة العمل
 // ============================================================
 const VEHICLE_CONDITIONS = [
     { value: 'جديدة',  label: '✨ جديدة' },
@@ -89,8 +122,12 @@ const vehicleSchema = new mongoose.Schema({
     },
     region: {
         type: String,
-        trim: true,
-        default: '',
+        enum: {
+            values: VEHICLE_REGIONS_VALUES,
+            message: 'منطقة غير صالحة: {VALUE}'
+        },
+        default: 'تونس',
+        required: [true, 'المنطقة / الإقليم مطلوب'],
         index: true
     },
     status: {
@@ -100,6 +137,7 @@ const vehicleSchema = new mongoose.Schema({
             message: 'حالة غير صالحة: {VALUE}'
         },
         default: 'صالحة',
+        required: true,
         index: true
     },
     workCondition: {
@@ -108,7 +146,8 @@ const vehicleSchema = new mongoose.Schema({
             values: VEHICLE_CONDITIONS_VALUES,
             message: 'حالة عمل غير صالحة: {VALUE}'
         },
-        default: 'جديدة'
+        default: 'جديدة',
+        required: true
     },
     appointmentDate: {
         type: String,
@@ -147,6 +186,16 @@ vehicleSchema.virtual('typeLabel').get(function() {
     return t ? t.label : this.type;
 });
 
+vehicleSchema.virtual('regionLabel').get(function() {
+    const r = VEHICLE_REGIONS.find(x => x.value === this.region);
+    return r ? r.label : this.region;
+});
+
+vehicleSchema.virtual('statusLabel').get(function() {
+    const s = VEHICLE_STATUS.find(x => x.value === this.status);
+    return s ? s.label : this.status;
+});
+
 // ============================================================
 // 📤 EXPORT
 // ============================================================
@@ -155,6 +204,8 @@ const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 module.exports = Vehicle;
 module.exports.VEHICLE_TYPES = VEHICLE_TYPES;
 module.exports.VEHICLE_TYPES_VALUES = VEHICLE_TYPES_VALUES;
+module.exports.VEHICLE_REGIONS = VEHICLE_REGIONS;
+module.exports.VEHICLE_REGIONS_VALUES = VEHICLE_REGIONS_VALUES;
 module.exports.VEHICLE_STATUS = VEHICLE_STATUS;
 module.exports.VEHICLE_STATUS_VALUES = VEHICLE_STATUS_VALUES;
 module.exports.VEHICLE_CONDITIONS = VEHICLE_CONDITIONS;
