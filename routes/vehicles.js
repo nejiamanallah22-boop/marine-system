@@ -1,201 +1,306 @@
 // ============================================================
-// 🚛 Vehicle Model — الوسائل البرية v2.0
-// الأقاليم والإدارات الرسمية
+// 🚛 routes/vehicles.js — Routes الوسائل البرية v1.0
+// ✅ لا ينشئ نموذج — يستقبله من server.js
 // ============================================================
 
 'use strict';
 
-const mongoose = require('mongoose');
+module.exports = function registerVehicleRoutes(app, deps) {
+    const {
+        Vehicle,
+        authenticateAccessToken,
+        csrfProtection,
+        requirePermission,
+        randomId,
+        addSystemLog,
+        notify,
+        buildIdQuery
+    } = deps || {};
 
-// ============================================================
-// 📋 VEHICLE TYPES — الأنواع
-// ============================================================
-const VEHICLE_TYPES = [
-    { value: 'سيارة',           label: '🚗 سيارة',                   icon: 'car' },
-    { value: 'كواد',            label: '🛺 كواد (دراجة رباعية)',     icon: 'motorcycle' },
-    { value: 'شاحنة',           label: '🚚 شاحنة',                   icon: 'truck' },
-    { value: 'شاحنة صهريج',     label: '🚛 شاحنة صهريج',             icon: 'truck-moving' },
-    { value: 'حافلة',           label: '🚌 حافلة',                   icon: 'bus' },
-    { value: 'بيك أب',          label: '🛻 بيك أب',                  icon: 'truck-pickup' },
-    { value: 'فان',             label: '🚐 فان',                     icon: 'shuttle-van' },
-    { value: 'جيب',             label: '🚙 جيب (4x4)',               icon: 'car-side' },
-    { value: 'دراجة',           label: '🏍️ دراجة',                   icon: 'motorcycle' },
-    { value: 'مدرعة',           label: '🛡️ مدرعة',                   icon: 'shield-halved' },
-    { value: 'إسعاف',           label: '🚑 إسعاف',                   icon: 'truck-medical' },
-    { value: 'إطفاء',           label: '🚒 إطفاء',                   icon: 'fire-extinguisher' },
-    { value: 'رافعة',           label: '🏗️ رافعة',                   icon: 'arrow-up-from-ground-water' },
-    { value: 'جرافة',           label: '🚜 جرافة',                   icon: 'tractor' },
-    { value: 'أخرى',            label: '⚙️ أخرى',                    icon: 'gear' }
-];
-
-const VEHICLE_TYPES_VALUES = VEHICLE_TYPES.map(t => t.value);
-
-// ============================================================
-// 📋 REGIONS — الأقاليم والإدارات الرسمية
-// ============================================================
-const VEHICLE_REGIONS = [
-    // 🌊 الأقاليم البحرية الأربعة
-    { value: 'إقليم الحرس البحري بالشمال',           label: '🌊 إقليم الحرس البحري بالشمال',           group: 'الأقاليم البحرية' },
-    { value: 'إقليم الحرس البحري بالساحل',            label: '🌊 إقليم الحرس البحري بالساحل',            group: 'الأقاليم البحرية' },
-    { value: 'إقليم الحرس البحري بالوسط',             label: '🌊 إقليم الحرس البحري بالوسط',             group: 'الأقاليم البحرية' },
-    { value: 'إقليم الحرس البحري بالجنوب',            label: '🌊 إقليم الحرس البحري بالجنوب',            group: 'الأقاليم البحرية' },
-
-    // 🏛️ منطقة تونس — الإدارة المركزية
-    { value: 'إدارة حرس السواحل',                    label: '🚢 إدارة حرس السواحل',                    group: 'منطقة تونس - الإدارة المركزية' },
-    { value: 'إدارة إسناد الوحدات البحرية',           label: '🏛️ إدارة إسناد الوحدات البحرية',           group: 'منطقة تونس - الإدارة المركزية' },
-    { value: 'وحدة الصيانة والإسناد البحري تونس',     label: '🛠️ وحدة الصيانة والإسناد البحري تونس',     group: 'منطقة تونس - الإدارة المركزية' },
-    { value: 'وحدة الصيانة والإسناد البحري المنستير', label: '🛠️ وحدة الصيانة والإسناد البحري المنستير', group: 'منطقة تونس - الإدارة المركزية' },
-    { value: 'وحدة الصيانة والإسناد البحري صفاقس',    label: '🛠️ وحدة الصيانة والإسناد البحري صفاقس',    group: 'منطقة تونس - الإدارة المركزية' },
-    { value: 'وحدة الصيانة والإسناد البحري جرجيس',    label: '🛠️ وحدة الصيانة والإسناد البحري جرجيس',    group: 'منطقة تونس - الإدارة المركزية' },
-    { value: 'المجمع الأمني بقبيبة',                  label: '🏛️ المجمع الأمني بقبيبة',                  group: 'منطقة تونس - الإدارة المركزية' }
-];
-
-const VEHICLE_REGIONS_VALUES = VEHICLE_REGIONS.map(r => r.value);
-
-// ============================================================
-// 📋 STATUS
-// ============================================================
-const VEHICLE_STATUS = [
-    { value: 'صالحة', label: '✅ صالحة', color: 'green' },
-    { value: 'معطبة', label: '🔴 معطبة', color: 'red' },
-    { value: 'صيانة', label: '🔧 صيانة', color: 'orange' }
-];
-
-const VEHICLE_STATUS_VALUES = VEHICLE_STATUS.map(s => s.value);
-
-// ============================================================
-// 📋 WORK CONDITION
-// ============================================================
-const VEHICLE_CONDITIONS = [
-    { value: 'جديدة',  label: '✨ جديدة' },
-    { value: 'متوسطة', label: '⚖️ متوسطة' },
-    { value: 'قديمة',  label: '⏳ قديمة' }
-];
-
-const VEHICLE_CONDITIONS_VALUES = VEHICLE_CONDITIONS.map(c => c.value);
-
-// ============================================================
-// 📋 SCHEMA
-// ============================================================
-const vehicleSchema = new mongoose.Schema({
-    id: {
-        type: String,
-        required: true,
-        unique: true,
-        sparse: true,
-        index: true
-    },
-    name: {
-        type: String,
-        trim: true,
-        default: '',
-        maxlength: 200
-    },
-    plateNumber: {
-        type: String,
-        trim: true,
-        required: [true, 'رقم الوسيلة مطلوب'],
-        unique: true,
-        index: true,
-        maxlength: 50
-    },
-    type: {
-        type: String,
-        enum: {
-            values: VEHICLE_TYPES_VALUES,
-            message: 'نوع غير صالح: {VALUE}'
-        },
-        default: 'سيارة',
-        required: true,
-        index: true
-    },
-    region: {
-        type: String,
-        enum: {
-            values: VEHICLE_REGIONS_VALUES,
-            message: 'منطقة غير صالحة: {VALUE}'
-        },
-        default: 'إقليم الحرس البحري بالشمال',
-        required: [true, 'الإقليم / الإدارة مطلوب'],
-        index: true
-    },
-    status: {
-        type: String,
-        enum: {
-            values: VEHICLE_STATUS_VALUES,
-            message: 'حالة غير صالحة: {VALUE}'
-        },
-        default: 'صالحة',
-        required: true,
-        index: true
-    },
-    workCondition: {
-        type: String,
-        enum: {
-            values: VEHICLE_CONDITIONS_VALUES,
-            message: 'حالة عمل غير صالحة: {VALUE}'
-        },
-        default: 'جديدة',
-        required: true
-    },
-    appointmentDate: {
-        type: String,
-        default: null
-    },
-    notes: {
-        type: String,
-        trim: true,
-        default: '',
-        maxlength: 1000
-    },
-    createdBy: {
-        type: String,
-        default: 'system'
+    if (!Vehicle) {
+        console.warn('⚠️ [VEHICLES] Vehicle model not loaded — routes disabled');
+        return;
     }
-}, {
-    timestamps: true,
-    versionKey: false,
-    collection: 'vehicles'
-});
 
-// Compound indexes للأداء
-vehicleSchema.index({ status: 1, type: 1 });
-vehicleSchema.index({ region: 1, status: 1 });
-vehicleSchema.index({ createdAt: -1 });
+    console.log('✅ [VEHICLES] Registering vehicles routes...');
 
-// ============================================================
-// 🎯 VIRTUALS
-// ============================================================
-vehicleSchema.virtual('isOperational').get(function() {
-    return this.status === 'صالحة';
-});
+    // ============================================================
+    // 📝 FORMATTER
+    // ============================================================
+    function formatVehicle(v) {
+        if (!v) return null;
+        return {
+            id: v.id,
+            _id: v._id ? v._id.toString() : null,
+            name: v.name || '',
+            plateNumber: v.plateNumber || '',
+            type: v.type || 'سيارة',
+            region: v.region || '',
+            status: v.status || 'صالحة',
+            workCondition: v.workCondition || 'جديدة',
+            appointmentDate: v.appointmentDate || null,
+            notes: v.notes || '',
+            createdAt: v.createdAt,
+            updatedAt: v.updatedAt
+        };
+    }
 
-vehicleSchema.virtual('typeLabel').get(function() {
-    const t = VEHICLE_TYPES.find(x => x.value === this.type);
-    return t ? t.label : this.type;
-});
+    // ============================================================
+    // ✅ GET — كل الوسائل
+    // ============================================================
+    app.get('/api/vehicles',
+        authenticateAccessToken,
+        requirePermission('vessels:read'),
+        async (req, res) => {
+            try {
+                const vehicles = await Vehicle.find()
+                    .sort({ createdAt: -1 })
+                    .limit(1000)
+                    .lean();
 
-vehicleSchema.virtual('regionLabel').get(function() {
-    const r = VEHICLE_REGIONS.find(x => x.value === this.region);
-    return r ? r.label : this.region;
-});
+                res.json(vehicles.map(formatVehicle));
+            } catch (e) {
+                console.error('❌ [VEHICLES] GET error:', e.message);
+                res.status(500).json({ success: false, error: 'فشل تحميل الوسائل البرية' });
+            }
+        }
+    );
 
-vehicleSchema.virtual('statusLabel').get(function() {
-    const s = VEHICLE_STATUS.find(x => x.value === this.status);
-    return s ? s.label : this.status;
-});
+    // ============================================================
+    // ✅ POST — إضافة وسيلة
+    // ============================================================
+    app.post('/api/vehicles',
+        authenticateAccessToken,
+        requirePermission('vessels:create'),
+        csrfProtection,
+        async (req, res) => {
+            try {
+                const {
+                    name, plateNumber, type, region,
+                    status, workCondition, appointmentDate, notes
+                } = req.body;
 
-// ============================================================
-// 📤 EXPORT
-// ============================================================
-const Vehicle = mongoose.model('Vehicle', vehicleSchema);
+                if (typeof plateNumber !== 'string' || !plateNumber.trim()) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'رقم الوسيلة مطلوب'
+                    });
+                }
 
-module.exports = Vehicle;
-module.exports.VEHICLE_TYPES = VEHICLE_TYPES;
-module.exports.VEHICLE_TYPES_VALUES = VEHICLE_TYPES_VALUES;
-module.exports.VEHICLE_REGIONS = VEHICLE_REGIONS;
-module.exports.VEHICLE_REGIONS_VALUES = VEHICLE_REGIONS_VALUES;
-module.exports.VEHICLE_STATUS = VEHICLE_STATUS;
-module.exports.VEHICLE_STATUS_VALUES = VEHICLE_STATUS_VALUES;
-module.exports.VEHICLE_CONDITIONS = VEHICLE_CONDITIONS;
-module.exports.VEHICLE_CONDITIONS_VALUES = VEHICLE_CONDITIONS_VALUES;
+                if (typeof region !== 'string' || !region.trim()) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'الإقليم / الإدارة مطلوب'
+                    });
+                }
+
+                const existing = await Vehicle.findOne({
+                    plateNumber: plateNumber.trim()
+                });
+
+                if (existing) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'رقم الوسيلة موجود مسبقاً'
+                    });
+                }
+
+                const newVehicle = await Vehicle.create({
+                    id: randomId(8),
+                    name: typeof name === 'string' ? name.trim() : '',
+                    plateNumber: plateNumber.trim(),
+                    type: type || 'سيارة',
+                    region: region.trim(),
+                    status: status || 'صالحة',
+                    workCondition: workCondition || 'جديدة',
+                    appointmentDate: appointmentDate || null,
+                    notes: typeof notes === 'string' ? notes.trim() : '',
+                    createdBy: req.user.id
+                });
+
+                await addSystemLog({
+                    userId: req.user.id,
+                    userName: req.user.name,
+                    action: 'create',
+                    resource: 'vehicle',
+                    resourceId: newVehicle.id,
+                    resourceName: newVehicle.plateNumber,
+                    status: 'success',
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                await notify({
+                    type: 'success',
+                    category: 'vehicle',
+                    title: '🚛 وسيلة برية جديدة',
+                    message: 'تم إضافة "' + newVehicle.plateNumber + '" (' + newVehicle.type + ')',
+                    link: '/pages/vehicles.html',
+                    icon: 'truck',
+                    actorName: req.user.name || req.user.username
+                });
+
+                res.status(201).json({
+                    success: true,
+                    message: 'تم إضافة الوسيلة البرية بنجاح',
+                    vehicle: formatVehicle(newVehicle)
+                });
+            } catch (e) {
+                console.error('❌ [VEHICLES] POST error:', e.message);
+                if (e.name === 'ValidationError') {
+                    return res.status(400).json({ success: false, error: e.message });
+                }
+                if (e.code === 11000) {
+                    return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
+                }
+                res.status(500).json({ success: false, error: 'خطأ في إضافة الوسيلة' });
+            }
+        }
+    );
+
+    // ============================================================
+    // ✅ PUT — تعديل وسيلة
+    // ============================================================
+    app.put('/api/vehicles/:id',
+        authenticateAccessToken,
+        requirePermission('vessels:update'),
+        csrfProtection,
+        async (req, res) => {
+            try {
+                const q = buildIdQuery(req.params.id);
+                if (!q) {
+                    return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+                }
+
+                const v = await Vehicle.findOne(q);
+                if (!v) {
+                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                }
+
+                const {
+                    name, plateNumber, type, region,
+                    status, workCondition, appointmentDate, notes
+                } = req.body;
+
+                if (typeof name === 'string') v.name = name.trim();
+
+                if (typeof plateNumber === 'string' && plateNumber.trim() && plateNumber.trim() !== v.plateNumber) {
+                    const dup = await Vehicle.findOne({
+                        plateNumber: plateNumber.trim(),
+                        _id: { $ne: v._id }
+                    });
+                    if (dup) {
+                        return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
+                    }
+                    v.plateNumber = plateNumber.trim();
+                }
+
+                if (type !== undefined) v.type = type;
+                if (typeof region === 'string') v.region = region.trim();
+                if (status !== undefined) v.status = status;
+                if (workCondition !== undefined) v.workCondition = workCondition;
+                if (appointmentDate !== undefined) v.appointmentDate = appointmentDate || null;
+                if (typeof notes === 'string') v.notes = notes.trim();
+
+                v.updatedAt = new Date();
+                await v.save();
+
+                await addSystemLog({
+                    userId: req.user.id,
+                    userName: req.user.name,
+                    action: 'update',
+                    resource: 'vehicle',
+                    resourceId: v.id,
+                    resourceName: v.plateNumber,
+                    status: 'success',
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                await notify({
+                    type: 'info',
+                    category: 'vehicle',
+                    title: 'تعديل وسيلة برية',
+                    message: 'تم تعديل "' + v.plateNumber + '"',
+                    link: '/pages/vehicles.html',
+                    icon: 'edit',
+                    actorName: req.user.name || req.user.username
+                });
+
+                res.json({
+                    success: true,
+                    message: 'تم تحديث الوسيلة',
+                    vehicle: formatVehicle(v)
+                });
+            } catch (e) {
+                console.error('❌ [VEHICLES] PUT error:', e.message);
+                if (e.name === 'ValidationError') {
+                    return res.status(400).json({ success: false, error: e.message });
+                }
+                if (e.code === 11000) {
+                    return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
+                }
+                res.status(500).json({ success: false, error: 'خطأ في التحديث' });
+            }
+        }
+    );
+
+    // ============================================================
+    // ✅ DELETE — حذف وسيلة
+    // ============================================================
+    app.delete('/api/vehicles/:id',
+        authenticateAccessToken,
+        requirePermission('vessels:delete'),
+        csrfProtection,
+        async (req, res) => {
+            try {
+                const q = buildIdQuery(req.params.id);
+                if (!q) {
+                    return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+                }
+
+                const v = await Vehicle.findOne(q);
+                if (!v) {
+                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                }
+
+                const plate = v.plateNumber;
+                const vid = v.id;
+                await Vehicle.deleteOne({ _id: v._id });
+
+                await addSystemLog({
+                    userId: req.user.id,
+                    userName: req.user.name,
+                    action: 'delete',
+                    resource: 'vehicle',
+                    resourceId: vid,
+                    resourceName: plate,
+                    status: 'success',
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                await notify({
+                    type: 'warning',
+                    category: 'vehicle',
+                    title: 'حذف وسيلة برية',
+                    message: 'تم حذف "' + plate + '"',
+                    link: '/pages/vehicles.html',
+                    icon: 'trash',
+                    actorName: req.user.name || req.user.username
+                });
+
+                res.json({ success: true, message: 'تم حذف الوسيلة' });
+            } catch (e) {
+                console.error('❌ [VEHICLES] DELETE error:', e.message);
+                res.status(500).json({ success: false, error: 'خطأ في الحذف' });
+            }
+        }
+    );
+
+    console.log('✅ [VEHICLES] Routes registered successfully');
+    console.log('   📌 GET    /api/vehicles');
+    console.log('   📌 POST   /api/vehicles');
+    console.log('   📌 PUT    /api/vehicles/:id');
+    console.log('   📌 DELETE /api/vehicles/:id');
+};
