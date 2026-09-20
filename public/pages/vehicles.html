@@ -1,0 +1,1228 @@
+<div id="page-vehicles">
+<style>
+    /* ============================================================
+       🚛 VEHICLES PAGE — صفحة الوسائل البرية
+       مستقلة تماماً — لا تؤثر على باقي الصفحات
+       ============================================================ */
+
+    #page-vehicles {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+        background: transparent;
+        color: #e8edf5;
+        position: relative;
+        z-index: 1;
+    }
+
+    #page-vehicles *,
+    #page-vehicles *::before,
+    #page-vehicles *::after {
+        box-sizing: border-box;
+    }
+
+    .veh-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* ===== HEADER ===== */
+    .veh-header {
+        background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(247,215,116,0.05));
+        border-radius: 20px;
+        padding: 24px 28px;
+        border: 1px solid rgba(255,255,255,0.06);
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .veh-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(247,215,116,0.04) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .veh-header .title-section {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .veh-header .title-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, rgba(247,215,116,0.2), rgba(247,215,116,0.05));
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        border: 1px solid rgba(247,215,116,0.2);
+        flex-shrink: 0;
+    }
+
+    .veh-header .title {
+        font-size: 22px;
+        font-weight: 900;
+        color: #f7d774;
+        line-height: 1.2;
+    }
+
+    .veh-header .subtitle {
+        font-size: 12px;
+        color: rgba(255,255,255,0.4);
+        margin-top: 4px;
+    }
+
+    /* ===== STATS ===== */
+    .veh-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .veh-stat {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 14px;
+        padding: 16px;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .veh-stat:hover {
+        background: rgba(255,255,255,0.04);
+        transform: translateY(-2px);
+        border-color: rgba(247,215,116,0.15);
+    }
+
+    .veh-stat .number {
+        font-size: 26px;
+        font-weight: 900;
+        color: #f7d774;
+        line-height: 1;
+    }
+
+    .veh-stat .label {
+        font-size: 11px;
+        color: rgba(255,255,255,0.4);
+        margin-top: 6px;
+        font-weight: 600;
+    }
+
+    .veh-stat.stat-valid .number { color: #4ade80; }
+    .veh-stat.stat-broken .number { color: #f87171; }
+    .veh-stat.stat-maint .number { color: #fbbf24; }
+
+    /* ===== ACTION BAR ===== */
+    .veh-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .veh-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.25s;
+    }
+
+    .veh-btn-primary {
+        background: linear-gradient(135deg, #f7d774, #e6b31e);
+        color: #0a0e1a;
+    }
+
+    .veh-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(247,215,116,0.3);
+    }
+
+    .veh-btn-secondary {
+        background: rgba(255,255,255,0.05);
+        color: #e8edf5;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .veh-btn-secondary:hover {
+        background: rgba(255,255,255,0.1);
+    }
+
+    .veh-input,
+    .veh-select {
+        padding: 12px 16px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        color: #e8edf5;
+        font-family: inherit;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .veh-input {
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .veh-input:focus,
+    .veh-select:focus {
+        outline: none;
+        border-color: rgba(247,215,116,0.4);
+        background: rgba(255,255,255,0.05);
+    }
+
+    .veh-select option {
+        background: #1a1f2e;
+        color: #e8edf5;
+    }
+
+    /* ===== TABLE ===== */
+    .veh-table-wrap {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 16px;
+        overflow: hidden;
+        overflow-x: auto;
+    }
+
+    .veh-table-head,
+    .veh-table-row {
+        display: grid;
+        grid-template-columns: 50px 130px 150px 140px 110px 120px 130px 1fr 90px;
+        gap: 8px;
+        padding: 14px 20px;
+        align-items: center;
+        font-size: 13px;
+        min-width: 1150px;
+    }
+
+    .veh-table-head {
+        background: rgba(247,215,116,0.05);
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        font-size: 12px;
+        font-weight: 800;
+        color: #f7d774;
+    }
+
+    .veh-table-row {
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: background 0.2s;
+    }
+
+    .veh-table-row:hover {
+        background: rgba(255,255,255,0.03);
+    }
+
+    .veh-table-row:last-child {
+        border-bottom: none;
+    }
+
+    .veh-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .veh-cell.center {
+        text-align: center;
+    }
+
+    .veh-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .veh-badge.type {
+        background: rgba(96,165,250,0.15);
+        color: #60a5fa;
+    }
+
+    .veh-badge.region {
+        background: rgba(247,215,116,0.15);
+        color: #f7d774;
+    }
+
+    .veh-badge.status-صالحة {
+        background: rgba(74,222,128,0.15);
+        color: #4ade80;
+    }
+
+    .veh-badge.status-معطبة {
+        background: rgba(248,113,113,0.15);
+        color: #f87171;
+    }
+
+    .veh-badge.status-صيانة {
+        background: rgba(251,191,36,0.15);
+        color: #fbbf24;
+    }
+
+    .veh-badge.cond-جديدة {
+        background: rgba(96,165,250,0.15);
+        color: #60a5fa;
+    }
+
+    .veh-badge.cond-متوسطة {
+        background: rgba(251,191,36,0.15);
+        color: #fbbf24;
+    }
+
+    .veh-badge.cond-قديمة {
+        background: rgba(148,163,184,0.15);
+        color: #94a3b8;
+    }
+
+    .veh-plate {
+        font-family: 'Courier New', monospace;
+        font-weight: 900;
+        color: #f7d774;
+        letter-spacing: 1px;
+        background: rgba(247,215,116,0.1);
+        padding: 3px 10px;
+        border-radius: 6px;
+        display: inline-block;
+        font-size: 12px;
+    }
+
+    .veh-action-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition: all 0.2s;
+        margin: 0 2px;
+    }
+
+    .veh-action-btn.edit {
+        background: rgba(96,165,250,0.15);
+        color: #60a5fa;
+    }
+
+    .veh-action-btn.edit:hover {
+        background: rgba(96,165,250,0.3);
+        transform: scale(1.1);
+    }
+
+    .veh-action-btn.delete {
+        background: rgba(248,113,113,0.15);
+        color: #f87171;
+    }
+
+    .veh-action-btn.delete:hover {
+        background: rgba(248,113,113,0.3);
+        transform: scale(1.1);
+    }
+
+    .veh-empty {
+        padding: 60px 20px;
+        text-align: center;
+        color: rgba(255,255,255,0.3);
+    }
+
+    .veh-empty i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.4;
+        color: #f7d774;
+    }
+
+    .veh-empty p {
+        font-size: 14px;
+    }
+
+    /* ===== MODAL ===== */
+    .veh-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 99999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .veh-modal.active {
+        display: flex;
+    }
+
+    .veh-modal-box {
+        background: linear-gradient(135deg, #1a1f2e, #0f1420);
+        border: 1px solid rgba(247,215,116,0.2);
+        border-radius: 20px;
+        padding: 28px;
+        width: 100%;
+        max-width: 540px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.8);
+        animation: vehModalIn 0.3s ease-out;
+    }
+
+    @keyframes vehModalIn {
+        from { opacity: 0; transform: scale(0.95) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .veh-modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .veh-modal-head h3 {
+        font-size: 18px;
+        font-weight: 900;
+        color: #f7d774;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+    }
+
+    .veh-modal-close {
+        background: rgba(255,255,255,0.05);
+        border: none;
+        color: rgba(255,255,255,0.6);
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .veh-modal-close:hover {
+        background: rgba(248,113,113,0.2);
+        color: #f87171;
+    }
+
+    .veh-form-group {
+        margin-bottom: 16px;
+    }
+
+    .veh-form-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.5);
+        margin-bottom: 6px;
+    }
+
+    .veh-form-group label .req {
+        color: #f87171;
+    }
+
+    .veh-form-control {
+        width: 100%;
+        padding: 12px 14px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        color: #e8edf5;
+        font-family: inherit;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .veh-form-control:focus {
+        outline: none;
+        border-color: rgba(247,215,116,0.4);
+        background: rgba(255,255,255,0.05);
+    }
+
+    .veh-form-control option {
+        background: #1a1f2e;
+        color: #e8edf5;
+    }
+
+    textarea.veh-form-control {
+        resize: vertical;
+        min-height: 70px;
+    }
+
+    .veh-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .veh-modal-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .veh-modal-actions .veh-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 14px;
+    }
+
+    /* ===== TOAST ===== */
+    .veh-toast {
+        position: fixed;
+        bottom: 24px;
+        left: 24px;
+        z-index: 999999;
+        max-width: 360px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        color: #fff;
+        font-family: 'Cairo', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        animation: vehToastIn 0.25s ease-out;
+        direction: rtl;
+    }
+
+    .veh-toast.success {
+        background: rgba(34,197,94,0.15);
+        border: 1px solid rgba(34,197,94,0.3);
+    }
+
+    .veh-toast.error {
+        background: rgba(239,68,68,0.15);
+        border: 1px solid rgba(239,68,68,0.3);
+    }
+
+    .veh-toast.info {
+        background: rgba(96,165,250,0.15);
+        border: 1px solid rgba(96,165,250,0.3);
+    }
+
+    @keyframes vehToastIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 992px) {
+        .veh-header {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .veh-container { padding: 12px; }
+        .veh-header { padding: 18px; }
+        .veh-header .title { font-size: 18px; }
+        .veh-stats { grid-template-columns: repeat(2, 1fr); }
+        .veh-form-row { grid-template-columns: 1fr; }
+        .veh-actions { flex-direction: column; }
+        .veh-input,
+        .veh-select { width: 100%; }
+    }
+</style>
+
+<div class="veh-container">
+
+    <!-- ===== HEADER ===== -->
+    <div class="veh-header">
+        <div class="title-section">
+            <div class="title-icon">🚛</div>
+            <div>
+                <div class="title">الوسائل البرية</div>
+                <div class="subtitle">إدارة السيارات والآليات البرية</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STATS ===== -->
+    <div class="veh-stats" id="vehStats">
+        <div class="veh-stat">
+            <div class="number" id="vehStatTotal">0</div>
+            <div class="label">📊 المجموع</div>
+        </div>
+        <div class="veh-stat stat-valid">
+            <div class="number" id="vehStatValid">0</div>
+            <div class="label">✅ صالحة</div>
+        </div>
+        <div class="veh-stat stat-broken">
+            <div class="number" id="vehStatBroken">0</div>
+            <div class="label">🔴 معطبة</div>
+        </div>
+        <div class="veh-stat stat-maint">
+            <div class="number" id="vehStatMaint">0</div>
+            <div class="label">🔧 صيانة</div>
+        </div>
+    </div>
+
+    <!-- ===== ACTIONS ===== -->
+    <div class="veh-actions">
+        <button class="veh-btn veh-btn-primary" id="vehAddBtn">
+            <i class="fas fa-plus"></i>
+            إضافة وسيلة
+        </button>
+
+        <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة أو المنطقة...">
+
+        <select class="veh-select" id="vehFilterStatus">
+            <option value="all">كل الحالات</option>
+            <option value="صالحة">✅ صالحة</option>
+            <option value="معطبة">🔴 معطبة</option>
+            <option value="صيانة">🔧 صيانة</option>
+        </select>
+
+        <select class="veh-select" id="vehFilterType">
+            <option value="all">كل الأنواع</option>
+            <option value="سيارة">🚗 سيارة</option>
+            <option value="كواد">🛺 كواد</option>
+            <option value="شاحنة">🚚 شاحنة</option>
+            <option value="شاحنة صهريج">🚛 شاحنة صهريج</option>
+            <option value="حافلة">🚌 حافلة</option>
+            <option value="بيك أب">🛻 بيك أب</option>
+            <option value="فان">🚐 فان</option>
+            <option value="جيب">🚙 جيب</option>
+            <option value="دراجة">🏍️ دراجة</option>
+            <option value="مدرعة">🛡️ مدرعة</option>
+            <option value="إسعاف">🚑 إسعاف</option>
+            <option value="إطفاء">🚒 إطفاء</option>
+            <option value="رافعة">🏗️ رافعة</option>
+            <option value="جرافة">🚜 جرافة</option>
+            <option value="أخرى">⚙️ أخرى</option>
+        </select>
+
+        <button class="veh-btn veh-btn-secondary" id="vehRefreshBtn" title="تحديث">
+            <i class="fas fa-rotate"></i>
+        </button>
+    </div>
+
+    <!-- ===== TABLE ===== -->
+    <div class="veh-table-wrap">
+        <div class="veh-table-head">
+            <div class="veh-cell center">#</div>
+            <div class="veh-cell center">النوع</div>
+            <div class="veh-cell">رقم الوسيلة</div>
+            <div class="veh-cell">المنطقة</div>
+            <div class="veh-cell center">الحالة</div>
+            <div class="veh-cell center">حالة العمل</div>
+            <div class="veh-cell center">تاريخ التعيين</div>
+            <div class="veh-cell">ملاحظات</div>
+            <div class="veh-cell center">إجراءات</div>
+        </div>
+        <div id="vehTableBody">
+            <div class="veh-empty">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>جاري التحميل...</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="veh-modal" id="vehModal">
+    <div class="veh-modal-box">
+        <div class="veh-modal-head">
+            <h3><i class="fas fa-truck"></i> <span id="vehModalTitle">إضافة وسيلة برية</span></h3>
+            <button class="veh-modal-close" id="vehModalClose">×</button>
+        </div>
+
+        <form id="vehForm" autocomplete="off">
+            <input type="hidden" id="vehId">
+
+            <div class="veh-form-row">
+                <div class="veh-form-group">
+                    <label>النوع <span class="req">*</span></label>
+                    <select class="veh-form-control" id="vehType" required>
+                        <option value="سيارة">🚗 سيارة</option>
+                        <option value="كواد">🛺 كواد (دراجة رباعية)</option>
+                        <option value="شاحنة">🚚 شاحنة</option>
+                        <option value="شاحنة صهريج">🚛 شاحنة صهريج</option>
+                        <option value="حافلة">🚌 حافلة</option>
+                        <option value="بيك أب">🛻 بيك أب</option>
+                        <option value="فان">🚐 فان</option>
+                        <option value="جيب">🚙 جيب (4x4)</option>
+                        <option value="دراجة">🏍️ دراجة</option>
+                        <option value="مدرعة">🛡️ مدرعة</option>
+                        <option value="إسعاف">🚑 إسعاف</option>
+                        <option value="إطفاء">🚒 إطفاء</option>
+                        <option value="رافعة">🏗️ رافعة</option>
+                        <option value="جرافة">🚜 جرافة</option>
+                        <option value="أخرى">⚙️ أخرى</option>
+                    </select>
+                </div>
+
+                <div class="veh-form-group">
+                    <label>رقم الوسيلة <span class="req">*</span></label>
+                    <input type="text" class="veh-form-control" id="vehPlate" required placeholder="مثال: 1234 تونس 5678" maxlength="50">
+                </div>
+            </div>
+
+            <div class="veh-form-row">
+                <div class="veh-form-group">
+                    <label>المنطقة / الإقليم <span class="req">*</span></label>
+                    <input type="text" class="veh-form-control" id="vehRegion" required placeholder="مثال: تونس، بنزرت..." maxlength="100">
+                </div>
+
+                <div class="veh-form-group">
+                    <label>الحالة</label>
+                    <select class="veh-form-control" id="vehStatus">
+                        <option value="صالحة">✅ صالحة</option>
+                        <option value="معطبة">🔴 معطبة</option>
+                        <option value="صيانة">🔧 صيانة</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="veh-form-row">
+                <div class="veh-form-group">
+                    <label>حالة العمل</label>
+                    <select class="veh-form-control" id="vehCondition">
+                        <option value="جديدة">✨ جديدة</option>
+                        <option value="متوسطة">⚖️ متوسطة</option>
+                        <option value="قديمة">⏳ قديمة</option>
+                    </select>
+                </div>
+
+                <div class="veh-form-group">
+                    <label>تاريخ التعيين</label>
+                    <input type="date" class="veh-form-control" id="vehDate">
+                </div>
+            </div>
+
+            <div class="veh-form-group">
+                <label>ملاحظات</label>
+                <textarea class="veh-form-control" id="vehNotes" placeholder="ملاحظات إضافية..." maxlength="1000"></textarea>
+            </div>
+
+            <div class="veh-modal-actions">
+                <button type="button" class="veh-btn veh-btn-secondary" id="vehCancelBtn">إلغاء</button>
+                <button type="submit" class="veh-btn veh-btn-primary" id="vehSaveBtn">
+                    <i class="fas fa-save"></i>
+                    <span id="vehSaveBtnText">حفظ</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('🚛 Vehicles Page v1.0 - Loading...');
+
+    // ============================================================
+    // ✅ CLEANUP
+    // ============================================================
+    var _isDestroyed = false;
+    var _timeouts = [];
+    var _listeners = [];
+
+    function _vehCleanup() {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+
+        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
+        _timeouts = [];
+
+        _listeners.forEach(function(l) {
+            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
+        });
+        _listeners = [];
+
+        try { delete window.vehLoad; } catch(e) {}
+        try { delete window.vehShowToast; } catch(e) {}
+
+        console.log('🧹 Vehicles cleanup done');
+    }
+
+    window._pageCleanup = window._pageCleanup || [];
+    window._pageCleanup.push(_vehCleanup);
+    window.addEventListener('beforeunload', _vehCleanup);
+    window.addEventListener('pagehide', _vehCleanup);
+
+    // ============================================================
+    // ✅ HELPERS
+    // ============================================================
+    function getToken() {
+        try {
+            return localStorage.getItem('marine_token')
+                || localStorage.getItem('token')
+                || localStorage.getItem('marine_auth_token')
+                || sessionStorage.getItem('token')
+                || null;
+        } catch(e) { return null; }
+    }
+
+    function getCsrf() {
+        try {
+            var m = document.cookie.match(/marine_csrf=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : '';
+        } catch(e) { return ''; }
+    }
+
+    function authHeaders(includeContentType) {
+        var h = { 'Accept': 'application/json' };
+        if (includeContentType) h['Content-Type'] = 'application/json';
+        var t = getToken();
+        if (t) h['Authorization'] = 'Bearer ' + t;
+        var c = getCsrf();
+        if (c) h['X-CSRF-Token'] = c;
+        return h;
+    }
+
+    function apiFetch(url, opts) {
+        opts = opts || {};
+        var method = (opts.method || 'GET').toUpperCase();
+        var isSafe = ['GET', 'HEAD', 'OPTIONS'].indexOf(method) !== -1;
+
+        opts.headers = Object.assign({}, authHeaders(!isSafe), opts.headers || {});
+        opts.credentials = 'include';
+
+        return fetch(url, opts);
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/[&<>"']/g, function(m) {
+            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+        });
+    }
+
+    function addSafeListener(el, type, fn) {
+        if (!el) return;
+        el.addEventListener(type, fn);
+        _listeners.push({ el: el, type: type, fn: fn });
+    }
+
+    // ============================================================
+    // ✅ TOAST
+    // ============================================================
+    function vehShowToast(msg, type, duration) {
+        if (_isDestroyed) return;
+        type = type || 'info';
+        duration = duration || 3000;
+
+        var existing = document.querySelector('.veh-toast');
+        if (existing) existing.remove();
+
+        var toast = document.createElement('div');
+        toast.className = 'veh-toast ' + type;
+
+        var icons = { success: '✅', error: '❌', info: 'ℹ️' };
+        var icon = document.createElement('span');
+        icon.textContent = icons[type] || 'ℹ️';
+
+        var text = document.createElement('span');
+        text.textContent = String(msg || '');
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        document.body.appendChild(toast);
+
+        var id = setTimeout(function() {
+            if (toast.parentNode) toast.remove();
+        }, duration);
+        _timeouts.push(id);
+    }
+
+    // ============================================================
+    // ✅ STATE
+    // ============================================================
+    var vehicles = [];
+
+    // ============================================================
+    // ✅ LOAD VEHICLES
+    // ============================================================
+    function vehLoad() {
+        if (_isDestroyed) return;
+
+        var tbody = document.getElementById('vehTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
+        }
+
+        apiFetch('/api/vehicles')
+            .then(function(res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function(data) {
+                if (_isDestroyed) return;
+                vehicles = Array.isArray(data) ? data : [];
+                renderTable();
+                updateStats();
+            })
+            .catch(function(err) {
+                console.warn('⚠️ Load vehicles error:', err.message);
+                if (tbody) {
+                    tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-exclamation-triangle" style="color:#f87171"></i><p>فشل تحميل البيانات</p></div>';
+                }
+            });
+    }
+
+    // ============================================================
+    // ✅ STATS
+    // ============================================================
+    function updateStats() {
+        var total = vehicles.length;
+        var valid = vehicles.filter(function(v) { return v.status === 'صالحة'; }).length;
+        var broken = vehicles.filter(function(v) { return v.status === 'معطبة'; }).length;
+        var maint = vehicles.filter(function(v) { return v.status === 'صيانة'; }).length;
+
+        var el;
+        el = document.getElementById('vehStatTotal'); if (el) el.textContent = total;
+        el = document.getElementById('vehStatValid'); if (el) el.textContent = valid;
+        el = document.getElementById('vehStatBroken'); if (el) el.textContent = broken;
+        el = document.getElementById('vehStatMaint'); if (el) el.textContent = maint;
+    }
+
+    // ============================================================
+    // ✅ FILTER
+    // ============================================================
+    function getFiltered() {
+        var searchEl = document.getElementById('vehSearch');
+        var statusEl = document.getElementById('vehFilterStatus');
+        var typeEl = document.getElementById('vehFilterType');
+
+        var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+        var status = statusEl ? statusEl.value : 'all';
+        var type = typeEl ? typeEl.value : 'all';
+
+        return vehicles.filter(function(v) {
+            if (status !== 'all' && v.status !== status) return false;
+            if (type !== 'all' && v.type !== type) return false;
+            if (search) {
+                var text = (v.plateNumber + ' ' + v.region + ' ' + v.type + ' ' + (v.notes || '')).toLowerCase();
+                if (text.indexOf(search) === -1) return false;
+            }
+            return true;
+        });
+    }
+
+    // ============================================================
+    // ✅ RENDER TABLE
+    // ============================================================
+    function renderTable() {
+        var tbody = document.getElementById('vehTableBody');
+        if (!tbody) return;
+
+        var filtered = getFiltered();
+
+        if (!filtered.length) {
+            var msg = vehicles.length === 0 ? 'لا توجد وسائل برية' : 'لا توجد نتائج مطابقة';
+            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-truck"></i><p>' + msg + '</p></div>';
+            return;
+        }
+
+        var html = '';
+        filtered.forEach(function(v, idx) {
+            var statusCls = v.status === 'صالحة' ? 'status-صالحة'
+                          : (v.status === 'معطبة' ? 'status-معطبة' : 'status-صيانة');
+            var condCls = v.workCondition === 'جديدة' ? 'cond-جديدة'
+                        : (v.workCondition === 'متوسطة' ? 'cond-متوسطة' : 'cond-قديمة');
+            var dateStr = v.appointmentDate || '—';
+            var notes = v.notes || '—';
+
+            html +=
+                '<div class="veh-table-row">' +
+                    '<div class="veh-cell center">' + (idx + 1) + '</div>' +
+                    '<div class="veh-cell center"><span class="veh-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
+                    '<div class="veh-cell"><span class="veh-plate">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
+                    '<div class="veh-cell"><span class="veh-badge region">' + escapeHtml(v.region || '—') + '</span></div>' +
+                    '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
+                    '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
+                    '<div class="veh-cell center">' + escapeHtml(dateStr) + '</div>' +
+                    '<div class="veh-cell" title="' + escapeHtml(notes) + '">' + escapeHtml(notes) + '</div>' +
+                    '<div class="veh-cell center">' +
+                        '<button class="veh-action-btn edit" data-action="edit" data-id="' + escapeHtml(v.id) + '" title="تعديل">' +
+                            '<i class="fas fa-pen"></i>' +
+                        '</button>' +
+                        '<button class="veh-action-btn delete" data-action="delete" data-id="' + escapeHtml(v.id) + '" title="حذف">' +
+                            '<i class="fas fa-trash"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+        });
+
+        tbody.innerHTML = html;
+
+        // Event delegation
+        tbody.querySelectorAll('[data-action]').forEach(function(btn) {
+            addSafeListener(btn, 'click', function(e) {
+                e.preventDefault();
+                var action = this.getAttribute('data-action');
+                var id = this.getAttribute('data-id');
+                if (action === 'edit') openEditModal(id);
+                else if (action === 'delete') confirmDelete(id);
+            });
+        });
+    }
+
+    // ============================================================
+    // ✅ MODAL
+    // ============================================================
+    function openAddModal() {
+        var modal = document.getElementById('vehModal');
+        var title = document.getElementById('vehModalTitle');
+        var form = document.getElementById('vehForm');
+        if (!modal || !form) return;
+
+        if (title) title.textContent = 'إضافة وسيلة برية';
+
+        document.getElementById('vehId').value = '';
+        document.getElementById('vehPlate').value = '';
+        document.getElementById('vehRegion').value = '';
+        document.getElementById('vehType').value = 'سيارة';
+        document.getElementById('vehStatus').value = 'صالحة';
+        document.getElementById('vehCondition').value = 'جديدة';
+        document.getElementById('vehDate').value = '';
+        document.getElementById('vehNotes').value = '';
+
+        modal.classList.add('active');
+        _timeouts.push(setTimeout(function() {
+            var p = document.getElementById('vehPlate');
+            if (p) p.focus();
+        }, 100));
+    }
+
+    function openEditModal(id) {
+        var v = vehicles.find(function(x) { return x.id === id; });
+        if (!v) return;
+
+        var modal = document.getElementById('vehModal');
+        var title = document.getElementById('vehModalTitle');
+        if (!modal) return;
+
+        if (title) title.textContent = 'تعديل وسيلة برية';
+
+        document.getElementById('vehId').value = v.id || '';
+        document.getElementById('vehPlate').value = v.plateNumber || '';
+        document.getElementById('vehRegion').value = v.region || '';
+        document.getElementById('vehType').value = v.type || 'سيارة';
+        document.getElementById('vehStatus').value = v.status || 'صالحة';
+        document.getElementById('vehCondition').value = v.workCondition || 'جديدة';
+        document.getElementById('vehDate').value = v.appointmentDate || '';
+        document.getElementById('vehNotes').value = v.notes || '';
+
+        modal.classList.add('active');
+    }
+
+    function closeModal() {
+        var modal = document.getElementById('vehModal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    // ============================================================
+    // ✅ SAVE (ADD / EDIT)
+    // ============================================================
+    function saveVehicle(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (_isDestroyed) return;
+
+        var id = document.getElementById('vehId').value.trim();
+        var plateNumber = document.getElementById('vehPlate').value.trim();
+        var region = document.getElementById('vehRegion').value.trim();
+        var type = document.getElementById('vehType').value;
+        var status = document.getElementById('vehStatus').value;
+        var workCondition = document.getElementById('vehCondition').value;
+        var appointmentDate = document.getElementById('vehDate').value || null;
+        var notes = document.getElementById('vehNotes').value.trim();
+
+        if (!plateNumber) {
+            vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error');
+            return;
+        }
+        if (!region) {
+            vehShowToast('⚠️ المنطقة مطلوبة', 'error');
+            return;
+        }
+
+        var payload = {
+            plateNumber: plateNumber,
+            region: region,
+            type: type,
+            status: status,
+            workCondition: workCondition,
+            appointmentDate: appointmentDate,
+            notes: notes
+        };
+
+        var btn = document.getElementById('vehSaveBtn');
+        var btnText = document.getElementById('vehSaveBtnText');
+        if (btn) btn.disabled = true;
+        if (btnText) btnText.textContent = 'جاري الحفظ...';
+
+        var isEdit = !!id;
+        var url = isEdit ? '/api/vehicles/' + encodeURIComponent(id) : '/api/vehicles';
+        var method = isEdit ? 'PUT' : 'POST';
+
+        apiFetch(url, {
+            method: method,
+            body: JSON.stringify(payload)
+        })
+        .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
+        .then(function(result) {
+            if (_isDestroyed) return;
+
+            if (!result.ok) {
+                throw new Error(result.data.error || 'فشل الحفظ');
+            }
+
+            vehShowToast(isEdit ? '✅ تم تعديل الوسيلة' : '✅ تم إضافة الوسيلة', 'success');
+            closeModal();
+            vehLoad();
+        })
+        .catch(function(err) {
+            console.warn('❌ Save error:', err.message);
+            vehShowToast('❌ ' + err.message, 'error');
+        })
+        .finally(function() {
+            if (btn) btn.disabled = false;
+            if (btnText) btnText.textContent = 'حفظ';
+        });
+    }
+
+    // ============================================================
+    // ✅ DELETE
+    // ============================================================
+    function confirmDelete(id) {
+        var v = vehicles.find(function(x) { return x.id === id; });
+        if (!v) return;
+
+        if (!confirm('⚠️ هل تريد حذف الوسيلة "' + v.plateNumber + '"؟')) return;
+
+        apiFetch('/api/vehicles/' + encodeURIComponent(id), {
+            method: 'DELETE'
+        })
+        .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
+        .then(function(result) {
+            if (_isDestroyed) return;
+
+            if (!result.ok) {
+                throw new Error(result.data.error || 'فشل الحذف');
+            }
+
+            vehShowToast('✅ تم حذف الوسيلة', 'success');
+            vehLoad();
+        })
+        .catch(function(err) {
+            console.warn('❌ Delete error:', err.message);
+            vehShowToast('❌ ' + err.message, 'error');
+        });
+    }
+
+    // ============================================================
+    // ✅ INIT
+    // ============================================================
+    function init() {
+        if (_isDestroyed) return;
+        console.log('🚀 Initializing Vehicles page...');
+
+        // Add button
+        addSafeListener(document.getElementById('vehAddBtn'), 'click', openAddModal);
+
+        // Modal close
+        addSafeListener(document.getElementById('vehModalClose'), 'click', closeModal);
+        addSafeListener(document.getElementById('vehCancelBtn'), 'click', closeModal);
+
+        // Click outside modal
+        var modal = document.getElementById('vehModal');
+        if (modal) {
+            addSafeListener(modal, 'click', function(e) {
+                if (e.target === modal) closeModal();
+            });
+        }
+
+        // ESC
+        addSafeListener(document, 'keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Form submit
+        var form = document.getElementById('vehForm');
+        if (form) {
+            addSafeListener(form, 'submit', saveVehicle);
+        }
+
+        // Refresh
+        addSafeListener(document.getElementById('vehRefreshBtn'), 'click', function() {
+            vehShowToast('🔄 جاري التحديث...', 'info', 1500);
+            vehLoad();
+        });
+
+        // Filters
+        addSafeListener(document.getElementById('vehSearch'), 'input', renderTable);
+        addSafeListener(document.getElementById('vehFilterStatus'), 'change', renderTable);
+        addSafeListener(document.getElementById('vehFilterType'), 'change', renderTable);
+
+        // Initial load
+        vehLoad();
+
+        console.log('✅ Vehicles page ready');
+    }
+
+    // ============================================================
+    // ✅ BOOT
+    // ============================================================
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+            _timeouts.push(id);
+        });
+    } else {
+        var id0 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+        _timeouts.push(id0);
+    }
+
+    // Expose for debugging
+    window.vehLoad = vehLoad;
+    window.vehShowToast = vehShowToast;
+
+    console.log('✅ Vehicles Page v1.0 ready');
+
+})();
+</script>
+</div>
