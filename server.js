@@ -1,10 +1,10 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.1 (FIXED)
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.2 (FIXED + VEHICLES)
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
 // 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v6
-// ✨ v10.8.1: All critical bugs fixed + Memory leak fixes +
-//             CSRF hardening + res.sendFile loop fix + Rate limit tune
+// 🚛 + VEHICLES (LAND) ROUTES
+// ✨ v10.8.2: Added vehicles routes (independent module)
 // ============================================================
 'use strict';
 require('dotenv').config();
@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.8.1 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.8.2 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 Node version:', process.version);
@@ -44,14 +44,19 @@ function loadModels() {
     } catch (e) { console.error('❌ Models:', e.message); process.exit(1); }
 }
 
-let User, Vessel, Maintenance, Log, Ticket, Note, Notification, UserSettings, SystemLogo;
+// ✅ MOD #1: أضفنا Vehicle إلى قائمة المتغيرات
+let User, Vessel, Vehicle, Maintenance, Log, Ticket, Note, Notification, UserSettings, SystemLogo;
 try {
     const m = loadModels();
     User = m.User; Vessel = m.Vessel; Maintenance = m.Maintenance; Log = m.Log; Ticket = m.Ticket;
     Note = m.Note || null; Notification = m.Notification || null;
     UserSettings = m.UserSettings || null; SystemLogo = m.SystemLogo || null;
+    // ✅ MOD #1 (تكملة): تحميل Vehicle
+    Vehicle = m.Vehicle || null;
     console.log('📦 Optional:', 'Note=' + (Note?'✅':'❌'), 'Notif=' + (Notification?'✅':'❌'),
         'Settings=' + (UserSettings?'✅':'❌'), 'Logo=' + (SystemLogo?'✅':'❌'));
+    // ✅ MOD #1 (تكملة): إعلام بحالة Vehicle
+    console.log('🚛 Vehicle:', Vehicle ? '✅' : '❌');
 } catch (e) { console.error('❌', e.message); process.exit(1); }
 
 const express = require('express');
@@ -75,6 +80,8 @@ const fetchSafe = (() => {
 
 const aiAndImportRoutes = require('./routes/ai-and-import');
 const settingsRoutes = require('./routes/settings');
+// ✅ MOD #2: تحميل routes الوسائل البرية
+const vehiclesRoutes = require('./routes/vehicles');
 
 let createDOMPurify = null;
 try { createDOMPurify = require('isomorphic-dompurify'); } catch (e) {}
@@ -111,7 +118,6 @@ async function initRedis() {
             redisClient.on('ready', () => { console.log('✅ Redis ready'); redisAvailable = true; });
             redisClient.on('end', () => { redisAvailable = false; });
 
-            // ✅ FIX #9: proper timeout with unref
             let timeoutId;
             const timeoutPromise = new Promise((_, rej) => {
                 timeoutId = setTimeout(() => rej(new Error('timeout')), 15000);
@@ -151,7 +157,7 @@ app.set('trust proxy', isProduction ? 1 : 0);
 // ============ OWNERSHIP HEADERS ============
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.8.1');
+    res.setHeader('X-System-Version', '10.8.2');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -177,7 +183,6 @@ const REFRESH_TOKEN_MAX_AGE = 7*24*60*60*1000;
 const CSRF_MAX_AGE = 8*60*60*1000;
 const RESET_TOKEN_TTL = 60*60*1000;
 
-// ✅ FIX #2 & #3: Memory caps
 const MAX_MEMORY_SESSIONS = 10000;
 const MAX_MEMORY_RESET_TOKENS = 5000;
 const MAX_MEMORY_REVOKED = 50000;
@@ -202,7 +207,7 @@ function generateStrongPassword(len=20) {
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.local';
-const ALLOW_ADMIN_RESET = process.env.ALLOW_ADMIN_RESET === 'true'; // ✅ FIX #10: default false
+const ALLOW_ADMIN_RESET = process.env.ALLOW_ADMIN_RESET === 'true';
 
 let ADMIN_PASSWORD, ADMIN_PASSWORD_GENERATED = false;
 if (process.env.ADMIN_PASSWORD) {
@@ -214,7 +219,6 @@ if (process.env.ADMIN_PASSWORD) {
 } else {
     if (isProduction) { console.error('❌ ADMIN_PASSWORD required'); process.exit(1); }
     ADMIN_PASSWORD = generateStrongPassword(); ADMIN_PASSWORD_GENERATED = true;
-    // ✅ FIX #12: don't print password in production
     if (!isProduction) console.log('🔑 DEV PASSWORD:', ADMIN_PASSWORD);
 }
 if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length !== 64)) {
@@ -230,7 +234,6 @@ function safeEqual(a,b) {
     return A.length === B.length && crypto.timingSafeEqual(A,B);
 }
 
-// ✅ FIX #5: strict ID query with length check
 function buildIdQuery(idParam) {
     if (!idParam || typeof idParam !== 'string') return null;
     const t = idParam.trim();
@@ -309,7 +312,7 @@ async function withRetry(fn, n=3, d=500) {
     throw last;
 }
 async function sendEmail(to, subj, html) {
-    if (!isValidEmail(to)) { console.warn('⚠️ Invalid email:', to); return null; } // ✅ FIX #13
+    if (!isValidEmail(to)) { console.warn('⚠️ Invalid email:', to); return null; }
     const k1 = process.env.MAILJET_API_KEY, k2 = process.env.MAILJET_SECRET_KEY;
     if (k1 && k2) {
         if (!fetchSafe) return null;
@@ -379,7 +382,6 @@ app.use(cors({
     exposedHeaders: ['X-CSRF-Token','X-Session-Expiry','X-Request-ID']
 }));
 
-// ✅ FIX #11 & #16: higher limits + skip for health/csrf
 const apiLimiter = rateLimit({ 
     windowMs: 15*60*1000, max: 2000, standardHeaders: true, legacyHeaders: false,
     keyGenerator: (req) => (req.user && req.user.id) ? req.user.id : (req.ip || 'unknown'),
@@ -429,7 +431,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.8.1',
+            version: '10.8.2',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -471,7 +473,13 @@ async function createIndexes() {
         { col:'maintenances', spec:{ vesselId:1 }, opts:{ background:true } },
         { col:'maintenances', spec:{ status:1 }, opts:{ background:true } },
         { col:'logs', spec:{ createdAt:-1 }, opts:{ background:true } },
-        { col:'logs', spec:{ action:1, resource:1 }, opts:{ background:true } }
+        { col:'logs', spec:{ action:1, resource:1 }, opts:{ background:true } },
+        // ✅ MOD: indexes للسيارات
+        { col:'vehicles', spec:{ id:1 }, opts:{ unique:true, sparse:true, background:true } },
+        { col:'vehicles', spec:{ plateNumber:1 }, opts:{ unique:true, sparse:true, background:true } },
+        { col:'vehicles', spec:{ status:1 }, opts:{ background:true } },
+        { col:'vehicles', spec:{ type:1 }, opts:{ background:true } },
+        { col:'vehicles', spec:{ region:1 }, opts:{ background:true } }
     ];
     for (const t of tasks) {
         try {
@@ -498,7 +506,6 @@ async function ensureAdminExists() {
             if (ex.loginAttempts > 0) upd.loginAttempts = 0;
             if (ex.isActive === false) upd.isActive = true;
             if (String(ex.role||'').trim() !== 'admin') upd.role = 'admin';
-            // ✅ FIX #10: only reset if ALLOW_ADMIN_RESET === true
             if (ALLOW_ADMIN_RESET) {
                 let ok = false;
                 try { ok = await bcrypt.compare(ADMIN_PASSWORD, ex.password); } catch(e) {}
@@ -535,7 +542,6 @@ async function cleanupLegacyDemoVessels() {
         }).lean();
         if (already) { console.log('ℹ️ Legacy cleanup done'); return; }
 
-        // ✅ FIX #7: safer filter — only old vessels created by 'system' before 2024
         const demo = await Vessel.find({ 
             name: { $in: LEGACY_DEMO }, 
             createdBy: 'system',
@@ -605,7 +611,6 @@ function looksLikeClientCsrfToken(t) {
         /^\d{10,16}\.[a-z0-9]{5,30}\.[a-z0-9]{5,20}$/i.test(t);
 }
 
-// ✅ FIX #4: hardened CSRF with proper session validation
 async function csrfProtection(req, res, next) {
     if (['GET','HEAD','OPTIONS'].includes(req.method)) return next();
     if (csrfExcluded.has(req.path)) return next();
@@ -614,18 +619,14 @@ async function csrfProtection(req, res, next) {
     const sTok = req.session?.csrfToken || null;
     const cTok = req.cookies?.marine_csrf || null;
 
-    // Case 1: matches session token
     if (provided && sTok && safeEqual(String(provided), String(sTok))) return next();
 
-    // Case 2: matches cookie token AND (no session OR cookie matches session)
     if (provided && cTok && safeEqual(String(provided), String(cTok))) {
         if (!sTok || safeEqual(String(cTok), String(sTok))) return next();
     }
 
-    // Case 3: dev-only fallback
     if (!isProduction && !sTok && looksLikeClientCsrfToken(provided)) return next();
 
-    // Case 4: authenticated user with valid refresh session
     if (req.auth && req.user && req.auth.sid && req.auth.sub === req.user.id) {
         try {
             const rec = await getRefreshSession(req.auth.sid);
@@ -663,7 +664,6 @@ async function saveRefreshSession({ sessionId, userId, refreshToken }) {
         return true;
     }, false);
     if (!ok) {
-        // ✅ FIX #2: enforce cap
         if (refreshSessionsMemory.size >= MAX_MEMORY_SESSIONS) {
             const sorted = [...refreshSessionsMemory.entries()].sort((a,b) => a[1].lastUsedAt - b[1].lastUsedAt);
             const toDelete = sorted.slice(0, Math.max(1, Math.floor(MAX_MEMORY_SESSIONS * 0.1)));
@@ -717,7 +717,6 @@ async function revokeAccessToken(decoded) {
     const ttl = decoded.exp ? Math.max(1, decoded.exp - Math.floor(Date.now()/1000)) : 15*60;
     const ok = await redisSafe(c => c.setEx(`marine:revoked:${decoded.jti}`, ttl, '1'), false);
     if (!ok) {
-        // ✅ FIX #2: enforce cap
         if (revokedAccessTokensMemory.size >= MAX_MEMORY_REVOKED) {
             const sorted = [...revokedAccessTokensMemory.entries()].sort((a,b) => a[1] - b[1]);
             const toDelete = sorted.slice(0, Math.max(1, Math.floor(MAX_MEMORY_REVOKED * 0.1)));
@@ -736,13 +735,11 @@ async function isAccessTokenRevoked(jti) {
     return true;
 }
 
-// ✅ FIX #2: cleanup every minute
 setInterval(() => {
     const now = Date.now();
     for (const [k, v] of revokedAccessTokensMemory) if (now > v) revokedAccessTokensMemory.delete(k);
     for (const [k, v] of refreshSessionsMemory) if (now > v.expiresAt) refreshSessionsMemory.delete(k);
     pruneResetMem();
-    // locations cleanup
     if (app.locals.__locMem) {
         for (const [uid, loc] of app.locals.__locMem) {
             if (now - new Date(loc.timestamp).getTime() > 24*60*60*1000) {
@@ -987,19 +984,16 @@ function formatMaintenance(log) {
     };
 }
 
-// ============ HTML INJECTION HELPERS (FIX #1, #17) ============
-// Store original methods once — prevents infinite loops and duplicate injection
+// ============ HTML INJECTION HELPERS ============
 const ORIGINAL_SEND = express.response.send;
 const ORIGINAL_SENDFILE = express.response.sendFile;
 
-// Track which injections have been applied per response
 function createInjectionState() {
     return { ownership: false, badge: false, gps: false };
 }
 
 function applyInjections(html, state) {
     if (typeof html !== 'string' || !html.includes('</body>')) return html;
-    // Each injector checks its own flag
     return html;
 }
 
@@ -1030,15 +1024,15 @@ function applyInjections(html, state) {
 
     app.get('/api/health', (req, res) => {
         res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.8.1',
+            success: true, status: 'online', service: 'Marine System', version: '10.8.2',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) ? 'mailjet'
                 : (process.env.EMAIL_HOST ? 'smtp' : 'not-configured'),
-            models: { User: !!User, Vessel: !!Vessel, Maintenance: !!Maintenance,
-                Log: !!Log, Ticket: !!Ticket, Note: !!Note,
+            models: { User: !!User, Vessel: !!Vessel, Vehicle: !!Vehicle,
+                Maintenance: !!Maintenance, Log: !!Log, Ticket: !!Ticket, Note: !!Note,
                 Notification: !!Notification, UserSettings: !!UserSettings, SystemLogo: !!SystemLogo }
         });
     });
@@ -1961,7 +1955,6 @@ function applyInjections(html, state) {
                 return true;
             }, false);
             if (!ok) {
-                // ✅ FIX #3: memory fallback with cap
                 if (!app.locals.__locMem) app.locals.__locMem = new Map();
                 if (app.locals.__locMem.size >= MAX_MEMORY_LOCATIONS) {
                     const sorted = [...app.locals.__locMem.entries()]
@@ -1979,6 +1972,19 @@ function applyInjections(html, state) {
         await redisSafe(c => c.del(`${LOCATION_PREFIX}${req.user.id}`));
         if (app.locals.__locMem) app.locals.__locMem.delete(req.user.id);
         res.json({ success: true });
+    });
+
+    // ✅ MOD #5: تسجيل routes الوسائل البرية
+    // ============ VEHICLES (LAND) ============
+    vehiclesRoutes(app, {
+        Vehicle,
+        authenticateAccessToken,
+        csrfProtection,
+        requirePermission,
+        randomId,
+        addSystemLog,
+        notify,
+        buildIdQuery
     });
 
     // ============ AI + IMPORT ============
@@ -2002,8 +2008,7 @@ function applyInjections(html, state) {
         console.warn('⚠️ Settings disabled (models missing)');
     }
 
-    // ============ HTML INJECTION (FIXED — single unified middleware) ============
-    // ✅ FIX #1 & #17: Single injection middleware, no nested sendFile wrapping
+    // ============ HTML INJECTION ============
     const OWNERSHIP_META = `
 <meta name="author" content="أمان الله ناجي">
 <meta name="creator" content="أمان الله ناجي">
@@ -2012,7 +2017,7 @@ function applyInjections(html, state) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.8.1 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.8.2 - Aman Allah Naji">
 `;
     const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
@@ -2115,7 +2120,6 @@ setInterval(updateBadge,1500);
         <div class="fg-warn">⚠️ بعد النقر اختر <strong>"السماح"</strong> في نافذة المتصفح.</div>
     </div>
 </div>`;
-    // ✅ FIX #8 & #18: proper cleanup + iframe handling
     const FORCE_GPS_SCRIPT = `
 <script>(function(){'use strict';
 var MID='force-gps-modal',INT=30000,first=false,watchId=null,lastSent=0,asking=false,verified=false,lastVerify=0;
@@ -2164,7 +2168,6 @@ function startWatch(){
 function request(){
  if(asking)return;asking=true;
  var b=document.getElementById('fgAllowBtn');if(b)b.disabled=true;
- // ✅ FIX #8: better iframe/unsupported detection
  if(!navigator.geolocation){
   asking=false;if(b)b.disabled=false;
   setStatus('❌ المتصفح لا يدعم خدمة الموقع','error');
@@ -2219,25 +2222,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else init();
 })();<\/script>`;
 
-    // ✅ FIX #1 & #17: Single unified injection middleware
     const INJECTION_SKIP_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i;
 
     function injectAll(html) {
         if (typeof html !== 'string' || !html.includes('</body>')) return html;
-        
-        // Ownership
         if (!html.includes('ownership-signature-style')) {
             if (html.includes('</head>')) html = html.replace('</head>', OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + '\n</head>');
             else html = OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + html;
             html = html.replace('</body>', OWNERSHIP_HTML + '\n</body>');
         }
-        // User badge
         if (!html.includes('user-info-badge-style')) {
             if (html.includes('</head>')) html = html.replace('</head>', USER_BADGE_CSS + '\n</head>');
             if (/<body[^>]*>/i.test(html)) html = html.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
             html = html.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
         }
-        // Force GPS
         if (!html.includes('force-gps-style')) {
             if (html.includes('</head>')) html = html.replace('</head>', FORCE_GPS_CSS + '\n</head>');
             if (/<body[^>]*>/i.test(html)) html = html.replace(/(<body[^>]*>)/i, '$1' + FORCE_GPS_HTML);
@@ -2249,11 +2247,8 @@ else init();
 
     app.use((req, res, next) => {
         if (req.path.startsWith('/api/') || INJECTION_SKIP_REGEX.test(req.path)) return next();
-
-        // Save original for THIS response only
         const originalSend = res.send;
         const originalSendFile = res.sendFile;
-
         res.send = function (body) {
             try {
                 if (typeof body === 'string' && body.includes('</body>')) {
@@ -2262,7 +2257,6 @@ else init();
             } catch (e) {}
             return originalSend.call(this, body);
         };
-
         res.sendFile = function (filePath, options, callback) {
             if (typeof options === 'function') { callback = options; options = {}; }
             try {
@@ -2275,7 +2269,6 @@ else init();
             } catch (e) {}
             return originalSendFile.call(this, filePath, options, callback);
         };
-
         next();
     });
 
@@ -2311,7 +2304,7 @@ else init();
             path.join(publicPagesDir, 'index.html')
         ];
         for (const p of possible) if (fs.existsSync(p)) return res.sendFile(p);
-        res.send('<h1>🚢 Marine System v10.8.1</h1><p>Running</p>');
+        res.send('<h1>🚢 Marine System v10.8.2</h1><p>Running</p>');
     });
     app.get('/pages/:page', (req, res) => {
         const fp = findPageFile(req.params.page);
@@ -2343,18 +2336,20 @@ else init();
     // ============ LISTEN ============
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v10.8.1 (FIXED)');
+        console.log('🚢 MARINE SYSTEM v10.8.2');
         console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
         console.log('🍃 MongoDB Atlas');
         console.log('📦 NO SEED — NO FAKE VESSELS');
         console.log('💾 Redis-first Maps');
         console.log('📍 Force GPS v6');
+        console.log('🚛 Vehicles (Land) routes: ENABLED');
         console.log('=========================================');
         console.log(`📍 Port: ${PORT}`);
         console.log(`🌍 Env: ${process.env.NODE_ENV || 'development'}`);
         console.log(`👤 Admin: ${ADMIN_USERNAME}`);
         console.log(`🍃 MongoDB: ${mongoConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
         console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY'}`);
+        console.log(`🚛 Vehicle Model: ${Vehicle ? 'LOADED' : 'NOT LOADED'}`);
         console.log('=========================================');
         console.log('👨‍💻 أمان الله ناجي');
         console.log('🏛️  إدارة إسناد الوحدات البحرية');
