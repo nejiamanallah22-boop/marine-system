@@ -11,16 +11,9 @@
         position: relative;
         z-index: 1;
     }
-
-    #page-vehicles *,
-    #page-vehicles *::before,
-    #page-vehicles *::after {
-        box-sizing: border-box;
-    }
-
+    #page-vehicles *, #page-vehicles *::before, #page-vehicles *::after { box-sizing: border-box; }
     .veh-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
 
-    /* ===== HEADER ===== */
     .veh-header {
         background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(247,215,116,0.05));
         border-radius: 20px;
@@ -35,7 +28,6 @@
         position: relative;
         overflow: hidden;
     }
-
     .veh-header::before {
         content: '';
         position: absolute;
@@ -44,56 +36,26 @@
         background: radial-gradient(circle, rgba(247,215,116,0.04) 0%, transparent 70%);
         pointer-events: none;
     }
-
-    .veh-header .title-section {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        position: relative;
-        z-index: 1;
-    }
-
+    .veh-header .title-section { display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; }
     .veh-header .title-icon {
         width: 56px; height: 56px;
         background: linear-gradient(135deg, rgba(247,215,116,0.2), rgba(247,215,116,0.05));
         border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
         font-size: 28px;
         border: 1px solid rgba(247,215,116,0.2);
         flex-shrink: 0;
     }
+    .veh-header .title { font-size: 22px; font-weight: 900; color: #f7d774; line-height: 1.2; }
+    .veh-header .subtitle { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+    .veh-header .header-actions { display: flex; gap: 10px; position: relative; z-index: 1; flex-wrap: wrap; }
 
-    .veh-header .title {
-        font-size: 22px;
-        font-weight: 900;
-        color: #f7d774;
-        line-height: 1.2;
-    }
-
-    .veh-header .subtitle {
-        font-size: 12px;
-        color: rgba(255,255,255,0.4);
-        margin-top: 4px;
-    }
-
-    .veh-header .header-actions {
-        display: flex;
-        gap: 10px;
-        position: relative;
-        z-index: 1;
-        flex-wrap: wrap;
-    }
-
-    /* ===== STATS ===== */
     .veh-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 12px;
         margin-bottom: 24px;
     }
-
     .veh-stat {
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.05);
@@ -102,32 +64,13 @@
         text-align: center;
         transition: all 0.3s;
     }
-
-    .veh-stat:hover {
-        background: rgba(255,255,255,0.04);
-        transform: translateY(-2px);
-        border-color: rgba(247,215,116,0.15);
-    }
-
-    .veh-stat .number {
-        font-size: 26px;
-        font-weight: 900;
-        color: #f7d774;
-        line-height: 1;
-    }
-
-    .veh-stat .label {
-        font-size: 11px;
-        color: rgba(255,255,255,0.4);
-        margin-top: 6px;
-        font-weight: 600;
-    }
-
+    .veh-stat:hover { background: rgba(255,255,255,0.04); transform: translateY(-2px); border-color: rgba(247,215,116,0.15); }
+    .veh-stat .number { font-size: 26px; font-weight: 900; color: #f7d774; line-height: 1; }
+    .veh-stat .label { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 6px; font-weight: 600; }
     .veh-stat.stat-valid .number { color: #4ade80; }
     .veh-stat.stat-broken .number { color: #f87171; }
     .veh-stat.stat-maint .number { color: #fbbf24; }
 
-    /* ===== ACTION BAR ===== */
     .veh-actions {
         display: flex;
         gap: 12px;
@@ -135,7 +78,6 @@
         flex-wrap: wrap;
         align-items: center;
     }
-
     .veh-btn {
         padding: 12px 22px;
         border: none;
@@ -150,37 +92,12 @@
         transition: all 0.25s;
         white-space: nowrap;
     }
-
-    .veh-btn-primary {
-        background: linear-gradient(135deg, #f7d774, #e6b31e);
-        color: #0a0e1a;
-    }
-
-    .veh-btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(247,215,116,0.3);
-    }
-
-    .veh-btn-secondary {
-        background: rgba(255,255,255,0.05);
-        color: #e8edf5;
-        border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .veh-btn-secondary:hover {
-        background: rgba(255,255,255,0.1);
-        transform: translateY(-1px);
-    }
-
-    .veh-btn-info {
-        background: linear-gradient(135deg, #60a5fa, #3b82f6);
-        color: white;
-    }
-
-    .veh-btn-info:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(96,165,250,0.3);
-    }
+    .veh-btn-primary { background: linear-gradient(135deg, #f7d774, #e6b31e); color: #0a0e1a; }
+    .veh-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(247,215,116,0.3); }
+    .veh-btn-secondary { background: rgba(255,255,255,0.05); color: #e8edf5; border: 1px solid rgba(255,255,255,0.08); }
+    .veh-btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+    .veh-btn-info { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: white; }
+    .veh-btn-info:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(96,165,250,0.3); }
 
     .veh-input, .veh-select {
         padding: 12px 16px;
@@ -192,18 +109,10 @@
         font-size: 13px;
         transition: all 0.2s;
     }
-
     .veh-input { flex: 1; min-width: 180px; }
-
-    .veh-input:focus, .veh-select:focus {
-        outline: none;
-        border-color: rgba(247,215,116,0.4);
-        background: rgba(255,255,255,0.05);
-    }
-
+    .veh-input:focus, .veh-select:focus { outline: none; border-color: rgba(247,215,116,0.4); background: rgba(255,255,255,0.05); }
     .veh-select option { background: #1a1f2e; color: #e8edf5; }
 
-    /* ===== AUTO-REFRESH TOGGLE ===== */
     .veh-auto-toggle {
         display: inline-flex;
         align-items: center;
@@ -219,48 +128,28 @@
         transition: all 0.2s;
         user-select: none;
     }
-
-    .veh-auto-toggle:hover {
-        background: rgba(255,255,255,0.06);
-        color: #e8edf5;
-    }
-
+    .veh-auto-toggle:hover { background: rgba(255,255,255,0.06); color: #e8edf5; }
     .veh-auto-toggle input { display: none; }
-
     .veh-auto-toggle .toggle-dot {
-        width: 32px;
-        height: 18px;
+        width: 32px; height: 18px;
         background: rgba(255,255,255,0.15);
         border-radius: 10px;
         position: relative;
         transition: all 0.25s;
     }
-
     .veh-auto-toggle .toggle-dot::before {
         content: '';
         position: absolute;
-        top: 2px;
-        right: 2px;
-        width: 14px;
-        height: 14px;
+        top: 2px; right: 2px;
+        width: 14px; height: 14px;
         background: #fff;
         border-radius: 50%;
         transition: all 0.25s;
     }
+    .veh-auto-toggle input:checked ~ .toggle-dot { background: #4ade80; }
+    .veh-auto-toggle input:checked ~ .toggle-dot::before { right: calc(100% - 16px); }
+    .veh-auto-toggle input:checked ~ .toggle-label { color: #4ade80; }
 
-    .veh-auto-toggle input:checked ~ .toggle-dot {
-        background: #4ade80;
-    }
-
-    .veh-auto-toggle input:checked ~ .toggle-dot::before {
-        right: calc(100% - 16px);
-    }
-
-    .veh-auto-toggle input:checked ~ .toggle-label {
-        color: #4ade80;
-    }
-
-    /* ===== TABLE ===== */
     .veh-table-wrap {
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.05);
@@ -268,17 +157,15 @@
         overflow: hidden;
         overflow-x: auto;
     }
-
     .veh-table-head, .veh-table-row {
         display: grid;
-        grid-template-columns: 50px 130px 150px 1fr 110px 120px 130px 1fr 100px;
+        grid-template-columns: 50px 130px 150px 1fr 130px 110px 120px 130px 1fr 100px;
         gap: 8px;
         padding: 14px 20px;
         align-items: center;
         font-size: 13px;
-        min-width: 1200px;
+        min-width: 1350px;
     }
-
     .veh-table-head {
         background: rgba(247,215,116,0.05);
         border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -286,12 +173,10 @@
         font-weight: 800;
         color: #f7d774;
     }
-
     .veh-table-row {
         border-bottom: 1px solid rgba(255,255,255,0.04);
         transition: background 0.2s;
     }
-
     .veh-table-row:hover { background: rgba(255,255,255,0.03); }
     .veh-table-row:last-child { border-bottom: none; }
 
@@ -305,9 +190,9 @@
         font-size: 11px;
         font-weight: 700;
     }
-
     .veh-badge.type { background: rgba(96,165,250,0.15); color: #60a5fa; }
     .veh-badge.region { background: rgba(247,215,116,0.15); color: #f7d774; font-size: 10px; }
+    .veh-badge.zone { background: rgba(74,222,128,0.15); color: #4ade80; font-size: 10px; }
     .veh-badge.status-صالحة { background: rgba(74,222,128,0.15); color: #4ade80; }
     .veh-badge.status-معطبة { background: rgba(248,113,113,0.15); color: #f87171; }
     .veh-badge.status-صيانة { background: rgba(251,191,36,0.15); color: #fbbf24; }
@@ -339,22 +224,15 @@
         transition: all 0.2s;
         margin: 0 2px;
     }
-
     .veh-action-btn.edit { background: rgba(96,165,250,0.15); color: #60a5fa; }
     .veh-action-btn.edit:hover { background: rgba(96,165,250,0.3); transform: scale(1.1); }
     .veh-action-btn.delete { background: rgba(248,113,113,0.15); color: #f87171; }
     .veh-action-btn.delete:hover { background: rgba(248,113,113,0.3); transform: scale(1.1); }
 
-    .veh-empty {
-        padding: 60px 20px;
-        text-align: center;
-        color: rgba(255,255,255,0.3);
-    }
-
+    .veh-empty { padding: 60px 20px; text-align: center; color: rgba(255,255,255,0.3); }
     .veh-empty i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; color: #f7d774; }
     .veh-empty p { font-size: 14px; }
 
-    /* ===== MODAL ===== */
     .veh-modal {
         position: fixed;
         inset: 0;
@@ -366,21 +244,18 @@
         justify-content: center;
         padding: 20px;
     }
-
     .veh-modal.active { display: flex; }
-
     .veh-modal-box {
         background: linear-gradient(135deg, #1a1f2e, #0f1420);
         border: 1px solid rgba(247,215,116,0.2);
         border-radius: 20px;
         padding: 28px;
         width: 100%;
-        max-width: 560px;
+        max-width: 600px;
         max-height: 90vh;
         overflow-y: auto;
         box-shadow: 0 24px 64px rgba(0,0,0,0.8);
     }
-
     .veh-modal-head {
         display: flex;
         justify-content: space-between;
@@ -389,7 +264,6 @@
         padding-bottom: 14px;
         border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-
     .veh-modal-head h3 {
         font-size: 18px;
         font-weight: 900;
@@ -399,7 +273,6 @@
         gap: 10px;
         margin: 0;
     }
-
     .veh-modal-close {
         background: rgba(255,255,255,0.05);
         border: none;
@@ -412,11 +285,9 @@
         align-items: center;
         justify-content: center;
     }
-
     .veh-modal-close:hover { background: rgba(248,113,113,0.2); color: #f87171; }
 
     .veh-form-group { margin-bottom: 16px; }
-
     .veh-form-group label {
         display: block;
         font-size: 12px;
@@ -424,9 +295,7 @@
         color: rgba(255,255,255,0.5);
         margin-bottom: 6px;
     }
-
     .veh-form-group label .req { color: #f87171; }
-
     .veh-form-control {
         width: 100%;
         padding: 12px 14px;
@@ -437,22 +306,19 @@
         font-family: inherit;
         font-size: 13px;
     }
-
     .veh-form-control:focus {
         outline: none;
         border-color: rgba(247,215,116,0.4);
         background: rgba(255,255,255,0.05);
     }
-
+    .veh-form-control:disabled { opacity: 0.5; cursor: not-allowed; }
     .veh-form-control option { background: #1a1f2e; color: #e8edf5; }
     textarea.veh-form-control { resize: vertical; min-height: 70px; }
 
     .veh-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
     .veh-modal-actions { display: flex; gap: 12px; margin-top: 24px; }
     .veh-modal-actions .veh-btn { flex: 1; justify-content: center; padding: 14px; }
 
-    /* ===== TOAST ===== */
     .veh-toast {
         position: fixed;
         bottom: 24px; left: 24px;
@@ -472,7 +338,6 @@
         animation: vehToastIn 0.25s ease-out;
         direction: rtl;
     }
-
     .veh-toast.success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); }
     .veh-toast.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
     .veh-toast.info { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); }
@@ -486,7 +351,6 @@
         .veh-header { flex-direction: column; text-align: center; }
         .veh-header .header-actions { width: 100%; justify-content: center; }
     }
-
     @media (max-width: 600px) {
         .veh-container { padding: 12px; }
         .veh-header { padding: 18px; }
@@ -497,50 +361,19 @@
         .veh-input, .veh-select, .veh-btn { width: 100%; }
     }
 
-    /* ===== PRINT ===== */
     @media print {
         body * { visibility: hidden !important; }
         #page-vehicles, #page-vehicles * { visibility: visible !important; }
-
-        #page-vehicles {
-            position: absolute !important;
-            left: 0 !important; top: 0 !important;
-            width: 100% !important;
-            background: white !important;
-            color: black !important;
-            padding: 20px !important;
-        }
-
-        .veh-header {
-            background: #f5f5f5 !important;
-            border: 2px solid #333 !important;
-            color: black !important;
-        }
-
+        #page-vehicles { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: white !important; color: black !important; padding: 20px !important; }
+        .veh-header { background: #f5f5f5 !important; border: 2px solid #333 !important; color: black !important; }
         .veh-header .title { color: #333 !important; }
         .veh-header .subtitle { color: #666 !important; }
         .veh-header .header-actions { display: none !important; }
         .veh-actions { display: none !important; }
         .veh-stats { display: none !important; }
-
-        .veh-table-wrap {
-            border: 2px solid #333 !important;
-            background: white !important;
-        }
-
-        .veh-table-head {
-            background: #333 !important;
-            color: white !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-
-        .veh-table-row {
-            border-bottom: 1px solid #ccc !important;
-            background: white !important;
-            color: black !important;
-        }
-
+        .veh-table-wrap { border: 2px solid #333 !important; background: white !important; }
+        .veh-table-head { background: #333 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .veh-table-row { border-bottom: 1px solid #ccc !important; background: white !important; color: black !important; }
         .veh-plate { background: #eee !important; color: #000 !important; border: 1px solid #999 !important; }
         .veh-badge { background: #eee !important; color: #000 !important; border: 1px solid #999 !important; }
         .veh-action-btn { display: none !important; }
@@ -602,20 +435,28 @@
         <select class="veh-select" id="vehFilterRegion">
             <option value="all">كل الأقاليم</option>
             <optgroup label="🌊 الأقاليم البحرية">
-                <option value="إقليم الحرس البحري بالشمال">🌊 الشمال</option>
-                <option value="إقليم الحرس البحري بالساحل">🌊 الساحل</option>
-                <option value="إقليم الحرس البحري بالوسط">🌊 الوسط</option>
-                <option value="إقليم الحرس البحري بالجنوب">🌊 الجنوب</option>
+                <option value="الشمال">🗺️ الشمال</option>
+                <option value="الساحل">🗺️ الساحل</option>
+                <option value="الوسط">🗺️ الوسط</option>
+                <option value="الجنوب">🗺️ الجنوب</option>
             </optgroup>
-            <optgroup label="🏛️ منطقة تونس - الإدارة المركزية">
+            <optgroup label="🏛️ الإدارة المركزية - تونس">
                 <option value="إدارة حرس السواحل">🚢 حرس السواحل</option>
                 <option value="إدارة إسناد الوحدات البحرية">🏛️ إسناد الوحدات</option>
+            </optgroup>
+            <optgroup label="🛠️ وحدات الصيانة والإسناد">
                 <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ صيانة تونس</option>
                 <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ صيانة المنستير</option>
                 <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ صيانة صفاقس</option>
                 <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ صيانة جرجيس</option>
+            </optgroup>
+            <optgroup label="🏛️ أخرى">
                 <option value="المجمع الأمني بقبيبة">🏛️ بقبيبة</option>
             </optgroup>
+        </select>
+
+        <select class="veh-select" id="vehFilterZone">
+            <option value="all">كل المناطق</option>
         </select>
 
         <select class="veh-select" id="vehFilterStatus">
@@ -657,6 +498,7 @@
             <div class="veh-cell center">النوع</div>
             <div class="veh-cell">رقم الوسيلة</div>
             <div class="veh-cell">الإقليم / الإدارة</div>
+            <div class="veh-cell">المنطقة</div>
             <div class="veh-cell center">الحالة</div>
             <div class="veh-cell center">حالة العمل</div>
             <div class="veh-cell center">تاريخ التعيين</div>
@@ -716,20 +558,31 @@
                 <select class="veh-form-control" id="vehRegion" required>
                     <option value="">— اختر الإقليم / الإدارة —</option>
                     <optgroup label="🌊 الأقاليم البحرية">
-                        <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الحرس البحري بالشمال</option>
-                        <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الحرس البحري بالساحل</option>
-                        <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الحرس البحري بالوسط</option>
-                        <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الحرس البحري بالجنوب</option>
+                        <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
+                        <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
+                        <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
+                        <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
                     </optgroup>
-                    <optgroup label="🏛️ منطقة تونس - الإدارة المركزية">
+                    <optgroup label="🏛️ الإدارة المركزية - تونس">
                         <option value="إدارة حرس السواحل">🚢 إدارة حرس السواحل</option>
                         <option value="إدارة إسناد الوحدات البحرية">🏛️ إدارة إسناد الوحدات البحرية</option>
-                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة والإسناد البحري تونس</option>
-                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة والإسناد البحري المنستير</option>
-                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة والإسناد البحري صفاقس</option>
-                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة والإسناد البحري جرجيس</option>
+                    </optgroup>
+                    <optgroup label="🛠️ وحدات الصيانة والإسناد">
+                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                    </optgroup>
+                    <optgroup label="🏛️ أخرى">
                         <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
                     </optgroup>
+                </select>
+            </div>
+
+            <div class="veh-form-group">
+                <label>المنطقة <span class="req">*</span></label>
+                <select class="veh-form-control" id="vehZone" required disabled>
+                    <option value="">— اختر الإقليم أولاً —</option>
                 </select>
             </div>
 
@@ -778,7 +631,7 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v2.1 - Loading...');
+    console.log('🚛 Vehicles Page v3.0 - Loading...');
 
     var _isDestroyed = false;
     var _timeouts = [];
@@ -878,9 +731,57 @@
         _timeouts.push(id);
     }
 
+    // ============================================================
+    // ✅ ZONES_DATA — نسخة طبق الأصل من fleet.html
+    // ============================================================
+    var ZONES_DATA = {
+        "الشمال": ["تونس", "بنزرت", "طبرقة"],
+        "الساحل": ["سوسة", "المنستير", "نابل"],
+        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
+        "الجنوب": ["جرجيس", "جربة", "قابس"],
+        "إدارة حرس السواحل": ["تونس"],
+        "إدارة إسناد الوحدات البحرية": ["تونس"],
+        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
+        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
+        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+        "المجمع الأمني بقبيبة": ["قبيبة"]
+    };
+
+    var REGION_LABELS = {
+        'الشمال': '🗺️ الشمال',
+        'الساحل': '🗺️ الساحل',
+        'الوسط': '🗺️ الوسط',
+        'الجنوب': '🗺️ الجنوب',
+        'إدارة حرس السواحل': '🚢 حرس السواحل',
+        'إدارة إسناد الوحدات البحرية': '🏛️ إسناد الوحدات',
+        'وحدة الصيانة والإسناد البحري تونس': '🛠️ صيانة تونس',
+        'وحدة الصيانة والإسناد البحري المنستير': '🛠️ صيانة المنستير',
+        'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ صيانة صفاقس',
+        'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ صيانة جرجيس',
+        'المجمع الأمني بقبيبة': '🏛️ بقبيبة'
+    };
+
+    function getRegionShort(region) {
+        if (!region) return '—';
+        return REGION_LABELS[region] || region;
+    }
+
+    // ✅ جميع المناطق (للفلترة)
+    function getAllZones() {
+        var set = {};
+        Object.keys(ZONES_DATA).forEach(function(reg) {
+            ZONES_DATA[reg].forEach(function(z) { set[z] = true; });
+        });
+        return Object.keys(set);
+    }
+
     var vehicles = [];
     var autoRefreshInterval = null;
 
+    // ============================================================
+    // 📥 LOAD
+    // ============================================================
     function vehLoad() {
         if (_isDestroyed) return;
         var tbody = document.getElementById('vehTableBody');
@@ -925,38 +826,25 @@
         var statusEl = document.getElementById('vehFilterStatus');
         var typeEl = document.getElementById('vehFilterType');
         var regionEl = document.getElementById('vehFilterRegion');
+        var zoneEl = document.getElementById('vehFilterZone');
 
         var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
         var status = statusEl ? statusEl.value : 'all';
         var type = typeEl ? typeEl.value : 'all';
         var region = regionEl ? regionEl.value : 'all';
+        var zone = zoneEl ? zoneEl.value : 'all';
 
         return vehicles.filter(function(v) {
             if (status !== 'all' && v.status !== status) return false;
             if (type !== 'all' && v.type !== type) return false;
             if (region !== 'all' && v.region !== region) return false;
+            if (zone !== 'all' && v.zone !== zone) return false;
             if (search) {
-                var text = (v.plateNumber + ' ' + v.region + ' ' + v.type + ' ' + (v.notes || '')).toLowerCase();
+                var text = (v.plateNumber + ' ' + v.region + ' ' + (v.zone || '') + ' ' + v.type + ' ' + (v.notes || '')).toLowerCase();
                 if (text.indexOf(search) === -1) return false;
             }
             return true;
         });
-    }
-
-    function getRegionShort(region) {
-        if (!region) return '—';
-        if (region.indexOf('إقليم الحرس البحري بالشمال') === 0) return '🌊 الشمال';
-        if (region.indexOf('إقليم الحرس البحري بالساحل') === 0) return '🌊 الساحل';
-        if (region.indexOf('إقليم الحرس البحري بالوسط') === 0) return '🌊 الوسط';
-        if (region.indexOf('إقليم الحرس البحري بالجنوب') === 0) return '🌊 الجنوب';
-        if (region === 'إدارة حرس السواحل') return '🚢 حرس السواحل';
-        if (region === 'إدارة إسناد الوحدات البحرية') return '🏛️ إسناد الوحدات';
-        if (region === 'وحدة الصيانة والإسناد البحري تونس') return '🛠️ صيانة تونس';
-        if (region === 'وحدة الصيانة والإسناد البحري المنستير') return '🛠️ صيانة المنستير';
-        if (region === 'وحدة الصيانة والإسناد البحري صفاقس') return '🛠️ صيانة صفاقس';
-        if (region === 'وحدة الصيانة والإسناد البحري جرجيس') return '🛠️ صيانة جرجيس';
-        if (region === 'المجمع الأمني بقبيبة') return '🏛️ بقبيبة';
-        return region;
     }
 
     function renderTable() {
@@ -980,6 +868,7 @@
             var dateStr = v.appointmentDate || '—';
             var notes = v.notes || '—';
             var regionShort = getRegionShort(v.region);
+            var zone = v.zone || '—';
 
             html +=
                 '<div class="veh-table-row">' +
@@ -987,6 +876,7 @@
                     '<div class="veh-cell center"><span class="veh-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
                     '<div class="veh-cell"><span class="veh-plate">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
                     '<div class="veh-cell" title="' + escapeHtml(v.region || '') + '"><span class="veh-badge region">' + escapeHtml(regionShort) + '</span></div>' +
+                    '<div class="veh-cell"><span class="veh-badge zone">📍 ' + escapeHtml(zone) + '</span></div>' +
                     '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
                     '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
                     '<div class="veh-cell center">' + escapeHtml(dateStr) + '</div>' +
@@ -1015,6 +905,43 @@
         });
     }
 
+    // ============================================================
+    // 🔄 UPDATE ZONE DROPDOWN (حسب الإقليم)
+    // ============================================================
+    function updateZoneOptions(selectedZone) {
+        var regionEl = document.getElementById('vehRegion');
+        var zoneEl = document.getElementById('vehZone');
+        if (!regionEl || !zoneEl) return;
+
+        var region = regionEl.value;
+        zoneEl.innerHTML = '';
+
+        if (!region) {
+            zoneEl.disabled = true;
+            zoneEl.innerHTML = '<option value="">— اختر الإقليم أولاً —</option>';
+            return;
+        }
+
+        var zones = ZONES_DATA[region] || [];
+
+        if (!zones.length) {
+            zoneEl.disabled = true;
+            zoneEl.innerHTML = '<option value="">— لا توجد مناطق —</option>';
+            return;
+        }
+
+        zoneEl.disabled = false;
+        var html = '<option value="">— اختر المنطقة —</option>';
+        zones.forEach(function(z) {
+            var sel = (z === selectedZone) ? ' selected' : '';
+            html += '<option value="' + escapeHtml(z) + '"' + sel + '>' + escapeHtml(z) + '</option>';
+        });
+        zoneEl.innerHTML = html;
+    }
+
+    // ============================================================
+    // 🪟 MODAL
+    // ============================================================
     function openAddModal() {
         var modal = document.getElementById('vehModal');
         var title = document.getElementById('vehModalTitle');
@@ -1030,6 +957,8 @@
         document.getElementById('vehCondition').value = 'جديدة';
         document.getElementById('vehDate').value = '';
         document.getElementById('vehNotes').value = '';
+
+        updateZoneOptions();
 
         modal.classList.add('active');
         _timeouts.push(setTimeout(function() {
@@ -1057,6 +986,9 @@
         document.getElementById('vehDate').value = v.appointmentDate || '';
         document.getElementById('vehNotes').value = v.notes || '';
 
+        // ✅ حدّث المناطق حسب الإقليم + اختر المنطقة الحالية
+        updateZoneOptions(v.zone || '');
+
         modal.classList.add('active');
     }
 
@@ -1065,6 +997,9 @@
         if (modal) modal.classList.remove('active');
     }
 
+    // ============================================================
+    // 💾 SAVE
+    // ============================================================
     function saveVehicle(e) {
         if (e && e.preventDefault) e.preventDefault();
         if (_isDestroyed) return;
@@ -1072,6 +1007,7 @@
         var id = document.getElementById('vehId').value.trim();
         var plateNumber = document.getElementById('vehPlate').value.trim();
         var region = document.getElementById('vehRegion').value.trim();
+        var zone = document.getElementById('vehZone').value.trim();
         var type = document.getElementById('vehType').value;
         var status = document.getElementById('vehStatus').value;
         var workCondition = document.getElementById('vehCondition').value;
@@ -1080,11 +1016,24 @@
 
         if (!plateNumber) { vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
         if (!region) { vehShowToast('⚠️ الإقليم / الإدارة مطلوب', 'error'); return; }
+        if (!zone) { vehShowToast('⚠️ المنطقة مطلوبة', 'error'); return; }
+
+        // ✅ التحقق من التبعية
+        var allowedZones = ZONES_DATA[region] || [];
+        if (allowedZones.length > 0 && allowedZones.indexOf(zone) === -1) {
+            vehShowToast('⚠️ المنطقة "' + zone + '" لا تتبع الإقليم المختار', 'error');
+            return;
+        }
 
         var payload = {
-            plateNumber: plateNumber, region: region, type: type,
-            status: status, workCondition: workCondition,
-            appointmentDate: appointmentDate, notes: notes
+            plateNumber: plateNumber,
+            region: region,
+            zone: zone,
+            type: type,
+            status: status,
+            workCondition: workCondition,
+            appointmentDate: appointmentDate,
+            notes: notes
         };
 
         var btn = document.getElementById('vehSaveBtn');
@@ -1162,9 +1111,23 @@
         }
     }
 
+    // ============================================================
+    // 🚀 INIT
+    // ============================================================
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v2.1...');
+        console.log('🚀 Initializing Vehicles page v3.0...');
+
+        // ✅ املأ قائمة فلتر المنطقة
+        var filterZoneEl = document.getElementById('vehFilterZone');
+        if (filterZoneEl) {
+            var zonesAll = getAllZones();
+            var zHtml = '<option value="all">كل المناطق</option>';
+            zonesAll.forEach(function(z) {
+                zHtml += '<option value="' + escapeHtml(z) + '">📍 ' + escapeHtml(z) + '</option>';
+            });
+            filterZoneEl.innerHTML = zHtml;
+        }
 
         addSafeListener(document.getElementById('vehAddBtn'), 'click', openAddModal);
         addSafeListener(document.getElementById('vehModalClose'), 'click', closeModal);
@@ -1195,11 +1158,17 @@
         addSafeListener(document.getElementById('vehFilterStatus'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterType'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterRegion'), 'change', renderTable);
+        addSafeListener(document.getElementById('vehFilterZone'), 'change', renderTable);
+
+        // ✅ عند تغيير الإقليم → حدّث المناطق
+        addSafeListener(document.getElementById('vehRegion'), 'change', function() {
+            updateZoneOptions();
+        });
 
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v2.1 ready');
+        console.log('✅ Vehicles page v3.0 ready');
     }
 
     if (document.readyState === 'loading') {
@@ -1216,7 +1185,7 @@
     window.vehShowToast = vehShowToast;
     window.vehPrint = vehPrint;
 
-    console.log('✅ Vehicles Page v2.1 ready');
+    console.log('✅ Vehicles Page v3.0 ready');
 
 })();
 </script>
