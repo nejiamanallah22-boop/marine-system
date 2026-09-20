@@ -1,10 +1,5 @@
 <div id="page-vehicles">
 <style>
-    /* ============================================================
-       🚛 VEHICLES PAGE v2.0
-       احترافية + طباعة + تحديث تلقائي
-       ============================================================ */
-
     #page-vehicles {
         width: 100%;
         padding: 0;
@@ -187,16 +182,6 @@
         box-shadow: 0 8px 24px rgba(96,165,250,0.3);
     }
 
-    .veh-btn-success {
-        background: linear-gradient(135deg, #4ade80, #22c55e);
-        color: #0a0e1a;
-    }
-
-    .veh-btn-success:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(74,222,128,0.3);
-    }
-
     .veh-input, .veh-select {
         padding: 12px 16px;
         background: rgba(255,255,255,0.03);
@@ -216,10 +201,7 @@
         background: rgba(255,255,255,0.05);
     }
 
-    .veh-select option {
-        background: #1a1f2e;
-        color: #e8edf5;
-    }
+    .veh-select option { background: #1a1f2e; color: #e8edf5; }
 
     /* ===== AUTO-REFRESH TOGGLE ===== */
     .veh-auto-toggle {
@@ -500,7 +482,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
         .veh-header { flex-direction: column; text-align: center; }
         .veh-header .header-actions { width: 100%; justify-content: center; }
@@ -516,17 +497,14 @@
         .veh-input, .veh-select, .veh-btn { width: 100%; }
     }
 
-    /* ============================================================
-       🖨️ PRINT STYLES
-       ============================================================ */
+    /* ===== PRINT ===== */
     @media print {
         body * { visibility: hidden !important; }
         #page-vehicles, #page-vehicles * { visibility: visible !important; }
 
         #page-vehicles {
             position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+            left: 0 !important; top: 0 !important;
             width: 100% !important;
             background: white !important;
             color: black !important;
@@ -542,9 +520,7 @@
         .veh-header .title { color: #333 !important; }
         .veh-header .subtitle { color: #666 !important; }
         .veh-header .header-actions { display: none !important; }
-
         .veh-actions { display: none !important; }
-
         .veh-stats { display: none !important; }
 
         .veh-table-wrap {
@@ -565,26 +541,9 @@
             color: black !important;
         }
 
-        .veh-table-row:nth-child(even) {
-            background: #f9f9f9 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-
-        .veh-plate {
-            background: #eee !important;
-            color: #000 !important;
-            border: 1px solid #999 !important;
-        }
-
-        .veh-badge {
-            background: #eee !important;
-            color: #000 !important;
-            border: 1px solid #999 !important;
-        }
-
+        .veh-plate { background: #eee !important; color: #000 !important; border: 1px solid #999 !important; }
+        .veh-badge { background: #eee !important; color: #000 !important; border: 1px solid #999 !important; }
         .veh-action-btn { display: none !important; }
-
         .veh-modal { display: none !important; }
         .veh-toast { display: none !important; }
         #dev-signature { display: none !important; }
@@ -593,7 +552,6 @@
 
 <div class="veh-container">
 
-    <!-- ===== HEADER ===== -->
     <div class="veh-header">
         <div class="title-section">
             <div class="title-icon">🚛</div>
@@ -614,7 +572,6 @@
         </div>
     </div>
 
-    <!-- ===== STATS ===== -->
     <div class="veh-stats">
         <div class="veh-stat">
             <div class="number" id="vehStatTotal">0</div>
@@ -634,7 +591,6 @@
         </div>
     </div>
 
-    <!-- ===== ACTIONS ===== -->
     <div class="veh-actions">
         <button class="veh-btn veh-btn-primary" id="vehAddBtn">
             <i class="fas fa-plus"></i>
@@ -645,15 +601,21 @@
 
         <select class="veh-select" id="vehFilterRegion">
             <option value="all">كل الأقاليم</option>
-            <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الحرس البحري بالشمال</option>
-            <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الحرس البحري بالساحل</option>
-            <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الحرس البحري بالوسط</option>
-            <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الحرس البحري بالجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة والإسناد البحري تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة والإسناد البحري المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة والإسناد البحري صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة والإسناد البحري جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+            <optgroup label="🌊 الأقاليم البحرية">
+                <option value="إقليم الحرس البحري بالشمال">🌊 الشمال</option>
+                <option value="إقليم الحرس البحري بالساحل">🌊 الساحل</option>
+                <option value="إقليم الحرس البحري بالوسط">🌊 الوسط</option>
+                <option value="إقليم الحرس البحري بالجنوب">🌊 الجنوب</option>
+            </optgroup>
+            <optgroup label="🏛️ منطقة تونس - الإدارة المركزية">
+                <option value="إدارة حرس السواحل">🚢 حرس السواحل</option>
+                <option value="إدارة إسناد الوحدات البحرية">🏛️ إسناد الوحدات</option>
+                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ صيانة تونس</option>
+                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ صيانة المنستير</option>
+                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ صيانة صفاقس</option>
+                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ صيانة جرجيس</option>
+                <option value="المجمع الأمني بقبيبة">🏛️ بقبيبة</option>
+            </optgroup>
         </select>
 
         <select class="veh-select" id="vehFilterStatus">
@@ -689,13 +651,12 @@
         </label>
     </div>
 
-    <!-- ===== TABLE ===== -->
     <div class="veh-table-wrap">
         <div class="veh-table-head">
             <div class="veh-cell center">#</div>
             <div class="veh-cell center">النوع</div>
             <div class="veh-cell">رقم الوسيلة</div>
-            <div class="veh-cell">الإقليم</div>
+            <div class="veh-cell">الإقليم / الإدارة</div>
             <div class="veh-cell center">الحالة</div>
             <div class="veh-cell center">حالة العمل</div>
             <div class="veh-cell center">تاريخ التعيين</div>
@@ -712,7 +673,6 @@
 
 </div>
 
-<!-- ===== MODAL ===== -->
 <div class="veh-modal" id="vehModal">
     <div class="veh-modal-box">
         <div class="veh-modal-head">
@@ -752,18 +712,24 @@
             </div>
 
             <div class="veh-form-group">
-                <label>الإقليم <span class="req">*</span></label>
+                <label>الإقليم / الإدارة <span class="req">*</span></label>
                 <select class="veh-form-control" id="vehRegion" required>
-                    <option value="">— اختر الإقليم —</option>
-                    <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الحرس البحري بالشمال</option>
-                    <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الحرس البحري بالساحل</option>
-                    <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الحرس البحري بالوسط</option>
-                    <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الحرس البحري بالجنوب</option>
-                    <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة والإسناد البحري تونس</option>
-                    <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة والإسناد البحري المنستير</option>
-                    <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة والإسناد البحري صفاقس</option>
-                    <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة والإسناد البحري جرجيس</option>
-                    <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                    <option value="">— اختر الإقليم / الإدارة —</option>
+                    <optgroup label="🌊 الأقاليم البحرية">
+                        <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الحرس البحري بالشمال</option>
+                        <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الحرس البحري بالساحل</option>
+                        <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الحرس البحري بالوسط</option>
+                        <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الحرس البحري بالجنوب</option>
+                    </optgroup>
+                    <optgroup label="🏛️ منطقة تونس - الإدارة المركزية">
+                        <option value="إدارة حرس السواحل">🚢 إدارة حرس السواحل</option>
+                        <option value="إدارة إسناد الوحدات البحرية">🏛️ إدارة إسناد الوحدات البحرية</option>
+                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة والإسناد البحري تونس</option>
+                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة والإسناد البحري المنستير</option>
+                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة والإسناد البحري صفاقس</option>
+                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة والإسناد البحري جرجيس</option>
+                        <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -812,11 +778,8 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v2.0 - Loading...');
+    console.log('🚛 Vehicles Page v2.1 - Loading...');
 
-    // ============================================================
-    // CLEANUP
-    // ============================================================
     var _isDestroyed = false;
     var _timeouts = [];
     var _intervals = [];
@@ -825,22 +788,17 @@
     function _vehCleanup() {
         if (_isDestroyed) return;
         _isDestroyed = true;
-
         _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
         _timeouts = [];
-
         _intervals.forEach(function(id) { try { clearInterval(id); } catch(e) {} });
         _intervals = [];
-
         _listeners.forEach(function(l) {
             try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
         });
         _listeners = [];
-
         try { delete window.vehLoad; } catch(e) {}
         try { delete window.vehShowToast; } catch(e) {}
         try { delete window.vehPrint; } catch(e) {}
-
         console.log('🧹 Vehicles cleanup done');
     }
 
@@ -849,9 +807,6 @@
     window.addEventListener('beforeunload', _vehCleanup);
     window.addEventListener('pagehide', _vehCleanup);
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
     function getToken() {
         try {
             return localStorage.getItem('marine_token')
@@ -883,10 +838,8 @@
         opts = opts || {};
         var method = (opts.method || 'GET').toUpperCase();
         var isSafe = ['GET', 'HEAD', 'OPTIONS'].indexOf(method) !== -1;
-
         opts.headers = Object.assign({}, authHeaders(!isSafe), opts.headers || {});
         opts.credentials = 'include';
-
         return fetch(url, opts);
     }
 
@@ -903,49 +856,33 @@
         _listeners.push({ el: el, type: type, fn: fn });
     }
 
-    // ============================================================
-    // TOAST
-    // ============================================================
     function vehShowToast(msg, type, duration) {
         if (_isDestroyed) return;
         type = type || 'info';
         duration = duration || 3000;
-
         var existing = document.querySelector('.veh-toast');
         if (existing) existing.remove();
-
         var toast = document.createElement('div');
         toast.className = 'veh-toast ' + type;
-
         var icons = { success: '✅', error: '❌', info: 'ℹ️' };
         var icon = document.createElement('span');
         icon.textContent = icons[type] || 'ℹ️';
-
         var text = document.createElement('span');
         text.textContent = String(msg || '');
-
         toast.appendChild(icon);
         toast.appendChild(text);
         document.body.appendChild(toast);
-
         var id = setTimeout(function() {
             if (toast.parentNode) toast.remove();
         }, duration);
         _timeouts.push(id);
     }
 
-    // ============================================================
-    // STATE
-    // ============================================================
     var vehicles = [];
     var autoRefreshInterval = null;
 
-    // ============================================================
-    // LOAD VEHICLES
-    // ============================================================
     function vehLoad() {
         if (_isDestroyed) return;
-
         var tbody = document.getElementById('vehTableBody');
         if (tbody && vehicles.length === 0) {
             tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
@@ -970,9 +907,6 @@
             });
     }
 
-    // ============================================================
-    // STATS
-    // ============================================================
     function updateStats() {
         var total = vehicles.length;
         var valid = vehicles.filter(function(v) { return v.status === 'صالحة'; }).length;
@@ -986,9 +920,6 @@
         el = document.getElementById('vehStatMaint'); if (el) el.textContent = maint;
     }
 
-    // ============================================================
-    // FILTER
-    // ============================================================
     function getFiltered() {
         var searchEl = document.getElementById('vehSearch');
         var statusEl = document.getElementById('vehFilterStatus');
@@ -1012,9 +943,22 @@
         });
     }
 
-    // ============================================================
-    // RENDER TABLE
-    // ============================================================
+    function getRegionShort(region) {
+        if (!region) return '—';
+        if (region.indexOf('إقليم الحرس البحري بالشمال') === 0) return '🌊 الشمال';
+        if (region.indexOf('إقليم الحرس البحري بالساحل') === 0) return '🌊 الساحل';
+        if (region.indexOf('إقليم الحرس البحري بالوسط') === 0) return '🌊 الوسط';
+        if (region.indexOf('إقليم الحرس البحري بالجنوب') === 0) return '🌊 الجنوب';
+        if (region === 'إدارة حرس السواحل') return '🚢 حرس السواحل';
+        if (region === 'إدارة إسناد الوحدات البحرية') return '🏛️ إسناد الوحدات';
+        if (region === 'وحدة الصيانة والإسناد البحري تونس') return '🛠️ صيانة تونس';
+        if (region === 'وحدة الصيانة والإسناد البحري المنستير') return '🛠️ صيانة المنستير';
+        if (region === 'وحدة الصيانة والإسناد البحري صفاقس') return '🛠️ صيانة صفاقس';
+        if (region === 'وحدة الصيانة والإسناد البحري جرجيس') return '🛠️ صيانة جرجيس';
+        if (region === 'المجمع الأمني بقبيبة') return '🏛️ بقبيبة';
+        return region;
+    }
+
     function renderTable() {
         var tbody = document.getElementById('vehTableBody');
         if (!tbody) return;
@@ -1035,9 +979,7 @@
                         : (v.workCondition === 'متوسطة' ? 'cond-متوسطة' : 'cond-قديمة');
             var dateStr = v.appointmentDate || '—';
             var notes = v.notes || '—';
-            var regionShort = v.region
-                ? v.region.replace('إقليم الحرس البحري ب', '').replace('وحدة الصيانة والإسناد البحري ', 'وحدة ')
-                : '—';
+            var regionShort = getRegionShort(v.region);
 
             html +=
                 '<div class="veh-table-row">' +
@@ -1073,9 +1015,6 @@
         });
     }
 
-    // ============================================================
-    // MODAL
-    // ============================================================
     function openAddModal() {
         var modal = document.getElementById('vehModal');
         var title = document.getElementById('vehModalTitle');
@@ -1126,9 +1065,6 @@
         if (modal) modal.classList.remove('active');
     }
 
-    // ============================================================
-    // SAVE
-    // ============================================================
     function saveVehicle(e) {
         if (e && e.preventDefault) e.preventDefault();
         if (_isDestroyed) return;
@@ -1143,7 +1079,7 @@
         var notes = document.getElementById('vehNotes').value.trim();
 
         if (!plateNumber) { vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
-        if (!region) { vehShowToast('⚠️ الإقليم مطلوب', 'error'); return; }
+        if (!region) { vehShowToast('⚠️ الإقليم / الإدارة مطلوب', 'error'); return; }
 
         var payload = {
             plateNumber: plateNumber, region: region, type: type,
@@ -1179,13 +1115,9 @@
             });
     }
 
-    // ============================================================
-    // DELETE
-    // ============================================================
     function confirmDelete(id) {
         var v = vehicles.find(function(x) { return x.id === id; });
         if (!v) return;
-
         if (!confirm('⚠️ هل تريد حذف الوسيلة "' + v.plateNumber + '"؟')) return;
 
         apiFetch('/api/vehicles/' + encodeURIComponent(id), { method: 'DELETE' })
@@ -1201,22 +1133,14 @@
             });
     }
 
-    // ============================================================
-    // PRINT
-    // ============================================================
     function vehPrint() {
         if (_isDestroyed) return;
-        console.log('🖨️ Printing vehicles...');
         vehShowToast('🖨️ جاري تحضير الطباعة...', 'info', 1500);
-
         _timeouts.push(setTimeout(function() {
             window.print();
         }, 300));
     }
 
-    // ============================================================
-    // AUTO REFRESH
-    // ============================================================
     function toggleAutoRefresh() {
         var cb = document.getElementById('vehAutoRefresh');
         if (!cb) return;
@@ -1238,12 +1162,9 @@
         }
     }
 
-    // ============================================================
-    // INIT
-    // ============================================================
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v2.0...');
+        console.log('🚀 Initializing Vehicles page v2.1...');
 
         addSafeListener(document.getElementById('vehAddBtn'), 'click', openAddModal);
         addSafeListener(document.getElementById('vehModalClose'), 'click', closeModal);
@@ -1278,7 +1199,7 @@
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v2.0 ready');
+        console.log('✅ Vehicles page v2.1 ready');
     }
 
     if (document.readyState === 'loading') {
@@ -1295,7 +1216,7 @@
     window.vehShowToast = vehShowToast;
     window.vehPrint = vehPrint;
 
-    console.log('✅ Vehicles Page v2.0 ready');
+    console.log('✅ Vehicles Page v2.1 ready');
 
 })();
 </script>
