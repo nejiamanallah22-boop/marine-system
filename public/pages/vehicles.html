@@ -1,8 +1,8 @@
 <div id="page-vehicles">
 <style>
     /* ============================================================
-       🚛 VEHICLES PAGE — صفحة الوسائل البرية
-       مستقلة تماماً — لا تؤثر على باقي الصفحات
+       🚛 VEHICLES PAGE v2.0
+       احترافية + طباعة + تحديث تلقائي
        ============================================================ */
 
     #page-vehicles {
@@ -23,11 +23,7 @@
         box-sizing: border-box;
     }
 
-    .veh-container {
-        padding: 20px;
-        max-width: 1400px;
-        margin: 0 auto;
-    }
+    .veh-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
 
     /* ===== HEADER ===== */
     .veh-header {
@@ -48,10 +44,8 @@
     .veh-header::before {
         content: '';
         position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 100%;
-        height: 100%;
+        top: -50%; right: -50%;
+        width: 100%; height: 100%;
         background: radial-gradient(circle, rgba(247,215,116,0.04) 0%, transparent 70%);
         pointer-events: none;
     }
@@ -65,8 +59,7 @@
     }
 
     .veh-header .title-icon {
-        width: 56px;
-        height: 56px;
+        width: 56px; height: 56px;
         background: linear-gradient(135deg, rgba(247,215,116,0.2), rgba(247,215,116,0.05));
         border-radius: 16px;
         display: flex;
@@ -88,6 +81,14 @@
         font-size: 12px;
         color: rgba(255,255,255,0.4);
         margin-top: 4px;
+    }
+
+    .veh-header .header-actions {
+        display: flex;
+        gap: 10px;
+        position: relative;
+        z-index: 1;
+        flex-wrap: wrap;
     }
 
     /* ===== STATS ===== */
@@ -141,7 +142,7 @@
     }
 
     .veh-btn {
-        padding: 12px 24px;
+        padding: 12px 22px;
         border: none;
         border-radius: 12px;
         font-family: inherit;
@@ -152,6 +153,7 @@
         align-items: center;
         gap: 8px;
         transition: all 0.25s;
+        white-space: nowrap;
     }
 
     .veh-btn-primary {
@@ -172,10 +174,30 @@
 
     .veh-btn-secondary:hover {
         background: rgba(255,255,255,0.1);
+        transform: translateY(-1px);
     }
 
-    .veh-input,
-    .veh-select {
+    .veh-btn-info {
+        background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        color: white;
+    }
+
+    .veh-btn-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(96,165,250,0.3);
+    }
+
+    .veh-btn-success {
+        background: linear-gradient(135deg, #4ade80, #22c55e);
+        color: #0a0e1a;
+    }
+
+    .veh-btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(74,222,128,0.3);
+    }
+
+    .veh-input, .veh-select {
         padding: 12px 16px;
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
@@ -186,13 +208,9 @@
         transition: all 0.2s;
     }
 
-    .veh-input {
-        flex: 1;
-        min-width: 180px;
-    }
+    .veh-input { flex: 1; min-width: 180px; }
 
-    .veh-input:focus,
-    .veh-select:focus {
+    .veh-input:focus, .veh-select:focus {
         outline: none;
         border-color: rgba(247,215,116,0.4);
         background: rgba(255,255,255,0.05);
@@ -201,6 +219,63 @@
     .veh-select option {
         background: #1a1f2e;
         color: #e8edf5;
+    }
+
+    /* ===== AUTO-REFRESH TOGGLE ===== */
+    .veh-auto-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.5);
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .veh-auto-toggle:hover {
+        background: rgba(255,255,255,0.06);
+        color: #e8edf5;
+    }
+
+    .veh-auto-toggle input { display: none; }
+
+    .veh-auto-toggle .toggle-dot {
+        width: 32px;
+        height: 18px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 10px;
+        position: relative;
+        transition: all 0.25s;
+    }
+
+    .veh-auto-toggle .toggle-dot::before {
+        content: '';
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border-radius: 50%;
+        transition: all 0.25s;
+    }
+
+    .veh-auto-toggle input:checked ~ .toggle-dot {
+        background: #4ade80;
+    }
+
+    .veh-auto-toggle input:checked ~ .toggle-dot::before {
+        right: calc(100% - 16px);
+    }
+
+    .veh-auto-toggle input:checked ~ .toggle-label {
+        color: #4ade80;
     }
 
     /* ===== TABLE ===== */
@@ -212,15 +287,14 @@
         overflow-x: auto;
     }
 
-    .veh-table-head,
-    .veh-table-row {
+    .veh-table-head, .veh-table-row {
         display: grid;
-        grid-template-columns: 50px 130px 150px 140px 110px 120px 130px 1fr 90px;
+        grid-template-columns: 50px 130px 150px 1fr 110px 120px 130px 1fr 100px;
         gap: 8px;
         padding: 14px 20px;
         align-items: center;
         font-size: 13px;
-        min-width: 1150px;
+        min-width: 1200px;
     }
 
     .veh-table-head {
@@ -236,23 +310,11 @@
         transition: background 0.2s;
     }
 
-    .veh-table-row:hover {
-        background: rgba(255,255,255,0.03);
-    }
+    .veh-table-row:hover { background: rgba(255,255,255,0.03); }
+    .veh-table-row:last-child { border-bottom: none; }
 
-    .veh-table-row:last-child {
-        border-bottom: none;
-    }
-
-    .veh-cell {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .veh-cell.center {
-        text-align: center;
-    }
+    .veh-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .veh-cell.center { text-align: center; }
 
     .veh-badge {
         display: inline-block;
@@ -262,45 +324,14 @@
         font-weight: 700;
     }
 
-    .veh-badge.type {
-        background: rgba(96,165,250,0.15);
-        color: #60a5fa;
-    }
-
-    .veh-badge.region {
-        background: rgba(247,215,116,0.15);
-        color: #f7d774;
-    }
-
-    .veh-badge.status-صالحة {
-        background: rgba(74,222,128,0.15);
-        color: #4ade80;
-    }
-
-    .veh-badge.status-معطبة {
-        background: rgba(248,113,113,0.15);
-        color: #f87171;
-    }
-
-    .veh-badge.status-صيانة {
-        background: rgba(251,191,36,0.15);
-        color: #fbbf24;
-    }
-
-    .veh-badge.cond-جديدة {
-        background: rgba(96,165,250,0.15);
-        color: #60a5fa;
-    }
-
-    .veh-badge.cond-متوسطة {
-        background: rgba(251,191,36,0.15);
-        color: #fbbf24;
-    }
-
-    .veh-badge.cond-قديمة {
-        background: rgba(148,163,184,0.15);
-        color: #94a3b8;
-    }
+    .veh-badge.type { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .veh-badge.region { background: rgba(247,215,116,0.15); color: #f7d774; font-size: 10px; }
+    .veh-badge.status-صالحة { background: rgba(74,222,128,0.15); color: #4ade80; }
+    .veh-badge.status-معطبة { background: rgba(248,113,113,0.15); color: #f87171; }
+    .veh-badge.status-صيانة { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .veh-badge.cond-جديدة { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .veh-badge.cond-متوسطة { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .veh-badge.cond-قديمة { background: rgba(148,163,184,0.15); color: #94a3b8; }
 
     .veh-plate {
         font-family: 'Courier New', monospace;
@@ -315,8 +346,7 @@
     }
 
     .veh-action-btn {
-        width: 32px;
-        height: 32px;
+        width: 32px; height: 32px;
         border: none;
         border-radius: 8px;
         cursor: pointer;
@@ -328,25 +358,10 @@
         margin: 0 2px;
     }
 
-    .veh-action-btn.edit {
-        background: rgba(96,165,250,0.15);
-        color: #60a5fa;
-    }
-
-    .veh-action-btn.edit:hover {
-        background: rgba(96,165,250,0.3);
-        transform: scale(1.1);
-    }
-
-    .veh-action-btn.delete {
-        background: rgba(248,113,113,0.15);
-        color: #f87171;
-    }
-
-    .veh-action-btn.delete:hover {
-        background: rgba(248,113,113,0.3);
-        transform: scale(1.1);
-    }
+    .veh-action-btn.edit { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .veh-action-btn.edit:hover { background: rgba(96,165,250,0.3); transform: scale(1.1); }
+    .veh-action-btn.delete { background: rgba(248,113,113,0.15); color: #f87171; }
+    .veh-action-btn.delete:hover { background: rgba(248,113,113,0.3); transform: scale(1.1); }
 
     .veh-empty {
         padding: 60px 20px;
@@ -354,16 +369,8 @@
         color: rgba(255,255,255,0.3);
     }
 
-    .veh-empty i {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.4;
-        color: #f7d774;
-    }
-
-    .veh-empty p {
-        font-size: 14px;
-    }
+    .veh-empty i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; color: #f7d774; }
+    .veh-empty p { font-size: 14px; }
 
     /* ===== MODAL ===== */
     .veh-modal {
@@ -371,7 +378,6 @@
         inset: 0;
         background: rgba(0,0,0,0.8);
         backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
         z-index: 99999;
         display: none;
         align-items: center;
@@ -379,9 +385,7 @@
         padding: 20px;
     }
 
-    .veh-modal.active {
-        display: flex;
-    }
+    .veh-modal.active { display: flex; }
 
     .veh-modal-box {
         background: linear-gradient(135deg, #1a1f2e, #0f1420);
@@ -389,16 +393,10 @@
         border-radius: 20px;
         padding: 28px;
         width: 100%;
-        max-width: 540px;
+        max-width: 560px;
         max-height: 90vh;
         overflow-y: auto;
         box-shadow: 0 24px 64px rgba(0,0,0,0.8);
-        animation: vehModalIn 0.3s ease-out;
-    }
-
-    @keyframes vehModalIn {
-        from { opacity: 0; transform: scale(0.95) translateY(20px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .veh-modal-head {
@@ -424,25 +422,18 @@
         background: rgba(255,255,255,0.05);
         border: none;
         color: rgba(255,255,255,0.6);
-        width: 36px;
-        height: 36px;
+        width: 36px; height: 36px;
         border-radius: 10px;
         cursor: pointer;
         font-size: 18px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s;
     }
 
-    .veh-modal-close:hover {
-        background: rgba(248,113,113,0.2);
-        color: #f87171;
-    }
+    .veh-modal-close:hover { background: rgba(248,113,113,0.2); color: #f87171; }
 
-    .veh-form-group {
-        margin-bottom: 16px;
-    }
+    .veh-form-group { margin-bottom: 16px; }
 
     .veh-form-group label {
         display: block;
@@ -452,9 +443,7 @@
         margin-bottom: 6px;
     }
 
-    .veh-form-group label .req {
-        color: #f87171;
-    }
+    .veh-form-group label .req { color: #f87171; }
 
     .veh-form-control {
         width: 100%;
@@ -465,7 +454,6 @@
         color: #e8edf5;
         font-family: inherit;
         font-size: 13px;
-        transition: all 0.2s;
     }
 
     .veh-form-control:focus {
@@ -474,39 +462,18 @@
         background: rgba(255,255,255,0.05);
     }
 
-    .veh-form-control option {
-        background: #1a1f2e;
-        color: #e8edf5;
-    }
+    .veh-form-control option { background: #1a1f2e; color: #e8edf5; }
+    textarea.veh-form-control { resize: vertical; min-height: 70px; }
 
-    textarea.veh-form-control {
-        resize: vertical;
-        min-height: 70px;
-    }
+    .veh-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-    .veh-form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-    }
-
-    .veh-modal-actions {
-        display: flex;
-        gap: 12px;
-        margin-top: 24px;
-    }
-
-    .veh-modal-actions .veh-btn {
-        flex: 1;
-        justify-content: center;
-        padding: 14px;
-    }
+    .veh-modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .veh-modal-actions .veh-btn { flex: 1; justify-content: center; padding: 14px; }
 
     /* ===== TOAST ===== */
     .veh-toast {
         position: fixed;
-        bottom: 24px;
-        left: 24px;
+        bottom: 24px; left: 24px;
         z-index: 999999;
         max-width: 360px;
         display: flex;
@@ -524,20 +491,9 @@
         direction: rtl;
     }
 
-    .veh-toast.success {
-        background: rgba(34,197,94,0.15);
-        border: 1px solid rgba(34,197,94,0.3);
-    }
-
-    .veh-toast.error {
-        background: rgba(239,68,68,0.15);
-        border: 1px solid rgba(239,68,68,0.3);
-    }
-
-    .veh-toast.info {
-        background: rgba(96,165,250,0.15);
-        border: 1px solid rgba(96,165,250,0.3);
-    }
+    .veh-toast.success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); }
+    .veh-toast.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
+    .veh-toast.info { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); }
 
     @keyframes vehToastIn {
         from { opacity: 0; transform: translateY(15px); }
@@ -546,10 +502,8 @@
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
-        .veh-header {
-            flex-direction: column;
-            text-align: center;
-        }
+        .veh-header { flex-direction: column; text-align: center; }
+        .veh-header .header-actions { width: 100%; justify-content: center; }
     }
 
     @media (max-width: 600px) {
@@ -559,8 +513,81 @@
         .veh-stats { grid-template-columns: repeat(2, 1fr); }
         .veh-form-row { grid-template-columns: 1fr; }
         .veh-actions { flex-direction: column; }
-        .veh-input,
-        .veh-select { width: 100%; }
+        .veh-input, .veh-select, .veh-btn { width: 100%; }
+    }
+
+    /* ============================================================
+       🖨️ PRINT STYLES
+       ============================================================ */
+    @media print {
+        body * { visibility: hidden !important; }
+        #page-vehicles, #page-vehicles * { visibility: visible !important; }
+
+        #page-vehicles {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            background: white !important;
+            color: black !important;
+            padding: 20px !important;
+        }
+
+        .veh-header {
+            background: #f5f5f5 !important;
+            border: 2px solid #333 !important;
+            color: black !important;
+        }
+
+        .veh-header .title { color: #333 !important; }
+        .veh-header .subtitle { color: #666 !important; }
+        .veh-header .header-actions { display: none !important; }
+
+        .veh-actions { display: none !important; }
+
+        .veh-stats { display: none !important; }
+
+        .veh-table-wrap {
+            border: 2px solid #333 !important;
+            background: white !important;
+        }
+
+        .veh-table-head {
+            background: #333 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .veh-table-row {
+            border-bottom: 1px solid #ccc !important;
+            background: white !important;
+            color: black !important;
+        }
+
+        .veh-table-row:nth-child(even) {
+            background: #f9f9f9 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .veh-plate {
+            background: #eee !important;
+            color: #000 !important;
+            border: 1px solid #999 !important;
+        }
+
+        .veh-badge {
+            background: #eee !important;
+            color: #000 !important;
+            border: 1px solid #999 !important;
+        }
+
+        .veh-action-btn { display: none !important; }
+
+        .veh-modal { display: none !important; }
+        .veh-toast { display: none !important; }
+        #dev-signature { display: none !important; }
     }
 </style>
 
@@ -575,10 +602,20 @@
                 <div class="subtitle">إدارة السيارات والآليات البرية</div>
             </div>
         </div>
+        <div class="header-actions">
+            <button class="veh-btn veh-btn-info" id="vehPrintBtn">
+                <i class="fas fa-print"></i>
+                طباعة
+            </button>
+            <button class="veh-btn veh-btn-secondary" id="vehRefreshBtn" title="تحديث">
+                <i class="fas fa-rotate"></i>
+                تحديث
+            </button>
+        </div>
     </div>
 
     <!-- ===== STATS ===== -->
-    <div class="veh-stats" id="vehStats">
+    <div class="veh-stats">
         <div class="veh-stat">
             <div class="number" id="vehStatTotal">0</div>
             <div class="label">📊 المجموع</div>
@@ -604,7 +641,20 @@
             إضافة وسيلة
         </button>
 
-        <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة أو المنطقة...">
+        <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة...">
+
+        <select class="veh-select" id="vehFilterRegion">
+            <option value="all">كل الأقاليم</option>
+            <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الحرس البحري بالشمال</option>
+            <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الحرس البحري بالساحل</option>
+            <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الحرس البحري بالوسط</option>
+            <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الحرس البحري بالجنوب</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة والإسناد البحري تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة والإسناد البحري المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة والإسناد البحري صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة والإسناد البحري جرجيس</option>
+            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+        </select>
 
         <select class="veh-select" id="vehFilterStatus">
             <option value="all">كل الحالات</option>
@@ -632,9 +682,11 @@
             <option value="أخرى">⚙️ أخرى</option>
         </select>
 
-        <button class="veh-btn veh-btn-secondary" id="vehRefreshBtn" title="تحديث">
-            <i class="fas fa-rotate"></i>
-        </button>
+        <label class="veh-auto-toggle" title="تحديث تلقائي كل 30 ثانية">
+            <input type="checkbox" id="vehAutoRefresh">
+            <span class="toggle-dot"></span>
+            <span class="toggle-label">تحديث تلقائي</span>
+        </label>
     </div>
 
     <!-- ===== TABLE ===== -->
@@ -643,7 +695,7 @@
             <div class="veh-cell center">#</div>
             <div class="veh-cell center">النوع</div>
             <div class="veh-cell">رقم الوسيلة</div>
-            <div class="veh-cell">المنطقة</div>
+            <div class="veh-cell">الإقليم</div>
             <div class="veh-cell center">الحالة</div>
             <div class="veh-cell center">حالة العمل</div>
             <div class="veh-cell center">تاريخ التعيين</div>
@@ -699,12 +751,23 @@
                 </div>
             </div>
 
-            <div class="veh-form-row">
-                <div class="veh-form-group">
-                    <label>المنطقة / الإقليم <span class="req">*</span></label>
-                    <input type="text" class="veh-form-control" id="vehRegion" required placeholder="مثال: تونس، بنزرت..." maxlength="100">
-                </div>
+            <div class="veh-form-group">
+                <label>الإقليم <span class="req">*</span></label>
+                <select class="veh-form-control" id="vehRegion" required>
+                    <option value="">— اختر الإقليم —</option>
+                    <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الحرس البحري بالشمال</option>
+                    <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الحرس البحري بالساحل</option>
+                    <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الحرس البحري بالوسط</option>
+                    <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الحرس البحري بالجنوب</option>
+                    <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة والإسناد البحري تونس</option>
+                    <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة والإسناد البحري المنستير</option>
+                    <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة والإسناد البحري صفاقس</option>
+                    <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة والإسناد البحري جرجيس</option>
+                    <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                </select>
+            </div>
 
+            <div class="veh-form-row">
                 <div class="veh-form-group">
                     <label>الحالة</label>
                     <select class="veh-form-control" id="vehStatus">
@@ -713,9 +776,7 @@
                         <option value="صيانة">🔧 صيانة</option>
                     </select>
                 </div>
-            </div>
 
-            <div class="veh-form-row">
                 <div class="veh-form-group">
                     <label>حالة العمل</label>
                     <select class="veh-form-control" id="vehCondition">
@@ -724,11 +785,11 @@
                         <option value="قديمة">⏳ قديمة</option>
                     </select>
                 </div>
+            </div>
 
-                <div class="veh-form-group">
-                    <label>تاريخ التعيين</label>
-                    <input type="date" class="veh-form-control" id="vehDate">
-                </div>
+            <div class="veh-form-group">
+                <label>تاريخ التعيين</label>
+                <input type="date" class="veh-form-control" id="vehDate">
             </div>
 
             <div class="veh-form-group">
@@ -751,13 +812,14 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v1.0 - Loading...');
+    console.log('🚛 Vehicles Page v2.0 - Loading...');
 
     // ============================================================
-    // ✅ CLEANUP
+    // CLEANUP
     // ============================================================
     var _isDestroyed = false;
     var _timeouts = [];
+    var _intervals = [];
     var _listeners = [];
 
     function _vehCleanup() {
@@ -767,6 +829,9 @@
         _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
         _timeouts = [];
 
+        _intervals.forEach(function(id) { try { clearInterval(id); } catch(e) {} });
+        _intervals = [];
+
         _listeners.forEach(function(l) {
             try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
         });
@@ -774,6 +839,7 @@
 
         try { delete window.vehLoad; } catch(e) {}
         try { delete window.vehShowToast; } catch(e) {}
+        try { delete window.vehPrint; } catch(e) {}
 
         console.log('🧹 Vehicles cleanup done');
     }
@@ -784,7 +850,7 @@
     window.addEventListener('pagehide', _vehCleanup);
 
     // ============================================================
-    // ✅ HELPERS
+    // HELPERS
     // ============================================================
     function getToken() {
         try {
@@ -838,7 +904,7 @@
     }
 
     // ============================================================
-    // ✅ TOAST
+    // TOAST
     // ============================================================
     function vehShowToast(msg, type, duration) {
         if (_isDestroyed) return;
@@ -869,18 +935,19 @@
     }
 
     // ============================================================
-    // ✅ STATE
+    // STATE
     // ============================================================
     var vehicles = [];
+    var autoRefreshInterval = null;
 
     // ============================================================
-    // ✅ LOAD VEHICLES
+    // LOAD VEHICLES
     // ============================================================
     function vehLoad() {
         if (_isDestroyed) return;
 
         var tbody = document.getElementById('vehTableBody');
-        if (tbody) {
+        if (tbody && vehicles.length === 0) {
             tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
         }
 
@@ -904,7 +971,7 @@
     }
 
     // ============================================================
-    // ✅ STATS
+    // STATS
     // ============================================================
     function updateStats() {
         var total = vehicles.length;
@@ -920,20 +987,23 @@
     }
 
     // ============================================================
-    // ✅ FILTER
+    // FILTER
     // ============================================================
     function getFiltered() {
         var searchEl = document.getElementById('vehSearch');
         var statusEl = document.getElementById('vehFilterStatus');
         var typeEl = document.getElementById('vehFilterType');
+        var regionEl = document.getElementById('vehFilterRegion');
 
         var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
         var status = statusEl ? statusEl.value : 'all';
         var type = typeEl ? typeEl.value : 'all';
+        var region = regionEl ? regionEl.value : 'all';
 
         return vehicles.filter(function(v) {
             if (status !== 'all' && v.status !== status) return false;
             if (type !== 'all' && v.type !== type) return false;
+            if (region !== 'all' && v.region !== region) return false;
             if (search) {
                 var text = (v.plateNumber + ' ' + v.region + ' ' + v.type + ' ' + (v.notes || '')).toLowerCase();
                 if (text.indexOf(search) === -1) return false;
@@ -943,7 +1013,7 @@
     }
 
     // ============================================================
-    // ✅ RENDER TABLE
+    // RENDER TABLE
     // ============================================================
     function renderTable() {
         var tbody = document.getElementById('vehTableBody');
@@ -965,13 +1035,16 @@
                         : (v.workCondition === 'متوسطة' ? 'cond-متوسطة' : 'cond-قديمة');
             var dateStr = v.appointmentDate || '—';
             var notes = v.notes || '—';
+            var regionShort = v.region
+                ? v.region.replace('إقليم الحرس البحري ب', '').replace('وحدة الصيانة والإسناد البحري ', 'وحدة ')
+                : '—';
 
             html +=
                 '<div class="veh-table-row">' +
                     '<div class="veh-cell center">' + (idx + 1) + '</div>' +
                     '<div class="veh-cell center"><span class="veh-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
                     '<div class="veh-cell"><span class="veh-plate">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
-                    '<div class="veh-cell"><span class="veh-badge region">' + escapeHtml(v.region || '—') + '</span></div>' +
+                    '<div class="veh-cell" title="' + escapeHtml(v.region || '') + '"><span class="veh-badge region">' + escapeHtml(regionShort) + '</span></div>' +
                     '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
                     '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
                     '<div class="veh-cell center">' + escapeHtml(dateStr) + '</div>' +
@@ -989,7 +1062,6 @@
 
         tbody.innerHTML = html;
 
-        // Event delegation
         tbody.querySelectorAll('[data-action]').forEach(function(btn) {
             addSafeListener(btn, 'click', function(e) {
                 e.preventDefault();
@@ -1002,13 +1074,12 @@
     }
 
     // ============================================================
-    // ✅ MODAL
+    // MODAL
     // ============================================================
     function openAddModal() {
         var modal = document.getElementById('vehModal');
         var title = document.getElementById('vehModalTitle');
-        var form = document.getElementById('vehForm');
-        if (!modal || !form) return;
+        if (!modal) return;
 
         if (title) title.textContent = 'إضافة وسيلة برية';
 
@@ -1056,7 +1127,7 @@
     }
 
     // ============================================================
-    // ✅ SAVE (ADD / EDIT)
+    // SAVE
     // ============================================================
     function saveVehicle(e) {
         if (e && e.preventDefault) e.preventDefault();
@@ -1071,23 +1142,13 @@
         var appointmentDate = document.getElementById('vehDate').value || null;
         var notes = document.getElementById('vehNotes').value.trim();
 
-        if (!plateNumber) {
-            vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error');
-            return;
-        }
-        if (!region) {
-            vehShowToast('⚠️ المنطقة مطلوبة', 'error');
-            return;
-        }
+        if (!plateNumber) { vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
+        if (!region) { vehShowToast('⚠️ الإقليم مطلوب', 'error'); return; }
 
         var payload = {
-            plateNumber: plateNumber,
-            region: region,
-            type: type,
-            status: status,
-            workCondition: workCondition,
-            appointmentDate: appointmentDate,
-            notes: notes
+            plateNumber: plateNumber, region: region, type: type,
+            status: status, workCondition: workCondition,
+            appointmentDate: appointmentDate, notes: notes
         };
 
         var btn = document.getElementById('vehSaveBtn');
@@ -1099,34 +1160,27 @@
         var url = isEdit ? '/api/vehicles/' + encodeURIComponent(id) : '/api/vehicles';
         var method = isEdit ? 'PUT' : 'POST';
 
-        apiFetch(url, {
-            method: method,
-            body: JSON.stringify(payload)
-        })
-        .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
-        .then(function(result) {
-            if (_isDestroyed) return;
-
-            if (!result.ok) {
-                throw new Error(result.data.error || 'فشل الحفظ');
-            }
-
-            vehShowToast(isEdit ? '✅ تم تعديل الوسيلة' : '✅ تم إضافة الوسيلة', 'success');
-            closeModal();
-            vehLoad();
-        })
-        .catch(function(err) {
-            console.warn('❌ Save error:', err.message);
-            vehShowToast('❌ ' + err.message, 'error');
-        })
-        .finally(function() {
-            if (btn) btn.disabled = false;
-            if (btnText) btnText.textContent = 'حفظ';
-        });
+        apiFetch(url, { method: method, body: JSON.stringify(payload) })
+            .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
+            .then(function(result) {
+                if (_isDestroyed) return;
+                if (!result.ok) throw new Error(result.data.error || 'فشل الحفظ');
+                vehShowToast(isEdit ? '✅ تم تعديل الوسيلة' : '✅ تم إضافة الوسيلة', 'success');
+                closeModal();
+                vehLoad();
+            })
+            .catch(function(err) {
+                console.warn('❌ Save error:', err.message);
+                vehShowToast('❌ ' + err.message, 'error');
+            })
+            .finally(function() {
+                if (btn) btn.disabled = false;
+                if (btnText) btnText.textContent = 'حفظ';
+            });
     }
 
     // ============================================================
-    // ✅ DELETE
+    // DELETE
     // ============================================================
     function confirmDelete(id) {
         var v = vehicles.find(function(x) { return x.id === id; });
@@ -1134,41 +1188,67 @@
 
         if (!confirm('⚠️ هل تريد حذف الوسيلة "' + v.plateNumber + '"؟')) return;
 
-        apiFetch('/api/vehicles/' + encodeURIComponent(id), {
-            method: 'DELETE'
-        })
-        .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
-        .then(function(result) {
-            if (_isDestroyed) return;
-
-            if (!result.ok) {
-                throw new Error(result.data.error || 'فشل الحذف');
-            }
-
-            vehShowToast('✅ تم حذف الوسيلة', 'success');
-            vehLoad();
-        })
-        .catch(function(err) {
-            console.warn('❌ Delete error:', err.message);
-            vehShowToast('❌ ' + err.message, 'error');
-        });
+        apiFetch('/api/vehicles/' + encodeURIComponent(id), { method: 'DELETE' })
+            .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
+            .then(function(result) {
+                if (_isDestroyed) return;
+                if (!result.ok) throw new Error(result.data.error || 'فشل الحذف');
+                vehShowToast('✅ تم حذف الوسيلة', 'success');
+                vehLoad();
+            })
+            .catch(function(err) {
+                vehShowToast('❌ ' + err.message, 'error');
+            });
     }
 
     // ============================================================
-    // ✅ INIT
+    // PRINT
+    // ============================================================
+    function vehPrint() {
+        if (_isDestroyed) return;
+        console.log('🖨️ Printing vehicles...');
+        vehShowToast('🖨️ جاري تحضير الطباعة...', 'info', 1500);
+
+        _timeouts.push(setTimeout(function() {
+            window.print();
+        }, 300));
+    }
+
+    // ============================================================
+    // AUTO REFRESH
+    // ============================================================
+    function toggleAutoRefresh() {
+        var cb = document.getElementById('vehAutoRefresh');
+        if (!cb) return;
+
+        if (cb.checked) {
+            autoRefreshInterval = setInterval(function() {
+                if (!_isDestroyed && !document.hidden) {
+                    vehLoad();
+                }
+            }, 30000);
+            _intervals.push(autoRefreshInterval);
+            vehShowToast('🔄 التحديث التلقائي مُفعَّل (30 ثانية)', 'success');
+        } else {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            vehShowToast('⏸️ التحديث التلقائي مُعطَّل', 'info');
+        }
+    }
+
+    // ============================================================
+    // INIT
     // ============================================================
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page...');
+        console.log('🚀 Initializing Vehicles page v2.0...');
 
-        // Add button
         addSafeListener(document.getElementById('vehAddBtn'), 'click', openAddModal);
-
-        // Modal close
         addSafeListener(document.getElementById('vehModalClose'), 'click', closeModal);
         addSafeListener(document.getElementById('vehCancelBtn'), 'click', closeModal);
 
-        // Click outside modal
         var modal = document.getElementById('vehModal');
         if (modal) {
             addSafeListener(modal, 'click', function(e) {
@@ -1176,37 +1256,31 @@
             });
         }
 
-        // ESC
         addSafeListener(document, 'keydown', function(e) {
             if (e.key === 'Escape') closeModal();
         });
 
-        // Form submit
         var form = document.getElementById('vehForm');
-        if (form) {
-            addSafeListener(form, 'submit', saveVehicle);
-        }
+        if (form) addSafeListener(form, 'submit', saveVehicle);
 
-        // Refresh
         addSafeListener(document.getElementById('vehRefreshBtn'), 'click', function() {
             vehShowToast('🔄 جاري التحديث...', 'info', 1500);
             vehLoad();
         });
 
-        // Filters
+        addSafeListener(document.getElementById('vehPrintBtn'), 'click', vehPrint);
+
         addSafeListener(document.getElementById('vehSearch'), 'input', renderTable);
         addSafeListener(document.getElementById('vehFilterStatus'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterType'), 'change', renderTable);
+        addSafeListener(document.getElementById('vehFilterRegion'), 'change', renderTable);
 
-        // Initial load
+        addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
+
         vehLoad();
-
-        console.log('✅ Vehicles page ready');
+        console.log('✅ Vehicles page v2.0 ready');
     }
 
-    // ============================================================
-    // ✅ BOOT
-    // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
@@ -1217,11 +1291,11 @@
         _timeouts.push(id0);
     }
 
-    // Expose for debugging
     window.vehLoad = vehLoad;
     window.vehShowToast = vehShowToast;
+    window.vehPrint = vehPrint;
 
-    console.log('✅ Vehicles Page v1.0 ready');
+    console.log('✅ Vehicles Page v2.0 ready');
 
 })();
 </script>
