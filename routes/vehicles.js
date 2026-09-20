@@ -1,6 +1,6 @@
 // ============================================================
-// 🚛 routes/vehicles.js — Routes الوسائل البرية v1.0
-// ✅ لا ينشئ نموذج — يستقبله من server.js
+// 🚛 routes/vehicles.js — v3.0
+// يدعم: region + zone
 // ============================================================
 
 'use strict';
@@ -18,15 +18,19 @@ module.exports = function registerVehicleRoutes(app, deps) {
     } = deps || {};
 
     if (!Vehicle) {
-        console.warn('⚠️ [VEHICLES] Vehicle model not loaded — routes disabled');
+        console.warn('⚠️ [VEHICLES] Vehicle model not loaded');
         return;
     }
 
     console.log('✅ [VEHICLES] Registering vehicles routes...');
 
-    // ============================================================
-    // 📝 FORMATTER
-    // ============================================================
+    // جلب القوائم من النموذج
+    let VEHICLE_ZONES = {};
+    try {
+        const vmod = require('../models/Vehicle');
+        VEHICLE_ZONES = vmod.VEHICLE_ZONES || {};
+    } catch (e) {}
+
     function formatVehicle(v) {
         if (!v) return null;
         return {
@@ -36,6 +40,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
             plateNumber: v.plateNumber || '',
             type: v.type || 'سيارة',
             region: v.region || '',
+            zone: v.zone || '',
             status: v.status || 'صالحة',
             workCondition: v.workCondition || 'جديدة',
             appointmentDate: v.appointmentDate || null,
@@ -45,9 +50,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         };
     }
 
-    // ============================================================
-    // ✅ GET — كل الوسائل
-    // ============================================================
+    // ✅ GET جميع الوسائل
     app.get('/api/vehicles',
         authenticateAccessToken,
         requirePermission('vessels:read'),
@@ -57,18 +60,36 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     .sort({ createdAt: -1 })
                     .limit(1000)
                     .lean();
-
                 res.json(vehicles.map(formatVehicle));
             } catch (e) {
                 console.error('❌ [VEHICLES] GET error:', e.message);
-                res.status(500).json({ success: false, error: 'فشل تحميل الوسائل البرية' });
+                res.status(500).json({ success: false, error: 'فشل تحميل الوسائل' });
             }
         }
     );
 
-    // ============================================================
-    // ✅ POST — إضافة وسيلة
-    // ============================================================
+    // ✅ GET قوائم للواجهة
+    app.get('/api/vehicles/config',
+        authenticateAccessToken,
+        (req, res) => {
+            try {
+                const vmod = require('../models/Vehicle');
+                res.json({
+                    success: true,
+                    types: vmod.VEHICLE_TYPES || [],
+                    regions: vmod.VEHICLE_REGIONS || [],
+                    zones: vmod.VEHICLE_ZONES || {},
+                    zonesAll: vmod.VEHICLE_ZONES_ALL || [],
+                    statuses: vmod.VEHICLE_STATUS || [],
+                    conditions: vmod.VEHICLE_CONDITIONS || []
+                });
+            } catch (e) {
+                res.status(500).json({ success: false, error: 'فشل تحميل القوائم' });
+            }
+        }
+    );
+
+    // ✅ POST إضافة
     app.post('/api/vehicles',
         authenticateAccessToken,
         requirePermission('vessels:create'),
@@ -76,33 +97,34 @@ module.exports = function registerVehicleRoutes(app, deps) {
         async (req, res) => {
             try {
                 const {
-                    name, plateNumber, type, region,
-                    status, workCondition, appointmentDate, notes
+                    name, plateNumber, type,
+                    region, zone,
+                    status, workCondition,
+                    appointmentDate, notes
                 } = req.body;
 
                 if (typeof plateNumber !== 'string' || !plateNumber.trim()) {
-                    return res.status(400).json({
-                        success: false,
-                        error: 'رقم الوسيلة مطلوب'
-                    });
+                    return res.status(400).json({ success: false, error: 'رقم الوسيلة مطلوب' });
                 }
-
                 if (typeof region !== 'string' || !region.trim()) {
+                    return res.status(400).json({ success: false, error: 'الإقليم مطلوب' });
+                }
+                if (typeof zone !== 'string' || !zone.trim()) {
+                    return res.status(400).json({ success: false, error: 'المنطقة مطلوبة' });
+                }
+
+                // ✅ التحقق من أن المنطقة تابعة للإقليم
+                const allowedZones = VEHICLE_ZONES[region] || [];
+                if (allowedZones.length > 0 && allowedZones.indexOf(zone) === -1) {
                     return res.status(400).json({
                         success: false,
-                        error: 'الإقليم / الإدارة مطلوب'
+                        error: 'المنطقة "' + zone + '" لا تتبع إقليم "' + region + '"'
                     });
                 }
 
-                const existing = await Vehicle.findOne({
-                    plateNumber: plateNumber.trim()
-                });
-
+                const existing = await Vehicle.findOne({ plateNumber: plateNumber.trim() });
                 if (existing) {
-                    return res.status(400).json({
-                        success: false,
-                        error: 'رقم الوسيلة موجود مسبقاً'
-                    });
+                    return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
                 }
 
                 const newVehicle = await Vehicle.create({
@@ -111,6 +133,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     plateNumber: plateNumber.trim(),
                     type: type || 'سيارة',
                     region: region.trim(),
+                    zone: zone.trim(),
                     status: status || 'صالحة',
                     workCondition: workCondition || 'جديدة',
                     appointmentDate: appointmentDate || null,
@@ -119,30 +142,23 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 });
 
                 await addSystemLog({
-                    userId: req.user.id,
-                    userName: req.user.name,
-                    action: 'create',
-                    resource: 'vehicle',
-                    resourceId: newVehicle.id,
-                    resourceName: newVehicle.plateNumber,
-                    status: 'success',
-                    ip: req.ip,
-                    requestId: req.requestId
+                    userId: req.user.id, userName: req.user.name,
+                    action: 'create', resource: 'vehicle',
+                    resourceId: newVehicle.id, resourceName: newVehicle.plateNumber,
+                    status: 'success', ip: req.ip, requestId: req.requestId
                 });
 
                 await notify({
-                    type: 'success',
-                    category: 'vehicle',
+                    type: 'success', category: 'vehicle',
                     title: '🚛 وسيلة برية جديدة',
                     message: 'تم إضافة "' + newVehicle.plateNumber + '" (' + newVehicle.type + ')',
-                    link: '/pages/vehicles.html',
-                    icon: 'truck',
+                    link: '/pages/vehicles.html', icon: 'truck',
                     actorName: req.user.name || req.user.username
                 });
 
                 res.status(201).json({
                     success: true,
-                    message: 'تم إضافة الوسيلة البرية بنجاح',
+                    message: 'تم إضافة الوسيلة بنجاح',
                     vehicle: formatVehicle(newVehicle)
                 });
             } catch (e) {
@@ -158,9 +174,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         }
     );
 
-    // ============================================================
-    // ✅ PUT — تعديل وسيلة
-    // ============================================================
+    // ✅ PUT تعديل
     app.put('/api/vehicles/:id',
         authenticateAccessToken,
         requirePermission('vessels:update'),
@@ -168,35 +182,45 @@ module.exports = function registerVehicleRoutes(app, deps) {
         async (req, res) => {
             try {
                 const q = buildIdQuery(req.params.id);
-                if (!q) {
-                    return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-                }
+                if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
                 const v = await Vehicle.findOne(q);
-                if (!v) {
-                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
-                }
+                if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
                 const {
-                    name, plateNumber, type, region,
-                    status, workCondition, appointmentDate, notes
+                    name, plateNumber, type,
+                    region, zone,
+                    status, workCondition,
+                    appointmentDate, notes
                 } = req.body;
 
                 if (typeof name === 'string') v.name = name.trim();
 
                 if (typeof plateNumber === 'string' && plateNumber.trim() && plateNumber.trim() !== v.plateNumber) {
-                    const dup = await Vehicle.findOne({
-                        plateNumber: plateNumber.trim(),
-                        _id: { $ne: v._id }
-                    });
-                    if (dup) {
-                        return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
-                    }
+                    const dup = await Vehicle.findOne({ plateNumber: plateNumber.trim(), _id: { $ne: v._id } });
+                    if (dup) return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
                     v.plateNumber = plateNumber.trim();
                 }
 
                 if (type !== undefined) v.type = type;
-                if (typeof region === 'string') v.region = region.trim();
+
+                // ✅ التحقق من التبعية عند تغيير الإقليم أو المنطقة
+                const newRegion = (typeof region === 'string' && region.trim()) ? region.trim() : v.region;
+                const newZone = (typeof zone === 'string' && zone.trim()) ? zone.trim() : v.zone;
+
+                if (region !== undefined || zone !== undefined) {
+                    const allowedZones = VEHICLE_ZONES[newRegion] || [];
+                    if (allowedZones.length > 0 && allowedZones.indexOf(newZone) === -1) {
+                        return res.status(400).json({
+                            success: false,
+                            error: 'المنطقة "' + newZone + '" لا تتبع إقليم "' + newRegion + '"'
+                        });
+                    }
+                }
+
+                if (region !== undefined) v.region = newRegion;
+                if (zone !== undefined) v.zone = newZone;
+
                 if (status !== undefined) v.status = status;
                 if (workCondition !== undefined) v.workCondition = workCondition;
                 if (appointmentDate !== undefined) v.appointmentDate = appointmentDate || null;
@@ -206,25 +230,10 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 await v.save();
 
                 await addSystemLog({
-                    userId: req.user.id,
-                    userName: req.user.name,
-                    action: 'update',
-                    resource: 'vehicle',
-                    resourceId: v.id,
-                    resourceName: v.plateNumber,
-                    status: 'success',
-                    ip: req.ip,
-                    requestId: req.requestId
-                });
-
-                await notify({
-                    type: 'info',
-                    category: 'vehicle',
-                    title: 'تعديل وسيلة برية',
-                    message: 'تم تعديل "' + v.plateNumber + '"',
-                    link: '/pages/vehicles.html',
-                    icon: 'edit',
-                    actorName: req.user.name || req.user.username
+                    userId: req.user.id, userName: req.user.name,
+                    action: 'update', resource: 'vehicle',
+                    resourceId: v.id, resourceName: v.plateNumber,
+                    status: 'success', ip: req.ip, requestId: req.requestId
                 });
 
                 res.json({
@@ -245,9 +254,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         }
     );
 
-    // ============================================================
-    // ✅ DELETE — حذف وسيلة
-    // ============================================================
+    // ✅ DELETE
     app.delete('/api/vehicles/:id',
         authenticateAccessToken,
         requirePermission('vessels:delete'),
@@ -255,39 +262,20 @@ module.exports = function registerVehicleRoutes(app, deps) {
         async (req, res) => {
             try {
                 const q = buildIdQuery(req.params.id);
-                if (!q) {
-                    return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-                }
+                if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
                 const v = await Vehicle.findOne(q);
-                if (!v) {
-                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
-                }
+                if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
                 const plate = v.plateNumber;
                 const vid = v.id;
                 await Vehicle.deleteOne({ _id: v._id });
 
                 await addSystemLog({
-                    userId: req.user.id,
-                    userName: req.user.name,
-                    action: 'delete',
-                    resource: 'vehicle',
-                    resourceId: vid,
-                    resourceName: plate,
-                    status: 'success',
-                    ip: req.ip,
-                    requestId: req.requestId
-                });
-
-                await notify({
-                    type: 'warning',
-                    category: 'vehicle',
-                    title: 'حذف وسيلة برية',
-                    message: 'تم حذف "' + plate + '"',
-                    link: '/pages/vehicles.html',
-                    icon: 'trash',
-                    actorName: req.user.name || req.user.username
+                    userId: req.user.id, userName: req.user.name,
+                    action: 'delete', resource: 'vehicle',
+                    resourceId: vid, resourceName: plate,
+                    status: 'success', ip: req.ip, requestId: req.requestId
                 });
 
                 res.json({ success: true, message: 'تم حذف الوسيلة' });
@@ -300,6 +288,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
 
     console.log('✅ [VEHICLES] Routes registered successfully');
     console.log('   📌 GET    /api/vehicles');
+    console.log('   📌 GET    /api/vehicles/config');
     console.log('   📌 POST   /api/vehicles');
     console.log('   📌 PUT    /api/vehicles/:id');
     console.log('   📌 DELETE /api/vehicles/:id');
