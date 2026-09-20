@@ -1,81 +1,208 @@
 // ============================================================
-// 📦 models/index.js - v2.5 (Production + Settings + Logo)
+// 🚛 routes/vehicles.js — Routes الوسائل البرية
 // ============================================================
 
-console.log('');
-console.log('📦 ============================================');
-console.log('📦 [MODELS] تحميل الموديلات...');
-console.log('📦 ============================================');
+'use strict';
 
-function tryLoad(name, path, required = true) {
-    try {
-        const mod = require(path);
-        console.log(`✅ [MODELS] ${name} (${typeof mod})`);
-        return mod;
-    } catch (err) {
-        if (required) {
-            console.error(`❌ [MODELS] فشل تحميل ${name}: ${err.message}`);
-            throw err;
-        } else {
-            console.warn(`⚠️ [MODELS] ${name} غير موجود — سيتم تجاهله`);
-            return null;
-        }
+module.exports = function registerVehicleRoutes(app, deps) {
+    const {
+        Vehicle,
+        authenticateAccessToken,
+        csrfProtection,
+        requirePermission,
+        randomId,
+        addSystemLog,
+        notify,
+        buildIdQuery
+    } = deps;
+
+    if (!Vehicle) {
+        console.warn('⚠️ [VEHICLES] Vehicle model not loaded — routes disabled');
+        return;
     }
-}
 
-let Vessel, User, Ticket, Log, Maintenance, Note, Notification;
-let UserSettings, SystemLogo;   // 🆕
+    console.log('✅ [VEHICLES] Registering vehicles routes...');
 
-try {
-    Vessel      = tryLoad('Vessel', './Vessel');
-    User        = tryLoad('User', './User');
-    Ticket      = tryLoad('Ticket', './Ticket');
-    Log         = tryLoad('Log', './Log');
-    Maintenance = tryLoad('Maintenance', './Maintenance');
-    Note        = tryLoad('Note', './Note');
+    // GET all
+    app.get('/api/vehicles', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
+        try {
+            const vehicles = await Vehicle.find().sort({ createdAt: -1 }).limit(1000);
+            res.json(vehicles.map(v => ({
+                id: v.id,
+                _id: v._id ? v._id.toString() : null,
+                name: v.name || '',
+                plateNumber: v.plateNumber || '',
+                type: v.type || 'سيارة',
+                region: v.region || '',
+                status: v.status || 'صالحة',
+                workCondition: v.workCondition || 'جديدة',
+                appointmentDate: v.appointmentDate || null,
+                notes: v.notes || '',
+                createdAt: v.createdAt,
+                updatedAt: v.updatedAt
+            })));
+        } catch (e) {
+            console.error('❌ GET vehicles:', e.message);
+            res.status(500).json({ success: false, error: 'فشل تحميل الوسائل البرية' });
+        }
+    });
 
-    // ✅ موديلات اختيارية
-    Notification = tryLoad('Notification', './Notification', false);
-    UserSettings = tryLoad('UserSettings', './UserSettings', false);   // 🆕
-    SystemLogo   = tryLoad('SystemLogo', './SystemLogo', false);        // 🆕
+    // POST create
+    app.post('/api/vehicles', authenticateAccessToken, requirePermission('vessels:create'), csrfProtection, async (req, res) => {
+        try {
+            const { name, plateNumber, type, region, status, workCondition, appointmentDate, notes } = req.body;
 
-    console.log('📦 [MODELS] ✅ جميع الموديلات تم تحميلها بنجاح');
-    console.log('📦 ============================================');
-    console.log('');
+            if (typeof plateNumber !== 'string' || !plateNumber.trim()) {
+                return res.status(400).json({ success: false, error: 'رقم الوسيلة مطلوب' });
+            }
+            if (typeof region !== 'string' || !region.trim()) {
+                return res.status(400).json({ success: false, error: 'المنطقة / الإقليم مطلوب' });
+            }
 
-} catch (err) {
-    console.error('');
-    console.error('🔴 ============================================');
-    console.error('🔴 [MODELS] توقف التحميل بسبب خطأ حرج');
-    console.error(`🔴 ${err.message}`);
-    console.error('🔴 ============================================');
-    console.error('');
-    throw err;
-}
+            const existing = await Vehicle.findOne({ plateNumber: plateNumber.trim() });
+            if (existing) {
+                return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
+            }
 
-// ✅ التحقق النهائي
-if (!Vessel) throw new Error('❌ Model "Vessel" is not loaded');
-if (!User) throw new Error('❌ Model "User" is not loaded');
-if (!Ticket) throw new Error('❌ Model "Ticket" is not loaded');
-if (!Log) throw new Error('❌ Model "Log" is not loaded');
-if (!Maintenance) throw new Error('❌ Model "Maintenance" is not loaded');
-if (!Note) throw new Error('❌ Model "Note" is not loaded');
+            const newVehicle = await Vehicle.create({
+                id: randomId(8),
+                name: typeof name === 'string' ? name.trim() : '',
+                plateNumber: plateNumber.trim(),
+                type: type || 'سيارة',
+                region: region.trim(),
+                status: status || 'صالحة',
+                workCondition: workCondition || 'جديدة',
+                appointmentDate: appointmentDate || null,
+                notes: typeof notes === 'string' ? notes.trim() : '',
+                createdBy: req.user.id
+            });
 
-console.log('✅ [MODELS] جميع الموديلات المطلوبة جاهزة للاستخدام');
-console.log(`   📝 Note: ${Note ? '✅' : '❌'}`);
-console.log(`   🔔 Notification: ${Notification ? '✅' : '❌'}`);
-console.log(`   ⚙️  UserSettings: ${UserSettings ? '✅' : '❌'}`);
-console.log(`   🖼️  SystemLogo: ${SystemLogo ? '✅' : '❌'}`);
-console.log('');
+            await addSystemLog({
+                userId: req.user.id, userName: req.user.name,
+                action: 'create', resource: 'vehicle',
+                resourceId: newVehicle.id, resourceName: newVehicle.plateNumber,
+                status: 'success', ip: req.ip, requestId: req.requestId
+            });
 
-module.exports = {
-    Vessel,
-    User,
-    Ticket,
-    Log,
-    Maintenance,
-    Note,
-    Notification,
-    UserSettings,   // 🆕
-    SystemLogo      // 🆕
+            res.status(201).json({
+                success: true,
+                message: 'تم إضافة الوسيلة البرية بنجاح',
+                vehicle: {
+                    id: newVehicle.id,
+                    _id: newVehicle._id.toString(),
+                    name: newVehicle.name,
+                    plateNumber: newVehicle.plateNumber,
+                    type: newVehicle.type,
+                    region: newVehicle.region,
+                    status: newVehicle.status,
+                    workCondition: newVehicle.workCondition,
+                    appointmentDate: newVehicle.appointmentDate,
+                    notes: newVehicle.notes,
+                    createdAt: newVehicle.createdAt
+                }
+            });
+        } catch (e) {
+            console.error('❌ POST vehicle:', e.message);
+            if (e.name === 'ValidationError') {
+                return res.status(400).json({ success: false, error: e.message });
+            }
+            res.status(500).json({ success: false, error: 'خطأ في إضافة الوسيلة' });
+        }
+    });
+
+    // PUT update
+    app.put('/api/vehicles/:id', authenticateAccessToken, requirePermission('vessels:update'), csrfProtection, async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const v = await Vehicle.findOne(q);
+            if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+
+            const { name, plateNumber, type, region, status, workCondition, appointmentDate, notes } = req.body;
+
+            if (typeof name === 'string') v.name = name.trim();
+
+            if (typeof plateNumber === 'string' && plateNumber.trim() && plateNumber.trim() !== v.plateNumber) {
+                const dup = await Vehicle.findOne({
+                    plateNumber: plateNumber.trim(),
+                    _id: { $ne: v._id }
+                });
+                if (dup) {
+                    return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
+                }
+                v.plateNumber = plateNumber.trim();
+            }
+
+            if (type !== undefined) v.type = type;
+            if (typeof region === 'string') v.region = region.trim();
+            if (status !== undefined) v.status = status;
+            if (workCondition !== undefined) v.workCondition = workCondition;
+            if (appointmentDate !== undefined) v.appointmentDate = appointmentDate || null;
+            if (typeof notes === 'string') v.notes = notes.trim();
+
+            await v.save();
+
+            await addSystemLog({
+                userId: req.user.id, userName: req.user.name,
+                action: 'update', resource: 'vehicle',
+                resourceId: v.id, resourceName: v.plateNumber,
+                status: 'success', ip: req.ip, requestId: req.requestId
+            });
+
+            res.json({
+                success: true,
+                message: 'تم تحديث الوسيلة',
+                vehicle: {
+                    id: v.id,
+                    _id: v._id.toString(),
+                    name: v.name,
+                    plateNumber: v.plateNumber,
+                    type: v.type,
+                    region: v.region,
+                    status: v.status,
+                    workCondition: v.workCondition,
+                    appointmentDate: v.appointmentDate,
+                    notes: v.notes,
+                    createdAt: v.createdAt,
+                    updatedAt: v.updatedAt
+                }
+            });
+        } catch (e) {
+            console.error('❌ PUT vehicle:', e.message);
+            if (e.name === 'ValidationError') {
+                return res.status(400).json({ success: false, error: e.message });
+            }
+            res.status(500).json({ success: false, error: 'خطأ في التحديث' });
+        }
+    });
+
+    // DELETE
+    app.delete('/api/vehicles/:id', authenticateAccessToken, requirePermission('vessels:delete'), csrfProtection, async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const v = await Vehicle.findOne(q);
+            if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+
+            const plate = v.plateNumber;
+            const vid = v.id;
+            await Vehicle.deleteOne({ _id: v._id });
+
+            await addSystemLog({
+                userId: req.user.id, userName: req.user.name,
+                action: 'delete', resource: 'vehicle',
+                resourceId: vid, resourceName: plate,
+                status: 'success', ip: req.ip, requestId: req.requestId
+            });
+
+            res.json({ success: true, message: 'تم حذف الوسيلة' });
+        } catch (e) {
+            console.error('❌ DELETE vehicle:', e.message);
+            res.status(500).json({ success: false, error: 'خطأ في الحذف' });
+        }
+    });
+
+    console.log('✅ [VEHICLES] Routes registered successfully');
 };
