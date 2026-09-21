@@ -1,6 +1,6 @@
 // ============================================================
-// 🚛 routes/vehicles.js — v3.0
-// يدعم: region + zone
+// 🚛 routes/vehicles.js — v3.1
+// يدعم: region + zone + faultDate
 // ============================================================
 
 'use strict';
@@ -24,7 +24,6 @@ module.exports = function registerVehicleRoutes(app, deps) {
 
     console.log('✅ [VEHICLES] Registering vehicles routes...');
 
-    // جلب القوائم من النموذج
     let VEHICLE_ZONES = {};
     try {
         const vmod = require('../models/Vehicle');
@@ -44,6 +43,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
             status: v.status || 'صالحة',
             workCondition: v.workCondition || 'جديدة',
             appointmentDate: v.appointmentDate || null,
+            faultDate: v.faultDate || null,
             notes: v.notes || '',
             createdAt: v.createdAt,
             updatedAt: v.updatedAt
@@ -100,7 +100,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     name, plateNumber, type,
                     region, zone,
                     status, workCondition,
-                    appointmentDate, notes
+                    appointmentDate, faultDate, notes
                 } = req.body;
 
                 if (typeof plateNumber !== 'string' || !plateNumber.trim()) {
@@ -113,12 +113,20 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     return res.status(400).json({ success: false, error: 'المنطقة مطلوبة' });
                 }
 
-                // ✅ التحقق من أن المنطقة تابعة للإقليم
+                // ✅ تحقق من أن المنطقة تابعة للإقليم
                 const allowedZones = VEHICLE_ZONES[region] || [];
                 if (allowedZones.length > 0 && allowedZones.indexOf(zone) === -1) {
                     return res.status(400).json({
                         success: false,
                         error: 'المنطقة "' + zone + '" لا تتبع إقليم "' + region + '"'
+                    });
+                }
+
+                // ✅ تحقق: إذا كانت الحالة "معطبة" يجب إدخال تاريخ العطب
+                if (status === 'معطبة' && (!faultDate || !String(faultDate).trim())) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'تاريخ العطب مطلوب عند الحالة "معطبة"'
                     });
                 }
 
@@ -137,6 +145,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     status: status || 'صالحة',
                     workCondition: workCondition || 'جديدة',
                     appointmentDate: appointmentDate || null,
+                    faultDate: faultDate || null,
                     notes: typeof notes === 'string' ? notes.trim() : '',
                     createdBy: req.user.id
                 });
@@ -191,7 +200,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     name, plateNumber, type,
                     region, zone,
                     status, workCondition,
-                    appointmentDate, notes
+                    appointmentDate, faultDate, notes
                 } = req.body;
 
                 if (typeof name === 'string') v.name = name.trim();
@@ -204,7 +213,6 @@ module.exports = function registerVehicleRoutes(app, deps) {
 
                 if (type !== undefined) v.type = type;
 
-                // ✅ التحقق من التبعية عند تغيير الإقليم أو المنطقة
                 const newRegion = (typeof region === 'string' && region.trim()) ? region.trim() : v.region;
                 const newZone = (typeof zone === 'string' && zone.trim()) ? zone.trim() : v.zone;
 
@@ -224,6 +232,16 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 if (status !== undefined) v.status = status;
                 if (workCondition !== undefined) v.workCondition = workCondition;
                 if (appointmentDate !== undefined) v.appointmentDate = appointmentDate || null;
+                if (faultDate !== undefined) v.faultDate = faultDate || null;
+
+                // ✅ إذا الحالة الجديدة "معطبة" يجب توفر تاريخ العطب
+                if (v.status === 'معطبة' && (!v.faultDate || !String(v.faultDate).trim())) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'تاريخ العطب مطلوب عند الحالة "معطبة"'
+                    });
+                }
+
                 if (typeof notes === 'string') v.notes = notes.trim();
 
                 v.updatedAt = new Date();
