@@ -499,7 +499,7 @@
                 </select>
             </div>
 
-            <div class="veh-form-group">
+            <div class="veh-form-group" id="vehZoneGroup">
                 <label>المنطقة <span class="req">*</span></label>
                 <select class="veh-form-control" id="vehZone" required disabled>
                     <option value="">— اختر الإدارة / الإقليم أولاً —</option>
@@ -558,7 +558,7 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v4.0 - Loading...');
+    console.log('🚛 Vehicles Page v4.1 - Loading...');
 
     var _isDestroyed = false;
     var _timeouts = [];
@@ -658,23 +658,17 @@
         _timeouts.push(id);
     }
 
-    // ============================================================
-    // ✅ ZONES_DATA — القائمة الرسمية النهائية
-    // ============================================================
     var ZONES_DATA = {
         'إدارة إسناد الوحدات البحرية': ['الإدارة المركزية بتونس'],
         'إدارة حرس السواحل':          ['الإدارة المركزية بتونس'],
-
         'إقليم الحرس البحري بالشمال': ['تونس', 'بنزرت', 'طبرقة'],
         'إقليم الحرس البحري بالساحل': ['سوسة', 'المنستير', 'نابل'],
         'إقليم الحرس البحري بالوسط':  ['صفاقس', 'المهدية', 'قرقنة'],
         'إقليم الحرس البحري بالجنوب': ['جرجيس', 'جربة', 'قابس'],
-
         'وحدة الصيانة والإسناد البحري تونس':     ['تونس'],
         'وحدة الصيانة والإسناد البحري صفاقس':    ['صفاقس'],
         'وحدة الصيانة والإسناد البحري المنستير': ['المنستير'],
         'وحدة الصيانة والإسناد البحري جرجيس':    ['جرجيس'],
-
         'المجمع الأمني بقبيبة': ['قبيبة "صفاقس"']
     };
 
@@ -833,9 +827,11 @@
         });
     }
 
+    // ✅ دالة تحديث المناطق — v4.1
     function updateZoneOptions(selectedZone) {
         var regionEl = document.getElementById('vehRegion');
         var zoneEl = document.getElementById('vehZone');
+        var zoneGroupEl = document.getElementById('vehZoneGroup');
         if (!regionEl || !zoneEl) return;
 
         var region = regionEl.value;
@@ -844,6 +840,7 @@
         if (!region) {
             zoneEl.disabled = true;
             zoneEl.innerHTML = '<option value="">— اختر الإدارة / الإقليم أولاً —</option>';
+            if (zoneGroupEl) zoneGroupEl.style.display = 'block';
             return;
         }
 
@@ -851,9 +848,20 @@
         if (!zones.length) {
             zoneEl.disabled = true;
             zoneEl.innerHTML = '<option value="">— لا توجد مناطق —</option>';
+            if (zoneGroupEl) zoneGroupEl.style.display = 'block';
             return;
         }
 
+        // ✅ منطقة واحدة → تلقائي + إخفاء الحقل
+        if (zones.length === 1) {
+            zoneEl.disabled = true;
+            zoneEl.innerHTML = '<option value="' + escapeHtml(zones[0]) + '" selected>' + escapeHtml(zones[0]) + '</option>';
+            if (zoneGroupEl) zoneGroupEl.style.display = 'none';
+            return;
+        }
+
+        // ✅ أكثر من منطقة → إظهار + اختيار
+        if (zoneGroupEl) zoneGroupEl.style.display = 'block';
         zoneEl.disabled = false;
         var html = '<option value="">— اختر المنطقة —</option>';
         zones.forEach(function(z) {
@@ -903,6 +911,10 @@
         if (fdg) fdg.style.display = 'none';
         var fdi = document.getElementById('vehFaultDate');
         if (fdi) fdi.required = false;
+
+        // ✅ إعادة تعيين حقل المنطقة
+        var zg = document.getElementById('vehZoneGroup');
+        if (zg) zg.style.display = 'block';
 
         updateZoneOptions();
 
@@ -974,12 +986,6 @@
 
         if (status === 'معطبة' && !faultDate) {
             vehShowToast('⚠️ تاريخ العطب مطلوب عند الحالة "معطبة"', 'error');
-            return;
-        }
-
-        var allowedZones = ZONES_DATA[region] || [];
-        if (allowedZones.length > 0 && allowedZones.indexOf(zone) === -1) {
-            vehShowToast('⚠️ المنطقة "' + zone + '" لا تتبع الإدارة المختارة', 'error');
             return;
         }
 
@@ -1072,7 +1078,7 @@
 
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v4.0...');
+        console.log('🚀 Initializing Vehicles page v4.1...');
 
         var filterZoneEl = document.getElementById('vehFilterZone');
         if (filterZoneEl) {
@@ -1124,7 +1130,7 @@
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v4.0 ready');
+        console.log('✅ Vehicles page v4.1 ready');
     }
 
     if (document.readyState === 'loading') {
@@ -1141,7 +1147,7 @@
     window.vehShowToast = vehShowToast;
     window.vehPrint = vehPrint;
 
-    console.log('✅ Vehicles Page v4.0 ready');
+    console.log('✅ Vehicles Page v4.1 ready');
 
 })();
 </script>
