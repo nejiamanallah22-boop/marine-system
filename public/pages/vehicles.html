@@ -352,16 +352,16 @@
         <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة...">
 
         <select class="veh-select" id="vehFilterRegion">
-            <option value="all">كل الأقاليم</option>
-            <optgroup label="🌊 الأقاليم البحرية">
-                <option value="الشمال">🗺️ الشمال</option>
-                <option value="الساحل">🗺️ الساحل</option>
-                <option value="الوسط">🗺️ الوسط</option>
-                <option value="الجنوب">🗺️ الجنوب</option>
-            </optgroup>
-            <optgroup label="🏛️ الإدارة المركزية">
+            <option value="all">كل الإدارات والأقاليم</option>
+            <optgroup label="🏛️ الإدارات المركزية">
                 <option value="إدارة إسناد الوحدات البحرية">🏛️ إسناد الوحدات</option>
                 <option value="إدارة حرس السواحل">🚢 حرس السواحل</option>
+            </optgroup>
+            <optgroup label="🌊 الأقاليم البحرية">
+                <option value="إقليم الحرس البحري بالشمال">🌊 الشمال</option>
+                <option value="إقليم الحرس البحري بالساحل">🌊 الساحل</option>
+                <option value="إقليم الحرس البحري بالوسط">🌊 الوسط</option>
+                <option value="إقليم الحرس البحري بالجنوب">🌊 الجنوب</option>
             </optgroup>
             <optgroup label="🛠️ وحدات الصيانة">
                 <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ صيانة تونس</option>
@@ -416,7 +416,7 @@
             <div class="veh-cell center">#</div>
             <div class="veh-cell center">النوع</div>
             <div class="veh-cell">رقم الوسيلة</div>
-            <div class="veh-cell">الإقليم / الإدارة</div>
+            <div class="veh-cell">الإدارة / الإقليم</div>
             <div class="veh-cell">المنطقة</div>
             <div class="veh-cell center">الحالة</div>
             <div class="veh-cell center">حالة العمل</div>
@@ -474,24 +474,24 @@
             </div>
 
             <div class="veh-form-group">
-                <label>الإقليم / الإدارة <span class="req">*</span></label>
+                <label>الإدارة / الإقليم <span class="req">*</span></label>
                 <select class="veh-form-control" id="vehRegion" required>
-                    <option value="">— اختر الإقليم / الإدارة —</option>
-                    <optgroup label="🌊 الأقاليم البحرية">
-                        <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-                        <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-                        <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-                        <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-                    </optgroup>
-                    <optgroup label="🏛️ الإدارة المركزية">
+                    <option value="">— اختر الإدارة / الإقليم —</option>
+                    <optgroup label="🏛️ الإدارات المركزية">
                         <option value="إدارة إسناد الوحدات البحرية">🏛️ إدارة إسناد الوحدات البحرية</option>
                         <option value="إدارة حرس السواحل">🚢 إدارة حرس السواحل</option>
                     </optgroup>
+                    <optgroup label="🌊 الأقاليم البحرية">
+                        <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الحرس البحري بالشمال</option>
+                        <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الحرس البحري بالساحل</option>
+                        <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الحرس البحري بالوسط</option>
+                        <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الحرس البحري بالجنوب</option>
+                    </optgroup>
                     <optgroup label="🛠️ وحدات الصيانة والإسناد">
-                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة والإسناد البحري تونس</option>
+                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة والإسناد البحري صفاقس</option>
+                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة والإسناد البحري المنستير</option>
+                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة والإسناد البحري جرجيس</option>
                     </optgroup>
                     <optgroup label="🏛️ أخرى">
                         <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
@@ -502,7 +502,7 @@
             <div class="veh-form-group">
                 <label>المنطقة <span class="req">*</span></label>
                 <select class="veh-form-control" id="vehZone" required disabled>
-                    <option value="">— اختر الإقليم أولاً —</option>
+                    <option value="">— اختر الإدارة / الإقليم أولاً —</option>
                 </select>
             </div>
 
@@ -558,7 +558,7 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v3.1 - Loading...');
+    console.log('🚛 Vehicles Page v4.0 - Loading...');
 
     var _isDestroyed = false;
     var _timeouts = [];
@@ -659,29 +659,32 @@
     }
 
     // ============================================================
-    // ✅ ZONES_DATA — مطابق لـ fleet.html
+    // ✅ ZONES_DATA — القائمة الرسمية النهائية
     // ============================================================
     var ZONES_DATA = {
-        "الشمال": ["تونس", "بنزرت", "طبرقة"],
-        "الساحل": ["سوسة", "المنستير", "نابل"],
-        "الوسط":  ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"],
-        "إدارة إسناد الوحدات البحرية": ["تونس"],
-        "إدارة حرس السواحل":          ["تونس"],
-        "وحدة الصيانة والإسناد البحري تونس":     ["تونس"],
-        "وحدة الصيانة والإسناد البحري صفاقس":    ["صفاقس"],
-        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
-        "وحدة الصيانة والإسناد البحري جرجيس":    ["جرجيس"],
-        "المجمع الأمني بقبيبة": ["قبيبة"]
+        'إدارة إسناد الوحدات البحرية': ['الإدارة المركزية بتونس'],
+        'إدارة حرس السواحل':          ['الإدارة المركزية بتونس'],
+
+        'إقليم الحرس البحري بالشمال': ['تونس', 'بنزرت', 'طبرقة'],
+        'إقليم الحرس البحري بالساحل': ['سوسة', 'المنستير', 'نابل'],
+        'إقليم الحرس البحري بالوسط':  ['صفاقس', 'المهدية', 'قرقنة'],
+        'إقليم الحرس البحري بالجنوب': ['جرجيس', 'جربة', 'قابس'],
+
+        'وحدة الصيانة والإسناد البحري تونس':     ['تونس'],
+        'وحدة الصيانة والإسناد البحري صفاقس':    ['صفاقس'],
+        'وحدة الصيانة والإسناد البحري المنستير': ['المنستير'],
+        'وحدة الصيانة والإسناد البحري جرجيس':    ['جرجيس'],
+
+        'المجمع الأمني بقبيبة': ['قبيبة "صفاقس"']
     };
 
     var REGION_LABELS = {
-        'الشمال': '🗺️ الشمال',
-        'الساحل': '🗺️ الساحل',
-        'الوسط':  '🗺️ الوسط',
-        'الجنوب': '🗺️ الجنوب',
         'إدارة إسناد الوحدات البحرية': '🏛️ إسناد الوحدات',
         'إدارة حرس السواحل': '🚢 حرس السواحل',
+        'إقليم الحرس البحري بالشمال': '🌊 الشمال',
+        'إقليم الحرس البحري بالساحل': '🌊 الساحل',
+        'إقليم الحرس البحري بالوسط': '🌊 الوسط',
+        'إقليم الحرس البحري بالجنوب': '🌊 الجنوب',
         'وحدة الصيانة والإسناد البحري تونس': '🛠️ صيانة تونس',
         'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ صيانة صفاقس',
         'وحدة الصيانة والإسناد البحري المنستير': '🛠️ صيانة المنستير',
@@ -800,7 +803,7 @@
                     '<div class="veh-cell center"><span class="veh-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
                     '<div class="veh-cell"><span class="veh-plate">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
                     '<div class="veh-cell" title="' + escapeHtml(v.region || '') + '"><span class="veh-badge region">' + escapeHtml(regionShort) + '</span></div>' +
-                    '<div class="veh-cell"><span class="veh-badge zone">📍 ' + escapeHtml(zone) + '</span></div>' +
+                    '<div class="veh-cell" title="' + escapeHtml(v.zone || '') + '"><span class="veh-badge zone">📍 ' + escapeHtml(zone) + '</span></div>' +
                     '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
                     '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
                     '<div class="veh-cell center">' + escapeHtml(dateStr) + '</div>' +
@@ -830,7 +833,6 @@
         });
     }
 
-    // ✅ تحديث قائمة المناطق حسب الإقليم
     function updateZoneOptions(selectedZone) {
         var regionEl = document.getElementById('vehRegion');
         var zoneEl = document.getElementById('vehZone');
@@ -841,7 +843,7 @@
 
         if (!region) {
             zoneEl.disabled = true;
-            zoneEl.innerHTML = '<option value="">— اختر الإقليم أولاً —</option>';
+            zoneEl.innerHTML = '<option value="">— اختر الإدارة / الإقليم أولاً —</option>';
             return;
         }
 
@@ -861,7 +863,6 @@
         zoneEl.innerHTML = html;
     }
 
-    // ✅ إظهار/إخفاء حقل تاريخ العطب حسب الحالة
     function toggleFaultDate() {
         var statusEl = document.getElementById('vehStatus');
         var groupEl = document.getElementById('vehFaultDateGroup');
@@ -934,7 +935,6 @@
 
         updateZoneOptions(v.zone || '');
 
-        // ✅ إظهار/إخفاء حقل تاريخ العطب حسب الحالة
         var faultEl = document.getElementById('vehFaultDate');
         var faultGrpEl = document.getElementById('vehFaultDateGroup');
         if (v.status === 'معطبة') {
@@ -969,19 +969,17 @@
         var notes = document.getElementById('vehNotes').value.trim();
 
         if (!plateNumber) { vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
-        if (!region) { vehShowToast('⚠️ الإقليم / الإدارة مطلوب', 'error'); return; }
+        if (!region) { vehShowToast('⚠️ الإدارة / الإقليم مطلوب', 'error'); return; }
         if (!zone) { vehShowToast('⚠️ المنطقة مطلوبة', 'error'); return; }
 
-        // ✅ تحقق: تاريخ العطب إلزامي عند الحالة "معطبة"
         if (status === 'معطبة' && !faultDate) {
             vehShowToast('⚠️ تاريخ العطب مطلوب عند الحالة "معطبة"', 'error');
             return;
         }
 
-        // ✅ التحقق من أن المنطقة تابعة للإقليم
         var allowedZones = ZONES_DATA[region] || [];
         if (allowedZones.length > 0 && allowedZones.indexOf(zone) === -1) {
-            vehShowToast('⚠️ المنطقة "' + zone + '" لا تتبع الإقليم المختار', 'error');
+            vehShowToast('⚠️ المنطقة "' + zone + '" لا تتبع الإدارة المختارة', 'error');
             return;
         }
 
@@ -1074,9 +1072,8 @@
 
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v3.1...');
+        console.log('🚀 Initializing Vehicles page v4.0...');
 
-        // ✅ املأ قائمة فلتر المنطقة
         var filterZoneEl = document.getElementById('vehFilterZone');
         if (filterZoneEl) {
             var zonesAll = getAllZones();
@@ -1118,18 +1115,16 @@
         addSafeListener(document.getElementById('vehFilterRegion'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterZone'), 'change', renderTable);
 
-        // ✅ عند تغيير الإقليم → حدّث المناطق
         addSafeListener(document.getElementById('vehRegion'), 'change', function() {
             updateZoneOptions();
         });
 
-        // ✅ عند تغيير الحالة → أظهر/أخفِ حقل تاريخ العطب
         addSafeListener(document.getElementById('vehStatus'), 'change', toggleFaultDate);
 
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v3.1 ready');
+        console.log('✅ Vehicles page v4.0 ready');
     }
 
     if (document.readyState === 'loading') {
@@ -1146,7 +1141,7 @@
     window.vehShowToast = vehShowToast;
     window.vehPrint = vehPrint;
 
-    console.log('✅ Vehicles Page v3.1 ready');
+    console.log('✅ Vehicles Page v4.0 ready');
 
 })();
 </script>
