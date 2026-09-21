@@ -1,38 +1,27 @@
 <div id="page-vehicles">
 <style>
     #page-vehicles {
-        width: 100%;
-        padding: 0;
-        margin: 0;
+        width: 100%; padding: 0; margin: 0;
         min-height: 100vh;
         font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-        background: transparent;
-        color: #e8edf5;
-        position: relative;
-        z-index: 1;
+        background: transparent; color: #e8edf5;
+        position: relative; z-index: 1;
     }
     #page-vehicles *, #page-vehicles *::before, #page-vehicles *::after { box-sizing: border-box; }
     .veh-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
 
     .veh-header {
         background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(247,215,116,0.05));
-        border-radius: 20px;
-        padding: 24px 28px;
+        border-radius: 20px; padding: 24px 28px;
         border: 1px solid rgba(255,255,255,0.06);
         margin-bottom: 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 16px;
-        position: relative;
-        overflow: hidden;
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 16px;
+        position: relative; overflow: hidden;
     }
     .veh-header::before {
-        content: '';
-        position: absolute;
-        top: -50%; right: -50%;
-        width: 100%; height: 100%;
+        content: ''; position: absolute;
+        top: -50%; right: -50%; width: 100%; height: 100%;
         background: radial-gradient(circle, rgba(247,215,116,0.04) 0%, transparent 70%);
         pointer-events: none;
     }
@@ -53,16 +42,13 @@
     .veh-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 12px;
-        margin-bottom: 24px;
+        gap: 12px; margin-bottom: 24px;
     }
     .veh-stat {
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 14px;
-        padding: 16px;
-        text-align: center;
-        transition: all 0.3s;
+        border-radius: 14px; padding: 16px;
+        text-align: center; transition: all 0.3s;
     }
     .veh-stat:hover { background: rgba(255,255,255,0.04); transform: translateY(-2px); border-color: rgba(247,215,116,0.15); }
     .veh-stat .number { font-size: 26px; font-weight: 900; color: #f7d774; line-height: 1; }
@@ -72,25 +58,16 @@
     .veh-stat.stat-maint .number { color: #fbbf24; }
 
     .veh-actions {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        align-items: center;
+        display: flex; gap: 12px; margin-bottom: 20px;
+        flex-wrap: wrap; align-items: center;
     }
     .veh-btn {
-        padding: 12px 22px;
-        border: none;
-        border-radius: 12px;
-        font-family: inherit;
-        font-size: 13px;
-        font-weight: 700;
+        padding: 12px 22px; border: none;
+        border-radius: 12px; font-family: inherit;
+        font-size: 13px; font-weight: 700;
         cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.25s;
-        white-space: nowrap;
+        display: inline-flex; align-items: center; gap: 8px;
+        transition: all 0.25s; white-space: nowrap;
     }
     .veh-btn-primary { background: linear-gradient(135deg, #f7d774, #e6b31e); color: #0a0e1a; }
     .veh-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(247,215,116,0.3); }
@@ -104,46 +81,36 @@
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
         border-radius: 12px;
-        color: #e8edf5;
-        font-family: inherit;
-        font-size: 13px;
-        transition: all 0.2s;
+        color: #e8edf5; font-family: inherit;
+        font-size: 13px; transition: all 0.2s;
     }
     .veh-input { flex: 1; min-width: 180px; }
     .veh-input:focus, .veh-select:focus { outline: none; border-color: rgba(247,215,116,0.4); background: rgba(255,255,255,0.05); }
     .veh-select option { background: #1a1f2e; color: #e8edf5; }
 
     .veh-auto-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+        display: inline-flex; align-items: center; gap: 8px;
         padding: 10px 16px;
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 12px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: 700;
+        border-radius: 12px; cursor: pointer;
+        font-size: 12px; font-weight: 700;
         color: rgba(255,255,255,0.5);
-        transition: all 0.2s;
-        user-select: none;
+        transition: all 0.2s; user-select: none;
     }
     .veh-auto-toggle:hover { background: rgba(255,255,255,0.06); color: #e8edf5; }
     .veh-auto-toggle input { display: none; }
     .veh-auto-toggle .toggle-dot {
         width: 32px; height: 18px;
         background: rgba(255,255,255,0.15);
-        border-radius: 10px;
-        position: relative;
+        border-radius: 10px; position: relative;
         transition: all 0.25s;
     }
     .veh-auto-toggle .toggle-dot::before {
-        content: '';
-        position: absolute;
+        content: ''; position: absolute;
         top: 2px; right: 2px;
         width: 14px; height: 14px;
-        background: #fff;
-        border-radius: 50%;
+        background: #fff; border-radius: 50%;
         transition: all 0.25s;
     }
     .veh-auto-toggle input:checked ~ .toggle-dot { background: #4ade80; }
@@ -154,23 +121,19 @@
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.05);
         border-radius: 16px;
-        overflow: hidden;
-        overflow-x: auto;
+        overflow: hidden; overflow-x: auto;
     }
     .veh-table-head, .veh-table-row {
         display: grid;
-        grid-template-columns: 50px 130px 150px 1fr 130px 110px 120px 130px 1fr 100px;
-        gap: 8px;
-        padding: 14px 20px;
-        align-items: center;
-        font-size: 13px;
-        min-width: 1350px;
+        grid-template-columns: 50px 130px 150px 1fr 130px 110px 120px 130px 130px 1fr 100px;
+        gap: 8px; padding: 14px 20px;
+        align-items: center; font-size: 13px;
+        min-width: 1500px;
     }
     .veh-table-head {
         background: rgba(247,215,116,0.05);
         border-bottom: 1px solid rgba(255,255,255,0.06);
-        font-size: 12px;
-        font-weight: 800;
+        font-size: 12px; font-weight: 800;
         color: #f7d774;
     }
     .veh-table-row {
@@ -187,8 +150,7 @@
         display: inline-block;
         padding: 3px 10px;
         border-radius: 8px;
-        font-size: 11px;
-        font-weight: 700;
+        font-size: 11px; font-weight: 700;
     }
     .veh-badge.type { background: rgba(96,165,250,0.15); color: #60a5fa; }
     .veh-badge.region { background: rgba(247,215,116,0.15); color: #f7d774; font-size: 10px; }
@@ -202,26 +164,19 @@
 
     .veh-plate {
         font-family: 'Courier New', monospace;
-        font-weight: 900;
-        color: #f7d774;
+        font-weight: 900; color: #f7d774;
         letter-spacing: 1px;
         background: rgba(247,215,116,0.1);
-        padding: 3px 10px;
-        border-radius: 6px;
-        display: inline-block;
-        font-size: 12px;
+        padding: 3px 10px; border-radius: 6px;
+        display: inline-block; font-size: 12px;
     }
 
     .veh-action-btn {
         width: 32px; height: 32px;
-        border: none;
-        border-radius: 8px;
+        border: none; border-radius: 8px;
         cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        transition: all 0.2s;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 13px; transition: all 0.2s;
         margin: 0 2px;
     }
     .veh-action-btn.edit { background: rgba(96,165,250,0.15); color: #60a5fa; }
@@ -234,83 +189,57 @@
     .veh-empty p { font-size: 14px; }
 
     .veh-modal {
-        position: fixed;
-        inset: 0;
+        position: fixed; inset: 0;
         background: rgba(0,0,0,0.8);
         backdrop-filter: blur(8px);
         z-index: 99999;
-        display: none;
-        align-items: center;
-        justify-content: center;
+        display: none; align-items: center; justify-content: center;
         padding: 20px;
     }
     .veh-modal.active { display: flex; }
     .veh-modal-box {
         background: linear-gradient(135deg, #1a1f2e, #0f1420);
         border: 1px solid rgba(247,215,116,0.2);
-        border-radius: 20px;
-        padding: 28px;
-        width: 100%;
-        max-width: 600px;
-        max-height: 90vh;
-        overflow-y: auto;
+        border-radius: 20px; padding: 28px;
+        width: 100%; max-width: 600px;
+        max-height: 90vh; overflow-y: auto;
         box-shadow: 0 24px 64px rgba(0,0,0,0.8);
     }
     .veh-modal-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 14px;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 20px; padding-bottom: 14px;
         border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .veh-modal-head h3 {
-        font-size: 18px;
-        font-weight: 900;
-        color: #f7d774;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 0;
+        font-size: 18px; font-weight: 900; color: #f7d774;
+        display: flex; align-items: center; gap: 10px; margin: 0;
     }
     .veh-modal-close {
         background: rgba(255,255,255,0.05);
-        border: none;
-        color: rgba(255,255,255,0.6);
+        border: none; color: rgba(255,255,255,0.6);
         width: 36px; height: 36px;
-        border-radius: 10px;
-        cursor: pointer;
+        border-radius: 10px; cursor: pointer;
         font-size: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
     }
     .veh-modal-close:hover { background: rgba(248,113,113,0.2); color: #f87171; }
 
     .veh-form-group { margin-bottom: 16px; }
     .veh-form-group label {
-        display: block;
-        font-size: 12px;
-        font-weight: 700;
+        display: block; font-size: 12px; font-weight: 700;
         color: rgba(255,255,255,0.5);
         margin-bottom: 6px;
     }
     .veh-form-group label .req { color: #f87171; }
     .veh-form-control {
-        width: 100%;
-        padding: 12px 14px;
+        width: 100%; padding: 12px 14px;
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
         border-radius: 10px;
-        color: #e8edf5;
-        font-family: inherit;
+        color: #e8edf5; font-family: inherit;
         font-size: 13px;
     }
-    .veh-form-control:focus {
-        outline: none;
-        border-color: rgba(247,215,116,0.4);
-        background: rgba(255,255,255,0.05);
-    }
+    .veh-form-control:focus { outline: none; border-color: rgba(247,215,116,0.4); background: rgba(255,255,255,0.05); }
     .veh-form-control:disabled { opacity: 0.5; cursor: not-allowed; }
     .veh-form-control option { background: #1a1f2e; color: #e8edf5; }
     textarea.veh-form-control { resize: vertical; min-height: 70px; }
@@ -320,19 +249,12 @@
     .veh-modal-actions .veh-btn { flex: 1; justify-content: center; padding: 14px; }
 
     .veh-toast {
-        position: fixed;
-        bottom: 24px; left: 24px;
-        z-index: 999999;
-        max-width: 360px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 14px 20px;
-        border-radius: 12px;
-        color: #fff;
-        font-family: 'Cairo', sans-serif;
-        font-size: 13px;
-        font-weight: 700;
+        position: fixed; bottom: 24px; left: 24px;
+        z-index: 999999; max-width: 360px;
+        display: flex; align-items: center; gap: 10px;
+        padding: 14px 20px; border-radius: 12px;
+        color: #fff; font-family: 'Cairo', sans-serif;
+        font-size: 13px; font-weight: 700;
         backdrop-filter: blur(12px);
         box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         animation: vehToastIn 0.25s ease-out;
@@ -342,10 +264,7 @@
     .veh-toast.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
     .veh-toast.info { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); }
 
-    @keyframes vehToastIn {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes vehToastIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
     @media (max-width: 992px) {
         .veh-header { flex-direction: column; text-align: center; }
@@ -440,14 +359,14 @@
                 <option value="الوسط">🗺️ الوسط</option>
                 <option value="الجنوب">🗺️ الجنوب</option>
             </optgroup>
-            <optgroup label="🏛️ الإدارة المركزية - تونس">
-                <option value="إدارة حرس السواحل">🚢 حرس السواحل</option>
+            <optgroup label="🏛️ الإدارة المركزية">
                 <option value="إدارة إسناد الوحدات البحرية">🏛️ إسناد الوحدات</option>
+                <option value="إدارة حرس السواحل">🚢 حرس السواحل</option>
             </optgroup>
-            <optgroup label="🛠️ وحدات الصيانة والإسناد">
+            <optgroup label="🛠️ وحدات الصيانة">
                 <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ صيانة تونس</option>
-                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ صيانة المنستير</option>
                 <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ صيانة صفاقس</option>
+                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ صيانة المنستير</option>
                 <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ صيانة جرجيس</option>
             </optgroup>
             <optgroup label="🏛️ أخرى">
@@ -502,6 +421,7 @@
             <div class="veh-cell center">الحالة</div>
             <div class="veh-cell center">حالة العمل</div>
             <div class="veh-cell center">تاريخ التعيين</div>
+            <div class="veh-cell center">⚠️ تاريخ العطب</div>
             <div class="veh-cell">ملاحظات</div>
             <div class="veh-cell center">إجراءات</div>
         </div>
@@ -563,14 +483,14 @@
                         <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
                         <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
                     </optgroup>
-                    <optgroup label="🏛️ الإدارة المركزية - تونس">
-                        <option value="إدارة حرس السواحل">🚢 إدارة حرس السواحل</option>
+                    <optgroup label="🏛️ الإدارة المركزية">
                         <option value="إدارة إسناد الوحدات البحرية">🏛️ إدارة إسناد الوحدات البحرية</option>
+                        <option value="إدارة حرس السواحل">🚢 إدارة حرس السواحل</option>
                     </optgroup>
                     <optgroup label="🛠️ وحدات الصيانة والإسناد">
                         <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
                         <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
                         <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
                     </optgroup>
                     <optgroup label="🏛️ أخرى">
@@ -606,9 +526,16 @@
                 </div>
             </div>
 
-            <div class="veh-form-group">
-                <label>تاريخ التعيين</label>
-                <input type="date" class="veh-form-control" id="vehDate">
+            <div class="veh-form-row">
+                <div class="veh-form-group">
+                    <label>تاريخ التعيين</label>
+                    <input type="date" class="veh-form-control" id="vehDate">
+                </div>
+
+                <div class="veh-form-group" id="vehFaultDateGroup" style="display:none;">
+                    <label>⚠️ تاريخ العطب <span class="req">*</span></label>
+                    <input type="date" class="veh-form-control" id="vehFaultDate">
+                </div>
             </div>
 
             <div class="veh-form-group">
@@ -631,7 +558,7 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v3.0 - Loading...');
+    console.log('🚛 Vehicles Page v3.1 - Loading...');
 
     var _isDestroyed = false;
     var _timeouts = [];
@@ -732,32 +659,32 @@
     }
 
     // ============================================================
-    // ✅ ZONES_DATA — نسخة طبق الأصل من fleet.html
+    // ✅ ZONES_DATA — مطابق لـ fleet.html
     // ============================================================
     var ZONES_DATA = {
         "الشمال": ["تونس", "بنزرت", "طبرقة"],
         "الساحل": ["سوسة", "المنستير", "نابل"],
-        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
+        "الوسط":  ["صفاقس", "المهدية", "قرقنة"],
         "الجنوب": ["جرجيس", "جربة", "قابس"],
-        "إدارة حرس السواحل": ["تونس"],
         "إدارة إسناد الوحدات البحرية": ["تونس"],
-        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+        "إدارة حرس السواحل":          ["تونس"],
+        "وحدة الصيانة والإسناد البحري تونس":     ["تونس"],
+        "وحدة الصيانة والإسناد البحري صفاقس":    ["صفاقس"],
         "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
-        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
-        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+        "وحدة الصيانة والإسناد البحري جرجيس":    ["جرجيس"],
         "المجمع الأمني بقبيبة": ["قبيبة"]
     };
 
     var REGION_LABELS = {
         'الشمال': '🗺️ الشمال',
         'الساحل': '🗺️ الساحل',
-        'الوسط': '🗺️ الوسط',
+        'الوسط':  '🗺️ الوسط',
         'الجنوب': '🗺️ الجنوب',
-        'إدارة حرس السواحل': '🚢 حرس السواحل',
         'إدارة إسناد الوحدات البحرية': '🏛️ إسناد الوحدات',
+        'إدارة حرس السواحل': '🚢 حرس السواحل',
         'وحدة الصيانة والإسناد البحري تونس': '🛠️ صيانة تونس',
-        'وحدة الصيانة والإسناد البحري المنستير': '🛠️ صيانة المنستير',
         'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ صيانة صفاقس',
+        'وحدة الصيانة والإسناد البحري المنستير': '🛠️ صيانة المنستير',
         'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ صيانة جرجيس',
         'المجمع الأمني بقبيبة': '🏛️ بقبيبة'
     };
@@ -767,7 +694,6 @@
         return REGION_LABELS[region] || region;
     }
 
-    // ✅ جميع المناطق (للفلترة)
     function getAllZones() {
         var set = {};
         Object.keys(ZONES_DATA).forEach(function(reg) {
@@ -779,9 +705,6 @@
     var vehicles = [];
     var autoRefreshInterval = null;
 
-    // ============================================================
-    // 📥 LOAD
-    // ============================================================
     function vehLoad() {
         if (_isDestroyed) return;
         var tbody = document.getElementById('vehTableBody');
@@ -866,6 +789,7 @@
             var condCls = v.workCondition === 'جديدة' ? 'cond-جديدة'
                         : (v.workCondition === 'متوسطة' ? 'cond-متوسطة' : 'cond-قديمة');
             var dateStr = v.appointmentDate || '—';
+            var faultStr = v.faultDate || '—';
             var notes = v.notes || '—';
             var regionShort = getRegionShort(v.region);
             var zone = v.zone || '—';
@@ -880,6 +804,7 @@
                     '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
                     '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
                     '<div class="veh-cell center">' + escapeHtml(dateStr) + '</div>' +
+                    '<div class="veh-cell center" style="color:#f87171;font-weight:700;">' + escapeHtml(faultStr) + '</div>' +
                     '<div class="veh-cell" title="' + escapeHtml(notes) + '">' + escapeHtml(notes) + '</div>' +
                     '<div class="veh-cell center">' +
                         '<button class="veh-action-btn edit" data-action="edit" data-id="' + escapeHtml(v.id) + '" title="تعديل">' +
@@ -905,9 +830,7 @@
         });
     }
 
-    // ============================================================
-    // 🔄 UPDATE ZONE DROPDOWN (حسب الإقليم)
-    // ============================================================
+    // ✅ تحديث قائمة المناطق حسب الإقليم
     function updateZoneOptions(selectedZone) {
         var regionEl = document.getElementById('vehRegion');
         var zoneEl = document.getElementById('vehZone');
@@ -923,7 +846,6 @@
         }
 
         var zones = ZONES_DATA[region] || [];
-
         if (!zones.length) {
             zoneEl.disabled = true;
             zoneEl.innerHTML = '<option value="">— لا توجد مناطق —</option>';
@@ -939,9 +861,26 @@
         zoneEl.innerHTML = html;
     }
 
-    // ============================================================
-    // 🪟 MODAL
-    // ============================================================
+    // ✅ إظهار/إخفاء حقل تاريخ العطب حسب الحالة
+    function toggleFaultDate() {
+        var statusEl = document.getElementById('vehStatus');
+        var groupEl = document.getElementById('vehFaultDateGroup');
+        var inputEl = document.getElementById('vehFaultDate');
+        if (!statusEl || !groupEl) return;
+
+        var status = statusEl.value;
+        if (status === 'معطبة') {
+            groupEl.style.display = 'block';
+            if (inputEl) inputEl.required = true;
+        } else {
+            groupEl.style.display = 'none';
+            if (inputEl) {
+                inputEl.required = false;
+                inputEl.value = '';
+            }
+        }
+    }
+
     function openAddModal() {
         var modal = document.getElementById('vehModal');
         var title = document.getElementById('vehModalTitle');
@@ -956,7 +895,13 @@
         document.getElementById('vehStatus').value = 'صالحة';
         document.getElementById('vehCondition').value = 'جديدة';
         document.getElementById('vehDate').value = '';
+        document.getElementById('vehFaultDate').value = '';
         document.getElementById('vehNotes').value = '';
+
+        var fdg = document.getElementById('vehFaultDateGroup');
+        if (fdg) fdg.style.display = 'none';
+        var fdi = document.getElementById('vehFaultDate');
+        if (fdi) fdi.required = false;
 
         updateZoneOptions();
 
@@ -984,10 +929,21 @@
         document.getElementById('vehStatus').value = v.status || 'صالحة';
         document.getElementById('vehCondition').value = v.workCondition || 'جديدة';
         document.getElementById('vehDate').value = v.appointmentDate || '';
+        document.getElementById('vehFaultDate').value = v.faultDate || '';
         document.getElementById('vehNotes').value = v.notes || '';
 
-        // ✅ حدّث المناطق حسب الإقليم + اختر المنطقة الحالية
         updateZoneOptions(v.zone || '');
+
+        // ✅ إظهار/إخفاء حقل تاريخ العطب حسب الحالة
+        var faultEl = document.getElementById('vehFaultDate');
+        var faultGrpEl = document.getElementById('vehFaultDateGroup');
+        if (v.status === 'معطبة') {
+            if (faultGrpEl) faultGrpEl.style.display = 'block';
+            if (faultEl) faultEl.required = true;
+        } else {
+            if (faultGrpEl) faultGrpEl.style.display = 'none';
+            if (faultEl) faultEl.required = false;
+        }
 
         modal.classList.add('active');
     }
@@ -997,9 +953,6 @@
         if (modal) modal.classList.remove('active');
     }
 
-    // ============================================================
-    // 💾 SAVE
-    // ============================================================
     function saveVehicle(e) {
         if (e && e.preventDefault) e.preventDefault();
         if (_isDestroyed) return;
@@ -1012,13 +965,20 @@
         var status = document.getElementById('vehStatus').value;
         var workCondition = document.getElementById('vehCondition').value;
         var appointmentDate = document.getElementById('vehDate').value || null;
+        var faultDate = document.getElementById('vehFaultDate').value || null;
         var notes = document.getElementById('vehNotes').value.trim();
 
         if (!plateNumber) { vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
         if (!region) { vehShowToast('⚠️ الإقليم / الإدارة مطلوب', 'error'); return; }
         if (!zone) { vehShowToast('⚠️ المنطقة مطلوبة', 'error'); return; }
 
-        // ✅ التحقق من التبعية
+        // ✅ تحقق: تاريخ العطب إلزامي عند الحالة "معطبة"
+        if (status === 'معطبة' && !faultDate) {
+            vehShowToast('⚠️ تاريخ العطب مطلوب عند الحالة "معطبة"', 'error');
+            return;
+        }
+
+        // ✅ التحقق من أن المنطقة تابعة للإقليم
         var allowedZones = ZONES_DATA[region] || [];
         if (allowedZones.length > 0 && allowedZones.indexOf(zone) === -1) {
             vehShowToast('⚠️ المنطقة "' + zone + '" لا تتبع الإقليم المختار', 'error');
@@ -1033,6 +993,7 @@
             status: status,
             workCondition: workCondition,
             appointmentDate: appointmentDate,
+            faultDate: faultDate,
             notes: notes
         };
 
@@ -1111,12 +1072,9 @@
         }
     }
 
-    // ============================================================
-    // 🚀 INIT
-    // ============================================================
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v3.0...');
+        console.log('🚀 Initializing Vehicles page v3.1...');
 
         // ✅ املأ قائمة فلتر المنطقة
         var filterZoneEl = document.getElementById('vehFilterZone');
@@ -1165,10 +1123,13 @@
             updateZoneOptions();
         });
 
+        // ✅ عند تغيير الحالة → أظهر/أخفِ حقل تاريخ العطب
+        addSafeListener(document.getElementById('vehStatus'), 'change', toggleFaultDate);
+
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v3.0 ready');
+        console.log('✅ Vehicles page v3.1 ready');
     }
 
     if (document.readyState === 'loading') {
@@ -1185,7 +1146,7 @@
     window.vehShowToast = vehShowToast;
     window.vehPrint = vehPrint;
 
-    console.log('✅ Vehicles Page v3.0 ready');
+    console.log('✅ Vehicles Page v3.1 ready');
 
 })();
 </script>
