@@ -1,16 +1,12 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.4
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.5
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
 // 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v6
 // 🚛 + VEHICLES (LAND) ROUTES
-// 🎨 + STATIC CSS/JS SERVING (FIXED)
+// 🎨 + STATIC CSS/JS SERVING
 // 🛡️ + SECURITY HARDENING (v10.8.4)
-//    ✓ Session fixation protection
-//    ✓ Timing-attack protection
-//    ✓ Password leak prevention
-//    ✓ Input validation hardening
-//    ✓ .env protection check
+// 🏛️ + OFFICIAL PRINT HEADER INJECTION (v10.8.5)
 // ============================================================
 'use strict';
 require('dotenv').config();
@@ -18,14 +14,11 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.8.4 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.8.5 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 Node version:', process.version);
 
-// ═══════════════════════════════════════════════════════════
-// 🛡️ SECURITY: منع تسريب .env
-// ═══════════════════════════════════════════════════════════
 const SENSITIVE_FILES = [
     '.env', '.env.local', '.env.production', '.env.development',
     'server.js', 'package.json', 'package-lock.json',
@@ -42,16 +35,8 @@ function isSensitivePath(urlPath) {
     return false;
 }
 
-// ═══════════════════════════════════════════════════════════
-// 🛡️ SECURITY: Dummy hash لمنع Timing Attacks
-// ═══════════════════════════════════════════════════════════
-// bcrypt hash ثابت يُستخدم عندما لا يوجد مستخدم — يجعل زمن
-// الرد متطابقاً بين "مستخدم غير موجود" و "كلمة مرور خاطئة"
 const DUMMY_BCRYPT_HASH = '$2a$12$C6UzMDM.H6dfI/f/IKcEeO7Z4x1yFzFqW1Xt2VvK4W8Q9pZkqH1L2';
 
-// ═══════════════════════════════════════════════════════════
-// 🛡️ SECURITY: Validators
-// ═══════════════════════════════════════════════════════════
 function validateString(v, { min = 0, max = 255, required = false, trim = true } = {}) {
     if (v === undefined || v === null) return required ? null : '';
     if (typeof v !== 'string') return null;
@@ -72,9 +57,7 @@ function validateDate(v) {
     try {
         const d = new Date(v);
         if (isNaN(d.getTime())) return null;
-        // منع تواريخ مستقبلية بعيدة (أكثر من سنة)
         if (d.getTime() > Date.now() + 365 * 24 * 60 * 60 * 1000) return null;
-        // منع تواريخ قديمة جداً
         if (d.getTime() < new Date('1900-01-01').getTime()) return null;
         return d;
     } catch (e) { return null; }
@@ -151,7 +134,6 @@ const vehiclesRoutes = require('./routes/vehicles');
 let createDOMPurify = null;
 try { createDOMPurify = require('isomorphic-dompurify'); } catch (e) {}
 
-// ============ REDIS ============
 let redisClient = null, RedisStore = null, redisAvailable = false, redisInitPromise = null;
 
 function normalizeRedisUrl(u) {
@@ -219,9 +201,6 @@ const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
 app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
 
-// ═══════════════════════════════════════════════════════════
-// 🛡️ SECURITY: منع الوصول لملفات حساسة (يُطبَّق قبل أي شيء)
-// ═══════════════════════════════════════════════════════════
 app.use((req, res, next) => {
     if (isSensitivePath(req.path)) {
         return res.status(404).json({ success: false, error: 'Not Found' });
@@ -229,10 +208,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// ============ OWNERSHIP HEADERS ============
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.8.4');
+    res.setHeader('X-System-Version', '10.8.5');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -294,7 +272,6 @@ if (process.env.ADMIN_PASSWORD) {
 } else {
     if (isProduction) { console.error('❌ ADMIN_PASSWORD required'); process.exit(1); }
     ADMIN_PASSWORD = generateStrongPassword(); ADMIN_PASSWORD_GENERATED = true;
-    // 🛡️ FIX: لا نطبع كلمة المرور في الإنتاج
     if (!isProduction) console.log('🔑 DEV PASSWORD:', ADMIN_PASSWORD);
 }
 if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length !== 64)) {
@@ -347,7 +324,6 @@ function xssSanitizer(req, res, next) {
     next();
 }
 
-// ============ EMAIL ============
 let emailTransporter = null, emailInitPromise = null;
 function isValidEmail(e) {
     return typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
@@ -418,9 +394,6 @@ async function sendEmail(to, subj, html) {
 }
 setTimeout(() => { initEmailService().then(t => { emailTransporter = t; }).catch(()=>{}); }, 100);
 
-// ============ SECURITY MIDDLEWARE ============
-// 🛡️ ملاحظة: unsafe-inline مطلوب لأن الصفحات الحالية تستخدم inline scripts
-//    في v11.0 سننقله لملفات خارجية ونزيله
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -497,7 +470,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// ============ OWNERSHIP DB SIGNATURE ============
 async function registerOwnershipSignature() {
     try {
         if (!SystemLogo) return;
@@ -509,7 +481,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.8.4',
+            version: '10.8.5',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -517,7 +489,6 @@ async function registerOwnershipSignature() {
     } catch (e) { console.warn('⚠️ Signature:', e.message); }
 }
 
-// ============ MONGODB ============
 let mongoConnected = false;
 async function connectMongoDB() {
     const uri = process.env.MONGODB_URI;
@@ -609,7 +580,6 @@ async function ensureAdminExists() {
     } catch (e) { console.error('❌ Admin:', e.message); }
 }
 
-// ============ LEGACY CLEANUP ============
 const LEGACY_DEMO = ['الوحدة 101','الوحدة 205','الوحدة 312'];
 const CLEANUP_MARKER = 'legacy-demo-vessels-removed-v2';
 async function cleanupLegacyDemoVessels() {
@@ -644,7 +614,6 @@ async function cleanupLegacyDemoVessels() {
     } catch (e) { console.warn('⚠️ Cleanup:', e.message); }
 }
 
-// ============ SESSION STORE ============
 let sessionStore = undefined;
 async function buildSessionStore() {
     await initRedis();
@@ -661,7 +630,6 @@ async function buildSessionStore() {
     }
 }
 
-// ============ CSRF ============
 function ensureCsrfToken(req, res) {
     if (!req.session) return null;
     const now = Date.now();
@@ -714,7 +682,6 @@ async function csrfProtection(req, res, next) {
     return res.status(403).json({ success: false, error: 'CSRF token غير صالح أو مفقود', code: 'CSRF_INVALID' });
 }
 
-// ============ JWT ============
 function generateAccessToken(user, sid) {
     return jwt.sign({
         sub: user.id, id: user.id, username: user.username, role: user.role,
@@ -728,7 +695,6 @@ function generateRefreshToken(user, sid) {
             audience: 'marine-system-client', jwtid: randomId(32) });
 }
 
-// ============ REFRESH SESSIONS ============
 const refreshSessionsMemory = new Map();
 async function saveRefreshSession({ sessionId, userId, refreshToken }) {
     const rec = {
@@ -826,7 +792,6 @@ setInterval(() => {
     }
 }, 60*1000).unref();
 
-// ============ PASSWORD RESET ============
 const resetTokensMemory = [];
 function pruneResetMem() {
     const now = Date.now();
@@ -881,7 +846,6 @@ async function verifyResetToken(email, token) {
     return !!(r && r.email === email);
 }
 
-// ============ LOG + NOTIFY ============
 async function addSystemLog({ userId=null, action='view', resource='system',
     resourceId=null, resourceName='', userName='', userEmail='', ip=null,
     requestId=null, status='success', details={}, error=null }) {
@@ -902,7 +866,6 @@ async function notify({ userId=null, type='info', category='system', title,
     } catch (e) { return null; }
 }
 
-// ============ AUTH MIDDLEWARE ============
 function extractBearerToken(req) {
     const h = req.headers.authorization;
     if (!h || !h.startsWith('Bearer ')) return null;
@@ -936,7 +899,6 @@ function authenticateAccessToken(req, res, next) {
     }
 }
 
-// ============ RBAC ============
 const ROLE_PERMISSIONS = {
     admin: ['*'],
     manager: ['dashboard:view','vessels:read','vessels:create','vessels:update',
@@ -1005,7 +967,6 @@ function requireAdmin(req, res, next) {
     next();
 }
 
-// ============ FORMATTERS ============
 function formatUser(u) {
     if (!u) return null;
     const role = normalizeRole(u.role);
@@ -1081,7 +1042,7 @@ function formatMaintenance(log) {
     app.use((req, res, next) => { ensureCsrfToken(req, res); next(); });
 
     // ============================================================
-    // 📁 STATIC FILES — CSS / JS (FIXED)
+    // 📁 STATIC FILES — CSS / JS
     // ============================================================
     const publicDir = path.join(__dirname, 'public');
     const pagesDir = path.join(__dirname, 'pages');
@@ -1160,7 +1121,7 @@ function formatMaintenance(log) {
 
     app.get('/api/health', (req, res) => {
         res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.8.4',
+            success: true, status: 'online', service: 'Marine System', version: '10.8.5',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
@@ -1177,9 +1138,7 @@ function formatMaintenance(log) {
         });
     });
 
-    // ═══════════════════════════════════════════════════════════
-    // 🛡️ LOGIN — مُحصَّن ضد Timing + Session Fixation
-    // ═══════════════════════════════════════════════════════════
+    // ============ LOGIN ============
     app.post('/api/auth/login', async (req, res) => {
         try {
             const { username, password } = req.body;
@@ -1188,8 +1147,6 @@ function formatMaintenance(log) {
                 return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
 
             const user = await User.findOne({ username: username.trim() });
-
-            // 🛡️ FIX: timing-safe — دائماً نقارن حتى لو المستخدم غير موجود
             const hashToCheck = user ? user.password : DUMMY_BCRYPT_HASH;
             const ok = await bcrypt.compare(password, hashToCheck);
 
@@ -1208,7 +1165,6 @@ function formatMaintenance(log) {
                 await addSystemLog({ action: 'login', resource: 'user', status: 'error',
                     ip, requestId: req.requestId,
                     details: { reason: user ? 'bad_password' : 'not_found', username } });
-                // 🛡️ FIX: رد موحّد — لا يكشف إذا كان المستخدم موجوداً
                 return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
             }
 
@@ -1227,8 +1183,6 @@ function formatMaintenance(log) {
             const rt = generateRefreshToken(user, sid);
             await saveRefreshSession({ sessionId: sid, userId: user.id, refreshToken: rt });
 
-            // 🛡️ FIX: Session Fixation Protection
-            //    نُجدّد sessionID بعد تسجيل الدخول لمنع سرقة الجلسة
             await new Promise((resolve) => {
                 if (!req.session || typeof req.session.regenerate !== 'function') {
                     if (req.session) {
@@ -1377,14 +1331,12 @@ function formatMaintenance(log) {
             if (typeof email !== 'string' || !email.trim())
                 return res.status(400).json({ success: false, error: 'البريد مطلوب' });
             const user = await User.findOne({ email: email.trim().toLowerCase() });
-            // 🛡️ FIX: رد موحّد دائماً (لا يكشف وجود الإيميل)
             if (!user) return res.json({ success: true, message: 'إذا كان البريد مسجلاً فسيتم الإرسال' });
             const token = await createPasswordResetToken(user.email);
             const link = `${req.protocol}://${req.get('host')}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
             const html = `<div dir="rtl" style="font-family:Arial"><h2>🔐 إعادة تعيين كلمة المرور</h2><p>مرحباً <strong>${String(user.name || user.username)}</strong></p><p>استخدم الرابط:</p><p><a href="${link}">إعادة تعيين</a></p><p>صالح لمدة ساعة.</p></div>`;
             await sendEmail(user.email, 'إعادة تعيين كلمة المرور', html);
             const p = { success: true, message: 'إذا كان البريد مسجلاً فسيتم الإرسال' };
-            // 🛡️ FIX: resetLink فقط في التطوير
             if (!isProduction) { p.resetLink = link; p.devNote = 'DEV ONLY'; }
             res.json(p);
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
@@ -1447,8 +1399,8 @@ function formatMaintenance(log) {
             if (!Note) return res.status(500).json({ success: false, error: 'غير متاح' });
             const title = validateString(req.body.title, { required: true, max: 200 });
             const content = validateString(req.body.content, { required: true, max: 5000 });
-            if (!title) return res.status(400).json({ success: false, error: 'العنوان مطلوب (حتى 200 حرف)' });
-            if (!content) return res.status(400).json({ success: false, error: 'المحتوى مطلوب (حتى 5000 حرف)' });
+            if (!title) return res.status(400).json({ success: false, error: 'العنوان مطلوب' });
+            if (!content) return res.status(400).json({ success: false, error: 'المحتوى مطلوب' });
             const { date, priority, type, weekNumber } = req.body;
             let nt = type || 'عام';
             if (priority === 'عاجل') nt = 'عاجلة'; else if (priority === 'مهم') nt = 'مهمة';
@@ -1668,8 +1620,8 @@ function formatMaintenance(log) {
         try {
             const subject = validateString(req.body.subject || req.body.title, { required: true, max: 200 });
             const message = validateString(req.body.message || req.body.description, { required: true, max: 5000 });
-            if (!subject) return res.status(400).json({ success: false, error: 'الموضوع مطلوب (حتى 200 حرف)' });
-            if (!message) return res.status(400).json({ success: false, error: 'الرسالة مطلوبة (حتى 5000 حرف)' });
+            if (!subject) return res.status(400).json({ success: false, error: 'الموضوع مطلوب' });
+            if (!message) return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
             const { priority, category } = req.body;
             const pr = ['منخفضة','متوسطة','عالية','عاجلة','منخفض','متوسط','عالي','حرج'].includes(priority) ? priority : 'متوسط';
             const ct = ['فني','لوجستي','إداري','تشغيلي','أمني','أخرى'].includes(category) ? category : 'فني';
@@ -1699,7 +1651,7 @@ function formatMaintenance(log) {
         try {
             const b = req.body;
             const name = validateString(b.name, { required: true, max: 100 });
-            if (!name) return res.status(400).json({ success: false, error: 'اسم المركب مطلوب (حتى 100 حرف)' });
+            if (!name) return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
             const nv = await Vessel.create({
                 id: randomId(8), name, num: validateString(b.num, { max: 50 }) || '',
                 len: validateNumber(b.len, { min: 0, max: 1000 }) || 0,
@@ -1960,9 +1912,9 @@ function formatMaintenance(log) {
         try {
             const { username, password, email, role, region, active } = req.body;
             const un = validateString(username, { required: true, min: 3, max: 50 });
-            if (!un) return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب (3-50 حرف)' });
+            if (!un) return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
             if (!isStrongPassword(password))
-                return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة (12+ حرف مختلط)' });
+                return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة' });
             if (await User.findOne({ username: un }))
                 return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
             const roles = ['admin','manager','editor','maintenance_unit','viewer','مسؤول','مدير','مشغل','مشاهد','operator','super_admin'];
@@ -2220,7 +2172,7 @@ function formatMaintenance(log) {
     } else {
         console.warn('⚠️ Settings disabled (models missing)');
     }
-
+    
     // ============ HTML INJECTION ============
     const OWNERSHIP_META = `
 <meta name="author" content="أمان الله ناجي">
@@ -2230,7 +2182,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.8.4 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.8.5 - Aman Allah Naji">
 `;
     const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
@@ -2435,26 +2387,199 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else init();
 })();<\/script>`;
 
+    // ═══════════════════════════════════════════════════════════
+    // 🏛️ PRINT HEADER — الترويسة الرسمية (v10.8.5)
+    // ═══════════════════════════════════════════════════════════
+    const PRINT_HEADER_CSS = `
+<style id="official-print-header-style">
+#official-print-header { display: none !important; }
+@media print {
+    #official-print-header {
+        display: block !important;
+        visibility: visible !important;
+        position: relative !important;
+        width: 100% !important;
+        height: 68mm !important;
+        min-height: 68mm !important;
+        margin: 0 0 5mm 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        border-bottom: 1pt solid #12121a !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        direction: rtl !important;
+        z-index: 99999 !important;
+    }
+    #official-print-header .official-header-print {
+        position: relative !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #ffffff !important;
+    }
+    #official-print-header .official-header-left-text {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+        direction: rtl !important;
+        text-align: left !important;
+        font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+        font-size: 13pt !important;
+        font-weight: 700 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        line-height: 1.5 !important;
+        white-space: nowrap !important;
+        z-index: 99999 !important;
+    }
+    #official-print-header .official-header-right-text {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        left: auto !important;
+        direction: rtl !important;
+        text-align: right !important;
+        font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+        font-size: 12pt !important;
+        font-weight: 700 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        line-height: 1.6 !important;
+        z-index: 99999 !important;
+    }
+    #official-print-header .official-header-title-print {
+        display: block !important;
+        position: absolute !important;
+        top: 50mm !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        text-align: center !important;
+        font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+        font-size: 20pt !important;
+        font-weight: 900 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        direction: rtl !important;
+        z-index: 99999 !important;
+    }
+    .eff-header-left::before, .eff-header-left::after,
+    .fleet-header-left::before, .fleet-header-left::after,
+    .veh-header .title-section::before, .veh-header .title-section::after,
+    .maint-header-left::before, .maint-header-left::after,
+    .logs-header-left::before, .logs-header-left::after {
+        display: none !important;
+        content: none !important;
+    }
+}
+</style>`;
+
+    const PRINT_HEADER_SCRIPT = `
+<script>(function(){
+    'use strict';
+    function injectPrintHeader() {
+        var body = document.body;
+        if (!body) return;
+        var existing = document.getElementById('official-print-header');
+        if (existing) existing.remove();
+        
+        var headerDiv = document.createElement('div');
+        headerDiv.id = 'official-print-header';
+        headerDiv.innerHTML = 
+            '<div class="official-header-print">' +
+                '<div class="official-header-left-text">العوينة في: ______________</div>' +
+                '<div class="official-header-right-text">' +
+                    'الجمهورية التونسية<br>' +
+                    'وزارة الداخلية<br>' +
+                    'كتابة الدولة للأمن<br>' +
+                    'الإدارة العامة للحرس الوطني<br>' +
+                    'الإدارة العامة لحرس الحدود<br>' +
+                    'إدارة إسناد الوحدات البحرية<br>' +
+                    'ع/ ______ /دد' +
+                '</div>' +
+                '<div class="official-header-title-print"></div>' +
+            '</div>';
+        body.insertBefore(headerDiv, body.firstChild);
+    }
+    
+    function setTitle() {
+        var titleEl = document.querySelector('#official-print-header .official-header-title-print');
+        if (!titleEl) return;
+        var pageId = '';
+        var pageEl = document.querySelector('[id^="page-"]:not(#pageContainer):not(#pageLoader)');
+        if (pageEl) pageId = pageEl.id;
+        var titles = {
+            'page-fleet': 'السجل العام للأسطول',
+            'page-vehicles': 'الوسائل البرية - الحرس البحري',
+            'page-efficiency': 'جاهزية الأسطول',
+            'page-maintenance': 'سجل الصيانة والتدخلات',
+            'page-logs': 'سجل الصيانة',
+            'page-notes': 'المذكرات',
+            'page-users': 'إدارة المستخدمين',
+            'page-monitoring': 'المراقبة'
+        };
+        titleEl.textContent = titles[pageId] || document.title || 'منظومة الوسائل البحرية';
+    }
+    
+    window.addEventListener('beforeprint', setTitle);
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            injectPrintHeader(); setTitle();
+        });
+    } else {
+        injectPrintHeader(); setTitle();
+    }
+    
+    var count = 0;
+    var interval = setInterval(function() {
+        count++;
+        if (count > 5) { clearInterval(interval); return; }
+        if (!document.getElementById('official-print-header')) {
+            injectPrintHeader(); setTitle();
+        }
+    }, 2000);
+})();<\/script>`;
+
     const INJECTION_SKIP_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i;
 
     function injectAll(html) {
         if (typeof html !== 'string' || !html.includes('</body>')) return html;
+        
+        // ✅ OWNERSHIP
         if (!html.includes('ownership-signature-style')) {
             if (html.includes('</head>')) html = html.replace('</head>', OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + '\n</head>');
             else html = OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + html;
             html = html.replace('</body>', OWNERSHIP_HTML + '\n</body>');
         }
+        
+        // ✅ USER BADGE
         if (!html.includes('user-info-badge-style')) {
             if (html.includes('</head>')) html = html.replace('</head>', USER_BADGE_CSS + '\n</head>');
             if (/<body[^>]*>/i.test(html)) html = html.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
             html = html.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
         }
+        
+        // ✅ FORCE GPS
         if (!html.includes('force-gps-style')) {
             if (html.includes('</head>')) html = html.replace('</head>', FORCE_GPS_CSS + '\n</head>');
             if (/<body[^>]*>/i.test(html)) html = html.replace(/(<body[^>]*>)/i, '$1' + FORCE_GPS_HTML);
             else html = FORCE_GPS_HTML + html;
             html = html.replace('</body>', FORCE_GPS_SCRIPT + '\n</body>');
         }
+        
+        // ✅ 🆕 PRINT HEADER — الترويسة الرسمية
+        if (!html.includes('official-print-header-style')) {
+            if (html.includes('</head>')) {
+                html = html.replace('</head>', PRINT_HEADER_CSS + '\n</head>');
+            }
+            html = html.replace('</body>', PRINT_HEADER_SCRIPT + '\n</body>');
+        }
+        
         return html;
     }
 
@@ -2511,7 +2636,7 @@ else init();
             path.join(publicPagesDir, 'index.html')
         ];
         for (const p of possible) if (fs.existsSync(p)) return res.sendFile(p);
-        res.send('<h1>🚢 Marine System v10.8.4</h1><p>Running</p>');
+        res.send('<h1>🚢 Marine System v10.8.5</h1><p>Running</p>');
     });
     app.get('/pages/:page', (req, res) => {
         const fp = findPageFile(req.params.page);
@@ -2543,7 +2668,7 @@ else init();
     // ============ LISTEN ============
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v10.8.4');
+        console.log('🚢 MARINE SYSTEM v10.8.5');
         console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
         console.log('🛡️  Security hardening: ENABLED');
         console.log('🍃 MongoDB Atlas');
@@ -2552,6 +2677,7 @@ else init();
         console.log('📍 Force GPS v6');
         console.log('🚛 Vehicles (Land) routes: ENABLED');
         console.log('🎨 Static CSS/JS: FIXED');
+        console.log('🏛️  Print Header Injection: ENABLED');
         console.log('=========================================');
         console.log(`📍 Port: ${PORT}`);
         console.log(`🌍 Env: ${process.env.NODE_ENV || 'development'}`);
