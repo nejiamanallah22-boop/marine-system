@@ -1,10 +1,20 @@
 /* ============================================================
-   🖨️ PRINT v15.2 — OFFICIAL INSTITUTIONAL GRADE
+   🖨️ PRINT v15.3 — OFFICIAL INSTITUTIONAL GRADE
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ الإصلاحات:
-   • العنوان الرئيسي يتمركز تحت العمودين (يمين + يسار)
-   • المحتوى يبدأ من أقصى اليمين (هامش يمين 3mm)
-   • ✏️ مساحة كتابة في سطر: ع/ ______ /دد (تكفي 6 أرقام)
+   ✅ يدعم 5 صفحات:
+      • #page-fleet        (السجل العام للأسطول)
+      • #page-logs         (سجل الصيانة)
+      • #page-efficiency   (تقرير الجاهزية)
+      • #page-maintenance  (الصيانة والتدخلات)
+      • #page-vehicles     (الوسائل البرية)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ✅ الميزات:
+      • ترويسة مؤسسية موحّدة (6 أسطر وزارية + العوينة في)
+      • عنوان رئيسي متمركز تحت العمودين
+      • مساحة كتابة: ع/ ______ /دد
+      • ترقيم أقسام تلقائي
+      • جداول نظيفة بخطوط دقيقة (0.5pt)
+      • تذييل مخصص لكل صفحة
    ============================================================ */
 
 /* ═══════════════════════════════════════════════════════════
@@ -69,7 +79,9 @@
     .action-btn, .action-btns,
     .fleet-header-actions, .logs-header-actions, .maint-header-actions,
     .add-part-btn, .modal-footer, .btn-submit,
-    .toast, .maint-modal, .log-modal, .modal-overlay {
+    .toast, .maint-modal, .log-modal, .modal-overlay,
+    .veh-modal, .veh-toast, .veh-actions, .veh-action-btn,
+    .veh-auto-toggle {
         display: none !important;
     }
 
@@ -77,7 +89,7 @@
     .main-content { margin: 0 !important; padding: 0 !important; }
     .page-container { max-width: 100% !important; margin: 0 !important; }
 
-    #page-fleet, #page-logs, #page-efficiency, #page-maintenance {
+    #page-fleet, #page-logs, #page-efficiency, #page-maintenance, #page-vehicles {
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 !important;
@@ -88,17 +100,19 @@
 
     #page-fleet::before, #page-logs::before,
     #page-efficiency::before, #page-maintenance::before,
+    #page-vehicles::before,
     body::before, body::after {
         display: none !important;
     }
 
     /* ═════════════════════════════════════════════
-       2) الترويسة المؤسسية — أعلى الصفحة الأولى
+       2) الترويسة المؤسسية الموحّدة
        ═════════════════════════════════════════════ */
     .eff-header,
     .fleet-header,
     .logs-header,
-    .maint-header {
+    .maint-header,
+    .veh-header {
         display: block !important;
         box-sizing: border-box !important;
         background: #ffffff !important;
@@ -120,18 +134,19 @@
     .eff-header::before,
     .fleet-header::before,
     .logs-header::before,
-    .maint-header::before {
+    .maint-header::before,
+    .veh-header::before {
         display: none !important;
     }
 
     /* ───────────────────────────────
        الحاوية الرئيسية للترويسة
-       ارتفاع أكبر لاستيعاب العنوان المتمركز
        ─────────────────────────────── */
     .eff-header-left,
     .fleet-header-left,
     .logs-header-left,
-    .maint-header-left {
+    .maint-header-left,
+    .veh-header .title-section {
         display: block !important;
         position: relative !important;
         width: 100% !important;
@@ -147,7 +162,8 @@
     .eff-header-left::before,
     .fleet-header-left::before,
     .logs-header-left::before,
-    .maint-header-left::before {
+    .maint-header-left::before,
+    .veh-header .title-section::before {
         content: "العوينة في: ______________" !important;
         display: block !important;
         position: absolute !important;
@@ -169,12 +185,12 @@
     /* ───────────────────────────────
        🔴 يمين: التسلسل الوزاري
        ✏️ مساحة الكتابة: ع/ ______ /دد
-          (6 شرطات = تكفي 6 أرقام)
        ─────────────────────────────── */
     .eff-header-left::after,
     .fleet-header-left::after,
     .logs-header-left::after,
-    .maint-header-left::after {
+    .maint-header-left::after,
+    .veh-header .title-section::after {
         content: "الجمهورية التونسية\A وزارة الداخلية\A كتابة الدولة للأمن\A الإدارة العامة للحرس الوطني\A الإدارة العامة لحرس الحدود\A إدارة إسناد الوحدات البحرية\A ع/ ______ /دد" !important;
         display: block !important;
         position: absolute !important;
@@ -195,14 +211,19 @@
         width: auto !important;
     }
 
+    /* إخفاء الأيقونات */
+    .header-icon,
+    .veh-header .title-icon { display: none !important; }
+
     /* ═════════════════════════════════════════════
        ✅ العنوان الرئيسي — يتمركز تحت العمودين
-       (position: absolute + left/right: 0)
        ═════════════════════════════════════════════ */
     .eff-header-left h2,
     .fleet-header-left h2,
     .logs-header-left h2,
-    .maint-header-left h2 {
+    .maint-header-left h2,
+    .veh-header .title,
+    .veh-header h2 {
         position: absolute !important;
         top: 50mm !important;
         left: 0 !important;
@@ -220,13 +241,16 @@
         text-align: center !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
+        background: none !important;
     }
 
-    /* ✅ العنوان الفرعي — يتمركز تحت العنوان الرئيسي */
+    /* ✅ العنوان الفرعي */
     .eff-header-left p,
     .fleet-header-left p,
     .logs-header-left p,
-    .maint-header-left p {
+    .maint-header-left p,
+    .veh-header .subtitle,
+    .veh-header p {
         position: absolute !important;
         top: 60mm !important;
         left: 0 !important;
@@ -242,19 +266,22 @@
         text-align: center !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
+        background: none !important;
     }
 
     .eff-header::after,
     .fleet-header::after,
     .logs-header::after,
-    .maint-header::after {
+    .maint-header::after,
+    .veh-header::after {
         display: none !important;
     }
 
     /* ═════════════════════════════════════════════
        3) لوحة المؤشرات
        ═════════════════════════════════════════════ */
-    .stats-grid {
+    .stats-grid,
+    .veh-stats {
         display: grid !important;
         gap: 0 !important;
         margin: 0 0 8mm 0 !important;
@@ -267,12 +294,15 @@
         break-before: avoid !important;
     }
 
-    #page-fleet .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
+    #page-fleet .stats-grid,
+    #page-vehicles .veh-stats { grid-template-columns: repeat(4, 1fr) !important; }
+
     #page-logs .stats-grid,
     #page-efficiency .stats-grid,
     #page-maintenance .stats-grid { grid-template-columns: repeat(5, 1fr) !important; }
 
-    .stat-card {
+    .stat-card,
+    .veh-stat {
         background: none !important;
         border: none !important;
         border-radius: 0 !important;
@@ -284,7 +314,8 @@
         overflow: visible !important;
     }
 
-    .stat-card:not(:last-child)::after {
+    .stat-card:not(:last-child)::after,
+    .veh-stat:not(:last-child)::after {
         content: "" !important;
         position: absolute !important;
         top: 10% !important;
@@ -294,12 +325,14 @@
         background: #d8d6d0 !important;
     }
 
-    .stat-card::before { display: none !important; }
+    .stat-card::before,
+    .veh-stat::before { display: none !important; }
     .stat-card .icon-bg,
     .stat-card .stat-icon { display: none !important; }
 
     .stat-card .number,
-    .stat-card .eff-stat-value {
+    .stat-card .eff-stat-value,
+    .veh-stat .number {
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
         font-size: 18pt !important;
@@ -312,7 +345,8 @@
         background: none !important;
     }
 
-    .stat-card .label {
+    .stat-card .label,
+    .veh-stat .label {
         color: #6b6b78 !important;
         -webkit-text-fill-color: #6b6b78 !important;
         font-size: 7pt !important;
@@ -321,6 +355,7 @@
         text-transform: uppercase !important;
         letter-spacing: 0.5px !important;
         white-space: normal !important;
+        background: none !important;
     }
 
     /* ═════════════════════════════════════════════
@@ -425,7 +460,7 @@
     }
 
     /* ═════════════════════════════════════════════
-       5) الجداول — لكل الصفحات
+       5) الجداول
        ═════════════════════════════════════════════ */
     .table-wrapper {
         padding: 0 !important;
@@ -572,7 +607,8 @@
        7) الشارات وأشرطة التقدم
        ───────────────────────────────────────────── */
     .status-badge,
-    .eff-status {
+    .eff-status,
+    .veh-badge {
         display: inline-block !important;
         padding: 0.6mm 2.5mm !important;
         border-radius: 3px !important;
@@ -585,14 +621,17 @@
     }
 
     .status-badge.excellent, .status-badge.good,
-    .status-badge.active, .status-badge.completed, .status-good {
+    .status-badge.active, .status-badge.completed, .status-good,
+    .veh-badge.status-صالحة, .veh-badge.cond-جديدة, .veh-badge.zone {
         color: #1d6b4a !important;
         -webkit-text-fill-color: #1d6b4a !important;
         background: #f4faf7 !important;
     }
 
     .status-badge.medium, .status-badge.pending,
-    .status-badge.in-progress, .status-mid {
+    .status-badge.in-progress, .status-mid,
+    .veh-badge.status-صيانة, .veh-badge.cond-متوسطة,
+    .veh-badge.brand, .veh-badge.region {
         color: #9a6b0e !important;
         -webkit-text-fill-color: #9a6b0e !important;
         background: #fffaf0 !important;
@@ -600,10 +639,37 @@
 
     .status-badge.low, .status-badge.critical,
     .status-badge.damaged, .status-badge.overdue,
-    .status-badge.cancelled, .status-bad {
+    .status-badge.cancelled, .status-bad,
+    .veh-badge.status-معطبة {
         color: #9b2c2c !important;
         -webkit-text-fill-color: #9b2c2c !important;
         background: #fdf4f4 !important;
+    }
+
+    .veh-badge.cond-قديمة {
+        color: #45454f !important;
+        -webkit-text-fill-color: #45454f !important;
+        background: #f2f1ed !important;
+    }
+
+    .veh-badge.type {
+        color: #1a4f8a !important;
+        -webkit-text-fill-color: #1a4f8a !important;
+        background: #f4f7fa !important;
+    }
+
+    .veh-plate {
+        font-family: 'Courier New', monospace !important;
+        font-weight: 900 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        background: #ffffff !important;
+        border: 0.75pt solid #12121a !important;
+        padding: 0.5mm 2mm !important;
+        border-radius: 2px !important;
+        font-size: 8pt !important;
+        letter-spacing: 0.5px !important;
+        display: inline-block !important;
     }
 
     .progress-bar {
@@ -627,7 +693,8 @@
     #page-fleet::after,
     #page-logs::after,
     #page-efficiency::after,
-    #page-maintenance::after {
+    #page-maintenance::after,
+    #page-vehicles::after {
         display: block !important;
         text-align: center !important;
         font-size: 7.5pt !important;
@@ -653,6 +720,9 @@
     }
     #page-maintenance::after {
         content: "منظومة الوسائل البحرية  —  سجل الصيانة والتدخلات  —  وثيقة رسمية" !important;
+    }
+    #page-vehicles::after {
+        content: "منظومة الوسائل البرية  —  الحرس الوطني البحري  —  وثيقة رسمية" !important;
     }
 
     /* ─────────────────────────────────────────────
@@ -822,7 +892,103 @@
     }
 
     /* ─────────────────────────────────────────────
-       12) ملخص الطباعة (fleet)
+       12) VEHICLES — الوسائل البرية
+       ───────────────────────────────────────────── */
+    #page-vehicles .veh-table-wrap {
+        background: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        page-break-inside: auto !important;
+    }
+
+    #page-vehicles .veh-table-wrap::before {
+        content: "📋 السجل التفصيلي للوسائل البرية" !important;
+        display: block !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 12pt !important;
+        font-weight: 800 !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding: 0 0 1.5mm !important;
+        margin: 0 0 2mm !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        text-align: right !important;
+        direction: rtl !important;
+    }
+
+    #page-vehicles .veh-table-head,
+    #page-vehicles .veh-table-row {
+        display: grid !important;
+        grid-template-columns:
+            25px 60px 130px 90px 110px 80px
+            55px 55px 70px 70px 1fr 0px !important;
+        gap: 3px !important;
+        padding: 1.8mm 2mm !important;
+        align-items: center !important;
+        font-size: 8.5pt !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    #page-vehicles .veh-table-head {
+        background: #f7f6f3 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 7pt !important;
+        font-weight: 800 !important;
+        border-top: 1pt solid #12121a !important;
+        border-bottom: 1pt solid #12121a !important;
+        text-transform: uppercase !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    #page-vehicles .veh-table-row {
+        background: #ffffff !important;
+        color: #23232b !important;
+        border-bottom: 0.5pt solid #e3e1db !important;
+    }
+    #page-vehicles .veh-table-row:nth-child(even) {
+        background: #fbfaf8 !important;
+    }
+    #page-vehicles .veh-table-row:last-child {
+        border-bottom: 1pt solid #12121a !important;
+    }
+
+    /* إخفاء عمود الإجراءات */
+    #page-vehicles .veh-table-head .veh-cell:last-child,
+    #page-vehicles .veh-table-row .veh-cell:last-child {
+        display: none !important;
+    }
+
+    #page-vehicles .veh-cell {
+        overflow: visible !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        color: #23232b !important;
+        -webkit-text-fill-color: #23232b !important;
+        line-height: 1.3 !important;
+        text-align: center !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+
+    #page-vehicles .veh-cell.center { text-align: center !important; }
+
+    #page-vehicles .veh-empty {
+        padding: 20mm !important;
+        color: #7c7c88 !important;
+        text-align: center !important;
+    }
+    #page-vehicles .veh-empty i { color: #d8d6d0 !important; }
+
+    /* ─────────────────────────────────────────────
+       13) ملخص الطباعة (fleet)
        ───────────────────────────────────────────── */
     .print-only,
     .print-summary-section {
@@ -891,7 +1057,7 @@
     }
 
     /* ─────────────────────────────────────────────
-       13) كسر شامل لأي قيود overflow
+       14) كسر شامل لأي قيود overflow
        ───────────────────────────────────────────── */
     html body #page-efficiency .eff-section,
     html body #page-fleet .eff-section,
@@ -901,6 +1067,8 @@
     html body #page-fleet .eff-section *,
     html body #page-logs .eff-section *,
     html body #page-maintenance .eff-section *,
+    html body #page-vehicles .veh-table-wrap,
+    html body #page-vehicles .veh-table-wrap *,
     html body .table-wrapper,
     html body table,
     html body tbody {
