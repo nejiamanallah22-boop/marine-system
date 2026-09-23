@@ -1,6 +1,5 @@
 // ============================================================
-// 🚛 routes/vehicles.js — v3.1
-// يدعم: region + zone + faultDate
+// 🚛 routes/vehicles.js — v6.0
 // ============================================================
 
 'use strict';
@@ -38,6 +37,10 @@ module.exports = function registerVehicleRoutes(app, deps) {
             name: v.name || '',
             plateNumber: v.plateNumber || '',
             type: v.type || 'سيارة',
+            brand: v.brand || '',
+            model: v.model || '',
+            year: v.year || null,
+            color: v.color || '',
             region: v.region || '',
             zone: v.zone || '',
             status: v.status || 'صالحة',
@@ -50,7 +53,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         };
     }
 
-    // ✅ GET جميع الوسائل
+    // GET جميع الوسائل
     app.get('/api/vehicles',
         authenticateAccessToken,
         requirePermission('vessels:read'),
@@ -68,7 +71,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         }
     );
 
-    // ✅ GET قوائم للواجهة
+    // GET config
     app.get('/api/vehicles/config',
         authenticateAccessToken,
         (req, res) => {
@@ -77,6 +80,8 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 res.json({
                     success: true,
                     types: vmod.VEHICLE_TYPES || [],
+                    brands: vmod.VEHICLE_BRANDS || [],
+                    colors: vmod.VEHICLE_COLORS || [],
                     regions: vmod.VEHICLE_REGIONS || [],
                     zones: vmod.VEHICLE_ZONES || {},
                     zonesAll: vmod.VEHICLE_ZONES_ALL || [],
@@ -89,7 +94,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         }
     );
 
-    // ✅ POST إضافة
+    // POST إضافة
     app.post('/api/vehicles',
         authenticateAccessToken,
         requirePermission('vessels:create'),
@@ -98,6 +103,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
             try {
                 const {
                     name, plateNumber, type,
+                    brand, model, year, color,
                     region, zone,
                     status, workCondition,
                     appointmentDate, faultDate, notes
@@ -107,22 +113,20 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     return res.status(400).json({ success: false, error: 'رقم الوسيلة مطلوب' });
                 }
                 if (typeof region !== 'string' || !region.trim()) {
-                    return res.status(400).json({ success: false, error: 'الإقليم مطلوب' });
+                    return res.status(400).json({ success: false, error: 'الإدارة / الإقليم مطلوب' });
                 }
                 if (typeof zone !== 'string' || !zone.trim()) {
                     return res.status(400).json({ success: false, error: 'المنطقة مطلوبة' });
                 }
 
-                // ✅ تحقق من أن المنطقة تابعة للإقليم
                 const allowedZones = VEHICLE_ZONES[region] || [];
                 if (allowedZones.length > 0 && allowedZones.indexOf(zone) === -1) {
                     return res.status(400).json({
                         success: false,
-                        error: 'المنطقة "' + zone + '" لا تتبع إقليم "' + region + '"'
+                        error: 'المنطقة "' + zone + '" لا تتبع "' + region + '"'
                     });
                 }
 
-                // ✅ تحقق: إذا كانت الحالة "معطبة" يجب إدخال تاريخ العطب
                 if (status === 'معطبة' && (!faultDate || !String(faultDate).trim())) {
                     return res.status(400).json({
                         success: false,
@@ -140,6 +144,10 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     name: typeof name === 'string' ? name.trim() : '',
                     plateNumber: plateNumber.trim(),
                     type: type || 'سيارة',
+                    brand: typeof brand === 'string' ? brand.trim() : '',
+                    model: typeof model === 'string' ? model.trim() : '',
+                    year: Number(year) || null,
+                    color: typeof color === 'string' ? color.trim() : '',
                     region: region.trim(),
                     zone: zone.trim(),
                     status: status || 'صالحة',
@@ -160,7 +168,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 await notify({
                     type: 'success', category: 'vehicle',
                     title: '🚛 وسيلة برية جديدة',
-                    message: 'تم إضافة "' + newVehicle.plateNumber + '" (' + newVehicle.type + ')',
+                    message: 'تم إضافة "' + newVehicle.plateNumber + '" (' + (newVehicle.brand || newVehicle.type) + ')',
                     link: '/pages/vehicles.html', icon: 'truck',
                     actorName: req.user.name || req.user.username
                 });
@@ -183,7 +191,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         }
     );
 
-    // ✅ PUT تعديل
+    // PUT تعديل
     app.put('/api/vehicles/:id',
         authenticateAccessToken,
         requirePermission('vessels:update'),
@@ -198,6 +206,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
 
                 const {
                     name, plateNumber, type,
+                    brand, model, year, color,
                     region, zone,
                     status, workCondition,
                     appointmentDate, faultDate, notes
@@ -212,6 +221,10 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 }
 
                 if (type !== undefined) v.type = type;
+                if (typeof brand === 'string') v.brand = brand.trim();
+                if (typeof model === 'string') v.model = model.trim();
+                if (year !== undefined) v.year = Number(year) || null;
+                if (typeof color === 'string') v.color = color.trim();
 
                 const newRegion = (typeof region === 'string' && region.trim()) ? region.trim() : v.region;
                 const newZone = (typeof zone === 'string' && zone.trim()) ? zone.trim() : v.zone;
@@ -221,7 +234,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     if (allowedZones.length > 0 && allowedZones.indexOf(newZone) === -1) {
                         return res.status(400).json({
                             success: false,
-                            error: 'المنطقة "' + newZone + '" لا تتبع إقليم "' + newRegion + '"'
+                            error: 'المنطقة "' + newZone + '" لا تتبع "' + newRegion + '"'
                         });
                     }
                 }
@@ -234,7 +247,6 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 if (appointmentDate !== undefined) v.appointmentDate = appointmentDate || null;
                 if (faultDate !== undefined) v.faultDate = faultDate || null;
 
-                // ✅ إذا الحالة الجديدة "معطبة" يجب توفر تاريخ العطب
                 if (v.status === 'معطبة' && (!v.faultDate || !String(v.faultDate).trim())) {
                     return res.status(400).json({
                         success: false,
@@ -272,7 +284,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         }
     );
 
-    // ✅ DELETE
+    // DELETE
     app.delete('/api/vehicles/:id',
         authenticateAccessToken,
         requirePermission('vessels:delete'),
