@@ -1,315 +1,915 @@
+<!-- ═══════════════════════════════════════════════════════════
+     🚛 VEHICLES PAGE v7.0 — Modern + Print-Ready
+     ═══════════════════════════════════════════════════════════ -->
 <div id="page-vehicles">
 <style>
+    /* ============================================================
+       🎨 VEHICLES v7.0 — Modern Screen Design
+       ============================================================ */
+
     #page-vehicles {
         width: 100%; padding: 0; margin: 0;
         min-height: 100vh;
         font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-        background: transparent; color: #e8edf5;
-        position: relative; z-index: 1;
+        background: transparent;
+        color: #e8edf5;
+        position: relative;
+        z-index: 1;
+        --gold: #f7d774;
+        --gold-2: #e6b31e;
+        --blue: #60a5fa;
+        --green: #4ade80;
+        --red: #f87171;
+        --yellow: #fbbf24;
+        --bg-glass: rgba(255,255,255,0.025);
+        --border-glass: rgba(255,255,255,0.06);
+        --border-hover: rgba(247,215,116,0.25);
+        --shadow-sm: 0 4px 16px rgba(0,0,0,0.15);
+        --shadow-md: 0 8px 32px rgba(0,0,0,0.25);
+        --shadow-lg: 0 16px 48px rgba(0,0,0,0.4);
+        --shadow-gold: 0 8px 32px rgba(247,215,116,0.2);
+        --radius: 16px;
+        --radius-sm: 10px;
+        --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    #page-vehicles *, #page-vehicles *::before, #page-vehicles *::after { box-sizing: border-box; }
-    .veh-container { padding: 20px; max-width: 1600px; margin: 0 auto; }
+    #page-vehicles *, #page-vehicles *::before, #page-vehicles *::after {
+        box-sizing: border-box;
+    }
 
+    /* ===== Container ===== */
+    .veh-container {
+        padding: 24px;
+        max-width: 1700px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ============================================================
+       ✨ HEADER — Modern Glassmorphism
+       ============================================================ */
     .veh-header {
-        background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(247,215,116,0.05));
-        border-radius: 20px; padding: 24px 28px;
-        border: 1px solid rgba(255,255,255,0.06);
+        position: relative;
+        background: linear-gradient(135deg,
+            rgba(96,165,250,0.08) 0%,
+            rgba(247,215,116,0.06) 50%,
+            rgba(96,165,250,0.04) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(247,215,116,0.15);
+        border-radius: var(--radius);
+        padding: 28px 32px;
         margin-bottom: 24px;
-        display: flex; justify-content: space-between; align-items: center;
-        flex-wrap: wrap; gap: 16px;
-        position: relative; overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.05);
     }
     .veh-header::before {
-        content: ''; position: absolute;
-        top: -50%; right: -50%; width: 100%; height: 100%;
-        background: radial-gradient(circle, rgba(247,215,116,0.04) 0%, transparent 70%);
+        content: '';
+        position: absolute;
+        top: -60%; right: -20%;
+        width: 60%; height: 200%;
+        background: radial-gradient(circle, rgba(247,215,116,0.08) 0%, transparent 60%);
         pointer-events: none;
+        animation: vehHeaderGlow 8s ease-in-out infinite;
     }
-    .veh-header .title-section { display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; }
+    @keyframes vehHeaderGlow {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .veh-header .title-section {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        position: relative;
+        z-index: 2;
+    }
     .veh-header .title-icon {
-        width: 56px; height: 56px;
-        background: linear-gradient(135deg, rgba(247,215,116,0.2), rgba(247,215,116,0.05));
-        border-radius: 16px;
+        width: 64px; height: 64px;
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+        border-radius: 18px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 28px;
-        border: 1px solid rgba(247,215,116,0.2);
+        font-size: 32px;
+        color: #0a0e1a;
+        box-shadow: var(--shadow-gold);
         flex-shrink: 0;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
     }
-    .veh-header .title { font-size: 22px; font-weight: 900; color: #f7d774; line-height: 1.2; }
-    .veh-header .subtitle { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
-    .veh-header .header-actions { display: flex; gap: 10px; position: relative; z-index: 1; flex-wrap: wrap; }
+    .veh-header .title-icon::after {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: vehShine 3s ease-in-out infinite;
+    }
+    @keyframes vehShine {
+        0% { left: -100%; }
+        50%, 100% { left: 100%; }
+    }
+    .veh-header .title-icon:hover { transform: scale(1.05) rotate(-3deg); }
 
-    .veh-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 12px; margin-bottom: 24px;
+    .veh-header .title {
+        font-size: 26px;
+        font-weight: 900;
+        background: linear-gradient(135deg, #ffffff 0%, var(--gold) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.15;
+        letter-spacing: -0.5px;
     }
-    .veh-stat {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 14px; padding: 16px;
-        text-align: center; transition: all 0.3s;
+    .veh-header .subtitle {
+        font-size: 13px;
+        color: rgba(255,255,255,0.45);
+        margin-top: 6px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
     }
-    .veh-stat:hover { background: rgba(255,255,255,0.04); transform: translateY(-2px); border-color: rgba(247,215,116,0.15); }
-    .veh-stat .number { font-size: 26px; font-weight: 900; color: #f7d774; line-height: 1; }
-    .veh-stat .label { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 6px; font-weight: 600; }
-    .veh-stat.stat-valid .number { color: #4ade80; }
-    .veh-stat.stat-broken .number { color: #f87171; }
-    .veh-stat.stat-maint .number { color: #fbbf24; }
 
-    .veh-actions {
-        display: flex; gap: 12px; margin-bottom: 20px;
-        flex-wrap: wrap; align-items: center;
+    .veh-header .header-actions {
+        display: flex;
+        gap: 12px;
+        position: relative;
+        z-index: 2;
+        flex-wrap: wrap;
     }
+
+    /* ============================================================
+       🔘 BUTTONS — Modern
+       ============================================================ */
     .veh-btn {
-        padding: 12px 22px; border: none;
-        border-radius: 12px; font-family: inherit;
-        font-size: 13px; font-weight: 700;
-        cursor: pointer;
-        display: inline-flex; align-items: center; gap: 8px;
-        transition: all 0.25s; white-space: nowrap;
-    }
-    .veh-btn-primary { background: linear-gradient(135deg, #f7d774, #e6b31e); color: #0a0e1a; }
-    .veh-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(247,215,116,0.3); }
-    .veh-btn-secondary { background: rgba(255,255,255,0.05); color: #e8edf5; border: 1px solid rgba(255,255,255,0.08); }
-    .veh-btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
-    .veh-btn-info { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: white; }
-    .veh-btn-info:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(96,165,250,0.3); }
-    .veh-btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
-    .veh-btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34,197,94,0.3); }
-
-    .veh-input, .veh-select {
-        padding: 12px 16px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.08);
+        padding: 12px 24px;
+        border: none;
         border-radius: 12px;
-        color: #e8edf5; font-family: inherit;
-        font-size: 13px; transition: all 0.2s;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        transition: var(--transition);
+        white-space: nowrap;
+        position: relative;
+        overflow: hidden;
+        letter-spacing: 0.2px;
     }
-    .veh-input { flex: 1; min-width: 180px; }
-    .veh-input:focus, .veh-select:focus { outline: none; border-color: rgba(247,215,116,0.4); background: rgba(255,255,255,0.05); }
-    .veh-select option { background: #1a1f2e; color: #e8edf5; }
+    .veh-btn i { font-size: 14px; }
 
-    .veh-auto-toggle {
-        display: inline-flex; align-items: center; gap: 8px;
-        padding: 10px 16px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 12px; cursor: pointer;
-        font-size: 12px; font-weight: 700;
-        color: rgba(255,255,255,0.5);
-        transition: all 0.2s; user-select: none;
+    .veh-btn-primary {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+        color: #0a0e1a;
+        box-shadow: 0 4px 16px rgba(247,215,116,0.25);
     }
-    .veh-auto-toggle:hover { background: rgba(255,255,255,0.06); color: #e8edf5; }
+    .veh-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(247,215,116,0.4);
+    }
+    .veh-btn-primary:active { transform: translateY(0); }
+
+    .veh-btn-secondary {
+        background: var(--bg-glass);
+        color: #e8edf5;
+        border: 1px solid var(--border-glass);
+        backdrop-filter: blur(8px);
+    }
+    .veh-btn-secondary:hover {
+        background: rgba(255,255,255,0.08);
+        border-color: var(--border-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .veh-btn-info {
+        background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        color: white;
+        box-shadow: 0 4px 16px rgba(96,165,250,0.25);
+    }
+    .veh-btn-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(96,165,250,0.4);
+    }
+
+    .veh-btn-success {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        box-shadow: 0 4px 16px rgba(34,197,94,0.25);
+    }
+    .veh-btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(34,197,94,0.4);
+    }
+
+    /* ============================================================
+       📝 INPUTS & SELECTS
+       ============================================================ */
+    .veh-input, .veh-select {
+        padding: 12px 18px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: 12px;
+        color: #e8edf5;
+        font-family: inherit;
+        font-size: 13px;
+        transition: var(--transition);
+        backdrop-filter: blur(8px);
+    }
+    .veh-input { flex: 1; min-width: 220px; }
+    .veh-input:focus, .veh-select:focus {
+        outline: none;
+        border-color: var(--border-hover);
+        background: rgba(255,255,255,0.06);
+        box-shadow: 0 0 0 4px rgba(247,215,116,0.08);
+    }
+    .veh-input::placeholder { color: rgba(255,255,255,0.3); }
+    .veh-select option,
+    .veh-select optgroup {
+        background: #1a1f2e;
+        color: #e8edf5;
+    }
+    .veh-select optgroup {
+        font-weight: 700;
+        color: var(--gold);
+    }
+
+    /* ============================================================
+       🔄 AUTO TOGGLE
+       ============================================================ */
+    .veh-auto-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 18px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.55);
+        transition: var(--transition);
+        user-select: none;
+        backdrop-filter: blur(8px);
+    }
+    .veh-auto-toggle:hover {
+        background: rgba(255,255,255,0.06);
+        color: #e8edf5;
+        border-color: var(--border-hover);
+    }
     .veh-auto-toggle input { display: none; }
     .veh-auto-toggle .toggle-dot {
-        width: 32px; height: 18px;
+        width: 34px; height: 19px;
         background: rgba(255,255,255,0.15);
-        border-radius: 10px; position: relative;
-        transition: all 0.25s;
+        border-radius: 11px;
+        position: relative;
+        transition: var(--transition);
+        flex-shrink: 0;
     }
     .veh-auto-toggle .toggle-dot::before {
-        content: ''; position: absolute;
+        content: '';
+        position: absolute;
         top: 2px; right: 2px;
-        width: 14px; height: 14px;
-        background: #fff; border-radius: 50%;
-        transition: all 0.25s;
+        width: 15px; height: 15px;
+        background: #fff;
+        border-radius: 50%;
+        transition: var(--transition);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
-    .veh-auto-toggle input:checked ~ .toggle-dot { background: #4ade80; }
-    .veh-auto-toggle input:checked ~ .toggle-dot::before { right: calc(100% - 16px); }
-    .veh-auto-toggle input:checked ~ .toggle-label { color: #4ade80; }
+    .veh-auto-toggle input:checked ~ .toggle-dot {
+        background: var(--green);
+        box-shadow: 0 0 12px rgba(74,222,128,0.5);
+    }
+    .veh-auto-toggle input:checked ~ .toggle-dot::before {
+        right: calc(100% - 17px);
+    }
+    .veh-auto-toggle input:checked ~ .toggle-label {
+        color: var(--green);
+    }
 
-    .veh-table-wrap {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 16px;
-        overflow: hidden; overflow-x: auto;
+    /* ============================================================
+       📊 STATS CARDS — Modern
+       ============================================================ */
+    .veh-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
     }
-    .veh-table-head, .veh-table-row {
+    .veh-stat {
+        background: var(--bg-glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius);
+        padding: 20px 18px;
+        text-align: center;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .veh-stat::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        opacity: 0.6;
+    }
+    .veh-stat:hover {
+        background: rgba(255,255,255,0.05);
+        transform: translateY(-4px);
+        border-color: var(--border-hover);
+        box-shadow: var(--shadow-md);
+    }
+    .veh-stat .number {
+        font-size: 32px;
+        font-weight: 900;
+        color: var(--gold);
+        line-height: 1;
+        transition: var(--transition);
+        font-variant-numeric: tabular-nums;
+    }
+    .veh-stat .label {
+        font-size: 11px;
+        color: rgba(255,255,255,0.45);
+        margin-top: 8px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    .veh-stat.stat-valid::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+    .veh-stat.stat-valid .number { color: var(--green); }
+    .veh-stat.stat-broken::before { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+    .veh-stat.stat-broken .number { color: var(--red); }
+    .veh-stat.stat-maint::before { background: linear-gradient(90deg, transparent, var(--yellow), transparent); }
+    .veh-stat.stat-maint .number { color: var(--yellow); }
+
+    /* ============================================================
+       🎛️ ACTIONS BAR
+       ============================================================ */
+    .veh-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 16px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius);
+        backdrop-filter: blur(12px);
+    }
+
+    /* ============================================================
+       📋 TABLE — Modern
+       ============================================================ */
+    .veh-table-wrap {
+        background: var(--bg-glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius);
+        overflow: hidden;
+        overflow-x: auto;
+        box-shadow: var(--shadow-sm);
+    }
+    .veh-table-head,
+    .veh-table-row {
         display: grid;
         grid-template-columns: 50px 110px 190px 150px 1fr 130px 100px 110px 120px 130px 1fr 100px;
-        gap: 8px; padding: 14px 20px;
-        align-items: center; font-size: 13px;
+        gap: 8px;
+        padding: 16px 22px;
+        align-items: center;
+        font-size: 13px;
         min-width: 1750px;
     }
     .veh-table-head {
-        background: rgba(247,215,116,0.05);
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        font-size: 12px; font-weight: 800;
-        color: #f7d774;
+        background: linear-gradient(135deg,
+            rgba(247,215,116,0.06) 0%,
+            rgba(247,215,116,0.03) 100%);
+        border-bottom: 1px solid rgba(247,215,116,0.15);
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--gold);
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        backdrop-filter: blur(20px);
     }
     .veh-table-row {
         border-bottom: 1px solid rgba(255,255,255,0.04);
-        transition: background 0.2s;
+        transition: var(--transition);
     }
-    .veh-table-row:hover { background: rgba(255,255,255,0.03); }
+    .veh-table-row:hover {
+        background: rgba(247,215,116,0.03);
+        transform: scale(1.001);
+    }
     .veh-table-row:last-child { border-bottom: none; }
 
-    .veh-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .veh-cell {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: rgba(255,255,255,0.85);
+    }
     .veh-cell.center { text-align: center; }
 
+    /* ============================================================
+       🏷️ BADGES
+       ============================================================ */
     .veh-badge {
         display: inline-block;
-        padding: 3px 10px;
+        padding: 4px 12px;
         border-radius: 8px;
-        font-size: 11px; font-weight: 700;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        transition: var(--transition);
     }
-    .veh-badge.type { background: rgba(96,165,250,0.15); color: #60a5fa; }
-    .veh-badge.brand { background: rgba(247,215,116,0.15); color: #f7d774; font-size: 11px; }
-    .veh-badge.model { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); font-size: 10px; }
-    .veh-badge.year { background: rgba(34,197,94,0.1); color: #4ade80; font-size: 10px; }
-    .veh-badge.region { background: rgba(247,215,116,0.15); color: #f7d774; font-size: 10px; }
-    .veh-badge.zone { background: rgba(74,222,128,0.15); color: #4ade80; font-size: 10px; }
-    .veh-badge.status-صالحة { background: rgba(74,222,128,0.15); color: #4ade80; }
-    .veh-badge.status-معطبة { background: rgba(248,113,113,0.15); color: #f87171; }
-    .veh-badge.status-صيانة { background: rgba(251,191,36,0.15); color: #fbbf24; }
-    .veh-badge.cond-جديدة { background: rgba(96,165,250,0.15); color: #60a5fa; }
-    .veh-badge.cond-متوسطة { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .veh-badge.type { background: rgba(96,165,250,0.15); color: var(--blue); }
+    .veh-badge.brand { background: rgba(247,215,116,0.15); color: var(--gold); }
+    .veh-badge.model { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.65); font-size: 10px; }
+    .veh-badge.year { background: rgba(34,197,94,0.1); color: var(--green); font-size: 10px; }
+    .veh-badge.region { background: rgba(247,215,116,0.15); color: var(--gold); font-size: 10px; }
+    .veh-badge.zone { background: rgba(74,222,128,0.15); color: var(--green); font-size: 10px; }
+    .veh-badge.status-صالحة { background: rgba(74,222,128,0.15); color: var(--green); }
+    .veh-badge.status-معطبة { background: rgba(248,113,113,0.15); color: var(--red); }
+    .veh-badge.status-صيانة { background: rgba(251,191,36,0.15); color: var(--yellow); }
+    .veh-badge.cond-جديدة { background: rgba(96,165,250,0.15); color: var(--blue); }
+    .veh-badge.cond-متوسطة { background: rgba(251,191,36,0.15); color: var(--yellow); }
     .veh-badge.cond-قديمة { background: rgba(148,163,184,0.15); color: #94a3b8; }
 
     .veh-plate {
         font-family: 'Courier New', monospace;
-        font-weight: 900; color: #f7d774;
-        letter-spacing: 1px;
-        background: rgba(247,215,116,0.1);
-        padding: 3px 10px; border-radius: 6px;
-        display: inline-block; font-size: 12px;
+        font-weight: 900;
+        color: var(--gold);
+        letter-spacing: 1.5px;
+        background: linear-gradient(135deg, rgba(247,215,116,0.12), rgba(247,215,116,0.06));
+        border: 1px solid rgba(247,215,116,0.2);
+        padding: 4px 12px;
+        border-radius: 8px;
+        display: inline-block;
+        font-size: 12px;
     }
 
+    /* ============================================================
+       ⚙️ ACTION BUTTONS
+       ============================================================ */
     .veh-action-btn {
-        width: 32px; height: 32px;
-        border: none; border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 10px;
         cursor: pointer;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: 13px; transition: all 0.2s;
-        margin: 0 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition: var(--transition);
+        margin: 0 3px;
     }
-    .veh-action-btn.edit { background: rgba(96,165,250,0.15); color: #60a5fa; }
-    .veh-action-btn.edit:hover { background: rgba(96,165,250,0.3); transform: scale(1.1); }
-    .veh-action-btn.delete { background: rgba(248,113,113,0.15); color: #f87171; }
-    .veh-action-btn.delete:hover { background: rgba(248,113,113,0.3); transform: scale(1.1); }
+    .veh-action-btn.edit {
+        background: rgba(96,165,250,0.15);
+        color: var(--blue);
+    }
+    .veh-action-btn.edit:hover {
+        background: var(--blue);
+        color: #fff;
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 16px rgba(96,165,250,0.35);
+    }
+    .veh-action-btn.delete {
+        background: rgba(248,113,113,0.15);
+        color: var(--red);
+    }
+    .veh-action-btn.delete:hover {
+        background: var(--red);
+        color: #fff;
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 16px rgba(248,113,113,0.35);
+    }
 
-    .veh-empty { padding: 60px 20px; text-align: center; color: rgba(255,255,255,0.3); }
-    .veh-empty i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; color: #f7d774; }
-    .veh-empty p { font-size: 14px; }
+    /* ============================================================
+       📭 EMPTY STATE
+       ============================================================ */
+    .veh-empty {
+        padding: 80px 24px;
+        text-align: center;
+        color: rgba(255,255,255,0.35);
+    }
+    .veh-empty i {
+        font-size: 56px;
+        margin-bottom: 20px;
+        opacity: 0.4;
+        color: var(--gold);
+        display: block;
+    }
+    .veh-empty p { font-size: 14px; font-weight: 600; }
 
+    /* ============================================================
+       🪟 MODAL — Modern
+       ============================================================ */
     .veh-modal {
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.8);
-        backdrop-filter: blur(8px);
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         z-index: 99999;
-        display: none; align-items: center; justify-content: center;
+        display: none;
+        align-items: center;
+        justify-content: center;
         padding: 20px;
+        animation: vehModalBgIn 0.25s ease-out;
+    }
+    @keyframes vehModalBgIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
     .veh-modal.active { display: flex; }
+
     .veh-modal-box {
-        background: linear-gradient(135deg, #1a1f2e, #0f1420);
-        border: 1px solid rgba(247,215,116,0.2);
-        border-radius: 20px; padding: 28px;
-        width: 100%; max-width: 650px;
-        max-height: 90vh; overflow-y: auto;
-        box-shadow: 0 24px 64px rgba(0,0,0,0.8);
+        background: linear-gradient(135deg, #1a1f2e 0%, #0f1420 100%);
+        border: 1px solid rgba(247,215,116,0.25);
+        border-radius: 20px;
+        padding: 32px;
+        width: 100%;
+        max-width: 700px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 32px 80px rgba(0,0,0,0.85);
+        animation: vehModalBoxIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
+    @keyframes vehModalBoxIn {
+        from { transform: scale(0.9) translateY(20px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
     .veh-modal-head {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 20px; padding-bottom: 14px;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     .veh-modal-head h3 {
-        font-size: 18px; font-weight: 900; color: #f7d774;
-        display: flex; align-items: center; gap: 10px; margin: 0;
+        font-size: 20px;
+        font-weight: 900;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0;
     }
     .veh-modal-close {
         background: rgba(255,255,255,0.05);
-        border: none; color: rgba(255,255,255,0.6);
-        width: 36px; height: 36px;
-        border-radius: 10px; cursor: pointer;
-        font-size: 18px;
-        display: flex; align-items: center; justify-content: center;
+        border: none;
+        color: rgba(255,255,255,0.6);
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        line-height: 1;
     }
-    .veh-modal-close:hover { background: rgba(248,113,113,0.2); color: #f87171; }
+    .veh-modal-close:hover {
+        background: rgba(248,113,113,0.2);
+        color: var(--red);
+        transform: rotate(90deg);
+    }
 
-    .veh-form-group { margin-bottom: 16px; }
+    /* ===== FORM ===== */
+    .veh-form-group { margin-bottom: 18px; }
     .veh-form-group label {
-        display: block; font-size: 12px; font-weight: 700;
-        color: rgba(255,255,255,0.5);
-        margin-bottom: 6px;
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.55);
+        margin-bottom: 8px;
+        letter-spacing: 0.3px;
     }
-    .veh-form-group label .req { color: #f87171; }
+    .veh-form-group label .req { color: var(--red); }
+
     .veh-form-control {
-        width: 100%; padding: 12px 14px;
+        width: 100%;
+        padding: 13px 16px;
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 10px;
-        color: #e8edf5; font-family: inherit;
+        border-radius: 12px;
+        color: #e8edf5;
+        font-family: inherit;
         font-size: 13px;
+        transition: var(--transition);
     }
-    .veh-form-control:focus { outline: none; border-color: rgba(247,215,116,0.4); background: rgba(255,255,255,0.05); }
-    .veh-form-control:disabled { opacity: 0.5; cursor: not-allowed; }
-    .veh-form-control option { background: #1a1f2e; color: #e8edf5; }
-    textarea.veh-form-control { resize: vertical; min-height: 70px; }
+    .veh-form-control:focus {
+        outline: none;
+        border-color: rgba(247,215,116,0.5);
+        background: rgba(255,255,255,0.05);
+        box-shadow: 0 0 0 4px rgba(247,215,116,0.08);
+    }
+    .veh-form-control:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .veh-form-control option {
+        background: #1a1f2e;
+        color: #e8edf5;
+    }
+    textarea.veh-form-control {
+        resize: vertical;
+        min-height: 80px;
+        font-family: inherit;
+    }
 
-    .veh-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .veh-form-row.three { grid-template-columns: 1fr 1fr 1fr; }
-    .veh-modal-actions { display: flex; gap: 12px; margin-top: 24px; }
-    .veh-modal-actions .veh-btn { flex: 1; justify-content: center; padding: 14px; }
+    .veh-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+    .veh-form-row.three {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
 
+    .veh-modal-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .veh-modal-actions .veh-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 14px;
+    }
+
+    /* ============================================================
+       🍞 TOAST — Modern
+       ============================================================ */
     .veh-toast {
-        position: fixed; bottom: 24px; left: 24px;
-        z-index: 999999; max-width: 360px;
-        display: flex; align-items: center; gap: 10px;
-        padding: 14px 20px; border-radius: 12px;
-        color: #fff; font-family: 'Cairo', sans-serif;
-        font-size: 13px; font-weight: 700;
-        backdrop-filter: blur(12px);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-        animation: vehToastIn 0.25s ease-out;
+        position: fixed;
+        bottom: 28px;
+        left: 28px;
+        z-index: 999999;
+        max-width: 380px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 22px;
+        border-radius: 14px;
+        color: #fff;
+        font-family: 'Cairo', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        backdrop-filter: blur(16px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        animation: vehToastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         direction: rtl;
     }
-    .veh-toast.success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); }
-    .veh-toast.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
-    .veh-toast.info { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); }
-
-    @keyframes vehToastIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-
-    @media (max-width: 992px) {
-        .veh-header { flex-direction: column; text-align: center; }
-        .veh-header .header-actions { width: 100%; justify-content: center; }
+    .veh-toast.success {
+        background: rgba(34,197,94,0.2);
+        border: 1px solid rgba(34,197,94,0.4);
     }
-    @media (max-width: 600px) {
-        .veh-container { padding: 12px; }
-        .veh-header { padding: 18px; }
+    .veh-toast.error {
+        background: rgba(239,68,68,0.2);
+        border: 1px solid rgba(239,68,68,0.4);
+    }
+    .veh-toast.info {
+        background: rgba(96,165,250,0.2);
+        border: 1px solid rgba(96,165,250,0.4);
+    }
+    @keyframes vehToastIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ============================================================
+       📱 RESPONSIVE — SCREEN ONLY ✅
+       ============================================================ */
+    @media screen and (max-width: 1200px) {
+        .veh-container { padding: 20px; }
+        .veh-header { padding: 24px; }
+        .veh-header .title { font-size: 22px; }
+        .veh-stats { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+    }
+
+    @media screen and (max-width: 992px) {
+        .veh-header {
+            flex-direction: column;
+            text-align: center;
+            padding: 22px;
+        }
+        .veh-header .title-section {
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+        }
+        .veh-header .header-actions {
+            width: 100%;
+            justify-content: center;
+        }
+        .veh-header .title { font-size: 20px; }
+    }
+
+    @media screen and (max-width: 768px) {
+        .veh-container { padding: 14px; }
+        .veh-header { padding: 18px; border-radius: 14px; }
+        .veh-header .title-icon {
+            width: 52px; height: 52px;
+            font-size: 26px;
+        }
         .veh-header .title { font-size: 18px; }
-        .veh-stats { grid-template-columns: repeat(2, 1fr); }
-        .veh-form-row, .veh-form-row.three { grid-template-columns: 1fr; }
-        .veh-actions { flex-direction: column; }
-        .veh-input, .veh-select, .veh-btn { width: 100%; }
+        .veh-header .subtitle { font-size: 11px; }
+        .veh-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .veh-stat { padding: 16px 12px; }
+        .veh-stat .number { font-size: 24px; }
+        .veh-actions { padding: 12px; gap: 8px; }
+        .veh-input { min-width: 100%; }
+        .veh-form-row,
+        .veh-form-row.three { grid-template-columns: 1fr; }
+        .veh-modal-box { padding: 24px 18px; }
+        .veh-modal-head h3 { font-size: 17px; }
+        .veh-toast {
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            max-width: none;
+        }
     }
 
+    @media screen and (max-width: 480px) {
+        .veh-container { padding: 10px; }
+        .veh-header { padding: 16px; }
+        .veh-header .title { font-size: 16px; }
+        .veh-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .veh-stat { padding: 14px 10px; }
+        .veh-stat .number { font-size: 22px; }
+        .veh-stat .label { font-size: 10px; }
+        .veh-actions { flex-direction: column; }
+        .veh-input, .veh-select, .veh-btn, .veh-auto-toggle {
+            width: 100%;
+        }
+        .veh-btn { justify-content: center; }
+    }
+
+    /* ============================================================
+       🖨️ PRINT — Safety Net Only
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       الطبعات الرئيسية تُدار مركزياً من /css/print.css
+       هنا فقط: إجبار على تجاوز responsive + الطباعة
+       ============================================================ */
     @media print {
-        body * { visibility: hidden !important; }
-        #page-vehicles, #page-vehicles * { visibility: visible !important; }
-        #page-vehicles { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: white !important; color: black !important; padding: 20px !important; }
-        .veh-header { background: #f5f5f5 !important; border: 2px solid #333 !important; color: black !important; }
-        .veh-header .title { color: #333 !important; }
-        .veh-header .subtitle { color: #666 !important; }
-        .veh-header .header-actions { display: none !important; }
-        .veh-actions { display: none !important; }
-        .veh-stats { display: none !important; }
-        .veh-table-wrap { border: 2px solid #333 !important; background: white !important; }
-        .veh-table-head { background: #333 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .veh-table-row { border-bottom: 1px solid #ccc !important; background: white !important; color: black !important; }
-        .veh-plate { background: #eee !important; color: #000 !important; border: 1px solid #999 !important; }
-        .veh-badge { background: #eee !important; color: #000 !important; border: 1px solid #999 !important; }
-        .veh-action-btn { display: none !important; }
-        .veh-modal { display: none !important; }
+        /* ===== إخفاء عناصر الشاشة ===== */
+        .veh-header .header-actions,
+        .veh-actions,
+        .veh-action-btn,
+        .veh-auto-toggle,
+        .veh-modal,
         .veh-toast { display: none !important; }
-        #dev-signature { display: none !important; }
+
+        /* ===== إلغاء تأثير responsive على الطباعة ===== */
+        #page-vehicles { padding: 0 !important; margin: 0 !important; }
+        .veh-container { padding: 0 !important; max-width: 100% !important; }
+
+        /* ===== إجبار الترويسة على الوضع الأفقي الصحيح ===== */
+        .veh-header {
+            display: block !important;
+            flex-direction: row !important;
+            background: #ffffff !important;
+            border: none !important;
+            border-bottom: 1pt solid #12121a !important;
+            padding: 0 0 5mm 0 !important;
+            margin: 0 0 5mm 0 !important;
+            border-radius: 0 !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+            text-align: center !important;
+        }
+        .veh-header::before { display: none !important; }
+        .veh-header .title-section {
+            display: block !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            position: relative !important;
+            min-height: 68mm !important;
+        }
+        .veh-header .title-icon { display: none !important; }
+
+        /* ===== البطاقات الإحصائية ===== */
+        .veh-stats {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 0 !important;
+            padding: 4mm 0 !important;
+            margin: 0 0 8mm 0 !important;
+            background: none !important;
+            border: none !important;
+            border-top: 1pt solid #12121a !important;
+            border-bottom: 1pt solid #12121a !important;
+            border-radius: 0 !important;
+            backdrop-filter: none !important;
+        }
+        .veh-stat {
+            background: none !important;
+            border: none !important;
+            padding: 0 3mm !important;
+            text-align: center !important;
+        }
+        .veh-stat::before { display: none !important; }
+        .veh-stat .number {
+            color: #0a0a12 !important;
+            background: none !important;
+            -webkit-text-fill-color: #0a0a12 !important;
+            font-size: 18pt !important;
+        }
+        .veh-stat .label {
+            color: #6b6b78 !important;
+            font-size: 7pt !important;
+        }
+
+        /* ===== الجدول ===== */
+        .veh-table-wrap {
+            background: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+        }
+        .veh-table-head,
+        .veh-table-row {
+            background: none !important;
+            color: #000 !important;
+            position: static !important;
+            backdrop-filter: none !important;
+        }
+        .veh-table-head {
+            background: #f7f6f3 !important;
+            color: #0a0a12 !important;
+            border-top: 1pt solid #12121a !important;
+            border-bottom: 1pt solid #12121a !important;
+            text-transform: none !important;
+        }
+        .veh-table-row {
+            background: #ffffff !important;
+            border-bottom: 0.5pt solid #e3e1db !important;
+        }
+        .veh-table-row:nth-child(even) {
+            background: #fbfaf8 !important;
+        }
+        .veh-cell {
+            color: #000 !important;
+            -webkit-text-fill-color: #000 !important;
+        }
+
+        /* ===== الشارات ===== */
+        .veh-badge {
+            background: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 0.5pt solid #cbd5e1 !important;
+            -webkit-text-fill-color: #334155 !important;
+        }
+        .veh-badge.status-صالحة {
+            background: #dcfce7 !important;
+            color: #166534 !important;
+            -webkit-text-fill-color: #166534 !important;
+        }
+        .veh-badge.status-معطبة {
+            background: #fee2e2 !important;
+            color: #991b1b !important;
+            -webkit-text-fill-color: #991b1b !important;
+        }
+        .veh-badge.status-صيانة {
+            background: #fef3c7 !important;
+            color: #92400e !important;
+            -webkit-text-fill-color: #92400e !important;
+        }
+        .veh-plate {
+            background: #fef3c7 !important;
+            color: #0a0a12 !important;
+            -webkit-text-fill-color: #0a0a12 !important;
+            border: 0.75pt solid #d4a017 !important;
+        }
     }
 </style>
 
 <div class="veh-container">
 
+    <!-- ═══ HEADER ═══ -->
     <div class="veh-header">
         <div class="title-section">
             <div class="title-icon">🚛</div>
@@ -334,6 +934,7 @@
         </div>
     </div>
 
+    <!-- ═══ STATS ═══ -->
     <div class="veh-stats">
         <div class="veh-stat">
             <div class="number" id="vehStatTotal">0</div>
@@ -353,6 +954,7 @@
         </div>
     </div>
 
+    <!-- ═══ ACTIONS ═══ -->
     <div class="veh-actions">
         <button class="veh-btn veh-btn-primary" id="vehAddBtn">
             <i class="fas fa-plus"></i>
@@ -425,6 +1027,7 @@
         </label>
     </div>
 
+    <!-- ═══ TABLE ═══ -->
     <div class="veh-table-wrap">
         <div class="veh-table-head">
             <div class="veh-cell center">#</div>
@@ -450,11 +1053,12 @@
 
 </div>
 
+<!-- ═══ MODAL ═══ -->
 <div class="veh-modal" id="vehModal">
     <div class="veh-modal-box">
         <div class="veh-modal-head">
             <h3><i class="fas fa-truck"></i> <span id="vehModalTitle">إضافة وسيلة برية</span></h3>
-            <button class="veh-modal-close" id="vehModalClose">×</button>
+            <button class="veh-modal-close" id="vehModalClose" type="button">×</button>
         </div>
 
         <form id="vehForm" autocomplete="off">
@@ -636,7 +1240,7 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v6.0 - Loading...');
+    console.log('🚛 Vehicles Page v7.0 - Modern - Loading...');
 
     var _isDestroyed = false;
     var _timeouts = [];
@@ -890,7 +1494,6 @@
             var regionShort = getRegionShort(v.region);
             var zone = v.zone || '—';
 
-            // ✅ الماركة / الطراز / السنة / اللون
             var brandModel = '—';
             if (v.brand || v.model || v.year) {
                 var parts = [];
@@ -900,7 +1503,7 @@
                 brandModel = parts.join(' ');
             }
             if (v.color) {
-                brandModel += ' <span style="color:rgba(255,255,255,0.3);font-size:10px">(' + escapeHtml(v.color) + ')</span>';
+                brandModel += ' <span style="color:rgba(255,255,255,0.35);font-size:10px">(' + escapeHtml(v.color) + ')</span>';
             }
 
             html +=
@@ -917,10 +1520,10 @@
                     '<div class="veh-cell center" style="color:#f87171;font-weight:700;">' + escapeHtml(faultStr) + '</div>' +
                     '<div class="veh-cell" title="' + escapeHtml(notes) + '">' + escapeHtml(notes) + '</div>' +
                     '<div class="veh-cell center">' +
-                        '<button class="veh-action-btn edit" data-action="edit" data-id="' + escapeHtml(v.id) + '" title="تعديل">' +
+                        '<button type="button" class="veh-action-btn edit" data-action="edit" data-id="' + escapeHtml(v.id) + '" title="تعديل">' +
                             '<i class="fas fa-pen"></i>' +
                         '</button>' +
-                        '<button class="veh-action-btn delete" data-action="delete" data-id="' + escapeHtml(v.id) + '" title="حذف">' +
+                        '<button type="button" class="veh-action-btn delete" data-action="delete" data-id="' + escapeHtml(v.id) + '" title="حذف">' +
                             '<i class="fas fa-trash"></i>' +
                         '</button>' +
                     '</div>' +
@@ -1301,9 +1904,8 @@
 
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v6.0...');
+        console.log('🚀 Initializing Vehicles page v7.0 (Modern)...');
 
-        // قائمة المناطق في الفلتر
         var filterZoneEl = document.getElementById('vehFilterZone');
         if (filterZoneEl) {
             var zonesAll = getAllZones();
@@ -1314,7 +1916,6 @@
             filterZoneEl.innerHTML = zHtml;
         }
 
-        // قائمة الماركات في الفلتر
         var filterBrandEl = document.getElementById('vehFilterBrand');
         if (filterBrandEl) {
             var brands = ['تويوتا','فورد','إيفيكو','مرسيدس','رينو','بيجو','ستروين','فولكس فاغن',
@@ -1359,7 +1960,6 @@
         addSafeListener(document.getElementById('vehFilterZone'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterBrand'), 'change', renderTable);
 
-        // ✅ ربط فلتر الإدارة بفلتر المنطقة
         addSafeListener(document.getElementById('vehFilterRegion'), 'change', function() {
             var region = this.value;
             var zoneEl = document.getElementById('vehFilterZone');
@@ -1396,7 +1996,7 @@
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v6.0 ready');
+        console.log('✅ Vehicles page v7.0 (Modern) ready');
     }
 
     if (document.readyState === 'loading') {
@@ -1414,7 +2014,7 @@
     window.vehPrint = vehPrint;
     window.vehExportExcel = vehExportExcel;
 
-    console.log('✅ Vehicles Page v6.0 ready');
+    console.log('✅ Vehicles Page v7.0 (Modern) ready');
 
 })();
 </script>
