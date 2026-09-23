@@ -1,5 +1,5 @@
 /* ============================================================
-   🖨️ PRINT v15.3 — OFFICIAL INSTITUTIONAL GRADE
+   🖨️ PRINT v15.4 — OFFICIAL INSTITUTIONAL GRADE
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    ✅ يدعم 5 صفحات:
       • #page-fleet        (السجل العام للأسطول)
@@ -8,22 +8,27 @@
       • #page-maintenance  (الصيانة والتدخلات)
       • #page-vehicles     (الوسائل البرية)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ الميزات:
-      • ترويسة مؤسسية موحّدة (6 أسطر وزارية + العوينة في)
-      • عنوان رئيسي متمركز تحت العمودين
-      • مساحة كتابة: ع/ ______ /دد
-      • ترقيم أقسام تلقائي
-      • جداول نظيفة بخطوط دقيقة (0.5pt)
-      • تذييل مخصص لكل صفحة
+   🆕 v15.4:
+      • Portrait للصفحة الأولى (رأس + ملخص)
+      • Landscape للجداول الطويلة
+      • كشف تلقائي حسب طول المحتوى
    ============================================================ */
 
 /* ═══════════════════════════════════════════════════════════
-   📐 إعدادات الصفحة — المحتوى يبدأ من أقصى اليمين
+   📐 إعدادات الصفحة الافتراضية — Portrait
    ═══════════════════════════════════════════════════════════ */
 @page {
-    size: A4;
+    size: A4 portrait;
     /* top | right | bottom | left */
-    margin: 12mm 3mm 12mm 18mm;
+    margin: 12mm 8mm 12mm 8mm;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   📐 صفحة الأسماء (Landscape) — للجداول العريضة
+   ═══════════════════════════════════════════════════════════ */
+@page landscape-page {
+    size: A4 landscape;
+    margin: 10mm 6mm 12mm 14mm;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -467,6 +472,15 @@
         margin: 0 !important;
         overflow: visible !important;
         page-break-inside: auto !important;
+    }
+
+    /* ✅ استخدام page: landscape-page للجداول الطويلة */
+    #page-fleet .table-wrapper,
+    #page-vehicles .veh-table-wrap,
+    #page-maintenance .damaged-table-wrapper,
+    #page-maintenance .table-scroll,
+    #page-logs .table-scroll {
+        page: landscape-page !important;
     }
 
     #page-efficiency table,
@@ -961,7 +975,6 @@
         border-bottom: 1pt solid #12121a !important;
     }
 
-    /* إخفاء عمود الإجراءات */
     #page-vehicles .veh-table-head .veh-cell:last-child,
     #page-vehicles .veh-table-row .veh-cell:last-child {
         display: none !important;
