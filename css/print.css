@@ -1249,3 +1249,216 @@
         display: none !important;
     }
 }
+/* ═══════════════════════════════════════════════════════════
+   🎨 VEHICLES PRINT — ألوان واضحة ومميزة
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+    
+    /* ✅ إجبار المتصفح على طباعة الألوان */
+    html, body,
+    #page-vehicles,
+    #page-vehicles * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       🎯 رأس الجدول — خلفية كحلية داكنة
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-table-head {
+        background: linear-gradient(135deg, #0a0e1a 0%, #1a2332 100%) !important;
+        color: #f7d774 !important;
+        -webkit-text-fill-color: #f7d774 !important;
+        border-bottom: 2pt solid #f7d774 !important;
+    }
+    
+    #page-vehicles .veh-table-head .veh-cell {
+        color: #f7d774 !important;
+        -webkit-text-fill-color: #f7d774 !important;
+        font-weight: 900 !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       🎯 صفوف الجدول — تباين واضح
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-table-row {
+        background: #ffffff !important;
+        border-bottom: 1pt solid #cbd5e1 !important;
+    }
+    
+    #page-vehicles .veh-table-row:nth-child(even) {
+        background: #f1f5f9 !important;
+    }
+    
+    #page-vehicles .veh-cell {
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        font-weight: 500 !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       🏷️ الشارات — ألوان قوية وواضحة
+       ═══════════════════════════════════════════════ */
+    
+    /* صالحة — أخضر واضح */
+    #page-vehicles .veh-badge.status-صالحة {
+        background: #10b981 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1pt solid #047857 !important;
+        font-weight: 900 !important;
+        padding: 1mm 3mm !important;
+        border-radius: 4px !important;
+    }
+    
+    /* معطبة — أحمر واضح */
+    #page-vehicles .veh-badge.status-معطبة {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1pt solid #b91c1c !important;
+        font-weight: 900 !important;
+        padding: 1mm 3mm !important;
+        border-radius: 4px !important;
+    }
+    
+    /* صيانة — برتقالي واضح */
+    #page-vehicles .veh-badge.status-صيانة {
+        background: #f59e0b !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1pt solid #b45309 !important;
+        font-weight: 900 !important;
+        padding: 1mm 3mm !important;
+        border-radius: 4px !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       🚗 نوع الوسيلة — أزرق
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-badge.type {
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1pt solid #1d4ed8 !important;
+        font-weight: 800 !important;
+        padding: 1mm 3mm !important;
+        border-radius: 4px !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       🏷️ الماركة — ذهبي
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-badge.brand {
+        background: #fbbf24 !important;
+        color: #1f2937 !important;
+        -webkit-text-fill-color: #1f2937 !important;
+        border: 1pt solid #b45309 !important;
+        font-weight: 800 !important;
+        padding: 1mm 3mm !important;
+        border-radius: 4px !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       📍 الإدارة/الإقليم — بنفسجي
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-badge.region {
+        background: #8b5cf6 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1pt solid #6d28d9 !important;
+        font-weight: 800 !important;
+        padding: 1mm 3mm !important;
+        border-radius: 4px !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       📍 المنطقة — أخضر فاتح
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-badge.zone {
+        background: #34d399 !important;
+        color: #064e3b !important;
+        -webkit-text-fill-color: #064e3b !important;
+        border: 1pt solid #047857 !important;
+        font-weight: 800 !important;
+        padding: 1mm 3mm !important;
+        border-radius: 4px !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       🔢 رقم الوسيلة (لوحة) — أصفر تونسي
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-plate {
+        background: #fef3c7 !important;
+        color: #0a0e1a !important;
+        -webkit-text-fill-color: #0a0e1a !important;
+        border: 2pt solid #1a2332 !important;
+        font-weight: 900 !important;
+        padding: 1mm 3mm !important;
+        border-radius: 3px !important;
+        letter-spacing: 1px !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       📅 تاريخ العطب — أحمر
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-table-row .veh-cell:nth-child(10) {
+        color: #dc2626 !important;
+        -webkit-text-fill-color: #dc2626 !important;
+        font-weight: 900 !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       🎨 حالة العمل — ألوان
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-badge.cond-جديدة {
+        background: #06b6d4 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1pt solid #0e7490 !important;
+        font-weight: 800 !important;
+        padding: 1mm 3mm !important;
+    }
+    
+    #page-vehicles .veh-badge.cond-متوسطة {
+        background: #f59e0b !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1pt solid #b45309 !important;
+        font-weight: 800 !important;
+        padding: 1mm 3mm !important;
+    }
+    
+    #page-vehicles .veh-badge.cond-قديمة {
+        background: #64748b !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1pt solid #334155 !important;
+        font-weight: 800 !important;
+        padding: 1mm 3mm !important;
+    }
+    
+    /* ═══════════════════════════════════════════════
+       📊 بطاقات الإحصائيات — ألوان
+       ═══════════════════════════════════════════════ */
+    #page-vehicles .veh-stat.stat-valid .number {
+        color: #10b981 !important;
+        -webkit-text-fill-color: #10b981 !important;
+    }
+    
+    #page-vehicles .veh-stat.stat-broken .number {
+        color: #ef4444 !important;
+        -webkit-text-fill-color: #ef4444 !important;
+    }
+    
+    #page-vehicles .veh-stat.stat-maint .number {
+        color: #f59e0b !important;
+        -webkit-text-fill-color: #f59e0b !important;
+    }
+    
+    #page-vehicles .veh-stat .number {
+        color: #0a0e1a !important;
+        -webkit-text-fill-color: #0a0e1a !important;
+    }
+}
