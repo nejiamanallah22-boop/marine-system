@@ -1,5 +1,21 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الوسائل البرية - الحرس البحري</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/print.css">
+</head>
+<body>
+
 <div id="page-vehicles">
 <style>
+    /* ============================================================
+       🚛 VEHICLES PAGE v7.0 — Screen Styles
+       الطباعة تُدار مركزياً من /css/print.css
+       ============================================================ */
     #page-vehicles {
         width: 100%; padding: 0; margin: 0;
         min-height: 100vh;
@@ -10,6 +26,7 @@
     #page-vehicles *, #page-vehicles *::before, #page-vehicles *::after { box-sizing: border-box; }
     .veh-container { padding: 20px; max-width: 1600px; margin: 0 auto; }
 
+    /* ===== HEADER ===== */
     .veh-header {
         background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(247,215,116,0.05));
         border-radius: 20px; padding: 24px 28px;
@@ -37,8 +54,11 @@
     }
     .veh-header .title { font-size: 22px; font-weight: 900; color: #f7d774; line-height: 1.2; }
     .veh-header .subtitle { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+    .veh-header h2 { font-size: 22px; font-weight: 900; color: #f7d774; line-height: 1.2; margin: 0; }
+    .veh-header p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
     .veh-header .header-actions { display: flex; gap: 10px; position: relative; z-index: 1; flex-wrap: wrap; }
 
+    /* ===== STATS ===== */
     .veh-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -57,6 +77,7 @@
     .veh-stat.stat-broken .number { color: #f87171; }
     .veh-stat.stat-maint .number { color: #fbbf24; }
 
+    /* ===== ACTIONS ===== */
     .veh-actions {
         display: flex; gap: 12px; margin-bottom: 20px;
         flex-wrap: wrap; align-items: center;
@@ -77,6 +98,8 @@
     .veh-btn-info:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(96,165,250,0.3); }
     .veh-btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
     .veh-btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34,197,94,0.3); }
+    .veh-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+    .veh-btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(239,68,68,0.3); }
 
     .veh-input, .veh-select {
         padding: 12px 16px;
@@ -88,7 +111,7 @@
     }
     .veh-input { flex: 1; min-width: 180px; }
     .veh-input:focus, .veh-select:focus { outline: none; border-color: rgba(247,215,116,0.4); background: rgba(255,255,255,0.05); }
-    .veh-select option { background: #1a1f2e; color: #e8edf5; }
+    .veh-select option, .veh-select optgroup { background: #1a1f2e; color: #e8edf5; }
 
     .veh-auto-toggle {
         display: inline-flex; align-items: center; gap: 8px;
@@ -119,6 +142,7 @@
     .veh-auto-toggle input:checked ~ .toggle-dot::before { right: calc(100% - 16px); }
     .veh-auto-toggle input:checked ~ .toggle-label { color: #4ade80; }
 
+    /* ===== TABLE ===== */
     .veh-table-wrap {
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.05);
@@ -193,6 +217,7 @@
     .veh-empty i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; color: #f7d774; }
     .veh-empty p { font-size: 14px; }
 
+    /* ===== MODAL ===== */
     .veh-modal {
         position: fixed; inset: 0;
         background: rgba(0,0,0,0.8);
@@ -246,14 +271,14 @@
     }
     .veh-form-control:focus { outline: none; border-color: rgba(247,215,116,0.4); background: rgba(255,255,255,0.05); }
     .veh-form-control:disabled { opacity: 0.5; cursor: not-allowed; }
-    .veh-form-control option { background: #1a1f2e; color: #e8edf5; }
+    .veh-form-control option, .veh-form-control optgroup { background: #1a1f2e; color: #e8edf5; }
     textarea.veh-form-control { resize: vertical; min-height: 70px; }
 
     .veh-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .veh-form-row.three { grid-template-columns: 1fr 1fr 1fr; }
     .veh-modal-actions { display: flex; gap: 12px; margin-top: 24px; }
     .veh-modal-actions .veh-btn { flex: 1; justify-content: center; padding: 14px; }
 
+    /* ===== TOAST ===== */
     .veh-toast {
         position: fixed; bottom: 24px; left: 24px;
         z-index: 999999; max-width: 360px;
@@ -279,84 +304,62 @@
     @media (max-width: 600px) {
         .veh-container { padding: 12px; }
         .veh-header { padding: 18px; }
-        .veh-header .title { font-size: 18px; }
+        .veh-header h2 { font-size: 18px; }
         .veh-stats { grid-template-columns: repeat(2, 1fr); }
-        .veh-form-row, .veh-form-row.three { grid-template-columns: 1fr; }
+        .veh-form-row { grid-template-columns: 1fr; }
         .veh-actions { flex-direction: column; }
         .veh-input, .veh-select, .veh-btn { width: 100%; }
-    }
-
-    @media print {
-        body * { visibility: hidden !important; }
-        #page-vehicles, #page-vehicles * { visibility: visible !important; }
-        #page-vehicles { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: white !important; color: black !important; padding: 20px !important; }
-        .veh-header { background: #f5f5f5 !important; border: 2px solid #333 !important; color: black !important; }
-        .veh-header .title { color: #333 !important; }
-        .veh-header .subtitle { color: #666 !important; }
-        .veh-header .header-actions { display: none !important; }
-        .veh-actions { display: none !important; }
-        .veh-stats { display: none !important; }
-        .veh-table-wrap { border: 2px solid #333 !important; background: white !important; }
-        .veh-table-head { background: #333 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .veh-table-row { border-bottom: 1px solid #ccc !important; background: white !important; color: black !important; }
-        .veh-plate { background: #eee !important; color: #000 !important; border: 1px solid #999 !important; }
-        .veh-badge { background: #eee !important; color: #000 !important; border: 1px solid #999 !important; }
-        .veh-action-btn { display: none !important; }
-        .veh-modal { display: none !important; }
-        .veh-toast { display: none !important; }
-        #dev-signature { display: none !important; }
     }
 </style>
 
 <div class="veh-container">
 
-    <div class="veh-header">
-        <div class="title-section">
+    <!-- ===== HEADER ===== -->
+    <div class="veh-header fleet-header">
+        <div class="title-section fleet-header-left">
             <div class="title-icon">🚛</div>
             <div>
-                <div class="title">الوسائل البرية - الحرس البحري</div>
-                <div class="subtitle">إدارة السيارات والآليات البرية</div>
+                <h2>الوسائل البرية - الحرس البحري</h2>
+                <p>إدارة السيارات والآليات البرية</p>
             </div>
         </div>
-        <div class="header-actions">
+        <div class="header-actions fleet-header-actions">
             <button class="veh-btn veh-btn-success" id="vehExcelBtn">
-                <i class="fas fa-file-excel"></i>
-                تصدير Excel
+                <i class="fas fa-file-excel"></i> تصدير Excel
             </button>
             <button class="veh-btn veh-btn-info" id="vehPrintBtn">
-                <i class="fas fa-print"></i>
-                طباعة
+                <i class="fas fa-print"></i> طباعة
             </button>
             <button class="veh-btn veh-btn-secondary" id="vehRefreshBtn" title="تحديث">
-                <i class="fas fa-rotate"></i>
-                تحديث
+                <i class="fas fa-rotate"></i> تحديث
             </button>
         </div>
     </div>
 
-    <div class="veh-stats">
-        <div class="veh-stat">
+    <!-- ===== STATS ===== -->
+    <div class="veh-stats stats-grid">
+        <div class="veh-stat stat-card">
             <div class="number" id="vehStatTotal">0</div>
             <div class="label">📊 المجموع</div>
         </div>
-        <div class="veh-stat stat-valid">
+        <div class="veh-stat stat-card stat-valid">
             <div class="number" id="vehStatValid">0</div>
             <div class="label">✅ صالحة</div>
         </div>
-        <div class="veh-stat stat-broken">
+        <div class="veh-stat stat-card stat-broken">
             <div class="number" id="vehStatBroken">0</div>
             <div class="label">🔴 معطبة</div>
         </div>
-        <div class="veh-stat stat-maint">
+        <div class="veh-stat stat-card stat-maint">
             <div class="number" id="vehStatMaint">0</div>
             <div class="label">🔧 صيانة</div>
         </div>
     </div>
 
+    <!-- ===== ACTIONS ===== -->
     <div class="veh-actions">
         <button class="veh-btn veh-btn-primary" id="vehAddBtn">
-            <i class="fas fa-plus"></i>
-            إضافة وسيلة
+            <i class="fas fa-plus"></i> إضافة وسيلة
         </button>
 
         <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة أو الماركة...">
@@ -425,6 +428,7 @@
         </label>
     </div>
 
+    <!-- ===== TABLE ===== -->
     <div class="veh-table-wrap">
         <div class="veh-table-head">
             <div class="veh-cell center">#</div>
@@ -450,6 +454,7 @@
 
 </div>
 
+<!-- ===== MODAL ===== -->
 <div class="veh-modal" id="vehModal">
     <div class="veh-modal-box">
         <div class="veh-modal-head">
@@ -565,7 +570,7 @@
                         <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الحرس البحري بالوسط</option>
                         <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الحرس البحري بالجنوب</option>
                     </optgroup>
-                    <optgroup label="🛠️ وحدات الصيانة والإسناد">
+                    <optgroup label="🛠️ وحدات الصيانة">
                         <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة والإسناد البحري تونس</option>
                         <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة والإسناد البحري صفاقس</option>
                         <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة والإسناد البحري المنستير</option>
@@ -577,845 +582,405 @@
                 </select>
             </div>
 
-            <div class="veh-form-group" id="vehZoneGroup">
-                <label>المنطقة <span class="req">*</span></label>
-                <select class="veh-form-control" id="vehZone" required disabled>
-                    <option value="">— اختر الإدارة / الإقليم أولاً —</option>
-                </select>
-            </div>
-
             <div class="veh-form-row">
                 <div class="veh-form-group">
-                    <label>الحالة</label>
-                    <select class="veh-form-control" id="vehStatus">
+                    <label>المنطقة</label>
+                    <input type="text" class="veh-form-control" id="vehZone" placeholder="مثال: المنطقة الشمالية" maxlength="100">
+                </div>
+                <div class="veh-form-group">
+                    <label>الحالة <span class="req">*</span></label>
+                    <select class="veh-form-control" id="vehStatus" required>
                         <option value="صالحة">✅ صالحة</option>
                         <option value="معطبة">🔴 معطبة</option>
                         <option value="صيانة">🔧 صيانة</option>
                     </select>
                 </div>
-
-                <div class="veh-form-group">
-                    <label>حالة العمل</label>
-                    <select class="veh-form-control" id="vehCondition">
-                        <option value="جديدة">✨ جديدة</option>
-                        <option value="متوسطة">⚖️ متوسطة</option>
-                        <option value="قديمة">⏳ قديمة</option>
-                    </select>
-                </div>
             </div>
 
             <div class="veh-form-row">
                 <div class="veh-form-group">
-                    <label>تاريخ التعيين</label>
-                    <input type="date" class="veh-form-control" id="vehDate">
+                    <label>حالة العمل</label>
+                    <select class="veh-form-control" id="vehCondition">
+                        <option value="">— اختر —</option>
+                        <option value="جديدة">🆕 جديدة</option>
+                        <option value="متوسطة">🟡 متوسطة</option>
+                        <option value="قديمة">⚪ قديمة</option>
+                    </select>
                 </div>
-
-                <div class="veh-form-group" id="vehFaultDateGroup" style="display:none;">
-                    <label>⚠️ تاريخ العطب <span class="req">*</span></label>
-                    <input type="date" class="veh-form-control" id="vehFaultDate">
+                <div class="veh-form-group">
+                    <label>تاريخ التعيين</label>
+                    <input type="date" class="veh-form-control" id="vehAssignDate">
                 </div>
             </div>
 
             <div class="veh-form-group">
+                <label>⚠️ تاريخ العطب</label>
+                <input type="date" class="veh-form-control" id="vehBreakDate">
+            </div>
+
+            <div class="veh-form-group">
                 <label>ملاحظات</label>
-                <textarea class="veh-form-control" id="vehNotes" placeholder="ملاحظات إضافية..." maxlength="1000"></textarea>
+                <textarea class="veh-form-control" id="vehNotes" placeholder="ملاحظات إضافية..." maxlength="500"></textarea>
             </div>
 
             <div class="veh-modal-actions">
-                <button type="button" class="veh-btn veh-btn-secondary" id="vehCancelBtn">إلغاء</button>
-                <button type="submit" class="veh-btn veh-btn-primary" id="vehSaveBtn">
-                    <i class="fas fa-save"></i>
-                    <span id="vehSaveBtnText">حفظ</span>
+                <button type="submit" class="veh-btn veh-btn-primary">
+                    <i class="fas fa-save"></i> حفظ
+                </button>
+                <button type="button" class="veh-btn veh-btn-secondary" id="vehCancelBtn">
+                    <i class="fas fa-times"></i> إلغاء
                 </button>
             </div>
         </form>
     </div>
 </div>
 
+</div><!-- /#page-vehicles -->
+
 <script>
+/* ============================================================
+   🚛 VEHICLES v7.0 — Logic
+   ============================================================ */
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v6.0 - Loading...');
+    const API_BASE = '/api/vehicles';
+    const STORAGE_KEY = 'veh_cache_v7';
 
-    var _isDestroyed = false;
-    var _timeouts = [];
-    var _intervals = [];
-    var _listeners = [];
+    const state = {
+        vehicles: [],
+        filtered: [],
+        autoTimer: null,
+        editingId: null
+    };
 
-    function _vehCleanup() {
-        if (_isDestroyed) return;
-        _isDestroyed = true;
-        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
-        _timeouts = [];
-        _intervals.forEach(function(id) { try { clearInterval(id); } catch(e) {} });
-        _intervals = [];
-        _listeners.forEach(function(l) {
-            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
-        });
-        _listeners = [];
-        try { delete window.vehLoad; } catch(e) {}
-        try { delete window.vehShowToast; } catch(e) {}
-        try { delete window.vehPrint; } catch(e) {}
-        try { delete window.vehExportExcel; } catch(e) {}
-        console.log('🧹 Vehicles cleanup done');
+    /* ===== Helpers ===== */
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => document.querySelectorAll(s);
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+
+    function toast(msg, type = 'info') {
+        const t = document.createElement('div');
+        t.className = `veh-toast ${type}`;
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+        t.innerHTML = `<span>${icon}</span><span>${esc(msg)}</span>`;
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 2600);
+        setTimeout(() => t.remove(), 3000);
     }
 
-    window._pageCleanup = window._pageCleanup || [];
-    window._pageCleanup.push(_vehCleanup);
-    window.addEventListener('beforeunload', _vehCleanup);
-    window.addEventListener('pagehide', _vehCleanup);
+    function fmtDate(d) {
+        if (!d) return '—';
+        try { return new Date(d).toLocaleDateString('fr-TN'); } catch { return d; }
+    }
 
-    function getToken() {
+    /* ===== Load / Save ===== */
+    async function loadVehicles() {
         try {
-            return localStorage.getItem('marine_token')
-                || localStorage.getItem('token')
-                || localStorage.getItem('marine_auth_token')
-                || sessionStorage.getItem('token')
-                || null;
-        } catch(e) { return null; }
-    }
-
-    function getCsrf() {
-        try {
-            var m = document.cookie.match(/marine_csrf=([^;]+)/);
-            return m ? decodeURIComponent(m[1]) : '';
-        } catch(e) { return ''; }
-    }
-
-    function authHeaders(includeContentType) {
-        var h = { 'Accept': 'application/json' };
-        if (includeContentType) h['Content-Type'] = 'application/json';
-        var t = getToken();
-        if (t) h['Authorization'] = 'Bearer ' + t;
-        var c = getCsrf();
-        if (c) h['X-CSRF-Token'] = c;
-        return h;
-    }
-
-    function apiFetch(url, opts) {
-        opts = opts || {};
-        var method = (opts.method || 'GET').toUpperCase();
-        var isSafe = ['GET', 'HEAD', 'OPTIONS'].indexOf(method) !== -1;
-        opts.headers = Object.assign({}, authHeaders(!isSafe), opts.headers || {});
-        opts.credentials = 'include';
-        return fetch(url, opts);
-    }
-
-    function escapeHtml(s) {
-        if (s == null) return '';
-        return String(s).replace(/[&<>"']/g, function(m) {
-            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
-        });
-    }
-
-    function addSafeListener(el, type, fn) {
-        if (!el) return;
-        el.addEventListener(type, fn);
-        _listeners.push({ el: el, type: type, fn: fn });
-    }
-
-    function vehShowToast(msg, type, duration) {
-        if (_isDestroyed) return;
-        type = type || 'info';
-        duration = duration || 3000;
-        var existing = document.querySelector('.veh-toast');
-        if (existing) existing.remove();
-        var toast = document.createElement('div');
-        toast.className = 'veh-toast ' + type;
-        var icons = { success: '✅', error: '❌', info: 'ℹ️' };
-        var icon = document.createElement('span');
-        icon.textContent = icons[type] || 'ℹ️';
-        var text = document.createElement('span');
-        text.textContent = String(msg || '');
-        toast.appendChild(icon);
-        toast.appendChild(text);
-        document.body.appendChild(toast);
-        var id = setTimeout(function() {
-            if (toast.parentNode) toast.remove();
-        }, duration);
-        _timeouts.push(id);
-    }
-
-    var ZONES_DATA = {
-        'إدارة إسناد الوحدات البحرية': ['الإدارة المركزية بتونس'],
-        'إدارة حرس السواحل':          ['الإدارة المركزية بتونس'],
-        'إقليم الحرس البحري بالشمال': ['تونس', 'بنزرت', 'طبرقة'],
-        'إقليم الحرس البحري بالساحل': ['سوسة', 'المنستير', 'نابل'],
-        'إقليم الحرس البحري بالوسط':  ['صفاقس', 'المهدية', 'قرقنة'],
-        'إقليم الحرس البحري بالجنوب': ['جرجيس', 'جربة', 'قابس'],
-        'وحدة الصيانة والإسناد البحري تونس':     ['تونس'],
-        'وحدة الصيانة والإسناد البحري صفاقس':    ['صفاقس'],
-        'وحدة الصيانة والإسناد البحري المنستير': ['المنستير'],
-        'وحدة الصيانة والإسناد البحري جرجيس':    ['جرجيس'],
-        'المجمع الأمني بقبيبة': ['قبيبة "صفاقس"']
-    };
-
-    var MODELS_DATA = {
-        'تويوتا': ['Hilux', 'Land Cruiser', 'RAV4', 'Corolla', 'Camry', 'Yaris', 'Hiace'],
-        'فورد': ['Ranger', 'F-150', 'Transit', 'Explorer', 'Focus'],
-        'إيفيكو': ['Daily', 'Eurocargo', 'Stralis', 'Trakker'],
-        'مرسيدس': ['Sprinter', 'Actros', 'Atego', 'G-Class', 'Vito'],
-        'رينو': ['Kangoo', 'Master', 'Duster', 'Clio'],
-        'بيجو': ['Partner', 'Boxer', '3008', '5008', '208'],
-        'نيسان': ['Navara', 'Patrol', 'Qashqai', 'NV200'],
-        'ميتسوبيشي': ['L200', 'Pajero', 'Canter', 'Outlander'],
-        'هيونداي': ['Tucson', 'Santa Fe', 'H1', 'Accent'],
-        'كيا': ['Sportage', 'Sorento', 'K2700'],
-        'شيفروليه': ['Silverado', 'Colorado', 'Tahoe'],
-        'جيب': ['Wrangler', 'Grand Cherokee', 'Compass']
-    };
-
-    var REGION_LABELS = {
-        'إدارة إسناد الوحدات البحرية': '🏛️ إسناد الوحدات',
-        'إدارة حرس السواحل': '🚢 حرس السواحل',
-        'إقليم الحرس البحري بالشمال': '🌊 الشمال',
-        'إقليم الحرس البحري بالساحل': '🌊 الساحل',
-        'إقليم الحرس البحري بالوسط': '🌊 الوسط',
-        'إقليم الحرس البحري بالجنوب': '🌊 الجنوب',
-        'وحدة الصيانة والإسناد البحري تونس': '🛠️ صيانة تونس',
-        'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ صيانة صفاقس',
-        'وحدة الصيانة والإسناد البحري المنستير': '🛠️ صيانة المنستير',
-        'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ صيانة جرجيس',
-        'المجمع الأمني بقبيبة': '🏛️ بقبيبة'
-    };
-
-    function getRegionShort(region) {
-        if (!region) return '—';
-        return REGION_LABELS[region] || region;
-    }
-
-    function getAllZones() {
-        var set = {};
-        Object.keys(ZONES_DATA).forEach(function(reg) {
-            ZONES_DATA[reg].forEach(function(z) { set[z] = true; });
-        });
-        return Object.keys(set);
-    }
-
-    var vehicles = [];
-    var autoRefreshInterval = null;
-
-    function vehLoad() {
-        if (_isDestroyed) return;
-        var tbody = document.getElementById('vehTableBody');
-        if (tbody && vehicles.length === 0) {
-            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
+            const r = await fetch(API_BASE, { credentials: 'same-origin' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const data = await r.json();
+            state.vehicles = Array.isArray(data) ? data : (data.vehicles || data.data || []);
+        } catch (e) {
+            // fallback local
+            try {
+                const cached = localStorage.getItem(STORAGE_KEY);
+                state.vehicles = cached ? JSON.parse(cached) : [];
+            } catch { state.vehicles = []; }
         }
-
-        apiFetch('/api/vehicles')
-            .then(function(res) {
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.json();
-            })
-            .then(function(data) {
-                if (_isDestroyed) return;
-                vehicles = Array.isArray(data) ? data : [];
-                renderTable();
-                updateStats();
-            })
-            .catch(function(err) {
-                console.warn('⚠️ Load vehicles error:', err.message);
-                if (tbody) {
-                    tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-exclamation-triangle" style="color:#f87171"></i><p>فشل تحميل البيانات</p></div>';
-                }
-            });
+        render();
     }
 
-    function updateStats() {
-        var total = vehicles.length;
-        var valid = vehicles.filter(function(v) { return v.status === 'صالحة'; }).length;
-        var broken = vehicles.filter(function(v) { return v.status === 'معطبة'; }).length;
-        var maint = vehicles.filter(function(v) { return v.status === 'صيانة'; }).length;
-
-        var el;
-        el = document.getElementById('vehStatTotal'); if (el) el.textContent = total;
-        el = document.getElementById('vehStatValid'); if (el) el.textContent = valid;
-        el = document.getElementById('vehStatBroken'); if (el) el.textContent = broken;
-        el = document.getElementById('vehStatMaint'); if (el) el.textContent = maint;
+    async function persist() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state.vehicles));
+        } catch {}
     }
 
-    function getFiltered() {
-        var searchEl = document.getElementById('vehSearch');
-        var statusEl = document.getElementById('vehFilterStatus');
-        var typeEl = document.getElementById('vehFilterType');
-        var regionEl = document.getElementById('vehFilterRegion');
-        var zoneEl = document.getElementById('vehFilterZone');
-        var brandEl = document.getElementById('vehFilterBrand');
+    /* ===== Filters ===== */
+    function applyFilters() {
+        const q = $('#vehSearch').value.trim().toLowerCase();
+        const region = $('#vehFilterRegion').value;
+        const zone = $('#vehFilterZone').value;
+        const brand = $('#vehFilterBrand').value;
+        const status = $('#vehFilterStatus').value;
+        const type = $('#vehFilterType').value;
 
-        var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
-        var status = statusEl ? statusEl.value : 'all';
-        var type = typeEl ? typeEl.value : 'all';
-        var region = regionEl ? regionEl.value : 'all';
-        var zone = zoneEl ? zoneEl.value : 'all';
-        var brand = brandEl ? brandEl.value : 'all';
-
-        return vehicles.filter(function(v) {
-            if (status !== 'all' && v.status !== status) return false;
-            if (type !== 'all' && v.type !== type) return false;
+        state.filtered = state.vehicles.filter(v => {
+            if (q) {
+                const hay = [v.plate, v.brand, v.model, v.zone, v.region].join(' ').toLowerCase();
+                if (!hay.includes(q)) return false;
+            }
             if (region !== 'all' && v.region !== region) return false;
             if (zone !== 'all' && v.zone !== zone) return false;
             if (brand !== 'all' && v.brand !== brand) return false;
-            if (search) {
-                var text = (v.plateNumber + ' ' + v.region + ' ' + (v.zone || '') + ' ' +
-                           v.type + ' ' + (v.brand || '') + ' ' + (v.model || '') + ' ' +
-                           (v.color || '') + ' ' + (v.notes || '')).toLowerCase();
-                if (text.indexOf(search) === -1) return false;
-            }
+            if (status !== 'all' && v.status !== status) return false;
+            if (type !== 'all' && v.type !== type) return false;
             return true;
         });
+        renderTable();
+        renderStats();
+    }
+
+    function rebuildFilterOptions() {
+        const zones = [...new Set(state.vehicles.map(v => v.zone).filter(Boolean))].sort();
+        const brands = [...new Set(state.vehicles.map(v => v.brand).filter(Boolean))].sort();
+
+        const zSel = $('#vehFilterZone');
+        const zCur = zSel.value;
+        zSel.innerHTML = '<option value="all">كل المناطق</option>' +
+            zones.map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join('');
+        if ([...zSel.options].some(o => o.value === zCur)) zSel.value = zCur;
+
+        const bSel = $('#vehFilterBrand');
+        const bCur = bSel.value;
+        bSel.innerHTML = '<option value="all">كل الماركات</option>' +
+            brands.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
+        if ([...bSel.options].some(o => o.value === bCur)) bSel.value = bCur;
+
+        // datalist models
+        const models = [...new Set(state.vehicles.map(v => v.model).filter(Boolean))];
+        $('#vehModelsList').innerHTML = models.map(m => `<option value="${esc(m)}">`).join('');
+    }
+
+    /* ===== Render ===== */
+    function renderStats() {
+        const list = state.filtered.length ? state.filtered : state.vehicles;
+        const total = state.vehicles.length;
+        const valid = state.vehicles.filter(v => v.status === 'صالحة').length;
+        const broken = state.vehicles.filter(v => v.status === 'معطبة').length;
+        const maint = state.vehicles.filter(v => v.status === 'صيانة').length;
+        $('#vehStatTotal').textContent = total;
+        $('#vehStatValid').textContent = valid;
+        $('#vehStatBroken').textContent = broken;
+        $('#vehStatMaint').textContent = maint;
     }
 
     function renderTable() {
-        var tbody = document.getElementById('vehTableBody');
-        if (!tbody) return;
-
-        var filtered = getFiltered();
-
-        if (!filtered.length) {
-            var msg = vehicles.length === 0 ? 'لا توجد وسائل برية' : 'لا توجد نتائج مطابقة';
-            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-truck"></i><p>' + msg + '</p></div>';
+        const body = $('#vehTableBody');
+        if (!state.filtered.length) {
+            body.innerHTML = `<div class="veh-empty">
+                <i class="fas fa-inbox"></i>
+                <p>لا توجد وسائل مطابقة</p>
+            </div>`;
             return;
         }
 
-        var html = '';
-        filtered.forEach(function(v, idx) {
-            var statusCls = v.status === 'صالحة' ? 'status-صالحة'
-                          : (v.status === 'معطبة' ? 'status-معطبة' : 'status-صيانة');
-            var condCls = v.workCondition === 'جديدة' ? 'cond-جديدة'
-                        : (v.workCondition === 'متوسطة' ? 'cond-متوسطة' : 'cond-قديمة');
-            var dateStr = v.appointmentDate || '—';
-            var faultStr = v.faultDate || '—';
-            var notes = v.notes || '—';
-            var regionShort = getRegionShort(v.region);
-            var zone = v.zone || '—';
-
-            // ✅ الماركة / الطراز / السنة / اللون
-            var brandModel = '—';
-            if (v.brand || v.model || v.year) {
-                var parts = [];
-                if (v.brand) parts.push('<span class="veh-badge brand">' + escapeHtml(v.brand) + '</span>');
-                if (v.model) parts.push('<span class="veh-badge model">' + escapeHtml(v.model) + '</span>');
-                if (v.year) parts.push('<span class="veh-badge year">' + escapeHtml(v.year) + '</span>');
-                brandModel = parts.join(' ');
-            }
-            if (v.color) {
-                brandModel += ' <span style="color:rgba(255,255,255,0.3);font-size:10px">(' + escapeHtml(v.color) + ')</span>';
-            }
-
-            html +=
-                '<div class="veh-table-row">' +
-                    '<div class="veh-cell center">' + (idx + 1) + '</div>' +
-                    '<div class="veh-cell center"><span class="veh-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
-                    '<div class="veh-cell">' + brandModel + '</div>' +
-                    '<div class="veh-cell"><span class="veh-plate">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
-                    '<div class="veh-cell" title="' + escapeHtml(v.region || '') + '"><span class="veh-badge region">' + escapeHtml(regionShort) + '</span></div>' +
-                    '<div class="veh-cell" title="' + escapeHtml(v.zone || '') + '"><span class="veh-badge zone">📍 ' + escapeHtml(zone) + '</span></div>' +
-                    '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
-                    '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
-                    '<div class="veh-cell center">' + escapeHtml(dateStr) + '</div>' +
-                    '<div class="veh-cell center" style="color:#f87171;font-weight:700;">' + escapeHtml(faultStr) + '</div>' +
-                    '<div class="veh-cell" title="' + escapeHtml(notes) + '">' + escapeHtml(notes) + '</div>' +
-                    '<div class="veh-cell center">' +
-                        '<button class="veh-action-btn edit" data-action="edit" data-id="' + escapeHtml(v.id) + '" title="تعديل">' +
-                            '<i class="fas fa-pen"></i>' +
-                        '</button>' +
-                        '<button class="veh-action-btn delete" data-action="delete" data-id="' + escapeHtml(v.id) + '" title="حذف">' +
-                            '<i class="fas fa-trash"></i>' +
-                        '</button>' +
-                    '</div>' +
-                '</div>';
-        });
-
-        tbody.innerHTML = html;
-
-        tbody.querySelectorAll('[data-action]').forEach(function(btn) {
-            addSafeListener(btn, 'click', function(e) {
-                e.preventDefault();
-                var action = this.getAttribute('data-action');
-                var id = this.getAttribute('data-id');
-                if (action === 'edit') openEditModal(id);
-                else if (action === 'delete') confirmDelete(id);
-            });
-        });
+        body.innerHTML = state.filtered.map((v, i) => `
+            <div class="veh-table-row" data-id="${esc(v.id)}">
+                <div class="veh-cell center">${i + 1}</div>
+                <div class="veh-cell center"><span class="veh-badge type">${esc(v.type || '—')}</span></div>
+                <div class="veh-cell">
+                    <span class="veh-badge brand">${esc(v.brand || '—')}</span>
+                    ${v.model ? `<span class="veh-badge model">${esc(v.model)}</span>` : ''}
+                    ${v.year ? `<span class="veh-badge year">${esc(v.year)}</span>` : ''}
+                </div>
+                <div class="veh-cell"><span class="veh-plate">${esc(v.plate || '—')}</span></div>
+                <div class="veh-cell"><span class="veh-badge region">${esc(v.region || '—')}</span></div>
+                <div class="veh-cell">${v.zone ? `<span class="veh-badge zone">${esc(v.zone)}</span>` : '—'}</div>
+                <div class="veh-cell center"><span class="veh-badge status-${esc(v.status)}">${esc(v.status || '—')}</span></div>
+                <div class="veh-cell center">${v.condition ? `<span class="veh-badge cond-${esc(v.condition)}">${esc(v.condition)}</span>` : '—'}</div>
+                <div class="veh-cell center">${fmtDate(v.assignDate)}</div>
+                <div class="veh-cell center">${v.breakDate ? `<span style="color:#f87171">${fmtDate(v.breakDate)}</span>` : '—'}</div>
+                <div class="veh-cell" title="${esc(v.notes)}">${esc(v.notes) || '—'}</div>
+                <div class="veh-cell center">
+                    <button class="veh-action-btn edit" data-act="edit" data-id="${esc(v.id)}" title="تعديل"><i class="fas fa-pen"></i></button>
+                    <button class="veh-action-btn delete" data-act="del" data-id="${esc(v.id)}" title="حذف"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
     }
 
-    function updateZoneOptions(selectedZone) {
-        var regionEl = document.getElementById('vehRegion');
-        var zoneEl = document.getElementById('vehZone');
-        var zoneGroupEl = document.getElementById('vehZoneGroup');
-        if (!regionEl || !zoneEl) return;
-
-        var region = regionEl.value;
-        zoneEl.innerHTML = '';
-
-        if (!region) {
-            zoneEl.disabled = true;
-            zoneEl.innerHTML = '<option value="">— اختر الإدارة / الإقليم أولاً —</option>';
-            if (zoneGroupEl) zoneGroupEl.style.display = 'block';
-            return;
-        }
-
-        var zones = ZONES_DATA[region] || [];
-        if (!zones.length) {
-            zoneEl.disabled = true;
-            zoneEl.innerHTML = '<option value="">— لا توجد مناطق —</option>';
-            if (zoneGroupEl) zoneGroupEl.style.display = 'block';
-            return;
-        }
-
-        if (zones.length === 1) {
-            zoneEl.disabled = true;
-            zoneEl.innerHTML = '<option value="' + escapeHtml(zones[0]) + '" selected>' + escapeHtml(zones[0]) + '</option>';
-            if (zoneGroupEl) zoneGroupEl.style.display = 'none';
-            return;
-        }
-
-        if (zoneGroupEl) zoneGroupEl.style.display = 'block';
-        zoneEl.disabled = false;
-        var html = '<option value="">— اختر المنطقة —</option>';
-        zones.forEach(function(z) {
-            var sel = (z === selectedZone) ? ' selected' : '';
-            html += '<option value="' + escapeHtml(z) + '"' + sel + '>' + escapeHtml(z) + '</option>';
-        });
-        zoneEl.innerHTML = html;
+    function render() {
+        rebuildFilterOptions();
+        applyFilters();
     }
 
-    function updateModelsList() {
-        var brandEl = document.getElementById('vehBrand');
-        var listEl = document.getElementById('vehModelsList');
-        if (!brandEl || !listEl) return;
-
-        var brand = brandEl.value;
-        var models = MODELS_DATA[brand] || [];
-
-        var html = '';
-        models.forEach(function(m) {
-            html += '<option value="' + escapeHtml(m) + '">';
-        });
-        listEl.innerHTML = html;
+    /* ===== Modal ===== */
+    function openModal(v) {
+        state.editingId = v ? v.id : null;
+        $('#vehModalTitle').textContent = v ? 'تعديل وسيلة برية' : 'إضافة وسيلة برية';
+        $('#vehId').value = v?.id || '';
+        $('#vehType').value = v?.type || 'سيارة';
+        $('#vehPlate').value = v?.plate || '';
+        $('#vehBrand').value = v?.brand || '';
+        $('#vehModel').value = v?.model || '';
+        $('#vehYear').value = v?.year || '';
+        $('#vehColor').value = v?.color || '';
+        $('#vehRegion').value = v?.region || '';
+        $('#vehZone').value = v?.zone || '';
+        $('#vehStatus').value = v?.status || 'صالحة';
+        $('#vehCondition').value = v?.condition || '';
+        $('#vehAssignDate').value = v?.assignDate || '';
+        $('#vehBreakDate').value = v?.breakDate || '';
+        $('#vehNotes').value = v?.notes || '';
+        $('#vehModal').classList.add('active');
     }
-
-    function toggleFaultDate() {
-        var statusEl = document.getElementById('vehStatus');
-        var groupEl = document.getElementById('vehFaultDateGroup');
-        var inputEl = document.getElementById('vehFaultDate');
-        if (!statusEl || !groupEl) return;
-
-        var status = statusEl.value;
-        if (status === 'معطبة') {
-            groupEl.style.display = 'block';
-            if (inputEl) inputEl.required = true;
-        } else {
-            groupEl.style.display = 'none';
-            if (inputEl) {
-                inputEl.required = false;
-                inputEl.value = '';
-            }
-        }
-    }
-
-    function openAddModal() {
-        var modal = document.getElementById('vehModal');
-        var title = document.getElementById('vehModalTitle');
-        if (!modal) return;
-
-        if (title) title.textContent = 'إضافة وسيلة برية';
-
-        document.getElementById('vehId').value = '';
-        document.getElementById('vehPlate').value = '';
-        document.getElementById('vehRegion').value = '';
-        document.getElementById('vehType').value = 'سيارة';
-        document.getElementById('vehBrand').value = '';
-        document.getElementById('vehModel').value = '';
-        document.getElementById('vehYear').value = '';
-        document.getElementById('vehColor').value = '';
-        document.getElementById('vehStatus').value = 'صالحة';
-        document.getElementById('vehCondition').value = 'جديدة';
-        document.getElementById('vehDate').value = '';
-        document.getElementById('vehFaultDate').value = '';
-        document.getElementById('vehNotes').value = '';
-
-        var fdg = document.getElementById('vehFaultDateGroup');
-        if (fdg) fdg.style.display = 'none';
-        var fdi = document.getElementById('vehFaultDate');
-        if (fdi) fdi.required = false;
-
-        var zg = document.getElementById('vehZoneGroup');
-        if (zg) zg.style.display = 'block';
-
-        updateZoneOptions();
-        updateModelsList();
-
-        modal.classList.add('active');
-        _timeouts.push(setTimeout(function() {
-            var p = document.getElementById('vehPlate');
-            if (p) p.focus();
-        }, 100));
-    }
-
-    function openEditModal(id) {
-        var v = vehicles.find(function(x) { return x.id === id; });
-        if (!v) return;
-
-        var modal = document.getElementById('vehModal');
-        var title = document.getElementById('vehModalTitle');
-        if (!modal) return;
-
-        if (title) title.textContent = 'تعديل وسيلة برية';
-
-        document.getElementById('vehId').value = v.id || '';
-        document.getElementById('vehPlate').value = v.plateNumber || '';
-        document.getElementById('vehRegion').value = v.region || '';
-        document.getElementById('vehType').value = v.type || 'سيارة';
-        document.getElementById('vehBrand').value = v.brand || '';
-        document.getElementById('vehModel').value = v.model || '';
-        document.getElementById('vehYear').value = v.year || '';
-        document.getElementById('vehColor').value = v.color || '';
-        document.getElementById('vehStatus').value = v.status || 'صالحة';
-        document.getElementById('vehCondition').value = v.workCondition || 'جديدة';
-        document.getElementById('vehDate').value = v.appointmentDate || '';
-        document.getElementById('vehFaultDate').value = v.faultDate || '';
-        document.getElementById('vehNotes').value = v.notes || '';
-
-        updateZoneOptions(v.zone || '');
-        updateModelsList();
-
-        var faultEl = document.getElementById('vehFaultDate');
-        var faultGrpEl = document.getElementById('vehFaultDateGroup');
-        if (v.status === 'معطبة') {
-            if (faultGrpEl) faultGrpEl.style.display = 'block';
-            if (faultEl) faultEl.required = true;
-        } else {
-            if (faultGrpEl) faultGrpEl.style.display = 'none';
-            if (faultEl) faultEl.required = false;
-        }
-
-        modal.classList.add('active');
-    }
-
     function closeModal() {
-        var modal = document.getElementById('vehModal');
-        if (modal) modal.classList.remove('active');
+        $('#vehModal').classList.remove('active');
+        state.editingId = null;
+        $('#vehForm').reset();
     }
 
-    function saveVehicle(e) {
-        if (e && e.preventDefault) e.preventDefault();
-        if (_isDestroyed) return;
-
-        var id = document.getElementById('vehId').value.trim();
-        var plateNumber = document.getElementById('vehPlate').value.trim();
-        var region = document.getElementById('vehRegion').value.trim();
-        var zone = document.getElementById('vehZone').value.trim();
-        var type = document.getElementById('vehType').value;
-        var brand = document.getElementById('vehBrand').value.trim();
-        var model = document.getElementById('vehModel').value.trim();
-        var year = document.getElementById('vehYear').value ? Number(document.getElementById('vehYear').value) : null;
-        var color = document.getElementById('vehColor').value;
-        var status = document.getElementById('vehStatus').value;
-        var workCondition = document.getElementById('vehCondition').value;
-        var appointmentDate = document.getElementById('vehDate').value || null;
-        var faultDate = document.getElementById('vehFaultDate').value || null;
-        var notes = document.getElementById('vehNotes').value.trim();
-
-        if (!plateNumber) { vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
-        if (!region) { vehShowToast('⚠️ الإدارة / الإقليم مطلوب', 'error'); return; }
-        if (!zone) { vehShowToast('⚠️ المنطقة مطلوبة', 'error'); return; }
-
-        if (status === 'معطبة' && !faultDate) {
-            vehShowToast('⚠️ تاريخ العطب مطلوب عند الحالة "معطبة"', 'error');
-            return;
-        }
-
-        var payload = {
-            plateNumber: plateNumber,
-            region: region,
-            zone: zone,
-            type: type,
-            brand: brand,
-            model: model,
-            year: year,
-            color: color,
-            status: status,
-            workCondition: workCondition,
-            appointmentDate: appointmentDate,
-            faultDate: faultDate,
-            notes: notes
+    /* ===== Save ===== */
+    async function saveVehicle(e) {
+        e.preventDefault();
+        const data = {
+            id: $('#vehId').value || ('v_' + Date.now()),
+            type: $('#vehType').value,
+            plate: $('#vehPlate').value.trim(),
+            brand: $('#vehBrand').value,
+            model: $('#vehModel').value.trim(),
+            year: $('#vehYear').value,
+            color: $('#vehColor').value,
+            region: $('#vehRegion').value,
+            zone: $('#vehZone').value.trim(),
+            status: $('#vehStatus').value,
+            condition: $('#vehCondition').value,
+            assignDate: $('#vehAssignDate').value,
+            breakDate: $('#vehBreakDate').value,
+            notes: $('#vehNotes').value.trim()
         };
 
-        var btn = document.getElementById('vehSaveBtn');
-        var btnText = document.getElementById('vehSaveBtnText');
-        if (btn) btn.disabled = true;
-        if (btnText) btnText.textContent = 'جاري الحفظ...';
+        if (!data.plate) { toast('رقم الوسيلة مطلوب', 'error'); return; }
+        if (!data.region) { toast('الإدارة / الإقليم مطلوب', 'error'); return; }
 
-        var isEdit = !!id;
-        var url = isEdit ? '/api/vehicles/' + encodeURIComponent(id) : '/api/vehicles';
-        var method = isEdit ? 'PUT' : 'POST';
-
-        apiFetch(url, { method: method, body: JSON.stringify(payload) })
-            .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
-            .then(function(result) {
-                if (_isDestroyed) return;
-                if (!result.ok) throw new Error(result.data.error || 'فشل الحفظ');
-                vehShowToast(isEdit ? '✅ تم تعديل الوسيلة' : '✅ تم إضافة الوسيلة', 'success');
-                closeModal();
-                vehLoad();
-            })
-            .catch(function(err) {
-                console.warn('❌ Save error:', err.message);
-                vehShowToast('❌ ' + err.message, 'error');
-            })
-            .finally(function() {
-                if (btn) btn.disabled = false;
-                if (btnText) btnText.textContent = 'حفظ';
-            });
-    }
-
-    function confirmDelete(id) {
-        var v = vehicles.find(function(x) { return x.id === id; });
-        if (!v) return;
-        if (!confirm('⚠️ هل تريد حذف الوسيلة "' + v.plateNumber + '"؟')) return;
-
-        apiFetch('/api/vehicles/' + encodeURIComponent(id), { method: 'DELETE' })
-            .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
-            .then(function(result) {
-                if (_isDestroyed) return;
-                if (!result.ok) throw new Error(result.data.error || 'فشل الحذف');
-                vehShowToast('✅ تم حذف الوسيلة', 'success');
-                vehLoad();
-            })
-            .catch(function(err) {
-                vehShowToast('❌ ' + err.message, 'error');
-            });
-    }
-
-    function vehPrint() {
-        if (_isDestroyed) return;
-        vehShowToast('🖨️ جاري تحضير الطباعة...', 'info', 1500);
-        _timeouts.push(setTimeout(function() {
-            window.print();
-        }, 300));
-    }
-
-    function vehExportExcel() {
-        if (_isDestroyed) return;
         try {
-            var filtered = getFiltered();
-            if (!filtered.length) {
-                vehShowToast('⚠️ لا توجد بيانات للتصدير', 'error');
-                return;
-            }
-
-            var BOM = '\uFEFF';
-            var headers = [
-                '#', 'النوع', 'الماركة', 'الطراز', 'السنة', 'اللون',
-                'رقم الوسيلة', 'الإدارة / الإقليم', 'المنطقة',
-                'الحالة', 'حالة العمل', 'تاريخ التعيين', 'تاريخ العطب', 'ملاحظات'
-            ];
-
-            function csvEscape(val) {
-                if (val === null || val === undefined) return '';
-                var s = String(val);
-                if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
-                    return '"' + s.replace(/"/g, '""') + '"';
-                }
-                return s;
-            }
-
-            var rows = [];
-            rows.push(headers.map(csvEscape).join(','));
-
-            filtered.forEach(function(v, idx) {
-                rows.push([
-                    csvEscape(idx + 1),
-                    csvEscape(v.type || ''),
-                    csvEscape(v.brand || ''),
-                    csvEscape(v.model || ''),
-                    csvEscape(v.year || ''),
-                    csvEscape(v.color || ''),
-                    csvEscape(v.plateNumber || ''),
-                    csvEscape(v.region || ''),
-                    csvEscape(v.zone || ''),
-                    csvEscape(v.status || ''),
-                    csvEscape(v.workCondition || ''),
-                    csvEscape(v.appointmentDate || ''),
-                    csvEscape(v.faultDate || ''),
-                    csvEscape(v.notes || '')
-                ].join(','));
+            const method = state.editingId ? 'PUT' : 'POST';
+            const url = state.editingId ? `${API_BASE}/${state.editingId}` : API_BASE;
+            const r = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
             });
-
-            var csv = BOM + rows.join('\r\n');
-            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-
-            var now = new Date();
-            var dateStr = now.getFullYear() + '-' +
-                          String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                          String(now.getDate()).padStart(2, '0') + '_' +
-                          String(now.getHours()).padStart(2, '0') + '-' +
-                          String(now.getMinutes()).padStart(2, '0');
-            var filename = 'vehicles_' + dateStr + '.csv';
-
-            if (window.navigator && window.navigator.msSaveBlob) {
-                window.navigator.msSaveBlob(blob, filename);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const saved = await r.json().catch(() => data);
+            if (state.editingId) {
+                const idx = state.vehicles.findIndex(v => v.id === state.editingId);
+                if (idx >= 0) state.vehicles[idx] = { ...state.vehicles[idx], ...data };
             } else {
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                _timeouts.push(setTimeout(function() {
-                    if (a.parentNode) a.parentNode.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100));
+                state.vehicles.push(saved.id ? saved : data);
             }
-
-            vehShowToast('✅ تم تصدير ' + filtered.length + ' وسيلة', 'success');
-        } catch (err) {
-            console.error('❌ Excel export error:', err);
-            vehShowToast('❌ فشل التصدير: ' + err.message, 'error');
+        } catch {
+            // fallback local
+            if (state.editingId) {
+                const idx = state.vehicles.findIndex(v => v.id === state.editingId);
+                if (idx >= 0) state.vehicles[idx] = { ...state.vehicles[idx], ...data };
+            } else {
+                state.vehicles.push(data);
+            }
+            persist();
         }
+
+        toast(state.editingId ? 'تم التعديل بنجاح' : 'تمت الإضافة بنجاح', 'success');
+        closeModal();
+        render();
     }
 
-    function toggleAutoRefresh() {
-        var cb = document.getElementById('vehAutoRefresh');
-        if (!cb) return;
+    /* ===== Delete ===== */
+    async function deleteVehicle(id) {
+        if (!confirm('هل أنت متأكد من حذف هذه الوسيلة؟')) return;
+        try {
+            const r = await fetch(`${API_BASE}/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+        } catch {}
+        state.vehicles = state.vehicles.filter(v => v.id !== id);
+        persist();
+        toast('تم الحذف', 'success');
+        render();
+    }
 
-        if (cb.checked) {
-            autoRefreshInterval = setInterval(function() {
-                if (!_isDestroyed && !document.hidden) {
-                    vehLoad();
-                }
-            }, 30000);
-            _intervals.push(autoRefreshInterval);
-            vehShowToast('🔄 التحديث التلقائي مُفعَّل (30 ثانية)', 'success');
+    /* ===== Export Excel (CSV with BOM) ===== */
+    function exportExcel() {
+        const rows = state.filtered.length ? state.filtered : state.vehicles;
+        if (!rows.length) { toast('لا توجد بيانات', 'error'); return; }
+        const headers = ['#','النوع','الماركة','الطراز','السنة','اللون','رقم الوسيلة','الإدارة/الإقليم','المنطقة','الحالة','حالة العمل','تاريخ التعيين','تاريخ العطب','ملاحظات'];
+        const lines = [headers.join(',')];
+        rows.forEach((v, i) => {
+            const row = [
+                i+1, v.type, v.brand, v.model, v.year, v.color,
+                v.plate, v.region, v.zone, v.status, v.condition,
+                v.assignDate, v.breakDate, (v.notes || '').replace(/,/g,'؛')
+            ].map(x => `"${String(x ?? '').replace(/"/g,'""')}"`).join(',');
+            lines.push(row);
+        });
+        const csv = '\uFEFF' + lines.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `vehicles_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast('تم التصدير', 'success');
+    }
+
+    /* ===== Print ===== */
+    function printPage() {
+        window.print();
+    }
+
+    /* ===== Auto refresh ===== */
+    function setAutoRefresh(on) {
+        if (state.autoTimer) { clearInterval(state.autoTimer); state.autoTimer = null; }
+        if (on) {
+            state.autoTimer = setInterval(() => loadVehicles(), 30000);
+            toast('تحديث تلقائي مُفعّل', 'info');
         } else {
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-                autoRefreshInterval = null;
-            }
-            vehShowToast('⏸️ التحديث التلقائي مُعطَّل', 'info');
+            toast('تحديث تلقائي مُعطّل', 'info');
         }
     }
 
-    function init() {
-        if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v6.0...');
+    /* ===== Events ===== */
+    function bindEvents() {
+        $('#vehAddBtn').addEventListener('click', () => openModal(null));
+        $('#vehModalClose').addEventListener('click', closeModal);
+        $('#vehCancelBtn').addEventListener('click', closeModal);
+        $('#vehModal').addEventListener('click', (e) => { if (e.target.id === 'vehModal') closeModal(); });
+        $('#vehForm').addEventListener('submit', saveVehicle);
 
-        // قائمة المناطق في الفلتر
-        var filterZoneEl = document.getElementById('vehFilterZone');
-        if (filterZoneEl) {
-            var zonesAll = getAllZones();
-            var zHtml = '<option value="all">كل المناطق</option>';
-            zonesAll.forEach(function(z) {
-                zHtml += '<option value="' + escapeHtml(z) + '">📍 ' + escapeHtml(z) + '</option>';
-            });
-            filterZoneEl.innerHTML = zHtml;
-        }
-
-        // قائمة الماركات في الفلتر
-        var filterBrandEl = document.getElementById('vehFilterBrand');
-        if (filterBrandEl) {
-            var brands = ['تويوتا','فورد','إيفيكو','مرسيدس','رينو','بيجو','ستروين','فولكس فاغن',
-                          'نيسان','ميتسوبيشي','هيونداي','كيا','شيفروليه','جيب','سكودا','فيات',
-                          'مان','سكانيا','فولفو','داف','هينو','ايسوزو','أخرى'];
-            var bHtml = '<option value="all">كل الماركات</option>';
-            brands.forEach(function(b) {
-                bHtml += '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>';
-            });
-            filterBrandEl.innerHTML = bHtml;
-        }
-
-        addSafeListener(document.getElementById('vehAddBtn'), 'click', openAddModal);
-        addSafeListener(document.getElementById('vehModalClose'), 'click', closeModal);
-        addSafeListener(document.getElementById('vehCancelBtn'), 'click', closeModal);
-
-        var modal = document.getElementById('vehModal');
-        if (modal) {
-            addSafeListener(modal, 'click', function(e) {
-                if (e.target === modal) closeModal();
-            });
-        }
-
-        addSafeListener(document, 'keydown', function(e) {
-            if (e.key === 'Escape') closeModal();
-        });
-
-        var form = document.getElementById('vehForm');
-        if (form) addSafeListener(form, 'submit', saveVehicle);
-
-        addSafeListener(document.getElementById('vehRefreshBtn'), 'click', function() {
-            vehShowToast('🔄 جاري التحديث...', 'info', 1500);
-            vehLoad();
-        });
-
-        addSafeListener(document.getElementById('vehPrintBtn'), 'click', vehPrint);
-        addSafeListener(document.getElementById('vehExcelBtn'), 'click', vehExportExcel);
-
-        addSafeListener(document.getElementById('vehSearch'), 'input', renderTable);
-        addSafeListener(document.getElementById('vehFilterStatus'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterType'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterZone'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterBrand'), 'change', renderTable);
-
-        // ✅ ربط فلتر الإدارة بفلتر المنطقة
-        addSafeListener(document.getElementById('vehFilterRegion'), 'change', function() {
-            var region = this.value;
-            var zoneEl = document.getElementById('vehFilterZone');
-            if (zoneEl) {
-                if (region === 'all') {
-                    var zonesAll = getAllZones();
-                    var html = '<option value="all">كل المناطق</option>';
-                    zonesAll.forEach(function(z) {
-                        html += '<option value="' + escapeHtml(z) + '">📍 ' + escapeHtml(z) + '</option>';
-                    });
-                    zoneEl.innerHTML = html;
-                } else {
-                    var zones = ZONES_DATA[region] || [];
-                    var html2 = '<option value="all">كل المناطق</option>';
-                    zones.forEach(function(z) {
-                        html2 += '<option value="' + escapeHtml(z) + '">📍 ' + escapeHtml(z) + '</option>';
-                    });
-                    zoneEl.innerHTML = html2;
-                }
+        $('#vehTableBody').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-act]');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            if (btn.dataset.act === 'edit') {
+                const v = state.vehicles.find(x => x.id === id);
+                if (v) openModal(v);
+            } else if (btn.dataset.act === 'del') {
+                deleteVehicle(id);
             }
-            renderTable();
         });
 
-        addSafeListener(document.getElementById('vehRegion'), 'change', function() {
-            updateZoneOptions();
+        $('#vehSearch').addEventListener('input', applyFilters);
+        ['vehFilterRegion','vehFilterZone','vehFilterBrand','vehFilterStatus','vehFilterType']
+            .forEach(id => $('#'+id).addEventListener('change', applyFilters));
+
+        $('#vehRefreshBtn').addEventListener('click', () => { loadVehicles(); toast('تم التحديث', 'info'); });
+        $('#vehExcelBtn').addEventListener('click', exportExcel);
+        $('#vehPrintBtn').addEventListener('click', printPage);
+
+        $('#vehAutoRefresh').addEventListener('change', (e) => setAutoRefresh(e.target.checked));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && $('#vehModal').classList.contains('active')) closeModal();
         });
+    }
 
-        addSafeListener(document.getElementById('vehBrand'), 'change', function() {
-            updateModelsList();
-        });
-
-        addSafeListener(document.getElementById('vehStatus'), 'change', toggleFaultDate);
-
-        addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
-
-        vehLoad();
-        console.log('✅ Vehicles page v6.0 ready');
+    /* ===== Init ===== */
+    function init() {
+        bindEvents();
+        loadVehicles();
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
-            _timeouts.push(id);
-        });
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        var id0 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
-        _timeouts.push(id0);
+        init();
     }
-
-    window.vehLoad = vehLoad;
-    window.vehShowToast = vehShowToast;
-    window.vehPrint = vehPrint;
-    window.vehExportExcel = vehExportExcel;
-
-    console.log('✅ Vehicles Page v6.0 ready');
-
 })();
 </script>
-</div>
+
+</body>
+</html>
