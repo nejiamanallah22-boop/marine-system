@@ -1152,3 +1152,100 @@
         visibility: visible !important;
     }
 }
+/* ═══════════════════════════════════════════════════════════
+   🚫 إخفاء المربع الأزرق الكبير (hero/banner section)
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+    
+    /* ─── إخفاء أي عنصر له خلفية داكنة/زرقاء كبيرة ─── */
+    
+    /* كلاسات محتملة */
+    .hero,
+    .hero-section,
+    .hero-banner,
+    .eff-hero,
+    .kpi-header,
+    .kpi-banner,
+    .page-hero,
+    .page-banner,
+    .page-cover,
+    .banner,
+    .banner-container,
+    .header-banner,
+    .hero-card,
+    .hero-image,
+    .hero-container,
+    .efficiency-hero,
+    .readiness-hero,
+    .dashboard-hero,
+    .top-banner,
+    .main-banner,
+    .cover-section,
+    
+    /* أي عنصر داخل الصفحة بكلاس يحتوي كلمات مفتاحية */
+    [class*="hero" i],
+    [class*="banner" i],
+    [class*="cover" i],
+    [class*="jumbotron" i],
+    [class*="showcase" i],
+    [class*="spotlight" i],
+    
+    /* أي عنصر له style مباشر فيه background-image أو linear-gradient */
+    [style*="background-image" i],
+    [style*="linear-gradient" i][style*="radial-gradient" i],
+    
+    /* العناصر ذات الخلفيات الداكنة الكبيرة */
+    .chart-section,
+    .chart-container,
+    .chart-card,
+    .graph-section,
+    
+    /* أي عنصر فيه id يشير لخلفية أو بانر */
+    [id*="hero" i],
+    [id*="banner" i],
+    [id*="cover" i],
+    [id*="jumbo" i] {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        opacity: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    /* ─── إخفاء الخلفيات الكبيرة عبر inline style ─── */
+    .main-content > div:first-child:not(.eff-header):not(.fleet-header):not(.veh-header),
+    #page-efficiency > div:not(.eff-header):not(.stats-grid):not(.eff-section),
+    #page-fleet > div:not(.fleet-header):not(.stats-grid):not(.table-wrapper):not(.print-summary-section),
+    #page-vehicles > div:not(.veh-header):not(.veh-stats):not(.veh-table-wrap) {
+        /* لا نخفي كل شيء — فقط إذا كان كبيراً وفارغاً */
+    }
+    
+    /* ─── إخفاء الصور الكبيرة ─── */
+    img[src*="background" i],
+    img[src*="hero" i],
+    img[src*="banner" i],
+    img[src*="cover" i] {
+        display: none !important;
+    }
+    
+    /* ─── إخفاء الـ SVG الكبير ─── */
+    svg[width="100%"],
+    svg[height="100%"],
+    .hero svg,
+    .banner svg {
+        display: none !important;
+    }
+    
+    /* ─── إخفاء شارات/شرائط ILLUSTRATION ─── */
+    .illustration,
+    .illustration-container,
+    .graphic,
+    .graphic-container,
+    .decoration,
+    .decoration-icon {
+        display: none !important;
+    }
+}
