@@ -1,11 +1,16 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.3
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.4
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
 // 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v6
 // 🚛 + VEHICLES (LAND) ROUTES
 // 🎨 + STATIC CSS/JS SERVING (FIXED)
-// ✨ v10.8.3: Fixed /css/ and /js/ static file serving
+// 🛡️ + SECURITY HARDENING (v10.8.4)
+//    ✓ Session fixation protection
+//    ✓ Timing-attack protection
+//    ✓ Password leak prevention
+//    ✓ Input validation hardening
+//    ✓ .env protection check
 // ============================================================
 'use strict';
 require('dotenv').config();
@@ -13,10 +18,73 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.8.3 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.8.4 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 Node version:', process.version);
+
+// ═══════════════════════════════════════════════════════════
+// 🛡️ SECURITY: منع تسريب .env
+// ═══════════════════════════════════════════════════════════
+const SENSITIVE_FILES = [
+    '.env', '.env.local', '.env.production', '.env.development',
+    'server.js', 'package.json', 'package-lock.json',
+    '.git', '.gitignore', '.npmrc', 'yarn.lock'
+];
+function isSensitivePath(urlPath) {
+    const clean = decodeURIComponent(urlPath).replace(/\\/g, '/').toLowerCase();
+    for (const s of SENSITIVE_FILES) {
+        if (clean === '/' + s || clean.startsWith('/' + s + '/') ||
+            clean.includes('/' + s + '/') || clean.endsWith('/' + s)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🛡️ SECURITY: Dummy hash لمنع Timing Attacks
+// ═══════════════════════════════════════════════════════════
+// bcrypt hash ثابت يُستخدم عندما لا يوجد مستخدم — يجعل زمن
+// الرد متطابقاً بين "مستخدم غير موجود" و "كلمة مرور خاطئة"
+const DUMMY_BCRYPT_HASH = '$2a$12$C6UzMDM.H6dfI/f/IKcEeO7Z4x1yFzFqW1Xt2VvK4W8Q9pZkqH1L2';
+
+// ═══════════════════════════════════════════════════════════
+// 🛡️ SECURITY: Validators
+// ═══════════════════════════════════════════════════════════
+function validateString(v, { min = 0, max = 255, required = false, trim = true } = {}) {
+    if (v === undefined || v === null) return required ? null : '';
+    if (typeof v !== 'string') return null;
+    const s = trim ? v.trim() : v;
+    if (s.length < min || s.length > max) return null;
+    if (required && !s) return null;
+    return s;
+}
+function validateEmail(v) {
+    if (typeof v !== 'string') return null;
+    const s = v.trim().toLowerCase();
+    if (s.length > 254) return null;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return null;
+    return s;
+}
+function validateDate(v) {
+    if (!v) return null;
+    try {
+        const d = new Date(v);
+        if (isNaN(d.getTime())) return null;
+        // منع تواريخ مستقبلية بعيدة (أكثر من سنة)
+        if (d.getTime() > Date.now() + 365 * 24 * 60 * 60 * 1000) return null;
+        // منع تواريخ قديمة جداً
+        if (d.getTime() < new Date('1900-01-01').getTime()) return null;
+        return d;
+    } catch (e) { return null; }
+}
+function validateNumber(v, { min = 0, max = 1e9 } = {}) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return null;
+    if (n < min || n > max) return null;
+    return n;
+}
 
 function findModelsPath() {
     const candidates = [
@@ -151,10 +219,20 @@ const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
 app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
 
+// ═══════════════════════════════════════════════════════════
+// 🛡️ SECURITY: منع الوصول لملفات حساسة (يُطبَّق قبل أي شيء)
+// ═══════════════════════════════════════════════════════════
+app.use((req, res, next) => {
+    if (isSensitivePath(req.path)) {
+        return res.status(404).json({ success: false, error: 'Not Found' });
+    }
+    next();
+});
+
 // ============ OWNERSHIP HEADERS ============
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.8.3');
+    res.setHeader('X-System-Version', '10.8.4');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -216,6 +294,7 @@ if (process.env.ADMIN_PASSWORD) {
 } else {
     if (isProduction) { console.error('❌ ADMIN_PASSWORD required'); process.exit(1); }
     ADMIN_PASSWORD = generateStrongPassword(); ADMIN_PASSWORD_GENERATED = true;
+    // 🛡️ FIX: لا نطبع كلمة المرور في الإنتاج
     if (!isProduction) console.log('🔑 DEV PASSWORD:', ADMIN_PASSWORD);
 }
 if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length !== 64)) {
@@ -340,6 +419,8 @@ async function sendEmail(to, subj, html) {
 setTimeout(() => { initEmailService().then(t => { emailTransporter = t; }).catch(()=>{}); }, 100);
 
 // ============ SECURITY MIDDLEWARE ============
+// 🛡️ ملاحظة: unsafe-inline مطلوب لأن الصفحات الحالية تستخدم inline scripts
+//    في v11.0 سننقله لملفات خارجية ونزيله
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -428,7 +509,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.8.3',
+            version: '10.8.4',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -528,7 +609,7 @@ async function ensureAdminExists() {
     } catch (e) { console.error('❌ Admin:', e.message); }
 }
 
-// ============ LEGACY CLEANUP (NO SEED) ============
+// ============ LEGACY CLEANUP ============
 const LEGACY_DEMO = ['الوحدة 101','الوحدة 205','الوحدة 312'];
 const CLEANUP_MARKER = 'legacy-demo-vessels-removed-v2';
 async function cleanupLegacyDemoVessels() {
@@ -647,7 +728,7 @@ function generateRefreshToken(user, sid) {
             audience: 'marine-system-client', jwtid: randomId(32) });
 }
 
-// ============ REFRESH SESSIONS (Redis-first) ============
+// ============ REFRESH SESSIONS ============
 const refreshSessionsMemory = new Map();
 async function saveRefreshSession({ sessionId, userId, refreshToken }) {
     const rec = {
@@ -745,7 +826,7 @@ setInterval(() => {
     }
 }, 60*1000).unref();
 
-// ============ PASSWORD RESET (Redis-first) ============
+// ============ PASSWORD RESET ============
 const resetTokensMemory = [];
 function pruneResetMem() {
     const now = Date.now();
@@ -1000,13 +1081,12 @@ function formatMaintenance(log) {
     app.use((req, res, next) => { ensureCsrfToken(req, res); next(); });
 
     // ============================================================
-    // 📁 STATIC FILES — CSS / JS (FIXED in v10.8.3)
+    // 📁 STATIC FILES — CSS / JS (FIXED)
     // ============================================================
     const publicDir = path.join(__dirname, 'public');
     const pagesDir = path.join(__dirname, 'pages');
     const publicPagesDir = path.join(__dirname, 'public', 'pages');
 
-    // ✅ CSS — يدعم: /css/  من  public/css/ أو css/ أو assets/css/
     const cssPaths = [
         path.join(publicDir, 'css'),
         path.join(__dirname, 'css'),
@@ -1028,9 +1108,8 @@ function formatMaintenance(log) {
             cssMounted = true;
         }
     });
-    if (!cssMounted) console.warn('⚠️ No CSS directory found (public/css, css, assets/css)');
+    if (!cssMounted) console.warn('⚠️ No CSS directory found');
 
-    // ✅ JS — يدعم: /js/  من  public/js/ أو js/ أو assets/js/
     const jsPaths = [
         path.join(publicDir, 'js'),
         path.join(__dirname, 'js'),
@@ -1050,9 +1129,8 @@ function formatMaintenance(log) {
             jsMounted = true;
         }
     });
-    if (!jsMounted) console.warn('⚠️ No JS directory found (public/js, js, assets/js)');
+    if (!jsMounted) console.warn('⚠️ No JS directory found');
 
-    // ✅ Assets
     const assetsPaths = [
         path.join(publicDir, 'assets'),
         path.join(__dirname, 'assets')
@@ -1064,14 +1142,12 @@ function formatMaintenance(log) {
         }
     });
 
-    // ✅ Favicon
     app.get('/favicon.ico', (req, res) => {
         const fp = path.join(publicDir, 'favicon.ico');
         if (fs.existsSync(fp)) return res.sendFile(fp);
         res.status(204).end();
     });
 
-    // ✅ PUBLIC — بقية الملفات
     if (fs.existsSync(publicDir)) {
         app.use('/public', express.static(publicDir));
     }
@@ -1084,7 +1160,7 @@ function formatMaintenance(log) {
 
     app.get('/api/health', (req, res) => {
         res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.8.3',
+            success: true, status: 'online', service: 'Marine System', version: '10.8.4',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
@@ -1101,39 +1177,48 @@ function formatMaintenance(log) {
         });
     });
 
-    // ============ LOGIN ============
+    // ═══════════════════════════════════════════════════════════
+    // 🛡️ LOGIN — مُحصَّن ضد Timing + Session Fixation
+    // ═══════════════════════════════════════════════════════════
     app.post('/api/auth/login', async (req, res) => {
         try {
             const { username, password } = req.body;
             const ip = req.ip || req.socket.remoteAddress;
             if (typeof username !== 'string' || typeof password !== 'string' || !username || !password)
                 return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
+
             const user = await User.findOne({ username: username.trim() });
-            if (!user) {
+
+            // 🛡️ FIX: timing-safe — دائماً نقارن حتى لو المستخدم غير موجود
+            const hashToCheck = user ? user.password : DUMMY_BCRYPT_HASH;
+            const ok = await bcrypt.compare(password, hashToCheck);
+
+            if (!user || !ok) {
+                if (user) {
+                    user.loginAttempts = (user.loginAttempts || 0) + 1;
+                    if (user.loginAttempts >= 5) {
+                        user.lockedUntil = new Date(Date.now() + 30*60*1000);
+                        await user.save();
+                        await addSystemLog({ action: 'login', resource: 'user', status: 'error',
+                            ip, requestId: req.requestId, details: { reason: 'locked', username } });
+                        return res.status(403).json({ success: false, error: 'الحساب مقفل لمدة 30 دقيقة' });
+                    }
+                    await user.save();
+                }
                 await addSystemLog({ action: 'login', resource: 'user', status: 'error',
-                    ip, requestId: req.requestId, details: { reason: 'not_found', username } });
+                    ip, requestId: req.requestId,
+                    details: { reason: user ? 'bad_password' : 'not_found', username } });
+                // 🛡️ FIX: رد موحّد — لا يكشف إذا كان المستخدم موجوداً
                 return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
             }
+
             if (user.lockedUntil && Date.now() < user.lockedUntil.getTime()) {
                 const m = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
                 return res.status(403).json({ success: false, error: `الحساب مقفل. حاول بعد ${m} دقيقة` });
             }
-            if (user.lockedUntil && Date.now() >= user.lockedUntil.getTime()) {
-                user.lockedUntil = null; user.loginAttempts = 0; await user.save();
-            }
             if (user.isActive === false)
                 return res.status(403).json({ success: false, error: 'الحساب معطّل' });
-            const ok = await bcrypt.compare(password, user.password);
-            if (!ok) {
-                user.loginAttempts = (user.loginAttempts || 0) + 1;
-                if (user.loginAttempts >= 5) {
-                    user.lockedUntil = new Date(Date.now() + 30*60*1000);
-                    await user.save();
-                    return res.status(403).json({ success: false, error: 'الحساب مقفل لمدة 30 دقيقة' });
-                }
-                await user.save();
-                return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-            }
+
             user.loginAttempts = 0; user.lockedUntil = null;
             user.lastLogin = new Date(); await user.save();
 
@@ -1142,8 +1227,30 @@ function formatMaintenance(log) {
             const rt = generateRefreshToken(user, sid);
             await saveRefreshSession({ sessionId: sid, userId: user.id, refreshToken: rt });
 
-            if (req.session) { req.session.userId = user.id; req.session.sessionId = sid; }
-            await new Promise(r => { if (!req.session) return r(); req.session.save(() => r()); });
+            // 🛡️ FIX: Session Fixation Protection
+            //    نُجدّد sessionID بعد تسجيل الدخول لمنع سرقة الجلسة
+            await new Promise((resolve) => {
+                if (!req.session || typeof req.session.regenerate !== 'function') {
+                    if (req.session) {
+                        req.session.userId = user.id;
+                        req.session.sessionId = sid;
+                    }
+                    return resolve();
+                }
+                req.session.regenerate((err) => {
+                    if (err) {
+                        console.warn('⚠️ Session regenerate failed:', err.message);
+                        if (req.session) {
+                            req.session.userId = user.id;
+                            req.session.sessionId = sid;
+                        }
+                        return resolve();
+                    }
+                    req.session.userId = user.id;
+                    req.session.sessionId = sid;
+                    req.session.save(() => resolve());
+                });
+            });
 
             const csrf = ensureCsrfToken(req, res);
             const rcn = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
@@ -1157,7 +1264,10 @@ function formatMaintenance(log) {
                 csrfToken: csrf,
                 session: { csrfToken: csrf, csrfExpiry: req.session?.csrfExpiry || (Date.now()+CSRF_MAX_AGE) },
                 user: formatUser(user) });
-        } catch (e) { res.status(500).json({ success: false, error: 'خطأ في الخادم' }); }
+        } catch (e) {
+            console.error('❌ Login error:', e.message);
+            res.status(500).json({ success: false, error: 'خطأ في الخادم' });
+        }
     });
 
     // ============ REFRESH ============
@@ -1267,12 +1377,14 @@ function formatMaintenance(log) {
             if (typeof email !== 'string' || !email.trim())
                 return res.status(400).json({ success: false, error: 'البريد مطلوب' });
             const user = await User.findOne({ email: email.trim().toLowerCase() });
+            // 🛡️ FIX: رد موحّد دائماً (لا يكشف وجود الإيميل)
             if (!user) return res.json({ success: true, message: 'إذا كان البريد مسجلاً فسيتم الإرسال' });
             const token = await createPasswordResetToken(user.email);
             const link = `${req.protocol}://${req.get('host')}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
             const html = `<div dir="rtl" style="font-family:Arial"><h2>🔐 إعادة تعيين كلمة المرور</h2><p>مرحباً <strong>${String(user.name || user.username)}</strong></p><p>استخدم الرابط:</p><p><a href="${link}">إعادة تعيين</a></p><p>صالح لمدة ساعة.</p></div>`;
             await sendEmail(user.email, 'إعادة تعيين كلمة المرور', html);
-            const p = { success: true, message: 'تم إنشاء طلب إعادة التعيين' };
+            const p = { success: true, message: 'إذا كان البريد مسجلاً فسيتم الإرسال' };
+            // 🛡️ FIX: resetLink فقط في التطوير
             if (!isProduction) { p.resetLink = link; p.devNote = 'DEV ONLY'; }
             res.json(p);
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
@@ -1333,11 +1445,11 @@ function formatMaintenance(log) {
     app.post('/api/notes', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Note) return res.status(500).json({ success: false, error: 'غير متاح' });
-            const { title, content, date, priority, type, weekNumber } = req.body;
-            if (typeof title !== 'string' || !title.trim())
-                return res.status(400).json({ success: false, error: 'العنوان مطلوب' });
-            if (typeof content !== 'string' || !content.trim())
-                return res.status(400).json({ success: false, error: 'المحتوى مطلوب' });
+            const title = validateString(req.body.title, { required: true, max: 200 });
+            const content = validateString(req.body.content, { required: true, max: 5000 });
+            if (!title) return res.status(400).json({ success: false, error: 'العنوان مطلوب (حتى 200 حرف)' });
+            if (!content) return res.status(400).json({ success: false, error: 'المحتوى مطلوب (حتى 5000 حرف)' });
+            const { date, priority, type, weekNumber } = req.body;
             let nt = type || 'عام';
             if (priority === 'عاجل') nt = 'عاجلة'; else if (priority === 'مهم') nt = 'مهمة';
             let wn = weekNumber;
@@ -1354,7 +1466,7 @@ function formatMaintenance(log) {
             try { cid = mongoose.Types.ObjectId.isValid(req.user._id) ? req.user._id : new mongoose.Types.ObjectId(); }
             catch(e) { cid = new mongoose.Types.ObjectId(); }
             const note = await Note.create({
-                title: title.trim(), content: content.trim(), type: nt,
+                title, content, type: nt,
                 weekNumber: wn, year: new Date().getFullYear(), status: 'مسودة',
                 createdBy: cid, createdByName: req.user.name || req.user.username
             });
@@ -1378,8 +1490,16 @@ function formatMaintenance(log) {
             const note = await Note.findOne(q);
             if (!note) return res.status(404).json({ success: false, error: 'غير موجودة' });
             const { title, content, priority, type } = req.body;
-            if (title !== undefined) note.title = title.trim();
-            if (content !== undefined) note.content = content.trim();
+            if (title !== undefined) {
+                const t = validateString(title, { required: true, max: 200 });
+                if (!t) return res.status(400).json({ success: false, error: 'عنوان غير صالح' });
+                note.title = t;
+            }
+            if (content !== undefined) {
+                const c = validateString(content, { required: true, max: 5000 });
+                if (!c) return res.status(400).json({ success: false, error: 'محتوى غير صالح' });
+                note.content = c;
+            }
             if (type !== undefined) note.type = type;
             else if (priority !== undefined) {
                 note.type = priority === 'عاجل' ? 'عاجلة' : (priority === 'مهم' ? 'مهمة' : 'عام');
@@ -1546,19 +1666,18 @@ function formatMaintenance(log) {
     });
     app.post('/api/support/tickets', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
-            const { subject, title, message, description, priority, category } = req.body;
-            const s = subject || title, m = message || description;
-            if (typeof s !== 'string' || !s.trim())
-                return res.status(400).json({ success: false, error: 'الموضوع مطلوب' });
-            if (typeof m !== 'string' || !m.trim())
-                return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
+            const subject = validateString(req.body.subject || req.body.title, { required: true, max: 200 });
+            const message = validateString(req.body.message || req.body.description, { required: true, max: 5000 });
+            if (!subject) return res.status(400).json({ success: false, error: 'الموضوع مطلوب (حتى 200 حرف)' });
+            if (!message) return res.status(400).json({ success: false, error: 'الرسالة مطلوبة (حتى 5000 حرف)' });
+            const { priority, category } = req.body;
             const pr = ['منخفضة','متوسطة','عالية','عاجلة','منخفض','متوسط','عالي','حرج'].includes(priority) ? priority : 'متوسط';
             const ct = ['فني','لوجستي','إداري','تشغيلي','أمني','أخرى'].includes(category) ? category : 'فني';
             let cid;
             try { cid = mongoose.Types.ObjectId.isValid(req.user._id) ? req.user._id : new mongoose.Types.ObjectId(); }
             catch(e) { cid = new mongoose.Types.ObjectId(); }
             const t = await Ticket.create({
-                title: s.trim(), description: m.trim(), category: ct, priority: pr,
+                title: subject, description: message, category: ct, priority: pr,
                 status: 'مفتوح', createdBy: cid, createdByName: req.user.name || req.user.username
             });
             res.status(201).json({ success: true, message: 'تم الإرسال',
@@ -1579,15 +1698,23 @@ function formatMaintenance(log) {
     app.post('/api/vessels', authenticateAccessToken, requirePermission('vessels:create'), csrfProtection, async (req, res) => {
         try {
             const b = req.body;
-            if (typeof b.name !== 'string' || !b.name.trim())
-                return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
+            const name = validateString(b.name, { required: true, max: 100 });
+            if (!name) return res.status(400).json({ success: false, error: 'اسم المركب مطلوب (حتى 100 حرف)' });
             const nv = await Vessel.create({
-                id: randomId(8), name: b.name.trim(), num: b.num || '',
-                len: Number(b.len) || 0, region: b.region || '', zone: b.zone || '',
-                port: b.port || '', supp: b.supp || '',
-                status: b.status || 'صالح', stat: b.status || 'صالح',
-                break: b.break || '', fDate: b.fDate || null, eDate: b.eDate || null,
-                ref: b.ref || '', repairUnit: b.repairUnit || '', cat: b.cat || '',
+                id: randomId(8), name, num: validateString(b.num, { max: 50 }) || '',
+                len: validateNumber(b.len, { min: 0, max: 1000 }) || 0,
+                region: validateString(b.region, { max: 100 }) || '',
+                zone: validateString(b.zone, { max: 100 }) || '',
+                port: validateString(b.port, { max: 100 }) || '',
+                supp: validateString(b.supp, { max: 100 }) || '',
+                status: ['صالح','معطب','صيانة'].includes(b.status) ? b.status : 'صالح',
+                stat: ['صالح','معطب','صيانة'].includes(b.status) ? b.status : 'صالح',
+                break: validateString(b.break, { max: 500 }) || '',
+                fDate: validateDate(b.fDate),
+                eDate: validateDate(b.eDate),
+                ref: validateString(b.ref, { max: 100 }) || '',
+                repairUnit: validateString(b.repairUnit, { max: 200 }) || '',
+                cat: validateString(b.cat, { max: 100 }) || '',
                 createdBy: req.user.id
             });
             if (nv.status === 'معطب' || nv.status === 'صيانة') {
@@ -1617,21 +1744,28 @@ function formatMaintenance(log) {
             const v = await Vessel.findOne(q);
             if (!v) return res.status(404).json({ success: false, error: 'غير موجود' });
             const b = req.body, old = v.status || v.stat;
-            if (typeof b.name === 'string' && b.name.trim()) v.name = b.name.trim();
-            if (b.num !== undefined) v.num = b.num;
-            if (b.len !== undefined) v.len = Number(b.len) || 0;
-            if (b.region !== undefined) v.region = b.region;
-            if (b.zone !== undefined) v.zone = b.zone;
-            if (b.port !== undefined) v.port = b.port;
-            if (b.supp !== undefined) v.supp = b.supp;
-            if (b.status !== undefined) { v.status = b.status; v.stat = b.status; }
-            else if (b.stat !== undefined) { v.status = b.stat; v.stat = b.stat; }
-            if (b.break !== undefined) v.break = b.break;
-            if (b.fDate !== undefined) v.fDate = b.fDate;
-            if (b.eDate !== undefined) v.eDate = b.eDate;
-            if (b.ref !== undefined) v.ref = b.ref;
-            if (b.repairUnit !== undefined) v.repairUnit = b.repairUnit;
-            if (b.cat !== undefined) v.cat = b.cat;
+            if (b.name !== undefined) {
+                const n = validateString(b.name, { required: true, max: 100 });
+                if (!n) return res.status(400).json({ success: false, error: 'اسم غير صالح' });
+                v.name = n;
+            }
+            if (b.num !== undefined) v.num = validateString(b.num, { max: 50 }) || '';
+            if (b.len !== undefined) v.len = validateNumber(b.len, { min: 0, max: 1000 }) || 0;
+            if (b.region !== undefined) v.region = validateString(b.region, { max: 100 }) || '';
+            if (b.zone !== undefined) v.zone = validateString(b.zone, { max: 100 }) || '';
+            if (b.port !== undefined) v.port = validateString(b.port, { max: 100 }) || '';
+            if (b.supp !== undefined) v.supp = validateString(b.supp, { max: 100 }) || '';
+            if (b.status !== undefined && ['صالح','معطب','صيانة'].includes(b.status)) {
+                v.status = b.status; v.stat = b.status;
+            } else if (b.stat !== undefined && ['صالح','معطب','صيانة'].includes(b.stat)) {
+                v.status = b.stat; v.stat = b.stat;
+            }
+            if (b.break !== undefined) v.break = validateString(b.break, { max: 500 }) || '';
+            if (b.fDate !== undefined) v.fDate = validateDate(b.fDate);
+            if (b.eDate !== undefined) v.eDate = validateDate(b.eDate);
+            if (b.ref !== undefined) v.ref = validateString(b.ref, { max: 100 }) || '';
+            if (b.repairUnit !== undefined) v.repairUnit = validateString(b.repairUnit, { max: 200 }) || '';
+            if (b.cat !== undefined) v.cat = validateString(b.cat, { max: 100 }) || '';
             v.updatedAt = new Date(); await v.save();
             if (v.status && (v.status === 'معطب' || v.status === 'صيانة') && old !== v.status) {
                 await Maintenance.create({
@@ -1692,27 +1826,30 @@ function formatMaintenance(log) {
     async function handleCreateMaint(req, res) {
         try {
             const b = req.body;
-            if (typeof b.vesselName !== 'string' || !b.vesselName.trim())
-                return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
+            const vesselName = validateString(b.vesselName, { required: true, max: 100 });
+            if (!vesselName) return res.status(400).json({ success: false, error: 'اسم المركب مطلوب' });
             const raw = b.partsUsed || b.parts || [];
-            const parts = (Array.isArray(raw) ? raw : []).map(p => ({
-                partName: p.partName || p.name || '',
-                quantity: Number(p.quantity) || 1,
-                cost: Number(p.cost || p.price) || 0
+            const parts = (Array.isArray(raw) ? raw : []).slice(0, 50).map(p => ({
+                partName: validateString(p.partName || p.name, { max: 200 }) || '',
+                quantity: validateNumber(p.quantity, { min: 1, max: 10000 }) || 1,
+                cost: validateNumber(p.cost || p.price, { min: 0, max: 1e9 }) || 0
             })).filter(p => p.partName);
             const le = await Maintenance.create({
-                id: randomId(8), vesselId: b.vesselId || '',
-                vesselName: b.vesselName.trim(), vesselNum: b.vesselNum || '',
-                type: b.type || 'صيانة دورية', priority: b.priority || 'متوسط',
-                status: b.status || 'قيد التنفيذ',
+                id: randomId(8), vesselId: validateString(b.vesselId, { max: 100 }) || '',
+                vesselName, vesselNum: validateString(b.vesselNum, { max: 50 }) || '',
+                type: validateString(b.type, { max: 100 }) || 'صيانة دورية',
+                priority: validateString(b.priority, { max: 50 }) || 'متوسط',
+                status: validateString(b.status, { max: 50 }) || 'قيد التنفيذ',
                 date: b.date || new Date().toISOString(),
                 startDate: b.startDate ? new Date(b.startDate) : new Date(),
                 endDate: b.endDate ? new Date(b.endDate) : null,
-                repairUnit: b.repairUnit || b.unit || '—',
-                cost: Number(b.cost) || 0,
-                description: b.description || '', notes: b.notes || '',
-                supervisorName: b.supervisorName || b.technician || '',
-                supervisor: b.supervisor || null, faultType: b.faultType || 'أخرى',
+                repairUnit: validateString(b.repairUnit || b.unit, { max: 200 }) || '—',
+                cost: validateNumber(b.cost, { min: 0, max: 1e9 }) || 0,
+                description: validateString(b.description, { max: 2000 }) || '',
+                notes: validateString(b.notes, { max: 2000 }) || '',
+                supervisorName: validateString(b.supervisorName || b.technician, { max: 200 }) || '',
+                supervisor: b.supervisor || null,
+                faultType: validateString(b.faultType, { max: 200 }) || 'أخرى',
                 partsUsed: parts, createdBy: req.user.id
             });
             await addSystemLog({ userId: req.user.id, userName: req.user.name,
@@ -1734,14 +1871,20 @@ function formatMaintenance(log) {
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
             const l = await Maintenance.findOne(q);
             if (!l) return res.status(404).json({ success: false, error: 'غير موجود' });
-            const fields = ['status','cost','notes','description','endDate','priority','repairUnit','supervisorName','type','faultType'];
-            fields.forEach(f => { if (req.body[f] !== undefined) l[f] = req.body[f]; });
+            const allowed = ['status','cost','notes','description','endDate','priority','repairUnit','supervisorName','type','faultType'];
+            allowed.forEach(f => {
+                if (req.body[f] !== undefined) {
+                    if (typeof req.body[f] === 'string') {
+                        l[f] = validateString(req.body[f], { max: 2000 }) || l[f];
+                    } else l[f] = req.body[f];
+                }
+            });
             if (req.body.partsUsed || req.body.parts) {
                 const raw = req.body.partsUsed || req.body.parts;
-                l.partsUsed = (Array.isArray(raw) ? raw : []).map(p => ({
-                    partName: p.partName || p.name || '',
-                    quantity: Number(p.quantity) || 1,
-                    cost: Number(p.cost || p.price) || 0
+                l.partsUsed = (Array.isArray(raw) ? raw : []).slice(0, 50).map(p => ({
+                    partName: validateString(p.partName || p.name, { max: 200 }) || '',
+                    quantity: validateNumber(p.quantity, { min: 1, max: 10000 }) || 1,
+                    cost: validateNumber(p.cost || p.price, { min: 0, max: 1e9 }) || 0
                 })).filter(p => p.partName);
             }
             l.updatedAt = new Date(); await l.save();
@@ -1816,23 +1959,21 @@ function formatMaintenance(log) {
     app.post('/api/users', authenticateAccessToken, requirePermission('users:manage'), csrfProtection, async (req, res) => {
         try {
             const { username, password, email, role, region, active } = req.body;
-            if (typeof username !== 'string' || !username.trim())
-                return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
-            if (typeof password !== 'string' || !password)
-                return res.status(400).json({ success: false, error: 'كلمة المرور مطلوبة' });
+            const un = validateString(username, { required: true, min: 3, max: 50 });
+            if (!un) return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب (3-50 حرف)' });
             if (!isStrongPassword(password))
-                return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة' });
-            const un = username.trim();
+                return res.status(400).json({ success: false, error: 'كلمة المرور ضعيفة (12+ حرف مختلط)' });
             if (await User.findOne({ username: un }))
                 return res.status(400).json({ success: false, error: 'اسم المستخدم موجود' });
             const roles = ['admin','manager','editor','maintenance_unit','viewer','مسؤول','مدير','مشغل','مشاهد','operator','super_admin'];
             const r = roles.includes(role) ? normalizeRole(role) : 'viewer';
-            const em = typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : `${un.toLowerCase()}@marine.com`;
+            const em = email ? validateEmail(email) : `${un.toLowerCase()}@marine.com`;
+            if (!em) return res.status(400).json({ success: false, error: 'بريد غير صالح' });
             if (await User.findOne({ email: em }))
                 return res.status(400).json({ success: false, error: 'البريد موجود' });
             const u = await User.create({
                 id: randomId(8), username: un, password, email: em, name: un, role: r,
-                region: typeof region === 'string' ? region.trim() : '',
+                region: validateString(region, { max: 100 }) || '',
                 isActive: active !== undefined ? Boolean(active) : true, tokenVersion: 0
             });
             await addSystemLog({ userId: req.user.id, userName: req.user.name,
@@ -1857,14 +1998,22 @@ function formatMaintenance(log) {
                 const a = await User.countDocuments({ role: 'admin', isActive: true });
                 if (a <= 1) return res.status(403).json({ success: false, error: 'لا يمكن تعطيل آخر مسؤول' });
             }
-            if (username) u.username = username.trim();
-            if (email) u.email = email.trim().toLowerCase();
+            if (username) {
+                const un = validateString(username, { min: 3, max: 50 });
+                if (!un) return res.status(400).json({ success: false, error: 'اسم غير صالح' });
+                u.username = un;
+            }
+            if (email) {
+                const em = validateEmail(email);
+                if (!em) return res.status(400).json({ success: false, error: 'بريد غير صالح' });
+                u.email = em;
+            }
             if (role) {
                 const roles = ['admin','manager','editor','maintenance_unit','viewer','مسؤول','مدير','مشغل','مشاهد','operator','super_admin'];
                 if (!roles.includes(role)) return res.status(400).json({ success: false, error: 'صلاحية غير صالحة' });
                 u.role = normalizeRole(role);
             }
-            if (region !== undefined) u.region = typeof region === 'string' ? region.trim() : '';
+            if (region !== undefined) u.region = validateString(region, { max: 100 }) || '';
             if (active !== undefined) u.isActive = Boolean(active);
             if (password) {
                 if (!isStrongPassword(password)) return res.status(400).json({ success: false, error: 'كلمة ضعيفة' });
@@ -1957,7 +2106,7 @@ function formatMaintenance(log) {
             sessionId: (req.session && req.session.sessionId) || (req.auth && req.auth.sid) || null });
     });
 
-    // ============ LIVE LOCATIONS (Redis-first) ============
+    // ============ LIVE LOCATIONS ============
     const LOCATION_MAX_AGE = 24*60*60*1000;
     const LOCATION_PREFIX = 'marine:loc:';
 
@@ -2008,9 +2157,10 @@ function formatMaintenance(log) {
                 id: randomId(8), userId: req.user.id, username: req.user.username,
                 name: req.user.name || req.user.username, role,
                 roleLabel: ROLE_LABELS[role] || role,
-                region: req.user.region || '', vesselId: vesselId || null,
+                region: req.user.region || '',
+                vesselId: validateString(vesselId, { max: 100 }) || null,
                 latitude: lat, longitude: lng,
-                accuracy: Number(accuracy) || null,
+                accuracy: validateNumber(accuracy, { min: 0, max: 100000 }) || null,
                 timestamp: new Date().toISOString()
             };
             const ok = await redisSafe(async c => {
@@ -2080,7 +2230,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.8.3 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.8.4 - Aman Allah Naji">
 `;
     const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
@@ -2361,7 +2511,7 @@ else init();
             path.join(publicPagesDir, 'index.html')
         ];
         for (const p of possible) if (fs.existsSync(p)) return res.sendFile(p);
-        res.send('<h1>🚢 Marine System v10.8.3</h1><p>Running</p>');
+        res.send('<h1>🚢 Marine System v10.8.4</h1><p>Running</p>');
     });
     app.get('/pages/:page', (req, res) => {
         const fp = findPageFile(req.params.page);
@@ -2393,8 +2543,9 @@ else init();
     // ============ LISTEN ============
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v10.8.3');
+        console.log('🚢 MARINE SYSTEM v10.8.4');
         console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
+        console.log('🛡️  Security hardening: ENABLED');
         console.log('🍃 MongoDB Atlas');
         console.log('📦 NO SEED — NO FAKE VESSELS');
         console.log('💾 Redis-first Maps');
