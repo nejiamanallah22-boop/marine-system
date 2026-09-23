@@ -1,10 +1,11 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.2 (FIXED + VEHICLES)
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.3
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
 // 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v6
 // 🚛 + VEHICLES (LAND) ROUTES
-// ✨ v10.8.2: Added vehicles routes (independent module)
+// 🎨 + STATIC CSS/JS SERVING (FIXED)
+// ✨ v10.8.3: Fixed /css/ and /js/ static file serving
 // ============================================================
 'use strict';
 require('dotenv').config();
@@ -12,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.8.2 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.8.3 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 Node version:', process.version);
@@ -44,18 +45,15 @@ function loadModels() {
     } catch (e) { console.error('❌ Models:', e.message); process.exit(1); }
 }
 
-// ✅ MOD #1: أضفنا Vehicle إلى قائمة المتغيرات
 let User, Vessel, Vehicle, Maintenance, Log, Ticket, Note, Notification, UserSettings, SystemLogo;
 try {
     const m = loadModels();
     User = m.User; Vessel = m.Vessel; Maintenance = m.Maintenance; Log = m.Log; Ticket = m.Ticket;
     Note = m.Note || null; Notification = m.Notification || null;
     UserSettings = m.UserSettings || null; SystemLogo = m.SystemLogo || null;
-    // ✅ MOD #1 (تكملة): تحميل Vehicle
     Vehicle = m.Vehicle || null;
     console.log('📦 Optional:', 'Note=' + (Note?'✅':'❌'), 'Notif=' + (Notification?'✅':'❌'),
         'Settings=' + (UserSettings?'✅':'❌'), 'Logo=' + (SystemLogo?'✅':'❌'));
-    // ✅ MOD #1 (تكملة): إعلام بحالة Vehicle
     console.log('🚛 Vehicle:', Vehicle ? '✅' : '❌');
 } catch (e) { console.error('❌', e.message); process.exit(1); }
 
@@ -80,7 +78,6 @@ const fetchSafe = (() => {
 
 const aiAndImportRoutes = require('./routes/ai-and-import');
 const settingsRoutes = require('./routes/settings');
-// ✅ MOD #2: تحميل routes الوسائل البرية
 const vehiclesRoutes = require('./routes/vehicles');
 
 let createDOMPurify = null;
@@ -157,7 +154,7 @@ app.set('trust proxy', isProduction ? 1 : 0);
 // ============ OWNERSHIP HEADERS ============
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.8.2');
+    res.setHeader('X-System-Version', '10.8.3');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -431,7 +428,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.8.2',
+            version: '10.8.3',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -474,7 +471,6 @@ async function createIndexes() {
         { col:'maintenances', spec:{ status:1 }, opts:{ background:true } },
         { col:'logs', spec:{ createdAt:-1 }, opts:{ background:true } },
         { col:'logs', spec:{ action:1, resource:1 }, opts:{ background:true } },
-        // ✅ MOD: indexes للسيارات
         { col:'vehicles', spec:{ id:1 }, opts:{ unique:true, sparse:true, background:true } },
         { col:'vehicles', spec:{ plateNumber:1 }, opts:{ unique:true, sparse:true, background:true } },
         { col:'vehicles', spec:{ status:1 }, opts:{ background:true } },
@@ -984,19 +980,6 @@ function formatMaintenance(log) {
     };
 }
 
-// ============ HTML INJECTION HELPERS ============
-const ORIGINAL_SEND = express.response.send;
-const ORIGINAL_SENDFILE = express.response.sendFile;
-
-function createInjectionState() {
-    return { ownership: false, badge: false, gps: false };
-}
-
-function applyInjections(html, state) {
-    if (typeof html !== 'string' || !html.includes('</body>')) return html;
-    return html;
-}
-
 // ============ STARTUP ============
 (async () => {
     const mongoOk = await connectMongoDB();
@@ -1016,7 +999,84 @@ function applyInjections(html, state) {
 
     app.use((req, res, next) => { ensureCsrfToken(req, res); next(); });
 
-    // ============ PUBLIC ============
+    // ============================================================
+    // 📁 STATIC FILES — CSS / JS (FIXED in v10.8.3)
+    // ============================================================
+    const publicDir = path.join(__dirname, 'public');
+    const pagesDir = path.join(__dirname, 'pages');
+    const publicPagesDir = path.join(__dirname, 'public', 'pages');
+
+    // ✅ CSS — يدعم: /css/  من  public/css/ أو css/ أو assets/css/
+    const cssPaths = [
+        path.join(publicDir, 'css'),
+        path.join(__dirname, 'css'),
+        path.join(__dirname, 'assets', 'css')
+    ];
+    let cssMounted = false;
+    cssPaths.forEach(p => {
+        if (fs.existsSync(p)) {
+            app.use('/css', express.static(p, {
+                maxAge: isProduction ? '7d' : 0,
+                etag: true,
+                setHeaders: (res) => {
+                    res.setHeader('Content-Type', 'text/css; charset=utf-8');
+                    res.setHeader('Cache-Control',
+                        isProduction ? 'public, max-age=604800' : 'no-cache');
+                }
+            }));
+            console.log('✅ CSS served from:', p);
+            cssMounted = true;
+        }
+    });
+    if (!cssMounted) console.warn('⚠️ No CSS directory found (public/css, css, assets/css)');
+
+    // ✅ JS — يدعم: /js/  من  public/js/ أو js/ أو assets/js/
+    const jsPaths = [
+        path.join(publicDir, 'js'),
+        path.join(__dirname, 'js'),
+        path.join(__dirname, 'assets', 'js')
+    ];
+    let jsMounted = false;
+    jsPaths.forEach(p => {
+        if (fs.existsSync(p)) {
+            app.use('/js', express.static(p, {
+                maxAge: isProduction ? '7d' : 0,
+                etag: true,
+                setHeaders: (res) => {
+                    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+                }
+            }));
+            console.log('✅ JS served from:', p);
+            jsMounted = true;
+        }
+    });
+    if (!jsMounted) console.warn('⚠️ No JS directory found (public/js, js, assets/js)');
+
+    // ✅ Assets
+    const assetsPaths = [
+        path.join(publicDir, 'assets'),
+        path.join(__dirname, 'assets')
+    ];
+    assetsPaths.forEach(p => {
+        if (fs.existsSync(p)) {
+            app.use('/assets', express.static(p));
+            console.log('✅ Assets served from:', p);
+        }
+    });
+
+    // ✅ Favicon
+    app.get('/favicon.ico', (req, res) => {
+        const fp = path.join(publicDir, 'favicon.ico');
+        if (fs.existsSync(fp)) return res.sendFile(fp);
+        res.status(204).end();
+    });
+
+    // ✅ PUBLIC — بقية الملفات
+    if (fs.existsSync(publicDir)) {
+        app.use('/public', express.static(publicDir));
+    }
+
+    // ============ PUBLIC API ============
     app.get('/api/csrf-token', (req, res) => {
         const t = ensureCsrfToken(req, res);
         return res.json({ success: true, token: t || null, expiresIn: CSRF_MAX_AGE });
@@ -1024,13 +1084,17 @@ function applyInjections(html, state) {
 
     app.get('/api/health', (req, res) => {
         res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.8.2',
+            success: true, status: 'online', service: 'Marine System', version: '10.8.3',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) ? 'mailjet'
                 : (process.env.EMAIL_HOST ? 'smtp' : 'not-configured'),
+            static: {
+                css: cssMounted ? cssPaths.filter(p => fs.existsSync(p)).length : 0,
+                js: jsMounted ? jsPaths.filter(p => fs.existsSync(p)).length : 0
+            },
             models: { User: !!User, Vessel: !!Vessel, Vehicle: !!Vehicle,
                 Maintenance: !!Maintenance, Log: !!Log, Ticket: !!Ticket, Note: !!Note,
                 Notification: !!Notification, UserSettings: !!UserSettings, SystemLogo: !!SystemLogo }
@@ -1974,7 +2038,6 @@ function applyInjections(html, state) {
         res.json({ success: true });
     });
 
-    // ✅ MOD #5: تسجيل routes الوسائل البرية
     // ============ VEHICLES (LAND) ============
     vehiclesRoutes(app, {
         Vehicle,
@@ -2017,7 +2080,7 @@ function applyInjections(html, state) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.8.2 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.8.3 - Aman Allah Naji">
 `;
     const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
@@ -2272,13 +2335,7 @@ else init();
         next();
     });
 
-    // ============ STATIC FILES ============
-    const pagesDir = path.join(__dirname, 'pages');
-    const publicPagesDir = path.join(__dirname, 'public', 'pages');
-    const publicDir = path.join(__dirname, 'public');
-    if (!fs.existsSync(pagesDir)) fs.mkdirSync(pagesDir, { recursive: true });
-    if (!fs.existsSync(publicPagesDir)) fs.mkdirSync(publicPagesDir, { recursive: true });
-
+    // ============ PAGE ROUTES ============
     function findPageFile(name) {
         const paths = [
             path.join(publicPagesDir, name + '.html'),
@@ -2289,13 +2346,13 @@ else init();
         for (const p of paths) if (fs.existsSync(p)) return p;
         return null;
     }
-    app.use(express.static(__dirname, { index: false }));
+
+    if (!fs.existsSync(pagesDir)) fs.mkdirSync(pagesDir, { recursive: true });
+    if (!fs.existsSync(publicPagesDir)) fs.mkdirSync(publicPagesDir, { recursive: true });
+
     app.use('/pages', express.static(pagesDir));
     app.use('/pages', express.static(publicPagesDir));
-    app.use('/public', express.static(publicDir));
-    app.use('/public/pages', express.static(publicPagesDir));
 
-    // ============ PAGE ROUTES ============
     app.get('/', (req, res) => {
         const possible = [
             path.join(__dirname, 'index.html'),
@@ -2304,7 +2361,7 @@ else init();
             path.join(publicPagesDir, 'index.html')
         ];
         for (const p of possible) if (fs.existsSync(p)) return res.sendFile(p);
-        res.send('<h1>🚢 Marine System v10.8.2</h1><p>Running</p>');
+        res.send('<h1>🚢 Marine System v10.8.3</h1><p>Running</p>');
     });
     app.get('/pages/:page', (req, res) => {
         const fp = findPageFile(req.params.page);
@@ -2336,13 +2393,14 @@ else init();
     // ============ LISTEN ============
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v10.8.2');
+        console.log('🚢 MARINE SYSTEM v10.8.3');
         console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
         console.log('🍃 MongoDB Atlas');
         console.log('📦 NO SEED — NO FAKE VESSELS');
         console.log('💾 Redis-first Maps');
         console.log('📍 Force GPS v6');
         console.log('🚛 Vehicles (Land) routes: ENABLED');
+        console.log('🎨 Static CSS/JS: FIXED');
         console.log('=========================================');
         console.log(`📍 Port: ${PORT}`);
         console.log(`🌍 Env: ${process.env.NODE_ENV || 'development'}`);
@@ -2350,6 +2408,8 @@ else init();
         console.log(`🍃 MongoDB: ${mongoConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
         console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY'}`);
         console.log(`🚛 Vehicle Model: ${Vehicle ? 'LOADED' : 'NOT LOADED'}`);
+        console.log(`🎨 CSS: ${cssMounted ? 'ENABLED' : 'DISABLED'}`);
+        console.log(`📜 JS:  ${jsMounted ? 'ENABLED' : 'DISABLED'}`);
         console.log('=========================================');
         console.log('👨‍💻 أمان الله ناجي');
         console.log('🏛️  إدارة إسناد الوحدات البحرية');
