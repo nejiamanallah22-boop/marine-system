@@ -1076,3 +1076,79 @@
     background: #ffffff !important;
     border-bottom: 1pt solid #12121a !important;
 }
+/* ═══════════════════════════════════════════════════════════
+   🖼️ إخفاء الخلفيات والشعارات الكبيرة من الطباعة
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+    
+    /* ✅ إخفاء الخلفية الكبيرة (system background) */
+    #systemBackground,
+    #backgroundContainer,
+    .background-container,
+    .background-image-container,
+    [id*="background" i],
+    [class*="background-container" i],
+    [class*="bg-image" i],
+    [class*="hero-image" i] {
+        display: none !important;
+        visibility: hidden !important;
+        background-image: none !important;
+        background: none !important;
+        height: 0 !important;
+        width: 0 !important;
+        opacity: 0 !important;
+    }
+    
+    /* ✅ إخفاء الشعار الكبير (system logo) */
+    #systemLogo,
+    #system-logo,
+    .system-logo,
+    .hero-logo,
+    [class*="hero-banner" i],
+    [class*="page-banner" i],
+    [class*="page-cover" i],
+    [class*="cover-image" i] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    
+    /* ✅ إخفاء أي صورة كبيرة في أعلى الصفحة */
+    body > div > img[style*="width: 100%"],
+    body > div > img[style*="width:100%"],
+    main > img:first-child,
+    .main-content > img:first-child,
+    .page-container > img:first-child {
+        display: none !important;
+    }
+    
+    /* ✅ إخفاء الشرائط الملونة الكبيرة (banner) */
+    .hero-section,
+    .hero-banner,
+    .page-hero,
+    .banner-container,
+    .header-banner,
+    .page-banner {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* ✅ إخفاء أي عنصر خلفيته صورة كبيرة */
+    [style*="background-image"],
+    [style*="background-image:"] {
+        background-image: none !important;
+    }
+    
+    /* ✅ الحفاظ على الرأس الرسمي فقط */
+    .eff-header,
+    .fleet-header,
+    .logs-header,
+    .maint-header,
+    .veh-header,
+    #official-print-header {
+        display: block !important;
+        visibility: visible !important;
+    }
+}
