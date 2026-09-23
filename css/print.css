@@ -1,50 +1,37 @@
 /* ============================================================
-   🖨️ PRINT v18.1 — FINAL FIXED VERSION
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ الترويسة الرسمية الكاملة (7 أسطر وزارية)
-   ✅ "العوينة في" على اليسار
-   ✅ العنوان الرئيسي متمركز
-   ✅ A4 Portrait + Paysage
-   ✅ يعمل مع جميع الصفحات
+   🖨️ PRINT v15.2 — OFFICIAL INSTITUTIONAL GRADE (الأصلي)
+   + إضافة دعم vehicles.html
    ============================================================ */
 
-/* ═══════════════════════════════════════════════════════════
-   📐 إعدادات الصفحة
-   ═══════════════════════════════════════════════════════════ */
 @page {
-    size: A4 portrait;
-    margin: 12mm 8mm 12mm 8mm;
+    size: A4;
+    margin: 12mm 3mm 12mm 18mm;
 }
 
-@page landscape-page {
-    size: A4 landscape;
-    margin: 10mm 6mm 12mm 6mm;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   🖨️ قواعد الطباعة الرئيسية
-   ═══════════════════════════════════════════════════════════ */
 @media print {
 
-    /* ─────────────────────────────────────────────
-       0) إعادة تعيين شاملة
-       ───────────────────────────────────────────── */
     *, *::before, *::after {
         animation: none !important;
         transition: none !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         text-shadow: none !important;
-        box-shadow: none !important;
         filter: none !important;
+        box-shadow: none !important;
+        page-break-before: auto !important;
+        page-break-after: auto !important;
+        page-break-inside: auto !important;
+        break-before: auto !important;
+        break-after: auto !important;
+        break-inside: auto !important;
     }
 
     html, body {
         background: #ffffff !important;
-        color: #000000 !important;
+        color: #12121a !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
         font-size: 10pt !important;
-        line-height: 1.5 !important;
+        line-height: 1.45 !important;
         margin: 0 !important;
         padding: 0 !important;
         -webkit-print-color-adjust: exact !important;
@@ -52,32 +39,22 @@
         color-adjust: exact !important;
     }
 
-    /* ─────────────────────────────────────────────
-       1) إخفاء عناصر الشاشة
-       ───────────────────────────────────────────── */
     button, .btn-action, .btn-filter, .btn-sm, .btn-save,
-    .btn-icon, .action-btns, .retry-btn, .chart-btn,
+    .btn-icon, .action-btns, .retry-btn, .chart-btn, .chart-switch,
     .filter-bar, nav, .sidebar, .navbar, .main-header, .menu-toggle,
     .notification-wrapper, .user-wrapper, .search-wrapper,
-    .back-to-top, .toast-container, .toast,
-    .chart-section, .empty-state .spinner,
+    .back-to-top, .toast-container, .toast, .eff-notification,
+    .chart-section, .empty-state .spinner, .eff-spinner,
     .no-print, #loginOverlay, #authLoadingOverlay, #forgotPasswordModal,
     .input-grid, #inputArea,
+    .header-icon, #fleetHeaderIcon, #logsHeaderIcon, #effHeaderIcon,
     .page-loader,
+    .action-btn, .action-btns,
     .fleet-header-actions, .logs-header-actions, .maint-header-actions,
-    .veh-actions, .veh-action-btn, .veh-auto-toggle,
-    .veh-print-group,
-    .veh-modal, .veh-toast,
-    .maint-modal, .log-modal, .modal-overlay, .modal-footer,
-    .add-part-btn, .btn-submit,
-    #dev-signature,
-    #user-info-badge,
-    #force-gps-modal,
-    .eff-header .header-icon,
-    .fleet-header .header-icon,
-    .logs-header .header-icon,
-    .maint-header .header-icon,
-    .veh-header .title-icon {
+    .add-part-btn, .modal-footer, .btn-submit,
+    .toast, .maint-modal, .log-modal, .modal-overlay,
+    .veh-modal, .veh-toast, .veh-actions, .veh-action-btn,
+    .veh-auto-toggle, #dev-signature, #user-info-badge, #force-gps-modal {
         display: none !important;
     }
 
@@ -85,8 +62,7 @@
     .main-content { margin: 0 !important; padding: 0 !important; }
     .page-container { max-width: 100% !important; margin: 0 !important; }
 
-    #page-fleet, #page-logs, #page-efficiency,
-    #page-maintenance, #page-vehicles {
+    #page-fleet, #page-logs, #page-efficiency, #page-maintenance, #page-vehicles {
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 !important;
@@ -103,107 +79,68 @@
     }
 
     /* ═════════════════════════════════════════════
-       2) 🏛️ الترويسة الرسمية الكاملة
+       2) الترويسة المؤسسية
        ═════════════════════════════════════════════ */
-
-    /* الحاوية الرئيسية */
-    #page-efficiency .eff-header,
-    #page-fleet .fleet-header,
-    #page-logs .logs-header,
-    #page-maintenance .maint-header,
-    #page-vehicles .veh-header {
+    .eff-header,
+    .fleet-header,
+    .logs-header,
+    .maint-header,
+    .veh-header {
         display: block !important;
-        visibility: visible !important;
+        box-sizing: border-box !important;
         background: #ffffff !important;
         border: none !important;
-        border-bottom: 1.5pt solid #000000 !important;
-        padding: 0 0 4mm 0 !important;
-        margin: 0 0 6mm 0 !important;
+        padding: 0 0 5mm 0 !important;
+        margin: 0 0 5mm 0 !important;
+        min-height: auto !important;
+        height: auto !important;
         width: 100% !important;
-        min-height: 68mm !important;
-        position: relative !important;
-        text-align: center !important;
-        overflow: visible !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        position: relative !important;
+        text-align: center !important;
+        border-bottom: 1pt solid #12121a !important;
     }
 
-    /* إخفاء الخلفيات المتحركة */
     .eff-header::before,
     .fleet-header::before,
     .logs-header::before,
     .maint-header::before,
     .veh-header::before {
         display: none !important;
-        content: none !important;
     }
 
-    /* حاوية العنوان */
-    #page-efficiency .eff-header-left,
-    #page-fleet .fleet-header-left,
-    #page-logs .logs-header-left,
-    #page-maintenance .maint-header-left,
-    #page-vehicles .veh-header .title-section {
+    .eff-header-left,
+    .fleet-header-left,
+    .logs-header-left,
+    .maint-header-left,
+    .veh-header .title-section {
         display: block !important;
-        visibility: visible !important;
         position: relative !important;
         width: 100% !important;
-        min-height: 62mm !important;
+        height: 68mm !important;
+        min-height: 68mm !important;
         padding: 0 !important;
         margin: 0 !important;
     }
 
-    /* ─────────────────────────────────────
-       🔴 الترويسة الوزارية (على اليمين)
-       ───────────────────────────────────── */
-    #page-efficiency .eff-header-left::after,
-    #page-fleet .fleet-header-left::after,
-    #page-logs .logs-header-left::after,
-    #page-maintenance .maint-header-left::after,
-    #page-vehicles .veh-header .title-section::after {
-        content: "الجمهورية التونسية\A وزارة الداخلية\A كتابة الدولة للأمن\A الإدارة العامة للحرس الوطني\A الإدارة العامة لحرس الحدود\A إدارة إسناد الوحدات البحرية\A ع/ ______ /دد" !important;
-        display: block !important;
-        visibility: visible !important;
-        position: absolute !important;
-        top: 0 !important;
-        right: 0 !important;
-        left: auto !important;
-        white-space: pre-line !important;
-        direction: rtl !important;
-        text-align: right !important;
-        font-size: 11.5pt !important;
-        font-weight: 700 !important;
-        color: #0a0a12 !important;
-        -webkit-text-fill-color: #0a0a12 !important;
-        line-height: 1.55 !important;
-        letter-spacing: 0.2px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: auto !important;
-        z-index: 10 !important;
-        opacity: 1 !important;
-    }
-
-    /* ─────────────────────────────────────
-       🟢 "العوينة في:" (على اليسار)
-       ───────────────────────────────────── */
-    #page-efficiency .eff-header-left::before,
-    #page-fleet .fleet-header-left::before,
-    #page-logs .logs-header-left::before,
-    #page-maintenance .maint-header-left::before,
-    #page-vehicles .veh-header .title-section::before {
+    /* 🟢 يسار: العوينة في: */
+    .eff-header-left::before,
+    .fleet-header-left::before,
+    .logs-header-left::before,
+    .maint-header-left::before,
+    .veh-header .title-section::before {
         content: "العوينة في: ______________" !important;
         display: block !important;
-        visibility: visible !important;
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
         right: auto !important;
         direction: rtl !important;
         text-align: left !important;
-        font-size: 12pt !important;
+        font-size: 13pt !important;
         font-weight: 700 !important;
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
@@ -211,109 +148,136 @@
         letter-spacing: 0.3px !important;
         white-space: nowrap !important;
         width: auto !important;
-        z-index: 10 !important;
-        opacity: 1 !important;
     }
 
-    /* ─────────────────────────────────────
-       🎯 العنوان الرئيسي — متمركز
-       ───────────────────────────────────── */
-    #page-efficiency .eff-header-left h2,
-    #page-fleet .fleet-header-left h2,
-    #page-logs .logs-header-left h2,
-    #page-maintenance .maint-header-left h2,
-    #page-vehicles .veh-header .title,
-    #page-vehicles .veh-header h2 {
+    /* 🔴 يمين: التسلسل الوزاري */
+    .eff-header-left::after,
+    .fleet-header-left::after,
+    .logs-header-left::after,
+    .maint-header-left::after,
+    .veh-header .title-section::after {
+        content: "الجمهورية التونسية\A وزارة الداخلية\A كتابة الدولة للأمن\A الإدارة العامة للحرس الوطني\A الإدارة العامة لحرس الحدود\A إدارة إسناد الوحدات البحرية\A ع/ ______ /دد" !important;
+        display: block !important;
         position: absolute !important;
-        top: 42mm !important;
+        top: 0 !important;
+        right: 0 !important;
+        left: auto !important;
+        white-space: pre-line !important;
+        direction: rtl !important;
+        text-align: right !important;
+        font-size: 12pt !important;
+        font-weight: 700 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        line-height: 1.6 !important;
+        letter-spacing: 0.3px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: auto !important;
+    }
+
+    /* إخفاء الأيقونة الأصلية */
+    .veh-header .title-icon { display: none !important; }
+
+    /* ✅ العنوان الرئيسي */
+    .eff-header-left h2,
+    .fleet-header-left h2,
+    .logs-header-left h2,
+    .maint-header-left h2,
+    .veh-header .title,
+    .veh-header h2 {
+        position: absolute !important;
+        top: 50mm !important;
         left: 0 !important;
         right: 0 !important;
         width: 100% !important;
-        display: block !important;
-        visibility: visible !important;
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
-        background: none !important;
-        font-size: 18pt !important;
+        font-size: 20pt !important;
         font-weight: 900 !important;
         margin: 0 !important;
         padding: 0 !important;
-        letter-spacing: -0.3px !important;
+        letter-spacing: -0.4px !important;
         line-height: 1.2 !important;
+        display: block !important;
         text-align: center !important;
-        z-index: 10 !important;
+        background: none !important;
     }
 
-    /* ─────────────────────────────────────
-       📝 العنوان الفرعي
-       ───────────────────────────────────── */
-    #page-efficiency .eff-header-left p,
-    #page-fleet .fleet-header-left p,
-    #page-logs .logs-header-left p,
-    #page-maintenance .maint-header-left p,
-    #page-vehicles .veh-header .subtitle,
-    #page-vehicles .veh-header p {
+    /* ✅ العنوان الفرعي */
+    .eff-header-left p,
+    .fleet-header-left p,
+    .logs-header-left p,
+    .maint-header-left p,
+    .veh-header .subtitle,
+    .veh-header p {
         position: absolute !important;
-        top: 51mm !important;
+        top: 60mm !important;
         left: 0 !important;
         right: 0 !important;
         width: 100% !important;
         display: block !important;
-        visibility: visible !important;
         color: #55555f !important;
         -webkit-text-fill-color: #55555f !important;
-        background: none !important;
-        font-size: 10.5pt !important;
+        font-size: 11pt !important;
         font-weight: 500 !important;
         margin: 0 !important;
         padding: 0 !important;
         text-align: center !important;
-        z-index: 10 !important;
+        background: none !important;
+    }
+
+    .eff-header::after,
+    .fleet-header::after,
+    .logs-header::after,
+    .maint-header::after,
+    .veh-header::after {
+        display: none !important;
     }
 
     /* ═════════════════════════════════════════════
-       3) البطاقات الإحصائية
+       3) لوحة المؤشرات
        ═════════════════════════════════════════════ */
-    .stats-grid, .veh-stats {
+    .stats-grid,
+    .veh-stats {
         display: grid !important;
         gap: 0 !important;
-        margin: 0 0 6mm 0 !important;
-        padding: 3mm 0 !important;
-        border-top: 1pt solid #000000 !important;
-        border-bottom: 1pt solid #000000 !important;
+        margin: 0 0 8mm 0 !important;
+        padding: 4mm 0 !important;
+        border-top: 1pt solid #12121a !important;
+        border-bottom: 1pt solid #12121a !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
     }
 
     #page-fleet .stats-grid,
-    #page-vehicles .veh-stats {
-        grid-template-columns: repeat(4, 1fr) !important;
-    }
+    #page-vehicles .veh-stats { grid-template-columns: repeat(4, 1fr) !important; }
 
     #page-logs .stats-grid,
     #page-efficiency .stats-grid,
-    #page-maintenance .stats-grid {
-        grid-template-columns: repeat(5, 1fr) !important;
-    }
+    #page-maintenance .stats-grid { grid-template-columns: repeat(5, 1fr) !important; }
 
-    .stat-card, .veh-stat {
+    .stat-card,
+    .veh-stat {
         background: none !important;
         border: none !important;
         border-radius: 0 !important;
         padding: 0 3mm !important;
         text-align: center !important;
-        position: relative !important;
-        overflow: visible !important;
         display: block !important;
         min-height: 0 !important;
+        position: relative !important;
+        overflow: visible !important;
     }
 
     .stat-card:not(:last-child)::after,
     .veh-stat:not(:last-child)::after {
         content: "" !important;
         position: absolute !important;
-        top: 15% !important;
-        bottom: 15% !important;
+        top: 10% !important;
+        bottom: 10% !important;
         left: 0 !important;
         width: 0.5pt !important;
         background: #d8d6d0 !important;
@@ -321,66 +285,146 @@
 
     .stat-card::before,
     .veh-stat::before { display: none !important; }
-
     .stat-card .icon-bg,
     .stat-card .stat-icon { display: none !important; }
 
     .stat-card .number,
     .stat-card .eff-stat-value,
     .veh-stat .number {
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        background: none !important;
-        font-size: 17pt !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 18pt !important;
         font-weight: 800 !important;
         line-height: 1 !important;
         display: block !important;
         margin-bottom: 1.5mm !important;
         letter-spacing: -0.3px !important;
         font-variant-numeric: tabular-nums !important;
+        background: none !important;
     }
 
     .stat-card .label,
     .veh-stat .label {
         color: #6b6b78 !important;
         -webkit-text-fill-color: #6b6b78 !important;
-        background: none !important;
         font-size: 7pt !important;
         font-weight: 700 !important;
         display: block !important;
         text-transform: uppercase !important;
         letter-spacing: 0.5px !important;
+        white-space: normal !important;
+        background: none !important;
     }
 
     /* ═════════════════════════════════════════════
-       4) الجداول
+       4) الأقسام المرقّمة
        ═════════════════════════════════════════════ */
-    .table-wrapper, .veh-table-wrap {
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow: visible !important;
+    #page-efficiency, #page-fleet, #page-logs, #page-maintenance {
+        counter-reset: section-num !important;
+    }
+
+    .eff-section, .fleet-section, .logs-section {
         background: none !important;
         border: none !important;
         border-radius: 0 !important;
+        margin: 0 0 6mm !important;
+        padding: 0 !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        overflow: visible !important;
+        counter-increment: section-num !important;
     }
 
-    /* Paysage عند التفعيل */
-    body.print-landscape .table-wrapper,
-    body.print-landscape .veh-table-wrap,
-    body.print-landscape .damaged-table-wrapper,
-    body.print-landscape .table-scroll {
-        page: landscape-page !important;
-        page-break-before: always !important;
-        break-before: page !important;
+    .eff-section[style*="display: none"],
+    .fleet-section[style*="display: none"],
+    .logs-section[style*="display: none"] {
+        display: none !important;
+        counter-increment: none !important;
     }
 
-    body.print-portrait .table-wrapper,
-    body.print-portrait .veh-table-wrap,
-    body.print-portrait .damaged-table-wrapper,
-    body.print-portrait .table-scroll {
-        page: auto !important;
-        page-break-before: auto !important;
-        break-before: auto !important;
+    .eff-section .section-header,
+    .fleet-section .section-header,
+    .logs-section .section-header {
+        display: flex !important;
+        align-items: baseline !important;
+        gap: 3mm !important;
+        background: none !important;
+        border: none !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding: 0 0 1.5mm !important;
+        margin: 0 0 2mm !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .eff-section .section-header::before,
+    .fleet-section .section-header::before,
+    .logs-section .section-header::before {
+        content: counter(section-num, decimal-leading-zero) !important;
+        font-size: 8.5pt !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        background: #12121a !important;
+        width: 6mm !important;
+        height: 6mm !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+        letter-spacing: 0 !important;
+        line-height: 1 !important;
+    }
+
+    .eff-section .section-header h3,
+    .fleet-section .section-header h3,
+    .logs-section .section-header h3 {
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 12pt !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 2mm !important;
+        flex: 1 !important;
+    }
+
+    .eff-section .section-header h3 i { display: none !important; }
+
+    .eff-section .section-header .badge,
+    .badge {
+        background: #f2f1ed !important;
+        color: #45454f !important;
+        -webkit-text-fill-color: #45454f !important;
+        border: 0.5pt solid #d8d6d0 !important;
+        font-size: 7pt !important;
+        font-weight: 700 !important;
+        padding: 0.8mm 2.5mm !important;
+        border-radius: 3px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .section-content { padding: 0 !important; }
+
+    .eff-section .table-wrapper,
+    .fleet-section .table-wrapper,
+    .logs-section .table-wrapper {
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+    }
+
+    /* ═════════════════════════════════════════════
+       5) الجداول
+       ═════════════════════════════════════════════ */
+    .table-wrapper {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        page-break-inside: auto !important;
     }
 
     #page-efficiency table,
@@ -391,9 +435,10 @@
         width: 100% !important;
         border-collapse: collapse !important;
         font-size: 8.5pt !important;
+        table-layout: auto !important;
         background: none !important;
         min-width: 0 !important;
-        table-layout: auto !important;
+        page-break-inside: auto !important;
     }
 
     thead {
@@ -403,16 +448,16 @@
 
     thead th {
         background: #f7f6f3 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
         padding: 1.8mm 2.5mm !important;
         font-size: 7pt !important;
         font-weight: 800 !important;
         text-align: center !important;
-        border-top: 1pt solid #000000 !important;
-        border-bottom: 1pt solid #000000 !important;
+        border-top: 1pt solid #12121a !important;
+        border-bottom: 1pt solid #12121a !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: 0.4px !important;
         white-space: nowrap !important;
     }
 
@@ -424,70 +469,96 @@
         break-inside: avoid !important;
         background: none !important;
     }
-
-    tbody tr:nth-child(even) {
-        background: #fbfaf8 !important;
-    }
+    tbody tr:nth-child(even) { background: #fbfaf8 !important; }
 
     tbody td {
         padding: 1.8mm 2.5mm !important;
         border: none !important;
         border-bottom: 0.5pt solid #e3e1db !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
+        color: #23232b !important;
+        -webkit-text-fill-color: #23232b !important;
         text-align: center !important;
         font-size: 8.5pt !important;
         font-weight: 400 !important;
         vertical-align: middle !important;
         line-height: 1.3 !important;
+        white-space: normal !important;
         word-break: break-word !important;
         font-variant-numeric: tabular-nums !important;
         background: transparent !important;
     }
 
     tbody tr:last-child td {
-        border-bottom: 1pt solid #000000 !important;
+        border-bottom: 1pt solid #12121a !important;
     }
 
     tbody td:first-child,
     tbody td.vessel-name,
     tbody td.vessel-name-damaged {
         font-weight: 700 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
         text-align: right !important;
         padding-right: 3.5mm !important;
     }
 
-    /* إخفاء عمود الإجراءات */
+    tbody tr:first-child,
+    tbody tr:nth-child(2) {
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
     thead th:last-child,
     tbody td:last-child {
         display: none !important;
     }
 
-    /* شرائط جانبية ملوّنة */
+    /* شرائط جانبية */
     .row-high {
         background: #f4faf7 !important;
         border-right: 3pt solid #1d6b4a !important;
     }
+    .row-high td:first-child,
+    .row-high .eff-cell {
+        color: #1d6b4a !important;
+        -webkit-text-fill-color: #1d6b4a !important;
+        font-weight: 800 !important;
+    }
+
     .row-mid {
         background: #fffaf0 !important;
         border-right: 3pt solid #9a6b0e !important;
     }
+    .row-mid td:first-child,
+    .row-mid .eff-cell {
+        color: #9a6b0e !important;
+        -webkit-text-fill-color: #9a6b0e !important;
+        font-weight: 800 !important;
+    }
+
     .row-low,
     tbody tr.damaged,
     tbody tr.critical {
         background: #fdf4f4 !important;
         border-right: 3pt solid #9b2c2c !important;
     }
+    .row-low td:first-child,
+    .row-low .eff-cell,
+    tbody tr.damaged td:first-child,
+    tbody tr.critical td:first-child {
+        color: #9b2c2c !important;
+        -webkit-text-fill-color: #9b2c2c !important;
+        font-weight: 800 !important;
+    }
+
     tbody tr.warning {
         background: #fffaf0 !important;
         border-right: 3pt solid #9a6b0e !important;
     }
 
-    /* ═════════════════════════════════════════════
-       5) الشارات
-       ═════════════════════════════════════════════ */
+    /* الشارات */
     .status-badge,
     .eff-status,
     .veh-badge {
@@ -502,33 +573,26 @@
         letter-spacing: 0.2px !important;
     }
 
-    .status-badge.active,
-    .status-badge.completed,
-    .status-badge.good,
-    .status-badge.excellent,
-    .veh-badge.status-صالحة,
-    .veh-badge.cond-جديدة,
-    .veh-badge.zone {
+    .status-badge.excellent, .status-badge.good,
+    .status-badge.active, .status-badge.completed, .status-good,
+    .veh-badge.status-صالحة, .veh-badge.cond-جديدة, .veh-badge.zone {
         color: #1d6b4a !important;
         -webkit-text-fill-color: #1d6b4a !important;
         background: #f4faf7 !important;
     }
 
-    .status-badge.pending,
-    .status-badge.in-progress,
-    .status-badge.medium,
-    .veh-badge.status-صيانة,
-    .veh-badge.cond-متوسطة,
-    .veh-badge.brand,
-    .veh-badge.region {
+    .status-badge.medium, .status-badge.pending,
+    .status-badge.in-progress, .status-mid,
+    .veh-badge.status-صيانة, .veh-badge.cond-متوسطة,
+    .veh-badge.brand, .veh-badge.region {
         color: #9a6b0e !important;
         -webkit-text-fill-color: #9a6b0e !important;
         background: #fffaf0 !important;
     }
 
-    .status-badge.damaged,
-    .status-badge.critical,
-    .status-badge.cancelled,
+    .status-badge.low, .status-badge.critical,
+    .status-badge.damaged, .status-badge.overdue,
+    .status-badge.cancelled, .status-bad,
     .veh-badge.status-معطبة {
         color: #9b2c2c !important;
         -webkit-text-fill-color: #9b2c2c !important;
@@ -550,10 +614,10 @@
     .veh-plate {
         font-family: 'Courier New', monospace !important;
         font-weight: 900 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
         background: #ffffff !important;
-        border: 0.75pt solid #000000 !important;
+        border: 0.75pt solid #12121a !important;
         padding: 0.5mm 2mm !important;
         border-radius: 2px !important;
         font-size: 8pt !important;
@@ -561,83 +625,22 @@
         display: inline-block !important;
     }
 
-    /* ═════════════════════════════════════════════
-       6) VEHICLES — Grid
-       ═════════════════════════════════════════════ */
-    #page-vehicles .veh-table-wrap {
-        background: none !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow: visible !important;
+    .progress-bar {
+        background: #e9e7e1 !important;
+        height: 1.8mm !important;
+        min-width: 14mm !important;
+        border-radius: 1mm !important;
+        border: 0.3pt solid #d8d6d0 !important;
+        overflow: hidden !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
     }
+    .progress-bar .progress-fill::after { display: none !important; }
+    .progress-bar .progress-fill.high { background: #1d6b4a !important; }
+    .progress-bar .progress-fill.mid  { background: #9a6b0e !important; }
+    .progress-bar .progress-fill.low  { background: #9b2c2c !important; }
 
-    #page-vehicles .veh-table-wrap::before {
-        content: "📋 السجل التفصيلي للوسائل البرية" !important;
-        display: block !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        font-size: 11pt !important;
-        font-weight: 800 !important;
-        border-bottom: 1pt solid #000000 !important;
-        padding: 0 0 1.5mm !important;
-        margin: 0 0 2mm !important;
-        text-align: right !important;
-        direction: rtl !important;
-    }
-
-    #page-vehicles .veh-table-head,
-    #page-vehicles .veh-table-row {
-        display: grid !important;
-        grid-template-columns:
-            25px 60px 130px 90px 110px 80px
-            55px 55px 70px 70px 1fr 0px !important;
-        gap: 3px !important;
-        padding: 1.8mm 2mm !important;
-        align-items: center !important;
-        font-size: 8.5pt !important;
-        min-width: 0 !important;
-        width: 100% !important;
-    }
-
-    #page-vehicles .veh-table-head {
-        background: #f7f6f3 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        font-size: 7pt !important;
-        font-weight: 800 !important;
-        border-top: 1pt solid #000000 !important;
-        border-bottom: 1pt solid #000000 !important;
-        text-transform: uppercase !important;
-    }
-
-    #page-vehicles .veh-table-row {
-        background: #ffffff !important;
-        color: #000000 !important;
-        border-bottom: 0.5pt solid #e3e1db !important;
-    }
-
-    #page-vehicles .veh-table-row:nth-child(even) {
-        background: #fbfaf8 !important;
-    }
-
-    #page-vehicles .veh-table-head .veh-cell:last-child,
-    #page-vehicles .veh-table-row .veh-cell:last-child {
-        display: none !important;
-    }
-
-    #page-vehicles .veh-cell {
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        text-align: center !important;
-        word-break: break-word !important;
-        font-variant-numeric: tabular-nums !important;
-        overflow: visible !important;
-    }
-
-    /* ═════════════════════════════════════════════
-       7) التذييل
-       ═════════════════════════════════════════════ */
+    /* التذييل */
     #page-fleet::after,
     #page-logs::after,
     #page-efficiency::after,
@@ -648,11 +651,13 @@
         font-size: 7.5pt !important;
         color: #7c7c88 !important;
         -webkit-text-fill-color: #7c7c88 !important;
-        border-top: 0.75pt solid #000000 !important;
+        border-top: 0.75pt solid #12121a !important;
         padding-top: 2mm !important;
-        margin-top: 4mm !important;
+        margin-top: 5mm !important;
         font-weight: 600 !important;
         letter-spacing: 0.3px !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
     }
 
     #page-fleet::after {
@@ -671,30 +676,171 @@
         content: "منظومة الوسائل البرية  —  الحرس الوطني البحري  —  وثيقة رسمية" !important;
     }
 
-    /* ═════════════════════════════════════════════
-       8) FLEET — عنوان الجدول
-       ═════════════════════════════════════════════ */
+    /* FLEET — عنوان الجدول */
     #page-fleet .table-wrapper::before {
         content: "📋 السجل التفصيلي للمراكب" !important;
         display: block !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        font-size: 11pt !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 12pt !important;
         font-weight: 800 !important;
-        border-bottom: 1pt solid #000000 !important;
+        border-bottom: 1pt solid #12121a !important;
         padding: 0 0 1.5mm !important;
         margin: 0 0 2mm !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
         text-align: right !important;
         direction: rtl !important;
     }
 
-    /* ═════════════════════════════════════════════
-       9) ملخص الطباعة (fleet)
-       ═════════════════════════════════════════════ */
+    /* LOGS */
+    #page-logs .table-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: baseline !important;
+        background: none !important;
+        border: none !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding: 0 0 1.5mm !important;
+        margin: 0 0 2mm !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    #page-logs .table-header h3 {
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 12pt !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+    }
+
+    #page-logs .table-header h3 i {
+        color: #0a0a12 !important;
+        font-size: 10pt !important;
+    }
+
+    #page-logs .table-header .badge {
+        background: #f2f1ed !important;
+        color: #45454f !important;
+        -webkit-text-fill-color: #45454f !important;
+        border: 0.5pt solid #d8d6d0 !important;
+        font-size: 7pt !important;
+        font-weight: 700 !important;
+        padding: 0.8mm 2.5mm !important;
+        border-radius: 3px !important;
+    }
+
+    #page-logs .table-scroll {
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    /* MAINTENANCE */
+    #page-maintenance .damaged-section {
+        background: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 0 6mm !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+    }
+
+    #page-maintenance .damaged-section::before {
+        display: none !important;
+    }
+
+    #page-maintenance .damaged-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: baseline !important;
+        background: none !important;
+        border: none !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding: 0 0 1.5mm !important;
+        margin: 0 0 2mm !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    #page-maintenance .damaged-header h3 {
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 12pt !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+    }
+
+    #page-maintenance .damaged-header h3 i {
+        color: #9b2c2c !important;
+        animation: none !important;
+    }
+
+    #page-maintenance .damaged-header .damaged-count {
+        background: none !important;
+        color: #9b2c2c !important;
+        -webkit-text-fill-color: #9b2c2c !important;
+        border: 0.75pt solid #9b2c2c !important;
+        font-size: 7pt !important;
+        font-weight: 700 !important;
+        padding: 0.6mm 2.5mm !important;
+        border-radius: 3px !important;
+    }
+
+    #page-maintenance .damaged-table-wrapper {
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    #page-maintenance .damaged-table .damage-type {
+        color: #9a6b0e !important;
+        -webkit-text-fill-color: #9a6b0e !important;
+        font-weight: 700 !important;
+    }
+
+    #page-maintenance .table-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: baseline !important;
+        background: none !important;
+        border: none !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding: 0 0 1.5mm !important;
+        margin: 0 0 2mm !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    #page-maintenance .table-header h3 {
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 12pt !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+    }
+
+    #page-maintenance .table-header .badge {
+        background: #f2f1ed !important;
+        color: #45454f !important;
+        -webkit-text-fill-color: #45454f !important;
+        border: 0.5pt solid #d8d6d0 !important;
+        font-size: 7pt !important;
+        font-weight: 700 !important;
+        padding: 0.8mm 2.5mm !important;
+        border-radius: 3px !important;
+    }
+
+    #page-maintenance .table-scroll {
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    /* ملخص الطباعة */
     .print-only,
     .print-summary-section {
         display: block !important;
-        margin: 0 0 4mm !important;
+        margin: 0 0 5mm !important;
         page-break-inside: avoid !important;
         page-break-after: avoid !important;
     }
@@ -704,7 +850,7 @@
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
         padding: 2mm 4mm !important;
-        font-size: 9pt !important;
+        font-size: 9.5pt !important;
         font-weight: 800 !important;
         text-align: center !important;
         letter-spacing: 0.5px !important;
@@ -714,27 +860,27 @@
         width: 100% !important;
         border-collapse: collapse !important;
         font-size: 8.5pt !important;
-        border: 1pt solid #000000 !important;
+        border: 1pt solid #12121a !important;
         background: #ffffff !important;
         min-width: 0 !important;
     }
 
     .print-summary-table thead th {
         background: #f7f6f3 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
         padding: 1.8mm 2.5mm !important;
         font-size: 7.5pt !important;
         font-weight: 800 !important;
-        border-bottom: 1pt solid #000000 !important;
+        border-bottom: 1pt solid #12121a !important;
         text-transform: uppercase !important;
     }
 
     .print-summary-table tbody td {
         padding: 1.8mm 2.5mm !important;
         border-bottom: 0.5pt solid #e3e1db !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
+        color: #23232b !important;
+        -webkit-text-fill-color: #23232b !important;
         font-size: 8.5pt !important;
         font-weight: 600 !important;
         text-align: center !important;
@@ -744,34 +890,119 @@
     .print-summary-table tbody tr.total-row td {
         background: #f7f6f3 !important;
         font-weight: 800 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        border-top: 1pt solid #000000 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        border-top: 1pt solid #12121a !important;
     }
 
     .print-summary-table .cat-name {
         text-align: right !important;
         font-weight: 800 !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
         padding-right: 3.5mm !important;
     }
 
     /* ═════════════════════════════════════════════
-       10) كسر overflow
+       🚛 VEHICLES — Grid Layout (إضافة جديدة)
        ═════════════════════════════════════════════ */
+    #page-vehicles .veh-table-wrap {
+        background: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+    }
+
+    #page-vehicles .veh-table-wrap::before {
+        content: "📋 السجل التفصيلي للوسائل البرية" !important;
+        display: block !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 12pt !important;
+        font-weight: 800 !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding: 0 0 1.5mm !important;
+        margin: 0 0 2mm !important;
+        text-align: right !important;
+        direction: rtl !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    #page-vehicles .veh-table-head,
+    #page-vehicles .veh-table-row {
+        display: grid !important;
+        grid-template-columns:
+            25px 60px 130px 90px 110px 80px
+            55px 55px 70px 70px 1fr 0px !important;
+        gap: 3px !important;
+        padding: 1.8mm 2mm !important;
+        align-items: center !important;
+        font-size: 8.5pt !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    #page-vehicles .veh-table-head {
+        background: #f7f6f3 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 7pt !important;
+        font-weight: 800 !important;
+        border-top: 1pt solid #12121a !important;
+        border-bottom: 1pt solid #12121a !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.3px !important;
+    }
+
+    #page-vehicles .veh-table-row {
+        background: #ffffff !important;
+        color: #23232b !important;
+        border-bottom: 0.5pt solid #e3e1db !important;
+    }
+
+    #page-vehicles .veh-table-row:nth-child(even) {
+        background: #fbfaf8 !important;
+    }
+
+    #page-vehicles .veh-table-row:last-child {
+        border-bottom: 1pt solid #12121a !important;
+    }
+
+    #page-vehicles .veh-table-head .veh-cell:last-child,
+    #page-vehicles .veh-table-row .veh-cell:last-child {
+        display: none !important;
+    }
+
+    #page-vehicles .veh-cell {
+        color: #23232b !important;
+        -webkit-text-fill-color: #23232b !important;
+        text-align: center !important;
+        word-break: break-word !important;
+        font-variant-numeric: tabular-nums !important;
+        overflow: visible !important;
+    }
+
+    /* كسر overflow */
+    html body #page-efficiency .eff-section,
+    html body #page-fleet .eff-section,
+    html body #page-logs .eff-section,
+    html body #page-maintenance .eff-section,
+    html body #page-efficiency .eff-section *,
+    html body #page-fleet .eff-section *,
+    html body #page-logs .eff-section *,
+    html body #page-maintenance .eff-section *,
+    html body #page-vehicles .veh-table-wrap,
+    html body #page-vehicles .veh-table-wrap *,
     html body .table-wrapper,
     html body table,
-    html body tbody,
-    html body #page-vehicles .veh-table-wrap,
-    html body #page-vehicles .veh-table-wrap * {
+    html body tbody {
         overflow: visible !important;
     }
 }
 
-/* ═══════════════════════════════════════════════════════════
-   🌐 SCREEN — إخفاء عناصر الطباعة على الشاشة
-   ═══════════════════════════════════════════════════════════ */
 @media screen {
     .print-only,
     .print-summary-section {
