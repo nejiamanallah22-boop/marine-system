@@ -1,118 +1,701 @@
 /* ============================================================
-   🖨️ PRINT ORIENTATION CHOOSER
+   🖨️ PRINT v17.0 — A4 (Portrait + Paysage) مع ترويسة ثابتة
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   • خياران: Portrait / Paysage
-   • يُستخدم في fleet.html و vehicles.html وكل الصفحات
+   ✅ الترويسة الوزارية تظهر على كل صفحة
+   ✅ تدعم Portrait + Paysage
    ============================================================ */
-(function() {
-    'use strict';
 
-    var STYLE_ID = 'dynamic-print-orientation';
+/* ═══════════════════════════════════════════════════════════
+   📐 A4 Portrait (افتراضي)
+   ═══════════════════════════════════════════════════════════ */
+@page {
+    size: A4 portrait;
+    margin: 40mm 8mm 20mm 8mm; /* 40mm أعلى = مساحة للترويسة */
+}
 
-    /**
-     * يُحقن قواعد @page ديناميكياً
-     * @param {string} mode - 'portrait' أو 'landscape'
-     */
-    function applyOrientation(mode) {
-        var style = document.getElementById(STYLE_ID);
-        if (!style) {
-            style = document.createElement('style');
-            style.id = STYLE_ID;
-            document.head.appendChild(style);
-        }
+/* ═══════════════════════════════════════════════════════════
+   📐 A4 Paysage (عند الطلب)
+   ═══════════════════════════════════════════════════════════ */
+@page landscape-page {
+    size: A4 landscape;
+    margin: 35mm 6mm 18mm 6mm;
+}
 
-        var portraitRules = '';
-        var landscapeRules = '';
+/* ═══════════════════════════════════════════════════════════
+   🖨️ قواعد الطباعة
+   ═══════════════════════════════════════════════════════════ */
+@media print {
 
-        if (mode === 'landscape') {
-            // ✅ Paysage: الجداول في A4 Landscape
-            portraitRules = `
-                @page { size: A4 portrait; margin: 12mm 8mm 12mm 8mm; }
-                @page landscape-page {
-                    size: A4 landscape;
-                    margin: 10mm 6mm 12mm 14mm;
-                }
-                @media print {
-                    .table-wrapper,
-                    .veh-table-wrap,
-                    .damaged-table-wrapper,
-                    .table-scroll {
-                        page: landscape-page !important;
-                        page-break-before: always !important;
-                        break-before: page !important;
-                    }
-                }
-            `;
-        } else {
-            // ✅ Portrait: كل شيء A4 Portrait
-            portraitRules = `
-                @page { size: A4 portrait; margin: 12mm 8mm 12mm 8mm; }
-                @media print {
-                    .table-wrapper,
-                    .veh-table-wrap,
-                    .damaged-table-wrapper,
-                    .table-scroll {
-                        page: auto !important;
-                        page-break-before: auto !important;
-                        break-before: auto !important;
-                    }
-                }
-            `;
-        }
-
-        style.textContent = portraitRules + landscapeRules;
-
-        // ✅ ضع علامة على body للاستخدام في CSS
-        document.body.classList.remove('print-portrait', 'print-landscape');
-        document.body.classList.add(mode === 'landscape' ? 'print-landscape' : 'print-portrait');
-
-        try {
-            localStorage.setItem('print_orientation', mode);
-        } catch (e) {}
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
     }
 
-    /**
-     * طباعة بالاتجاه المطلوب
-     * @param {string} mode - 'portrait' أو 'landscape'
-     */
-    function printWith(mode) {
-        applyOrientation(mode);
-
-        var label = mode === 'landscape' ? 'Paysage (أفقي)' : 'Portrait (عمودي)';
-        if (window.vehShowToast) {
-            window.vehShowToast('🖨️ الطباعة ' + label + '...', 'info', 1500);
-        } else if (window.showToast) {
-            window.showToast('🖨️ الطباعة ' + label + '...', 'info');
-        }
-
-        setTimeout(function() {
-            window.print();
-        }, 350);
+    html, body {
+        background: #ffffff !important;
+        color: #12121a !important;
+        font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+        font-size: 10pt !important;
+        line-height: 1.45 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
-    /**
-     * استعادة آخر اختيار
-     */
-    function restoreOrientation() {
-        var saved = 'landscape'; // افتراضي
-        try {
-            saved = localStorage.getItem('print_orientation') || 'landscape';
-        } catch (e) {}
-        applyOrientation(saved);
+    /* ─────────────────────────────────────────────
+       1) إخفاء واجهة الشاشة
+       ───────────────────────────────────────────── */
+    button, .btn-action, .btn-filter, .btn-sm, .btn-save,
+    .btn-icon, .action-btns, .retry-btn,
+    .filter-bar, nav, .sidebar, .navbar, .main-header, .menu-toggle,
+    .notification-wrapper, .user-wrapper, .search-wrapper,
+    .back-to-top, .toast-container, .toast,
+    .chart-section, .empty-state .spinner,
+    .no-print, #loginOverlay, #authLoadingOverlay,
+    .input-grid, #inputArea,
+    .page-loader,
+    .fleet-header-actions, .logs-header-actions, .maint-header-actions,
+    .modal-footer, .btn-submit,
+    .toast, .maint-modal, .log-modal, .modal-overlay,
+    .veh-modal, .veh-toast, .veh-actions, .veh-action-btn,
+    .veh-auto-toggle,
+    .print-orientation-bar,
+    .veh-print-group {
+        display: none !important;
     }
 
-    // ✅ استعادة عند التحميل
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', restoreOrientation);
-    } else {
-        restoreOrientation();
+    #mainApp { display: block !important; }
+    .main-content { margin: 0 !important; padding: 0 !important; }
+    .page-container { max-width: 100% !important; margin: 0 !important; }
+
+    #page-fleet, #page-logs, #page-efficiency, #page-maintenance, #page-vehicles {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        min-height: 0 !important;
     }
 
-    // ✅ كشف API عام
-    window.PrintOrientation = {
-        portrait: function() { printWith('portrait'); },
-        landscape: function() { printWith('landscape'); },
-        apply: applyOrientation,
-        restore: restoreOrientation
-    };
-})();
+    #page-fleet::before, #page-logs::before,
+    #page-efficiency::before, #page-maintenance::before,
+    #page-vehicles::before,
+    body::before, body::after {
+        display: none !important;
+    }
+
+    /* ═════════════════════════════════════════════
+       2) الترويسة الوزارية — تظهر على كل صفحة
+       ═════════════════════════════════════════════ */
+    .eff-header,
+    .fleet-header,
+    .logs-header,
+    .maint-header,
+    .veh-header {
+        display: block !important;
+        box-sizing: border-box !important;
+        background: #ffffff !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 0 8mm 0 !important;
+        width: 100% !important;
+        position: relative !important;
+        text-align: center !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding-bottom: 5mm !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    .eff-header::before,
+    .fleet-header::before,
+    .logs-header::before,
+    .maint-header::before,
+    .veh-header::before {
+        display: none !important;
+    }
+
+    .eff-header-left,
+    .fleet-header-left,
+    .logs-header-left,
+    .maint-header-left,
+    .veh-header .title-section {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
+        height: 62mm !important;
+        min-height: 62mm !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* 🟢 يسار: العوينة في: */
+    .eff-header-left::before,
+    .fleet-header-left::before,
+    .logs-header-left::before,
+    .maint-header-left::before,
+    .veh-header .title-section::before {
+        content: "العوينة في: ______________" !important;
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+        direction: rtl !important;
+        text-align: left !important;
+        font-size: 13pt !important;
+        font-weight: 700 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        line-height: 1.5 !important;
+        white-space: nowrap !important;
+        width: auto !important;
+    }
+
+    /* 🔴 يمين: التسلسل الوزاري الكامل */
+    .eff-header-left::after,
+    .fleet-header-left::after,
+    .logs-header-left::after,
+    .maint-header-left::after,
+    .veh-header .title-section::after {
+        content: "الجمهورية التونسية\A وزارة الداخلية\A كتابة الدولة للأمن\A الإدارة العامة للحرس الوطني\A الإدارة العامة لحرس الحدود\A إدارة إسناد الوحدات البحرية\A ع/ ______ /دد" !important;
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        left: auto !important;
+        white-space: pre-line !important;
+        direction: rtl !important;
+        text-align: right !important;
+        font-size: 12pt !important;
+        font-weight: 700 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        line-height: 1.6 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: auto !important;
+    }
+
+    .header-icon,
+    .veh-header .title-icon { display: none !important; }
+
+    /* العنوان الرئيسي — متمركز في وسط الترويسة */
+    .eff-header-left h2,
+    .fleet-header-left h2,
+    .logs-header-left h2,
+    .maint-header-left h2,
+    .veh-header .title,
+    .veh-header h2 {
+        position: absolute !important;
+        top: 46mm !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 20pt !important;
+        font-weight: 900 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.2 !important;
+        text-align: center !important;
+        background: none !important;
+    }
+
+    /* العنوان الفرعي */
+    .eff-header-left p,
+    .fleet-header-left p,
+    .logs-header-left p,
+    .maint-header-left p,
+    .veh-header .subtitle,
+    .veh-header p {
+        position: absolute !important;
+        top: 56mm !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        display: block !important;
+        color: #55555f !important;
+        -webkit-text-fill-color: #55555f !important;
+        font-size: 11pt !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-align: center !important;
+        background: none !important;
+    }
+
+    .eff-header::after,
+    .fleet-header::after,
+    .logs-header::after,
+    .maint-header::after,
+    .veh-header::after {
+        display: none !important;
+    }
+
+    /* ═════════════════════════════════════════════
+       3) لوحة المؤشرات
+       ═════════════════════════════════════════════ */
+    .stats-grid,
+    .veh-stats {
+        display: grid !important;
+        gap: 0 !important;
+        margin: 0 0 8mm 0 !important;
+        padding: 4mm 0 !important;
+        border-top: 1pt solid #12121a !important;
+        border-bottom: 1pt solid #12121a !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    #page-fleet .stats-grid,
+    #page-vehicles .veh-stats { grid-template-columns: repeat(4, 1fr) !important; }
+
+    #page-logs .stats-grid,
+    #page-efficiency .stats-grid,
+    #page-maintenance .stats-grid { grid-template-columns: repeat(5, 1fr) !important; }
+
+    .stat-card,
+    .veh-stat {
+        background: none !important;
+        border: none !important;
+        padding: 0 3mm !important;
+        text-align: center !important;
+        position: relative !important;
+    }
+
+    .stat-card:not(:last-child)::after,
+    .veh-stat:not(:last-child)::after {
+        content: "" !important;
+        position: absolute !important;
+        top: 10% !important;
+        bottom: 10% !important;
+        left: 0 !important;
+        width: 0.5pt !important;
+        background: #d8d6d0 !important;
+    }
+
+    .stat-card::before,
+    .veh-stat::before { display: none !important; }
+    .stat-card .icon-bg,
+    .stat-card .stat-icon { display: none !important; }
+
+    .stat-card .number,
+    .stat-card .eff-stat-value,
+    .veh-stat .number {
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 18pt !important;
+        font-weight: 800 !important;
+        display: block !important;
+        margin-bottom: 1.5mm !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+
+    .stat-card .label,
+    .veh-stat .label {
+        color: #6b6b78 !important;
+        -webkit-text-fill-color: #6b6b78 !important;
+        font-size: 7pt !important;
+        font-weight: 700 !important;
+        display: block !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    /* ═════════════════════════════════════════════
+       4) الجداول — تنتقل إلى Paysage عند الطلب
+       ═════════════════════════════════════════════ */
+    .table-wrapper {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* ✅ عند تفعيل Paysage */
+    body.print-landscape .table-wrapper,
+    body.print-landscape .veh-table-wrap,
+    body.print-landscape .damaged-table-wrapper,
+    body.print-landscape .table-scroll {
+        page: landscape-page !important;
+        page-break-before: always !important;
+        break-before: page !important;
+    }
+
+    /* ✅ عند تفعيل Portrait */
+    body.print-portrait .table-wrapper,
+    body.print-portrait .veh-table-wrap,
+    body.print-portrait .damaged-table-wrapper,
+    body.print-portrait .table-scroll {
+        page: auto !important;
+        page-break-before: auto !important;
+        break-before: auto !important;
+    }
+
+    #page-efficiency table,
+    #page-fleet table,
+    #page-logs table,
+    #page-maintenance table,
+    #page-maintenance .damaged-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 8.5pt !important;
+        table-layout: auto !important;
+        min-width: 0 !important;
+    }
+
+    thead {
+        display: table-header-group !important;
+    }
+
+    thead th {
+        background: #f7f6f3 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        padding: 1.8mm 2.5mm !important;
+        font-size: 7pt !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        border-top: 1pt solid #12121a !important;
+        border-bottom: 1pt solid #12121a !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+    }
+
+    thead th i { display: none !important; }
+    thead th:first-child { text-align: right !important; }
+
+    tbody tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    tbody tr:nth-child(even) { background: #fbfaf8 !important; }
+
+    tbody td {
+        padding: 1.8mm 2.5mm !important;
+        border: none !important;
+        border-bottom: 0.5pt solid #e3e1db !important;
+        color: #23232b !important;
+        -webkit-text-fill-color: #23232b !important;
+        text-align: center !important;
+        font-size: 8.5pt !important;
+        vertical-align: middle !important;
+        word-break: break-word !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: 1pt solid #12121a !important;
+    }
+
+    tbody td:first-child,
+    tbody td.vessel-name,
+    tbody td.vessel-name-damaged {
+        font-weight: 700 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        text-align: right !important;
+        padding-right: 3.5mm !important;
+    }
+
+    thead th:last-child,
+    tbody td:last-child {
+        display: none !important;
+    }
+
+    /* شرائط جانبية */
+    .row-high {
+        background: #f4faf7 !important;
+        border-right: 3pt solid #1d6b4a !important;
+    }
+    .row-mid {
+        background: #fffaf0 !important;
+        border-right: 3pt solid #9a6b0e !important;
+    }
+    .row-low,
+    tbody tr.damaged,
+    tbody tr.critical {
+        background: #fdf4f4 !important;
+        border-right: 3pt solid #9b2c2c !important;
+    }
+
+    /* ─────────────────────────────────────────────
+       5) الشارات
+       ───────────────────────────────────────────── */
+    .status-badge,
+    .eff-status,
+    .veh-badge {
+        display: inline-block !important;
+        padding: 0.6mm 2.5mm !important;
+        border-radius: 3px !important;
+        font-size: 7pt !important;
+        font-weight: 700 !important;
+        border: 0.75pt solid currentColor !important;
+        background: #ffffff !important;
+        white-space: nowrap !important;
+    }
+
+    .status-badge.excellent, .status-badge.good,
+    .status-badge.active, .status-badge.completed, .status-good,
+    .veh-badge.status-صالحة, .veh-badge.cond-جديدة, .veh-badge.zone {
+        color: #1d6b4a !important;
+        -webkit-text-fill-color: #1d6b4a !important;
+        background: #f4faf7 !important;
+    }
+
+    .status-badge.medium, .status-badge.pending,
+    .status-badge.in-progress, .status-mid,
+    .veh-badge.status-صيانة, .veh-badge.cond-متوسطة,
+    .veh-badge.brand, .veh-badge.region {
+        color: #9a6b0e !important;
+        -webkit-text-fill-color: #9a6b0e !important;
+        background: #fffaf0 !important;
+    }
+
+    .status-badge.low, .status-badge.critical,
+    .status-badge.damaged, .status-badge.overdue,
+    .status-badge.cancelled, .status-bad,
+    .veh-badge.status-معطبة {
+        color: #9b2c2c !important;
+        -webkit-text-fill-color: #9b2c2c !important;
+        background: #fdf4f4 !important;
+    }
+
+    .veh-badge.cond-قديمة {
+        color: #45454f !important;
+        -webkit-text-fill-color: #45454f !important;
+        background: #f2f1ed !important;
+    }
+
+    .veh-badge.type {
+        color: #1a4f8a !important;
+        -webkit-text-fill-color: #1a4f8a !important;
+        background: #f4f7fa !important;
+    }
+
+    .veh-plate {
+        font-family: 'Courier New', monospace !important;
+        font-weight: 900 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        background: #ffffff !important;
+        border: 0.75pt solid #12121a !important;
+        padding: 0.5mm 2mm !important;
+        border-radius: 2px !important;
+        font-size: 8pt !important;
+        display: inline-block !important;
+    }
+
+    /* ─────────────────────────────────────────────
+       6) VEHICLES — Grid
+       ───────────────────────────────────────────── */
+    #page-vehicles .veh-table-wrap {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+    }
+
+    #page-vehicles .veh-table-wrap::before {
+        content: "📋 السجل التفصيلي للوسائل البرية" !important;
+        display: block !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 12pt !important;
+        font-weight: 800 !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding: 0 0 1.5mm !important;
+        margin: 0 0 2mm !important;
+        text-align: right !important;
+        direction: rtl !important;
+    }
+
+    #page-vehicles .veh-table-head,
+    #page-vehicles .veh-table-row {
+        display: grid !important;
+        grid-template-columns:
+            25px 60px 130px 90px 110px 80px
+            55px 55px 70px 70px 1fr 0px !important;
+        gap: 3px !important;
+        padding: 1.8mm 2mm !important;
+        align-items: center !important;
+        font-size: 8.5pt !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    #page-vehicles .veh-table-head {
+        background: #f7f6f3 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 7pt !important;
+        font-weight: 800 !important;
+        border-top: 1pt solid #12121a !important;
+        border-bottom: 1pt solid #12121a !important;
+    }
+
+    #page-vehicles .veh-table-row {
+        background: #ffffff !important;
+        color: #23232b !important;
+        border-bottom: 0.5pt solid #e3e1db !important;
+    }
+    #page-vehicles .veh-table-row:nth-child(even) {
+        background: #fbfaf8 !important;
+    }
+
+    #page-vehicles .veh-table-head .veh-cell:last-child,
+    #page-vehicles .veh-table-row .veh-cell:last-child {
+        display: none !important;
+    }
+
+    #page-vehicles .veh-cell {
+        color: #23232b !important;
+        -webkit-text-fill-color: #23232b !important;
+        text-align: center !important;
+        word-break: break-word !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+
+    /* ─────────────────────────────────────────────
+       7) التذييل
+       ───────────────────────────────────────────── */
+    #page-fleet::after,
+    #page-logs::after,
+    #page-efficiency::after,
+    #page-maintenance::after,
+    #page-vehicles::after {
+        display: block !important;
+        text-align: center !important;
+        font-size: 7.5pt !important;
+        color: #7c7c88 !important;
+        -webkit-text-fill-color: #7c7c88 !important;
+        border-top: 0.75pt solid #12121a !important;
+        padding-top: 2mm !important;
+        margin-top: 5mm !important;
+        font-weight: 600 !important;
+    }
+
+    #page-fleet::after {
+        content: "منظومة الوسائل البحرية  —  السجل العام للأسطول  —  وثيقة رسمية" !important;
+    }
+    #page-logs::after {
+        content: "منظومة الوسائل البحرية  —  سجل الصيانة  —  وثيقة رسمية" !important;
+    }
+    #page-efficiency::after {
+        content: "منظومة الوسائل البحرية  —  تقرير جاهزية الأسطول  —  وثيقة رسمية" !important;
+    }
+    #page-maintenance::after {
+        content: "منظومة الوسائل البحرية  —  سجل الصيانة والتدخلات  —  وثيقة رسمية" !important;
+    }
+    #page-vehicles::after {
+        content: "منظومة الوسائل البرية  —  الحرس الوطني البحري  —  وثيقة رسمية" !important;
+    }
+
+    /* ─────────────────────────────────────────────
+       8) FLEET — عنوان الجدول
+       ───────────────────────────────────────────── */
+    #page-fleet .table-wrapper::before {
+        content: "📋 السجل التفصيلي للمراكب" !important;
+        display: block !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        font-size: 12pt !important;
+        font-weight: 800 !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding: 0 0 1.5mm !important;
+        margin: 0 0 2mm !important;
+        text-align: right !important;
+        direction: rtl !important;
+    }
+
+    /* ─────────────────────────────────────────────
+       9) ملخص الطباعة (fleet)
+       ───────────────────────────────────────────── */
+    .print-only,
+    .print-summary-section {
+        display: block !important;
+        margin: 0 0 5mm !important;
+        page-break-inside: avoid !important;
+    }
+
+    .print-summary-title {
+        background: #12121a !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        padding: 2mm 4mm !important;
+        font-size: 9.5pt !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+    }
+
+    .print-summary-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 8.5pt !important;
+        border: 1pt solid #12121a !important;
+        background: #ffffff !important;
+    }
+
+    .print-summary-table thead th {
+        background: #f7f6f3 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        padding: 1.8mm 2.5mm !important;
+        font-size: 7.5pt !important;
+        font-weight: 800 !important;
+        border-bottom: 1pt solid #12121a !important;
+    }
+
+    .print-summary-table tbody td {
+        padding: 1.8mm 2.5mm !important;
+        border-bottom: 0.5pt solid #e3e1db !important;
+        color: #23232b !important;
+        -webkit-text-fill-color: #23232b !important;
+        font-weight: 600 !important;
+        text-align: center !important;
+    }
+
+    .print-summary-table tbody tr.total-row td {
+        background: #f7f6f3 !important;
+        font-weight: 800 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        border-top: 1pt solid #12121a !important;
+    }
+
+    .print-summary-table .cat-name {
+        text-align: right !important;
+        font-weight: 800 !important;
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        padding-right: 3.5mm !important;
+    }
+
+    /* ─────────────────────────────────────────────
+       10) كسر overflow
+       ───────────────────────────────────────────── */
+    html body .table-wrapper,
+    html body table,
+    html body tbody,
+    html body #page-vehicles .veh-table-wrap {
+        overflow: visible !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🌐 SCREEN
+   ═══════════════════════════════════════════════════════════ */
+@media screen {
+    .print-only,
+    .print-summary-section {
+        display: none;
+    }
+}
