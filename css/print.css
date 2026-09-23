@@ -1020,3 +1020,59 @@
         display: none;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   🔧 FIX UNIVERSAL — يدعم أي اسم كلاس
+   ═══════════════════════════════════════════════════════════ */
+
+/* أي عنصر فيه "header-left" أو "title-section" */
+[class*="header-left"]::after,
+[class*="title-section"]::after,
+[class*="header-left"]::after {
+    content: "الجمهورية التونسية\A وزارة الداخلية\A كتابة الدولة للأمن\A الإدارة العامة للحرس الوطني\A الإدارة العامة لحرس الحدود\A إدارة إسناد الوحدات البحرية\A ع/ ______ /دد" !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    left: auto !important;
+    white-space: pre-line !important;
+    direction: rtl !important;
+    text-align: right !important;
+    font-size: 12pt !important;
+    font-weight: 700 !important;
+    color: #0a0a12 !important;
+    -webkit-text-fill-color: #0a0a12 !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    z-index: 100 !important;
+}
+
+[class*="header-left"]::before,
+[class*="title-section"]::before {
+    content: "العوينة في: ______________" !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    direction: rtl !important;
+    text-align: left !important;
+    font-size: 13pt !important;
+    font-weight: 700 !important;
+    color: #0a0a12 !important;
+    -webkit-text-fill-color: #0a0a12 !important;
+    line-height: 1.5 !important;
+    white-space: nowrap !important;
+    width: auto !important;
+    z-index: 100 !important;
+}
+
+/* الحاوية الرئيسية لأي هيدر */
+[class*="-header"] {
+    position: relative !important;
+    min-height: 68mm !important;
+    background: #ffffff !important;
+    border-bottom: 1pt solid #12121a !important;
+}
