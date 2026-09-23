@@ -1,30 +1,27 @@
 /* ============================================================
    🖨️ PRINT v15.2 — OFFICIAL INSTITUTIONAL GRADE
-   + إضافة دعم vehicles.html (بدون تغيير الأصل)
+   + دعم vehicles.html (بدون تغيير الأصل)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    ✅ الإصلاحات:
    • العنوان الرئيسي يتمركز تحت العمودين (يمين + يسار)
    • المحتوى يبدأ من أقصى اليمين (هامش يمين 3mm)
-   • ✏️ مساحة كتابة في سطر: ع/ ______ /دد (تكفي 6 أرقام)
+   • ✏️ مساحة كتابة في سطر: ع/ ______ /دد
    ============================================================ */
 
 /* ═══════════════════════════════════════════════════════════
-   📐 إعدادات الصفحة — المحتوى يبدأ من أقصى اليمين
+   📐 إعدادات الصفحة
    ═══════════════════════════════════════════════════════════ */
 @page {
     size: A4;
-    /* top | right | bottom | left */
     margin: 12mm 3mm 12mm 18mm;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   🖨️ قواعد الطباعة الرئيسية
+   🖨️ PRINT
    ═══════════════════════════════════════════════════════════ */
 @media print {
 
-    /* ─────────────────────────────────────────────
-       0) إعادة تعيين شاملة
-       ───────────────────────────────────────────── */
+    /* ───────────── 0) إعادة تعيين ───────────── */
     *, *::before, *::after {
         animation: none !important;
         transition: none !important;
@@ -54,9 +51,7 @@
         color-adjust: exact !important;
     }
 
-    /* ─────────────────────────────────────────────
-       1) إخفاء واجهة الشاشة
-       ───────────────────────────────────────────── */
+    /* ───────────── 1) إخفاء واجهة الشاشة ───────────── */
     button, .btn-action, .btn-filter, .btn-sm, .btn-save,
     .btn-icon, .action-btns, .retry-btn, .chart-btn, .chart-switch,
     .filter-bar, nav, .sidebar, .navbar, .main-header, .menu-toggle,
@@ -72,7 +67,9 @@
     .add-part-btn, .modal-footer, .btn-submit,
     .toast, .maint-modal, .log-modal, .modal-overlay,
     .veh-header-actions, .veh-actions, .veh-action-btn, .veh-auto-toggle,
-    .veh-modal, .veh-toast, .veh-print-group, .veh-header .title-icon {
+    .veh-modal, .veh-toast, .veh-print-group,
+    .veh-header .title-icon,
+    #dev-signature, #user-info-badge, #force-gps-modal {
         display: none !important;
     }
 
@@ -97,7 +94,7 @@
     }
 
     /* ═════════════════════════════════════════════
-       2) الترويسة المؤسسية — أعلى الصفحة الأولى
+       2) الترويسة المؤسسية
        ═════════════════════════════════════════════ */
     .eff-header,
     .fleet-header,
@@ -130,9 +127,7 @@
         display: none !important;
     }
 
-    /* ───────────────────────────────
-       الحاوية الرئيسية للترويسة
-       ─────────────────────────────── */
+    /* الحاوية الرئيسية للترويسة */
     .eff-header-left,
     .fleet-header-left,
     .logs-header-left,
@@ -147,9 +142,7 @@
         margin: 0 !important;
     }
 
-    /* ───────────────────────────────
-       🟢 يسار: العوينة في: (فارغة للكتابة)
-       ─────────────────────────────── */
+    /* 🟢 يسار: العوينة في */
     .eff-header-left::before,
     .fleet-header-left::before,
     .logs-header-left::before,
@@ -173,9 +166,7 @@
         width: auto !important;
     }
 
-    /* ───────────────────────────────
-       🔴 يمين: التسلسل الوزاري
-       ─────────────────────────────── */
+    /* 🔴 يمين: التسلسل الوزاري الكامل */
     .eff-header-left::after,
     .fleet-header-left::after,
     .logs-header-left::after,
@@ -201,9 +192,7 @@
         width: auto !important;
     }
 
-    /* ═════════════════════════════════════════════
-       ✅ العنوان الرئيسي — يتمركز تحت العمودين
-       ═════════════════════════════════════════════ */
+    /* ✅ العنوان الرئيسي */
     .eff-header-left h2,
     .fleet-header-left h2,
     .logs-header-left h2,
@@ -230,7 +219,7 @@
         break-after: avoid !important;
     }
 
-    /* ✅ العنوان الفرعي — يتمركز تحت العنوان الرئيسي */
+    /* ✅ العنوان الفرعي */
     .eff-header-left p,
     .fleet-header-left p,
     .logs-header-left p,
@@ -444,7 +433,7 @@
     }
 
     /* ═════════════════════════════════════════════
-       5) الجداول — لكل الصفحات
+       5) الجداول
        ═════════════════════════════════════════════ */
     .table-wrapper,
     .veh-table-wrap {
@@ -540,15 +529,12 @@
         break-inside: avoid !important;
     }
 
-    /* إخفاء عمود "إجراء" */
     thead th:last-child,
     tbody td:last-child {
         display: none !important;
     }
 
-    /* ─────────────────────────────────────────────
-       6) شرائط جانبية ملوّنة
-       ───────────────────────────────────────────── */
+    /* ───────────── 6) شرائط جانبية ───────────── */
     .row-high {
         background: #f4faf7 !important;
         border-right: 3pt solid #1d6b4a !important;
@@ -591,9 +577,7 @@
         border-right: 3pt solid #9a6b0e !important;
     }
 
-    /* ─────────────────────────────────────────────
-       7) الشارات وأشرطة التقدم
-       ───────────────────────────────────────────── */
+    /* ───────────── 7) الشارات ───────────── */
     .status-badge,
     .eff-status,
     .veh-badge {
@@ -675,9 +659,7 @@
     .progress-bar .progress-fill.mid  { background: #9a6b0e !important; }
     .progress-bar .progress-fill.low  { background: #9b2c2c !important; }
 
-    /* ─────────────────────────────────────────────
-       8) التذييل لكل الصفحات
-       ───────────────────────────────────────────── */
+    /* ───────────── 8) التذييل ───────────── */
     #page-fleet::after,
     #page-logs::after,
     #page-efficiency::after,
@@ -713,9 +695,7 @@
         content: "منظومة الوسائل البرية  —  الحرس الوطني البحري  —  وثيقة رسمية" !important;
     }
 
-    /* ─────────────────────────────────────────────
-       9) FLEET — السجل العام
-       ───────────────────────────────────────────── */
+    /* ───────────── 9) FLEET ───────────── */
     #page-fleet .table-wrapper::before {
         content: "📋 السجل التفصيلي للمراكب" !important;
         display: block !important;
@@ -732,9 +712,7 @@
         direction: rtl !important;
     }
 
-    /* ─────────────────────────────────────────────
-       10) LOGS — سجل الصيانة
-       ───────────────────────────────────────────── */
+    /* ───────────── 10) LOGS ───────────── */
     #page-logs .table-header {
         display: flex !important;
         justify-content: space-between !important;
@@ -777,9 +755,7 @@
         padding: 0 !important;
     }
 
-    /* ─────────────────────────────────────────────
-       11) MAINTENANCE — قسم المراكب المعطبة
-       ───────────────────────────────────────────── */
+    /* ───────────── 11) MAINTENANCE ───────────── */
     #page-maintenance .damaged-section {
         background: none !important;
         border: none !important;
@@ -879,9 +855,7 @@
         padding: 0 !important;
     }
 
-    /* ─────────────────────────────────────────────
-       12) VEHICLES — الوسائل البرية
-       ───────────────────────────────────────────── */
+    /* ───────────── 12) VEHICLES ───────────── */
     #page-vehicles .veh-table-wrap::before {
         content: "📋 السجل التفصيلي للوسائل البرية" !important;
         display: block !important;
@@ -952,9 +926,7 @@
 
     #page-vehicles .veh-cell.center { text-align: center !important; }
 
-    /* ─────────────────────────────────────────────
-       13) ملخص الطباعة (fleet)
-       ───────────────────────────────────────────── */
+    /* ───────────── 13) ملخص الطباعة ───────────── */
     .print-only,
     .print-summary-section {
         display: block !important;
@@ -1021,9 +993,7 @@
         padding-right: 3.5mm !important;
     }
 
-    /* ─────────────────────────────────────────────
-       14) كسر شامل لأي قيود overflow
-       ───────────────────────────────────────────── */
+    /* ───────────── 14) كسر overflow ───────────── */
     html body #page-efficiency .eff-section,
     html body #page-fleet .eff-section,
     html body #page-logs .eff-section,
@@ -1042,7 +1012,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   🌐 SCREEN — إخفاء عناصر الطباعة
+   🌐 SCREEN
    ═══════════════════════════════════════════════════════════ */
 @media screen {
     .print-only,
