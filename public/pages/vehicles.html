@@ -8,7 +8,7 @@
         position: relative; z-index: 1;
     }
     #page-vehicles *, #page-vehicles *::before, #page-vehicles *::after { box-sizing: border-box; }
-    .veh-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
+    .veh-container { padding: 20px; max-width: 1600px; margin: 0 auto; }
 
     .veh-header {
         background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(247,215,116,0.05));
@@ -127,10 +127,10 @@
     }
     .veh-table-head, .veh-table-row {
         display: grid;
-        grid-template-columns: 50px 130px 150px 1fr 130px 110px 120px 130px 130px 1fr 100px;
+        grid-template-columns: 50px 110px 190px 150px 1fr 130px 100px 110px 120px 130px 1fr 100px;
         gap: 8px; padding: 14px 20px;
         align-items: center; font-size: 13px;
-        min-width: 1500px;
+        min-width: 1750px;
     }
     .veh-table-head {
         background: rgba(247,215,116,0.05);
@@ -155,6 +155,9 @@
         font-size: 11px; font-weight: 700;
     }
     .veh-badge.type { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .veh-badge.brand { background: rgba(247,215,116,0.15); color: #f7d774; font-size: 11px; }
+    .veh-badge.model { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); font-size: 10px; }
+    .veh-badge.year { background: rgba(34,197,94,0.1); color: #4ade80; font-size: 10px; }
     .veh-badge.region { background: rgba(247,215,116,0.15); color: #f7d774; font-size: 10px; }
     .veh-badge.zone { background: rgba(74,222,128,0.15); color: #4ade80; font-size: 10px; }
     .veh-badge.status-صالحة { background: rgba(74,222,128,0.15); color: #4ade80; }
@@ -203,7 +206,7 @@
         background: linear-gradient(135deg, #1a1f2e, #0f1420);
         border: 1px solid rgba(247,215,116,0.2);
         border-radius: 20px; padding: 28px;
-        width: 100%; max-width: 600px;
+        width: 100%; max-width: 650px;
         max-height: 90vh; overflow-y: auto;
         box-shadow: 0 24px 64px rgba(0,0,0,0.8);
     }
@@ -247,6 +250,7 @@
     textarea.veh-form-control { resize: vertical; min-height: 70px; }
 
     .veh-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .veh-form-row.three { grid-template-columns: 1fr 1fr 1fr; }
     .veh-modal-actions { display: flex; gap: 12px; margin-top: 24px; }
     .veh-modal-actions .veh-btn { flex: 1; justify-content: center; padding: 14px; }
 
@@ -277,7 +281,7 @@
         .veh-header { padding: 18px; }
         .veh-header .title { font-size: 18px; }
         .veh-stats { grid-template-columns: repeat(2, 1fr); }
-        .veh-form-row { grid-template-columns: 1fr; }
+        .veh-form-row, .veh-form-row.three { grid-template-columns: 1fr; }
         .veh-actions { flex-direction: column; }
         .veh-input, .veh-select, .veh-btn { width: 100%; }
     }
@@ -355,7 +359,7 @@
             إضافة وسيلة
         </button>
 
-        <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة...">
+        <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة أو الماركة...">
 
         <select class="veh-select" id="vehFilterRegion">
             <option value="all">كل الإدارات والأقاليم</option>
@@ -382,6 +386,10 @@
 
         <select class="veh-select" id="vehFilterZone">
             <option value="all">كل المناطق</option>
+        </select>
+
+        <select class="veh-select" id="vehFilterBrand">
+            <option value="all">كل الماركات</option>
         </select>
 
         <select class="veh-select" id="vehFilterStatus">
@@ -421,6 +429,7 @@
         <div class="veh-table-head">
             <div class="veh-cell center">#</div>
             <div class="veh-cell center">النوع</div>
+            <div class="veh-cell">الماركة / الطراز</div>
             <div class="veh-cell">رقم الوسيلة</div>
             <div class="veh-cell">الإدارة / الإقليم</div>
             <div class="veh-cell">المنطقة</div>
@@ -476,6 +485,69 @@
                 <div class="veh-form-group">
                     <label>رقم الوسيلة <span class="req">*</span></label>
                     <input type="text" class="veh-form-control" id="vehPlate" required placeholder="مثال: 1234 تونس 5678" maxlength="50">
+                </div>
+            </div>
+
+            <div class="veh-form-row">
+                <div class="veh-form-group">
+                    <label>الماركة</label>
+                    <select class="veh-form-control" id="vehBrand">
+                        <option value="">— اختر الماركة —</option>
+                        <option value="تويوتا">🚗 تويوتا (Toyota)</option>
+                        <option value="فورد">🚗 فورد (Ford)</option>
+                        <option value="إيفيكو">🚚 إيفيكو (Iveco)</option>
+                        <option value="مرسيدس">🚗 مرسيدس (Mercedes)</option>
+                        <option value="رينو">🚗 رينو (Renault)</option>
+                        <option value="بيجو">🚗 بيجو (Peugeot)</option>
+                        <option value="ستروين">🚗 ستروين (Citroën)</option>
+                        <option value="فولكس فاغن">🚗 فولكس فاغن (Volkswagen)</option>
+                        <option value="نيسان">🚗 نيسان (Nissan)</option>
+                        <option value="ميتسوبيشي">🚗 ميتسوبيشي (Mitsubishi)</option>
+                        <option value="هيونداي">🚗 هيونداي (Hyundai)</option>
+                        <option value="كيا">🚗 كيا (Kia)</option>
+                        <option value="شيفروليه">🚗 شيفروليه (Chevrolet)</option>
+                        <option value="جيب">🚙 جيب (Jeep)</option>
+                        <option value="سكودا">🚗 سكودا (Škoda)</option>
+                        <option value="فيات">🚗 فيات (Fiat)</option>
+                        <option value="مان">🚚 مان (MAN)</option>
+                        <option value="سكانيا">🚚 سكانيا (Scania)</option>
+                        <option value="فولفو">🚚 فولفو (Volvo)</option>
+                        <option value="داف">🚚 داف (DAF)</option>
+                        <option value="هينو">🚚 هينو (Hino)</option>
+                        <option value="ايسوزو">🚚 ايسوزو (Isuzu)</option>
+                        <option value="أخرى">⚙️ أخرى</option>
+                    </select>
+                </div>
+
+                <div class="veh-form-group">
+                    <label>الطراز</label>
+                    <input type="text" class="veh-form-control" id="vehModel" placeholder="مثال: Hilux, Daily, Ranger" maxlength="100" list="vehModelsList">
+                    <datalist id="vehModelsList"></datalist>
+                </div>
+            </div>
+
+            <div class="veh-form-row">
+                <div class="veh-form-group">
+                    <label>السنة</label>
+                    <input type="number" class="veh-form-control" id="vehYear" placeholder="2020" min="1900" max="2100">
+                </div>
+
+                <div class="veh-form-group">
+                    <label>اللون</label>
+                    <select class="veh-form-control" id="vehColor">
+                        <option value="">— اختر اللون —</option>
+                        <option value="أبيض">⚪ أبيض</option>
+                        <option value="أسود">⚫ أسود</option>
+                        <option value="رمادي">🩶 رمادي</option>
+                        <option value="فضي">⚪ فضي</option>
+                        <option value="أحمر">🔴 أحمر</option>
+                        <option value="أزرق">🔵 أزرق</option>
+                        <option value="أخضر">🟢 أخضر</option>
+                        <option value="أصفر">🟡 أصفر</option>
+                        <option value="بني">🟤 بني</option>
+                        <option value="بيج">🟠 بيج</option>
+                        <option value="أخرى">⚙️ أخرى</option>
+                    </select>
                 </div>
             </div>
 
@@ -564,7 +636,7 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v5.1 - Loading...');
+    console.log('🚛 Vehicles Page v6.0 - Loading...');
 
     var _isDestroyed = false;
     var _timeouts = [];
@@ -679,6 +751,21 @@
         'المجمع الأمني بقبيبة': ['قبيبة "صفاقس"']
     };
 
+    var MODELS_DATA = {
+        'تويوتا': ['Hilux', 'Land Cruiser', 'RAV4', 'Corolla', 'Camry', 'Yaris', 'Hiace'],
+        'فورد': ['Ranger', 'F-150', 'Transit', 'Explorer', 'Focus'],
+        'إيفيكو': ['Daily', 'Eurocargo', 'Stralis', 'Trakker'],
+        'مرسيدس': ['Sprinter', 'Actros', 'Atego', 'G-Class', 'Vito'],
+        'رينو': ['Kangoo', 'Master', 'Duster', 'Clio'],
+        'بيجو': ['Partner', 'Boxer', '3008', '5008', '208'],
+        'نيسان': ['Navara', 'Patrol', 'Qashqai', 'NV200'],
+        'ميتسوبيشي': ['L200', 'Pajero', 'Canter', 'Outlander'],
+        'هيونداي': ['Tucson', 'Santa Fe', 'H1', 'Accent'],
+        'كيا': ['Sportage', 'Sorento', 'K2700'],
+        'شيفروليه': ['Silverado', 'Colorado', 'Tahoe'],
+        'جيب': ['Wrangler', 'Grand Cherokee', 'Compass']
+    };
+
     var REGION_LABELS = {
         'إدارة إسناد الوحدات البحرية': '🏛️ إسناد الوحدات',
         'إدارة حرس السواحل': '🚢 حرس السواحل',
@@ -754,20 +841,25 @@
         var typeEl = document.getElementById('vehFilterType');
         var regionEl = document.getElementById('vehFilterRegion');
         var zoneEl = document.getElementById('vehFilterZone');
+        var brandEl = document.getElementById('vehFilterBrand');
 
         var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
         var status = statusEl ? statusEl.value : 'all';
         var type = typeEl ? typeEl.value : 'all';
         var region = regionEl ? regionEl.value : 'all';
         var zone = zoneEl ? zoneEl.value : 'all';
+        var brand = brandEl ? brandEl.value : 'all';
 
         return vehicles.filter(function(v) {
             if (status !== 'all' && v.status !== status) return false;
             if (type !== 'all' && v.type !== type) return false;
             if (region !== 'all' && v.region !== region) return false;
             if (zone !== 'all' && v.zone !== zone) return false;
+            if (brand !== 'all' && v.brand !== brand) return false;
             if (search) {
-                var text = (v.plateNumber + ' ' + v.region + ' ' + (v.zone || '') + ' ' + v.type + ' ' + (v.notes || '')).toLowerCase();
+                var text = (v.plateNumber + ' ' + v.region + ' ' + (v.zone || '') + ' ' +
+                           v.type + ' ' + (v.brand || '') + ' ' + (v.model || '') + ' ' +
+                           (v.color || '') + ' ' + (v.notes || '')).toLowerCase();
                 if (text.indexOf(search) === -1) return false;
             }
             return true;
@@ -798,10 +890,24 @@
             var regionShort = getRegionShort(v.region);
             var zone = v.zone || '—';
 
+            // ✅ الماركة / الطراز / السنة / اللون
+            var brandModel = '—';
+            if (v.brand || v.model || v.year) {
+                var parts = [];
+                if (v.brand) parts.push('<span class="veh-badge brand">' + escapeHtml(v.brand) + '</span>');
+                if (v.model) parts.push('<span class="veh-badge model">' + escapeHtml(v.model) + '</span>');
+                if (v.year) parts.push('<span class="veh-badge year">' + escapeHtml(v.year) + '</span>');
+                brandModel = parts.join(' ');
+            }
+            if (v.color) {
+                brandModel += ' <span style="color:rgba(255,255,255,0.3);font-size:10px">(' + escapeHtml(v.color) + ')</span>';
+            }
+
             html +=
                 '<div class="veh-table-row">' +
                     '<div class="veh-cell center">' + (idx + 1) + '</div>' +
                     '<div class="veh-cell center"><span class="veh-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
+                    '<div class="veh-cell">' + brandModel + '</div>' +
                     '<div class="veh-cell"><span class="veh-plate">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
                     '<div class="veh-cell" title="' + escapeHtml(v.region || '') + '"><span class="veh-badge region">' + escapeHtml(regionShort) + '</span></div>' +
                     '<div class="veh-cell" title="' + escapeHtml(v.zone || '') + '"><span class="veh-badge zone">📍 ' + escapeHtml(zone) + '</span></div>' +
@@ -875,6 +981,21 @@
         zoneEl.innerHTML = html;
     }
 
+    function updateModelsList() {
+        var brandEl = document.getElementById('vehBrand');
+        var listEl = document.getElementById('vehModelsList');
+        if (!brandEl || !listEl) return;
+
+        var brand = brandEl.value;
+        var models = MODELS_DATA[brand] || [];
+
+        var html = '';
+        models.forEach(function(m) {
+            html += '<option value="' + escapeHtml(m) + '">';
+        });
+        listEl.innerHTML = html;
+    }
+
     function toggleFaultDate() {
         var statusEl = document.getElementById('vehStatus');
         var groupEl = document.getElementById('vehFaultDateGroup');
@@ -905,6 +1026,10 @@
         document.getElementById('vehPlate').value = '';
         document.getElementById('vehRegion').value = '';
         document.getElementById('vehType').value = 'سيارة';
+        document.getElementById('vehBrand').value = '';
+        document.getElementById('vehModel').value = '';
+        document.getElementById('vehYear').value = '';
+        document.getElementById('vehColor').value = '';
         document.getElementById('vehStatus').value = 'صالحة';
         document.getElementById('vehCondition').value = 'جديدة';
         document.getElementById('vehDate').value = '';
@@ -920,6 +1045,7 @@
         if (zg) zg.style.display = 'block';
 
         updateZoneOptions();
+        updateModelsList();
 
         modal.classList.add('active');
         _timeouts.push(setTimeout(function() {
@@ -942,6 +1068,10 @@
         document.getElementById('vehPlate').value = v.plateNumber || '';
         document.getElementById('vehRegion').value = v.region || '';
         document.getElementById('vehType').value = v.type || 'سيارة';
+        document.getElementById('vehBrand').value = v.brand || '';
+        document.getElementById('vehModel').value = v.model || '';
+        document.getElementById('vehYear').value = v.year || '';
+        document.getElementById('vehColor').value = v.color || '';
         document.getElementById('vehStatus').value = v.status || 'صالحة';
         document.getElementById('vehCondition').value = v.workCondition || 'جديدة';
         document.getElementById('vehDate').value = v.appointmentDate || '';
@@ -949,6 +1079,7 @@
         document.getElementById('vehNotes').value = v.notes || '';
 
         updateZoneOptions(v.zone || '');
+        updateModelsList();
 
         var faultEl = document.getElementById('vehFaultDate');
         var faultGrpEl = document.getElementById('vehFaultDateGroup');
@@ -977,6 +1108,10 @@
         var region = document.getElementById('vehRegion').value.trim();
         var zone = document.getElementById('vehZone').value.trim();
         var type = document.getElementById('vehType').value;
+        var brand = document.getElementById('vehBrand').value.trim();
+        var model = document.getElementById('vehModel').value.trim();
+        var year = document.getElementById('vehYear').value ? Number(document.getElementById('vehYear').value) : null;
+        var color = document.getElementById('vehColor').value;
         var status = document.getElementById('vehStatus').value;
         var workCondition = document.getElementById('vehCondition').value;
         var appointmentDate = document.getElementById('vehDate').value || null;
@@ -997,6 +1132,10 @@
             region: region,
             zone: zone,
             type: type,
+            brand: brand,
+            model: model,
+            year: year,
+            color: color,
             status: status,
             workCondition: workCondition,
             appointmentDate: appointmentDate,
@@ -1069,7 +1208,8 @@
 
             var BOM = '\uFEFF';
             var headers = [
-                '#', 'النوع', 'رقم الوسيلة', 'الإدارة / الإقليم', 'المنطقة',
+                '#', 'النوع', 'الماركة', 'الطراز', 'السنة', 'اللون',
+                'رقم الوسيلة', 'الإدارة / الإقليم', 'المنطقة',
                 'الحالة', 'حالة العمل', 'تاريخ التعيين', 'تاريخ العطب', 'ملاحظات'
             ];
 
@@ -1089,6 +1229,10 @@
                 rows.push([
                     csvEscape(idx + 1),
                     csvEscape(v.type || ''),
+                    csvEscape(v.brand || ''),
+                    csvEscape(v.model || ''),
+                    csvEscape(v.year || ''),
+                    csvEscape(v.color || ''),
                     csvEscape(v.plateNumber || ''),
                     csvEscape(v.region || ''),
                     csvEscape(v.zone || ''),
@@ -1157,8 +1301,9 @@
 
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v5.1...');
+        console.log('🚀 Initializing Vehicles page v6.0...');
 
+        // قائمة المناطق في الفلتر
         var filterZoneEl = document.getElementById('vehFilterZone');
         if (filterZoneEl) {
             var zonesAll = getAllZones();
@@ -1167,6 +1312,19 @@
                 zHtml += '<option value="' + escapeHtml(z) + '">📍 ' + escapeHtml(z) + '</option>';
             });
             filterZoneEl.innerHTML = zHtml;
+        }
+
+        // قائمة الماركات في الفلتر
+        var filterBrandEl = document.getElementById('vehFilterBrand');
+        if (filterBrandEl) {
+            var brands = ['تويوتا','فورد','إيفيكو','مرسيدس','رينو','بيجو','ستروين','فولكس فاغن',
+                          'نيسان','ميتسوبيشي','هيونداي','كيا','شيفروليه','جيب','سكودا','فيات',
+                          'مان','سكانيا','فولفو','داف','هينو','ايسوزو','أخرى'];
+            var bHtml = '<option value="all">كل الماركات</option>';
+            brands.forEach(function(b) {
+                bHtml += '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>';
+            });
+            filterBrandEl.innerHTML = bHtml;
         }
 
         addSafeListener(document.getElementById('vehAddBtn'), 'click', openAddModal);
@@ -1199,6 +1357,7 @@
         addSafeListener(document.getElementById('vehFilterStatus'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterType'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterZone'), 'change', renderTable);
+        addSafeListener(document.getElementById('vehFilterBrand'), 'change', renderTable);
 
         // ✅ ربط فلتر الإدارة بفلتر المنطقة
         addSafeListener(document.getElementById('vehFilterRegion'), 'change', function() {
@@ -1228,12 +1387,16 @@
             updateZoneOptions();
         });
 
+        addSafeListener(document.getElementById('vehBrand'), 'change', function() {
+            updateModelsList();
+        });
+
         addSafeListener(document.getElementById('vehStatus'), 'change', toggleFaultDate);
 
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v5.1 ready');
+        console.log('✅ Vehicles page v6.0 ready');
     }
 
     if (document.readyState === 'loading') {
@@ -1251,7 +1414,7 @@
     window.vehPrint = vehPrint;
     window.vehExportExcel = vehExportExcel;
 
-    console.log('✅ Vehicles Page v5.1 ready');
+    console.log('✅ Vehicles Page v6.0 ready');
 
 })();
 </script>
