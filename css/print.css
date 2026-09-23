@@ -1462,3 +1462,46 @@
         -webkit-text-fill-color: #0a0e1a !important;
     }
 }
+/* ═══════════════════════════════════════════════════════════
+   🚫 إخفاء أي عنصر كبير بخلفية داكنة/زرقاء
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+    
+    /* 🎯 العنصر الذي يحتوي "جاهزية الأسطول" داخل صندوق */
+    #page-efficiency .hero-section,
+    #page-efficiency .hero,
+    #page-efficiency .eff-hero,
+    #page-efficiency .kpi-header,
+    #page-efficiency .readiness-hero,
+    #page-efficiency .dashboard-hero,
+    #page-efficiency .page-hero,
+    #page-efficiency .banner,
+    #page-efficiency [class*="hero"],
+    #page-efficiency [class*="banner"],
+    #page-efficiency [class*="cover"],
+    #page-efficiency [class*="jumbo"],
+    #page-efficiency [id*="hero"],
+    #page-efficiency [id*="banner"],
+    
+    /* 🎯 أي عنصر داخل main-content له خلفية داكنة كبيرة */
+    #page-efficiency > div:not(.eff-header):not(.stats-grid):not(.eff-section):not([class*="section"]) {
+        /* لا نخفي — انتظر الاكتشاف */
+    }
+    
+    /* 🚨 الحل الجذري: أي عنصر كبير بخلفية زرقاء/داكنة */
+    #page-efficiency [style*="background"] ,
+    #page-efficiency [style*="linear-gradient"],
+    #page-efficiency [style*="radial-gradient"] {
+        background: none !important;
+    }
+    
+    /* ✅ الحفاظ على الرأس الرسمي */
+    #official-print-header,
+    .eff-header,
+    .fleet-header,
+    .veh-header {
+        display: block !important;
+        visibility: visible !important;
+        background: #ffffff !important;
+    }
+}
