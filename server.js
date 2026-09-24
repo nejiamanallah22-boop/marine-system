@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.9.1
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.9.2
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
 // 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v6
@@ -8,8 +8,7 @@
 // 🛡️ + SECURITY HARDENING
 // 🏛️ + OFFICIAL PRINT HEADER
 // 🚨 + HIDE BLUE BOXES (JS auto-detect)
-// 🖨️ + PRINT ORIENTATION BAR (Portrait / Paysage)
-// 🎯 FIX: HTML injection via explicit res.sendFile (v10.9.1)
+// ✂️ + PRINT ORIENTATION BUTTONS REMOVED (v10.9.2)
 // ============================================================
 'use strict';
 require('dotenv').config();
@@ -17,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.9.1 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.9.2 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 Node version:', process.version);
@@ -213,7 +212,7 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.9.1');
+    res.setHeader('X-System-Version', '10.9.2');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -484,7 +483,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.9.1',
+            version: '10.9.2',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -531,7 +530,8 @@ async function createIndexes() {
         { col:'vehicles', spec:{ status:1 }, opts:{ background:true } },
         { col:'vehicles', spec:{ type:1 }, opts:{ background:true } },
         { col:'vehicles', spec:{ region:1 }, opts:{ background:true } },
-        { col:'vehicles', spec:{ center:1 }, opts:{ background:true } }
+        { col:'vehicles', spec:{ center:1 }, opts:{ background:true } },
+        { col:'vehicles', spec:{ supplyPlace:1 }, opts:{ background:true } }
     ];
     for (const t of tasks) {
         try {
@@ -1046,7 +1046,7 @@ function formatMaintenance(log) {
     app.use((req, res, next) => { ensureCsrfToken(req, res); next(); });
 
     // ============================================================
-    // 📁 STATIC FILES — CSS / JS / Assets
+    // 📁 STATIC FILES
     // ============================================================
     const publicDir = path.join(__dirname, 'public');
     const pagesDir = path.join(__dirname, 'pages');
@@ -1113,7 +1113,6 @@ function formatMaintenance(log) {
         res.status(204).end();
     });
 
-    // 🎯 SW.js — بدون cache
     app.get('/sw.js', (req, res) => {
         const fp = path.join(publicDir, 'sw.js');
         if (!fs.existsSync(fp)) return res.status(404).end();
@@ -1133,22 +1132,21 @@ function formatMaintenance(log) {
         return res.json({ success: true, token: t || null, expiresIn: CSRF_MAX_AGE });
     });
 
-    // 🎯 اختبار الحقن
     app.get('/api/injection-check', (req, res) => {
         res.json({
             success: true,
-            version: '10.9.1',
+            version: '10.9.2',
             hasInjectionMiddleware: true,
             hasPrintHeader: typeof PRINT_HEADER_SCRIPT === 'string',
             hasHideBlueBoxes: typeof HIDE_BLUE_BOXES_SCRIPT === 'string',
-            hasPrintOrientation: typeof PRINT_ORIENTATION_SCRIPT === 'string',
+            printOrientationBar: 'REMOVED',
             timestamp: new Date().toISOString()
         });
     });
 
     app.get('/api/health', (req, res) => {
         res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.9.1',
+            success: true, status: 'online', service: 'Marine System', version: '10.9.2',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
@@ -1162,7 +1160,7 @@ function formatMaintenance(log) {
             features: {
                 printHeader: true,
                 hideBlueBoxes: true,
-                printOrientation: true,
+                printOrientationBar: false,
                 forceGPS: true,
                 userBadge: true,
                 ownership: true,
@@ -2222,7 +2220,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.9.1 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.9.2 - Aman Allah Naji">
 `;
     const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
@@ -2588,7 +2586,6 @@ else init();
                 
                 if (el.id === 'official-print-header') continue;
                 if (el.closest && el.closest('#official-print-header')) continue;
-                if (el.closest && el.closest('.print-orientation-bar')) continue;
                 
                 if (el.tagName === 'TABLE' || el.tagName === 'THEAD' || 
                     el.tagName === 'TBODY' || el.tagName === 'TR' || 
@@ -2690,146 +2687,6 @@ else init();
     }
 })();<\/script>`;
 
-    const PRINT_ORIENTATION_CSS = `
-<style id="print-orientation-style">
-@media screen {
-    .print-orientation-bar {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-        display: flex;
-        gap: 8px;
-        padding: 8px 10px;
-        background: rgba(6, 9, 17, 0.95);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(230, 179, 30, 0.3);
-        border-radius: 14px;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-        font-family: 'Cairo', sans-serif;
-        direction: rtl;
-    }
-    .print-orientation-bar button {
-        padding: 10px 18px;
-        border: none;
-        border-radius: 10px;
-        font-family: 'Cairo', sans-serif;
-        font-size: 12.5px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.25s;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        white-space: nowrap;
-    }
-    .print-orientation-bar .btn-portrait {
-        background: linear-gradient(135deg, #f7d774, #e6b31e);
-        color: #060911;
-    }
-    .print-orientation-bar .btn-portrait:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(247, 215, 116, 0.4);
-    }
-    .print-orientation-bar .btn-paysage {
-        background: linear-gradient(135deg, #60a5fa, #3b82f6);
-        color: #fff;
-    }
-    .print-orientation-bar .btn-paysage:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(96, 165, 250, 0.4);
-    }
-    .print-orientation-bar button i {
-        font-size: 13px;
-    }
-}
-@media print {
-    .print-orientation-bar { display: none !important; }
-}
-</style>`;
-
-    const PRINT_ORIENTATION_HTML = `
-<div class="print-orientation-bar" id="printOrientationBar">
-    <button type="button" class="btn-portrait" id="printPortraitBtn" title="طباعة A4 عمودي">
-        <i class="fas fa-file-alt"></i> Portrait
-    </button>
-    <button type="button" class="btn-paysage" id="printPaysageBtn" title="طباعة A4 أفقي">
-        <i class="fas fa-file"></i> Paysage
-    </button>
-</div>`;
-
-    const PRINT_ORIENTATION_SCRIPT = `
-<script>(function(){
-    'use strict';
-    
-    var STYLE_ID = 'dynamic-print-orientation';
-    
-    function applyOrientation(mode) {
-        var style = document.getElementById(STYLE_ID);
-        if (!style) {
-            style = document.createElement('style');
-            style.id = STYLE_ID;
-            document.head.appendChild(style);
-        }
-        
-        if (mode === 'landscape') {
-            style.textContent = '@page { size: A4 landscape !important; margin: 10mm 6mm 12mm 6mm !important; }';
-            document.body.classList.add('print-landscape');
-            document.body.classList.remove('print-portrait');
-        } else {
-            style.textContent = '@page { size: A4 portrait !important; margin: 12mm 8mm 12mm 8mm !important; }';
-            document.body.classList.add('print-portrait');
-            document.body.classList.remove('print-landscape');
-        }
-        
-        try { localStorage.setItem('print_orientation', mode); } catch(e) {}
-    }
-    
-    function printWith(mode) {
-        applyOrientation(mode);
-        var label = mode === 'landscape' ? 'Paysage (أفقي)' : 'Portrait (عمودي)';
-        console.log('%c🖨️ الطباعة: ' + label, 'background: #f7d774; color: #060911; padding: 6px 12px; font-weight: bold;');
-        
-        setTimeout(function() {
-            window.print();
-        }, 350);
-    }
-    
-    function init() {
-        var btnPortrait = document.getElementById('printPortraitBtn');
-        var btnPaysage = document.getElementById('printPaysageBtn');
-        var bar = document.getElementById('printOrientationBar');
-        
-        if (!bar || !btnPortrait || !btnPaysage) return;
-        
-        btnPortrait.addEventListener('click', function(e) {
-            e.preventDefault();
-            printWith('portrait');
-        });
-        
-        btnPaysage.addEventListener('click', function(e) {
-            e.preventDefault();
-            printWith('landscape');
-        });
-        
-        try {
-            var saved = localStorage.getItem('print_orientation') || 'portrait';
-            applyOrientation(saved);
-        } catch(e) {
-            applyOrientation('portrait');
-        }
-        
-        console.log('%c✅ Print Orientation Bar ready', 'background: green; color: white; padding: 4px 8px;');
-    }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-})();<\/script>`;
-
     const INJECTION_SKIP_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i;
 
     function injectAll(html) {
@@ -2865,22 +2722,9 @@ else init();
             html = html.replace('</body>', '<!-- HIDE_BLUE_BOXES_INJECTED -->\n' + HIDE_BLUE_BOXES_SCRIPT + '\n</body>');
         }
         
-        if (!html.includes('print-orientation-style')) {
-            if (html.includes('</head>')) {
-                html = html.replace('</head>', PRINT_ORIENTATION_CSS + '\n</head>');
-            }
-            if (/<body[^>]*>/i.test(html)) {
-                html = html.replace(/(<body[^>]*>)/i, '$1' + PRINT_ORIENTATION_HTML);
-            } else {
-                html = PRINT_ORIENTATION_HTML + html;
-            }
-            html = html.replace('</body>', PRINT_ORIENTATION_SCRIPT + '\n</body>');
-        }
-        
         return html;
     }
 
-    // ─── Injection Middleware ───
     app.use((req, res, next) => {
         if (req.path.startsWith('/api/') || INJECTION_SKIP_REGEX.test(req.path)) return next();
         const originalSend = res.send;
@@ -2911,9 +2755,7 @@ else init();
         next();
     });
 
-    // ============================================================
-    // 🎯 PAGE ROUTES — يستخدم res.sendFile (لتفعيل الحقن)
-    // ============================================================
+    // ============ PAGE ROUTES ============
     function findPageFile(name) {
         const paths = [
             path.join(publicPagesDir, name + '.html'),
@@ -2928,7 +2770,6 @@ else init();
     if (!fs.existsSync(pagesDir)) fs.mkdirSync(pagesDir, { recursive: true });
     if (!fs.existsSync(publicPagesDir)) fs.mkdirSync(publicPagesDir, { recursive: true });
 
-    // ✅ handler صريح لصفحات HTML — يأتي قبل express.static
     app.get('/pages/:page', (req, res, next) => {
         let page = String(req.params.page || '');
         if (page.includes('..') || page.includes('\\')) return next();
@@ -2938,7 +2779,6 @@ else init();
         return res.sendFile(fp);
     });
 
-    // 📁 الملفات الثابتة الأخرى في /pages/ (CSS/JS/صور)
     app.use('/pages', express.static(pagesDir, { index: false }));
     app.use('/pages', express.static(publicPagesDir, { index: false }));
 
@@ -2950,7 +2790,7 @@ else init();
             path.join(publicPagesDir, 'index.html')
         ];
         for (const p of possible) if (fs.existsSync(p)) return res.sendFile(p);
-        res.send('<h1>🚢 Marine System v10.9.1</h1><p>Running</p>');
+        res.send('<h1>🚢 Marine System v10.9.2</h1><p>Running</p>');
     });
 
     app.get('/:page', (req, res, next) => {
@@ -2978,7 +2818,7 @@ else init();
     // ============ LISTEN ============
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v10.9.1');
+        console.log('🚢 MARINE SYSTEM v10.9.2');
         console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
         console.log('🛡️  Security hardening: ENABLED');
         console.log('🍃 MongoDB Atlas');
@@ -2989,8 +2829,7 @@ else init();
         console.log('🎨 Static CSS/JS: FIXED');
         console.log('🏛️  Print Header Injection: ENABLED');
         console.log('🚨 Hide Blue Boxes: ENABLED');
-        console.log('🖨️  Print Orientation Bar: ENABLED');
-        console.log('🎯 HTML Injection via res.sendFile: FIXED');
+        console.log('✂️  Print Orientation Bar: REMOVED');
         console.log('=========================================');
         console.log(`📍 Port: ${PORT}`);
         console.log(`🌍 Env: ${process.env.NODE_ENV || 'development'}`);
