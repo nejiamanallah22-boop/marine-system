@@ -1259,7 +1259,7 @@
             .sidebar-header { display: flex; }
             .sidebar-close { display: block; }
         }
-        @media (max-width: 768px) {
+               @media (max-width: 768px) {
             .login-box { padding: 32px 24px 28px; }
             .brand h1 { font-size: 14px; }
             .brand .brand-tag { display: none; }
@@ -1273,10 +1273,156 @@
             .user-avatar { width: 28px; height: 28px; font-size: 12px; }
             .sidebar { width: 260px; padding: 10px; }
         }
+
+        /* ============================================================
+           🖨️ PRINT SETTINGS MODAL
+           ============================================================ */
+        #printSettingsModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999999;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #printSettingsModal.active { display: flex; }
+
+        #printSettingsModal .ps-box {
+            background: linear-gradient(145deg, #111e3a, #0a1628);
+            border: 1px solid rgba(230, 179, 30, 0.15);
+            border-radius: 20px;
+            max-width: 560px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 60px rgba(230, 179, 30, 0.05);
+            animation: psModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes psModalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(15px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        #printSettingsModal .ps-header {
+            padding: 20px 24px;
+            background: rgba(230, 179, 30, 0.04);
+            border-bottom: 1px solid rgba(230, 179, 30, 0.1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        #printSettingsModal .ps-header h3 {
+            color: var(--gold-light); font-size: 18px; font-weight: 800;
+            display: flex; align-items: center; gap: 10px; margin: 0;
+        }
+        #printSettingsModal .ps-header h3 i { color: var(--gold); }
+
+        #printSettingsModal .ps-close {
+            background: rgba(255, 255, 255, 0.04); border: none;
+            color: rgba(255, 255, 255, 0.5); width: 36px; height: 36px;
+            border-radius: 10px; cursor: pointer; font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        #printSettingsModal .ps-close:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171; transform: rotate(90deg);
+        }
+
+        #printSettingsModal .ps-body { padding: 24px; }
+        #printSettingsModal .ps-group { margin-bottom: 22px; }
+        #printSettingsModal .ps-group:last-child { margin-bottom: 0; }
+
+        #printSettingsModal .ps-label {
+            display: block; font-size: 12px; font-weight: 700;
+            color: rgba(255, 255, 255, 0.5); margin-bottom: 12px;
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        #printSettingsModal .ps-label i { color: var(--gold); margin-left: 6px; }
+
+        #printSettingsModal .ps-options {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+        #printSettingsModal .ps-options.four {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        #printSettingsModal .ps-option {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 8px; padding: 16px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px; cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            color: rgba(255, 255, 255, 0.6);
+            font-family: inherit; font-size: 12px; font-weight: 700;
+            position: relative;
+        }
+        #printSettingsModal .ps-option:hover {
+            background: rgba(230, 179, 30, 0.05);
+            border-color: rgba(230, 179, 30, 0.3);
+            color: #f5d76e; transform: translateY(-2px);
+        }
+        #printSettingsModal .ps-option.active {
+            background: linear-gradient(135deg, rgba(230, 179, 30, 0.15), rgba(245, 215, 110, 0.08));
+            border-color: var(--gold);
+            color: var(--gold-light);
+            box-shadow: 0 4px 20px rgba(230, 179, 30, 0.15);
+        }
+        #printSettingsModal .ps-option.active::before {
+            content: '✓'; position: absolute; top: 6px; left: 8px;
+            width: 18px; height: 18px; background: var(--gold);
+            color: #0a1628; border-radius: 50%; font-size: 10px;
+            font-weight: 900; display: flex; align-items: center;
+            justify-content: center;
+        }
+        #printSettingsModal .ps-option i { font-size: 22px; color: inherit; }
+        #printSettingsModal .ps-option .ps-opt-label { font-size: 12px; font-weight: 700; }
+        #printSettingsModal .ps-option .ps-opt-sub { font-size: 9px; opacity: 0.5; font-weight: 500; }
+
+        #printSettingsModal .ps-footer {
+            padding: 18px 24px 24px; display: flex; gap: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        #printSettingsModal .ps-btn {
+            flex: 1; padding: 14px; border: none; border-radius: 12px;
+            font-family: inherit; font-size: 14px; font-weight: 800;
+            cursor: pointer; transition: all 0.25s;
+            display: inline-flex; align-items: center;
+            justify-content: center; gap: 8px;
+        }
+        #printSettingsModal .ps-btn-print {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            box-shadow: 0 4px 20px rgba(230, 179, 30, 0.2);
+        }
+        #printSettingsModal .ps-btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230, 179, 30, 0.35);
+        }
+        #printSettingsModal .ps-btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            flex: 0 0 auto; padding: 14px 24px;
+        }
+        #printSettingsModal .ps-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.08); color: #fff;
+        }
+
+        /* إخفاء اللوحة عند الطباعة نفسها */
+        @media print {
+            #printSettingsModal { display: none !important; }
+        }
+
+        @media (max-width: 480px) {
+            #printSettingsModal .ps-options.four { grid-template-columns: 1fr 1fr; }
+            #printSettingsModal .ps-body { padding: 18px; }
+        }
     </style>
 </head>
 <body>
-
     <!-- ===== LOGIN ===== -->
     <div id="loginOverlay">
         <div class="login-container">
@@ -1516,6 +1662,79 @@
         <button class="back-to-top" id="backToTop" style="display:none;">
             <i class="fas fa-chevron-up"></i>
         </button>
+    </div>
+
+    <!-- ===== 🖨️ PRINT SETTINGS MODAL ===== -->
+    <div id="printSettingsModal">
+        <div class="ps-box">
+            <div class="ps-header">
+                <h3><i class="fas fa-print"></i> إعدادات الطباعة</h3>
+                <button class="ps-close" id="printSettingsClose" type="button">✕</button>
+            </div>
+            <div class="ps-body">
+                <div class="ps-group">
+                    <label class="ps-label"><i class="fas fa-file"></i> حجم الورق</label>
+                    <div class="ps-options four" data-group="size">
+                        <button type="button" class="ps-option" data-value="A3">
+                            <i class="fas fa-file"></i>
+                            <span class="ps-opt-label">A3</span>
+                            <span class="ps-opt-sub">297 × 420 mm</span>
+                        </button>
+                        <button type="button" class="ps-option active" data-value="A4">
+                            <i class="fas fa-file"></i>
+                            <span class="ps-opt-label">A4</span>
+                            <span class="ps-opt-sub">210 × 297 mm</span>
+                        </button>
+                        <button type="button" class="ps-option" data-value="A5">
+                            <i class="fas fa-file"></i>
+                            <span class="ps-opt-label">A5</span>
+                            <span class="ps-opt-sub">148 × 210 mm</span>
+                        </button>
+                        <button type="button" class="ps-option" data-value="Letter">
+                            <i class="fas fa-file"></i>
+                            <span class="ps-opt-label">Letter</span>
+                            <span class="ps-opt-sub">216 × 279 mm</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="ps-group">
+                    <label class="ps-label"><i class="fas fa-arrows-alt-h"></i> الاتجاه</label>
+                    <div class="ps-options" data-group="orientation">
+                        <button type="button" class="ps-option active" data-value="portrait">
+                            <i class="fas fa-file-alt"></i>
+                            <span class="ps-opt-label">Portrait</span>
+                            <span class="ps-opt-sub">عمودي</span>
+                        </button>
+                        <button type="button" class="ps-option" data-value="landscape">
+                            <i class="fas fa-file"></i>
+                            <span class="ps-opt-label">Paysage</span>
+                            <span class="ps-opt-sub">أفقي</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="ps-group">
+                    <label class="ps-label"><i class="fas fa-palette"></i> الألوان</label>
+                    <div class="ps-options" data-group="color">
+                        <button type="button" class="ps-option active" data-value="color">
+                            <i class="fas fa-palette"></i>
+                            <span class="ps-opt-label">Couleur</span>
+                            <span class="ps-opt-sub">ملوّن</span>
+                        </button>
+                        <button type="button" class="ps-option" data-value="bw">
+                            <i class="fas fa-adjust"></i>
+                            <span class="ps-opt-label">Noir & Blanc</span>
+                            <span class="ps-opt-sub">أبيض/أسود</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="ps-footer">
+                <button type="button" class="ps-btn ps-btn-cancel" id="printSettingsCancel">إلغاء</button>
+                <button type="button" class="ps-btn ps-btn-print" id="printSettingsGo">
+                    <i class="fas fa-print"></i> طباعة
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- ===== TOAST ===== -->
@@ -3194,6 +3413,112 @@ const PAGE_PERMISSIONS = {
                     }
                 }
             }
+
+            /* ============================================================
+               🖨️ PRINT SETTINGS SYSTEM
+               ============================================================ */
+            (function initPrintSettings() {
+                var printState = { size: 'A4', orientation: 'portrait', color: 'color' };
+                var STORAGE_KEY = 'marine_print_settings';
+
+                try {
+                    var saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        var p = JSON.parse(saved);
+                        if (p.size) printState.size = p.size;
+                        if (p.orientation) printState.orientation = p.orientation;
+                        if (p.color) printState.color = p.color;
+                    }
+                } catch (e) {}
+
+                var modal = document.getElementById('printSettingsModal');
+                if (!modal) { console.warn('⚠️ printSettingsModal not found'); return; }
+
+                var closeBtn  = document.getElementById('printSettingsClose');
+                var cancelBtn = document.getElementById('printSettingsCancel');
+                var goBtn     = document.getElementById('printSettingsGo');
+
+                var styleEl = document.getElementById('dynamic-print-style');
+                if (!styleEl) {
+                    styleEl = document.createElement('style');
+                    styleEl.id = 'dynamic-print-style';
+                    document.head.appendChild(styleEl);
+                }
+
+                var sizeMap = { A3: 'A3', A4: 'A4', A5: 'A5', Letter: 'letter' };
+
+                function applyPrintRules() {
+                    var pageSize = sizeMap[printState.size] || 'A4';
+                    var orient = printState.orientation === 'landscape' ? 'landscape' : 'portrait';
+                    var isBW = printState.color === 'bw';
+                    styleEl.textContent =
+                        '@page { size: ' + pageSize + ' ' + orient + ' !important; ' +
+                        'margin: 12mm 8mm 12mm 8mm !important; }\n' +
+                        '@media print {\n' +
+                        '  html { -webkit-filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; ' +
+                        'filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; }\n' +
+                        '  body { -webkit-print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; ' +
+                        'print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; }\n' +
+                        '}';
+                    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(printState)); } catch (e) {}
+                }
+
+                function updateActiveButtons() {
+                    modal.querySelectorAll('.ps-options').forEach(function (grp) {
+                        var groupName = grp.getAttribute('data-group');
+                        grp.querySelectorAll('.ps-option').forEach(function (b) {
+                            b.classList.toggle('active', printState[groupName] === b.getAttribute('data-value'));
+                        });
+                    });
+                }
+
+                function openPrintModal() { updateActiveButtons(); modal.classList.add('active'); }
+                function closePrintModal() { modal.classList.remove('active'); }
+
+                modal.querySelectorAll('.ps-option').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var parent = btn.closest('.ps-options');
+                        var groupName = parent.getAttribute('data-group');
+                        printState[groupName] = btn.getAttribute('data-value');
+                        parent.querySelectorAll('.ps-option').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        applyPrintRules();
+                    });
+                });
+
+                var nativePrint = window.print.bind(window);
+                var bypass = false;
+
+                function doPrint() {
+                    applyPrintRules();
+                    closePrintModal();
+                    setTimeout(function () {
+                        bypass = true;
+                        try { nativePrint(); } catch (e) { window.print(); }
+                        setTimeout(function () { bypass = false; }, 500);
+                    }, 300);
+                }
+
+                window.print = function () {
+                    if (bypass) return nativePrint();
+                    openPrintModal();
+                };
+
+                if (closeBtn)  closeBtn.addEventListener('click', closePrintModal);
+                if (cancelBtn) cancelBtn.addEventListener('click', closePrintModal);
+                if (goBtn)     goBtn.addEventListener('click', doPrint);
+
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) closePrintModal();
+                });
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && modal.classList.contains('active')) closePrintModal();
+                });
+
+                applyPrintRules();
+                console.log('✅ Print Settings System ready');
+            })();
 
             console.log('✅ Marine System v9.16 ready');
         }
