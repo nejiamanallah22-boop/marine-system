@@ -1,14 +1,15 @@
 /* ============================================================
-   🖨️ PRINT v22.0 — FINAL COMPLETE (NO BLUE BOXES)
+   🖨️ PRINT v23.0 — FINAL
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ الترويسة الرسمية الكاملة (7 أسطر وزارية)
-   ✅ "العوينة في" على اليسار
-   ✅ العنوان الرئيسي متمركز
-   ✅ ألوان كاملة للجداول والشارات
-   ✅ إخفاء كل المربعات الزرقاء نهائياً
+   ✅ الترويسة الرسمية (7 أسطر وزارية + العوينة في)
+   ✅ إخفاء المربعات الزرقاء (gradient boxes)
+   ✅ إجبار ألوان الوسائل البرية
    ✅ A4 Portrait + Paysage
    ============================================================ */
 
+/* ═══════════════════════════════════════════════════════════
+   📐 إعدادات الصفحة
+   ═══════════════════════════════════════════════════════════ */
 @page {
     size: A4 portrait;
     margin: 12mm 8mm 12mm 8mm;
@@ -50,19 +51,19 @@
        1) إخفاء واجهة الشاشة
        ═══════════════════════════════════════ */
     button, .btn-action, .btn-filter, .btn-sm, .btn-save,
-    .btn-icon, .action-btns, .retry-btn, .chart-btn, .chart-switch,
+    .btn-icon, .action-btns, .retry-btn, .chart-btn,
     .filter-bar, nav, .sidebar, .navbar, .main-header, .menu-toggle,
     .notification-wrapper, .user-wrapper, .search-wrapper,
-    .back-to-top, .toast-container, .toast, .eff-notification,
-    .empty-state .spinner, .eff-spinner,
-    .no-print, #loginOverlay, #authLoadingOverlay, #forgotPasswordModal,
+    .back-to-top, .toast-container, .toast,
+    .empty-state .spinner,
+    .no-print, #loginOverlay, #authLoadingOverlay,
     .input-grid, #inputArea,
     .header-icon, #fleetHeaderIcon, #logsHeaderIcon, #effHeaderIcon,
     .page-loader,
-    .action-btn, .action-btns,
+    .action-btn,
     .fleet-header-actions, .logs-header-actions, .maint-header-actions,
     .add-part-btn, .modal-footer, .btn-submit,
-    .toast, .maint-modal, .log-modal, .modal-overlay,
+    .maint-modal, .log-modal, .modal-overlay,
     .veh-header-actions, .veh-actions, .veh-action-btn, .veh-auto-toggle,
     .veh-modal, .veh-toast, .veh-print-group,
     .veh-header .title-icon,
@@ -71,26 +72,15 @@
     }
 
     /* ═══════════════════════════════════════
-       2) 🚫 حظر نهائي لكل الصفحات:
-          لا gradient, لا خلفيات داكنة
+       2) 🚫 إخفاء المربعات الزرقاء
        ═══════════════════════════════════════ */
-    
-    /* منع أي خلفية gradient في أي مكان */
-    #page-efficiency [style*="gradient"],
-    #page-fleet [style*="gradient"],
-    #page-vehicles [style*="gradient"],
-    #page-maintenance [style*="gradient"],
-    #page-logs [style*="gradient"],
-    #page-efficiency [class*="hero"],
-    #page-fleet [class*="hero"],
-    #page-vehicles [class*="hero"],
-    #page-efficiency [class*="banner"],
-    #page-fleet [class*="banner"],
-    #page-vehicles [class*="banner"],
-    #page-efficiency [class*="cover"],
-    #page-fleet [class*="cover"],
-    #page-vehicles [class*="cover"] {
+
+    /* أ) أي عنصر له inline style فيه gradient */
+    *[style*="gradient"],
+    *[style*="linear-gradient"],
+    *[style*="radial-gradient"] {
         display: none !important;
+        visibility: hidden !important;
         height: 0 !important;
         min-height: 0 !important;
         max-height: 0 !important;
@@ -104,17 +94,40 @@
         border: none !important;
     }
 
-    /* 🎯 حظر خلفيات الأقسام في efficiency */
-    #page-efficiency .eff-section > div:first-child:not(.section-header),
-    #page-efficiency .eff-section-header,
-    #page-efficiency .section-banner,
-    #page-efficiency .section-cover,
-    #page-efficiency .section-hero,
-    #page-efficiency .section-image,
-    #page-efficiency .section-visual,
-    #page-efficiency .section-graphic,
-    #page-efficiency .section-chart,
-    #page-efficiency .section-illustration {
+    /* ب) الكلاسات الاحتمالية */
+    .hero, .hero-section, .hero-banner, .hero-card, .hero-container,
+    .hero-image, .hero-illustration, .hero-content, .hero-wrapper,
+    .page-hero, .page-banner, .page-cover,
+    .banner, .banner-container, .banner-wrapper, .header-banner,
+    .top-banner, .main-banner, .cover-section,
+    .eff-hero, .kpi-header, .kpi-banner, .readiness-hero,
+    .dashboard-hero, .efficiency-hero, .report-hero,
+    .jumbotron, .showcase, .spotlight,
+    .illustration, .illustration-container,
+    .graphic, .graphic-container,
+    .chart-section, .chart-container, .chart-card, .chart-wrapper,
+    .chart-area, .chart-box,
+    .section-hero, .section-banner, .section-cover,
+    .section-image, .section-visual, .section-graphic,
+    .section-chart, .section-illustration,
+    [class*="hero" i],
+    [class*="banner" i],
+    [class*="cover" i],
+    [class*="jumbo" i],
+    [class*="showcase" i],
+    [class*="spotlight" i],
+    [class*="illustration" i],
+    [id*="hero" i],
+    [id*="banner" i],
+    [id*="cover" i],
+    #systemBackground, #backgroundContainer,
+    .background-container, .background-image-container,
+    [class*="background-container" i],
+    [class*="bg-image" i],
+    img[src*="background" i],
+    img[src*="hero" i],
+    img[src*="banner" i],
+    img[src*="cover" i] {
         display: none !important;
         visibility: hidden !important;
         height: 0 !important;
@@ -123,29 +136,70 @@
         padding: 0 !important;
         opacity: 0 !important;
         overflow: hidden !important;
-    }
-
-    /* 🎯 حظر inline styles داكنة */
-    [style*="linear-gradient"],
-    [style*="radial-gradient"],
-    [style*="rgba(10,"],
-    [style*="rgba(15,"],
-    [style*="rgba(18,"],
-    [style*="rgba(20,"],
-    [style*="rgba(6,"] {
         background: none !important;
         background-image: none !important;
-    }
-    
-    /* استثناء الترويسة الرسمية */
-    #official-print-header,
-    #official-print-header * {
-        background: #ffffff !important;
+        border: none !important;
     }
 
-    /* إخفاء أي canvas / svg كبير */
+    /* ج) إخفاء أي canvas كبير */
     canvas { display: none !important; }
-    svg[width="100%"] { display: none !important; }
+
+    /* د) إخفاء الخلفيات الكبيرة عبر inline style — مع استثناء الترويسة */
+    [style*="background-image" i]:not(#official-print-header):not(#official-print-header *) {
+        background-image: none !important;
+    }
+
+    /* 🛡️ استثناء: لا تُخفِ هذه أبداً */
+    #official-print-header,
+    #official-print-header *,
+    #official-print-header [class*="hero" i],
+    #official-print-header [class*="banner" i],
+    #official-print-header [style*="gradient"],
+    .stats-grid, .stats-grid *,
+    .veh-stats, .veh-stats *,
+    table, table *,
+    thead, thead *,
+    tbody, tbody *,
+    tr, tr *,
+    th, th *,
+    td, td *,
+    .veh-table-wrap,
+    .veh-table-wrap *,
+    .veh-table-head,
+    .veh-table-head *,
+    .veh-table-row,
+    .veh-table-row *,
+    .veh-badge, .veh-badge *,
+    .veh-plate, .veh-plate *,
+    .stat-card, .stat-card *,
+    .veh-stat, .veh-stat *,
+    .eff-section, .eff-section *,
+    .fleet-section, .fleet-section *,
+    .print-summary-table, .print-summary-table * {
+        display: revert !important;
+        visibility: visible !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        width: auto !important;
+        margin: revert !important;
+        padding: revert !important;
+        opacity: 1 !important;
+        overflow: visible !important;
+    }
+
+    #official-print-header { display: block !important; }
+    .stats-grid { display: grid !important; }
+    .veh-stats { display: grid !important; }
+    table { display: table !important; }
+    thead { display: table-header-group !important; }
+    tbody { display: table-row-group !important; }
+    tr { display: table-row !important; }
+    th, td { display: table-cell !important; }
+    .veh-table-head { display: grid !important; }
+    .veh-table-row { display: grid !important; }
+    .veh-badge { display: inline-block !important; }
+    .veh-plate { display: inline-block !important; }
 
     /* ═══════════════════════════════════════
        3) الصفحات الرئيسية
@@ -176,7 +230,6 @@
        ═══════════════════════════════════════ */
     #official-print-header {
         display: block !important;
-        visibility: visible !important;
         position: relative !important;
         width: 100% !important;
         height: 68mm !important;
@@ -188,7 +241,6 @@
         page-break-after: avoid !important;
         break-after: avoid !important;
         direction: rtl !important;
-        z-index: 99999 !important;
     }
 
     #official-print-header .official-header-print {
@@ -215,7 +267,6 @@
         -webkit-text-fill-color: #0a0a12 !important;
         line-height: 1.5 !important;
         white-space: nowrap !important;
-        z-index: 99999 !important;
     }
 
     #official-print-header .official-header-right-text {
@@ -232,7 +283,6 @@
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
         line-height: 1.6 !important;
-        z-index: 99999 !important;
     }
 
     #official-print-header .official-header-title-print {
@@ -249,7 +299,6 @@
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
         direction: rtl !important;
-        z-index: 99999 !important;
     }
 
     /* إخفاء الترويسات القديمة */
@@ -265,8 +314,7 @@
     /* ═══════════════════════════════════════
        5) بطاقات الإحصائيات
        ═══════════════════════════════════════ */
-    .stats-grid,
-    .veh-stats {
+    .stats-grid, .veh-stats {
         display: grid !important;
         gap: 0 !important;
         margin: 0 0 6mm 0 !important;
@@ -279,6 +327,7 @@
 
     #page-fleet .stats-grid,
     #page-vehicles .veh-stats { grid-template-columns: repeat(4, 1fr) !important; }
+
     #page-logs .stats-grid,
     #page-efficiency .stats-grid,
     #page-maintenance .stats-grid { grid-template-columns: repeat(5, 1fr) !important; }
@@ -289,7 +338,6 @@
         padding: 0 3mm !important;
         text-align: center !important;
         position: relative !important;
-        display: block !important;
     }
 
     .stat-card:not(:last-child)::after,
@@ -303,9 +351,6 @@
         background: #d8d6d0 !important;
     }
 
-    .stat-card .icon-bg,
-    .stat-card .stat-icon { display: none !important; }
-
     .stat-card .number,
     .stat-card .eff-stat-value,
     .veh-stat .number {
@@ -316,7 +361,6 @@
         line-height: 1 !important;
         display: block !important;
         margin-bottom: 1.5mm !important;
-        font-variant-numeric: tabular-nums !important;
         background: none !important;
     }
 
@@ -327,9 +371,9 @@
         font-size: 7pt !important;
         font-weight: 700 !important;
         display: block !important;
-        text-transform: uppercase !important;
     }
 
+    /* ألوان أرقام بطاقات vehicles */
     #page-vehicles .veh-stat.stat-valid .number {
         color: #10b981 !important; -webkit-text-fill-color: #10b981 !important;
     }
@@ -367,7 +411,6 @@
         padding: 0 0 1.5mm !important;
         margin: 0 0 2mm !important;
         page-break-after: avoid !important;
-        break-after: avoid !important;
     }
 
     .eff-section .section-header::before,
@@ -399,10 +442,6 @@
         flex: 1 !important;
     }
 
-    .eff-section .section-header h3 i { display: none !important; }
-
-    .section-content { padding: 0 !important; }
-
     /* ═══════════════════════════════════════
        7) الجداول
        ═══════════════════════════════════════ */
@@ -410,7 +449,6 @@
         padding: 0 !important;
         margin: 0 !important;
         overflow: visible !important;
-        page-break-inside: auto !important;
         background: none !important;
         border: none !important;
     }
@@ -441,10 +479,8 @@
         width: 100% !important;
         border-collapse: collapse !important;
         font-size: 8.5pt !important;
-        table-layout: auto !important;
         background: none !important;
         min-width: 0 !important;
-        page-break-inside: auto !important;
     }
 
     thead {
@@ -462,17 +498,11 @@
         text-align: center !important;
         border-top: 1pt solid #12121a !important;
         border-bottom: 1pt solid #12121a !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.4px !important;
         white-space: nowrap !important;
     }
 
-    thead th i { display: none !important; }
-    thead th:first-child { text-align: right !important; }
-
     tbody tr {
         page-break-inside: avoid !important;
-        break-inside: avoid !important;
         background: none !important;
     }
     tbody tr:nth-child(even) { background: #fbfaf8 !important; }
@@ -487,15 +517,13 @@
         font-size: 8.5pt !important;
         vertical-align: middle !important;
         word-break: break-word !important;
-        font-variant-numeric: tabular-nums !important;
         background: transparent !important;
     }
 
     tbody tr:last-child td { border-bottom: 1pt solid #12121a !important; }
 
     tbody td:first-child,
-    tbody td.vessel-name,
-    tbody td.vessel-name-damaged {
+    tbody td.vessel-name {
         font-weight: 700 !important;
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
@@ -506,17 +534,10 @@
     thead th:last-child,
     tbody td:last-child { display: none !important; }
 
-    .row-high { background: #f4faf7 !important; border-right: 3pt solid #1d6b4a !important; }
-    .row-mid { background: #fffaf0 !important; border-right: 3pt solid #9a6b0e !important; }
-    .row-low, tbody tr.damaged, tbody tr.critical {
-        background: #fdf4f4 !important; border-right: 3pt solid #9b2c2c !important;
-    }
-    tbody tr.warning { background: #fffaf0 !important; border-right: 3pt solid #9a6b0e !important; }
-
     /* ═══════════════════════════════════════
        8) الشارات
        ═══════════════════════════════════════ */
-    .status-badge, .eff-status, .veh-badge {
+    .status-badge, .veh-badge {
         display: inline-block !important;
         padding: 0.6mm 2.5mm !important;
         border-radius: 3px !important;
@@ -525,18 +546,16 @@
         border: 0.75pt solid currentColor !important;
         background: #ffffff !important;
         white-space: nowrap !important;
-        letter-spacing: 0.2px !important;
     }
 
-    .status-badge.active, .status-badge.completed, .status-badge.good,
-    .status-badge.excellent,
+    .status-badge.active, .status-badge.completed,
     .veh-badge.status-صالحة, .veh-badge.cond-جديدة, .veh-badge.zone {
         color: #1d6b4a !important;
         -webkit-text-fill-color: #1d6b4a !important;
         background: #f4faf7 !important;
     }
 
-    .status-badge.pending, .status-badge.in-progress, .status-badge.medium,
+    .status-badge.pending, .status-badge.in-progress,
     .veh-badge.status-صيانة, .veh-badge.cond-متوسطة,
     .veh-badge.brand, .veh-badge.region {
         color: #9a6b0e !important;
@@ -544,7 +563,7 @@
         background: #fffaf0 !important;
     }
 
-    .status-badge.damaged, .status-badge.critical, .status-badge.cancelled,
+    .status-badge.damaged, .status-badge.cancelled,
     .veh-badge.status-معطبة {
         color: #9b2c2c !important;
         -webkit-text-fill-color: #9b2c2c !important;
@@ -575,6 +594,7 @@
         display: inline-block !important;
     }
 
+    /* ألوان قوية لصفحة vehicles */
     #page-vehicles .veh-badge.status-صالحة {
         background: #10b981 !important; color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
@@ -650,7 +670,6 @@
         font-weight: 800 !important;
         border-top: 1pt solid #0a0e1a !important;
         border-bottom: 2pt solid #f7d774 !important;
-        text-transform: uppercase !important;
     }
 
     #page-vehicles .veh-table-head .veh-cell {
@@ -667,9 +686,6 @@
     #page-vehicles .veh-table-row:nth-child(even) {
         background: #f1f5f9 !important;
     }
-    #page-vehicles .veh-table-row:last-child {
-        border-bottom: 1pt solid #12121a !important;
-    }
 
     #page-vehicles .veh-table-head .veh-cell:last-child,
     #page-vehicles .veh-table-row .veh-cell:last-child {
@@ -681,10 +697,8 @@
         -webkit-text-fill-color: #23232b !important;
         text-align: center !important;
         word-break: break-word !important;
-        font-variant-numeric: tabular-nums !important;
         overflow: visible !important;
     }
-    #page-vehicles .veh-cell.center { text-align: center !important; }
 
     #page-vehicles .veh-table-row .veh-cell:nth-child(10) {
         color: #dc2626 !important;
@@ -718,7 +732,7 @@
     #page-vehicles::after { content: "منظومة الوسائل البرية — الحرس الوطني البحري — وثيقة رسمية" !important; }
 
     /* ═══════════════════════════════════════
-       11) عناوين الجداول
+       11) عناوين الجداول (fleet)
        ═══════════════════════════════════════ */
     #page-fleet .table-wrapper::before {
         content: "📋 السجل التفصيلي للمراكب" !important;
@@ -800,25 +814,17 @@
     /* ═══════════════════════════════════════
        13) كسر overflow
        ═══════════════════════════════════════ */
-    html body #page-efficiency .eff-section,
-    html body #page-fleet .eff-section,
-    html body #page-logs .eff-section,
-    html body #page-maintenance .eff-section,
-    html body #page-efficiency .eff-section *,
-    html body #page-fleet .eff-section *,
-    html body #page-logs .eff-section *,
-    html body #page-maintenance .eff-section *,
-    html body #page-vehicles .veh-table-wrap,
-    html body #page-vehicles .veh-table-wrap *,
     html body .table-wrapper,
     html body table,
-    html body tbody {
+    html body tbody,
+    html body .veh-table-wrap,
+    html body .eff-section {
         overflow: visible !important;
     }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   🌐 SCREEN
+   🌐 SCREEN — إخفاء عناصر الطباعة
    ═══════════════════════════════════════════════════════════ */
 @media screen {
     .print-only,
