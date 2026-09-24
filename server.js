@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.5
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.6
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
 // 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v6
@@ -7,6 +7,7 @@
 // 🎨 + STATIC CSS/JS SERVING
 // 🛡️ + SECURITY HARDENING (v10.8.4)
 // 🏛️ + OFFICIAL PRINT HEADER INJECTION (v10.8.5)
+// 🚨 + AUTO HIDE BLUE BOXES (v10.8.6)
 // ============================================================
 'use strict';
 require('dotenv').config();
@@ -14,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.8.5 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.8.6 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 Node version:', process.version);
@@ -210,7 +211,7 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.8.5');
+    res.setHeader('X-System-Version', '10.8.6');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -433,7 +434,7 @@ app.use(cors({
     exposedHeaders: ['X-CSRF-Token','X-Session-Expiry','X-Request-ID']
 }));
 
-const apiLimiter = rateLimit({ 
+const apiLimiter = rateLimit({
     windowMs: 15*60*1000, max: 2000, standardHeaders: true, legacyHeaders: false,
     keyGenerator: (req) => (req.user && req.user.id) ? req.user.id : (req.ip || 'unknown'),
     message: { success: false, error: 'Too many requests.' }
@@ -481,7 +482,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.8.5',
+            version: '10.8.6',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -589,8 +590,8 @@ async function cleanupLegacyDemoVessels() {
         }).lean();
         if (already) { console.log('ℹ️ Legacy cleanup done'); return; }
 
-        const demo = await Vessel.find({ 
-            name: { $in: LEGACY_DEMO }, 
+        const demo = await Vessel.find({
+            name: { $in: LEGACY_DEMO },
             createdBy: 'system',
             createdAt: { $lt: new Date('2024-01-01T00:00:00Z') }
         }).lean();
@@ -1121,7 +1122,7 @@ function formatMaintenance(log) {
 
     app.get('/api/health', (req, res) => {
         res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.8.5',
+            success: true, status: 'online', service: 'Marine System', version: '10.8.6',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
@@ -1131,6 +1132,13 @@ function formatMaintenance(log) {
             static: {
                 css: cssMounted ? cssPaths.filter(p => fs.existsSync(p)).length : 0,
                 js: jsMounted ? jsPaths.filter(p => fs.existsSync(p)).length : 0
+            },
+            features: {
+                printHeader: true,
+                hideBlueBoxes: true,
+                forceGPS: true,
+                userBadge: true,
+                ownership: true
             },
             models: { User: !!User, Vessel: !!Vessel, Vehicle: !!Vehicle,
                 Maintenance: !!Maintenance, Log: !!Log, Ticket: !!Ticket, Note: !!Note,
@@ -2172,8 +2180,10 @@ function formatMaintenance(log) {
     } else {
         console.warn('⚠️ Settings disabled (models missing)');
     }
-    
-    // ============ HTML INJECTION ============
+
+    // ============================================================
+    // 📄 HTML INJECTION
+    // ============================================================
     const OWNERSHIP_META = `
 <meta name="author" content="أمان الله ناجي">
 <meta name="creator" content="أمان الله ناجي">
@@ -2182,7 +2192,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.8.5 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.8.6 - Aman Allah Naji">
 `;
     const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
@@ -2388,7 +2398,7 @@ else init();
 })();<\/script>`;
 
     // ═══════════════════════════════════════════════════════════
-    // 🏛️ PRINT HEADER — الترويسة الرسمية (v10.8.5)
+    // 🏛️ PRINT HEADER — الترويسة الرسمية
     // ═══════════════════════════════════════════════════════════
     const PRINT_HEADER_CSS = `
 <style id="official-print-header-style">
@@ -2545,6 +2555,141 @@ else init();
     }, 2000);
 })();<\/script>`;
 
+    // ═══════════════════════════════════════════════════════════
+    // 🚨 HIDE BLUE BOXES — إخفاء المربعات الزرقاء تلقائياً قبل الطباعة
+    // ═══════════════════════════════════════════════════════════
+    const HIDE_BLUE_BOXES_SCRIPT = `
+<script>(function(){
+    'use strict';
+    
+    function hideBigBlueBoxes() {
+        try {
+            var all = document.querySelectorAll('body *');
+            var hiddenCount = 0;
+            var hiddenElements = [];
+            
+            for (var i = 0; i < all.length; i++) {
+                var el = all[i];
+                
+                // تجاهل الترويسة الرسمية
+                if (el.id === 'official-print-header') continue;
+                if (el.closest && el.closest('#official-print-header')) continue;
+                
+                // تجاهل عناصر الجداول
+                if (el.tagName === 'TABLE' || el.tagName === 'THEAD' || 
+                    el.tagName === 'TBODY' || el.tagName === 'TR' || 
+                    el.tagName === 'TH' || el.tagName === 'TD') continue;
+                
+                // تجاهل العناصر المحمية
+                if (el.classList && (
+                    el.classList.contains('stats-grid') ||
+                    el.classList.contains('veh-stats') ||
+                    el.classList.contains('stat-card') ||
+                    el.classList.contains('veh-stat') ||
+                    el.classList.contains('veh-table-wrap') ||
+                    el.classList.contains('veh-table-head') ||
+                    el.classList.contains('veh-table-row') ||
+                    el.classList.contains('print-summary-section') ||
+                    el.classList.contains('eff-section')
+                )) continue;
+                
+                var r = el.getBoundingClientRect();
+                
+                // فقط العناصر الكبيرة
+                if (r.width < 500 || r.height < 100) continue;
+                if (r.top < -200 || r.top > 1500) continue;
+                
+                var cs = window.getComputedStyle(el);
+                var bg = cs.backgroundImage || '';
+                var bgc = cs.backgroundColor || '';
+                var bc = cs.borderColor || '';
+                
+                // له gradient
+                var hasGradient = bg.indexOf('gradient') !== -1;
+                
+                // له خلفية داكنة/زرقاء
+                var hasDarkBg = false;
+                if (bgc && bgc !== 'rgba(0, 0, 0, 0)' && bgc !== 'transparent') {
+                    var m = bgc.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                    if (m) {
+                        var rv = parseInt(m[1]), gv = parseInt(m[2]), bv = parseInt(m[3]);
+                        if (rv < 60 && gv < 60 && bv < 100) hasDarkBg = true;
+                    }
+                }
+                
+                // له حد ذهبي
+                var hasGoldBorder = bc.indexOf('230, 179') !== -1 || 
+                                    bc.indexOf('247, 215') !== -1;
+                
+                if (hasGradient || hasDarkBg || hasGoldBorder) {
+                    el.setAttribute('data-print-hidden', '1');
+                    el.style.setProperty('display', 'none', 'important');
+                    el.style.setProperty('visibility', 'hidden', 'important');
+                    el.style.setProperty('height', '0', 'important');
+                    el.style.setProperty('width', '0', 'important');
+                    el.style.setProperty('opacity', '0', 'important');
+                    el.style.setProperty('overflow', 'hidden', 'important');
+                    hiddenCount++;
+                    hiddenElements.push({
+                        tag: el.tagName,
+                        cls: el.className || '',
+                        id: el.id || '',
+                        size: Math.round(r.width) + 'x' + Math.round(r.height)
+                    });
+                }
+            }
+            
+            if (hiddenCount > 0) {
+                console.log('%c🚫 تم إخفاء ' + hiddenCount + ' عنصر قبل الطباعة',
+                    'background: red; color: white; padding: 4px 8px; font-weight: bold;');
+                hiddenElements.forEach(function(h) {
+                    console.log('   →', h.tag, '| class:', h.cls, '| id:', h.id, '|', h.size);
+                });
+            } else {
+                console.log('ℹ️ لم يتم العثور على مربعات زرقاء');
+            }
+        } catch(e) {
+            console.error('❌ خطأ hideBigBlueBoxes:', e);
+        }
+    }
+    
+    function restoreHidden() {
+        try {
+            document.querySelectorAll('[data-print-hidden]').forEach(function(el) {
+                el.style.removeProperty('display');
+                el.style.removeProperty('visibility');
+                el.style.removeProperty('height');
+                el.style.removeProperty('width');
+                el.style.removeProperty('opacity');
+                el.style.removeProperty('overflow');
+                el.removeAttribute('data-print-hidden');
+            });
+        } catch(e) {}
+    }
+    
+    window.addEventListener('beforeprint', function() {
+        console.log('%c🖨️ بدء تحضير الطباعة...', 'background: #0a0e1a; color: #f7d774; padding: 4px 8px;');
+        hideBigBlueBoxes();
+    });
+    
+    window.addEventListener('afterprint', function() {
+        restoreHidden();
+        console.log('✅ تمت إعادة العناصر');
+    });
+    
+    if (window.matchMedia) {
+        var mql = window.matchMedia('print');
+        if (mql.addEventListener) {
+            mql.addEventListener('change', function(m) {
+                if (m.matches) hideBigBlueBoxes();
+                else restoreHidden();
+            });
+        }
+    }
+    
+    console.log('%c✅ HIDE BLUE BOXES Script loaded', 'background: green; color: white; padding: 3px 6px;');
+})();<\/script>`;
+
     const INJECTION_SKIP_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i;
 
     function injectAll(html) {
@@ -2572,12 +2717,17 @@ else init();
             html = html.replace('</body>', FORCE_GPS_SCRIPT + '\n</body>');
         }
         
-        // ✅ 🆕 PRINT HEADER — الترويسة الرسمية
+        // ✅ PRINT HEADER
         if (!html.includes('official-print-header-style')) {
             if (html.includes('</head>')) {
                 html = html.replace('</head>', PRINT_HEADER_CSS + '\n</head>');
             }
             html = html.replace('</body>', PRINT_HEADER_SCRIPT + '\n</body>');
+        }
+        
+        // ✅ HIDE BLUE BOXES
+        if (!html.includes('HIDE BLUE BOXES Script loaded')) {
+            html = html.replace('</body>', HIDE_BLUE_BOXES_SCRIPT + '\n</body>');
         }
         
         return html;
@@ -2636,7 +2786,7 @@ else init();
             path.join(publicPagesDir, 'index.html')
         ];
         for (const p of possible) if (fs.existsSync(p)) return res.sendFile(p);
-        res.send('<h1>🚢 Marine System v10.8.5</h1><p>Running</p>');
+        res.send('<h1>🚢 Marine System v10.8.6</h1><p>Running</p>');
     });
     app.get('/pages/:page', (req, res) => {
         const fp = findPageFile(req.params.page);
@@ -2668,7 +2818,7 @@ else init();
     // ============ LISTEN ============
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v10.8.5');
+        console.log('🚢 MARINE SYSTEM v10.8.6');
         console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
         console.log('🛡️  Security hardening: ENABLED');
         console.log('🍃 MongoDB Atlas');
@@ -2678,6 +2828,7 @@ else init();
         console.log('🚛 Vehicles (Land) routes: ENABLED');
         console.log('🎨 Static CSS/JS: FIXED');
         console.log('🏛️  Print Header Injection: ENABLED');
+        console.log('🚨 Hide Blue Boxes: ENABLED');
         console.log('=========================================');
         console.log(`📍 Port: ${PORT}`);
         console.log(`🌍 Env: ${process.env.NODE_ENV || 'development'}`);
