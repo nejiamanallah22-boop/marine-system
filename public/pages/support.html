@@ -2,8 +2,9 @@
 <div id="page-support">
     <style>
         /* ============================================================
-           🛟 SUPPORT PAGE - PROFESSIONAL v10.0
+           🛟 SUPPORT PAGE - PROFESSIONAL v11.0
            ✅ CSRF Token + Users List + Modal + Filters
+           ✅ Screen Share Request System
            ============================================================ */
 
         #page-support {
@@ -134,8 +135,31 @@
             text-decoration: none;
         }
 
-        .support-header .developer-badge .contact a:hover {
-            text-decoration: underline;
+        /* ===== LIVE INDICATOR ===== */
+        .live-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.04);
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .live-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #f87171;
+            animation: livePulse 1.5s ease-in-out infinite;
+        }
+
+        .live-dot.online { background: #4ade80; }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
         /* ===== STATS ===== */
@@ -175,6 +199,7 @@
         .stat-item.open .number { color: #fbbf24; }
         .stat-item.progress .number { color: #06b6d4; }
         .stat-item.closed .number { color: #4ade80; }
+        .stat-item.screenshare .number { color: #a78bfa; }
 
         /* ===== GRID ===== */
         .support-grid {
@@ -272,13 +297,6 @@
             justify-content: space-between;
             align-items: center;
             gap: 8px;
-        }
-
-        .ticket-item .ticket-id {
-            font-size: 10px;
-            color: rgba(96,165,250,0.7);
-            font-family: monospace;
-            font-weight: bold;
         }
 
         .ticket-item .ticket-subject {
@@ -418,7 +436,6 @@
             background: #1a1a2e;
         }
 
-        /* ✅ NEW: User selector */
         .support-form .user-selector {
             display: flex;
             gap: 8px;
@@ -468,8 +485,6 @@
         .support-form .btn-submit:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         /* ===== MODAL ===== */
@@ -566,17 +581,278 @@
             word-break: break-word;
         }
 
-        .ticket-modal .modal-body textarea {
+        /* ===== SCREEN SHARE CONTROLS ===== */
+        .screen-share-controls {
+            margin-top: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(96,165,250,0.05));
+            border-radius: 12px;
+            border: 1px solid rgba(139,92,246,0.2);
+        }
+
+        .screen-share-controls h5 {
+            margin: 0 0 12px 0;
+            color: #a78bfa;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .screen-share-controls input {
             width: 100%;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 10px 14px;
+            border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.06);
             background: rgba(255,255,255,0.03);
             color: white;
             font-family: 'Cairo', sans-serif;
             font-size: 13px;
-            resize: vertical;
-            min-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .screen-share-controls input:focus {
+            outline: none;
+            border-color: rgba(139,92,246,0.5);
+        }
+
+        .btn-request-screen {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-request-screen:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(139,92,246,0.3);
+        }
+
+        .btn-request-screen:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===== SCREEN REQUEST POPUP (User) ===== */
+        .screen-popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .screen-popup.active {
+            display: flex;
+        }
+
+        .screen-popup-content {
+            background: linear-gradient(135deg, #1a1f2e, #0f1420);
+            border: 2px solid #8b5cf6;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+            animation: modalIn 0.3s ease-out;
+            box-shadow: 0 20px 60px rgba(139,92,246,0.3);
+        }
+
+        .screen-popup-icon {
+            font-size: 56px;
+            margin-bottom: 10px;
+            animation: pulseScreen 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseScreen {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .screen-popup h3 {
+            color: #a78bfa;
+            margin: 10px 0;
+            font-size: 20px;
+        }
+
+        .screen-popup p {
+            color: rgba(255,255,255,0.75);
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .screen-popup-reason {
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.8);
+            font-size: 13px;
+            margin: 15px 0;
+            text-align: right;
+            border-right: 3px solid #8b5cf6;
+        }
+
+        .screen-popup-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-accept-screen, .btn-reject-screen {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-accept-screen {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: white;
+        }
+
+        .btn-reject-screen {
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+
+        .btn-accept-screen:hover, .btn-reject-screen:hover {
+            transform: translateY(-2px);
+        }
+
+        .screen-popup-warning {
+            color: #fbbf24;
+            font-size: 12px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(251,191,36,0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(251,191,36,0.2);
+        }
+
+        /* ===== SCREEN SHARING INDICATOR (User) ===== */
+        .screen-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+            font-size: 13px;
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(220,38,38,0.5);
+            animation: recordPulse 1.5s ease-in-out infinite;
+        }
+
+        .screen-indicator.active {
+            display: flex;
+        }
+
+        @keyframes recordPulse {
+            0%, 100% { box-shadow: 0 8px 32px rgba(220,38,38,0.5); }
+            50% { box-shadow: 0 8px 48px rgba(220,38,38,0.9); }
+        }
+
+        #stopScreenBtn {
+            background: white;
+            color: #dc2626;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+        }
+
+        /* ===== SCREEN VIEWER (Admin) ===== */
+        .screen-viewer {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 100001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .screen-viewer.active {
+            display: flex;
+        }
+
+        .screen-viewer-content {
+            background: #0f1420;
+            border-radius: 16px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 1200px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            border: 1px solid rgba(139,92,246,0.3);
+        }
+
+        .screen-viewer-header {
+            background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(96,165,250,0.1));
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #a78bfa;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .screen-viewer-header button {
+            background: rgba(239,68,68,0.2);
+            color: #f87171;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screen-viewer-header button:hover {
+            background: rgba(239,68,68,0.4);
+        }
+
+        #remoteScreen {
+            width: 100%;
+            height: auto;
+            max-height: 75vh;
+            background: #000;
+            display: block;
         }
 
         /* ===== SCROLL ===== */
@@ -594,9 +870,7 @@
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
-            .support-grid {
-                grid-template-columns: 1fr;
-            }
+            .support-grid { grid-template-columns: 1fr; }
             .support-header .header-content {
                 flex-direction: column;
                 text-align: center;
@@ -613,9 +887,6 @@
             .support-container { padding: 12px; }
             .support-header { padding: 20px; }
             .support-header .title { font-size: 18px; }
-            .support-header .developer-badge { padding: 10px 14px; min-width: 0; }
-            .support-header .developer-badge .name { font-size: 13px; }
-            .support-header .developer-badge .contact { font-size: 10px; }
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .support-card { padding: 14px; }
             .ticket-modal .modal-content { padding: 18px; }
@@ -667,6 +938,11 @@
             border: 1px solid rgba(96,165,250,.2);
         }
 
+        .support-toast.warning {
+            background: rgba(251,191,36,.15);
+            border: 1px solid rgba(251,191,36,.2);
+        }
+
         @keyframes supportToastIn {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
@@ -692,6 +968,18 @@
                         <i class="fas fa-envelope"></i> <a href="mailto:nejiamanallah22@gmail.com">nejiamanallah22@gmail.com</a>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ===== LIVE STATUS ===== -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+            <div class="live-status-bar">
+                <span class="live-dot" id="connectionDot"></span>
+                <span id="connectionText">جاري الاتصال بالسيرفر...</span>
+            </div>
+            <div class="live-status-bar">
+                <span style="color:#a78bfa;">📺</span>
+                <span id="onlineCountText">— متصل</span>
             </div>
         </div>
 
@@ -756,7 +1044,6 @@
                     <span class="badge-count">📨 جديد</span>
                 </div>
                 <form class="support-form" id="ticketForm">
-                    <!-- ✅ NEW: User Selector -->
                     <div class="form-group">
                         <label for="ticketSender">👤 المرسل</label>
                         <div class="user-selector">
@@ -794,22 +1081,60 @@
         </div>
     </div>
 
-    <!-- ===== MODAL ===== -->
+    <!-- ===== TICKET MODAL ===== -->
     <div class="ticket-modal" id="ticketModal">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title" id="modalTitle">تفاصيل التذكرة</div>
-                <button type="button" class="modal-close" id="modalClose">×</button>
+                <button type="button" class="modal-close" id="modalClose" aria-label="إغلاق">×</button>
             </div>
             <div class="modal-body" id="modalBody"></div>
         </div>
     </div>
 
+    <!-- ===== SCREEN REQUEST POPUP (User) ===== -->
+    <div class="screen-popup" id="screenRequestPopup">
+        <div class="screen-popup-content">
+            <div class="screen-popup-icon">🔔</div>
+            <h3>طلب عرض الشاشة</h3>
+            <p>
+                <strong id="screenRequesterName" style="color:#fbbf24;">—</strong>
+                يطلب رؤية شاشتك
+            </p>
+            <div class="screen-popup-reason" id="screenRequestReason">—</div>
+            <div class="screen-popup-actions">
+                <button id="acceptScreenBtn" class="btn-accept-screen">✅ موافقة</button>
+                <button id="rejectScreenBtn" class="btn-reject-screen">❌ رفض</button>
+            </div>
+            <p class="screen-popup-warning">
+                ⚠️ ستُرى شاشتك بالكامل. أغلق النوافذ الخاصة أولاً.
+            </p>
+        </div>
+    </div>
+
+    <!-- ===== SCREEN SHARING INDICATOR (User) ===== -->
+    <div id="screenSharingIndicator" class="screen-indicator">
+        🔴 المسؤول يرى شاشتك الآن
+        <button id="stopScreenBtn">⏹️ إيقاف</button>
+    </div>
+
+    <!-- ===== SCREEN VIEWER (Admin) ===== -->
+    <div class="screen-viewer" id="screenViewerModal">
+        <div class="screen-viewer-content">
+            <div class="screen-viewer-header">
+                <span id="screenViewerTitle">👁️ عرض شاشة المستخدم</span>
+                <button id="closeScreenViewer" aria-label="إغلاق">×</button>
+            </div>
+            <video id="remoteScreen" autoplay playsinline></video>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script>
     (function() {
         'use strict';
 
-        console.log('🛟 Support Page v10.0 - Loading...');
+        console.log('🛟 Support Page v11.0 - Loading...');
 
         // ============================================================
         // CLEANUP
@@ -832,12 +1157,35 @@
             });
             _eventListeners = [];
 
+            // ✅ نظف Socket
+            try {
+                if (socket) {
+                    socket.removeAllListeners();
+                    socket.disconnect();
+                    socket = null;
+                }
+            } catch(e) {}
+
+            // ✅ نظف WebRTC
+            try {
+                if (localScreenStream) {
+                    localScreenStream.getTracks().forEach(function(t) { t.stop(); });
+                    localScreenStream = null;
+                }
+                if (screenPeerConnection) {
+                    screenPeerConnection.close();
+                    screenPeerConnection = null;
+                }
+            } catch(e) {}
+
             try {
                 delete window.sendTicket;
                 delete window.loadTickets;
                 delete window.renderTickets;
                 delete window.updateStats;
                 delete window.showToast;
+                delete window.openTicketModal;
+                delete window.closeTicketModal;
             } catch (e) {}
 
             console.log('🧹 Support cleanup done');
@@ -860,7 +1208,6 @@
                    null;
         }
 
-        /* ✅ CSRF Token from cookie */
         function getCsrfToken() {
             try {
                 var match = document.cookie.match(/marine_csrf=([^;]+)/);
@@ -898,19 +1245,17 @@
                 var date = new Date(d);
                 if (isNaN(date.getTime())) return '-';
                 return date.toLocaleDateString('ar-TN') + ' ' + date.toLocaleTimeString('ar-TN', {
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    hour: '2-digit', minute: '2-digit'
                 });
             } catch (e) { return '-'; }
         }
 
-        /* ✅ Normalize status (Arabic/English) */
         function normalizeStatus(status) {
             if (!status) return 'مفتوحة';
             var s = String(status).toLowerCase().trim();
             if (s === 'open' || s === 'مفتوحة' || s === 'مفتوح') return 'مفتوحة';
-            if (s === 'progress' || s === 'in-progress' || s === 'قيد المعالجة') return 'قيد المعالجة';
-            if (s === 'closed' || s === 'مغلقة' || s === 'مغلق') return 'مغلقة';
+            if (s === 'progress' || s === 'in-progress' || s === 'قيد المعالجة' || s === 'قيد التنفيذ') return 'قيد المعالجة';
+            if (s === 'closed' || s === 'مغلقة' || s === 'مغلق' || s === 'محلول') return 'مغلقة';
             return 'مفتوحة';
         }
 
@@ -920,8 +1265,14 @@
             if (p === 'low' || p === 'منخفضة' || p === 'منخفض') return 'منخفضة';
             if (p === 'medium' || p === 'متوسطة' || p === 'متوسط') return 'متوسطة';
             if (p === 'high' || p === 'عالية' || p === 'عالي') return 'عالية';
-            if (p === 'urgent' || p === 'critical' || p === 'عاجلة' || p === 'عاجل') return 'عاجلة';
+            if (p === 'urgent' || p === 'critical' || p === 'عاجلة' || p === 'عاجل' || p === 'حرج') return 'عاجلة';
             return 'متوسطة';
+        }
+
+        function isAdmin() {
+            if (!currentUser) return false;
+            var r = String(currentUser.role || '').trim();
+            return ['admin', 'مسؤول', 'superadmin', 'super_admin'].includes(r);
         }
 
         // ============================================================
@@ -967,6 +1318,11 @@
         var tickets = [];
         var allUsers = [];
         var currentUser = null;
+        var socket = null;
+        var currentScreenSession = null;
+        var screenPeerConnection = null;
+        var localScreenStream = null;
+        var pendingScreenRequests = {};
 
         // ============================================================
         // LOAD CURRENT USER
@@ -1003,7 +1359,6 @@
 
             var token = getToken();
             if (!token) {
-                // Show only current user
                 select.innerHTML = '';
                 if (currentUser) {
                     var opt = document.createElement('option');
@@ -1025,7 +1380,6 @@
 
                     select.innerHTML = '';
 
-                    // Add current user as default
                     if (currentUser) {
                         var myOpt = document.createElement('option');
                         myOpt.value = currentUser.username || currentUser.name || 'me';
@@ -1034,10 +1388,10 @@
                         select.appendChild(myOpt);
                     }
 
-                    // Add other users
                     allUsers.forEach(function(u) {
                         var myName = currentUser ? (currentUser.username || currentUser.name) : '';
                         if (u.username === myName || u.name === myName) return;
+                        if (u.id === (currentUser && (currentUser.id || currentUser._id))) return;
 
                         var opt = document.createElement('option');
                         opt.value = u.username || u.name || u.id;
@@ -1045,14 +1399,10 @@
                                         (u.roleLabel ? ' — ' + u.roleLabel : '');
                         select.appendChild(opt);
                     });
-
-                    console.log('✅ Loaded', allUsers.length, 'users');
                 })
                 .catch(function(err) {
                     if (_isDestroyed) return;
                     console.warn('⚠️ Could not load users:', err.message);
-
-                    // Fallback: only current user
                     select.innerHTML = '';
                     if (currentUser) {
                         var opt = document.createElement('option');
@@ -1070,9 +1420,15 @@
             if (_isDestroyed) return;
 
             var total = tickets.length;
-            var open = tickets.filter(function(t) { return t.status === 'مفتوحة'; }).length;
-            var progress = tickets.filter(function(t) { return t.status === 'قيد المعالجة'; }).length;
-            var closed = tickets.filter(function(t) { return t.status === 'مغلقة'; }).length;
+            var open = tickets.filter(function(t) {
+                return t.status === 'مفتوحة' || t.status === 'مفتوح';
+            }).length;
+            var progress = tickets.filter(function(t) {
+                return t.status === 'قيد المعالجة' || t.status === 'قيد التنفيذ';
+            }).length;
+            var closed = tickets.filter(function(t) {
+                return t.status === 'مغلقة' || t.status === 'مغلق' || t.status === 'محلول';
+            }).length;
 
             var el;
             el = document.getElementById('statTotal'); if (el) el.textContent = total;
@@ -1085,7 +1441,7 @@
         }
 
         // ============================================================
-        // FILTER TICKETS
+        // FILTER
         // ============================================================
         function getFilteredTickets() {
             var statusFilter = document.getElementById('filterStatus');
@@ -1097,7 +1453,14 @@
             var search = searchFilter ? searchFilter.value.trim().toLowerCase() : '';
 
             return tickets.filter(function(t) {
-                if (status !== 'all' && t.status !== status) return false;
+                if (status !== 'all') {
+                    var statusMatch =
+                        (status === 'مفتوحة' && (t.status === 'مفتوحة' || t.status === 'مفتوح')) ||
+                        (status === 'قيد المعالجة' && (t.status === 'قيد المعالجة' || t.status === 'قيد التنفيذ')) ||
+                        (status === 'مغلقة' && (t.status === 'مغلقة' || t.status === 'مغلق' || t.status === 'محلول')) ||
+                        t.status === status;
+                    if (!statusMatch) return false;
+                }
                 if (priority !== 'all' && t.priority !== priority) return false;
                 if (search) {
                     var text = (t.subject + ' ' + t.message + ' ' + (t.sender || '')).toLowerCase();
@@ -1125,16 +1488,13 @@
             }
 
             var statusClass = {
-                'مفتوحة': 'open',
-                'قيد المعالجة': 'progress',
-                'مغلقة': 'closed'
+                'مفتوحة': 'open', 'مفتوح': 'open',
+                'قيد المعالجة': 'progress', 'قيد التنفيذ': 'progress',
+                'مغلقة': 'closed', 'مغلق': 'closed', 'محلول': 'closed'
             };
-
             var priorityClass = {
-                'منخفضة': 'low',
-                'متوسطة': 'medium',
-                'عالية': 'high',
-                'عاجلة': 'urgent'
+                'منخفضة': 'low', 'متوسطة': 'medium',
+                'عالية': 'high', 'عاجلة': 'urgent'
             };
 
             var html = '';
@@ -1160,15 +1520,16 @@
             });
             list.innerHTML = html;
 
-            // ✅ Add click handlers for opening modal
-            list.querySelectorAll('.ticket-item').forEach(function(item) {
-                var handler = function() {
-                    var tid = this.getAttribute('data-ticket-id');
-                    openTicketModal(tid);
-                };
-                item.addEventListener('click', handler);
-                _eventListeners.push({ el: item, type: 'click', fn: handler });
-            });
+            // ✅ Event Delegation (بدل إضافة listener لكل عنصر)
+            if (!list.__delegated) {
+                list.__delegated = true;
+                addSafeListener(list, 'click', function(e) {
+                    var item = e.target.closest('.ticket-item');
+                    if (!item) return;
+                    var tid = item.getAttribute('data-ticket-id');
+                    if (tid) openTicketModal(tid);
+                });
+            }
         }
 
         // ============================================================
@@ -1185,7 +1546,7 @@
 
             if (title) title.textContent = '🎫 ' + ticket.subject;
 
-            body.innerHTML =
+            var html =
                 '<div class="field">' +
                     '<span class="field-label">👤 المرسل</span>' +
                     '<span class="field-value">' + escapeHtml(ticket.sender || ticket.user || 'مستخدم') + '</span>' +
@@ -1215,7 +1576,36 @@
                     '<span class="field-value">' + formatDate(ticket.createdAt) + '</span>' +
                 '</div>';
 
+            // ✅ زر طلب عرض الشاشة (للمسؤول فقط)
+            if (isAdmin() && ticket.userId) {
+                html +=
+                    '<div class="screen-share-controls">' +
+                        '<h5>📺 عرض شاشة المستخدم</h5>' +
+                        '<input type="text" id="screenRequestReasonInput" ' +
+                               'placeholder="سبب الطلب (اختياري)" maxlength="200">' +
+                        '<button type="button" class="btn-request-screen" ' +
+                                'id="requestScreenBtn" ' +
+                                'data-ticket-id="' + escapeHtml(ticket.id) + '" ' +
+                                'data-user-id="' + escapeHtml(ticket.userId) + '">' +
+                            '📺 طلب عرض الشاشة' +
+                        '</button>' +
+                    '</div>';
+            }
+
+            body.innerHTML = html;
             modal.classList.add('active');
+
+            // ✅ إضافة listener لزر الطلب
+            var reqBtn = document.getElementById('requestScreenBtn');
+            if (reqBtn) {
+                addSafeListener(reqBtn, 'click', function() {
+                    var tid = this.getAttribute('data-ticket-id');
+                    var uid = this.getAttribute('data-user-id');
+                    var reasonEl = document.getElementById('screenRequestReasonInput');
+                    var reason = reasonEl ? reasonEl.value.trim() : '';
+                    requestUserScreen(tid, uid, reason);
+                });
+            }
         }
 
         function closeTicketModal() {
@@ -1229,7 +1619,6 @@
         function loadTickets() {
             if (_isDestroyed) return;
 
-            // Load from localStorage first
             try {
                 var stored = localStorage.getItem('marine_support_tickets');
                 if (stored) {
@@ -1238,12 +1627,13 @@
                         tickets = parsed.map(function(t) {
                             return {
                                 id: t.id || ('T-' + Date.now() + Math.random()),
-                                subject: t.subject || '',
-                                message: t.message || '',
+                                subject: t.subject || t.title || '',
+                                message: t.message || t.description || '',
                                 priority: normalizePriority(t.priority),
                                 status: normalizeStatus(t.status),
-                                sender: t.sender || t.user || 'مستخدم',
-                                user: t.sender || t.user || 'مستخدم',
+                                sender: t.sender || t.user || t.createdByName || 'مستخدم',
+                                user: t.sender || t.user || t.createdByName || 'مستخدم',
+                                userId: t.userId || null,
                                 createdAt: t.createdAt || new Date().toISOString()
                             };
                         });
@@ -1278,6 +1668,7 @@
                             status: normalizeStatus(t.status),
                             sender: t.sender || t.user || t.createdByName || 'مستخدم',
                             user: t.sender || t.user || t.createdByName || 'مستخدم',
+                            userId: t.userId || null,
                             createdAt: t.createdAt || new Date().toISOString()
                         };
                     });
@@ -1295,9 +1686,6 @@
                 });
         }
 
-        // ============================================================
-        // SAVE TICKETS LOCALLY
-        // ============================================================
         function saveTicketsLocally() {
             try {
                 localStorage.setItem('marine_support_tickets', JSON.stringify(tickets.slice(0, 100)));
@@ -1319,7 +1707,9 @@
 
             if (!subjectEl || !messageEl || !priorityEl) return;
 
-            var sender = (senderEl && senderEl.value) || (currentUser && (currentUser.name || currentUser.username)) || 'مستخدم';
+            var sender = (senderEl && senderEl.value) ||
+                        (currentUser && (currentUser.name || currentUser.username)) ||
+                        'مستخدم';
             var subject = subjectEl.value.trim();
             var message = messageEl.value.trim();
             var priority = priorityEl.value;
@@ -1328,13 +1718,14 @@
             if (!message) { showToast('⚠️ يرجى إدخال وصف المشكلة', 'error'); return; }
 
             var newTicket = {
-                id: 'T-' + Date.now(),
+                id: 'T-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
                 subject: subject,
                 message: message,
                 priority: priority,
                 status: 'مفتوحة',
                 sender: sender,
                 user: sender,
+                userId: currentUser ? (currentUser.id || currentUser._id) : null,
                 createdAt: new Date().toISOString()
             };
 
@@ -1351,14 +1742,20 @@
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({
-                        title: subject,
-                        description: message,
+                        subject: subject,
+                        message: message,
                         priority: priority,
                         sender: sender
                     })
                 })
                 .then(function(res) {
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    if (!res.ok) {
+                        return res.json().then(function(d) {
+                            throw new Error(d.error || ('HTTP ' + res.status));
+                        }).catch(function() {
+                            throw new Error('HTTP ' + res.status);
+                        });
+                    }
                     return res.json();
                 });
             } else {
@@ -1366,9 +1763,17 @@
             }
 
             promise
-                .then(function() {
+                .then(function(data) {
                     if (_isDestroyed) return;
-                    tickets.unshift(newTicket);
+
+                    var finalTicket = newTicket;
+                    if (data && data.ticket) {
+                        finalTicket.id = data.ticket.id || data.ticket._id || newTicket.id;
+                        finalTicket.status = normalizeStatus(data.ticket.status || 'مفتوحة');
+                        finalTicket.createdAt = data.ticket.createdAt || newTicket.createdAt;
+                    }
+
+                    tickets.unshift(finalTicket);
                     saveTicketsLocally();
                     renderTickets();
                     updateStats();
@@ -1381,17 +1786,21 @@
                 })
                 .catch(function(err) {
                     if (_isDestroyed) return;
-                    console.warn('⚠️ Server error, saving locally:', err.message);
-                    tickets.unshift(newTicket);
-                    saveTicketsLocally();
-                    renderTickets();
-                    updateStats();
+                    console.error('❌ Send ticket error:', err.message);
 
-                    if (subjectEl) subjectEl.value = '';
-                    if (messageEl) messageEl.value = '';
-                    if (priorityEl) priorityEl.value = 'متوسطة';
-
-                    showToast('✅ تم حفظ التذكرة محلياً', 'info');
+                    if (err.message.includes('400')) {
+                        showToast('❌ بيانات غير صحيحة — تحقق من الحقول', 'error', 5000);
+                    } else if (err.message.includes('401')) {
+                        showToast('❌ انتهت الجلسة — يرجى إعادة الدخول', 'error', 5000);
+                    } else if (err.message.includes('403')) {
+                        showToast('❌ لا تملك صلاحية إرسال التذاكر', 'error', 5000);
+                    } else {
+                        tickets.unshift(newTicket);
+                        saveTicketsLocally();
+                        renderTickets();
+                        updateStats();
+                        showToast('⚠️ فشل الاتصال — تم الحفظ محلياً', 'warning', 5000);
+                    }
                 })
                 .finally(function() {
                     if (btn) {
@@ -1402,35 +1811,419 @@
         }
 
         // ============================================================
+        // 🎥 SCREEN SHARE — SOCKET.IO + WEBRTC
+        // ============================================================
+        function initSocket() {
+            var token = getToken();
+            if (!token || !currentUser) {
+                console.warn('⚠️ Socket: no auth');
+                return;
+            }
+
+            if (typeof io !== 'function') {
+                console.error('❌ Socket.IO not loaded');
+                return;
+            }
+
+            socket = io({
+                transports: ['websocket', 'polling'],
+                auth: { token: token }
+            });
+
+            socket.on('connect', function() {
+                console.log('🔌 Socket connected');
+                updateConnectionStatus(true);
+                socket.emit('register', {
+                    userId: currentUser.id || currentUser._id,
+                    role: currentUser.role,
+                    name: currentUser.name,
+                    username: currentUser.username,
+                    token: token
+                });
+            });
+
+            socket.on('disconnect', function() {
+                console.log('❌ Socket disconnected');
+                updateConnectionStatus(false);
+            });
+
+            socket.on('registered', function() {
+                console.log('✅ Socket registered');
+            });
+
+            socket.on('error', function(err) {
+                console.error('❌ Socket error:', err);
+            });
+
+            // ✅ استقبال طلب عرض الشاشة (للمستخدم)
+            socket.on('screen:incoming', function(data) {
+                console.log('📺 Incoming screen request:', data);
+                showScreenRequestPopup(data);
+            });
+
+            // ✅ المسؤول: تم القبول
+            socket.on('screen:accepted', function(data) {
+                console.log('✅ Screen accepted:', data);
+                showToast('✅ المستخدم وافق على عرض الشاشة', 'success');
+                startReceivingScreen(data);
+            });
+
+            // ✅ المسؤول: تم الرفض
+            socket.on('screen:rejected', function(data) {
+                console.log('❌ Screen rejected:', data);
+                showToast('❌ المستخدم رفض: ' + (data.reason || 'بدون سبب'), 'error');
+            });
+
+            // ✅ WebRTC Signaling
+            socket.on('screen:offer', async function(data) {
+                console.log('📥 Received offer');
+                await handleScreenOffer(data);
+            });
+
+            socket.on('screen:answer', async function(data) {
+                console.log('📥 Received answer');
+                if (screenPeerConnection) {
+                    try {
+                        await screenPeerConnection.setRemoteDescription(
+                            new RTCSessionDescription(data.answer)
+                        );
+                    } catch (e) {
+                        console.error('❌ setRemoteDescription error:', e);
+                    }
+                }
+            });
+
+            socket.on('screen:ice-candidate', async function(data) {
+                if (screenPeerConnection && data.candidate) {
+                    try {
+                        await screenPeerConnection.addIceCandidate(
+                            new RTCIceCandidate(data.candidate)
+                        );
+                    } catch (e) {
+                        console.warn('ICE error:', e);
+                    }
+                }
+            });
+
+            socket.on('screen:ended', function(data) {
+                console.log('⏹️ Session ended:', data);
+                endScreenSession();
+            });
+
+            socket.on('users:online-count', function(data) {
+                var el = document.getElementById('onlineCountText');
+                if (el) el.textContent = (data.count || 0) + ' متصل';
+            });
+        }
+
+        function updateConnectionStatus(online) {
+            var dot = document.getElementById('connectionDot');
+            var txt = document.getElementById('connectionText');
+            if (dot) dot.classList.toggle('online', online);
+            if (txt) txt.textContent = online ? 'متصل بالسيرفر' : 'غير متصل';
+        }
+
+        // ============================================================
+        // 👤 USER: عرض الإشعار
+        // ============================================================
+        function showScreenRequestPopup(data) {
+            currentScreenSession = data;
+            pendingScreenRequests[data.sessionId] = data;
+            var nameEl = document.getElementById('screenRequesterName');
+            var reasonEl = document.getElementById('screenRequestReason');
+            if (nameEl) nameEl.textContent = data.requestedByName || 'مسؤول';
+            if (reasonEl) reasonEl.textContent = data.reason || '(بدون سبب)';
+            var popup = document.getElementById('screenRequestPopup');
+            if (popup) popup.classList.add('active');
+        }
+
+        function acceptScreenRequest() {
+            var popup = document.getElementById('screenRequestPopup');
+            if (popup) popup.classList.remove('active');
+
+            if (!currentScreenSession) return;
+
+            navigator.mediaDevices.getDisplayMedia({
+                video: { cursor: 'always' },
+                audio: false
+            })
+            .then(function(stream) {
+                localScreenStream = stream;
+
+                // أبلغ السيرفر
+                socket.emit('screen:accept', {
+                    sessionId: currentScreenSession.sessionId
+                });
+
+                // أنشئ Peer Connection
+                setupScreenPeerAsSender();
+
+                // أظهر المؤشر
+                var ind = document.getElementById('screenSharingIndicator');
+                if (ind) ind.classList.add('active');
+
+                // عند إيقاف المشاركة من المتصفح
+                stream.getVideoTracks()[0].onended = function() {
+                    endScreenSession();
+                };
+
+                showToast('✅ بدأت مشاركة الشاشة', 'success');
+            })
+            .catch(function(err) {
+                console.error('❌ getDisplayMedia error:', err);
+                showToast('❌ فشل بدء المشاركة: ' + err.message, 'error', 5000);
+
+                socket.emit('screen:reject', {
+                    sessionId: currentScreenSession.sessionId,
+                    reason: 'فشل تقني: ' + err.message
+                });
+                currentScreenSession = null;
+            });
+        }
+
+        function rejectScreenRequest() {
+            var popup = document.getElementById('screenRequestPopup');
+            if (popup) popup.classList.remove('active');
+
+            if (!currentScreenSession) return;
+            socket.emit('screen:reject', {
+                sessionId: currentScreenSession.sessionId,
+                reason: 'رفض المستخدم'
+            });
+            currentScreenSession = null;
+        }
+
+        // ============================================================
+        // 🔧 WebRTC: المستخدم كمُرسل
+        // ============================================================
+        function setupScreenPeerAsSender() {
+            screenPeerConnection = new RTCPeerConnection({
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            });
+
+            // أضف الشاشة
+            localScreenStream.getTracks().forEach(function(track) {
+                screenPeerConnection.addTrack(track, localScreenStream);
+            });
+
+            // أرسل ICE
+            screenPeerConnection.onicecandidate = function(e) {
+                if (e.candidate && socket) {
+                    socket.emit('screen:ice-candidate', {
+                        sessionId: currentScreenSession.sessionId,
+                        targetSocketId: currentScreenSession.requesterSocketId,
+                        candidate: e.candidate
+                    });
+                }
+            };
+
+            // أنشئ offer وأرسله
+            screenPeerConnection.createOffer()
+                .then(function(offer) {
+                    return screenPeerConnection.setLocalDescription(offer);
+                })
+                .then(function() {
+                    socket.emit('screen:offer', {
+                        sessionId: currentScreenSession.sessionId,
+                        targetSocketId: currentScreenSession.requesterSocketId,
+                        offer: screenPeerConnection.localDescription
+                    });
+                })
+                .catch(function(err) {
+                    console.error('❌ Offer creation error:', err);
+                });
+        }
+
+        // ============================================================
+        // 👨‍💼 ADMIN: طلب عرض الشاشة
+        // ============================================================
+        function requestUserScreen(ticketId, targetUserId, reason) {
+            if (!socket || !socket.connected) {
+                showToast('❌ الاتصال بالسيرفر غير جاهز', 'error');
+                return;
+            }
+
+            if (!targetUserId) {
+                showToast('❌ لا يمكن تحديد المستخدم', 'error');
+                return;
+            }
+
+            socket.emit('screen:request', {
+                ticketId: ticketId,
+                targetUserId: targetUserId,
+                reason: reason || ''
+            }, function(response) {
+                if (response && response.success) {
+                    showToast('📺 تم إرسال الطلب للمستخدم', 'info');
+                    var btn = document.getElementById('requestScreenBtn');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.textContent = '⏳ بانتظار الموافقة...';
+                    }
+                } else {
+                    showToast('❌ ' + ((response && response.error) || 'فشل الإرسال'), 'error');
+                }
+            });
+        }
+
+        // ============================================================
+        // 👨‍💼 ADMIN: استقبال البث
+        // ============================================================
+        function startReceivingScreen(data) {
+            screenPeerConnection = new RTCPeerConnection({
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            });
+
+            // استقبل الفيديو
+            screenPeerConnection.ontrack = function(event) {
+                console.log('📹 Received screen track');
+                var video = document.getElementById('remoteScreen');
+                if (video) {
+                    video.srcObject = event.streams[0];
+                }
+                var viewer = document.getElementById('screenViewerModal');
+                if (viewer) viewer.classList.add('active');
+
+                var titleEl = document.getElementById('screenViewerTitle');
+                if (titleEl) {
+                    titleEl.textContent = '👁️ عرض شاشة: ' + (data.userName || 'مستخدم');
+                }
+            };
+
+            // أرسل ICE
+            screenPeerConnection.onicecandidate = function(e) {
+                if (e.candidate && socket) {
+                    socket.emit('screen:ice-candidate', {
+                        sessionId: data.sessionId,
+                        targetSocketId: data.userSocketId,
+                        candidate: e.candidate
+                    });
+                }
+            };
+
+            currentScreenSession = data;
+        }
+
+        // ============================================================
+        // 🔄 ADMIN: استقبال Offer من المستخدم
+        // ============================================================
+        async function handleScreenOffer(data) {
+            if (!screenPeerConnection) {
+                screenPeerConnection = new RTCPeerConnection({
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                });
+
+                screenPeerConnection.ontrack = function(event) {
+                    var video = document.getElementById('remoteScreen');
+                    if (video) video.srcObject = event.streams[0];
+                    var viewer = document.getElementById('screenViewerModal');
+                    if (viewer) viewer.classList.add('active');
+                };
+
+                screenPeerConnection.onicecandidate = function(e) {
+                    if (e.candidate) {
+                        socket.emit('screen:ice-candidate', {
+                            sessionId: data.sessionId,
+                            targetSocketId: data.fromSocketId,
+                            candidate: e.candidate
+                        });
+                    }
+                };
+            }
+
+            try {
+                await screenPeerConnection.setRemoteDescription(
+                    new RTCSessionDescription(data.offer)
+                );
+                var answer = await screenPeerConnection.createAnswer();
+                await screenPeerConnection.setLocalDescription(answer);
+
+                socket.emit('screen:answer', {
+                    sessionId: data.sessionId,
+                    targetSocketId: data.fromSocketId,
+                    answer: screenPeerConnection.localDescription
+                });
+            } catch (err) {
+                console.error('❌ Offer handling error:', err);
+            }
+        }
+
+        // ============================================================
+        // ⏹️ إنهاء جلسة عرض الشاشة
+        // ============================================================
+        function endScreenSession() {
+            if (localScreenStream) {
+                localScreenStream.getTracks().forEach(function(t) { t.stop(); });
+                localScreenStream = null;
+            }
+
+            if (screenPeerConnection) {
+                try { screenPeerConnection.close(); } catch(e) {}
+                screenPeerConnection = null;
+            }
+
+            if (currentScreenSession && socket) {
+                socket.emit('screen:end', {
+                    sessionId: currentScreenSession.sessionId
+                });
+            }
+
+            var ind = document.getElementById('screenSharingIndicator');
+            if (ind) ind.classList.remove('active');
+            var viewer = document.getElementById('screenViewerModal');
+            if (viewer) viewer.classList.remove('active');
+            var video = document.getElementById('remoteScreen');
+            if (video) video.srcObject = null;
+
+            currentScreenSession = null;
+
+            // ✅ أعد زر الطلب
+            var btn = document.getElementById('requestScreenBtn');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '📺 طلب عرض الشاشة';
+            }
+        }
+
+        // ============================================================
         // INIT
         // ============================================================
         function init() {
             if (_isDestroyed) return;
-            console.log('🚀 Initializing Support page v10.0...');
+            _isDestroyed = false;
+            console.log('🚀 Initializing Support page v11.0...');
 
-            // Load current user
             loadCurrentUser();
-
-            // Load users list
             loadUsers();
 
-            // Form submit
             var form = document.getElementById('ticketForm');
-            if (form) {
-                addSafeListener(form, 'submit', sendTicket);
-            }
+            if (form) addSafeListener(form, 'submit', sendTicket);
 
-            // Filters
             var filterStatus = document.getElementById('filterStatus');
             if (filterStatus) addSafeListener(filterStatus, 'change', renderTickets);
 
             var filterPriority = document.getElementById('filterPriority');
             if (filterPriority) addSafeListener(filterPriority, 'change', renderTickets);
 
+            // ✅ Debounce للبحث
+            var searchTimer = null;
             var filterSearch = document.getElementById('filterSearch');
-            if (filterSearch) addSafeListener(filterSearch, 'input', renderTickets);
+            if (filterSearch) {
+                addSafeListener(filterSearch, 'input', function() {
+                    clearTimeout(searchTimer);
+                    searchTimer = setTimeout(renderTickets, 200);
+                });
+            }
 
-            // Modal close
             var modalClose = document.getElementById('modalClose');
             if (modalClose) addSafeListener(modalClose, 'click', closeTicketModal);
 
@@ -1441,12 +2234,27 @@
                 });
             }
 
-            // ESC to close modal
             addSafeListener(document, 'keydown', function(e) {
                 if (e.key === 'Escape') closeTicketModal();
             });
 
-            // Load tickets
+            // ✅ Screen share buttons
+            var acceptBtn = document.getElementById('acceptScreenBtn');
+            if (acceptBtn) addSafeListener(acceptBtn, 'click', acceptScreenRequest);
+
+            var rejectBtn = document.getElementById('rejectScreenBtn');
+            if (rejectBtn) addSafeListener(rejectBtn, 'click', rejectScreenRequest);
+
+            var stopBtn = document.getElementById('stopScreenBtn');
+            if (stopBtn) addSafeListener(stopBtn, 'click', endScreenSession);
+
+            var closeViewer = document.getElementById('closeScreenViewer');
+            if (closeViewer) addSafeListener(closeViewer, 'click', endScreenSession);
+
+            // ✅ تهيئة Socket
+            initSocket();
+
+            // ✅ تحميل التذاكر
             loadTickets();
 
             console.log('✅ Support page ready');
@@ -1475,8 +2283,10 @@
         window.showToast = showToast;
         window.openTicketModal = openTicketModal;
         window.closeTicketModal = closeTicketModal;
+        window.requestUserScreen = requestUserScreen;
+        window.endScreenSession = endScreenSession;
 
-        console.log('✅ Support Page v10.0 ready');
+        console.log('✅ Support Page v11.0 ready');
 
     })();
     </script>
