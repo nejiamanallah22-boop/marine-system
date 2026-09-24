@@ -1,25 +1,20 @@
 /* ============================================================
-   🖨️ PRINT.CSS v25.2 — Enterprise Print (Marine System)
+   🖨️ PRINT.CSS v25.3 — Enterprise Print (Marine System)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ يدعم 5 صفحات: fleet / vehicles / efficiency / maintenance / logs
-   ✅ الترويسة الرسمية (من server.js: #official-print-header)
+   ✅ A4 (Portrait/Paysage يُختار من نافذة الطباعة)
+   ✅ الترويسة الرسمية (#official-print-header)
    ✅ إخفاء الرؤوس الأصلية (المربعات الزرقاء)
    ✅ ألوان كاملة للجداول والشارات
    ✅ دعم Center + Supply
-   ✅ A4 Portrait + Paysage
+   ✅ يدعم 5 صفحات
    ============================================================ */
 
 /* ═══════════════════════════════════════════════════════════
-   📐 إعدادات الصفحة
+   📐 إعدادات الصفحة — لا يُفرض اتجاه (يُختار من المتصفح)
    ═══════════════════════════════════════════════════════════ */
 @page {
-    size: A4 portrait;
+    size: A4;
     margin: 12mm 8mm 12mm 8mm;
-}
-
-@page landscape-page {
-    size: A4 landscape;
-    margin: 10mm 6mm 12mm 6mm;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -45,6 +40,7 @@
 
     html, body {
         background: #ffffff !important;
+        background-image: none !important;
         color: #12121a !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
         font-size: 10pt !important;
@@ -54,7 +50,7 @@
     }
 
     /* ─────────────────────────────────────────
-       1) 🎯 إخفاء الرؤوس الأصلية (المربعات الزرقاء)
+       1) 🚫 إخفاء الرؤوس الأصلية (المربعات الزرقاء)
        ───────────────────────────────────────── */
     #page-efficiency .eff-header,
     #page-efficiency .eff-header *,
@@ -87,7 +83,7 @@
     }
 
     /* ─────────────────────────────────────────
-       2) إخفاء خلفيات الصفحات الداكنة
+       2) خلفيات بيضاء للصفحات
        ───────────────────────────────────────── */
     #page-efficiency,
     #page-fleet,
@@ -126,6 +122,7 @@
     .filter-bar,
     nav, .sidebar, .navbar, .main-header, .menu-toggle,
     .notification-wrapper, .user-wrapper, .search-wrapper,
+    .notif-dropdown,
     .back-to-top, .toast-container, .toast, .eff-notification,
     .empty-state .spinner, .eff-spinner,
     .no-print, #loginOverlay, #authLoadingOverlay, #forgotPasswordModal,
@@ -430,13 +427,6 @@
         backdrop-filter: none !important;
     }
 
-    body.print-landscape .table-wrapper,
-    body.print-landscape .veh-table-wrap {
-        page: landscape-page !important;
-        page-break-before: always !important;
-        break-before: page !important;
-    }
-
     #page-efficiency table,
     #page-fleet table,
     #page-logs table,
@@ -504,7 +494,7 @@
     tbody td:last-child { display: none !important; }
 
     /* ─────────────────────────────────────────
-       9) 🎯 VEHICLES — رأس الجدول + الألوان
+       9) 🎯 VEHICLES — رأس الجدول
        ───────────────────────────────────────── */
     #page-vehicles .veh-table-wrap {
         background: none !important;
@@ -554,8 +544,6 @@
         font-size: 6pt !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
     }
 
     #page-vehicles .veh-table-head .veh-cell {
@@ -571,8 +559,6 @@
         border-bottom: 0.5pt solid #cbd5e1 !important;
         break-inside: avoid !important;
         page-break-inside: avoid !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
     }
     #page-vehicles .veh-table-row:nth-child(even) {
         background: #f1f5f9 !important;
@@ -615,8 +601,6 @@
         font-weight: 800 !important;
         border: none !important;
         white-space: nowrap !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
         line-height: 1.4 !important;
         max-width: 100% !important;
         overflow: hidden !important;
@@ -712,12 +696,10 @@
         font-size: 6.5pt !important;
         display: inline-block !important;
         letter-spacing: 0.3px !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
     }
 
     /* ─────────────────────────────────────────
-       12) التذييل (كل الصفحات)
+       12) التذييل
        ───────────────────────────────────────── */
     #page-fleet::after,
     #page-logs::after,
@@ -752,7 +734,7 @@
     }
 
     /* ─────────────────────────────────────────
-       13) عناوين الجداول (fleet)
+       13) عناوين جداول fleet
        ───────────────────────────────────────── */
     #page-fleet .table-wrapper::before {
         content: "📋 السجل التفصيلي للمراكب" !important;
@@ -769,17 +751,23 @@
     }
 
     /* ─────────────────────────────────────────
-       14) منع التداخل مع الترويسة الرسمية
+       14) منع التداخل
        ───────────────────────────────────────── */
-    .veh-container > *:first-child,
-    #page-vehicles > *:first-child {
-        margin-top: 0 !important;
+    .main-content {
+        margin-right: 0 !important;
+        padding: 0 !important;
     }
 
-    #official-print-header + .veh-container,
-    #official-print-header + * {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
+    .page-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #pageContainer {
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: 0 !important;
     }
 
     /* ─────────────────────────────────────────
@@ -795,7 +783,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   🌐 SCREEN
+   🌐 SCREEN — إخفاء عناصر الطباعة على الشاشة
    ═══════════════════════════════════════════════════════════ */
 @media screen {
     .print-only,
