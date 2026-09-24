@@ -1,14 +1,17 @@
 /* ============================================================
-   🖨️ PRINT v22.0 — FINAL COMPLETE (NO BLUE BOXES)
+   🖨️ PRINT v22.0 — FINAL COMPLETE
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    ✅ الترويسة الرسمية الكاملة (7 أسطر وزارية)
    ✅ "العوينة في" على اليسار
    ✅ العنوان الرئيسي متمركز
    ✅ ألوان كاملة للجداول والشارات
-   ✅ إخفاء كل المربعات الزرقاء نهائياً
+   ✅ إخفاء المربعات الزرقاء (hero/gradient)
    ✅ A4 Portrait + Paysage
    ============================================================ */
 
+/* ═══════════════════════════════════════════════════════════
+   📐 إعدادات الصفحة
+   ═══════════════════════════════════════════════════════════ */
 @page {
     size: A4 portrait;
     margin: 12mm 8mm 12mm 8mm;
@@ -18,6 +21,9 @@
     margin: 10mm 6mm 12mm 6mm;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   🖨️ PRINT
+   ═══════════════════════════════════════════════════════════ */
 @media print {
 
     /* ═══════════════════════════════════════
@@ -71,30 +77,53 @@
     }
 
     /* ═══════════════════════════════════════
-       2) 🚫 حظر نهائي لكل الصفحات:
-          لا gradient, لا خلفيات داكنة
+       2) 🚫 إخفاء المربع الأزرق (Hero/Banner/Gradient)
        ═══════════════════════════════════════ */
-    
-    /* منع أي خلفية gradient في أي مكان */
-    #page-efficiency [style*="gradient"],
-    #page-fleet [style*="gradient"],
-    #page-vehicles [style*="gradient"],
-    #page-maintenance [style*="gradient"],
-    #page-logs [style*="gradient"],
-    #page-efficiency [class*="hero"],
-    #page-fleet [class*="hero"],
-    #page-vehicles [class*="hero"],
-    #page-efficiency [class*="banner"],
-    #page-fleet [class*="banner"],
-    #page-vehicles [class*="banner"],
-    #page-efficiency [class*="cover"],
-    #page-fleet [class*="cover"],
-    #page-vehicles [class*="cover"] {
+    .hero, .hero-section, .hero-banner, .hero-card, .hero-container,
+    .hero-image, .hero-illustration, .hero-content, .hero-wrapper,
+    .page-hero, .page-banner, .page-cover, .page-header-hero,
+    .banner, .banner-container, .banner-wrapper, .header-banner,
+    .top-banner, .main-banner, .cover-section,
+    .eff-hero, .kpi-header, .kpi-banner, .readiness-hero,
+    .dashboard-hero, .efficiency-hero, .report-hero,
+    .jumbotron, .showcase, .spotlight, .feature-hero,
+    .illustration, .illustration-container, .illustration-wrapper,
+    .graphic, .graphic-container,
+    .chart-section, .chart-container, .chart-card, .chart-wrapper,
+    .chart-area, .chart-box, .chart-visual,
+    .stats-hero, .metrics-hero, .overview-hero,
+    .dashboard-header, .page-header-banner, .section-hero,
+    .section-banner, .section-cover, .section-hero,
+    .section-image, .section-visual, .section-graphic,
+    .section-chart, .section-illustration,
+    [class*="hero" i],
+    [class*="banner" i],
+    [class*="cover" i],
+    [class*="jumbo" i],
+    [class*="showcase" i],
+    [class*="spotlight" i],
+    [class*="illustration" i],
+    [class*="chart-section" i],
+    [class*="chart-container" i],
+    [id*="hero" i],
+    [id*="banner" i],
+    [id*="cover" i],
+    #systemBackground, #backgroundContainer,
+    .background-container, .background-image-container,
+    [class*="background-container" i],
+    [class*="bg-image" i],
+    img[src*="background" i],
+    img[src*="hero" i],
+    img[src*="banner" i],
+    img[src*="cover" i] {
         display: none !important;
+        visibility: hidden !important;
         height: 0 !important;
         min-height: 0 !important;
         max-height: 0 !important;
         width: 0 !important;
+        min-width: 0 !important;
+        max-width: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
         opacity: 0 !important;
@@ -104,43 +133,9 @@
         border: none !important;
     }
 
-    /* 🎯 حظر خلفيات الأقسام في efficiency */
-    #page-efficiency .eff-section > div:first-child:not(.section-header),
-    #page-efficiency .eff-section-header,
-    #page-efficiency .section-banner,
-    #page-efficiency .section-cover,
-    #page-efficiency .section-hero,
-    #page-efficiency .section-image,
-    #page-efficiency .section-visual,
-    #page-efficiency .section-graphic,
-    #page-efficiency .section-chart,
-    #page-efficiency .section-illustration {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        width: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        opacity: 0 !important;
-        overflow: hidden !important;
-    }
-
-    /* 🎯 حظر inline styles داكنة */
-    [style*="linear-gradient"],
-    [style*="radial-gradient"],
-    [style*="rgba(10,"],
-    [style*="rgba(15,"],
-    [style*="rgba(18,"],
-    [style*="rgba(20,"],
-    [style*="rgba(6,"] {
-        background: none !important;
+    /* إخفاء الخلفيات الكبيرة عبر inline style */
+    [style*="background-image" i]:not(#official-print-header):not(#official-print-header *) {
         background-image: none !important;
-    }
-    
-    /* استثناء الترويسة الرسمية */
-    #official-print-header,
-    #official-print-header * {
-        background: #ffffff !important;
     }
 
     /* إخفاء أي canvas / svg كبير */
