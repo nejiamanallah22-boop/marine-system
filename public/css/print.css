@@ -737,3 +737,163 @@
         display: none;
     }
 }
+/* ═══════════════════════════════════════════════════════════
+   🎯 FIX — إخفاء رأس efficiency + الدعم الكامل للطباعة
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+
+    /* 1) 🚫 إخفاء رأس efficiency بالكامل (المربع الأزرق) */
+    #page-efficiency .eff-header,
+    #page-efficiency .eff-header * {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        opacity: 0 !important;
+        overflow: hidden !important;
+        background: none !important;
+        background-image: none !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* 2) 🎨 خلفية الصفحة بيضاء */
+    #page-efficiency,
+    #page-fleet,
+    #page-vehicles,
+    #page-logs,
+    #page-maintenance {
+        background: #ffffff !important;
+        background-image: none !important;
+        color: #12121a !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: 0 !important;
+    }
+
+    /* 3) إخفاء pseudo-elements للخلفيات */
+    #page-efficiency::before,
+    #page-efficiency::after,
+    #page-fleet::before,
+    #page-fleet::after,
+    #page-vehicles::before,
+    #page-vehicles::after,
+    body::before,
+    body::after {
+        display: none !important;
+        content: none !important;
+        background: none !important;
+    }
+
+    /* 4) إخفاء الفلاتر والأزرار */
+    #page-efficiency .filter-bar,
+    #page-efficiency .scroll-nav,
+    #page-efficiency .eff-header-actions,
+    #page-fleet .filter-bar,
+    #page-vehicles .veh-actions {
+        display: none !important;
+    }
+
+    /* 5) 📊 جدول efficiency — نص أسود على أبيض */
+    #page-efficiency .eff-section {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        margin: 0 0 4mm 0 !important;
+        padding: 0 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    #page-efficiency .eff-section .section-header {
+        background: #f7f6f3 !important;
+        border-bottom: 1pt solid #12121a !important;
+        padding: 2mm 3mm !important;
+    }
+
+    #page-efficiency .eff-section .section-header h3 {
+        color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+    }
+
+    #page-efficiency .eff-section .section-header h3 i {
+        color: #b8860b !important;
+    }
+
+    #page-efficiency .badge {
+        background: #f2f1ed !important;
+        color: #45454f !important;
+        border: 0.5pt solid #d8d6d0 !important;
+    }
+
+    /* 6) 💡 أزرار اختيار الاتجاه (Portrait / Paysage) */
+    .print-orientation-bar {
+        display: none !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🌐 SCREEN — إظهار أزرار الاتجاه على الشاشة
+   ═══════════════════════════════════════════════════════════ */
+@media screen {
+    #official-print-header { display: none; }
+    
+    .print-orientation-bar {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        gap: 10px;
+        padding: 10px 14px;
+        background: rgba(6, 9, 17, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(230, 179, 30, 0.3);
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        font-family: 'Cairo', sans-serif;
+        direction: rtl;
+    }
+    
+    .print-orientation-bar button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        font-family: 'Cairo', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .print-orientation-bar .btn-portrait {
+        background: linear-gradient(135deg, #f7d774, #e6b31e);
+        color: #060911;
+    }
+    
+    .print-orientation-bar .btn-portrait:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(247, 215, 116, 0.4);
+    }
+    
+    .print-orientation-bar .btn-paysage {
+        background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        color: #fff;
+    }
+    
+    .print-orientation-bar .btn-paysage:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(96, 165, 250, 0.4);
+    }
+    
+    .print-orientation-bar button i {
+        font-size: 14px;
+    }
+}
