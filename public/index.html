@@ -6,7 +6,114 @@
     <title>⚓ منظومة الوسائل البحرية v9.6</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/print.css" media="print">
+      <link rel="stylesheet" href="/css/print.css" media="print">
+    
+    <!-- 🎯 PRINT STYLES INLINE (لا يعتمد على ملف خارجي) -->
+    <style media="print">
+        /* ═══════════════════════════════════════════════════════
+           🚫 إخفاء كل الرؤوس الأصلية (المربعات الزرقاء)
+           ═══════════════════════════════════════════════════════ */
+        
+        #page-efficiency .eff-header,
+        #page-efficiency .eff-header *,
+        #page-vehicles .veh-header,
+        #page-vehicles .veh-header *,
+        #page-fleet .fleet-header,
+        #page-fleet .fleet-header *,
+        #page-logs .logs-header,
+        #page-logs .logs-header *,
+        #page-maintenance .maint-header,
+        #page-maintenance .maint-header * {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            width: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            opacity: 0 !important;
+            overflow: hidden !important;
+            background: none !important;
+            background-image: none !important;
+            border: none !important;
+        }
+        
+        /* إخفاء الفلاتر والأزرار وكل عناصر التفاعل */
+        .filter-bar,
+        .veh-actions,
+        .scroll-nav,
+        .main-header,
+        .sidebar,
+        .back-to-top,
+        .toast-container,
+        .notif-dropdown,
+        .chart-section,
+        .chart-switch,
+        .charts-container,
+        .eff-header-actions,
+        .veh-header .header-actions,
+        .fleet-header-actions,
+        #dev-signature,
+        #user-info-badge,
+        #force-gps-modal,
+        button,
+        .btn-action,
+        .veh-btn,
+        .btn-filter {
+            display: none !important;
+        }
+        
+        /* خلفية بيضاء للصفحة كلها */
+        html, body,
+        #mainApp, #pageContainer,
+        #page-efficiency, #page-vehicles, #page-fleet,
+        #page-logs, #page-maintenance {
+            background: #ffffff !important;
+            background-image: none !important;
+            color: #000000 !important;
+        }
+        
+        #page-efficiency::before,
+        #page-efficiency::after,
+        #page-vehicles::before,
+        #page-vehicles::after,
+        body::before,
+        body::after {
+            display: none !important;
+            content: none !important;
+        }
+        
+        /* إخفاء المربعات الزرقاء (hero/gradient) */
+        *[style*="gradient"],
+        *[style*="linear-gradient"],
+        *[style*="radial-gradient"],
+        [class*="hero"],
+        [class*="banner"],
+        [class*="cover"] {
+            display: none !important;
+            height: 0 !important;
+            background: none !important;
+        }
+        
+        /* ضمان طباعة الألوان */
+        *, *::before, *::after {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+        
+        /* إلغاء main-content margin (لأن sidebar مخفي) */
+        .main-content {
+            margin-right: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .page-container {
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+    
     <style>
         /* ===== RESET & BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
