@@ -1,10 +1,10 @@
 <!-- ═══════════════════════════════════════════════════════════
-     🚛 VEHICLES PAGE v8.0 — Modern + Print + Center Field
+     🚛 VEHICLES PAGE v9.0 — Modern + Print + Center + Supply
      ═══════════════════════════════════════════════════════════ -->
 <div id="page-vehicles">
 <style>
     /* ============================================================
-       🎨 VEHICLES v8.0 — Modern Screen Design
+       🎨 VEHICLES v9.0 — Modern Screen Design
        ============================================================ */
 
     #page-vehicles {
@@ -364,12 +364,12 @@
     .veh-table-head,
     .veh-table-row {
         display: grid;
-        grid-template-columns: 50px 110px 190px 150px 1fr 130px 130px 100px 110px 120px 130px 1fr 100px;
+        grid-template-columns: 50px 110px 190px 150px 1fr 130px 130px 120px 100px 110px 120px 130px 1fr 100px;
         gap: 8px;
         padding: 16px 22px;
         align-items: center;
         font-size: 13px;
-        min-width: 1900px;
+        min-width: 2000px;
     }
     .veh-table-head {
         background: linear-gradient(135deg,
@@ -420,6 +420,7 @@
     .veh-badge.year { background: rgba(34,197,94,0.1); color: var(--green); font-size: 10px; }
     .veh-badge.region { background: rgba(247,215,116,0.15); color: var(--gold); font-size: 10px; }
     .veh-badge.center { background: rgba(139,92,246,0.15); color: #a78bfa; font-size: 10px; }
+    .veh-badge.supp { background: rgba(236,72,153,0.15); color: #f472b6; font-size: 10px; }
     .veh-badge.zone { background: rgba(74,222,128,0.15); color: var(--green); font-size: 10px; }
     .veh-badge.status-صالحة { background: rgba(74,222,128,0.15); color: var(--green); }
     .veh-badge.status-معطبة { background: rgba(248,113,113,0.15); color: var(--red); }
@@ -723,10 +724,9 @@
     }
 
     /* ============================================================
-       🖨️ PRINT — Vehicles v8.0
+       🖨️ PRINT — Vehicles v9.0
        ============================================================ */
     @media print {
-        /* إخفاء الرأس الأزرق */
         .veh-header,
         .veh-header *,
         .veh-actions,
@@ -797,11 +797,11 @@
         .veh-table-row {
             display: grid !important;
             grid-template-columns:
-                22px 55px 120px 85px 100px 75px 75px 55px 55px 65px 65px 1fr 0px !important;
+                20px 50px 110px 80px 90px 70px 70px 70px 50px 50px 60px 60px 1fr 0px !important;
             gap: 2px !important;
-            padding: 1.5mm 1.5mm !important;
+            padding: 1.3mm 1.3mm !important;
             align-items: center !important;
-            font-size: 7.5pt !important;
+            font-size: 7pt !important;
             min-width: 0 !important;
             width: 100% !important;
             position: static !important;
@@ -813,7 +813,7 @@
             -webkit-text-fill-color: #f7d774 !important;
             border-top: 1pt solid #0a0e1a !important;
             border-bottom: 2pt solid #f7d774 !important;
-            font-size: 6.5pt !important;
+            font-size: 6pt !important;
             font-weight: 800 !important;
         }
         .veh-table-head .veh-cell {
@@ -840,7 +840,7 @@
             overflow: visible !important;
             background: none !important;
         }
-        .veh-table-row .veh-cell:nth-child(11) {
+        .veh-table-row .veh-cell:nth-child(12) {
             color: #dc2626 !important;
             -webkit-text-fill-color: #dc2626 !important;
             font-weight: 900 !important;
@@ -848,9 +848,9 @@
 
         .veh-badge {
             display: inline-block !important;
-            padding: 0.5mm 2mm !important;
+            padding: 0.4mm 1.8mm !important;
             border-radius: 3px !important;
-            font-size: 6.5pt !important;
+            font-size: 6pt !important;
             font-weight: 700 !important;
             border: 0.75pt solid currentColor !important;
             background: #ffffff !important;
@@ -891,6 +891,11 @@
             -webkit-text-fill-color: #ffffff !important;
             border: 1pt solid #7c3aed !important; font-weight: 800 !important;
         }
+        .veh-badge.supp {
+            background: #ec4899 !important; color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            border: 1pt solid #be185d !important; font-weight: 800 !important;
+        }
         .veh-badge.zone {
             background: #34d399 !important; color: #064e3b !important;
             -webkit-text-fill-color: #064e3b !important;
@@ -918,9 +923,9 @@
             -webkit-text-fill-color: #0a0a12 !important;
             background: #fef3c7 !important;
             border: 1.5pt solid #1a2332 !important;
-            padding: 0.4mm 1.5mm !important;
+            padding: 0.4mm 1.3mm !important;
             border-radius: 2px !important;
-            font-size: 7pt !important;
+            font-size: 6.5pt !important;
             display: inline-block !important;
         }
     }
@@ -980,7 +985,7 @@
             إضافة وسيلة
         </button>
 
-        <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة أو الماركة أو المركز...">
+        <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة أو الماركة أو المركز أو مكان التعزيز...">
 
         <select class="veh-select" id="vehFilterRegion">
             <option value="all">كل الإدارات والأقاليم</option>
@@ -1011,6 +1016,10 @@
 
         <select class="veh-select" id="vehFilterCenter">
             <option value="all">كل المراكز</option>
+        </select>
+
+        <select class="veh-select" id="vehFilterSupp">
+            <option value="all">كل أماكن التعزيز</option>
         </select>
 
         <select class="veh-select" id="vehFilterBrand">
@@ -1060,6 +1069,7 @@
             <div class="veh-cell">الإدارة / الإقليم</div>
             <div class="veh-cell">المنطقة</div>
             <div class="veh-cell">المركز</div>
+            <div class="veh-cell">مكان التعزيز</div>
             <div class="veh-cell center">الحالة</div>
             <div class="veh-cell center">حالة العمل</div>
             <div class="veh-cell center">تاريخ التعيين</div>
@@ -1212,11 +1222,17 @@
                 </select>
             </div>
 
-            <!-- ✅ المركز الجديد -->
             <div class="veh-form-group" id="vehCenterGroup">
                 <label>المركز</label>
                 <select class="veh-form-control" id="vehCenter" disabled>
                     <option value="">— اختر المنطقة أولاً —</option>
+                </select>
+            </div>
+
+            <div class="veh-form-group" id="vehSuppGroup">
+                <label>مكان التعزيز</label>
+                <select class="veh-form-control" id="vehSupp" disabled>
+                    <option value="">— اختر المركز أولاً —</option>
                 </select>
             </div>
 
@@ -1272,7 +1288,7 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v8.0 (with Center) - Loading...');
+    console.log('🚛 Vehicles Page v9.0 (Center + Supply) - Loading...');
 
     var _isDestroyed = false;
     var _timeouts = [];
@@ -1370,7 +1386,7 @@
     }
 
     /* ═══════════════════════════════════════════════════════════
-       📍 بيانات المناطق + المراكز
+       📍 بيانات المناطق + المراكز + أماكن التعزيز
        ═══════════════════════════════════════════════════════════ */
     var ZONES_DATA = {
         'إدارة إسناد الوحدات البحرية': ['الإدارة المركزية بتونس'],
@@ -1402,6 +1418,60 @@
         'قابس':      ['مركز قابس', 'مركز قابس الجنوبية', 'مركز غنوش', 'مركز مارث'],
         'الإدارة المركزية بتونس': ['مركز الإدارة المركزية'],
         'قبيبة "صفاقس"': ['مركز قبيبة']
+    };
+
+    /* ✅ أماكن التعزيز لكل مركز */
+    var SUPPLY_DATA = {
+        'مركز تونس المدينة':     ['مكان التعزيز الرئيسي - تونس', 'موقع التعزيز الثانوي - باردو'],
+        'مركز حلق الوادي':       ['مكان التعزيز - الميناء', 'موقع التعزيز - الرادس'],
+        'مركز المرسى':           ['مكان التعزيز - الميناء', 'موقع التعزيز - قمرت'],
+        'مركز قمرت':             ['مكان التعزيز - الشاطئ الشمالي', 'موقع التعزيز - سيدي بوسعيد'],
+        'مركز رادس':             ['مكان التعزيز - الميناء التجاري', 'موقع التعزيز - مقرين'],
+        'مركز بنزرت':            ['مكان التعزيز - الميناء العسكري', 'موقع التعزيز - منزل بورقيبة'],
+        'مركز غار الملح':        ['مكان التعزيز - الميناء', 'موقع التعزيز - غار الملح الشمالي'],
+        'مركز منزل بورقيبة':     ['مكان التعزيز - الميناء', 'موقع التعزيز - الشاطئ'],
+        'مركز رأس الجبل':        ['مكان التعزيز - الميناء', 'موقع التعزيز - الشمالي'],
+        'مركز العالية':          ['مكان التعزيز - السد', 'موقع التعزيز - الغابة'],
+        'مركز طبرقة':            ['مكان التعزيز - الميناء', 'موقع التعزيز - الشمالي'],
+        'مركز عين دراهم':        ['مكان التعزيز - الحدود', 'موقع التعزيز - الجبال'],
+        'مركز غار الدماء':       ['مكان التعزيز - الحدود', 'موقع التعزيز - الجنوبي'],
+        'مركز سوسة':             ['مكان التعزيز - الميناء', 'موقع التعزيز - القنطاوي'],
+        'مركز هرقلة':            ['مكان التعزيز - الشاطئ', 'موقع التعزيز - الجنوبي'],
+        'مركز القلعة الكبرى':    ['مكان التعزيز - المقر', 'موقع التعزيز - الشمالي'],
+        'مركز المساكن':          ['مكان التعزيز - المقر', 'موقع التعزيز - الساحلي'],
+        'مركز المنستير':         ['مكان التعزيز - الميناء', 'موقع التعزيز - الوسط'],
+        'مركز المكنين':          ['مكان التعزيز - المقر', 'موقع التعزيز - الشمالي'],
+        'مركز جمال':             ['مكان التعزيز - المقر', 'موقع التعزيز - الجنوبي'],
+        'مركز بني حسان':         ['مكان التعزيز - المقر', 'موقع التعزيز - الساحلي'],
+        'مركز الساحلين':         ['مكان التعزيز - الشاطئ', 'موقع التعزيز - الشمالي'],
+        'مركز نابل':             ['مكان التعزيز - الميناء', 'موقع التعزيز - الجنوبي'],
+        'مركز الحمامات':         ['مكان التعزيز - الشاطئ', 'موقع التعزيز - الشمالي'],
+        'مركز قربة':             ['مكان التعزيز - الشاطئ', 'موقع التعزيز - الساحلي'],
+        'مركز منزل تميم':        ['مكان التعزيز - المقر', 'موقع التعزيز - الجنوبي'],
+        'مركز الهوارية':         ['مكان التعزيز - الرأس', 'موقع التعزيز - الشمالي'],
+        'مركز صفاقس':            ['مكان التعزيز - الميناء التجاري', 'موقع التعزيز - الجزيرة'],
+        'مركز ساقية الزيت':      ['مكان التعزيز - المقر', 'موقع التعزيز - الشمالي'],
+        'مركز ساقية الدائر':     ['مكان التعزيز - المقر', 'موقع التعزيز - الجنوبي'],
+        'مركز طينة':             ['مكان التعزيز - الساحلي', 'موقع التعزيز - الشمالي'],
+        'مركز قرقنة':            ['مكان التعزيز - الميناء', 'موقع التعزيز - الجزيرة'],
+        'مركز المهدية':          ['مكان التعزيز - الميناء', 'موقع التعزيز - الجنوبي'],
+        'مركز قصور الساف':       ['مكان التعزيز - الشاطئ', 'موقع التعزيز - الساحلي'],
+        'مركز الجم':             ['مكان التعزيز - الميناء', 'موقع التعزيز - الشمالي'],
+        'مركز الشابة':           ['مكان التعزيز - الميناء', 'موقع التعزيز - الجنوبي'],
+        'مركز قرقنة الشمالية':   ['مكان التعزيز - الشمالي', 'موقع التعزيز - المركزي'],
+        'مركز قرقنة الجنوبية':   ['مكان التعزيز - الجنوبي', 'موقع التعزيز - المركزي'],
+        'مركز جرجيس':            ['مكان التعزيز - الميناء', 'موقع التعزيز - الشمالي'],
+        'مركز بنقردان':          ['مكان التعزيز - الحدود', 'موقع التعزيز - الجنوبي'],
+        'مركز جرجيس الشمالية':   ['مكان التعزيز - الشمالي', 'موقع التعزيز - الساحلي'],
+        'مركز جربة حومة السوق':  ['مكان التعزيز - الميناء', 'موقع التعزيز - المركزي'],
+        'مركز جربة ميدون':       ['مكان التعزيز - الشاطئ', 'موقع التعزيز - الشمالي'],
+        'مركز جربة أجيم':        ['مكان التعزيز - الميناء', 'موقع التعزيز - الجنوبي'],
+        'مركز قابس':             ['مكان التعزيز - الميناء', 'موقع التعزيز - الشمالي'],
+        'مركز قابس الجنوبية':    ['مكان التعزيز - الشاطئ', 'موقع التعزيز - الساحلي'],
+        'مركز غنوش':             ['مكان التعزيز - المقر', 'موقع التعزيز - الشرقي'],
+        'مركز مارث':             ['مكان التعزيز - المقر', 'موقع التعزيز - الغربي'],
+        'مركز الإدارة المركزية':  ['مكان التعزيز الرئيسي', 'موقع التعزيز الاحتياطي'],
+        'مركز قبيبة':            ['مكان التعزيز - المقر', 'موقع التعزيز - الفرعي']
     };
 
     var MODELS_DATA = {
@@ -1450,6 +1520,14 @@
         var set = {};
         Object.keys(CENTERS_DATA).forEach(function(zone) {
             CENTERS_DATA[zone].forEach(function(c) { set[c] = true; });
+        });
+        return Object.keys(set);
+    }
+
+    function getAllSupply() {
+        var set = {};
+        Object.keys(SUPPLY_DATA).forEach(function(center) {
+            SUPPLY_DATA[center].forEach(function(s) { set[s] = true; });
         });
         return Object.keys(set);
     }
@@ -1503,6 +1581,7 @@
         var regionEl = document.getElementById('vehFilterRegion');
         var zoneEl = document.getElementById('vehFilterZone');
         var centerEl = document.getElementById('vehFilterCenter');
+        var suppEl = document.getElementById('vehFilterSupp');
         var brandEl = document.getElementById('vehFilterBrand');
 
         var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
@@ -1511,6 +1590,7 @@
         var region = regionEl ? regionEl.value : 'all';
         var zone = zoneEl ? zoneEl.value : 'all';
         var center = centerEl ? centerEl.value : 'all';
+        var supp = suppEl ? suppEl.value : 'all';
         var brand = brandEl ? brandEl.value : 'all';
 
         return vehicles.filter(function(v) {
@@ -1519,10 +1599,11 @@
             if (region !== 'all' && v.region !== region) return false;
             if (zone !== 'all' && v.zone !== zone) return false;
             if (center !== 'all' && v.center !== center) return false;
+            if (supp !== 'all' && v.supplyPlace !== supp) return false;
             if (brand !== 'all' && v.brand !== brand) return false;
             if (search) {
                 var text = (v.plateNumber + ' ' + v.region + ' ' + (v.zone || '') + ' ' +
-                           (v.center || '') + ' ' +
+                           (v.center || '') + ' ' + (v.supplyPlace || '') + ' ' +
                            v.type + ' ' + (v.brand || '') + ' ' + (v.model || '') + ' ' +
                            (v.color || '') + ' ' + (v.notes || '')).toLowerCase();
                 if (text.indexOf(search) === -1) return false;
@@ -1555,6 +1636,7 @@
             var regionShort = getRegionShort(v.region);
             var zone = v.zone || '—';
             var center = v.center || '—';
+            var supply = v.supplyPlace || '—';
 
             var brandModel = '—';
             if (v.brand || v.model || v.year) {
@@ -1577,6 +1659,7 @@
                     '<div class="veh-cell" title="' + escapeHtml(v.region || '') + '"><span class="veh-badge region">' + escapeHtml(regionShort) + '</span></div>' +
                     '<div class="veh-cell" title="' + escapeHtml(v.zone || '') + '"><span class="veh-badge zone">📍 ' + escapeHtml(zone) + '</span></div>' +
                     '<div class="veh-cell" title="' + escapeHtml(v.center || '') + '">' + (v.center ? '<span class="veh-badge center">🏢 ' + escapeHtml(center) + '</span>' : '—') + '</div>' +
+                    '<div class="veh-cell" title="' + escapeHtml(v.supplyPlace || '') + '">' + (v.supplyPlace ? '<span class="veh-badge supp">🎯 ' + escapeHtml(supply) + '</span>' : '—') + '</div>' +
                     '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
                     '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
                     '<div class="veh-cell center">' + escapeHtml(dateStr) + '</div>' +
@@ -1651,7 +1734,6 @@
         updateCenterOptions(selectedZone);
     }
 
-    /* ✅ تحديث قائمة المراكز عند تغيير المنطقة */
     function updateCenterOptions(selectedCenter) {
         var zoneEl = document.getElementById('vehZone');
         var centerEl = document.getElementById('vehCenter');
@@ -1664,6 +1746,7 @@
         if (!zone) {
             centerEl.disabled = true;
             centerEl.innerHTML = '<option value="">— اختر المنطقة أولاً —</option>';
+            updateSupplyOptions();
             return;
         }
 
@@ -1671,6 +1754,7 @@
         if (!centers.length) {
             centerEl.disabled = true;
             centerEl.innerHTML = '<option value="">— لا توجد مراكز —</option>';
+            updateSupplyOptions();
             return;
         }
 
@@ -1681,6 +1765,39 @@
             html += '<option value="' + escapeHtml(c) + '"' + sel + '>' + escapeHtml(c) + '</option>';
         });
         centerEl.innerHTML = html;
+        updateSupplyOptions(selectedCenter);
+    }
+
+    /* ✅ تحديث أماكن التعزيز عند تغيير المركز */
+    function updateSupplyOptions(selectedSupply) {
+        var centerEl = document.getElementById('vehCenter');
+        var suppEl = document.getElementById('vehSupp');
+        var suppGroupEl = document.getElementById('vehSuppGroup');
+        if (!centerEl || !suppEl) return;
+
+        var center = centerEl.value;
+        suppEl.innerHTML = '';
+
+        if (!center) {
+            suppEl.disabled = true;
+            suppEl.innerHTML = '<option value="">— اختر المركز أولاً —</option>';
+            return;
+        }
+
+        var supplies = SUPPLY_DATA[center] || [];
+        if (!supplies.length) {
+            suppEl.disabled = true;
+            suppEl.innerHTML = '<option value="">— لا توجد أماكن تعزيز —</option>';
+            return;
+        }
+
+        suppEl.disabled = false;
+        var html = '<option value="">— اختر مكان التعزيز —</option>';
+        supplies.forEach(function(s) {
+            var sel = (s === selectedSupply) ? ' selected' : '';
+            html += '<option value="' + escapeHtml(s) + '"' + sel + '>' + escapeHtml(s) + '</option>';
+        });
+        suppEl.innerHTML = html;
     }
 
     function updateModelsList() {
@@ -1782,6 +1899,7 @@
 
         updateZoneOptions(v.zone || '');
         updateCenterOptions(v.center || '');
+        updateSupplyOptions(v.supplyPlace || '');
         updateModelsList();
 
         var faultEl = document.getElementById('vehFaultDate');
@@ -1811,6 +1929,7 @@
         var region = document.getElementById('vehRegion').value.trim();
         var zone = document.getElementById('vehZone').value.trim();
         var center = document.getElementById('vehCenter').value.trim();
+        var supplyPlace = document.getElementById('vehSupp').value.trim();
         var type = document.getElementById('vehType').value;
         var brand = document.getElementById('vehBrand').value.trim();
         var model = document.getElementById('vehModel').value.trim();
@@ -1836,6 +1955,7 @@
             region: region,
             zone: zone,
             center: center,
+            supplyPlace: supplyPlace,
             type: type,
             brand: brand,
             model: model,
@@ -1914,7 +2034,7 @@
             var BOM = '\uFEFF';
             var headers = [
                 '#', 'النوع', 'الماركة', 'الطراز', 'السنة', 'اللون',
-                'رقم الوسيلة', 'الإدارة / الإقليم', 'المنطقة', 'المركز',
+                'رقم الوسيلة', 'الإدارة / الإقليم', 'المنطقة', 'المركز', 'مكان التعزيز',
                 'الحالة', 'حالة العمل', 'تاريخ التعيين', 'تاريخ العطب', 'ملاحظات'
             ];
 
@@ -1942,6 +2062,7 @@
                     csvEscape(v.region || ''),
                     csvEscape(v.zone || ''),
                     csvEscape(v.center || ''),
+                    csvEscape(v.supplyPlace || ''),
                     csvEscape(v.status || ''),
                     csvEscape(v.workCondition || ''),
                     csvEscape(v.appointmentDate || ''),
@@ -2007,7 +2128,7 @@
 
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v8.0 (Center)...');
+        console.log('🚀 Initializing Vehicles page v9.0 (Center + Supply)...');
 
         var filterZoneEl = document.getElementById('vehFilterZone');
         if (filterZoneEl) {
@@ -2027,6 +2148,16 @@
                 cHtml += '<option value="' + escapeHtml(c) + '">🏢 ' + escapeHtml(c) + '</option>';
             });
             filterCenterEl.innerHTML = cHtml;
+        }
+
+        var filterSuppEl = document.getElementById('vehFilterSupp');
+        if (filterSuppEl) {
+            var suppsAll = getAllSupply();
+            var sHtml = '<option value="all">كل أماكن التعزيز</option>';
+            suppsAll.forEach(function(s) {
+                sHtml += '<option value="' + escapeHtml(s) + '">🎯 ' + escapeHtml(s) + '</option>';
+            });
+            filterSuppEl.innerHTML = sHtml;
         }
 
         var filterBrandEl = document.getElementById('vehFilterBrand');
@@ -2072,12 +2203,14 @@
         addSafeListener(document.getElementById('vehFilterType'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterZone'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterCenter'), 'change', renderTable);
+        addSafeListener(document.getElementById('vehFilterSupp'), 'change', renderTable);
         addSafeListener(document.getElementById('vehFilterBrand'), 'change', renderTable);
 
         addSafeListener(document.getElementById('vehFilterRegion'), 'change', function() {
             var region = this.value;
             var zoneEl = document.getElementById('vehFilterZone');
             var centerEl = document.getElementById('vehFilterCenter');
+            var suppEl = document.getElementById('vehFilterSupp');
             if (zoneEl) {
                 if (region === 'all') {
                     var zonesAll = getAllZones();
@@ -2095,15 +2228,15 @@
                     zoneEl.innerHTML = html2;
                 }
             }
-            if (centerEl) {
-                centerEl.innerHTML = '<option value="all">كل المراكز</option>';
-            }
+            if (centerEl) centerEl.innerHTML = '<option value="all">كل المراكز</option>';
+            if (suppEl) suppEl.innerHTML = '<option value="all">كل أماكن التعزيز</option>';
             renderTable();
         });
 
         addSafeListener(document.getElementById('vehFilterZone'), 'change', function() {
             var zone = this.value;
             var centerEl = document.getElementById('vehFilterCenter');
+            var suppEl = document.getElementById('vehFilterSupp');
             if (centerEl) {
                 if (zone === 'all') {
                     var centersAll = getAllCenters();
@@ -2121,6 +2254,30 @@
                     centerEl.innerHTML = html2;
                 }
             }
+            if (suppEl) suppEl.innerHTML = '<option value="all">كل أماكن التعزيز</option>';
+            renderTable();
+        });
+
+        addSafeListener(document.getElementById('vehFilterCenter'), 'change', function() {
+            var center = this.value;
+            var suppEl = document.getElementById('vehFilterSupp');
+            if (suppEl) {
+                if (center === 'all') {
+                    var suppsAll = getAllSupply();
+                    var html = '<option value="all">كل أماكن التعزيز</option>';
+                    suppsAll.forEach(function(s) {
+                        html += '<option value="' + escapeHtml(s) + '">🎯 ' + escapeHtml(s) + '</option>';
+                    });
+                    suppEl.innerHTML = html;
+                } else {
+                    var supplies = SUPPLY_DATA[center] || [];
+                    var html2 = '<option value="all">كل أماكن التعزيز</option>';
+                    supplies.forEach(function(s) {
+                        html2 += '<option value="' + escapeHtml(s) + '">🎯 ' + escapeHtml(s) + '</option>';
+                    });
+                    suppEl.innerHTML = html2;
+                }
+            }
             renderTable();
         });
 
@@ -2132,6 +2289,10 @@
             updateCenterOptions();
         });
 
+        addSafeListener(document.getElementById('vehCenter'), 'change', function() {
+            updateSupplyOptions();
+        });
+
         addSafeListener(document.getElementById('vehBrand'), 'change', function() {
             updateModelsList();
         });
@@ -2141,7 +2302,7 @@
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v8.0 (Center) ready');
+        console.log('✅ Vehicles page v9.0 (Center + Supply) ready');
     }
 
     if (document.readyState === 'loading') {
@@ -2159,7 +2320,7 @@
     window.vehPrint = vehPrint;
     window.vehExportExcel = vehExportExcel;
 
-    console.log('✅ Vehicles Page v8.0 (Center) ready');
+    console.log('✅ Vehicles Page v9.0 (Center + Supply) ready');
 
 })();
 </script>
