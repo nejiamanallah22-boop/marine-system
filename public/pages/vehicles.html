@@ -1,10 +1,10 @@
 <!-- ═══════════════════════════════════════════════════════════
-     🚛 VEHICLES PAGE v9.0 — Modern + Print + Center + Supply
+     🚛 VEHICLES PAGE v9.1 — Modern + Print + Center + Supply (Manual)
      ═══════════════════════════════════════════════════════════ -->
 <div id="page-vehicles">
 <style>
     /* ============================================================
-       🎨 VEHICLES v9.0 — Modern Screen Design
+       🎨 VEHICLES v9.1 — Modern Screen Design
        ============================================================ */
 
     #page-vehicles {
@@ -724,7 +724,7 @@
     }
 
     /* ============================================================
-       🖨️ PRINT — Vehicles v9.0
+       🖨️ PRINT — Vehicles v9.1
        ============================================================ */
     @media print {
         .veh-header,
@@ -1231,9 +1231,10 @@
 
             <div class="veh-form-group" id="vehSuppGroup">
                 <label>مكان التعزيز</label>
-                <select class="veh-form-control" id="vehSupp" disabled>
-                    <option value="">— اختر المركز أولاً —</option>
-                </select>
+                <input type="text" class="veh-form-control" id="vehSupp"
+                       placeholder="✍️ اكتب مكان التعزيز يدوياً..."
+                       list="vehSuppList" maxlength="200" autocomplete="off">
+                <datalist id="vehSuppList"></datalist>
             </div>
 
             <div class="veh-form-row">
@@ -1288,7 +1289,7 @@
 (function() {
     'use strict';
 
-    console.log('🚛 Vehicles Page v9.0 (Center + Supply) - Loading...');
+    console.log('🚛 Vehicles Page v9.1 (Manual Supply) - Loading...');
 
     var _isDestroyed = false;
     var _timeouts = [];
@@ -1386,7 +1387,7 @@
     }
 
     /* ═══════════════════════════════════════════════════════════
-       📍 بيانات المناطق + المراكز + أماكن التعزيز
+       📍 بيانات المناطق + المراكز + أماكن التعزيز (للمقترحات فقط)
        ═══════════════════════════════════════════════════════════ */
     var ZONES_DATA = {
         'إدارة إسناد الوحدات البحرية': ['الإدارة المركزية بتونس'],
@@ -1402,7 +1403,6 @@
         'المجمع الأمني بقبيبة': ['قبيبة "صفاقس"']
     };
 
-    /* ✅ المراكز لكل منطقة */
     var CENTERS_DATA = {
         'تونس':      ['مركز تونس المدينة', 'مركز حلق الوادي', 'مركز المرسى', 'مركز قمرت', 'مركز رادس'],
         'بنزرت':     ['مركز بنزرت', 'مركز غار الملح', 'مركز منزل بورقيبة', 'مركز رأس الجبل', 'مركز العالية'],
@@ -1420,7 +1420,7 @@
         'قبيبة "صفاقس"': ['مركز قبيبة']
     };
 
-    /* ✅ أماكن التعزيز لكل مركز */
+    /* ✅ مقترحات أماكن التعزيز (User can type anything) */
     var SUPPLY_DATA = {
         'مركز تونس المدينة':     ['مكان التعزيز الرئيسي - تونس', 'موقع التعزيز الثانوي - باردو'],
         'مركز حلق الوادي':       ['مكان التعزيز - الميناء', 'موقع التعزيز - الرادس'],
@@ -1524,14 +1524,6 @@
         return Object.keys(set);
     }
 
-    function getAllSupply() {
-        var set = {};
-        Object.keys(SUPPLY_DATA).forEach(function(center) {
-            SUPPLY_DATA[center].forEach(function(s) { set[s] = true; });
-        });
-        return Object.keys(set);
-    }
-
     var vehicles = [];
     var autoRefreshInterval = null;
 
@@ -1552,6 +1544,7 @@
                 vehicles = Array.isArray(data) ? data : [];
                 renderTable();
                 updateStats();
+                refreshSuppFilter();
             })
             .catch(function(err) {
                 console.warn('⚠️ Load vehicles error:', err.message);
@@ -1737,7 +1730,6 @@
     function updateCenterOptions(selectedCenter) {
         var zoneEl = document.getElementById('vehZone');
         var centerEl = document.getElementById('vehCenter');
-        var centerGroupEl = document.getElementById('vehCenterGroup');
         if (!zoneEl || !centerEl) return;
 
         var zone = zoneEl.value;
@@ -1765,39 +1757,30 @@
             html += '<option value="' + escapeHtml(c) + '"' + sel + '>' + escapeHtml(c) + '</option>';
         });
         centerEl.innerHTML = html;
-        updateSupplyOptions(selectedCenter);
+        updateSupplyOptions();
     }
 
-    /* ✅ تحديث أماكن التعزيز عند تغيير المركز */
+    /* ✅ مكان التعزيز: إدخال يدوي + اقتراحات حسب المركز */
     function updateSupplyOptions(selectedSupply) {
         var centerEl = document.getElementById('vehCenter');
-        var suppEl = document.getElementById('vehSupp');
-        var suppGroupEl = document.getElementById('vehSuppGroup');
-        if (!centerEl || !suppEl) return;
+        var suppEl   = document.getElementById('vehSupp');
+        var listEl   = document.getElementById('vehSuppList');
+        if (!suppEl) return;
 
-        var center = centerEl.value;
-        suppEl.innerHTML = '';
-
-        if (!center) {
-            suppEl.disabled = true;
-            suppEl.innerHTML = '<option value="">— اختر المركز أولاً —</option>';
-            return;
-        }
-
+        var center = centerEl ? centerEl.value : '';
         var supplies = SUPPLY_DATA[center] || [];
-        if (!supplies.length) {
-            suppEl.disabled = true;
-            suppEl.innerHTML = '<option value="">— لا توجد أماكن تعزيز —</option>';
-            return;
+
+        if (listEl) {
+            var html = '';
+            supplies.forEach(function(s) {
+                html += '<option value="' + escapeHtml(s) + '"></option>';
+            });
+            listEl.innerHTML = html;
         }
 
-        suppEl.disabled = false;
-        var html = '<option value="">— اختر مكان التعزيز —</option>';
-        supplies.forEach(function(s) {
-            var sel = (s === selectedSupply) ? ' selected' : '';
-            html += '<option value="' + escapeHtml(s) + '"' + sel + '>' + escapeHtml(s) + '</option>';
-        });
-        suppEl.innerHTML = html;
+        if (selectedSupply !== undefined && selectedSupply !== null) {
+            suppEl.value = selectedSupply;
+        }
     }
 
     function updateModelsList() {
@@ -1834,6 +1817,27 @@
         }
     }
 
+    /* ✅ فلتر أماكن التعزيز الديناميكي */
+    function refreshSuppFilter() {
+        var filterSuppEl = document.getElementById('vehFilterSupp');
+        if (!filterSuppEl) return;
+        var cur = filterSuppEl.value || 'all';
+        var set = {};
+        vehicles.forEach(function(v){ if (v.supplyPlace) set[v.supplyPlace] = true; });
+        var list = Object.keys(set).sort();
+        var html = '<option value="all">كل أماكن التعزيز</option>';
+        list.forEach(function(s){
+            html += '<option value="' + escapeHtml(s) + '">🎯 ' + escapeHtml(s) + '</option>';
+        });
+        filterSuppEl.innerHTML = html;
+        // حاول نحافظ على الاختيار السابق
+        if (cur && cur !== 'all' && set[cur]) {
+            filterSuppEl.value = cur;
+        } else {
+            filterSuppEl.value = 'all';
+        }
+    }
+
     function openAddModal() {
         var modal = document.getElementById('vehModal');
         var title = document.getElementById('vehModalTitle');
@@ -1854,6 +1858,9 @@
         document.getElementById('vehDate').value = '';
         document.getElementById('vehFaultDate').value = '';
         document.getElementById('vehNotes').value = '';
+
+        var suppInput = document.getElementById('vehSupp');
+        if (suppInput) suppInput.value = '';
 
         var fdg = document.getElementById('vehFaultDateGroup');
         if (fdg) fdg.style.display = 'none';
@@ -1929,7 +1936,8 @@
         var region = document.getElementById('vehRegion').value.trim();
         var zone = document.getElementById('vehZone').value.trim();
         var center = document.getElementById('vehCenter').value.trim();
-        var supplyPlace = document.getElementById('vehSupp').value.trim();
+        var supplyPlaceEl = document.getElementById('vehSupp');
+        var supplyPlace = supplyPlaceEl ? supplyPlaceEl.value.trim() : '';
         var type = document.getElementById('vehType').value;
         var brand = document.getElementById('vehBrand').value.trim();
         var model = document.getElementById('vehModel').value.trim();
@@ -2128,7 +2136,7 @@
 
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles page v9.0 (Center + Supply)...');
+        console.log('🚀 Initializing Vehicles page v9.1 (Manual Supply)...');
 
         var filterZoneEl = document.getElementById('vehFilterZone');
         if (filterZoneEl) {
@@ -2150,15 +2158,8 @@
             filterCenterEl.innerHTML = cHtml;
         }
 
-        var filterSuppEl = document.getElementById('vehFilterSupp');
-        if (filterSuppEl) {
-            var suppsAll = getAllSupply();
-            var sHtml = '<option value="all">كل أماكن التعزيز</option>';
-            suppsAll.forEach(function(s) {
-                sHtml += '<option value="' + escapeHtml(s) + '">🎯 ' + escapeHtml(s) + '</option>';
-            });
-            filterSuppEl.innerHTML = sHtml;
-        }
+        // ✅ فلتر أماكن التعزيز: يتعبّى ديناميكياً من البيانات (بعد التحميل)
+        refreshSuppFilter();
 
         var filterBrandEl = document.getElementById('vehFilterBrand');
         if (filterBrandEl) {
@@ -2210,7 +2211,6 @@
             var region = this.value;
             var zoneEl = document.getElementById('vehFilterZone');
             var centerEl = document.getElementById('vehFilterCenter');
-            var suppEl = document.getElementById('vehFilterSupp');
             if (zoneEl) {
                 if (region === 'all') {
                     var zonesAll = getAllZones();
@@ -2229,14 +2229,15 @@
                 }
             }
             if (centerEl) centerEl.innerHTML = '<option value="all">كل المراكز</option>';
-            if (suppEl) suppEl.innerHTML = '<option value="all">كل أماكن التعزيز</option>';
+            // نعيد فلتر التعزيز للكل (لأنه ديناميكي)
+            var suppEl = document.getElementById('vehFilterSupp');
+            if (suppEl) suppEl.value = 'all';
             renderTable();
         });
 
         addSafeListener(document.getElementById('vehFilterZone'), 'change', function() {
             var zone = this.value;
             var centerEl = document.getElementById('vehFilterCenter');
-            var suppEl = document.getElementById('vehFilterSupp');
             if (centerEl) {
                 if (zone === 'all') {
                     var centersAll = getAllCenters();
@@ -2254,30 +2255,14 @@
                     centerEl.innerHTML = html2;
                 }
             }
-            if (suppEl) suppEl.innerHTML = '<option value="all">كل أماكن التعزيز</option>';
+            var suppEl = document.getElementById('vehFilterSupp');
+            if (suppEl) suppEl.value = 'all';
             renderTable();
         });
 
         addSafeListener(document.getElementById('vehFilterCenter'), 'change', function() {
-            var center = this.value;
             var suppEl = document.getElementById('vehFilterSupp');
-            if (suppEl) {
-                if (center === 'all') {
-                    var suppsAll = getAllSupply();
-                    var html = '<option value="all">كل أماكن التعزيز</option>';
-                    suppsAll.forEach(function(s) {
-                        html += '<option value="' + escapeHtml(s) + '">🎯 ' + escapeHtml(s) + '</option>';
-                    });
-                    suppEl.innerHTML = html;
-                } else {
-                    var supplies = SUPPLY_DATA[center] || [];
-                    var html2 = '<option value="all">كل أماكن التعزيز</option>';
-                    supplies.forEach(function(s) {
-                        html2 += '<option value="' + escapeHtml(s) + '">🎯 ' + escapeHtml(s) + '</option>';
-                    });
-                    suppEl.innerHTML = html2;
-                }
-            }
+            if (suppEl) suppEl.value = 'all';
             renderTable();
         });
 
@@ -2290,6 +2275,7 @@
         });
 
         addSafeListener(document.getElementById('vehCenter'), 'change', function() {
+            // عند تغيير المركز: نحدّث المقترحات بدون مسح ما كتبه المستخدم
             updateSupplyOptions();
         });
 
@@ -2302,7 +2288,7 @@
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v9.0 (Center + Supply) ready');
+        console.log('✅ Vehicles page v9.1 (Manual Supply) ready');
     }
 
     if (document.readyState === 'loading') {
@@ -2320,7 +2306,7 @@
     window.vehPrint = vehPrint;
     window.vehExportExcel = vehExportExcel;
 
-    console.log('✅ Vehicles Page v9.0 (Center + Supply) ready');
+    console.log('✅ Vehicles Page v9.1 (Manual Supply) ready');
 
 })();
 </script>
