@@ -1,13 +1,14 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.8.6
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v10.9.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
 // 📌 OWNERSHIP + 👤 USER BADGE + 📍 FORCE GPS v6
 // 🚛 + VEHICLES (LAND) ROUTES
 // 🎨 + STATIC CSS/JS SERVING
-// 🛡️ + SECURITY HARDENING (v10.8.4)
-// 🏛️ + OFFICIAL PRINT HEADER INJECTION (v10.8.5)
-// 🚨 + AUTO HIDE BLUE BOXES (v10.8.6)
+// 🛡️ + SECURITY HARDENING (v10.9.0)
+// 🏛️ + OFFICIAL PRINT HEADER
+// 🚨 + HIDE BLUE BOXES (JS auto-detect)
+// 🖨️ + PRINT ORIENTATION BAR (Portrait / Paysage)
 // ============================================================
 'use strict';
 require('dotenv').config();
@@ -15,11 +16,14 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v10.8.6 - STARTING');
+console.log('🚢 MARINE SYSTEM v10.9.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 Node version:', process.version);
 
+// ═══════════════════════════════════════════════════════════
+// 🛡️ SECURITY: منع تسريب الملفات الحساسة
+// ═══════════════════════════════════════════════════════════
 const SENSITIVE_FILES = [
     '.env', '.env.local', '.env.production', '.env.development',
     'server.js', 'package.json', 'package-lock.json',
@@ -36,8 +40,14 @@ function isSensitivePath(urlPath) {
     return false;
 }
 
+// ═══════════════════════════════════════════════════════════
+// 🛡️ SECURITY: Dummy hash لمنع Timing Attacks
+// ═══════════════════════════════════════════════════════════
 const DUMMY_BCRYPT_HASH = '$2a$12$C6UzMDM.H6dfI/f/IKcEeO7Z4x1yFzFqW1Xt2VvK4W8Q9pZkqH1L2';
 
+// ═══════════════════════════════════════════════════════════
+// 🛡️ SECURITY: Validators
+// ═══════════════════════════════════════════════════════════
 function validateString(v, { min = 0, max = 255, required = false, trim = true } = {}) {
     if (v === undefined || v === null) return required ? null : '';
     if (typeof v !== 'string') return null;
@@ -70,6 +80,9 @@ function validateNumber(v, { min = 0, max = 1e9 } = {}) {
     return n;
 }
 
+// ═══════════════════════════════════════════════════════════
+// 📂 LOAD MODELS
+// ═══════════════════════════════════════════════════════════
 function findModelsPath() {
     const candidates = [
         path.join(__dirname, 'models'), path.join(__dirname, '..', 'models'),
@@ -135,6 +148,9 @@ const vehiclesRoutes = require('./routes/vehicles');
 let createDOMPurify = null;
 try { createDOMPurify = require('isomorphic-dompurify'); } catch (e) {}
 
+// ═══════════════════════════════════════════════════════════
+// 💾 REDIS
+// ═══════════════════════════════════════════════════════════
 let redisClient = null, RedisStore = null, redisAvailable = false, redisInitPromise = null;
 
 function normalizeRedisUrl(u) {
@@ -194,6 +210,9 @@ async function redisSafe(fn, fallback = null) {
     try { return await fn(redisClient); } catch (e) { return fallback; }
 }
 
+// ═══════════════════════════════════════════════════════════
+// 🌐 EXPRESS APP
+// ═══════════════════════════════════════════════════════════
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
@@ -202,6 +221,7 @@ const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
 app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
 
+// 🛡️ منع الوصول لملفات حساسة
 app.use((req, res, next) => {
     if (isSensitivePath(req.path)) {
         return res.status(404).json({ success: false, error: 'Not Found' });
@@ -209,9 +229,10 @@ app.use((req, res, next) => {
     next();
 });
 
+// 🏷️ headers مخصصة
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '10.8.6');
+    res.setHeader('X-System-Version', '10.9.0');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -242,6 +263,7 @@ const MAX_MEMORY_RESET_TOKENS = 5000;
 const MAX_MEMORY_REVOKED = 50000;
 const MAX_MEMORY_LOCATIONS = 5000;
 
+// 🛡️ قوة كلمة المرور
 function isStrongPassword(p) {
     if (typeof p !== 'string' || p.length < 12) return false;
     const c = [/[A-Z]/.test(p), /[a-z]/.test(p), /\d/.test(p),
@@ -258,6 +280,9 @@ function generateStrongPassword(len=20) {
     return c.join('');
 }
 
+// ═══════════════════════════════════════════════════════════
+// 👤 ADMIN SETUP
+// ═══════════════════════════════════════════════════════════
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.local';
@@ -280,6 +305,9 @@ if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.l
 }
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
 
+// ═══════════════════════════════════════════════════════════
+// 🧰 HELPERS
+// ═══════════════════════════════════════════════════════════
 function randomId(b=32) { return crypto.randomBytes(b).toString('hex'); }
 function hashToken(t) { return crypto.createHash('sha256').update(t).digest('hex'); }
 function safeEqual(a,b) {
@@ -325,6 +353,9 @@ function xssSanitizer(req, res, next) {
     next();
 }
 
+// ═══════════════════════════════════════════════════════════
+// 📧 EMAIL
+// ═══════════════════════════════════════════════════════════
 let emailTransporter = null, emailInitPromise = null;
 function isValidEmail(e) {
     return typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
@@ -395,6 +426,9 @@ async function sendEmail(to, subj, html) {
 }
 setTimeout(() => { initEmailService().then(t => { emailTransporter = t; }).catch(()=>{}); }, 100);
 
+// ═══════════════════════════════════════════════════════════
+// 🛡️ SECURITY MIDDLEWARE
+// ═══════════════════════════════════════════════════════════
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -434,6 +468,7 @@ app.use(cors({
     exposedHeaders: ['X-CSRF-Token','X-Session-Expiry','X-Request-ID']
 }));
 
+// 🚦 Rate Limiters
 const apiLimiter = rateLimit({
     windowMs: 15*60*1000, max: 2000, standardHeaders: true, legacyHeaders: false,
     keyGenerator: (req) => (req.user && req.user.id) ? req.user.id : (req.ip || 'unknown'),
@@ -471,6 +506,7 @@ app.use((req, res, next) => {
     next();
 });
 
+// ============ OWNERSHIP DB SIGNATURE ============
 async function registerOwnershipSignature() {
     try {
         if (!SystemLogo) return;
@@ -482,7 +518,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '10.8.6',
+            version: '10.9.0',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -490,6 +526,7 @@ async function registerOwnershipSignature() {
     } catch (e) { console.warn('⚠️ Signature:', e.message); }
 }
 
+// ============ MONGODB ============
 let mongoConnected = false;
 async function connectMongoDB() {
     const uri = process.env.MONGODB_URI;
@@ -528,7 +565,8 @@ async function createIndexes() {
         { col:'vehicles', spec:{ plateNumber:1 }, opts:{ unique:true, sparse:true, background:true } },
         { col:'vehicles', spec:{ status:1 }, opts:{ background:true } },
         { col:'vehicles', spec:{ type:1 }, opts:{ background:true } },
-        { col:'vehicles', spec:{ region:1 }, opts:{ background:true } }
+        { col:'vehicles', spec:{ region:1 }, opts:{ background:true } },
+        { col:'vehicles', spec:{ center:1 }, opts:{ background:true } }
     ];
     for (const t of tasks) {
         try {
@@ -581,6 +619,7 @@ async function ensureAdminExists() {
     } catch (e) { console.error('❌ Admin:', e.message); }
 }
 
+// ============ LEGACY CLEANUP ============
 const LEGACY_DEMO = ['الوحدة 101','الوحدة 205','الوحدة 312'];
 const CLEANUP_MARKER = 'legacy-demo-vessels-removed-v2';
 async function cleanupLegacyDemoVessels() {
@@ -615,6 +654,7 @@ async function cleanupLegacyDemoVessels() {
     } catch (e) { console.warn('⚠️ Cleanup:', e.message); }
 }
 
+// ============ SESSION STORE ============
 let sessionStore = undefined;
 async function buildSessionStore() {
     await initRedis();
@@ -631,6 +671,7 @@ async function buildSessionStore() {
     }
 }
 
+// ============ CSRF ============
 function ensureCsrfToken(req, res) {
     if (!req.session) return null;
     const now = Date.now();
@@ -683,6 +724,7 @@ async function csrfProtection(req, res, next) {
     return res.status(403).json({ success: false, error: 'CSRF token غير صالح أو مفقود', code: 'CSRF_INVALID' });
 }
 
+// ============ JWT ============
 function generateAccessToken(user, sid) {
     return jwt.sign({
         sub: user.id, id: user.id, username: user.username, role: user.role,
@@ -696,6 +738,7 @@ function generateRefreshToken(user, sid) {
             audience: 'marine-system-client', jwtid: randomId(32) });
 }
 
+// ============ REFRESH SESSIONS ============
 const refreshSessionsMemory = new Map();
 async function saveRefreshSession({ sessionId, userId, refreshToken }) {
     const rec = {
@@ -779,6 +822,7 @@ async function isAccessTokenRevoked(jti) {
     return true;
 }
 
+// ⏰ Cleanup دوري
 setInterval(() => {
     const now = Date.now();
     for (const [k, v] of revokedAccessTokensMemory) if (now > v) revokedAccessTokensMemory.delete(k);
@@ -793,6 +837,7 @@ setInterval(() => {
     }
 }, 60*1000).unref();
 
+// ============ PASSWORD RESET ============
 const resetTokensMemory = [];
 function pruneResetMem() {
     const now = Date.now();
@@ -847,6 +892,7 @@ async function verifyResetToken(email, token) {
     return !!(r && r.email === email);
 }
 
+// ============ LOG + NOTIFY ============
 async function addSystemLog({ userId=null, action='view', resource='system',
     resourceId=null, resourceName='', userName='', userEmail='', ip=null,
     requestId=null, status='success', details={}, error=null }) {
@@ -867,6 +913,7 @@ async function notify({ userId=null, type='info', category='system', title,
     } catch (e) { return null; }
 }
 
+// ============ AUTH MIDDLEWARE ============
 function extractBearerToken(req) {
     const h = req.headers.authorization;
     if (!h || !h.startsWith('Bearer ')) return null;
@@ -900,6 +947,7 @@ function authenticateAccessToken(req, res, next) {
     }
 }
 
+// ============ RBAC ============
 const ROLE_PERMISSIONS = {
     admin: ['*'],
     manager: ['dashboard:view','vessels:read','vessels:create','vessels:update',
@@ -968,6 +1016,7 @@ function requireAdmin(req, res, next) {
     next();
 }
 
+// ============ FORMATTERS ============
 function formatUser(u) {
     if (!u) return null;
     const role = normalizeRole(u.role);
@@ -1029,6 +1078,7 @@ function formatMaintenance(log) {
     if (!mongoOk && isProduction) { console.error('❌ Mongo required in prod'); process.exit(1); }
     await buildSessionStore();
 
+    // ============ SESSION ============
     app.use(session({
         secret: SESSION_SECRET, resave: false, saveUninitialized: false,
         ...(sessionStore ? { store: sessionStore } : {}),
@@ -1043,7 +1093,7 @@ function formatMaintenance(log) {
     app.use((req, res, next) => { ensureCsrfToken(req, res); next(); });
 
     // ============================================================
-    // 📁 STATIC FILES — CSS / JS
+    // 📁 STATIC FILES — CSS / JS / Assets
     // ============================================================
     const publicDir = path.join(__dirname, 'public');
     const pagesDir = path.join(__dirname, 'pages');
@@ -1122,7 +1172,7 @@ function formatMaintenance(log) {
 
     app.get('/api/health', (req, res) => {
         res.json({
-            success: true, status: 'online', service: 'Marine System', version: '10.8.6',
+            success: true, status: 'online', service: 'Marine System', version: '10.9.0',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
@@ -1136,9 +1186,11 @@ function formatMaintenance(log) {
             features: {
                 printHeader: true,
                 hideBlueBoxes: true,
+                printOrientation: true,
                 forceGPS: true,
                 userBadge: true,
-                ownership: true
+                ownership: true,
+                vehicles: true
             },
             models: { User: !!User, Vessel: !!Vessel, Vehicle: !!Vehicle,
                 Maintenance: !!Maintenance, Log: !!Log, Ticket: !!Ticket, Note: !!Note,
@@ -1191,6 +1243,7 @@ function formatMaintenance(log) {
             const rt = generateRefreshToken(user, sid);
             await saveRefreshSession({ sessionId: sid, userId: user.id, refreshToken: rt });
 
+            // 🛡️ Session Fixation Protection
             await new Promise((resolve) => {
                 if (!req.session || typeof req.session.regenerate !== 'function') {
                     if (req.session) {
@@ -2180,10 +2233,12 @@ function formatMaintenance(log) {
     } else {
         console.warn('⚠️ Settings disabled (models missing)');
     }
+   
+    // ============================================================
+    // 📄 HTML INJECTION SYSTEM
+    // ============================================================
 
-    // ============================================================
-    // 📄 HTML INJECTION
-    // ============================================================
+    // ─── OWNERSHIP ───
     const OWNERSHIP_META = `
 <meta name="author" content="أمان الله ناجي">
 <meta name="creator" content="أمان الله ناجي">
@@ -2192,7 +2247,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v10.8.6 - Aman Allah Naji">
+<meta name="generator" content="Marine System v10.9.0 - Aman Allah Naji">
 `;
     const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
@@ -2216,6 +2271,7 @@ console.log('%c⚓ منظومة الوسائل البحرية','background:linea
 console.log('%c👨‍💻 أمان الله ناجي — إدارة إسناد الوحدات البحرية','background:#0a1020;color:#e6b31e;font-size:13px;font-weight:700;padding:8px 24px;');
 }catch(e){}})();<\/script>`;
 
+    // ─── USER BADGE ───
     const USER_BADGE_CSS = `
 <style id="user-info-badge-style">
 #user-info-badge{position:fixed!important;top:42px!important;left:20px!important;display:none;align-items:center!important;gap:10px!important;padding:8px 14px!important;background:rgba(6,9,17,0.88)!important;backdrop-filter:blur(14px)!important;border:1px solid rgba(230,179,30,0.3)!important;border-radius:12px!important;font-family:'Cairo','Segoe UI',Tahoma,sans-serif!important;z-index:9998!important;pointer-events:none!important;user-select:none!important;box-shadow:0 6px 24px rgba(0,0,0,0.45)!important;direction:rtl!important;max-width:360px!important;}
@@ -2228,7 +2284,6 @@ console.log('%c👨‍💻 أمان الله ناجي — إدارة إسناد 
 #user-info-badge .uib-role::before{content:'👤 '!important;font-size:10px!important;}
 #user-info-badge .uib-region{color:#60a5fa!important;font-weight:700!important;}
 #user-info-badge .uib-region::before{content:'📍 '!important;font-size:10px!important;}
-#user-info-badge .uib-sep{color:#475569!important;font-size:9px!important;}
 @media print{#user-info-badge{display:none!important;}}
 @media (max-width:768px){#user-info-badge{top:36px!important;left:10px!important;padding:6px 10px!important;max-width:260px!important;}}
 </style>`;
@@ -2267,6 +2322,7 @@ else updateBadge();
 setInterval(updateBadge,1500);
 })();<\/script>`;
 
+    // ─── FORCE GPS ───
     const FORCE_GPS_CSS = `
 <style id="force-gps-style">
 #force-gps-modal{position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;background:rgba(6,9,17,0.98)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-family:'Cairo','Segoe UI',sans-serif!important;direction:rtl!important;padding:20px!important;margin:0!important;box-sizing:border-box!important;}
@@ -2397,9 +2453,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else init();
 })();<\/script>`;
 
-    // ═══════════════════════════════════════════════════════════
-    // 🏛️ PRINT HEADER — الترويسة الرسمية
-    // ═══════════════════════════════════════════════════════════
+    // ─── PRINT HEADER ───
     const PRINT_HEADER_CSS = `
 <style id="official-print-header-style">
 #official-print-header { display: none !important; }
@@ -2477,14 +2531,6 @@ else init();
         direction: rtl !important;
         z-index: 99999 !important;
     }
-    .eff-header-left::before, .eff-header-left::after,
-    .fleet-header-left::before, .fleet-header-left::after,
-    .veh-header .title-section::before, .veh-header .title-section::after,
-    .maint-header-left::before, .maint-header-left::after,
-    .logs-header-left::before, .logs-header-left::after {
-        display: none !important;
-        content: none !important;
-    }
 }
 </style>`;
 
@@ -2555,9 +2601,7 @@ else init();
     }, 2000);
 })();<\/script>`;
 
-    // ═══════════════════════════════════════════════════════════
-    // 🚨 HIDE BLUE BOXES — إخفاء المربعات الزرقاء تلقائياً قبل الطباعة
-    // ═══════════════════════════════════════════════════════════
+    // ─── HIDE BLUE BOXES ───
     const HIDE_BLUE_BOXES_SCRIPT = `
 <script>(function(){
     'use strict';
@@ -2571,16 +2615,14 @@ else init();
             for (var i = 0; i < all.length; i++) {
                 var el = all[i];
                 
-                // تجاهل الترويسة الرسمية
                 if (el.id === 'official-print-header') continue;
                 if (el.closest && el.closest('#official-print-header')) continue;
+                if (el.closest && el.closest('.print-orientation-bar')) continue;
                 
-                // تجاهل عناصر الجداول
                 if (el.tagName === 'TABLE' || el.tagName === 'THEAD' || 
                     el.tagName === 'TBODY' || el.tagName === 'TR' || 
                     el.tagName === 'TH' || el.tagName === 'TD') continue;
                 
-                // تجاهل العناصر المحمية
                 if (el.classList && (
                     el.classList.contains('stats-grid') ||
                     el.classList.contains('veh-stats') ||
@@ -2594,8 +2636,6 @@ else init();
                 )) continue;
                 
                 var r = el.getBoundingClientRect();
-                
-                // فقط العناصر الكبيرة
                 if (r.width < 500 || r.height < 100) continue;
                 if (r.top < -200 || r.top > 1500) continue;
                 
@@ -2604,10 +2644,8 @@ else init();
                 var bgc = cs.backgroundColor || '';
                 var bc = cs.borderColor || '';
                 
-                // له gradient
                 var hasGradient = bg.indexOf('gradient') !== -1;
                 
-                // له خلفية داكنة/زرقاء
                 var hasDarkBg = false;
                 if (bgc && bgc !== 'rgba(0, 0, 0, 0)' && bgc !== 'transparent') {
                     var m = bgc.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
@@ -2617,7 +2655,6 @@ else init();
                     }
                 }
                 
-                // له حد ذهبي
                 var hasGoldBorder = bc.indexOf('230, 179') !== -1 || 
                                     bc.indexOf('247, 215') !== -1;
                 
@@ -2645,12 +2682,8 @@ else init();
                 hiddenElements.forEach(function(h) {
                     console.log('   →', h.tag, '| class:', h.cls, '| id:', h.id, '|', h.size);
                 });
-            } else {
-                console.log('ℹ️ لم يتم العثور على مربعات زرقاء');
             }
-        } catch(e) {
-            console.error('❌ خطأ hideBigBlueBoxes:', e);
-        }
+        } catch(e) {}
     }
     
     function restoreHidden() {
@@ -2668,13 +2701,11 @@ else init();
     }
     
     window.addEventListener('beforeprint', function() {
-        console.log('%c🖨️ بدء تحضير الطباعة...', 'background: #0a0e1a; color: #f7d774; padding: 4px 8px;');
         hideBigBlueBoxes();
     });
     
     window.addEventListener('afterprint', function() {
         restoreHidden();
-        console.log('✅ تمت إعادة العناصر');
     });
     
     if (window.matchMedia) {
@@ -2686,10 +2717,150 @@ else init();
             });
         }
     }
-    
-    console.log('%c✅ HIDE BLUE BOXES Script loaded', 'background: green; color: white; padding: 3px 6px;');
 })();<\/script>`;
 
+    // ─── PRINT ORIENTATION BAR ───
+    const PRINT_ORIENTATION_CSS = `
+<style id="print-orientation-style">
+@media screen {
+    .print-orientation-bar {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        gap: 8px;
+        padding: 8px 10px;
+        background: rgba(6, 9, 17, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(230, 179, 30, 0.3);
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        font-family: 'Cairo', sans-serif;
+        direction: rtl;
+    }
+    .print-orientation-bar button {
+        padding: 10px 18px;
+        border: none;
+        border-radius: 10px;
+        font-family: 'Cairo', sans-serif;
+        font-size: 12.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .print-orientation-bar .btn-portrait {
+        background: linear-gradient(135deg, #f7d774, #e6b31e);
+        color: #060911;
+    }
+    .print-orientation-bar .btn-portrait:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(247, 215, 116, 0.4);
+    }
+    .print-orientation-bar .btn-paysage {
+        background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        color: #fff;
+    }
+    .print-orientation-bar .btn-paysage:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(96, 165, 250, 0.4);
+    }
+    .print-orientation-bar button i {
+        font-size: 13px;
+    }
+}
+@media print {
+    .print-orientation-bar { display: none !important; }
+}
+</style>`;
+
+    const PRINT_ORIENTATION_HTML = `
+<div class="print-orientation-bar" id="printOrientationBar">
+    <button type="button" class="btn-portrait" id="printPortraitBtn" title="طباعة A4 عمودي">
+        <i class="fas fa-file-alt"></i> Portrait
+    </button>
+    <button type="button" class="btn-paysage" id="printPaysageBtn" title="طباعة A4 أفقي">
+        <i class="fas fa-file"></i> Paysage
+    </button>
+</div>`;
+
+    const PRINT_ORIENTATION_SCRIPT = `
+<script>(function(){
+    'use strict';
+    
+    var STYLE_ID = 'dynamic-print-orientation';
+    
+    function applyOrientation(mode) {
+        var style = document.getElementById(STYLE_ID);
+        if (!style) {
+            style = document.createElement('style');
+            style.id = STYLE_ID;
+            document.head.appendChild(style);
+        }
+        
+        if (mode === 'landscape') {
+            style.textContent = '@page { size: A4 landscape !important; margin: 10mm 6mm 12mm 6mm !important; }';
+            document.body.classList.add('print-landscape');
+            document.body.classList.remove('print-portrait');
+        } else {
+            style.textContent = '@page { size: A4 portrait !important; margin: 12mm 8mm 12mm 8mm !important; }';
+            document.body.classList.add('print-portrait');
+            document.body.classList.remove('print-landscape');
+        }
+        
+        try { localStorage.setItem('print_orientation', mode); } catch(e) {}
+    }
+    
+    function printWith(mode) {
+        applyOrientation(mode);
+        var label = mode === 'landscape' ? 'Paysage (أفقي)' : 'Portrait (عمودي)';
+        console.log('%c🖨️ الطباعة: ' + label, 'background: #f7d774; color: #060911; padding: 6px 12px; font-weight: bold;');
+        
+        setTimeout(function() {
+            window.print();
+        }, 350);
+    }
+    
+    function init() {
+        var btnPortrait = document.getElementById('printPortraitBtn');
+        var btnPaysage = document.getElementById('printPaysageBtn');
+        var bar = document.getElementById('printOrientationBar');
+        
+        if (!bar || !btnPortrait || !btnPaysage) return;
+        
+        btnPortrait.addEventListener('click', function(e) {
+            e.preventDefault();
+            printWith('portrait');
+        });
+        
+        btnPaysage.addEventListener('click', function(e) {
+            e.preventDefault();
+            printWith('landscape');
+        });
+        
+        try {
+            var saved = localStorage.getItem('print_orientation') || 'portrait';
+            applyOrientation(saved);
+        } catch(e) {
+            applyOrientation('portrait');
+        }
+        
+        console.log('%c✅ Print Orientation Bar ready', 'background: green; color: white; padding: 4px 8px;');
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();<\/script>`;
+
+    // ─── INJECTION SKIP REGEX ───
     const INJECTION_SKIP_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i;
 
     function injectAll(html) {
@@ -2726,13 +2897,29 @@ else init();
         }
         
         // ✅ HIDE BLUE BOXES
-        if (!html.includes('HIDE BLUE BOXES Script loaded')) {
-            html = html.replace('</body>', HIDE_BLUE_BOXES_SCRIPT + '\n</body>');
+        if (!html.includes('data-print-hidden')) {
+            if (!html.includes('HIDE_BLUE_BOXES_INJECTED')) {
+                html = html.replace('</body>', '<!-- HIDE_BLUE_BOXES_INJECTED -->\n' + HIDE_BLUE_BOXES_SCRIPT + '\n</body>');
+            }
+        }
+        
+        // ✅ 🆕 PRINT ORIENTATION BAR
+        if (!html.includes('print-orientation-style')) {
+            if (html.includes('</head>')) {
+                html = html.replace('</head>', PRINT_ORIENTATION_CSS + '\n</head>');
+            }
+            if (/<body[^>]*>/i.test(html)) {
+                html = html.replace(/(<body[^>]*>)/i, '$1' + PRINT_ORIENTATION_HTML);
+            } else {
+                html = PRINT_ORIENTATION_HTML + html;
+            }
+            html = html.replace('</body>', PRINT_ORIENTATION_SCRIPT + '\n</body>');
         }
         
         return html;
     }
 
+    // ─── Injection Middleware ───
     app.use((req, res, next) => {
         if (req.path.startsWith('/api/') || INJECTION_SKIP_REGEX.test(req.path)) return next();
         const originalSend = res.send;
@@ -2786,7 +2973,7 @@ else init();
             path.join(publicPagesDir, 'index.html')
         ];
         for (const p of possible) if (fs.existsSync(p)) return res.sendFile(p);
-        res.send('<h1>🚢 Marine System v10.8.6</h1><p>Running</p>');
+        res.send('<h1>🚢 Marine System v10.9.0</h1><p>Running</p>');
     });
     app.get('/pages/:page', (req, res) => {
         const fp = findPageFile(req.params.page);
@@ -2818,7 +3005,7 @@ else init();
     // ============ LISTEN ============
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v10.8.6');
+        console.log('🚢 MARINE SYSTEM v10.9.0');
         console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
         console.log('🛡️  Security hardening: ENABLED');
         console.log('🍃 MongoDB Atlas');
@@ -2829,6 +3016,7 @@ else init();
         console.log('🎨 Static CSS/JS: FIXED');
         console.log('🏛️  Print Header Injection: ENABLED');
         console.log('🚨 Hide Blue Boxes: ENABLED');
+        console.log('🖨️  Print Orientation Bar: ENABLED');
         console.log('=========================================');
         console.log(`📍 Port: ${PORT}`);
         console.log(`🌍 Env: ${process.env.NODE_ENV || 'development'}`);
@@ -2872,4 +3060,4 @@ module.exports.hasPermission = hasPermission;
 module.exports.normalizeRole = normalizeRole;
 module.exports.addSystemLog = addSystemLog;
 module.exports.getRedisClient = getRedisClient;
-module.exports.isRedisAvailable = isRedisAvailable;
+module.exports.isRedisAvailable = isRedisAvailable; 
