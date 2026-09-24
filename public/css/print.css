@@ -1,11 +1,12 @@
 /* ============================================================
-   🖨️ PRINT.CSS v25.0 — FINAL COMPLETE
+   🖨️ PRINT.CSS v25.2 — Enterprise Print (Marine System)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ إخفاء كل الرؤوس الأصلية (المربعات الزرقاء)
-   ✅ الترويسة الرسمية من server.js (#official-print-header)
+   ✅ يدعم 5 صفحات: fleet / vehicles / efficiency / maintenance / logs
+   ✅ الترويسة الرسمية (من server.js: #official-print-header)
+   ✅ إخفاء الرؤوس الأصلية (المربعات الزرقاء)
    ✅ ألوان كاملة للجداول والشارات
+   ✅ دعم Center + Supply
    ✅ A4 Portrait + Paysage
-   ✅ يدعم: fleet / vehicles / efficiency / maintenance / logs
    ============================================================ */
 
 /* ═══════════════════════════════════════════════════════════
@@ -15,6 +16,7 @@
     size: A4 portrait;
     margin: 12mm 8mm 12mm 8mm;
 }
+
 @page landscape-page {
     size: A4 landscape;
     margin: 10mm 6mm 12mm 6mm;
@@ -25,9 +27,9 @@
    ═══════════════════════════════════════════════════════════ */
 @media print {
 
-    /* ═══════════════════════════════════════
+    /* ─────────────────────────────────────────
        0) إعادة تعيين + إجبار الألوان
-       ═══════════════════════════════════════ */
+       ───────────────────────────────────────── */
     *, *::before, *::after {
         animation: none !important;
         transition: none !important;
@@ -51,9 +53,9 @@
         padding: 0 !important;
     }
 
-    /* ═══════════════════════════════════════
-       1) 🎯 إخفاء كل الرؤوس الأصلية (المربعات الزرقاء)
-       ═══════════════════════════════════════ */
+    /* ─────────────────────────────────────────
+       1) 🎯 إخفاء الرؤوس الأصلية (المربعات الزرقاء)
+       ───────────────────────────────────────── */
     #page-efficiency .eff-header,
     #page-efficiency .eff-header *,
     #page-fleet .fleet-header,
@@ -84,9 +86,9 @@
         border: none !important;
     }
 
-    /* ═══════════════════════════════════════
-       2) إخفاء كل الخلفيات الداكنة الكبيرة
-       ═══════════════════════════════════════ */
+    /* ─────────────────────────────────────────
+       2) إخفاء خلفيات الصفحات الداكنة
+       ───────────────────────────────────────── */
     #page-efficiency,
     #page-fleet,
     #page-vehicles,
@@ -100,7 +102,6 @@
         min-height: 0 !important;
     }
 
-    /* إخفاء pseudo-elements للخلفيات */
     #page-efficiency::before,
     #page-efficiency::after,
     #page-fleet::before,
@@ -116,9 +117,9 @@
         background: none !important;
     }
 
-    /* ═══════════════════════════════════════
+    /* ─────────────────────────────────────────
        3) إخفاء عناصر الشاشة التفاعلية
-       ═══════════════════════════════════════ */
+       ───────────────────────────────────────── */
     button,
     .btn-action, .btn-filter, .btn-sm, .btn-save, .btn-icon,
     .action-btns, .retry-btn, .chart-btn, .chart-switch,
@@ -144,9 +145,9 @@
         display: none !important;
     }
 
-    /* ═══════════════════════════════════════
+    /* ─────────────────────────────────────────
        4) إخفاء المربعات الزرقاء (hero / banner)
-       ═══════════════════════════════════════ */
+       ───────────────────────────────────────── */
     [class*="hero" i],
     [class*="banner" i],
     [class*="cover" i],
@@ -177,17 +178,17 @@
         background: none !important;
     }
 
-    /* إخفاء أي عنصر بحد ذهبي كبير */
-    *[style*="gold"][style*="border"],
-    *[style*="linear-gradient"],
-    *[style*="radial-gradient"] {
+    /* إخفاء الخلفيات الكبيرة عبر inline style */
+    [style*="gradient"],
+    [style*="linear-gradient"],
+    [style*="radial-gradient"] {
         background: none !important;
         background-image: none !important;
     }
 
-    /* ═══════════════════════════════════════
-       5) 🏛️ الترويسة الرسمية — إظهار مؤكد
-       ═══════════════════════════════════════ */
+    /* ─────────────────────────────────────────
+       5) 🏛️ الترويسة الرسمية — تأكيد الظهور
+       ───────────────────────────────────────── */
     #official-print-header {
         display: block !important;
         visibility: visible !important;
@@ -204,6 +205,7 @@
         direction: rtl !important;
         z-index: 99999 !important;
     }
+
     #official-print-header .official-header-print {
         position: relative !important;
         width: 100% !important;
@@ -212,11 +214,13 @@
         margin: 0 !important;
         background: #ffffff !important;
     }
+
     #official-print-header .official-header-left-text {
         display: block !important;
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
+        right: auto !important;
         direction: rtl !important;
         text-align: left !important;
         font-size: 13pt !important;
@@ -226,11 +230,13 @@
         line-height: 1.5 !important;
         white-space: nowrap !important;
     }
+
     #official-print-header .official-header-right-text {
         display: block !important;
         position: absolute !important;
         top: 0 !important;
         right: 0 !important;
+        left: auto !important;
         direction: rtl !important;
         text-align: right !important;
         font-size: 12pt !important;
@@ -239,6 +245,7 @@
         -webkit-text-fill-color: #0a0a12 !important;
         line-height: 1.6 !important;
     }
+
     #official-print-header .official-header-title-print {
         display: block !important;
         position: absolute !important;
@@ -254,9 +261,9 @@
         direction: rtl !important;
     }
 
-    /* ═══════════════════════════════════════
-       6) البطاقات الإحصائية
-       ═══════════════════════════════════════ */
+    /* ─────────────────────────────────────────
+       6) البطاقات الإحصائية (fleet / vehicles)
+       ───────────────────────────────────────── */
     .stats-grid,
     .veh-stats {
         display: grid !important;
@@ -272,21 +279,28 @@
     }
 
     #page-fleet .stats-grid,
-    #page-vehicles .veh-stats { grid-template-columns: repeat(4, 1fr) !important; }
+    #page-vehicles .veh-stats {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
     #page-logs .stats-grid,
     #page-efficiency .stats-grid,
-    #page-maintenance .stats-grid { grid-template-columns: repeat(5, 1fr) !important; }
+    #page-maintenance .stats-grid {
+        grid-template-columns: repeat(5, 1fr) !important;
+    }
 
-    .stat-card, .veh-stat {
+    .stat-card,
+    .veh-stat {
         background: none !important;
         border: none !important;
         padding: 0 3mm !important;
         text-align: center !important;
         position: relative !important;
+        display: block !important;
     }
-    .stat-card::before, .veh-stat::before {
-        display: none !important;
-    }
+
+    .stat-card::before,
+    .veh-stat::before { display: none !important; }
+
     .stat-card:not(:last-child)::after,
     .veh-stat:not(:last-child)::after {
         content: "" !important;
@@ -297,8 +311,10 @@
         width: 0.5pt !important;
         background: #d8d6d0 !important;
     }
+
     .stat-card .icon-bg,
     .stat-card .stat-icon { display: none !important; }
+
     .stat-card .number,
     .stat-card .eff-stat-value,
     .veh-stat .number {
@@ -311,6 +327,7 @@
         margin-bottom: 1.5mm !important;
         background: none !important;
     }
+
     .stat-card .label,
     .veh-stat .label {
         color: #6b6b78 !important;
@@ -320,23 +337,27 @@
         display: block !important;
     }
 
-    /* ألوان بطاقات vehicles */
+    /* ألوان البطاقات */
     #page-vehicles .veh-stat.stat-valid .number {
-        color: #10b981 !important; -webkit-text-fill-color: #10b981 !important;
+        color: #10b981 !important;
+        -webkit-text-fill-color: #10b981 !important;
     }
     #page-vehicles .veh-stat.stat-broken .number {
-        color: #ef4444 !important; -webkit-text-fill-color: #ef4444 !important;
+        color: #ef4444 !important;
+        -webkit-text-fill-color: #ef4444 !important;
     }
     #page-vehicles .veh-stat.stat-maint .number {
-        color: #f59e0b !important; -webkit-text-fill-color: #f59e0b !important;
+        color: #f59e0b !important;
+        -webkit-text-fill-color: #f59e0b !important;
     }
 
-    /* ═══════════════════════════════════════
+    /* ─────────────────────────────────────────
        7) الأقسام (efficiency / fleet)
-       ═══════════════════════════════════════ */
+       ───────────────────────────────────────── */
     #page-efficiency, #page-fleet, #page-logs, #page-maintenance {
         counter-reset: section-num !important;
     }
+
     .eff-section, .fleet-section, .logs-section {
         background: none !important;
         border: none !important;
@@ -346,6 +367,7 @@
         counter-increment: section-num !important;
         backdrop-filter: none !important;
     }
+
     .eff-section .section-header,
     .fleet-section .section-header,
     .logs-section .section-header {
@@ -359,9 +381,11 @@
         page-break-after: avoid !important;
         break-after: avoid !important;
     }
+
     .eff-section .section-header::after {
         display: none !important;
     }
+
     .eff-section .section-header::before,
     .fleet-section .section-header::before,
     .logs-section .section-header::before {
@@ -379,6 +403,7 @@
         justify-content: center !important;
         flex-shrink: 0 !important;
     }
+
     .eff-section .section-header h3,
     .fleet-section .section-header h3,
     .logs-section .section-header h3 {
@@ -389,12 +414,13 @@
         margin: 0 !important;
         flex: 1 !important;
     }
+
     .eff-section .section-header h3 i { display: none !important; }
 
-    /* ═══════════════════════════════════════
-       8) الجداول (efficiency / fleet)
-       ═══════════════════════════════════════ */
-    .table-wrapper, .veh-table-wrap {
+    /* ─────────────────────────────────────────
+       8) الجداول (efficiency / fleet / logs / maintenance)
+       ───────────────────────────────────────── */
+    .table-wrapper {
         padding: 0 !important;
         margin: 0 !important;
         overflow: visible !important;
@@ -402,10 +428,8 @@
         border: none !important;
         border-radius: 0 !important;
         backdrop-filter: none !important;
-        box-shadow: none !important;
     }
 
-    /* Paysage عند التفعيل */
     body.print-landscape .table-wrapper,
     body.print-landscape .veh-table-wrap {
         page: landscape-page !important;
@@ -424,11 +448,13 @@
         background: none !important;
         min-width: 0 !important;
     }
+
     thead {
         display: table-header-group !important;
         background: none !important;
     }
     thead::after { display: none !important; }
+
     thead th {
         background: #f7f6f3 !important;
         color: #0a0a12 !important;
@@ -441,13 +467,16 @@
         border-bottom: 1pt solid #12121a !important;
         white-space: nowrap !important;
     }
+
     thead th i { display: none !important; }
+
     tbody tr {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
         background: none !important;
     }
     tbody tr:nth-child(even) { background: #fbfaf8 !important; }
+
     tbody td {
         padding: 1.8mm 2.5mm !important;
         border: none !important;
@@ -460,7 +489,9 @@
         word-break: break-word !important;
         background: transparent !important;
     }
+
     tbody tr:last-child td { border-bottom: 1pt solid #12121a !important; }
+
     tbody td:first-child {
         font-weight: 700 !important;
         color: #0a0a12 !important;
@@ -468,12 +499,23 @@
         text-align: right !important;
         padding-right: 3.5mm !important;
     }
+
     thead th:last-child,
     tbody td:last-child { display: none !important; }
 
-    /* ═══════════════════════════════════════
-       9) 🎨 VEHICLES — رأس الجدول + الألوان
-       ═══════════════════════════════════════ */
+    /* ─────────────────────────────────────────
+       9) 🎯 VEHICLES — رأس الجدول + الألوان
+       ───────────────────────────────────────── */
+    #page-vehicles .veh-table-wrap {
+        background: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        backdrop-filter: none !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
     #page-vehicles .veh-table-wrap::before {
         content: "📋 السجل التفصيلي للوسائل البرية" !important;
         display: block !important;
@@ -487,42 +529,50 @@
         text-align: right !important;
         direction: rtl !important;
     }
+
     #page-vehicles .veh-table-head,
     #page-vehicles .veh-table-row {
         display: grid !important;
         grid-template-columns:
-            25px 60px 130px 90px 110px 80px
-            55px 55px 70px 70px 1fr 0px !important;
-        gap: 3px !important;
-        padding: 1.8mm 2mm !important;
+            22px 55px 105px 75px 85px 65px 65px 65px 50px 55px 65px 65px 1fr 0px !important;
+        gap: 2px !important;
+        padding: 1.5mm 1.5mm !important;
         align-items: center !important;
-        font-size: 8.5pt !important;
+        font-size: 7pt !important;
         min-width: 0 !important;
         width: 100% !important;
         position: static !important;
         backdrop-filter: none !important;
     }
+
     #page-vehicles .veh-table-head {
         background: #0a0e1a !important;
         color: #f7d774 !important;
         -webkit-text-fill-color: #f7d774 !important;
         border-top: 1pt solid #0a0e1a !important;
         border-bottom: 2pt solid #f7d774 !important;
-        font-size: 7pt !important;
+        font-size: 6pt !important;
         font-weight: 800 !important;
         text-transform: uppercase !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
+
     #page-vehicles .veh-table-head .veh-cell {
+        background: transparent !important;
         color: #f7d774 !important;
         -webkit-text-fill-color: #f7d774 !important;
         font-weight: 900 !important;
     }
+
     #page-vehicles .veh-table-row {
         background: #ffffff !important;
         color: #23232b !important;
         border-bottom: 0.5pt solid #cbd5e1 !important;
         break-inside: avoid !important;
         page-break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
     #page-vehicles .veh-table-row:nth-child(even) {
         background: #f1f5f9 !important;
@@ -530,145 +580,145 @@
     #page-vehicles .veh-table-row:last-child {
         border-bottom: 1pt solid #12121a !important;
     }
+
     #page-vehicles .veh-table-head .veh-cell:last-child,
     #page-vehicles .veh-table-row .veh-cell:last-child {
         display: none !important;
     }
+
     #page-vehicles .veh-cell {
         color: #23232b !important;
         -webkit-text-fill-color: #23232b !important;
         text-align: center !important;
         word-break: break-word !important;
-        overflow: visible !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
         background: none !important;
+        padding: 0 0.5mm !important;
+        font-weight: 600 !important;
     }
-    #page-vehicles .veh-table-row .veh-cell:nth-child(10) {
+
+    #page-vehicles .veh-table-row .veh-cell:nth-child(12) {
         color: #dc2626 !important;
         -webkit-text-fill-color: #dc2626 !important;
         font-weight: 900 !important;
     }
 
-    /* ═══════════════════════════════════════
-       10) 🎨 الشارات الملونة
-       ═══════════════════════════════════════ */
-    .status-badge, .veh-badge {
+    /* ─────────────────────────────────────────
+       10) 🎯 الشارات (vehicles)
+       ───────────────────────────────────────── */
+    #page-vehicles .veh-badge {
         display: inline-block !important;
-        padding: 0.6mm 2.5mm !important;
+        padding: 0.4mm 1.6mm !important;
         border-radius: 3px !important;
-        font-size: 7pt !important;
-        font-weight: 700 !important;
-        border: 0.75pt solid currentColor !important;
-        background: #ffffff !important;
+        font-size: 5.5pt !important;
+        font-weight: 800 !important;
+        border: none !important;
         white-space: nowrap !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        line-height: 1.4 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
 
-    /* ألوان عامة */
-    .status-badge.excellent, .status-badge.good,
-    .status-badge.active, .status-badge.completed, .status-good {
-        color: #1d6b4a !important;
-        -webkit-text-fill-color: #1d6b4a !important;
-        background: #f4faf7 !important;
-    }
-    .status-badge.medium, .status-badge.pending,
-    .status-badge.in-progress, .status-mid {
-        color: #9a6b0e !important;
-        -webkit-text-fill-color: #9a6b0e !important;
-        background: #fffaf0 !important;
-    }
-    .status-badge.low, .status-badge.critical,
-    .status-badge.damaged, .status-badge.cancelled, .status-bad {
-        color: #9b2c2c !important;
-        -webkit-text-fill-color: #9b2c2c !important;
-        background: #fdf4f4 !important;
-    }
-
-    /* ألوان vehicles القوية */
     #page-vehicles .veh-badge.status-صالحة {
         background: #10b981 !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        border: 1pt solid #047857 !important;
         font-weight: 900 !important;
     }
     #page-vehicles .veh-badge.status-معطبة {
         background: #ef4444 !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        border: 1pt solid #b91c1c !important;
         font-weight: 900 !important;
     }
     #page-vehicles .veh-badge.status-صيانة {
         background: #f59e0b !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        border: 1pt solid #b45309 !important;
         font-weight: 900 !important;
     }
     #page-vehicles .veh-badge.type {
         background: #3b82f6 !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        border: 1pt solid #1d4ed8 !important;
-        font-weight: 800 !important;
     }
     #page-vehicles .veh-badge.brand {
         background: #fbbf24 !important;
         color: #1f2937 !important;
         -webkit-text-fill-color: #1f2937 !important;
-        border: 1pt solid #b45309 !important;
-        font-weight: 800 !important;
+    }
+    #page-vehicles .veh-badge.model {
+        background: #e2e8f0 !important;
+        color: #475569 !important;
+        -webkit-text-fill-color: #475569 !important;
+    }
+    #page-vehicles .veh-badge.year {
+        background: #dcfce7 !important;
+        color: #166534 !important;
+        -webkit-text-fill-color: #166534 !important;
     }
     #page-vehicles .veh-badge.region {
         background: #8b5cf6 !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        border: 1pt solid #6d28d9 !important;
-        font-weight: 800 !important;
     }
     #page-vehicles .veh-badge.zone {
         background: #34d399 !important;
         color: #064e3b !important;
         -webkit-text-fill-color: #064e3b !important;
-        border: 1pt solid #047857 !important;
-        font-weight: 800 !important;
+    }
+    #page-vehicles .veh-badge.center {
+        background: #a78bfa !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    #page-vehicles .veh-badge.supp {
+        background: #ec4899 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
     }
     #page-vehicles .veh-badge.cond-جديدة {
         background: #06b6d4 !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        border: 1pt solid #0e7490 !important;
     }
     #page-vehicles .veh-badge.cond-متوسطة {
         background: #f59e0b !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        border: 1pt solid #b45309 !important;
     }
     #page-vehicles .veh-badge.cond-قديمة {
         background: #64748b !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
-        border: 1pt solid #334155 !important;
     }
 
-    /* رقم الوسيلة — لوحة صفراء */
-    .veh-plate {
+    /* ─────────────────────────────────────────
+       11) 🎯 رقم الوسيلة (لوحة)
+       ───────────────────────────────────────── */
+    #page-vehicles .veh-plate {
         font-family: 'Courier New', monospace !important;
         font-weight: 900 !important;
         color: #0a0a12 !important;
         -webkit-text-fill-color: #0a0a12 !important;
         background: #fef3c7 !important;
-        border: 1.5pt solid #1a2332 !important;
-        padding: 0.5mm 2mm !important;
+        border: 1pt solid #d4a017 !important;
+        padding: 0.4mm 1.5mm !important;
         border-radius: 2px !important;
-        font-size: 8pt !important;
+        font-size: 6.5pt !important;
         display: inline-block !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 0.3px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
-    /* ═══════════════════════════════════════
-       11) التذييل
-       ═══════════════════════════════════════ */
+    /* ─────────────────────────────────────────
+       12) التذييل (كل الصفحات)
+       ───────────────────────────────────────── */
     #page-fleet::after,
     #page-logs::after,
     #page-efficiency::after,
@@ -684,6 +734,7 @@
         margin-top: 4mm !important;
         font-weight: 600 !important;
     }
+
     #page-fleet::after {
         content: "منظومة الوسائل البحرية — السجل العام للأسطول — وثيقة رسمية" !important;
     }
@@ -700,9 +751,9 @@
         content: "منظومة الوسائل البرية — الحرس الوطني البحري — وثيقة رسمية" !important;
     }
 
-    /* ═══════════════════════════════════════
-       12) عناوين جداول fleet
-       ═══════════════════════════════════════ */
+    /* ─────────────────────────────────────────
+       13) عناوين الجداول (fleet)
+       ───────────────────────────────────────── */
     #page-fleet .table-wrapper::before {
         content: "📋 السجل التفصيلي للمراكب" !important;
         display: block !important;
@@ -717,13 +768,27 @@
         direction: rtl !important;
     }
 
-    /* ═══════════════════════════════════════
-       13) overflow
-       ═══════════════════════════════════════ */
+    /* ─────────────────────────────────────────
+       14) منع التداخل مع الترويسة الرسمية
+       ───────────────────────────────────────── */
+    .veh-container > *:first-child,
+    #page-vehicles > *:first-child {
+        margin-top: 0 !important;
+    }
+
+    #official-print-header + .veh-container,
+    #official-print-header + * {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    /* ─────────────────────────────────────────
+       15) كسر overflow
+       ───────────────────────────────────────── */
     html body .table-wrapper,
     html body table,
     html body tbody,
-    html body .veh-table-wrap,
+    html body #page-vehicles .veh-table-wrap,
     html body .eff-section {
         overflow: visible !important;
     }
@@ -733,167 +798,9 @@
    🌐 SCREEN
    ═══════════════════════════════════════════════════════════ */
 @media screen {
+    .print-only,
+    .print-summary-section,
     #official-print-header {
         display: none;
-    }
-}
-/* ═══════════════════════════════════════════════════════════
-   🎯 FIX — إخفاء رأس efficiency + الدعم الكامل للطباعة
-   ═══════════════════════════════════════════════════════════ */
-@media print {
-
-    /* 1) 🚫 إخفاء رأس efficiency بالكامل (المربع الأزرق) */
-    #page-efficiency .eff-header,
-    #page-efficiency .eff-header * {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        min-height: 0 !important;
-        max-height: 0 !important;
-        width: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        opacity: 0 !important;
-        overflow: hidden !important;
-        background: none !important;
-        background-image: none !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-
-    /* 2) 🎨 خلفية الصفحة بيضاء */
-    #page-efficiency,
-    #page-fleet,
-    #page-vehicles,
-    #page-logs,
-    #page-maintenance {
-        background: #ffffff !important;
-        background-image: none !important;
-        color: #12121a !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        min-height: 0 !important;
-    }
-
-    /* 3) إخفاء pseudo-elements للخلفيات */
-    #page-efficiency::before,
-    #page-efficiency::after,
-    #page-fleet::before,
-    #page-fleet::after,
-    #page-vehicles::before,
-    #page-vehicles::after,
-    body::before,
-    body::after {
-        display: none !important;
-        content: none !important;
-        background: none !important;
-    }
-
-    /* 4) إخفاء الفلاتر والأزرار */
-    #page-efficiency .filter-bar,
-    #page-efficiency .scroll-nav,
-    #page-efficiency .eff-header-actions,
-    #page-fleet .filter-bar,
-    #page-vehicles .veh-actions {
-        display: none !important;
-    }
-
-    /* 5) 📊 جدول efficiency — نص أسود على أبيض */
-    #page-efficiency .eff-section {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 6px !important;
-        margin: 0 0 4mm 0 !important;
-        padding: 0 !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-    }
-
-    #page-efficiency .eff-section .section-header {
-        background: #f7f6f3 !important;
-        border-bottom: 1pt solid #12121a !important;
-        padding: 2mm 3mm !important;
-    }
-
-    #page-efficiency .eff-section .section-header h3 {
-        color: #0a0a12 !important;
-        -webkit-text-fill-color: #0a0a12 !important;
-    }
-
-    #page-efficiency .eff-section .section-header h3 i {
-        color: #b8860b !important;
-    }
-
-    #page-efficiency .badge {
-        background: #f2f1ed !important;
-        color: #45454f !important;
-        border: 0.5pt solid #d8d6d0 !important;
-    }
-
-    /* 6) 💡 أزرار اختيار الاتجاه (Portrait / Paysage) */
-    .print-orientation-bar {
-        display: none !important;
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   🌐 SCREEN — إظهار أزرار الاتجاه على الشاشة
-   ═══════════════════════════════════════════════════════════ */
-@media screen {
-    #official-print-header { display: none; }
-    
-    .print-orientation-bar {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-        display: flex;
-        gap: 10px;
-        padding: 10px 14px;
-        background: rgba(6, 9, 17, 0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(230, 179, 30, 0.3);
-        border-radius: 14px;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-        font-family: 'Cairo', sans-serif;
-        direction: rtl;
-    }
-    
-    .print-orientation-bar button {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 10px;
-        font-family: 'Cairo', sans-serif;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.25s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .print-orientation-bar .btn-portrait {
-        background: linear-gradient(135deg, #f7d774, #e6b31e);
-        color: #060911;
-    }
-    
-    .print-orientation-bar .btn-portrait:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(247, 215, 116, 0.4);
-    }
-    
-    .print-orientation-bar .btn-paysage {
-        background: linear-gradient(135deg, #60a5fa, #3b82f6);
-        color: #fff;
-    }
-    
-    .print-orientation-bar .btn-paysage:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(96, 165, 250, 0.4);
-    }
-    
-    .print-orientation-bar button i {
-        font-size: 14px;
     }
 }
