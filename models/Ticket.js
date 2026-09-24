@@ -1,6 +1,6 @@
 // ============================================================
-// 🎫 Ticket Model — v2.0
-// Support tickets + replies + sender tracking
+// 🎫 Ticket Model — v3.0
+// Support tickets + replies + sender tracking + SCREEN SHARE
 // ============================================================
 
 'use strict';
@@ -34,6 +34,87 @@ const replySchema = new mongoose.Schema({
     _id: true
 });
 
+// ============================================================
+// 📺 SCREEN SHARE SESSION SUB-SCHEMA
+// ============================================================
+const screenShareSessionSchema = new mongoose.Schema({
+    sessionId: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 64
+    },
+    requestedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+    requestedByName: {
+        type: String,
+        trim: true,
+        default: '',
+        maxlength: 200
+    },
+    requestedByUsername: {
+        type: String,
+        trim: true,
+        default: '',
+        maxlength: 100
+    },
+    reason: {
+        type: String,
+        trim: true,
+        default: '',
+        maxlength: 500
+    },
+    status: {
+        type: String,
+        enum: ['معلّق', 'مقبول', 'مرفوض', 'منتهي', 'ملغى'],
+        default: 'معلّق'
+    },
+    requestedAt: {
+        type: Date,
+        default: Date.now
+    },
+    respondedAt: {
+        type: Date,
+        default: null
+    },
+    startedAt: {
+        type: Date,
+        default: null
+    },
+    endedAt: {
+        type: Date,
+        default: null
+    },
+    duration: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    rejectionReason: {
+        type: String,
+        trim: true,
+        default: '',
+        maxlength: 500
+    },
+    ipAddress: {
+        type: String,
+        trim: true,
+        default: ''
+    },
+    userAgent: {
+        type: String,
+        trim: true,
+        default: '',
+        maxlength: 500
+    }
+}, {
+    _id: true,
+    timestamps: false
+});
+
 const ticketSchema = new mongoose.Schema({
     // ============================================================
     // 📝 CORE FIELDS
@@ -59,18 +140,18 @@ const ticketSchema = new mongoose.Schema({
     priority: {
         type: String,
         enum: ['منخفضة', 'متوسطة', 'عالية', 'عاجلة', 'منخفض', 'متوسط', 'عالي', 'حرج'],
-        default: 'متوسط',
+        default: 'متوسطة',   // ✅ موحّد مع الواجهة
         trim: true
     },
     status: {
         type: String,
-        enum: ['مفتوح', 'مفتوحة', 'قيد المعالجة', 'قيد التنفيذ', 'مغلق', 'مغلقة', 'محلول'],
-        default: 'مفتوح',
+        enum: ['مفتوحة', 'مفتوح', 'قيد المعالجة', 'قيد التنفيذ', 'مغلقة', 'مغلق', 'محلول'],
+        default: 'مفتوحة',   // ✅ موحّد مع الواجهة
         trim: true
     },
 
     // ============================================================
-    // 👤 SENDER — ✅ الحقل الجديد المطلوب
+    // 👤 SENDER
     // ============================================================
     sender: {
         type: String,
@@ -139,6 +220,14 @@ const ticketSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         min: 0
+    },
+
+    // ============================================================
+    // 📺 SCREEN SHARE SESSIONS — ✅ جديد
+    // ============================================================
+    screenShareSessions: {
+        type: [screenShareSessionSchema],
+        default: []
     },
 
     // ============================================================
@@ -214,20 +303,19 @@ ticketSchema.index({ status: 1, createdAt: -1 });
 ticketSchema.index({ priority: 1, createdAt: -1 });
 ticketSchema.index({ sender: 1 });
 ticketSchema.index({ createdByName: 1 });
+ticketSchema.index({ createdBy: 1, createdAt: -1 });
 
 // ============================================================
 // 🪝 HOOKS
 // ============================================================
-
-// Update repliesCount + lastActivityAt تلقائياً
 ticketSchema.pre('save', function(next) {
     if (this.isModified('replies') && Array.isArray(this.replies)) {
         this.repliesCount = this.replies.length;
     }
-    if (this.isModified('replies') || this.isModified('status') || this.isModified('description')) {
+    if (this.isModified('replies') || this.isModified('status') ||
+        this.isModified('description') || this.isModified('screenShareSessions')) {
         this.lastActivityAt = new Date();
     }
-    // ✅ ضمان وجود sender دائماً
     if (!this.sender && this.createdByName) {
         this.sender = this.createdByName;
     }
@@ -240,19 +328,15 @@ ticketSchema.pre('save', function(next) {
 ticketSchema.virtual('subject').get(function() {
     return this.title;
 });
-
 ticketSchema.virtual('message').get(function() {
     return this.description;
 });
-
 ticketSchema.virtual('user').get(function() {
     return this.sender || this.createdByName || 'مستخدم';
 });
-
 ticketSchema.virtual('isOpen').get(function() {
     return ['مفتوح', 'مفتوحة'].includes(this.status);
 });
-
 ticketSchema.virtual('isClosed').get(function() {
     return ['مغلق', 'مغلقة', 'محلول'].includes(this.status);
 });
@@ -273,7 +357,7 @@ ticketSchema.methods.addReply = function(message, author) {
 };
 
 ticketSchema.methods.close = function(user, resolution) {
-    this.status = 'مغلق';
+    this.status = 'مغلقة';
     this.closedAt = new Date();
     this.closedBy = user?._id || user?.id || null;
     this.closedByName = user?.name || user?.username || '';
@@ -284,6 +368,34 @@ ticketSchema.methods.close = function(user, resolution) {
 
 ticketSchema.methods.incrementViews = function() {
     this.viewsCount = (this.viewsCount || 0) + 1;
+    return this.save();
+};
+
+// ============================================================
+// 📺 SCREEN SHARE METHODS — ✅ جديد
+// ============================================================
+ticketSchema.methods.addScreenRequest = function({ sessionId, requestedBy, requestedByName, requestedByUsername, reason, ipAddress, userAgent }) {
+    this.screenShareSessions = this.screenShareSessions || [];
+    this.screenShareSessions.push({
+        sessionId,
+        requestedBy: requestedBy || null,
+        requestedByName: requestedByName || '',
+        requestedByUsername: requestedByUsername || '',
+        reason: String(reason || '').substring(0, 500),
+        status: 'معلّق',
+        requestedAt: new Date(),
+        ipAddress: ipAddress || '',
+        userAgent: userAgent || ''
+    });
+    this.lastActivityAt = new Date();
+    return this.save();
+};
+
+ticketSchema.methods.updateScreenSession = function(sessionId, updates) {
+    const s = this.screenShareSessions.find(x => x.sessionId === sessionId);
+    if (!s) return Promise.resolve(this);
+    Object.assign(s, updates);
+    this.lastActivityAt = new Date();
     return this.save();
 };
 
