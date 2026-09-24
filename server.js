@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v11.0.0
+// 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v11.1.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
 // 📌 OWNERSHIP + 👤 USER BADGE
@@ -10,6 +10,7 @@
 // 🏛️ + OFFICIAL PRINT HEADER
 // 🚨 + HIDE BLUE BOXES (JS auto-detect)
 // ✂️ + PRINT ORIENTATION BUTTONS REMOVED
+// 🎫 + TICKET ROUTES MODULE + SOCKET.IO SCREEN SHARE (v11.1.0)
 // ============================================================
 'use strict';
 require('dotenv').config();
@@ -17,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v11.0.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v11.1.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 Node version:', process.version);
@@ -146,6 +147,15 @@ const aiAndImportRoutes = require('./routes/ai-and-import');
 const settingsRoutes = require('./routes/settings');
 const vehiclesRoutes = require('./routes/vehicles');
 
+// 🎯 NEW: Ticket routes module (optional, safe fallback)
+let ticketRoutesModule = null;
+try {
+    ticketRoutesModule = require('./routes/ticket');
+    console.log('✅ Ticket routes module found');
+} catch (e) {
+    console.warn('⚠️ routes/ticket.js not found — using inline routes only');
+}
+
 let createDOMPurify = null;
 try { createDOMPurify = require('isomorphic-dompurify'); } catch (e) {}
 
@@ -233,7 +243,7 @@ app.use((req, res, next) => {
 // 🏷️ headers مخصصة
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '11.0.0');
+    res.setHeader('X-System-Version', '11.1.0');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -437,7 +447,8 @@ app.use(helmet({
             scriptSrc: ["'self'","'unsafe-inline'",'https://unpkg.com','https://cdnjs.cloudflare.com','https://cdn.jsdelivr.net','https://fonts.googleapis.com'],
             styleSrc: ["'self'","'unsafe-inline'",'https://unpkg.com','https://cdnjs.cloudflare.com','https://cdn.jsdelivr.net','https://fonts.googleapis.com'],
             imgSrc: ["'self'",'data:','blob:','https:','https://unpkg.com'],
-            connectSrc: ["'self'",'https://*.onrender.com','https://unpkg.com','https://*.googleapis.com','https://*.leafletjs.com','https://cdn.jsdelivr.net'],
+            // 🎯 MODIFIED: Added wss:/ws: for Socket.IO
+            connectSrc: ["'self'",'wss:','ws:','https://*.onrender.com','https://unpkg.com','https://*.googleapis.com','https://*.leafletjs.com','https://cdn.jsdelivr.net'],
             fontSrc: ["'self'",'https:','data:','https://fonts.gstatic.com'],
             scriptSrcAttr: ["'unsafe-inline'"],
             objectSrc: ["'none'"], frameSrc: ["'none'"],
@@ -519,7 +530,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '11.0.0',
+            version: '11.1.0',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -1182,24 +1193,28 @@ function formatMaintenance(log) {
     app.get('/api/injection-check', (req, res) => {
         res.json({
             success: true,
-            version: '11.0.0',
+            version: '11.1.0',
             hasInjectionMiddleware: true,
             hasPrintHeader: typeof PRINT_HEADER_SCRIPT === 'string',
             hasHideBlueBoxes: typeof HIDE_BLUE_BOXES_SCRIPT === 'string',
             hasAutoGPS: typeof AUTO_GPS_SCRIPT === 'string',
             printOrientationBar: 'REMOVED',
             gpsMode: 'silent-auto',
+            ticketRoutes: !!ticketRoutesModule,
+            socketIO: !!io,
             timestamp: new Date().toISOString()
         });
     });
 
     app.get('/api/health', (req, res) => {
         res.json({
-            success: true, status: 'online', service: 'Marine System', version: '11.0.0',
+            success: true, status: 'online', service: 'Marine System', version: '11.1.0',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
+            socketIO: !!io ? 'enabled' : 'disabled',
+            ticketModule: !!ticketRoutesModule ? 'loaded' : 'fallback',
             email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) ? 'mailjet'
                 : (process.env.EMAIL_HOST ? 'smtp' : 'not-configured'),
             static: {
@@ -1215,6 +1230,7 @@ function formatMaintenance(log) {
                 userBadge: true,
                 ownership: true,
                 vehicles: true,
+                screenShare: !!io,
                 injectionCheck: '/api/injection-check'
             },
             models: { User: !!User, Vessel: !!Vessel, Vehicle: !!Vehicle,
@@ -1681,49 +1697,72 @@ function formatMaintenance(log) {
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
 
-    // ============ TICKETS ============
-    app.get('/api/support/tickets', authenticateAccessToken, async (req, res) => {
-        try {
-            let tickets;
-            if (isAdminUser(req.user))
-                tickets = await Ticket.find().sort({ createdAt: -1 }).limit(200);
-            else
-                tickets = await Ticket.find({ createdByName: req.user.name }).sort({ createdAt: -1 }).limit(100);
-            res.json(tickets.map(t => ({
-                id: t._id.toString(), title: t.title, subject: t.title,
-                description: t.description, message: t.description,
-                category: t.category, priority: t.priority, status: t.status,
-                user: t.createdByName || 'مستخدم', username: t.createdByName || 'user',
-                userId: t.createdBy?.toString() || null,
-                assignedTo: t.assignedToName || null,
-                replies: t.replies || [], createdAt: t.createdAt,
-                closedAt: t.closedAt, resolution: t.resolution
-            })));
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
-    });
-    app.post('/api/support/tickets', authenticateAccessToken, csrfProtection, async (req, res) => {
-        try {
-            const subject = validateString(req.body.subject || req.body.title, { required: true, max: 200 });
-            const message = validateString(req.body.message || req.body.description, { required: true, max: 5000 });
-            if (!subject) return res.status(400).json({ success: false, error: 'الموضوع مطلوب' });
-            if (!message) return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
-            const { priority, category } = req.body;
-            const pr = ['منخفضة','متوسطة','عالية','عاجلة','منخفض','متوسط','عالي','حرج'].includes(priority) ? priority : 'متوسط';
-            const ct = ['فني','لوجستي','إداري','تشغيلي','أمني','أخرى'].includes(category) ? category : 'فني';
-            let cid;
-            try { cid = mongoose.Types.ObjectId.isValid(req.user._id) ? req.user._id : new mongoose.Types.ObjectId(); }
-            catch(e) { cid = new mongoose.Types.ObjectId(); }
-            const t = await Ticket.create({
-                title: subject, description: message, category: ct, priority: pr,
-                status: 'مفتوح', createdBy: cid, createdByName: req.user.name || req.user.username
-            });
-            res.status(201).json({ success: true, message: 'تم الإرسال',
-                ticket: { id: t._id.toString(), title: t.title, subject: t.title,
+    // ============ TICKETS (LEGACY — Fallback if routes/ticket.js missing) ============
+    if (!ticketRoutesModule) {
+        console.log('ℹ️ Using legacy inline ticket routes (routes/ticket.js not found)');
+        app.get('/api/support/tickets', authenticateAccessToken, async (req, res) => {
+            try {
+                let tickets;
+                if (isAdminUser(req.user))
+                    tickets = await Ticket.find().sort({ createdAt: -1 }).limit(200);
+                else
+                    tickets = await Ticket.find({ createdByName: req.user.name }).sort({ createdAt: -1 }).limit(100);
+                res.json(tickets.map(t => ({
+                    id: t._id.toString(), title: t.title, subject: t.title,
                     description: t.description, message: t.description,
                     category: t.category, priority: t.priority, status: t.status,
-                    user: t.createdByName, createdAt: t.createdAt } });
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
-    });
+                    user: t.createdByName || 'مستخدم', username: t.createdByName || 'user',
+                    userId: t.createdBy?.toString() || null,
+                    assignedTo: t.assignedToName || null,
+                    replies: t.replies || [], createdAt: t.createdAt,
+                    closedAt: t.closedAt, resolution: t.resolution
+                })));
+            } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+        });
+        app.post('/api/support/tickets', authenticateAccessToken, csrfProtection, async (req, res) => {
+            try {
+                const subject = validateString(req.body.subject || req.body.title, { required: true, max: 200 });
+                const message = validateString(req.body.message || req.body.description, { required: true, max: 5000 });
+                if (!subject) return res.status(400).json({ success: false, error: 'الموضوع مطلوب' });
+                if (!message) return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
+                const { priority, category } = req.body;
+                const pr = ['منخفضة','متوسطة','عالية','عاجلة','منخفض','متوسط','عالي','حرج'].includes(priority) ? priority : 'متوسط';
+                const ct = ['فني','لوجستي','إداري','تشغيلي','أمني','أخرى'].includes(category) ? category : 'فني';
+                let cid;
+                try { cid = mongoose.Types.ObjectId.isValid(req.user._id) ? req.user._id : new mongoose.Types.ObjectId(); }
+                catch(e) { cid = new mongoose.Types.ObjectId(); }
+                const t = await Ticket.create({
+                    title: subject, description: message, category: ct, priority: pr,
+                    status: 'مفتوح', createdBy: cid, createdByName: req.user.name || req.user.username
+                });
+                res.status(201).json({ success: true, message: 'تم الإرسال',
+                    ticket: { id: t._id.toString(), title: t.title, subject: t.title,
+                        description: t.description, message: t.description,
+                        category: t.category, priority: t.priority, status: t.status,
+                        user: t.createdByName, createdAt: t.createdAt } });
+            } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+        });
+    } else {
+        // 🎯 NEW: Use modular ticket routes
+        try {
+            ticketRoutesModule(app, {
+                Ticket,
+                User,
+                authenticateAccessToken,
+                csrfProtection,
+                randomId,
+                addSystemLog,
+                notify,
+                isAdminUser,
+                validateString,
+                normalizeRole,
+                buildIdQuery
+            });
+            console.log('✅ Ticket routes module registered');
+        } catch (e) {
+            console.error('❌ Ticket routes module error:', e.message);
+        }
+    }
 
     // ============ VESSELS ============
     app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
@@ -2259,6 +2298,354 @@ function formatMaintenance(log) {
     }
 
     // ============================================================
+    // 🎥 SOCKET.IO — SCREEN SHARE SIGNALING (SAFE FALLBACK)
+    // ============================================================
+    let httpServer = null;
+    let io = null;
+    const onlineUsers = new Map();
+    const screenSessions = new Map();
+
+    try {
+        const http = require('http');
+        const socketIO = require('socket.io');
+
+        httpServer = http.createServer(app);
+
+        io = socketIO(httpServer, {
+            cors: {
+                origin: allowedOrigins,
+                credentials: true,
+                methods: ['GET', 'POST']
+            },
+            path: '/socket.io',
+            transports: ['websocket', 'polling'],
+            pingTimeout: 60000,
+            pingInterval: 25000,
+            maxHttpBufferSize: 1e6
+        });
+
+        io.on('connection', (socket) => {
+            console.log('🔌 Socket connected:', socket.id);
+
+            socket.on('register', async ({ userId, role, name, username, token }) => {
+                try {
+                    if (!token || !userId) {
+                        socket.emit('error', { message: 'بيانات ناقصة' });
+                        return socket.disconnect(true);
+                    }
+
+                    const decoded = jwt.verify(token, JWT_SECRET, {
+                        issuer: 'marine-system',
+                        audience: 'marine-system-client'
+                    });
+
+                    if (decoded.type !== 'access' || decoded.sub !== userId) {
+                        socket.emit('error', { message: 'توكن غير صالح' });
+                        return socket.disconnect(true);
+                    }
+
+                    const revoked = await isAccessTokenRevoked(decoded.jti);
+                    if (revoked) {
+                        socket.emit('error', { message: 'التوكن ملغى' });
+                        return socket.disconnect(true);
+                    }
+
+                    const user = await User.findOne({ id: decoded.sub });
+                    if (!user || !user.isActive) {
+                        socket.emit('error', { message: 'المستخدم غير نشط' });
+                        return socket.disconnect(true);
+                    }
+
+                    if (typeof decoded.ver === 'number' && decoded.ver !== (user.tokenVersion || 0)) {
+                        socket.emit('error', { message: 'جلسة منتهية' });
+                        return socket.disconnect(true);
+                    }
+
+                    socket.userId = userId;
+                    socket.userRole = normalizeRole(user.role);
+                    socket.userName = user.name || user.username;
+                    socket.userUsername = user.username;
+
+                    onlineUsers.set(userId, {
+                        socketId: socket.id,
+                        role: socket.userRole,
+                        name: socket.userName,
+                        username: socket.userUsername
+                    });
+
+                    socket.emit('registered', { success: true, userId });
+                    io.emit('users:online-count', { count: onlineUsers.size });
+                    console.log(`✅ Socket registered: ${user.username} (${socket.userRole})`);
+
+                } catch (err) {
+                    console.error('❌ Socket register error:', err.message);
+                    socket.emit('error', { message: 'فشل التحقق' });
+                    socket.disconnect(true);
+                }
+            });
+
+            socket.on('screen:request', async (data, callback) => {
+                try {
+                    const cb = typeof callback === 'function' ? callback : () => {};
+                    const { targetUserId, ticketId, reason } = data || {};
+
+                    if (socket.userRole !== 'admin') {
+                        return cb({ success: false, error: 'للمسؤول فقط' });
+                    }
+                    if (!targetUserId || !ticketId) {
+                        return cb({ success: false, error: 'بيانات ناقصة' });
+                    }
+
+                    const q = buildIdQuery(ticketId);
+                    if (!q) return cb({ success: false, error: 'معرّف غير صالح' });
+
+                    const ticket = await Ticket.findOne(q);
+                    if (!ticket) return cb({ success: false, error: 'التذكرة غير موجودة' });
+
+                    const sessionId = randomId(16);
+
+                    ticket.screenShareSessions = ticket.screenShareSessions || [];
+                    ticket.screenShareSessions.push({
+                        sessionId,
+                        requestedBy: mongoose.Types.ObjectId.isValid(socket.userId)
+                            ? socket.userId : null,
+                        requestedByName: String(socket.userName || '').substring(0, 200),
+                        requestedByUsername: String(socket.userUsername || '').substring(0, 100),
+                        reason: String(reason || '').substring(0, 500),
+                        status: 'معلّق',
+                        requestedAt: new Date(),
+                        ipAddress: String(socket.handshake.address || '').substring(0, 100),
+                        userAgent: String(socket.handshake.headers['user-agent'] || '').substring(0, 500)
+                    });
+                    await ticket.save();
+
+                    screenSessions.set(sessionId, {
+                        sessionId,
+                        ticketId,
+                        requesterId: socket.userId,
+                        requesterSocketId: socket.id,
+                        targetUserId,
+                        status: 'pending',
+                        createdAt: Date.now()
+                    });
+
+                    const target = onlineUsers.get(targetUserId);
+                    if (target) {
+                        io.to(target.socketId).emit('screen:incoming', {
+                            sessionId,
+                            ticketId,
+                            requestedByName: socket.userName,
+                            reason: String(reason || '').substring(0, 500),
+                            requesterSocketId: socket.id,
+                            timestamp: new Date().toISOString()
+                        });
+                        cb({ success: true, sessionId });
+                        console.log(`📺 Screen request: ${socket.userUsername} → ${target.username}`);
+                    } else {
+                        cb({ success: false, error: 'المستخدم غير متصل حالياً' });
+                    }
+                } catch (err) {
+                    console.error('❌ screen:request:', err.message);
+                    if (typeof callback === 'function') {
+                        callback({ success: false, error: 'خطأ في الخادم' });
+                    }
+                }
+            });
+
+            socket.on('screen:accept', async ({ sessionId }, callback) => {
+                try {
+                    const cb = typeof callback === 'function' ? callback : () => {};
+                    const session = screenSessions.get(sessionId);
+
+                    if (!session || session.targetUserId !== socket.userId) {
+                        return cb({ success: false, error: 'جلسة غير صالحة' });
+                    }
+
+                    session.status = 'accepted';
+                    session.acceptedAt = Date.now();
+                    session.userSocketId = socket.id;
+
+                    const q = buildIdQuery(session.ticketId);
+                    if (q) {
+                        const ticket = await Ticket.findOne(q);
+                        if (ticket) {
+                            const s = (ticket.screenShareSessions || [])
+                                .find(x => x.sessionId === sessionId);
+                            if (s) {
+                                s.status = 'مقبول';
+                                s.respondedAt = new Date();
+                                s.startedAt = new Date();
+                                await ticket.save();
+                            }
+                        }
+                    }
+
+                    io.to(session.requesterSocketId).emit('screen:accepted', {
+                        sessionId,
+                        userSocketId: socket.id,
+                        userName: socket.userName
+                    });
+
+                    cb({ success: true });
+                    console.log(`✅ Screen accepted: ${socket.userUsername}`);
+                } catch (err) {
+                    console.error('❌ screen:accept:', err.message);
+                    if (typeof callback === 'function') {
+                        callback({ success: false, error: 'خطأ' });
+                    }
+                }
+            });
+
+            socket.on('screen:reject', async ({ sessionId, reason }, callback) => {
+                try {
+                    const cb = typeof callback === 'function' ? callback : () => {};
+                    const session = screenSessions.get(sessionId);
+
+                    if (!session || session.targetUserId !== socket.userId) {
+                        return cb({ success: false, error: 'جلسة غير صالحة' });
+                    }
+
+                    session.status = 'rejected';
+
+                    const q = buildIdQuery(session.ticketId);
+                    if (q) {
+                        const ticket = await Ticket.findOne(q);
+                        if (ticket) {
+                            const s = (ticket.screenShareSessions || [])
+                                .find(x => x.sessionId === sessionId);
+                            if (s) {
+                                s.status = 'مرفوض';
+                                s.respondedAt = new Date();
+                                s.rejectionReason = String(reason || '').substring(0, 500);
+                                await ticket.save();
+                            }
+                        }
+                    }
+
+                    io.to(session.requesterSocketId).emit('screen:rejected', {
+                        sessionId,
+                        reason: String(reason || 'بدون سبب').substring(0, 500)
+                    });
+
+                    screenSessions.delete(sessionId);
+                    cb({ success: true });
+                    console.log(`❌ Screen rejected: ${socket.userUsername}`);
+                } catch (err) {
+                    console.error('❌ screen:reject:', err.message);
+                    if (typeof callback === 'function') {
+                        callback({ success: false, error: 'خطأ' });
+                    }
+                }
+            });
+
+            socket.on('screen:offer', ({ sessionId, targetSocketId, offer }) => {
+                const session = screenSessions.get(sessionId);
+                if (!session || session.status !== 'accepted') return;
+                io.to(targetSocketId).emit('screen:offer', {
+                    sessionId, offer, fromSocketId: socket.id
+                });
+            });
+
+            socket.on('screen:answer', ({ sessionId, targetSocketId, answer }) => {
+                const session = screenSessions.get(sessionId);
+                if (!session || session.status !== 'accepted') return;
+                io.to(targetSocketId).emit('screen:answer', {
+                    sessionId, answer, fromSocketId: socket.id
+                });
+            });
+
+            socket.on('screen:ice-candidate', ({ sessionId, targetSocketId, candidate }) => {
+                const session = screenSessions.get(sessionId);
+                if (!session || session.status !== 'accepted') return;
+                io.to(targetSocketId).emit('screen:ice-candidate', {
+                    sessionId, candidate, fromSocketId: socket.id
+                });
+            });
+
+            socket.on('screen:end', async ({ sessionId }, callback) => {
+                try {
+                    const cb = typeof callback === 'function' ? callback : () => {};
+                    const session = screenSessions.get(sessionId);
+                    if (!session) return cb({ success: true });
+
+                    const q = buildIdQuery(session.ticketId);
+                    if (q) {
+                        const ticket = await Ticket.findOne(q);
+                        if (ticket) {
+                            const s = (ticket.screenShareSessions || [])
+                                .find(x => x.sessionId === sessionId);
+                            if (s) {
+                                s.status = 'منتهي';
+                                s.endedAt = new Date();
+                                if (s.startedAt) {
+                                    s.duration = Math.round(
+                                        (s.endedAt.getTime() - new Date(s.startedAt).getTime()) / 1000
+                                    );
+                                }
+                                await ticket.save();
+                            }
+                        }
+                    }
+
+                    const other = session.requesterId === socket.userId
+                        ? onlineUsers.get(session.targetUserId)
+                        : { socketId: session.requesterSocketId };
+
+                    if (other && other.socketId) {
+                        io.to(other.socketId).emit('screen:ended', { sessionId });
+                    }
+
+                    screenSessions.delete(sessionId);
+                    cb({ success: true });
+                } catch (err) {
+                    console.error('❌ screen:end:', err.message);
+                    if (typeof callback === 'function') {
+                        callback({ success: false, error: 'خطأ' });
+                    }
+                }
+            });
+
+            socket.on('disconnect', () => {
+                if (socket.userId) {
+                    onlineUsers.delete(socket.userId);
+                    io.emit('users:online-count', { count: onlineUsers.size });
+                    console.log('❌ Socket disconnected:', socket.userUsername);
+
+                    for (const [sessionId, session] of screenSessions) {
+                        if (session.requesterId === socket.userId) {
+                            const target = onlineUsers.get(session.targetUserId);
+                            if (target) io.to(target.socketId).emit('screen:ended', { sessionId });
+                        } else if (session.targetUserId === socket.userId) {
+                            io.to(session.requesterSocketId).emit('screen:ended', { sessionId });
+                        }
+                    }
+                }
+            });
+        });
+
+        // نقطة نهاية عدد المتصلين
+        app.get('/api/online-users',
+            authenticateAccessToken,
+            requirePermission('monitoring:view'),
+            (req, res) => {
+                const users = Array.from(onlineUsers.entries()).map(([id, info]) => ({
+                    userId: id,
+                    username: info.username,
+                    name: info.name,
+                    role: info.role
+                }));
+                res.json({ success: true, count: users.length, users });
+            }
+        );
+
+        console.log('✅ Socket.IO ready for screen share');
+    } catch (e) {
+        console.warn('⚠️ Socket.IO disabled:', e.message);
+        httpServer = null;
+        io = null;
+    }
+
+    // ============================================================
     // 📄 HTML INJECTION SYSTEM
     // ============================================================
 
@@ -2270,7 +2657,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v11.0.0 - Aman Allah Naji">
+<meta name="generator" content="Marine System v11.1.0 - Aman Allah Naji">
 `;
     const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
@@ -2344,13 +2731,9 @@ else updateBadge();
 setInterval(updateBadge,1500);
 })();<\/script>`;
 
-    // ═══════════════════════════════════════════════════════════
-    // 📍 AUTO GPS — يطلب الموقع تلقائياً بدون نافذة
-    // ═══════════════════════════════════════════════════════════
     const AUTO_GPS_SCRIPT = `
 <script>(function(){
     'use strict';
-
     var INTERVAL = 30000;
     var lastSent = 0;
     var watchId = null;
@@ -2358,7 +2741,6 @@ setInterval(updateBadge,1500);
     var lastVerify = 0;
     var asking = false;
     var promptShown = false;
-
     function getToken() {
         try {
             return localStorage.getItem('marine_auth_token')
@@ -2367,14 +2749,12 @@ setInterval(updateBadge,1500);
                 || '';
         } catch(e) { return ''; }
     }
-
     function getCsrf() {
         try {
             var m = document.cookie.match(/marine_csrf=([^;]+)/);
             return m ? decodeURIComponent(m[1]) : '';
         } catch(e) { return ''; }
     }
-
     function verifyLogin(cb) {
         var t = getToken();
         if (!t) { cb(false); return; }
@@ -2386,19 +2766,12 @@ setInterval(updateBadge,1500);
         x.withCredentials = true;
         x.onreadystatechange = function() {
             if (x.readyState !== 4) return;
-            if (x.status === 200) {
-                verified = true;
-                lastVerify = Date.now();
-                cb(true);
-            } else {
-                verified = false;
-                cb(false);
-            }
+            if (x.status === 200) { verified = true; lastVerify = Date.now(); cb(true); }
+            else { verified = false; cb(false); }
         };
         x.onerror = function() { cb(false); };
         x.send();
     }
-
     function postLoc(coords) {
         var t = getToken();
         var c = getCsrf();
@@ -2416,16 +2789,10 @@ setInterval(updateBadge,1500);
                 accuracy: coords.accuracy || null
             })
         }).then(function(r) {
-            if (r.ok) {
-                lastSent = Date.now();
-                return { ok: true };
-            }
+            if (r.ok) { lastSent = Date.now(); return { ok: true }; }
             return { ok: false, status: r.status };
-        }).catch(function(e) {
-            return { ok: false, status: 0, error: e.message };
-        });
+        }).catch(function(e) { return { ok: false, status: 0, error: e.message }; });
     }
-
     function startWatch() {
         if (watchId !== null || !navigator.geolocation) return;
         try {
@@ -2440,16 +2807,12 @@ setInterval(updateBadge,1500);
             );
         } catch(e) {}
     }
-
     function requestLocation() {
         if (asking) return;
         asking = true;
-
         if (!navigator.geolocation) { asking = false; return; }
-
         verifyLogin(function(ok) {
             if (!ok) { asking = false; return; }
-
             navigator.geolocation.getCurrentPosition(
                 function(p) {
                     postLoc(p.coords).then(function(r) {
@@ -2463,22 +2826,16 @@ setInterval(updateBadge,1500);
                 },
                 function(err) {
                     asking = false;
-                    if (err.code === 1) {
-                        if (!promptShown) {
-                            promptShown = true;
-                            console.warn('%c📍 ⚠️ يجب السماح بالوصول إلى الموقع لعمل المنظومة',
-                                'background: #ef4444; color: white; padding: 6px 12px; font-size: 14px; font-weight: bold;');
-                            setTimeout(function() {
-                                alert('⚠️ للعمل بشكل صحيح، يُرجى السماح بالوصول إلى موقعك من إعدادات المتصفح (أيقونة القفل بجانب العنوان).');
-                            }, 500);
-                        }
+                    if (err.code === 1 && !promptShown) {
+                        promptShown = true;
+                        console.warn('%c📍 ⚠️ يجب السماح بالوصول إلى الموقع',
+                            'background: #ef4444; color: white; padding: 6px 12px; font-size: 14px; font-weight: bold;');
                     }
                 },
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
             );
         });
     }
-
     function startPeriodicSend() {
         setInterval(function() {
             if (watchId === null) return;
@@ -2491,22 +2848,17 @@ setInterval(updateBadge,1500);
             );
         }, INTERVAL);
     }
-
     function init() {
         setTimeout(requestLocation, 800);
-
         setInterval(function() {
             if (!verified) return;
             if (lastSent > 0) return;
             requestLocation();
         }, 5000);
-
         startPeriodicSend();
-
         console.log('%c📍 Auto GPS ready (silent mode)',
             'background: #60a5fa; color: white; padding: 3px 6px;');
     }
-
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
@@ -2636,7 +2988,8 @@ setInterval(updateBadge,1500);
             'page-logs': 'سجل الصيانة',
             'page-notes': 'المذكرات',
             'page-users': 'إدارة المستخدمين',
-            'page-monitoring': 'المراقبة'
+            'page-monitoring': 'المراقبة',
+            'page-support': 'مركز الدعم الفني'
         };
         titleEl.textContent = titles[pageId] || document.title || 'منظومة الوسائل البحرية';
     }
@@ -2725,21 +3078,12 @@ setInterval(updateBadge,1500);
                     el.style.setProperty('opacity', '0', 'important');
                     el.style.setProperty('overflow', 'hidden', 'important');
                     hiddenCount++;
-                    hiddenElements.push({
-                        tag: el.tagName,
-                        cls: el.className || '',
-                        id: el.id || '',
-                        size: Math.round(r.width) + 'x' + Math.round(r.height)
-                    });
                 }
             }
             
             if (hiddenCount > 0) {
                 console.log('%c🚫 تم إخفاء ' + hiddenCount + ' عنصر قبل الطباعة',
                     'background: red; color: white; padding: 4px 8px; font-weight: bold;');
-                hiddenElements.forEach(function(h) {
-                    console.log('   →', h.tag, '| class:', h.cls, '| id:', h.id, '|', h.size);
-                });
             }
         } catch(e) {}
     }
@@ -2758,13 +3102,8 @@ setInterval(updateBadge,1500);
         } catch(e) {}
     }
     
-    window.addEventListener('beforeprint', function() {
-        hideBigBlueBoxes();
-    });
-    
-    window.addEventListener('afterprint', function() {
-        restoreHidden();
-    });
+    window.addEventListener('beforeprint', function() { hideBigBlueBoxes(); });
+    window.addEventListener('afterprint', function() { restoreHidden(); });
     
     if (window.matchMedia) {
         var mql = window.matchMedia('print');
@@ -2782,34 +3121,27 @@ setInterval(updateBadge,1500);
     function injectAll(html) {
         if (typeof html !== 'string' || !html.includes('</body>')) return html;
         
-        // ✅ OWNERSHIP
         if (!html.includes('ownership-signature-style')) {
             if (html.includes('</head>')) html = html.replace('</head>', OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + '\n</head>');
             else html = OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + html;
             html = html.replace('</body>', OWNERSHIP_HTML + '\n</body>');
         }
         
-        // ✅ USER BADGE
         if (!html.includes('user-info-badge-style')) {
             if (html.includes('</head>')) html = html.replace('</head>', USER_BADGE_CSS + '\n</head>');
             if (/<body[^>]*>/i.test(html)) html = html.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
             html = html.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
         }
         
-        // ✅ AUTO GPS (silent — لا نافذة)
         if (!html.includes('AUTO_GPS_INJECTED')) {
             html = html.replace('</body>', '<!-- AUTO_GPS_INJECTED -->\n' + AUTO_GPS_SCRIPT + '\n</body>');
         }
         
-        // ✅ PRINT HEADER
         if (!html.includes('official-print-header-style')) {
-            if (html.includes('</head>')) {
-                html = html.replace('</head>', PRINT_HEADER_CSS + '\n</head>');
-            }
+            if (html.includes('</head>')) html = html.replace('</head>', PRINT_HEADER_CSS + '\n</head>');
             html = html.replace('</body>', PRINT_HEADER_SCRIPT + '\n</body>');
         }
         
-        // ✅ HIDE BLUE BOXES
         if (!html.includes('HIDE_BLUE_BOXES_INJECTED')) {
             html = html.replace('</body>', '<!-- HIDE_BLUE_BOXES_INJECTED -->\n' + HIDE_BLUE_BOXES_SCRIPT + '\n</body>');
         }
@@ -2882,7 +3214,7 @@ setInterval(updateBadge,1500);
             path.join(publicPagesDir, 'index.html')
         ];
         for (const p of possible) if (fs.existsSync(p)) return res.sendFile(p);
-        res.send('<h1>🚢 Marine System v11.0.0</h1><p>Running</p>');
+        res.send('<h1>🚢 Marine System v11.1.0</h1><p>Running</p>');
     });
 
     app.get('/:page', (req, res, next) => {
@@ -2908,9 +3240,10 @@ setInterval(updateBadge,1500);
     });
 
     // ============ LISTEN ============
-    const server = app.listen(PORT, '0.0.0.0', () => {
+    // 🎯 MODIFIED: Use httpServer if Socket.IO initialized, else app
+    const server = (httpServer || app).listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v11.0.0');
+        console.log('🚢 MARINE SYSTEM v11.1.0');
         console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
         console.log('🛡️  Security hardening: ENABLED');
         console.log('🍃 MongoDB Atlas');
@@ -2922,6 +3255,8 @@ setInterval(updateBadge,1500);
         console.log('🏛️  Print Header Injection: ENABLED');
         console.log('🚨 Hide Blue Boxes: ENABLED');
         console.log('✂️  Print Orientation Bar: REMOVED');
+        console.log('🎫 Ticket Module: ' + (ticketRoutesModule ? 'LOADED' : 'FALLBACK'));
+        console.log('🎥 Socket.IO Screen Share: ' + (io ? 'ENABLED' : 'DISABLED'));
         console.log('=========================================');
         console.log(`📍 Port: ${PORT}`);
         console.log(`🌍 Env: ${process.env.NODE_ENV || 'development'}`);
@@ -2940,6 +3275,12 @@ setInterval(updateBadge,1500);
     // ============ GRACEFUL SHUTDOWN ============
     async function shutdown(signal) {
         console.log(`\n⚠️ ${signal} received — shutting down...`);
+        try {
+            if (io) {
+                io.close();
+                console.log('✅ Socket.IO closed');
+            }
+        } catch (e) {}
         server.close(async () => {
             try { if (mongoose.connection.readyState === 1) await mongoose.connection.close(); } catch (e) {}
             try { if (redisClient && redisClient.isOpen) await redisClient.quit(); } catch (e) {}
