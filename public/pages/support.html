@@ -2,9 +2,8 @@
 <div id="page-support">
     <style>
         /* ============================================================
-           🛟 SUPPORT PAGE - PROFESSIONAL v11.0
-           ✅ CSRF Token + Users List + Modal + Filters
-           ✅ Screen Share Request System
+           🛟 SUPPORT PAGE - PROFESSIONAL v12.0
+           ✅ Refresh Button + Admin Edit/Delete + Screen Share
            ============================================================ */
 
         #page-support {
@@ -49,7 +48,6 @@
             margin: 0 auto;
         }
 
-        /* ===== HEADER ===== */
         .support-header {
             background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(74,222,128,0.05));
             border-radius: 20px;
@@ -135,7 +133,6 @@
             text-decoration: none;
         }
 
-        /* ===== LIVE INDICATOR ===== */
         .live-status-bar {
             display: flex;
             align-items: center;
@@ -162,7 +159,44 @@
             50% { opacity: 0.4; }
         }
 
-        /* ===== STATS ===== */
+        .btn-refresh {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(96,165,250,0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(96,165,250,0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+
+        .btn-refresh:hover:not(:disabled) {
+            background: rgba(96,165,250,0.25);
+            border-color: rgba(96,165,250,0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-refresh:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-refresh .spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -185,23 +219,13 @@
             transform: translateY(-2px);
         }
 
-        .stat-item .number {
-            font-size: 24px; font-weight: bold;
-        }
-
-        .stat-item .label {
-            font-size: 11px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 2px;
-        }
-
+        .stat-item .number { font-size: 24px; font-weight: bold; }
+        .stat-item .label { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
         .stat-item.total .number { color: #60a5fa; }
         .stat-item.open .number { color: #fbbf24; }
         .stat-item.progress .number { color: #06b6d4; }
         .stat-item.closed .number { color: #4ade80; }
-        .stat-item.screenshare .number { color: #a78bfa; }
 
-        /* ===== GRID ===== */
         .support-grid {
             display: grid;
             grid-template-columns: 1.3fr 0.7fr;
@@ -216,9 +240,7 @@
             transition: all 0.3s;
         }
 
-        .support-card:hover {
-            border-color: rgba(255,255,255,0.08);
-        }
+        .support-card:hover { border-color: rgba(255,255,255,0.08); }
 
         .support-card .card-header {
             display: flex;
@@ -243,7 +265,12 @@
             color: rgba(255,255,255,0.3);
         }
 
-        /* ===== FILTERS ===== */
+        .card-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .tickets-filters {
             display: flex;
             gap: 8px;
@@ -271,11 +298,8 @@
             background: rgba(255,255,255,0.05);
         }
 
-        .tickets-filters select option {
-            background: #1a1a2e;
-        }
+        .tickets-filters select option { background: #1a1a2e; }
 
-        /* ===== TICKETS ===== */
         .ticket-item {
             background: rgba(255,255,255,0.02);
             padding: 14px 16px;
@@ -351,20 +375,9 @@
             white-space: nowrap;
         }
 
-        .ticket-status.open {
-            background: rgba(251,191,36,0.15);
-            color: #fbbf24;
-        }
-
-        .ticket-status.progress {
-            background: rgba(6,182,212,0.15);
-            color: #06b6d4;
-        }
-
-        .ticket-status.closed {
-            background: rgba(74,222,128,0.15);
-            color: #4ade80;
-        }
+        .ticket-status.open { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .ticket-status.progress { background: rgba(6,182,212,0.15); color: #06b6d4; }
+        .ticket-status.closed { background: rgba(74,222,128,0.15); color: #4ade80; }
 
         .ticket-priority {
             font-size: 10px;
@@ -391,10 +404,7 @@
             opacity: 0.3;
         }
 
-        /* ===== FORM ===== */
-        .support-form .form-group {
-            margin-bottom: 14px;
-        }
+        .support-form .form-group { margin-bottom: 14px; }
 
         .support-form .form-group label {
             display: block;
@@ -427,14 +437,8 @@
             box-shadow: 0 0 20px rgba(96,165,250,0.05);
         }
 
-        .support-form .form-group textarea {
-            resize: vertical;
-            min-height: 90px;
-        }
-
-        .support-form .form-group select option {
-            background: #1a1a2e;
-        }
+        .support-form .form-group textarea { resize: vertical; min-height: 90px; }
+        .support-form .form-group select option { background: #1a1a2e; }
 
         .support-form .user-selector {
             display: flex;
@@ -455,9 +459,7 @@
             gap: 6px;
         }
 
-        .support-form .user-selector select {
-            flex: 1;
-        }
+        .support-form .user-selector select { flex: 1; }
 
         .support-form .btn-submit {
             padding: 12px;
@@ -482,12 +484,8 @@
             box-shadow: 0 8px 30px rgba(96,165,250,0.2);
         }
 
-        .support-form .btn-submit:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .support-form .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* ===== MODAL ===== */
         .ticket-modal {
             position: fixed;
             inset: 0;
@@ -500,15 +498,13 @@
             padding: 20px;
         }
 
-        .ticket-modal.active {
-            display: flex;
-        }
+        .ticket-modal.active { display: flex; }
 
         .ticket-modal .modal-content {
             background: linear-gradient(135deg, #1a1f2e, #0f1420);
             border-radius: 16px;
             padding: 24px;
-            max-width: 600px;
+            max-width: 620px;
             width: 100%;
             max-height: 85vh;
             overflow-y: auto;
@@ -563,9 +559,7 @@
             color: rgba(255,255,255,0.75);
         }
 
-        .ticket-modal .modal-body .field {
-            margin-bottom: 14px;
-        }
+        .ticket-modal .modal-body .field { margin-bottom: 14px; }
 
         .ticket-modal .modal-body .field-label {
             font-size: 11px;
@@ -581,9 +575,71 @@
             word-break: break-word;
         }
 
-        /* ===== SCREEN SHARE CONTROLS ===== */
-        .screen-share-controls {
+        .admin-controls {
             margin-top: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(248,113,113,0.05));
+            border-radius: 12px;
+            border: 1px solid rgba(251,191,36,0.2);
+        }
+
+        .admin-controls h5 {
+            margin: 0 0 12px 0;
+            color: #fbbf24;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-btn-group { display: flex; gap: 8px; }
+
+        .btn-admin-edit,
+        .btn-admin-delete {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-admin-edit {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #0a0e1a;
+        }
+
+        .btn-admin-edit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(251,191,36,0.3);
+        }
+
+        .btn-admin-delete {
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+
+        .btn-admin-delete:hover:not(:disabled) {
+            background: rgba(239,68,68,0.25);
+            transform: translateY(-2px);
+        }
+
+        .btn-admin-edit:disabled,
+        .btn-admin-delete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .screen-share-controls {
+            margin-top: 16px;
             padding: 16px;
             background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(96,165,250,0.05));
             border-radius: 12px;
@@ -639,12 +695,80 @@
             box-shadow: 0 8px 32px rgba(139,92,246,0.3);
         }
 
-        .btn-request-screen:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .btn-request-screen:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .edit-form .field { margin-bottom: 14px; }
+
+        .edit-form input,
+        .edit-form textarea,
+        .edit-form select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
         }
 
-        /* ===== SCREEN REQUEST POPUP (User) ===== */
+        .edit-form input:focus,
+        .edit-form textarea:focus,
+        .edit-form select:focus {
+            outline: none;
+            border-color: rgba(96,165,250,0.5);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .edit-form textarea { min-height: 120px; resize: vertical; }
+        .edit-form select option { background: #1a1a2e; }
+
+        .edit-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-save-edit {
+            flex: 1;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.25s;
+        }
+
+        .btn-save-edit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(74,222,128,0.3);
+        }
+
+        .btn-save-edit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-cancel-edit {
+            flex: 1;
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.3);
+            padding: 12px;
+            border-radius: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.25s;
+        }
+
+        .btn-cancel-edit:hover {
+            background: rgba(239,68,68,0.25);
+            transform: translateY(-2px);
+        }
+
         .screen-popup {
             position: fixed;
             inset: 0;
@@ -657,9 +781,7 @@
             padding: 20px;
         }
 
-        .screen-popup.active {
-            display: flex;
-        }
+        .screen-popup.active { display: flex; }
 
         .screen-popup-content {
             background: linear-gradient(135deg, #1a1f2e, #0f1420);
@@ -684,17 +806,8 @@
             50% { transform: scale(1.15); }
         }
 
-        .screen-popup h3 {
-            color: #a78bfa;
-            margin: 10px 0;
-            font-size: 20px;
-        }
-
-        .screen-popup p {
-            color: rgba(255,255,255,0.75);
-            margin: 10px 0;
-            font-size: 14px;
-        }
+        .screen-popup h3 { color: #a78bfa; margin: 10px 0; font-size: 20px; }
+        .screen-popup p { color: rgba(255,255,255,0.75); margin: 10px 0; font-size: 14px; }
 
         .screen-popup-reason {
             background: rgba(255,255,255,0.05);
@@ -707,11 +820,7 @@
             border-right: 3px solid #8b5cf6;
         }
 
-        .screen-popup-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
+        .screen-popup-actions { display: flex; gap: 10px; margin-top: 20px; }
 
         .btn-accept-screen, .btn-reject-screen {
             flex: 1;
@@ -725,16 +834,8 @@
             transition: all 0.3s;
         }
 
-        .btn-accept-screen {
-            background: linear-gradient(135deg, #4ade80, #22c55e);
-            color: white;
-        }
-
-        .btn-reject-screen {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.3);
-        }
+        .btn-accept-screen { background: linear-gradient(135deg, #4ade80, #22c55e); color: white; }
+        .btn-reject-screen { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
 
         .btn-accept-screen:hover, .btn-reject-screen:hover {
             transform: translateY(-2px);
@@ -750,7 +851,6 @@
             border: 1px solid rgba(251,191,36,0.2);
         }
 
-        /* ===== SCREEN SHARING INDICATOR (User) ===== */
         .screen-indicator {
             position: fixed;
             top: 20px;
@@ -771,9 +871,7 @@
             animation: recordPulse 1.5s ease-in-out infinite;
         }
 
-        .screen-indicator.active {
-            display: flex;
-        }
+        .screen-indicator.active { display: flex; }
 
         @keyframes recordPulse {
             0%, 100% { box-shadow: 0 8px 32px rgba(220,38,38,0.5); }
@@ -792,7 +890,6 @@
             font-size: 12px;
         }
 
-        /* ===== SCREEN VIEWER (Admin) ===== */
         .screen-viewer {
             position: fixed;
             inset: 0;
@@ -804,9 +901,7 @@
             padding: 20px;
         }
 
-        .screen-viewer.active {
-            display: flex;
-        }
+        .screen-viewer.active { display: flex; }
 
         .screen-viewer-content {
             background: #0f1420;
@@ -843,9 +938,7 @@
             justify-content: center;
         }
 
-        .screen-viewer-header button:hover {
-            background: rgba(239,68,68,0.4);
-        }
+        .screen-viewer-header button:hover { background: rgba(239,68,68,0.4); }
 
         #remoteScreen {
             width: 100%;
@@ -855,7 +948,6 @@
             display: block;
         }
 
-        /* ===== SCROLL ===== */
         .tickets-scroll {
             max-height: 500px;
             overflow-y: auto;
@@ -868,19 +960,11 @@
             border-radius: 10px;
         }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
             .support-grid { grid-template-columns: 1fr; }
-            .support-header .header-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            .support-header .title-section {
-                flex-direction: column;
-            }
-            .support-header .developer-badge {
-                width: 100%;
-            }
+            .support-header .header-content { flex-direction: column; text-align: center; }
+            .support-header .title-section { flex-direction: column; }
+            .support-header .developer-badge { width: 100%; }
         }
 
         @media (max-width: 600px) {
@@ -893,7 +977,6 @@
             .tickets-filters { flex-direction: column; }
         }
 
-        /* ===== Animations ===== */
         .fade-in {
             animation: fadeIn 0.4s ease;
         }
@@ -903,7 +986,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== Toast ===== */
         .support-toast {
             position: fixed;
             bottom: 24px;
@@ -950,7 +1032,6 @@
     </style>
 
     <div class="support-container">
-        <!-- ===== HEADER ===== -->
         <div class="support-header">
             <div class="header-content">
                 <div class="title-section">
@@ -971,7 +1052,6 @@
             </div>
         </div>
 
-        <!-- ===== LIVE STATUS ===== -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
             <div class="live-status-bar">
                 <span class="live-dot" id="connectionDot"></span>
@@ -983,7 +1063,6 @@
             </div>
         </div>
 
-        <!-- ===== STATS ===== -->
         <div class="stats-row" id="ticketStats">
             <div class="stat-item total">
                 <div class="number" id="statTotal">0</div>
@@ -1003,13 +1082,17 @@
             </div>
         </div>
 
-        <!-- ===== CONTENT ===== -->
         <div class="support-grid">
-            <!-- Tickets List -->
             <div class="support-card">
                 <div class="card-header">
                     <h4><i class="fas fa-ticket-alt" style="color:#fbbf24;"></i> تذاكر الدعم</h4>
-                    <span class="badge-count" id="ticketCount">0 تذكرة</span>
+                    <div class="card-header-actions">
+                        <span class="badge-count" id="ticketCount">0 تذكرة</span>
+                        <button type="button" class="btn-refresh" id="refreshTicketsBtn" title="تحديث القائمة">
+                            <span id="refreshIcon">🔄</span>
+                            <span>تحديث</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="tickets-filters">
                     <select id="filterStatus">
@@ -1037,7 +1120,6 @@
                 </div>
             </div>
 
-            <!-- New Ticket Form -->
             <div class="support-card">
                 <div class="card-header">
                     <h4><i class="fas fa-pen" style="color:#60a5fa;"></i> إنشاء تذكرة جديدة</h4>
@@ -1081,7 +1163,6 @@
         </div>
     </div>
 
-    <!-- ===== TICKET MODAL ===== -->
     <div class="ticket-modal" id="ticketModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1092,7 +1173,6 @@
         </div>
     </div>
 
-    <!-- ===== SCREEN REQUEST POPUP (User) ===== -->
     <div class="screen-popup" id="screenRequestPopup">
         <div class="screen-popup-content">
             <div class="screen-popup-icon">🔔</div>
@@ -1112,13 +1192,11 @@
         </div>
     </div>
 
-    <!-- ===== SCREEN SHARING INDICATOR (User) ===== -->
     <div id="screenSharingIndicator" class="screen-indicator">
         🔴 المسؤول يرى شاشتك الآن
         <button id="stopScreenBtn">⏹️ إيقاف</button>
     </div>
 
-    <!-- ===== SCREEN VIEWER (Admin) ===== -->
     <div class="screen-viewer" id="screenViewerModal">
         <div class="screen-viewer-content">
             <div class="screen-viewer-header">
@@ -1134,11 +1212,8 @@
     (function() {
         'use strict';
 
-        console.log('🛟 Support Page v11.0 - Loading...');
+        console.log('🛟 Support Page v12.0 - Loading...');
 
-        // ============================================================
-        // CLEANUP
-        // ============================================================
         var _isDestroyed = false;
         var _pageIntervals = [];
         var _pageTimeouts = [];
@@ -1157,55 +1232,31 @@
             });
             _eventListeners = [];
 
-            // ✅ نظف Socket
             try {
-                if (socket) {
-                    socket.removeAllListeners();
-                    socket.disconnect();
-                    socket = null;
-                }
+                if (socket) { socket.removeAllListeners(); socket.disconnect(); socket = null; }
             } catch(e) {}
 
-            // ✅ نظف WebRTC
             try {
                 if (localScreenStream) {
                     localScreenStream.getTracks().forEach(function(t) { t.stop(); });
                     localScreenStream = null;
                 }
-                if (screenPeerConnection) {
-                    screenPeerConnection.close();
-                    screenPeerConnection = null;
-                }
+                if (screenPeerConnection) { screenPeerConnection.close(); screenPeerConnection = null; }
             } catch(e) {}
-
-            try {
-                delete window.sendTicket;
-                delete window.loadTickets;
-                delete window.renderTickets;
-                delete window.updateStats;
-                delete window.showToast;
-                delete window.openTicketModal;
-                delete window.closeTicketModal;
-            } catch (e) {}
 
             console.log('🧹 Support cleanup done');
         }
 
         window._pageCleanup = window._pageCleanup || [];
         window._pageCleanup.push(_supportCleanup);
-
         window.addEventListener('beforeunload', _supportCleanup);
         window.addEventListener('pagehide', _supportCleanup);
 
-        // ============================================================
-        // HELPERS
-        // ============================================================
         function getToken() {
             return localStorage.getItem('marine_token') ||
                    localStorage.getItem('token') ||
                    localStorage.getItem('marine_auth_token') ||
-                   sessionStorage.getItem('token') ||
-                   null;
+                   sessionStorage.getItem('token') || null;
         }
 
         function getCsrfToken() {
@@ -1218,10 +1269,7 @@
         function getAuthHeaders() {
             var token = getToken();
             var csrf = getCsrfToken();
-            var headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            };
+            var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
             if (token) headers['Authorization'] = 'Bearer ' + token;
             if (csrf) headers['X-CSRF-Token'] = csrf;
             return headers;
@@ -1275,9 +1323,6 @@
             return ['admin', 'مسؤول', 'superadmin', 'super_admin'].includes(r);
         }
 
-        // ============================================================
-        // TOAST
-        // ============================================================
         function showToast(message, type, duration) {
             if (_isDestroyed) return;
             type = type || 'info';
@@ -1288,14 +1333,11 @@
 
             var toast = document.createElement('div');
             toast.className = 'support-toast ' + type;
-
             var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
             var icon = document.createElement('span');
             icon.textContent = icons[type] || icons.info;
-
             var text = document.createElement('span');
             text.textContent = String(message || '');
-
             toast.appendChild(icon);
             toast.appendChild(text);
             document.body.appendChild(toast);
@@ -1312,9 +1354,6 @@
             _pageTimeouts.push(id);
         }
 
-        // ============================================================
-        // STATE
-        // ============================================================
         var tickets = [];
         var allUsers = [];
         var currentUser = null;
@@ -1324,9 +1363,6 @@
         var localScreenStream = null;
         var pendingScreenRequests = {};
 
-        // ============================================================
-        // LOAD CURRENT USER
-        // ============================================================
         function loadCurrentUser() {
             try {
                 var keys = ['marine_user', 'currentUser', 'user'];
@@ -1348,12 +1384,8 @@
             }
         }
 
-        // ============================================================
-        // LOAD USERS
-        // ============================================================
         function loadUsers() {
             if (_isDestroyed) return;
-
             var select = document.getElementById('ticketSender');
             if (!select) return;
 
@@ -1377,7 +1409,6 @@
                 .then(function(data) {
                     if (_isDestroyed) return;
                     allUsers = Array.isArray(data) ? data : (data.users || []);
-
                     select.innerHTML = '';
 
                     if (currentUser) {
@@ -1413,36 +1444,22 @@
                 });
         }
 
-        // ============================================================
-        // STATS
-        // ============================================================
         function updateStats() {
             if (_isDestroyed) return;
-
             var total = tickets.length;
-            var open = tickets.filter(function(t) {
-                return t.status === 'مفتوحة' || t.status === 'مفتوح';
-            }).length;
-            var progress = tickets.filter(function(t) {
-                return t.status === 'قيد المعالجة' || t.status === 'قيد التنفيذ';
-            }).length;
-            var closed = tickets.filter(function(t) {
-                return t.status === 'مغلقة' || t.status === 'مغلق' || t.status === 'محلول';
-            }).length;
+            var open = tickets.filter(function(t) { return t.status === 'مفتوحة' || t.status === 'مفتوح'; }).length;
+            var progress = tickets.filter(function(t) { return t.status === 'قيد المعالجة' || t.status === 'قيد التنفيذ'; }).length;
+            var closed = tickets.filter(function(t) { return t.status === 'مغلقة' || t.status === 'مغلق' || t.status === 'محلول'; }).length;
 
             var el;
             el = document.getElementById('statTotal'); if (el) el.textContent = total;
             el = document.getElementById('statOpen'); if (el) el.textContent = open;
             el = document.getElementById('statProgress'); if (el) el.textContent = progress;
             el = document.getElementById('statClosed'); if (el) el.textContent = closed;
-
             el = document.getElementById('ticketCount');
             if (el) el.textContent = total + ' تذكرة';
         }
 
-        // ============================================================
-        // FILTER
-        // ============================================================
         function getFilteredTickets() {
             var statusFilter = document.getElementById('filterStatus');
             var priorityFilter = document.getElementById('filterPriority');
@@ -1470,12 +1487,8 @@
             });
         }
 
-        // ============================================================
-        // RENDER TICKETS
-        // ============================================================
         function renderTickets() {
             if (_isDestroyed) return;
-
             var list = document.getElementById('ticketsList');
             if (!list) return;
 
@@ -1520,7 +1533,6 @@
             });
             list.innerHTML = html;
 
-            // ✅ Event Delegation (بدل إضافة listener لكل عنصر)
             if (!list.__delegated) {
                 list.__delegated = true;
                 addSafeListener(list, 'click', function(e) {
@@ -1532,9 +1544,6 @@
             }
         }
 
-        // ============================================================
-        // TICKET MODAL
-        // ============================================================
         function openTicketModal(ticketId) {
             var ticket = tickets.find(function(t) { return t.id === ticketId; });
             if (!ticket) return;
@@ -1576,7 +1585,25 @@
                     '<span class="field-value">' + formatDate(ticket.createdAt) + '</span>' +
                 '</div>';
 
-            // ✅ زر طلب عرض الشاشة (للمسؤول فقط)
+            if (isAdmin()) {
+                html +=
+                    '<div class="admin-controls">' +
+                        '<h5>⚙️ إدارة التذكرة (للمسؤول)</h5>' +
+                        '<div class="admin-btn-group">' +
+                            '<button type="button" class="btn-admin-edit" ' +
+                                    'id="editTicketBtn" ' +
+                                    'data-ticket-id="' + escapeHtml(ticket.id) + '">' +
+                                '✏️ تعديل التذكرة' +
+                            '</button>' +
+                            '<button type="button" class="btn-admin-delete" ' +
+                                    'id="deleteTicketBtn" ' +
+                                    'data-ticket-id="' + escapeHtml(ticket.id) + '">' +
+                                '🗑️ حذف التذكرة' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>';
+            }
+
             if (isAdmin() && ticket.userId) {
                 html +=
                     '<div class="screen-share-controls">' +
@@ -1595,7 +1622,22 @@
             body.innerHTML = html;
             modal.classList.add('active');
 
-            // ✅ إضافة listener لزر الطلب
+            var editBtn = document.getElementById('editTicketBtn');
+            if (editBtn) {
+                addSafeListener(editBtn, 'click', function() {
+                    var tid = this.getAttribute('data-ticket-id');
+                    openEditTicketModal(tid);
+                });
+            }
+
+            var delBtn = document.getElementById('deleteTicketBtn');
+            if (delBtn) {
+                addSafeListener(delBtn, 'click', function() {
+                    var tid = this.getAttribute('data-ticket-id');
+                    confirmDeleteTicket(tid);
+                });
+            }
+
             var reqBtn = document.getElementById('requestScreenBtn');
             if (reqBtn) {
                 addSafeListener(reqBtn, 'click', function() {
@@ -1613,9 +1655,188 @@
             if (modal) modal.classList.remove('active');
         }
 
-        // ============================================================
-        // LOAD TICKETS
-        // ============================================================
+        function openEditTicketModal(ticketId) {
+            var ticket = tickets.find(function(t) { return t.id === ticketId; });
+            if (!ticket) { showToast('❌ التذكرة غير موجودة', 'error'); return; }
+
+            var modal = document.getElementById('ticketModal');
+            var title = document.getElementById('modalTitle');
+            var body = document.getElementById('modalBody');
+            if (!modal || !body) return;
+
+            if (title) title.textContent = '✏️ تعديل التذكرة';
+
+            body.innerHTML =
+                '<div class="edit-form">' +
+                    '<div class="field">' +
+                        '<span class="field-label">✏️ الموضوع</span>' +
+                        '<input type="text" id="editSubject" maxlength="200" value="' + escapeHtml(ticket.subject) + '">' +
+                    '</div>' +
+                    '<div class="field">' +
+                        '<span class="field-label">📝 الوصف</span>' +
+                        '<textarea id="editMessage" maxlength="5000">' + escapeHtml(ticket.message) + '</textarea>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:10px;">' +
+                        '<div class="field" style="flex:1;">' +
+                            '<span class="field-label">🎯 الأولوية</span>' +
+                            '<select id="editPriority">' +
+                                '<option value="منخفضة"' + (ticket.priority === 'منخفضة' ? ' selected' : '') + '>🟢 منخفضة</option>' +
+                                '<option value="متوسطة"' + (ticket.priority === 'متوسطة' ? ' selected' : '') + '>🟡 متوسطة</option>' +
+                                '<option value="عالية"' + (ticket.priority === 'عالية' ? ' selected' : '') + '>🟠 عالية</option>' +
+                                '<option value="عاجلة"' + (ticket.priority === 'عاجلة' ? ' selected' : '') + '>🔴 عاجلة</option>' +
+                            '</select>' +
+                        '</div>' +
+                        '<div class="field" style="flex:1;">' +
+                            '<span class="field-label">📊 الحالة</span>' +
+                            '<select id="editStatus">' +
+                                '<option value="مفتوحة"' + (ticket.status === 'مفتوحة' ? ' selected' : '') + '>🟡 مفتوحة</option>' +
+                                '<option value="قيد المعالجة"' + (ticket.status === 'قيد المعالجة' ? ' selected' : '') + '>🔵 قيد المعالجة</option>' +
+                                '<option value="مغلقة"' + (ticket.status === 'مغلقة' ? ' selected' : '') + '>🟢 مغلقة</option>' +
+                            '</select>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="edit-actions">' +
+                        '<button type="button" class="btn-save-edit" id="saveEditBtn">💾 حفظ التعديلات</button>' +
+                        '<button type="button" class="btn-cancel-edit" id="cancelEditBtn">❌ إلغاء</button>' +
+                    '</div>' +
+                '</div>';
+
+            var saveBtn = document.getElementById('saveEditBtn');
+            if (saveBtn) {
+                addSafeListener(saveBtn, 'click', function() {
+                    var newSubject = document.getElementById('editSubject').value.trim();
+                    var newMessage = document.getElementById('editMessage').value.trim();
+                    var newPriority = document.getElementById('editPriority').value;
+                    var newStatus = document.getElementById('editStatus').value;
+
+                    if (!newSubject) { showToast('⚠️ الموضوع مطلوب', 'error'); return; }
+                    if (!newMessage) { showToast('⚠️ الوصف مطلوب', 'error'); return; }
+
+                    saveEditTicket(ticketId, {
+                        subject: newSubject,
+                        message: newMessage,
+                        priority: newPriority,
+                        status: newStatus
+                    });
+                });
+            }
+
+            var cancelBtn = document.getElementById('cancelEditBtn');
+            if (cancelBtn) {
+                addSafeListener(cancelBtn, 'click', function() {
+                    openTicketModal(ticketId);
+                });
+            }
+        }
+
+        function saveEditTicket(ticketId, updates) {
+            var btn = document.getElementById('saveEditBtn');
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ جاري الحفظ...'; }
+
+            fetch('/api/support/tickets/' + encodeURIComponent(ticketId), {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(updates)
+            })
+            .then(function(res) {
+                if (!res.ok) {
+                    return res.json().then(function(d) {
+                        throw new Error(d.error || ('HTTP ' + res.status));
+                    }).catch(function() { throw new Error('HTTP ' + res.status); });
+                }
+                return res.json();
+            })
+            .then(function(data) {
+                if (_isDestroyed) return;
+                showToast('✅ تم حفظ التعديلات بنجاح', 'success');
+                var idx = tickets.findIndex(function(t) { return t.id === ticketId; });
+                if (idx !== -1) {
+                    tickets[idx].subject = updates.subject;
+                    tickets[idx].message = updates.message;
+                    tickets[idx].priority = normalizePriority(updates.priority);
+                    tickets[idx].status = normalizeStatus(updates.status);
+                }
+                closeTicketModal();
+                renderTickets();
+                updateStats();
+                saveTicketsLocally();
+            })
+            .catch(function(err) {
+                if (_isDestroyed) return;
+                console.error('❌ Save error:', err);
+                showToast('❌ فشل الحفظ: ' + err.message, 'error', 5000);
+                if (btn) { btn.disabled = false; btn.innerHTML = '💾 حفظ التعديلات'; }
+            });
+        }
+
+        function confirmDeleteTicket(ticketId) {
+            var ticket = tickets.find(function(t) { return t.id === ticketId; });
+            if (!ticket) { showToast('❌ التذكرة غير موجودة', 'error'); return; }
+
+            var confirmed = window.confirm(
+                '⚠️ هل أنت متأكد من حذف هذه التذكرة؟\n\n' +
+                '📋 ' + ticket.subject + '\n\n' +
+                'لا يمكن التراجع عن هذا الإجراء.'
+            );
+            if (!confirmed) return;
+            executeDeleteTicket(ticketId);
+        }
+
+        function executeDeleteTicket(ticketId) {
+            var btn = document.getElementById('deleteTicketBtn');
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ جاري الحذف...'; }
+
+            fetch('/api/support/tickets/' + encodeURIComponent(ticketId), {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            })
+            .then(function(res) {
+                if (!res.ok) {
+                    return res.json().then(function(d) {
+                        throw new Error(d.error || ('HTTP ' + res.status));
+                    }).catch(function() { throw new Error('HTTP ' + res.status); });
+                }
+                return res.json();
+            })
+            .then(function(data) {
+                if (_isDestroyed) return;
+                showToast('✅ تم حذف التذكرة بنجاح', 'success');
+                tickets = tickets.filter(function(t) { return t.id !== ticketId; });
+                closeTicketModal();
+                renderTickets();
+                updateStats();
+                saveTicketsLocally();
+            })
+            .catch(function(err) {
+                if (_isDestroyed) return;
+                console.error('❌ Delete error:', err);
+                showToast('❌ فشل الحذف: ' + err.message, 'error', 5000);
+                if (btn) { btn.disabled = false; btn.innerHTML = '🗑️ حذف التذكرة'; }
+            });
+        }
+
+        function refreshTickets() {
+            if (_isDestroyed) return;
+            var btn = document.getElementById('refreshTicketsBtn');
+            var icon = document.getElementById('refreshIcon');
+            if (btn) btn.disabled = true;
+            if (icon) icon.className = 'spinner';
+
+            if (socket && !socket.connected) {
+                console.log('🔄 Reconnecting socket...');
+                try { socket.connect(); } catch (e) {}
+            }
+
+            loadTickets();
+            loadUsers();
+
+            setTimeout(function() {
+                if (btn) btn.disabled = false;
+                if (icon) icon.className = '';
+                showToast('✅ تم تحديث القائمة', 'success', 2000);
+            }, 900);
+        }
+
         function loadTickets() {
             if (_isDestroyed) return;
 
@@ -1644,11 +1865,7 @@
             } catch (e) {}
 
             var token = getToken();
-            if (!token) {
-                renderTickets();
-                updateStats();
-                return;
-            }
+            if (!token) { renderTickets(); updateStats(); return; }
 
             fetch('/api/support/tickets', { headers: getAuthHeaders() })
                 .then(function(res) {
@@ -1672,7 +1889,6 @@
                             createdAt: t.createdAt || new Date().toISOString()
                         };
                     });
-
                     tickets = remoteTickets;
                     saveTicketsLocally();
                     renderTickets();
@@ -1692,9 +1908,6 @@
             } catch (e) {}
         }
 
-        // ============================================================
-        // SEND TICKET
-        // ============================================================
         function sendTicket(event) {
             if (event && event.preventDefault) event.preventDefault();
             if (_isDestroyed) return;
@@ -1708,8 +1921,7 @@
             if (!subjectEl || !messageEl || !priorityEl) return;
 
             var sender = (senderEl && senderEl.value) ||
-                        (currentUser && (currentUser.name || currentUser.username)) ||
-                        'مستخدم';
+                        (currentUser && (currentUser.name || currentUser.username)) || 'مستخدم';
             var subject = subjectEl.value.trim();
             var message = messageEl.value.trim();
             var priority = priorityEl.value;
@@ -1729,13 +1941,9 @@
                 createdAt: new Date().toISOString()
             };
 
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '⏳ جاري الإرسال...';
-            }
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ جاري الإرسال...'; }
 
             var token = getToken();
-
             var promise;
             if (token) {
                 promise = fetch('/api/support/tickets', {
@@ -1752,9 +1960,7 @@
                     if (!res.ok) {
                         return res.json().then(function(d) {
                             throw new Error(d.error || ('HTTP ' + res.status));
-                        }).catch(function() {
-                            throw new Error('HTTP ' + res.status);
-                        });
+                        }).catch(function() { throw new Error('HTTP ' + res.status); });
                     }
                     return res.json();
                 });
@@ -1765,29 +1971,24 @@
             promise
                 .then(function(data) {
                     if (_isDestroyed) return;
-
                     var finalTicket = newTicket;
                     if (data && data.ticket) {
                         finalTicket.id = data.ticket.id || data.ticket._id || newTicket.id;
                         finalTicket.status = normalizeStatus(data.ticket.status || 'مفتوحة');
                         finalTicket.createdAt = data.ticket.createdAt || newTicket.createdAt;
                     }
-
                     tickets.unshift(finalTicket);
                     saveTicketsLocally();
                     renderTickets();
                     updateStats();
-
                     if (subjectEl) subjectEl.value = '';
                     if (messageEl) messageEl.value = '';
                     if (priorityEl) priorityEl.value = 'متوسطة';
-
                     showToast('✅ تم إرسال التذكرة بنجاح', 'success');
                 })
                 .catch(function(err) {
                     if (_isDestroyed) return;
                     console.error('❌ Send ticket error:', err.message);
-
                     if (err.message.includes('400')) {
                         showToast('❌ بيانات غير صحيحة — تحقق من الحقول', 'error', 5000);
                     } else if (err.message.includes('401')) {
@@ -1803,32 +2004,29 @@
                     }
                 })
                 .finally(function() {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = '📨 إرسال التذكرة';
-                    }
+                    if (btn) { btn.disabled = false; btn.innerHTML = '📨 إرسال التذكرة'; }
                 });
         }
 
-        // ============================================================
-        // 🎥 SCREEN SHARE — SOCKET.IO + WEBRTC
-        // ============================================================
         function initSocket() {
             var token = getToken();
             if (!token || !currentUser) {
                 console.warn('⚠️ Socket: no auth');
                 return;
             }
-
             if (typeof io !== 'function') {
                 console.error('❌ Socket.IO not loaded');
                 return;
             }
-
-            socket = io({
-                transports: ['websocket', 'polling'],
-                auth: { token: token }
-            });
+            try {
+                socket = io({
+                    transports: ['websocket', 'polling'],
+                    auth: { token: token }
+                });
+            } catch (e) {
+                console.error('❌ Socket init error:', e);
+                return;
+            }
 
             socket.on('connect', function() {
                 console.log('🔌 Socket connected');
@@ -1847,34 +2045,25 @@
                 updateConnectionStatus(false);
             });
 
-            socket.on('registered', function() {
-                console.log('✅ Socket registered');
-            });
+            socket.on('registered', function() { console.log('✅ Socket registered'); });
+            socket.on('error', function(err) { console.error('❌ Socket error:', err); });
 
-            socket.on('error', function(err) {
-                console.error('❌ Socket error:', err);
-            });
-
-            // ✅ استقبال طلب عرض الشاشة (للمستخدم)
             socket.on('screen:incoming', function(data) {
                 console.log('📺 Incoming screen request:', data);
                 showScreenRequestPopup(data);
             });
 
-            // ✅ المسؤول: تم القبول
             socket.on('screen:accepted', function(data) {
                 console.log('✅ Screen accepted:', data);
                 showToast('✅ المستخدم وافق على عرض الشاشة', 'success');
                 startReceivingScreen(data);
             });
 
-            // ✅ المسؤول: تم الرفض
             socket.on('screen:rejected', function(data) {
                 console.log('❌ Screen rejected:', data);
                 showToast('❌ المستخدم رفض: ' + (data.reason || 'بدون سبب'), 'error');
             });
 
-            // ✅ WebRTC Signaling
             socket.on('screen:offer', async function(data) {
                 console.log('📥 Received offer');
                 await handleScreenOffer(data);
@@ -1884,24 +2073,16 @@
                 console.log('📥 Received answer');
                 if (screenPeerConnection) {
                     try {
-                        await screenPeerConnection.setRemoteDescription(
-                            new RTCSessionDescription(data.answer)
-                        );
-                    } catch (e) {
-                        console.error('❌ setRemoteDescription error:', e);
-                    }
+                        await screenPeerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    } catch (e) { console.error('❌ setRemoteDescription error:', e); }
                 }
             });
 
             socket.on('screen:ice-candidate', async function(data) {
                 if (screenPeerConnection && data.candidate) {
                     try {
-                        await screenPeerConnection.addIceCandidate(
-                            new RTCIceCandidate(data.candidate)
-                        );
-                    } catch (e) {
-                        console.warn('ICE error:', e);
-                    }
+                        await screenPeerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                    } catch (e) { console.warn('ICE error:', e); }
                 }
             });
 
@@ -1923,9 +2104,6 @@
             if (txt) txt.textContent = online ? 'متصل بالسيرفر' : 'غير متصل';
         }
 
-        // ============================================================
-        // 👤 USER: عرض الإشعار
-        // ============================================================
         function showScreenRequestPopup(data) {
             currentScreenSession = data;
             pendingScreenRequests[data.sessionId] = data;
@@ -1940,7 +2118,6 @@
         function acceptScreenRequest() {
             var popup = document.getElementById('screenRequestPopup');
             if (popup) popup.classList.remove('active');
-
             if (!currentScreenSession) return;
 
             navigator.mediaDevices.getDisplayMedia({
@@ -1949,30 +2126,16 @@
             })
             .then(function(stream) {
                 localScreenStream = stream;
-
-                // أبلغ السيرفر
-                socket.emit('screen:accept', {
-                    sessionId: currentScreenSession.sessionId
-                });
-
-                // أنشئ Peer Connection
+                socket.emit('screen:accept', { sessionId: currentScreenSession.sessionId });
                 setupScreenPeerAsSender();
-
-                // أظهر المؤشر
                 var ind = document.getElementById('screenSharingIndicator');
                 if (ind) ind.classList.add('active');
-
-                // عند إيقاف المشاركة من المتصفح
-                stream.getVideoTracks()[0].onended = function() {
-                    endScreenSession();
-                };
-
+                stream.getVideoTracks()[0].onended = function() { endScreenSession(); };
                 showToast('✅ بدأت مشاركة الشاشة', 'success');
             })
             .catch(function(err) {
                 console.error('❌ getDisplayMedia error:', err);
                 showToast('❌ فشل بدء المشاركة: ' + err.message, 'error', 5000);
-
                 socket.emit('screen:reject', {
                     sessionId: currentScreenSession.sessionId,
                     reason: 'فشل تقني: ' + err.message
@@ -1984,7 +2147,6 @@
         function rejectScreenRequest() {
             var popup = document.getElementById('screenRequestPopup');
             if (popup) popup.classList.remove('active');
-
             if (!currentScreenSession) return;
             socket.emit('screen:reject', {
                 sessionId: currentScreenSession.sessionId,
@@ -1993,9 +2155,6 @@
             currentScreenSession = null;
         }
 
-        // ============================================================
-        // 🔧 WebRTC: المستخدم كمُرسل
-        // ============================================================
         function setupScreenPeerAsSender() {
             screenPeerConnection = new RTCPeerConnection({
                 iceServers: [
@@ -2004,12 +2163,10 @@
                 ]
             });
 
-            // أضف الشاشة
             localScreenStream.getTracks().forEach(function(track) {
                 screenPeerConnection.addTrack(track, localScreenStream);
             });
 
-            // أرسل ICE
             screenPeerConnection.onicecandidate = function(e) {
                 if (e.candidate && socket) {
                     socket.emit('screen:ice-candidate', {
@@ -2020,11 +2177,8 @@
                 }
             };
 
-            // أنشئ offer وأرسله
             screenPeerConnection.createOffer()
-                .then(function(offer) {
-                    return screenPeerConnection.setLocalDescription(offer);
-                })
+                .then(function(offer) { return screenPeerConnection.setLocalDescription(offer); })
                 .then(function() {
                     socket.emit('screen:offer', {
                         sessionId: currentScreenSession.sessionId,
@@ -2032,25 +2186,18 @@
                         offer: screenPeerConnection.localDescription
                     });
                 })
-                .catch(function(err) {
-                    console.error('❌ Offer creation error:', err);
-                });
+                .catch(function(err) { console.error('❌ Offer creation error:', err); });
         }
 
-        // ============================================================
-        // 👨‍💼 ADMIN: طلب عرض الشاشة
-        // ============================================================
         function requestUserScreen(ticketId, targetUserId, reason) {
             if (!socket || !socket.connected) {
                 showToast('❌ الاتصال بالسيرفر غير جاهز', 'error');
                 return;
             }
-
             if (!targetUserId) {
                 showToast('❌ لا يمكن تحديد المستخدم', 'error');
                 return;
             }
-
             socket.emit('screen:request', {
                 ticketId: ticketId,
                 targetUserId: targetUserId,
@@ -2059,19 +2206,13 @@
                 if (response && response.success) {
                     showToast('📺 تم إرسال الطلب للمستخدم', 'info');
                     var btn = document.getElementById('requestScreenBtn');
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.textContent = '⏳ بانتظار الموافقة...';
-                    }
+                    if (btn) { btn.disabled = true; btn.textContent = '⏳ بانتظار الموافقة...'; }
                 } else {
                     showToast('❌ ' + ((response && response.error) || 'فشل الإرسال'), 'error');
                 }
             });
         }
 
-        // ============================================================
-        // 👨‍💼 ADMIN: استقبال البث
-        // ============================================================
         function startReceivingScreen(data) {
             screenPeerConnection = new RTCPeerConnection({
                 iceServers: [
@@ -2080,23 +2221,16 @@
                 ]
             });
 
-            // استقبل الفيديو
             screenPeerConnection.ontrack = function(event) {
                 console.log('📹 Received screen track');
                 var video = document.getElementById('remoteScreen');
-                if (video) {
-                    video.srcObject = event.streams[0];
-                }
+                if (video) video.srcObject = event.streams[0];
                 var viewer = document.getElementById('screenViewerModal');
                 if (viewer) viewer.classList.add('active');
-
                 var titleEl = document.getElementById('screenViewerTitle');
-                if (titleEl) {
-                    titleEl.textContent = '👁️ عرض شاشة: ' + (data.userName || 'مستخدم');
-                }
+                if (titleEl) titleEl.textContent = '👁️ عرض شاشة: ' + (data.userName || 'مستخدم');
             };
 
-            // أرسل ICE
             screenPeerConnection.onicecandidate = function(e) {
                 if (e.candidate && socket) {
                     socket.emit('screen:ice-candidate', {
@@ -2106,13 +2240,9 @@
                     });
                 }
             };
-
             currentScreenSession = data;
         }
 
-        // ============================================================
-        // 🔄 ADMIN: استقبال Offer من المستخدم
-        // ============================================================
         async function handleScreenOffer(data) {
             if (!screenPeerConnection) {
                 screenPeerConnection = new RTCPeerConnection({
@@ -2141,66 +2271,44 @@
             }
 
             try {
-                await screenPeerConnection.setRemoteDescription(
-                    new RTCSessionDescription(data.offer)
-                );
+                await screenPeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                 var answer = await screenPeerConnection.createAnswer();
                 await screenPeerConnection.setLocalDescription(answer);
-
                 socket.emit('screen:answer', {
                     sessionId: data.sessionId,
                     targetSocketId: data.fromSocketId,
                     answer: screenPeerConnection.localDescription
                 });
-            } catch (err) {
-                console.error('❌ Offer handling error:', err);
-            }
+            } catch (err) { console.error('❌ Offer handling error:', err); }
         }
 
-        // ============================================================
-        // ⏹️ إنهاء جلسة عرض الشاشة
-        // ============================================================
         function endScreenSession() {
             if (localScreenStream) {
                 localScreenStream.getTracks().forEach(function(t) { t.stop(); });
                 localScreenStream = null;
             }
-
             if (screenPeerConnection) {
                 try { screenPeerConnection.close(); } catch(e) {}
                 screenPeerConnection = null;
             }
-
             if (currentScreenSession && socket) {
-                socket.emit('screen:end', {
-                    sessionId: currentScreenSession.sessionId
-                });
+                socket.emit('screen:end', { sessionId: currentScreenSession.sessionId });
             }
-
             var ind = document.getElementById('screenSharingIndicator');
             if (ind) ind.classList.remove('active');
             var viewer = document.getElementById('screenViewerModal');
             if (viewer) viewer.classList.remove('active');
             var video = document.getElementById('remoteScreen');
             if (video) video.srcObject = null;
-
             currentScreenSession = null;
-
-            // ✅ أعد زر الطلب
             var btn = document.getElementById('requestScreenBtn');
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = '📺 طلب عرض الشاشة';
-            }
+            if (btn) { btn.disabled = false; btn.textContent = '📺 طلب عرض الشاشة'; }
         }
 
-        // ============================================================
-        // INIT
-        // ============================================================
         function init() {
             if (_isDestroyed) return;
             _isDestroyed = false;
-            console.log('🚀 Initializing Support page v11.0...');
+            console.log('🚀 Initializing Support page v12.0...');
 
             loadCurrentUser();
             loadUsers();
@@ -2214,7 +2322,6 @@
             var filterPriority = document.getElementById('filterPriority');
             if (filterPriority) addSafeListener(filterPriority, 'change', renderTickets);
 
-            // ✅ Debounce للبحث
             var searchTimer = null;
             var filterSearch = document.getElementById('filterSearch');
             if (filterSearch) {
@@ -2238,7 +2345,9 @@
                 if (e.key === 'Escape') closeTicketModal();
             });
 
-            // ✅ Screen share buttons
+            var refreshBtn = document.getElementById('refreshTicketsBtn');
+            if (refreshBtn) addSafeListener(refreshBtn, 'click', refreshTickets);
+
             var acceptBtn = document.getElementById('acceptScreenBtn');
             if (acceptBtn) addSafeListener(acceptBtn, 'click', acceptScreenRequest);
 
@@ -2251,18 +2360,12 @@
             var closeViewer = document.getElementById('closeScreenViewer');
             if (closeViewer) addSafeListener(closeViewer, 'click', endScreenSession);
 
-            // ✅ تهيئة Socket
             initSocket();
-
-            // ✅ تحميل التذاكر
             loadTickets();
 
             console.log('✅ Support page ready');
         }
 
-        // ============================================================
-        // BOOT
-        // ============================================================
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
                 var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
@@ -2273,9 +2376,6 @@
             _pageTimeouts.push(id0);
         }
 
-        // ============================================================
-        // EXPOSE
-        // ============================================================
         window.sendTicket = sendTicket;
         window.loadTickets = loadTickets;
         window.renderTickets = renderTickets;
@@ -2285,9 +2385,11 @@
         window.closeTicketModal = closeTicketModal;
         window.requestUserScreen = requestUserScreen;
         window.endScreenSession = endScreenSession;
+        window.refreshTickets = refreshTickets;
+        window.openEditTicketModal = openEditTicketModal;
+        window.confirmDeleteTicket = confirmDeleteTicket;
 
-        console.log('✅ Support Page v11.0 ready');
-
+        console.log('✅ Support Page v12.0 ready');
     })();
     </script>
 </div>

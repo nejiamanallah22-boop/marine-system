@@ -1,11 +1,11 @@
 // ============================================================
-// 🎫 routes/ticket.js — v2.0
+// 🎫 routes/ticket.js — v3.0
 // ============================================================
 // Professional Support Ticket Routes
 // ✅ JWT Auth + CSRF + Rate Limiting
 // ✅ RBAC (Admin / Owner)
 // ✅ Screen Share Sessions
-// ✅ Replies + Close + Delete
+// ✅ Replies + Close + Reopen + EDIT + Delete
 // ✅ Statistics
 // ============================================================
 
@@ -336,7 +336,6 @@ module.exports = function ticketRoutes(app, deps) {
                     });
                 }
 
-                // زيادة المشاهدات
                 ticket.viewsCount = (ticket.viewsCount || 0) + 1;
                 await ticket.save();
 
@@ -364,7 +363,6 @@ module.exports = function ticketRoutes(app, deps) {
         rateLimit(15),
         async (req, res) => {
             try {
-                // ✅ التحقق
                 const subject = safeValidateString(
                     req.body.subject || req.body.title,
                     { required: true, max: 200 }
@@ -387,21 +385,17 @@ module.exports = function ticketRoutes(app, deps) {
                     });
                 }
 
-                // ✅ الأولوية
                 const priority = normalizePriority(req.body.priority);
 
-                // ✅ الفئة
                 const category = VALID_CATEGORIES.includes(req.body.category)
                     ? req.body.category
                     : 'فني';
 
-                // ✅ المرسل
                 const sender = safeValidateString(
                     req.body.sender || req.user.name || req.user.username,
                     { max: 200 }
                 ) || req.user.name || req.user.username || 'مستخدم';
 
-                // ✅ ObjectId آمن
                 let cid;
                 try {
                     cid = mongoose.Types.ObjectId.isValid(req.user._id)
@@ -411,7 +405,6 @@ module.exports = function ticketRoutes(app, deps) {
                     cid = new mongoose.Types.ObjectId();
                 }
 
-                // ✅ بناء التذكرة يدوياً (لا نثق بـ req.body)
                 const ticket = new Ticket({
                     title: subject,
                     description: message,
@@ -434,7 +427,6 @@ module.exports = function ticketRoutes(app, deps) {
 
                 console.log(`✅ Ticket created: ${ticket._id} | sender: ${sender} | by: ${req.user.username}`);
 
-                // ✅ تسجيل في السجلات
                 await safeLog({
                     userId: req.user.id,
                     userName: req.user.name,
@@ -448,7 +440,6 @@ module.exports = function ticketRoutes(app, deps) {
                     requestId: req.requestId
                 });
 
-                // ✅ إشعار
                 await safeNotify({
                     userId: null,
                     type: 'info',
@@ -480,6 +471,119 @@ module.exports = function ticketRoutes(app, deps) {
                 res.status(500).json({
                     success: false,
                     error: 'فشل إرسال التذكرة'
+                });
+            }
+        }
+    );
+
+    // ============================================================
+    // ✏️ PUT /api/support/tickets/:id — تعديل تذكرة (جديد)
+    // ============================================================
+    app.put('/api/support/tickets/:id',
+        authenticateAccessToken,
+        safeCsrf,
+        async (req, res) => {
+            try {
+                const q = safeBuildIdQuery(req.params.id);
+                if (!q) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'معرّف غير صالح'
+                    });
+                }
+
+                const ticket = await Ticket.findOne(q);
+                if (!ticket) {
+                    return res.status(404).json({
+                        success: false,
+                        error: 'التذكرة غير موجودة'
+                    });
+                }
+
+                if (!canAccessTicket(ticket, req.user)) {
+                    return res.status(403).json({
+                        success: false,
+                        error: 'غير مصرح'
+                    });
+                }
+
+                const { subject, title, message, description, priority, status } = req.body;
+
+                // ✅ تحديث الموضوع
+                if (subject !== undefined || title !== undefined) {
+                    const newTitle = safeValidateString(subject || title, { required: true, max: 200 });
+                    if (!newTitle) {
+                        return res.status(400).json({
+                            success: false,
+                            error: 'الموضوع غير صالح (1-200 حرف)'
+                        });
+                    }
+                    ticket.title = newTitle;
+                }
+
+                // ✅ تحديث الوصف
+                if (message !== undefined || description !== undefined) {
+                    const newDesc = safeValidateString(message || description, { required: true, max: 5000 });
+                    if (!newDesc) {
+                        return res.status(400).json({
+                            success: false,
+                            error: 'الوصف غير صالح (1-5000 حرف)'
+                        });
+                    }
+                    ticket.description = newDesc;
+                }
+
+                // ✅ تحديث الأولوية
+                if (priority !== undefined) {
+                    ticket.priority = normalizePriority(priority);
+                }
+
+                // ✅ تحديث الحالة (فقط المسؤول)
+                if (status !== undefined && safeIsAdmin(req.user)) {
+                    const newStatus = normalizeStatus(status);
+                    ticket.status = newStatus;
+
+                    if (newStatus === 'مغلقة' && !ticket.closedAt) {
+                        ticket.closedAt = new Date();
+                        ticket.closedBy = mongoose.Types.ObjectId.isValid(req.user._id)
+                            ? req.user._id
+                            : null;
+                        ticket.closedByName = req.user.name || req.user.username || '';
+                    } else if (newStatus !== 'مغلقة') {
+                        ticket.closedAt = null;
+                        ticket.closedBy = null;
+                        ticket.closedByName = '';
+                    }
+                }
+
+                ticket.lastActivityAt = new Date();
+                await ticket.save();
+
+                console.log(`✏️ Ticket updated: ${ticket._id} | by: ${req.user.username}`);
+
+                await safeLog({
+                    userId: req.user.id,
+                    userName: req.user.name,
+                    action: 'update',
+                    resource: 'ticket',
+                    resourceId: ticket._id.toString(),
+                    resourceName: ticket.title,
+                    status: 'success',
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                res.json({
+                    success: true,
+                    message: 'تم تحديث التذكرة بنجاح',
+                    ticket: formatTicket(ticket)
+                });
+
+            } catch (e) {
+                console.error('❌ PUT /api/support/tickets/:id:', e.message);
+                res.status(500).json({
+                    success: false,
+                    error: 'فشل تحديث التذكرة'
                 });
             }
         }
@@ -540,7 +644,6 @@ module.exports = function ticketRoutes(app, deps) {
                 });
                 ticket.repliesCount = ticket.replies.length;
 
-                // ✅ تغيير الحالة إذا رد المسؤول
                 if (safeIsAdmin(req.user) && ticket.status === 'مفتوحة') {
                     ticket.status = 'قيد المعالجة';
                 }
@@ -866,16 +969,17 @@ module.exports = function ticketRoutes(app, deps) {
     // ============================================================
     // ✅ LOG — تم التحميل بنجاح
     // ============================================================
-    console.log('✅ routes/ticket.js loaded — 8 endpoints registered');
+    console.log('✅ routes/ticket.js loaded — 10 endpoints registered');
     console.log('   📥 GET    /api/support/tickets');
     console.log('   📥 GET    /api/support/tickets/:id');
     console.log('   📤 POST   /api/support/tickets');
+    console.log('   ✏️  PUT    /api/support/tickets/:id  ← جديد');
     console.log('   💬 POST   /api/support/tickets/:id/reply');
     console.log('   ✅ PUT    /api/support/tickets/:id/close');
     console.log('   🔓 PUT    /api/support/tickets/:id/reopen');
     console.log('   📺 GET    /api/support/tickets/:id/screen-sessions');
     console.log('   📊 GET    /api/support/stats');
-    console.log('   🗑️ DELETE /api/support/tickets/:id');
+    console.log('   🗑️  DELETE /api/support/tickets/:id');
 };
 
 // ============================================================
