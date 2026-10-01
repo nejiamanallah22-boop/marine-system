@@ -1,0 +1,1108 @@
+<!-- public/pages/disposals-vehicles.html -->
+<div id="page-disposals-vehicles">
+<style>
+    #page-disposals-vehicles {
+        --c-border-soft: rgba(148, 163, 184, 0.08);
+        --c-border-mid: rgba(148, 163, 184, 0.15);
+        --c-border-strong: rgba(148, 163, 184, 0.25);
+        --c-gold-1: #f7d774;
+        --c-gold-2: #e6b31e;
+        --c-gold-3: #b8860b;
+        --c-gold-glow: rgba(230, 179, 30, 0.35);
+        --c-emerald-1: #6ee7b7;
+        --c-amber-1: #fcd34d;
+        --c-red-1: #fca5a5;
+        --c-cyan-1: #67e8f9;
+        --c-purple-1: #c4b5fd;
+        --c-pink-1: #f9a8d4;
+        --c-slate-1: #94a3b8;
+        --c-text-1: #f1f5f9;
+        --c-text-2: #cbd5e1;
+        --c-text-3: #94a3b8;
+        --c-text-4: #64748b;
+        --radius: 16px;
+        --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        --font: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        width: 100%; max-width: 100%;
+        padding: 0; margin: 0;
+        font-family: var(--font);
+        background:
+            radial-gradient(ellipse 80% 50% at 20% 0%, rgba(100, 116, 139, 0.10), transparent 50%),
+            radial-gradient(ellipse 60% 40% at 80% 10%, rgba(230, 179, 30, 0.06), transparent 50%),
+            radial-gradient(ellipse 70% 50% at 50% 100%, rgba(239, 68, 68, 0.04), transparent 60%),
+            linear-gradient(180deg, #060911 0%, #0a1020 50%, #060911 100%);
+        color: var(--c-text-1);
+        min-height: 100vh;
+        position: relative;
+        z-index: 2;
+        overflow-x: hidden;
+    }
+    #page-disposals-vehicles::before {
+        content: '';
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background:
+            radial-gradient(circle 400px at 10% 20%, rgba(100, 116, 139, 0.06), transparent 70%),
+            radial-gradient(circle 500px at 90% 60%, rgba(230, 179, 30, 0.05), transparent 70%);
+        z-index: -1; pointer-events: none;
+        animation: dvvOrbsFloat 22s ease-in-out infinite;
+    }
+    @keyframes dvvOrbsFloat {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(3%, -2%) scale(1.05); }
+        66% { transform: translate(-3%, 2%) scale(0.97); }
+    }
+    #page-disposals-vehicles *,
+    #page-disposals-vehicles *::before,
+    #page-disposals-vehicles *::after { box-sizing: border-box; }
+    #page-disposals-vehicles ::-webkit-scrollbar { width: 8px; height: 8px; }
+    #page-disposals-vehicles ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
+    #page-disposals-vehicles ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--c-slate-1), #475569);
+        border-radius: 4px; border: 2px solid transparent; background-clip: padding-box;
+    }
+    .dvv-container { padding: 16px 24px 40px; max-width: 1700px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* HEADER */
+    .dvv-header {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 18px 24px; flex-wrap: wrap; gap: 16px;
+        background: linear-gradient(135deg, rgba(18, 26, 44, 0.9) 0%, rgba(24, 34, 56, 0.8) 100%);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid var(--c-border-mid);
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 32px rgba(0,0,0,0.35);
+    }
+    .dvv-header .title-section { display: flex; align-items: center; gap: 14px; flex: 1 1 260px; min-width: 0; }
+    .dvv-header .title-icon {
+        width: 50px; height: 50px; border-radius: 14px;
+        background: linear-gradient(135deg, #475569 0%, #1e293b 50%, #0f172a 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px; color: #f7d774;
+        position: relative; overflow: hidden; flex-shrink: 0;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.6), 0 0 0 1px rgba(247, 215, 116, 0.2) inset;
+        animation: dvvIconFloat 4s ease-in-out infinite;
+    }
+    .dvv-header .title-icon::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    @keyframes dvvIconFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-3px) rotate(-2deg); }
+    }
+    .dvv-header .title-icon::after {
+        content: ''; position: absolute; top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(247, 215, 116, 0.25), transparent);
+        animation: dvvShine 4s ease-in-out infinite; pointer-events: none;
+    }
+    @keyframes dvvShine { 0% { left: -100%; } 50%, 100% { left: 100%; } }
+    .dvv-header .header-text { min-width: 0; overflow: hidden; }
+    .dvv-header .title {
+        font-size: 22px; font-weight: 800;
+        background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 50%, #cbd5e1 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text; margin: 0 0 2px 0; letter-spacing: -0.5px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dvv-header .subtitle {
+        font-size: 12px; color: var(--c-text-3); margin: 0; font-weight: 500;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dvv-header .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
+
+    /* BUTTONS */
+    .dvv-btn {
+        padding: 10px 20px; border: none; border-radius: 12px;
+        font-weight: 700; font-size: 13px; cursor: pointer;
+        transition: all var(--transition);
+        display: inline-flex; align-items: center; gap: 8px;
+        font-family: var(--font); white-space: nowrap; flex-shrink: 0;
+        line-height: 1; position: relative; overflow: hidden;
+    }
+    .dvv-btn i { font-size: 13px; }
+    .dvv-btn::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    .dvv-btn-primary {
+        background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
+        color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
+    }
+    .dvv-btn-primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px var(--c-gold-glow); }
+    .dvv-btn-secondary {
+        background: linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(148, 163, 184, 0.04) 100%);
+        border: 1px solid var(--c-border-mid); color: var(--c-text-2);
+        backdrop-filter: blur(8px);
+    }
+    .dvv-btn-secondary:hover {
+        background: rgba(148, 163, 184, 0.15); color: var(--c-text-1);
+        transform: translateY(-2px); border-color: var(--c-border-strong);
+    }
+    .dvv-btn-info {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: #fff; box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+    }
+    .dvv-btn-info:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5); }
+    .dvv-btn-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+    }
+    .dvv-btn-success:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5); }
+    .dvv-btn-dark {
+        background: linear-gradient(135deg, #475569, #1e293b);
+        color: #f7d774; border: 1px solid rgba(247, 215, 116, 0.25);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.5);
+    }
+    .dvv-btn-dark:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px rgba(15, 23, 42, 0.7), 0 0 24px rgba(247, 215, 116, 0.2); }
+
+    /* INPUTS */
+    .dvv-input, .dvv-select {
+        padding: 10px 16px; border-radius: 10px;
+        border: 1px solid var(--c-border-mid);
+        background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
+        color: var(--c-text-1); font-family: var(--font);
+        font-size: 12px; font-weight: 600;
+        transition: all var(--transition); cursor: pointer;
+    }
+    .dvv-input { flex: 1; min-width: 240px; cursor: text; }
+    .dvv-input:focus, .dvv-select:focus {
+        outline: none; border-color: var(--c-gold-2);
+        box-shadow: 0 0 0 3px var(--c-gold-glow);
+    }
+    .dvv-input::placeholder { color: var(--c-text-4); }
+    .dvv-select option, .dvv-select optgroup { background: #0a1020; color: var(--c-text-1); padding: 8px; }
+
+    /* STATS */
+    .dvv-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .dvv-stat {
+        background: linear-gradient(135deg, rgba(24, 34, 56, 0.85) 0%, rgba(18, 26, 44, 0.95) 100%);
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        border: 1px solid var(--c-border-soft);
+        border-radius: var(--radius);
+        padding: 22px 16px 18px;
+        text-align: center;
+        transition: all var(--transition);
+        position: relative; overflow: hidden;
+        min-width: 0; min-height: 110px;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.25);
+        color: var(--c-slate-1);
+    }
+    .dvv-stat::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+        background: linear-gradient(90deg, transparent 0%, currentColor 50%, transparent 100%);
+        filter: drop-shadow(0 0 8px currentColor);
+    }
+    .dvv-stat::after {
+        content: ''; position: absolute; top: -50%; right: -50%;
+        width: 200%; height: 200%;
+        background: radial-gradient(circle, currentColor 0%, transparent 40%);
+        opacity: 0.06; pointer-events: none;
+    }
+    .dvv-stat:hover {
+        transform: translateY(-5px); border-color: var(--c-border-strong);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 20px 48px rgba(0,0,0,0.45), 0 0 40px currentColor;
+    }
+    .dvv-stat:hover::after { opacity: 0.15; }
+    .dvv-stat.stat-total  { color: var(--c-gold-1); }
+    .dvv-stat.stat-month  { color: var(--c-cyan-1); }
+    .dvv-stat.stat-year   { color: var(--c-purple-1); }
+    .dvv-stat.stat-reason { color: var(--c-red-1); }
+    .dvv-stat .number {
+        font-size: 30px; font-weight: 900; line-height: 1;
+        color: currentColor;
+        text-shadow: 0 0 24px currentColor, 0 0 8px currentColor;
+        letter-spacing: -1px; position: relative; z-index: 1;
+        white-space: nowrap; margin-bottom: 8px; font-variant-numeric: tabular-nums;
+    }
+    .dvv-stat .label {
+        font-size: 11px; color: rgba(203, 213, 225, 0.75); font-weight: 700;
+        position: relative; z-index: 1; line-height: 1.3;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+    }
+
+    /* FILTER BAR */
+    .dvv-actions {
+        display: flex; flex-wrap: wrap; align-items: center;
+        gap: 12px 14px; padding: 16px 20px;
+        background: linear-gradient(135deg, rgba(18, 26, 44, 0.6) 0%, rgba(24, 34, 56, 0.5) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--c-border-soft);
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset;
+    }
+    .dvv-actions > .dvv-input, .dvv-actions > .dvv-select { min-width: 160px; }
+    .dvv-actions > .dvv-input { min-width: 260px; }
+
+    /* TABLE */
+    .dvv-table-wrap {
+        background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        border: 1px solid var(--c-border-soft);
+        border-radius: var(--radius);
+        overflow: hidden; overflow-x: auto;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
+        transition: all var(--transition);
+    }
+    .dvv-table-wrap:hover {
+        border-color: var(--c-border-mid);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .dvv-table-head, .dvv-table-row {
+        display: grid;
+        grid-template-columns: 50px 110px 140px 150px 1fr 120px 120px 140px 160px 120px;
+        gap: 8px; padding: 15px 22px;
+        align-items: center; font-size: 13px; min-width: 1500px;
+    }
+    .dvv-table-head {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%);
+        font-size: 10.5px; font-weight: 800; color: #cbd5e1;
+        letter-spacing: 1px; text-transform: uppercase;
+        position: sticky; top: 0; z-index: 2;
+        backdrop-filter: blur(20px);
+        border-bottom: 2px solid #64748b;
+        box-shadow: 0 4px 20px rgba(100, 116, 139, 0.25);
+    }
+    .dvv-table-head .dvv-cell { color: #cbd5e1; font-weight: 800; }
+    .dvv-table-row {
+        border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+        transition: all var(--transition); background: transparent;
+    }
+    .dvv-table-row:nth-child(even) { background: rgba(148, 163, 184, 0.02); }
+    .dvv-table-row:hover { background: rgba(100, 116, 139, 0.08); }
+    .dvv-table-row:last-child { border-bottom: none; }
+    .dvv-cell {
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        color: var(--c-text-2); font-weight: 600;
+    }
+    .dvv-cell.center { text-align: center; }
+
+    /* BADGES */
+    .dvv-badge {
+        display: inline-block; padding: 4px 12px;
+        border-radius: 8px; font-size: 11px; font-weight: 800;
+        letter-spacing: 0.3px; transition: var(--transition); white-space: nowrap;
+    }
+    .dvv-badge.type    { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
+    .dvv-badge.brand   { background: rgba(230,179,30,0.15); color: var(--c-gold-1); border: 1px solid rgba(230,179,30,0.25); }
+    .dvv-badge.region  { background: rgba(230,179,30,0.15); color: var(--c-gold-1); font-size: 10px; border: 1px solid rgba(230,179,30,0.2); }
+    .dvv-badge.zone    { background: rgba(16,185,129,0.15); color: var(--c-emerald-1); font-size: 10px; border: 1px solid rgba(16,185,129,0.25); }
+    .dvv-badge.disposal {
+        background: linear-gradient(135deg, #1e293b, #334155);
+        color: #f7d774; border: 1px solid rgba(247, 215, 116, 0.4);
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.6);
+    }
+
+    /* ACTION BUTTONS */
+    .dvv-action-btn {
+        width: 34px; height: 34px; border: none; border-radius: 10px;
+        cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 13px; transition: all var(--transition);
+        margin: 0 3px; position: relative; overflow: hidden;
+    }
+    .dvv-action-btn::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
+        opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .dvv-action-btn:hover::before { opacity: 1; }
+    .dvv-action-btn.restore {
+        background: rgba(16,185,129,0.15);
+        color: var(--c-emerald-1);
+        border: 1px solid rgba(16,185,129,0.25);
+    }
+    .dvv-action-btn.restore:hover {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff; transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 16px rgba(16,185,129,0.45);
+    }
+    .dvv-action-btn.view {
+        background: rgba(59,130,246,0.15);
+        color: #93c5fd; border: 1px solid rgba(59,130,246,0.25);
+    }
+    .dvv-action-btn.view:hover {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: #fff; transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 16px rgba(59,130,246,0.45);
+    }
+
+    /* EMPTY */
+    .dvv-empty { padding: 80px 24px; text-align: center; color: var(--c-text-4); }
+    .dvv-empty i {
+        font-size: 56px; margin-bottom: 20px;
+        opacity: 0.5; color: var(--c-slate-1);
+        display: block;
+        filter: drop-shadow(0 0 20px rgba(100, 116, 139, 0.5));
+    }
+    .dvv-empty p { font-size: 14px; font-weight: 700; color: var(--c-text-3); }
+
+    /* DETAILS MODAL */
+    .dvv-modal {
+        position: fixed; inset: 0;
+        background: rgba(2,4,12,0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 99999; display: none;
+        align-items: center; justify-content: center;
+        padding: 20px;
+        animation: dvvModalBgIn 0.25s ease-out;
+    }
+    @keyframes dvvModalBgIn { from { opacity: 0; } to { opacity: 1; } }
+    .dvv-modal.active { display: flex; }
+    .dvv-modal-box {
+        background: linear-gradient(135deg, rgba(24, 34, 56, 0.98) 0%, rgba(15, 20, 32, 0.99) 100%);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(247, 215, 116, 0.25);
+        border-radius: 20px;
+        padding: 28px 32px;
+        width: 100%; max-width: 720px;
+        max-height: 90vh; overflow-y: auto;
+        box-shadow: 0 32px 80px rgba(0,0,0,0.85), 0 0 60px rgba(247, 215, 116, 0.08);
+        animation: dvvModalBoxIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes dvvModalBoxIn {
+        from { transform: scale(0.9) translateY(20px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .dvv-modal-head {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 22px; padding-bottom: 18px;
+        border-bottom: 1px solid var(--c-border-soft);
+        position: relative;
+    }
+    .dvv-modal-head::after {
+        content: ''; position: absolute;
+        bottom: -1px; right: 0;
+        width: 120px; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--c-slate-1));
+        box-shadow: 0 0 12px rgba(148, 163, 184, 0.4);
+    }
+    .dvv-modal-head h3 {
+        font-size: 19px; font-weight: 800;
+        color: var(--c-text-1);
+        display: flex; align-items: center; gap: 10px;
+        margin: 0;
+    }
+    .dvv-modal-head h3 i {
+        color: var(--c-slate-1);
+        filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.5));
+    }
+    .dvv-modal-close {
+        background: rgba(148, 163, 184, 0.08);
+        border: 1px solid var(--c-border-mid);
+        color: var(--c-text-3);
+        width: 38px; height: 38px; border-radius: 12px;
+        cursor: pointer; font-size: 22px;
+        display: flex; align-items: center; justify-content: center;
+        transition: all var(--transition); line-height: 1;
+    }
+    .dvv-modal-close:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--c-red-1);
+        border-color: rgba(239, 68, 68, 0.4);
+        transform: rotate(90deg);
+    }
+    .dvv-detail-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 14px; margin-bottom: 18px;
+    }
+    .dvv-detail-item {
+        background: linear-gradient(135deg, rgba(10, 16, 32, 0.6), rgba(18, 26, 44, 0.4));
+        border: 1px solid var(--c-border-soft);
+        border-radius: 12px; padding: 14px 16px;
+    }
+    .dvv-detail-item label {
+        display: block; font-size: 10px;
+        font-weight: 800; color: var(--c-text-4);
+        text-transform: uppercase;
+        letter-spacing: 0.8px; margin-bottom: 6px;
+    }
+    .dvv-detail-item .dvv-value {
+        font-size: 14px; font-weight: 700;
+        color: var(--c-text-1); word-break: break-word;
+    }
+    .dvv-detail-item.full { grid-column: 1 / -1; }
+    .dvv-detail-item.highlight {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(185, 28, 28, 0.04));
+        border-color: rgba(239, 68, 68, 0.25);
+    }
+    .dvv-detail-item.highlight label { color: var(--c-red-1); }
+    .dvv-detail-item.highlight .dvv-value { color: #fecaca; }
+
+    /* TOAST */
+    .dvv-toast {
+        position: fixed; bottom: 28px; left: 28px;
+        z-index: 999999; max-width: 400px;
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 22px; border-radius: 14px;
+        color: #fff; font-family: var(--font);
+        font-size: 13px; font-weight: 700;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        animation: dvvToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        direction: rtl;
+    }
+    .dvv-toast.success {
+        background: linear-gradient(135deg, rgba(16,185,129,0.95), rgba(5,150,105,0.9));
+        border: 1px solid rgba(110, 231, 183, 0.5);
+    }
+    .dvv-toast.error {
+        background: linear-gradient(135deg, rgba(239,68,68,0.95), rgba(185,28,28,0.9));
+        border: 1px solid rgba(252, 165, 165, 0.5);
+    }
+    .dvv-toast.info {
+        background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(29,78,216,0.9));
+        border: 1px solid rgba(147, 197, 253, 0.5);
+    }
+    @keyframes dvvToastIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1100px) {
+        .dvv-stats { gap: 12px; }
+        .dvv-stat { padding: 18px 12px 16px; }
+        .dvv-stat .number { font-size: 26px; }
+    }
+    @media (max-width: 1024px) {
+        .dvv-header { flex-direction: column; align-items: stretch; padding: 16px 20px; }
+        .dvv-header .header-actions { width: 100%; justify-content: flex-start; }
+        .dvv-detail-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+        .dvv-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .dvv-stat .number { font-size: 24px; }
+    }
+    @media (max-width: 768px) {
+        .dvv-container { padding: 14px 16px 60px; }
+        .dvv-header { padding: 14px 18px; }
+        .dvv-header .title { font-size: 18px; }
+        .dvv-header .title-icon { width: 42px; height: 42px; font-size: 20px; border-radius: 12px; }
+        .dvv-actions { padding: 14px; gap: 10px 12px; }
+        .dvv-input, .dvv-select { min-width: 100%; }
+        .dvv-modal-box { padding: 22px 18px; }
+        .dvv-modal-head h3 { font-size: 16px; }
+        .dvv-toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+    }
+    @media (max-width: 480px) {
+        .dvv-container { padding: 10px 12px 60px; }
+        .dvv-header { padding: 14px; }
+        .dvv-header .title { font-size: 16px; }
+        .dvv-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .dvv-stat { padding: 14px 10px; }
+        .dvv-stat .number { font-size: 20px; }
+        .dvv-stat .label { font-size: 10px; white-space: normal; line-height: 1.3; }
+    }
+</style>
+
+<div class="dvv-container">
+
+    <div class="dvv-header">
+        <div class="title-section">
+            <div class="title-icon"><i class="fas fa-archive"></i></div>
+            <div class="header-text">
+                <div class="title">الوسائل البرية المطروحة</div>
+                <div class="subtitle">سجل الوسائل البرية المسحوبة نهائياً من الخدمة</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="dvv-btn dvv-btn-primary" id="dvvRefreshBtn">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="dvv-btn dvv-btn-info" id="dvvPrintBtn">
+                <i class="fas fa-print"></i> طباعة
+            </button>
+            <button class="dvv-btn dvv-btn-success" id="dvvExcelBtn">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+            <button class="dvv-btn dvv-btn-dark" id="dvvBackBtn" title="عودة إلى السجل العام">
+                <i class="fas fa-arrow-right"></i> السجل العام
+            </button>
+        </div>
+    </div>
+
+    <div class="dvv-stats">
+        <div class="dvv-stat stat-total">
+            <div class="number" id="dvvStatTotal">0</div>
+            <div class="label">📊 إجمالي المطروحة</div>
+        </div>
+        <div class="dvv-stat stat-month">
+            <div class="number" id="dvvStatMonth">0</div>
+            <div class="label">📅 مطروحة هذا الشهر</div>
+        </div>
+        <div class="dvv-stat stat-year">
+            <div class="number" id="dvvStatYear">0</div>
+            <div class="label">🗓️ مطروحة هذه السنة</div>
+        </div>
+        <div class="dvv-stat stat-reason">
+            <div class="number" id="dvvStatTopReason">—</div>
+            <div class="label">⚠️ السبب الأكثر شيوعاً</div>
+        </div>
+    </div>
+
+    <div class="dvv-actions">
+        <input type="text" class="dvv-input" id="dvvSearch" placeholder="🔍 ابحث برقم الوسيلة أو الماركة أو السبب أو رقم القرار...">
+        <select class="dvv-select" id="dvvFilterRegion">
+            <option value="all">كل الإدارات والأقاليم</option>
+        </select>
+        <select class="dvv-select" id="dvvFilterType">
+            <option value="all">كل الأنواع</option>
+        </select>
+        <select class="dvv-select" id="dvvFilterYear">
+            <option value="all">كل السنوات</option>
+        </select>
+        <select class="dvv-select" id="dvvFilterSort">
+            <option value="recent">📅 الأحدث طرحاً</option>
+            <option value="oldest">📅 الأقدم طرحاً</option>
+            <option value="plate">🔤 رقم الوسيلة</option>
+            <option value="type">🚗 النوع</option>
+        </select>
+    </div>
+
+    <div class="dvv-table-wrap">
+        <div class="dvv-table-head">
+            <div class="dvv-cell center">#</div>
+            <div class="dvv-cell center">النوع</div>
+            <div class="dvv-cell">الماركة / الطراز</div>
+            <div class="dvv-cell">رقم الوسيلة</div>
+            <div class="dvv-cell">الإدارة / الإقليم</div>
+            <div class="dvv-cell">المنطقة</div>
+            <div class="dvv-cell center">📅 تاريخ الطرح</div>
+            <div class="dvv-cell">⚠️ سبب الطرح</div>
+            <div class="dvv-cell center">📋 رقم القرار</div>
+            <div class="dvv-cell center">إجراءات</div>
+        </div>
+        <div id="dvvTableBody">
+            <div class="dvv-empty">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>جاري التحميل...</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="dvv-modal" id="dvvModal">
+    <div class="dvv-modal-box">
+        <div class="dvv-modal-head">
+            <h3><i class="fas fa-info-circle"></i> تفاصيل الطرح</h3>
+            <button class="dvv-modal-close" id="dvvModalClose" type="button">×</button>
+        </div>
+        <div id="dvvModalBody"></div>
+        <div style="display:flex; gap:12px; margin-top:24px; padding-top:18px; border-top:1px solid rgba(148,163,184,0.1);">
+            <button type="button" class="dvv-btn dvv-btn-secondary" id="dvvModalCancel" style="flex:1; justify-content:center;">
+                إغلاق
+            </button>
+            <button type="button" class="dvv-btn dvv-btn-success" id="dvvModalRestore" style="flex:1; justify-content:center;">
+                <i class="fas fa-undo"></i> إلغاء الطرح (إعادة للخدمة)
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+    console.log('⚫ Disposals Vehicles v2.0 — Loading...');
+
+    var _isDestroyed = false;
+    var _timeouts = [];
+    var _listeners = [];
+
+    var REGION_LABELS = {
+        'إدارة إسناد الوحدات البحرية': '🏛️ إسناد الوحدات',
+        'إدارة حرس السواحل': '🚢 حرس السواحل',
+        'إقليم الحرس البحري بالشمال': '🌊 الشمال',
+        'إقليم الحرس البحري بالساحل': '🌊 الساحل',
+        'إقليم الحرس البحري بالوسط': '🌊 الوسط',
+        'إقليم الحرس البحري بالجنوب': '🌊 الجنوب',
+        'وحدة الصيانة والإسناد البحري تونس': '🛠️ صيانة تونس',
+        'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ صيانة صفاقس',
+        'وحدة الصيانة والإسناد البحري المنستير': '🛠️ صيانة المنستير',
+        'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ صيانة جرجيس',
+        'المجمع الأمني بقبيبة': '🏛️ بقبيبة'
+    };
+
+    function _dvvCleanup() {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
+        _timeouts = [];
+        _listeners.forEach(function(l) {
+            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
+        });
+        _listeners = [];
+        console.log('🧹 Disposals Vehicles cleanup done');
+    }
+    window._pageCleanup = window._pageCleanup || [];
+    window._pageCleanup.push(_dvvCleanup);
+    window.addEventListener('beforeunload', _dvvCleanup);
+    window.addEventListener('pagehide', _dvvCleanup);
+
+    function getToken() {
+        try {
+            return localStorage.getItem('marine_token')
+                || localStorage.getItem('token')
+                || localStorage.getItem('marine_auth_token')
+                || sessionStorage.getItem('token')
+                || null;
+        } catch(e) { return null; }
+    }
+    function getCsrf() {
+        try {
+            var m = document.cookie.match(/marine_csrf=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : '';
+        } catch(e) { return ''; }
+    }
+    function authHeaders(includeCT) {
+        var h = { 'Accept': 'application/json' };
+        if (includeCT) h['Content-Type'] = 'application/json';
+        var t = getToken();
+        if (t) h['Authorization'] = 'Bearer ' + t;
+        var c = getCsrf();
+        if (c) h['X-CSRF-Token'] = c;
+        return h;
+    }
+    function apiFetch(url, opts) {
+        opts = opts || {};
+        var method = (opts.method || 'GET').toUpperCase();
+        var isSafe = ['GET', 'HEAD', 'OPTIONS'].indexOf(method) !== -1;
+        opts.headers = Object.assign({}, authHeaders(!isSafe), opts.headers || {});
+        opts.credentials = 'include';
+        return fetch(url, opts);
+    }
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/[&<>"']/g, function(m) {
+            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+        });
+    }
+    function addSafeListener(el, type, fn) {
+        if (!el) return;
+        el.addEventListener(type, fn);
+        _listeners.push({ el: el, type: type, fn: fn });
+    }
+    function dvvToast(msg, type, duration) {
+        if (_isDestroyed) return;
+        type = type || 'info';
+        duration = duration || 3000;
+        var existing = document.querySelector('.dvv-toast');
+        if (existing) existing.remove();
+        var toast = document.createElement('div');
+        toast.className = 'dvv-toast ' + type;
+        var icons = { success: '✅', error: '❌', info: 'ℹ️' };
+        var icon = document.createElement('span');
+        icon.textContent = icons[type] || 'ℹ️';
+        var text = document.createElement('span');
+        text.textContent = String(msg || '');
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        document.body.appendChild(toast);
+        var id = setTimeout(function() { if (toast.parentNode) toast.remove(); }, duration);
+        _timeouts.push(id);
+    }
+    function getRegionShort(r) { return REGION_LABELS[r] || r || '—'; }
+    function formatDate(d) {
+        if (!d) return '—';
+        try {
+            var dt = new Date(d);
+            if (isNaN(dt.getTime())) return d;
+            var y = dt.getFullYear();
+            var m = String(dt.getMonth() + 1).padStart(2, '0');
+            var day = String(dt.getDate()).padStart(2, '0');
+            return day + '/' + m + '/' + y;
+        } catch(e) { return d; }
+    }
+
+    var disposals = [];
+    var currentViewId = null;
+
+    function loadDisposals() {
+        if (_isDestroyed) return;
+        var tbody = document.getElementById('dvvTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<div class="dvv-empty"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
+        }
+        apiFetch('/api/vehicles/disposed')
+            .then(function(res) {
+                if (!res.ok) {
+                    return apiFetch('/api/vehicles').then(function(r) { return r.json(); })
+                        .then(function(all) {
+                            if (!Array.isArray(all)) return [];
+                            return all.filter(function(v) { return v.status === 'طرح'; });
+                        });
+                }
+                return res.json();
+            })
+            .then(function(data) {
+                if (_isDestroyed) return;
+                var list = [];
+                if (Array.isArray(data)) {
+                    list = data;
+                } else if (data && Array.isArray(data.vehicles)) {
+                    list = data.vehicles;
+                }
+                disposals = list.filter(function(v) { return v.status === 'طرح'; });
+                renderStats();
+                populateFilters();
+                renderTable();
+            })
+            .catch(function(err) {
+                console.warn('⚠️ Load error:', err.message);
+                if (tbody) {
+                    tbody.innerHTML = '<div class="dvv-empty"><i class="fas fa-exclamation-triangle" style="color:#f87171"></i><p>فشل تحميل البيانات</p></div>';
+                }
+            });
+    }
+
+    function renderStats() {
+        var total = disposals.length;
+        var now = new Date();
+        var curMonth = now.getMonth();
+        var curYear = now.getFullYear();
+        var month = 0, year = 0;
+        var reasons = {};
+        disposals.forEach(function(v) {
+            var d = v.disposalDate ? new Date(v.disposalDate) : null;
+            if (d && !isNaN(d.getTime())) {
+                if (d.getMonth() === curMonth && d.getFullYear() === curYear) month++;
+                if (d.getFullYear() === curYear) year++;
+            }
+            var r = (v.disposalReason || '').trim();
+            if (r) reasons[r] = (reasons[r] || 0) + 1;
+        });
+        var topReason = '—', maxCount = 0;
+        Object.keys(reasons).forEach(function(r) {
+            if (reasons[r] > maxCount) { maxCount = reasons[r]; topReason = r; }
+        });
+        if (topReason.length > 25) topReason = topReason.substring(0, 25) + '…';
+        var el;
+        el = document.getElementById('dvvStatTotal'); if (el) el.textContent = total;
+        el = document.getElementById('dvvStatMonth'); if (el) el.textContent = month;
+        el = document.getElementById('dvvStatYear'); if (el) el.textContent = year;
+        el = document.getElementById('dvvStatTopReason');
+        if (el) {
+            el.textContent = topReason;
+            el.style.fontSize = topReason.length > 15 ? '14px' : '20px';
+        }
+    }
+
+    function populateFilters() {
+        var regionEl = document.getElementById('dvvFilterRegion');
+        if (regionEl) {
+            var regions = {};
+            disposals.forEach(function(v) { if (v.region) regions[v.region] = true; });
+            var html = '<option value="all">كل الإدارات والأقاليم</option>';
+            Object.keys(regions).sort().forEach(function(r) {
+                html += '<option value="' + escapeHtml(r) + '">' + escapeHtml(getRegionShort(r)) + '</option>';
+            });
+            regionEl.innerHTML = html;
+        }
+        var typeEl = document.getElementById('dvvFilterType');
+        if (typeEl) {
+            var types = {};
+            disposals.forEach(function(v) { if (v.type) types[v.type] = true; });
+            var tHtml = '<option value="all">كل الأنواع</option>';
+            Object.keys(types).sort().forEach(function(t) {
+                tHtml += '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>';
+            });
+            typeEl.innerHTML = tHtml;
+        }
+        var yearEl = document.getElementById('dvvFilterYear');
+        if (yearEl) {
+            var years = {};
+            disposals.forEach(function(v) {
+                if (v.disposalDate) {
+                    try {
+                        var y = new Date(v.disposalDate).getFullYear();
+                        if (!isNaN(y)) years[y] = true;
+                    } catch(e) {}
+                }
+            });
+            var ylist = Object.keys(years).map(Number).sort(function(a, b) { return b - a; });
+            var yHtml = '<option value="all">كل السنوات</option>';
+            ylist.forEach(function(y) { yHtml += '<option value="' + y + '">' + y + '</option>'; });
+            yearEl.innerHTML = yHtml;
+        }
+    }
+
+    function getFiltered() {
+        var searchEl = document.getElementById('dvvSearch');
+        var regionEl = document.getElementById('dvvFilterRegion');
+        var typeEl = document.getElementById('dvvFilterType');
+        var yearEl = document.getElementById('dvvFilterYear');
+        var sortEl = document.getElementById('dvvFilterSort');
+        var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+        var region = regionEl ? regionEl.value : 'all';
+        var type = typeEl ? typeEl.value : 'all';
+        var year = yearEl ? yearEl.value : 'all';
+        var sort = sortEl ? sortEl.value : 'recent';
+
+        var filtered = disposals.filter(function(v) {
+            if (region !== 'all' && v.region !== region) return false;
+            if (type !== 'all' && v.type !== type) return false;
+            if (year !== 'all') {
+                var y = v.disposalDate ? new Date(v.disposalDate).getFullYear() : null;
+                if (String(y) !== String(year)) return false;
+            }
+            if (search) {
+                var text = ((v.plateNumber || '') + ' ' + (v.brand || '') + ' ' + (v.model || '') + ' ' +
+                            (v.type || '') + ' ' + (v.region || '') + ' ' + (v.zone || '') + ' ' +
+                            (v.center || '') + ' ' + (v.disposalReason || '') + ' ' +
+                            (v.disposalDecision || '') + ' ' + (v.disposedBy || '')).toLowerCase();
+                if (text.indexOf(search) === -1) return false;
+            }
+            return true;
+        });
+
+        filtered.sort(function(a, b) {
+            if (sort === 'recent' || sort === 'oldest') {
+                var da = a.disposalDate ? new Date(a.disposalDate).getTime() : 0;
+                var db = b.disposalDate ? new Date(b.disposalDate).getTime() : 0;
+                return sort === 'recent' ? db - da : da - db;
+            }
+            if (sort === 'plate') {
+                return String(a.plateNumber || '').localeCompare(String(b.plateNumber || ''), 'ar');
+            }
+            if (sort === 'type') {
+                return String(a.type || '').localeCompare(String(b.type || ''), 'ar');
+            }
+            return 0;
+        });
+        return filtered;
+    }
+
+    function renderTable() {
+        var tbody = document.getElementById('dvvTableBody');
+        if (!tbody) return;
+        var filtered = getFiltered();
+        if (!filtered.length) {
+            var msg = disposals.length === 0 ? 'لا توجد وسائل مطروحة حتى الآن' : 'لا توجد نتائج مطابقة';
+            tbody.innerHTML = '<div class="dvv-empty"><i class="fas fa-archive"></i><p>' + msg + '</p></div>';
+            return;
+        }
+        var html = '';
+        filtered.forEach(function(v, idx) {
+            var id = v._id || v.id;
+            var brandModel = '—';
+            if (v.brand || v.model) {
+                var parts = [];
+                if (v.brand) parts.push('<span class="dvv-badge brand">' + escapeHtml(v.brand) + '</span>');
+                if (v.model) parts.push('<span class="dvv-badge type" style="font-size:10px;">' + escapeHtml(v.model) + '</span>');
+                brandModel = parts.join(' ');
+            }
+            var reason = v.disposalReason || '—';
+            var shortReason = reason.length > 40 ? reason.substring(0, 40) + '…' : reason;
+            var region = v.region || '—';
+            var zone = v.zone || '—';
+            var decision = v.disposalDecision || '—';
+            var disposalDate = v.disposalDate || v.disposedAt;
+
+            html +=
+                '<div class="dvv-table-row">' +
+                    '<div class="dvv-cell center">' + (idx + 1) + '</div>' +
+                    '<div class="dvv-cell center"><span class="dvv-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
+                    '<div class="dvv-cell">' + brandModel + '</div>' +
+                    '<div class="dvv-cell"><span class="dvv-badge brand" style="font-family:monospace; letter-spacing:1px;">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
+                    '<div class="dvv-cell" title="' + escapeHtml(region) + '"><span class="dvv-badge region">' + escapeHtml(getRegionShort(region)) + '</span></div>' +
+                    '<div class="dvv-cell" title="' + escapeHtml(zone) + '"><span class="dvv-badge zone">📍 ' + escapeHtml(zone) + '</span></div>' +
+                    '<div class="dvv-cell center">' + formatDate(disposalDate) + '</div>' +
+                    '<div class="dvv-cell" title="' + escapeHtml(reason) + '">' + escapeHtml(shortReason) + '</div>' +
+                    '<div class="dvv-cell center">' + (decision !== '—' ? '<span class="dvv-badge disposal">' + escapeHtml(decision) + '</span>' : '—') + '</div>' +
+                    '<div class="dvv-cell center">' +
+                        '<button type="button" class="dvv-action-btn view" data-action="view" data-id="' + escapeHtml(id) + '" title="عرض التفاصيل"><i class="fas fa-eye"></i></button>' +
+                        '<button type="button" class="dvv-action-btn restore" data-action="restore" data-id="' + escapeHtml(id) + '" title="إلغاء الطرح"><i class="fas fa-undo"></i></button>' +
+                    '</div>' +
+                '</div>';
+        });
+        tbody.innerHTML = html;
+        tbody.querySelectorAll('[data-action]').forEach(function(btn) {
+            addSafeListener(btn, 'click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var action = this.getAttribute('data-action');
+                var id = this.getAttribute('data-id');
+                if (action === 'view') openDetailsModal(id);
+                else if (action === 'restore') restoreVehicle(id);
+            });
+        });
+    }
+
+    function openDetailsModal(id) {
+        var v = disposals.find(function(x) { return String(x._id || x.id) === String(id); });
+        if (!v) return;
+        currentViewId = id;
+        var body = document.getElementById('dvvModalBody');
+        if (!body) return;
+        var disposalDate = v.disposalDate || v.disposedAt;
+        body.innerHTML =
+            '<div class="dvv-detail-grid">' +
+                '<div class="dvv-detail-item"><label>رقم الوسيلة</label><div class="dvv-value"><strong style="color:#f7d774; font-family:monospace; letter-spacing:1.5px;">' + escapeHtml(v.plateNumber || '—') + '</strong></div></div>' +
+                '<div class="dvv-detail-item"><label>النوع</label><div class="dvv-value">' + escapeHtml(v.type || '—') + '</div></div>' +
+                '<div class="dvv-detail-item"><label>الماركة</label><div class="dvv-value">' + escapeHtml(v.brand || '—') + '</div></div>' +
+                '<div class="dvv-detail-item"><label>الطراز</label><div class="dvv-value">' + escapeHtml(v.model || '—') + '</div></div>' +
+                '<div class="dvv-detail-item"><label>السنة</label><div class="dvv-value">' + escapeHtml(v.year || '—') + '</div></div>' +
+                '<div class="dvv-detail-item"><label>اللون</label><div class="dvv-value">' + escapeHtml(v.color || '—') + '</div></div>' +
+                '<div class="dvv-detail-item full"><label>الإدارة / الإقليم</label><div class="dvv-value">' + escapeHtml(getRegionShort(v.region)) + '</div></div>' +
+                '<div class="dvv-detail-item"><label>المنطقة</label><div class="dvv-value">' + escapeHtml(v.zone || '—') + '</div></div>' +
+                '<div class="dvv-detail-item"><label>المركز</label><div class="dvv-value">' + escapeHtml(v.center || '—') + '</div></div>' +
+                '<div class="dvv-detail-item full highlight"><label>⚠️ سبب الطرح</label><div class="dvv-value">' + escapeHtml(v.disposalReason || '—') + '</div></div>' +
+                '<div class="dvv-detail-item"><label>📋 رقم القرار</label><div class="dvv-value">' + escapeHtml(v.disposalDecision || '—') + '</div></div>' +
+                '<div class="dvv-detail-item"><label>👤 من قرر الطرح</label><div class="dvv-value">' + escapeHtml(v.disposedBy || '—') + '</div></div>' +
+                '<div class="dvv-detail-item"><label>📅 تاريخ الطرح</label><div class="dvv-value">' + formatDate(disposalDate) + '</div></div>' +
+                '<div class="dvv-detail-item"><label>📅 تاريخ التعيين الأصلي</label><div class="dvv-value">' + formatDate(v.appointmentDate) + '</div></div>' +
+                (v.faultDate ? '<div class="dvv-detail-item"><label>⚠️ تاريخ العطب</label><div class="dvv-value">' + formatDate(v.faultDate) + '</div></div>' : '') +
+                (v.notes ? '<div class="dvv-detail-item full"><label>ملاحظات</label><div class="dvv-value">' + escapeHtml(v.notes) + '</div></div>' : '') +
+            '</div>';
+        var modal = document.getElementById('dvvModal');
+        if (modal) modal.classList.add('active');
+    }
+
+    function closeDetailsModal() {
+        var modal = document.getElementById('dvvModal');
+        if (modal) modal.classList.remove('active');
+        currentViewId = null;
+    }
+
+    function restoreVehicle(id) {
+        var v = disposals.find(function(x) { return String(x._id || x.id) === String(id); });
+        if (!v) return;
+        var plate = v.plateNumber || '—';
+        if (!confirm('⚠️ هل تريد إلغاء طرح الوسيلة "' + plate + '" وإعادتها للخدمة؟\n\nملاحظة: سيتم وضعها في حالة "صالحة" افتراضياً.')) return;
+
+        apiFetch('/api/vehicles/' + encodeURIComponent(id) + '/restore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newStatus: 'صالحة' })
+        })
+            .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
+            .then(function(result) {
+                if (!result.ok) throw new Error(result.data.error || 'فشل إلغاء الطرح');
+                dvvToast('✅ تم إلغاء الطرح — الوسيلة عادت للخدمة', 'success');
+                closeDetailsModal();
+                loadDisposals();
+            })
+            .catch(function(err) {
+                dvvToast('❌ ' + err.message, 'error');
+            });
+    }
+
+    function dvvPrint() {
+        dvvToast('🖨️ جاري تحضير الطباعة...', 'info', 1500);
+        _timeouts.push(setTimeout(function() { window.print(); }, 300));
+    }
+
+    function dvvExportExcel() {
+        try {
+            var filtered = getFiltered();
+            if (!filtered.length) { dvvToast('⚠️ لا توجد بيانات', 'error'); return; }
+            var BOM = '\uFEFF';
+            var headers = ['#','النوع','الماركة','الطراز','السنة','اللون','رقم الوسيلة','الإدارة / الإقليم','المنطقة','المركز','تاريخ الطرح','سبب الطرح','رقم القرار','من قرر الطرح','ملاحظات'];
+            function csvEscape(val) {
+                if (val === null || val === undefined) return '';
+                var s = String(val);
+                if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
+                    return '"' + s.replace(/"/g, '""') + '"';
+                }
+                return s;
+            }
+            var rows = [headers.map(csvEscape).join(',')];
+            filtered.forEach(function(v, idx) {
+                var disposalDate = v.disposalDate || v.disposedAt;
+                rows.push([
+                    csvEscape(idx + 1), csvEscape(v.type || ''), csvEscape(v.brand || ''),
+                    csvEscape(v.model || ''), csvEscape(v.year || ''), csvEscape(v.color || ''),
+                    csvEscape(v.plateNumber || ''), csvEscape(v.region || ''), csvEscape(v.zone || ''),
+                    csvEscape(v.center || ''), csvEscape(formatDate(disposalDate)),
+                    csvEscape(v.disposalReason || ''), csvEscape(v.disposalDecision || ''),
+                    csvEscape(v.disposedBy || ''), csvEscape(v.notes || '')
+                ].join(','));
+            });
+            var csv = BOM + rows.join('\r\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var now = new Date();
+            var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            var filename = 'disposals_vehicles_' + dateStr + '.csv';
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            _timeouts.push(setTimeout(function() {
+                if (a.parentNode) a.parentNode.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100));
+            dvvToast('✅ تم تصدير ' + filtered.length + ' وسيلة مطروحة', 'success');
+        } catch (err) {
+            console.error('Excel error:', err);
+            dvvToast('❌ فشل التصدير: ' + err.message, 'error');
+        }
+    }
+
+    function init() {
+        if (_isDestroyed) return;
+        console.log('🚀 Initializing Disposals Vehicles v2.0...');
+        addSafeListener(document.getElementById('dvvRefreshBtn'), 'click', function() {
+            dvvToast('🔄 جاري التحديث...', 'info', 1200);
+            loadDisposals();
+        });
+        addSafeListener(document.getElementById('dvvPrintBtn'), 'click', dvvPrint);
+        addSafeListener(document.getElementById('dvvExcelBtn'), 'click', dvvExportExcel);
+        addSafeListener(document.getElementById('dvvBackBtn'), 'click', function() {
+            if (typeof window.navigateTo === 'function') {
+                window.navigateTo('vehicles');
+            } else {
+                window.location.hash = '#vehicles';
+                setTimeout(function() {
+                    if (!window.location.hash || window.location.hash === '#vehicles') {
+                        window.location.href = '/pages/vehicles.html';
+                    }
+                }, 300);
+            }
+        });
+        addSafeListener(document.getElementById('dvvSearch'), 'input', renderTable);
+        addSafeListener(document.getElementById('dvvFilterRegion'), 'change', renderTable);
+        addSafeListener(document.getElementById('dvvFilterType'), 'change', renderTable);
+        addSafeListener(document.getElementById('dvvFilterYear'), 'change', renderTable);
+        addSafeListener(document.getElementById('dvvFilterSort'), 'change', renderTable);
+        addSafeListener(document.getElementById('dvvModalClose'), 'click', closeDetailsModal);
+        addSafeListener(document.getElementById('dvvModalCancel'), 'click', closeDetailsModal);
+        addSafeListener(document.getElementById('dvvModalRestore'), 'click', function() {
+            if (currentViewId) restoreVehicle(currentViewId);
+        });
+        var modal = document.getElementById('dvvModal');
+        if (modal) addSafeListener(modal, 'click', function(e) {
+            if (e.target === modal) closeDetailsModal();
+        });
+        addSafeListener(document, 'keydown', function(e) {
+            if (e.key === 'Escape') closeDetailsModal();
+        });
+        loadDisposals();
+        console.log('✅ Disposals Vehicles v2.0 ready');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+            _timeouts.push(id);
+        });
+    } else {
+        var id0 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+        _timeouts.push(id0);
+    }
+})();
+</script>
+</div>
