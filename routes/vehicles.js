@@ -1,12 +1,11 @@
 // ============================================================
-// 🚛 routes/vehicles.js — v6.1
-// + 🆕 الصور + 🆕 الطرح
+// 🚛 routes/vehicles.js — v7.0
+// + 🆕 الصور (Cloudinary) + 🆕 الطرح
 // ============================================================
 
 'use strict';
 
 const path = require('path');
-const fs   = require('fs');
 
 module.exports = function registerVehicleRoutes(app, deps) {
     const {
@@ -25,12 +24,31 @@ module.exports = function registerVehicleRoutes(app, deps) {
         return;
     }
 
-    // 🆕 استيراد Multer
-    let upload;
+    // 🆕 Multer (Memory Storage)
+    let upload = null;
     try {
         upload = require('../middleware/uploadVehicleImages');
     } catch (e) {
         console.warn('⚠️ [VEHICLES] Upload middleware not found, images disabled');
+    }
+
+    // ☁️ Cloudinary Setup
+    let cloudinary = null;
+    try {
+        cloudinary = require('cloudinary').v2;
+        cloudinary.config({
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key:    process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET,
+            secure: true
+        });
+        if (process.env.CLOUDINARY_CLOUD_NAME) {
+            console.log('☁️ [VEHICLES] Cloudinary configured');
+        } else {
+            console.warn('⚠️ [VEHICLES] Cloudinary env vars missing');
+        }
+    } catch (e) {
+        console.warn('⚠️ [VEHICLES] Cloudinary not installed:', e.message);
     }
 
     console.log('✅ [VEHICLES] Registering vehicles routes...');
@@ -44,7 +62,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     const MAX_IMAGES = 10;
 
     // ============================================================
-    // 🎨 formatVehicle — 🆕 يضم الصور وحقول الطرح
+    // 🎨 formatVehicle
     // ============================================================
     function formatVehicle(v) {
         if (!v) return null;
@@ -53,6 +71,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
             filename: img.filename || '',
             originalName: img.originalName || '',
             url: img.url || '',
+            cloudinaryId: img.cloudinaryId || '',
             size: img.size || 0,
             mimetype: img.mimetype || '',
             caption: img.caption || '',
@@ -101,7 +120,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     }
 
     // ============================================================
-    // 🔍 GET /api/vehicles — استثناء المطروحة افتراضياً
+    // 🔍 GET /api/vehicles
     // ============================================================
     app.get('/api/vehicles',
         authenticateAccessToken,
@@ -125,7 +144,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     );
 
     // ============================================================
-    // 🔍 GET /api/vehicles/disposed — المطروحة
+    // 🔍 GET /api/vehicles/disposed
     // ============================================================
     app.get('/api/vehicles/disposed',
         authenticateAccessToken,
@@ -133,7 +152,6 @@ module.exports = function registerVehicleRoutes(app, deps) {
         async (req, res) => {
             try {
                 const { q, region, zone, type, brand, decision, from, to } = req.query;
-
                 const query = { status: 'طرح' };
                 if (region)   query.region = region;
                 if (zone)     query.zone = zone;
@@ -194,8 +212,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
 
                 res.json({
                     success: true,
-                    total,
-                    disposed,
+                    total, disposed,
                     active: total - disposed,
                     disposedPercent: total > 0 ? Math.round((disposed / total) * 1000) / 10 : 0,
                     byRegion: byRegion.map(x => ({ region: x._id, count: x.count })),
@@ -234,7 +251,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     );
 
     // ============================================================
-    // 🔍 GET /api/vehicles/:id — تفاصيل وسيلة واحدة
+    // 🔍 GET /api/vehicles/:id
     // ============================================================
     app.get('/api/vehicles/:id',
         authenticateAccessToken,
@@ -256,7 +273,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     );
 
     // ============================================================
-    // ➕ POST /api/vehicles — إضافة
+    // ➕ POST /api/vehicles
     // ============================================================
     app.post('/api/vehicles',
         authenticateAccessToken,
@@ -272,15 +289,12 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     appointmentDate, faultDate, notes
                 } = req.body;
 
-                if (typeof plateNumber !== 'string' || !plateNumber.trim()) {
+                if (typeof plateNumber !== 'string' || !plateNumber.trim())
                     return res.status(400).json({ success: false, error: 'رقم الوسيلة مطلوب' });
-                }
-                if (typeof region !== 'string' || !region.trim()) {
+                if (typeof region !== 'string' || !region.trim())
                     return res.status(400).json({ success: false, error: 'الإدارة / الإقليم مطلوب' });
-                }
-                if (typeof zone !== 'string' || !zone.trim()) {
+                if (typeof zone !== 'string' || !zone.trim())
                     return res.status(400).json({ success: false, error: 'المنطقة مطلوبة' });
-                }
 
                 const allowedZones = VEHICLE_ZONES[region] || [];
                 if (allowedZones.length > 0 && allowedZones.indexOf(zone) === -1) {
@@ -344,19 +358,17 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 });
             } catch (e) {
                 console.error('❌ [VEHICLES] POST error:', e.message);
-                if (e.name === 'ValidationError') {
+                if (e.name === 'ValidationError')
                     return res.status(400).json({ success: false, error: e.message });
-                }
-                if (e.code === 11000) {
+                if (e.code === 11000)
                     return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
-                }
                 res.status(500).json({ success: false, error: 'خطأ في إضافة الوسيلة' });
             }
         }
     );
 
     // ============================================================
-    // ✏️ PUT /api/vehicles/:id — تعديل
+    // ✏️ PUT /api/vehicles/:id
     // ============================================================
     app.put('/api/vehicles/:id',
         authenticateAccessToken,
@@ -378,7 +390,6 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     appointmentDate, faultDate, notes
                 } = req.body;
 
-                // منع تغيير حالة "طرح" عبر PUT العادي
                 const wasDisposed = v.status === 'طرح';
                 if (wasDisposed && status !== undefined && status !== 'طرح') {
                     return res.status(400).json({
@@ -416,8 +427,6 @@ module.exports = function registerVehicleRoutes(app, deps) {
 
                 if (region !== undefined) v.region = newRegion;
                 if (zone !== undefined) v.zone = newZone;
-
-                // منع تعيين "طرح" من هنا (استخدم endpoint الطرح)
                 if (status !== undefined && status !== 'طرح') v.status = status;
                 if (workCondition !== undefined) v.workCondition = workCondition;
                 if (appointmentDate !== undefined) v.appointmentDate = appointmentDate || null;
@@ -449,19 +458,17 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 });
             } catch (e) {
                 console.error('❌ [VEHICLES] PUT error:', e.message);
-                if (e.name === 'ValidationError') {
+                if (e.name === 'ValidationError')
                     return res.status(400).json({ success: false, error: e.message });
-                }
-                if (e.code === 11000) {
+                if (e.code === 11000)
                     return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
-                }
                 res.status(500).json({ success: false, error: 'خطأ في التحديث' });
             }
         }
     );
 
     // ============================================================
-    // 🗑️ DELETE /api/vehicles/:id
+    // 🗑️ DELETE /api/vehicles/:id — يحذف الصور من Cloudinary
     // ============================================================
     app.delete('/api/vehicles/:id',
         authenticateAccessToken,
@@ -478,14 +485,17 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 const plate = v.plateNumber;
                 const vid = v.id;
 
-                // 🆕 حذف ملفات الصور
-                if (v.images && v.images.length > 0) {
-                    v.images.forEach(img => {
-                        if (img.url) {
-                            const fp = path.join(__dirname, '..', img.url);
-                            fs.unlink(fp, () => {});
+                // ☁️ حذف الصور من Cloudinary
+                if (cloudinary && v.images && v.images.length > 0) {
+                    for (const img of v.images) {
+                        if (img.cloudinaryId) {
+                            try {
+                                await cloudinary.uploader.destroy(img.cloudinaryId);
+                            } catch (err) {
+                                console.warn('⚠️ Cloudinary delete:', err.message);
+                            }
                         }
-                    });
+                    }
                 }
 
                 await Vehicle.deleteOne({ _id: v._id });
@@ -506,7 +516,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     );
 
     // ============================================================
-    // ⚫ POST /api/vehicles/:id/dispose — طرح وسيلة
+    // ⚫ POST /api/vehicles/:id/dispose
     // ============================================================
     app.post('/api/vehicles/:id/dispose',
         authenticateAccessToken,
@@ -520,15 +530,13 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 const v = await Vehicle.findOne(q);
                 if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
-                if (v.status === 'طرح') {
+                if (v.status === 'طرح')
                     return res.status(400).json({ success: false, error: 'الوسيلة مطروحة مسبقاً' });
-                }
 
                 const { reason, decision, disposedBy, notes, date } = req.body || {};
 
-                if (!reason || !String(reason).trim()) {
+                if (!reason || !String(reason).trim())
                     return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
-                }
 
                 v.dispose({
                     reason: String(reason).trim(),
@@ -569,7 +577,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     );
 
     // ============================================================
-    // ♻️ POST /api/vehicles/:id/restore — إلغاء الطرح
+    // ♻️ POST /api/vehicles/:id/restore
     // ============================================================
     app.post('/api/vehicles/:id/restore',
         authenticateAccessToken,
@@ -583,9 +591,8 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 const v = await Vehicle.findOne(q);
                 if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
-                if (v.status !== 'طرح') {
+                if (v.status !== 'طرح')
                     return res.status(400).json({ success: false, error: 'الوسيلة غير مطروحة' });
-                }
 
                 const { newStatus } = req.body || {};
                 const allowed = ['صالحة', 'صيانة', 'معطبة'];
@@ -622,9 +629,9 @@ module.exports = function registerVehicleRoutes(app, deps) {
     );
 
     // ============================================================
-    // 📸 POST /api/vehicles/:id/images — رفع صور
+    // 📸 POST /api/vehicles/:id/images — رفع صور إلى Cloudinary
     // ============================================================
-    if (upload) {
+    if (upload && cloudinary) {
         app.post('/api/vehicles/:id/images',
             authenticateAccessToken,
             requirePermission('vessels:update'),
@@ -633,51 +640,65 @@ module.exports = function registerVehicleRoutes(app, deps) {
             async (req, res) => {
                 try {
                     const q = buildIdQuery(req.params.id);
-                    if (!q) {
-                        req.files?.forEach(f => fs.unlink(f.path, () => {}));
-                        return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-                    }
+                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
                     const v = await Vehicle.findOne(q);
-                    if (!v) {
-                        req.files?.forEach(f => fs.unlink(f.path, () => {}));
-                        return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
-                    }
+                    if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
-                    if (!req.files || req.files.length === 0) {
+                    if (!req.files || req.files.length === 0)
                         return res.status(400).json({ success: false, error: 'لم يتم رفع أي صورة' });
-                    }
 
                     const remaining = MAX_IMAGES - v.images.length;
-                    if (remaining <= 0) {
-                        req.files.forEach(f => fs.unlink(f.path, () => {}));
+                    if (remaining <= 0)
                         return res.status(400).json({
                             success: false,
                             error: `الحد الأقصى ${MAX_IMAGES} صور`
                         });
-                    }
 
-                    const filesToAdd  = req.files.slice(0, remaining);
-                    const filesToDrop = req.files.slice(remaining);
-                    filesToDrop.forEach(f => fs.unlink(f.path, () => {}));
-
+                    const filesToAdd = req.files.slice(0, remaining);
                     const source  = req.body.source === 'camera' ? 'camera' : 'upload';
                     const caption = typeof req.body.caption === 'string' ? req.body.caption.trim() : '';
 
-                    const newImages = filesToAdd.map((file, idx) => ({
-                        filename:     file.filename,
-                        originalName: file.originalname,
-                        url:          `/uploads/vehicles/${file.filename}`,
-                        size:         file.size,
-                        mimetype:     file.mimetype,
-                        caption,
-                        isPrimary:    v.images.length === 0 && idx === 0,
-                        source,
-                        uploadedAt:   new Date(),
-                        uploadedBy:   req.user.name || req.user.username || 'system'
-                    }));
+                    const uploaded = [];
 
-                    v.images.push(...newImages);
+                    for (let idx = 0; idx < filesToAdd.length; idx++) {
+                        const file = filesToAdd[idx];
+                        try {
+                            const result = await new Promise((resolve, reject) => {
+                                const stream = cloudinary.uploader.upload_stream({
+                                    folder: `marine-system/vehicles/${v.plateNumber || v.id}`,
+                                    resource_type: 'image',
+                                    transformation: [
+                                        { width: 1920, height: 1920, crop: 'limit' },
+                                        { quality: 'auto:good' },
+                                        { fetch_format: 'auto' }
+                                    ]
+                                }, (err, r) => err ? reject(err) : resolve(r));
+                                stream.end(file.buffer);
+                            });
+
+                            uploaded.push({
+                                filename:     result.public_id.split('/').pop(),
+                                originalName: file.originalname,
+                                url:          result.secure_url,
+                                cloudinaryId: result.public_id,
+                                size:         result.bytes,
+                                mimetype:     file.mimetype,
+                                caption:      caption,
+                                isPrimary:    v.images.length === 0 && idx === 0,
+                                source:       source,
+                                uploadedAt:   new Date(),
+                                uploadedBy:   req.user.name || req.user.username || 'system'
+                            });
+                        } catch (err) {
+                            console.error('❌ Cloudinary upload error:', err.message);
+                        }
+                    }
+
+                    if (uploaded.length === 0)
+                        return res.status(500).json({ success: false, error: 'فشل رفع الصور' });
+
+                    v.images.push(...uploaded);
                     await v.save();
 
                     await addSystemLog({
@@ -685,18 +706,17 @@ module.exports = function registerVehicleRoutes(app, deps) {
                         action: 'upload_images', resource: 'vehicle',
                         resourceId: v.id, resourceName: v.plateNumber,
                         status: 'success', ip: req.ip, requestId: req.requestId,
-                        details: { count: newImages.length, source }
+                        details: { count: uploaded.length, source }
                     });
 
                     res.json({
                         success: true,
-                        message: `تم رفع ${newImages.length} صورة`,
+                        message: `تم رفع ${uploaded.length} صورة`,
                         images: v.images,
                         vehicle: formatVehicle(v)
                     });
                 } catch (e) {
                     console.error('❌ [VEHICLES] upload error:', e.message);
-                    req.files?.forEach(f => fs.unlink(f.path, () => {}));
                     res.status(500).json({ success: false, error: 'خطأ في رفع الصور' });
                 }
             }
@@ -720,10 +740,12 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     const img = v.images.id(req.params.imageId);
                     if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
 
-                    // حذف الملف الفعلي
-                    if (img.url) {
-                        const fp = path.join(__dirname, '..', img.url);
-                        fs.unlink(fp, () => {});
+                    if (img.cloudinaryId) {
+                        try {
+                            await cloudinary.uploader.destroy(img.cloudinaryId);
+                        } catch (err) {
+                            console.warn('⚠️ Cloudinary delete:', err.message);
+                        }
                     }
 
                     v.removeImage(req.params.imageId);
@@ -780,6 +802,8 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 }
             }
         );
+    } else if (upload && !cloudinary) {
+        console.warn('⚠️ [VEHICLES] Image endpoints disabled (Cloudinary not configured)');
     }
 
     // ============================================================
@@ -796,8 +820,8 @@ module.exports = function registerVehicleRoutes(app, deps) {
     console.log('   📌 DELETE /api/vehicles/:id');
     console.log('   📌 POST   /api/vehicles/:id/dispose');
     console.log('   📌 POST   /api/vehicles/:id/restore');
-    if (upload) {
-        console.log('   📌 POST   /api/vehicles/:id/images');
+    if (upload && cloudinary) {
+        console.log('   📌 POST   /api/vehicles/:id/images (Cloudinary)');
         console.log('   📌 DELETE /api/vehicles/:id/images/:imageId');
         console.log('   📌 PATCH  /api/vehicles/:id/images/:imageId/primary');
     }
