@@ -1,18 +1,19 @@
 /**
  * 🚢 مسارات الوسائل البحرية
  * @module routes/vesselRoutes
- * @version 9.1.0
+ * @version 10.0.0
  *
- * ✨ v9.1 Features:
- * - Full authenticate + authorize chain
- * - CSRF protection on mutating routes
- * - express-validator result checking
- * - Frontend-compatible field names
- * - RBAC via requirePermission
- * - Rate limiting ready
+ * ✨ v10.0 Features:
+ * - كامل مع الطرح والصور
+ * - disposed قبل /:id لتجنّب التعارض
+ * - multer للصور
+ * - express-validator
+ * - RBAC + CSRF
  */
 
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const { body, param, validationResult } = require('express-validator');
 
 const {
@@ -29,30 +30,32 @@ const {
     requirePermission
 } = require('../middleware/auth');
 
-// ✅ CSRF protection من server.js
-//    إن لم يكن متوفراً، نستخدم passthrough
+// CSRF protection
 let csrfProtection = (req, res, next) => next();
 try {
-    // نحاول استيراده من server.js إذا كان مُصدَّراً
-    // وإلا نبقى على passthrough
     const serverModule = require('../server');
     if (serverModule && typeof serverModule.csrfProtection === 'function') {
         csrfProtection = serverModule.csrfProtection;
     }
+} catch (e) {}
+
+// Multer للصور
+let upload;
+try {
+    upload = require('../middleware/uploadVesselImages');
 } catch (e) {
-    // server.js لا يُصدّر csrfProtection — نتجاهل
+    console.warn('⚠️ [VESSELS] uploadVesselImages middleware not found — images disabled');
 }
 
+const Vessel = require('../models/Vessel');
+
 const router = express.Router();
+
+const MAX_IMAGES = 10;
 
 // ============================================================
 // 🔧 HELPERS
 // ============================================================
-
-/**
- * ✅ فحص نتائج express-validator
- *    إن فشل → 400 مع أول رسالة خطأ
- */
 const checkValidation = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -67,187 +70,173 @@ const checkValidation = (req, res, next) => {
     next();
 };
 
+function formatVessel(v) {
+    if (!v) return null;
+    const obj = v.toObject ? v.toObject() : v;
+    const images = Array.isArray(obj.images) ? obj.images.map(img => ({
+        _id: img._id ? img._id.toString() : null,
+        filename: img.filename || '',
+        originalName: img.originalName || '',
+        url: img.url || '',
+        size: img.size || 0,
+        mimetype: img.mimetype || '',
+        caption: img.caption || '',
+        isPrimary: !!img.isPrimary,
+        source: img.source || 'upload',
+        uploadedAt: img.uploadedAt || null,
+        uploadedBy: img.uploadedBy || 'system'
+    })) : [];
+    const primary = images.find(i => i.isPrimary) || images[0] || null;
+    obj.id = obj.id || (obj._id ? obj._id.toString() : null);
+    obj.images = images;
+    obj.primaryImage = primary;
+    obj.imagesCount = images.length;
+    return obj;
+}
+
+function buildIdQuery(id) {
+    if (!id || typeof id !== 'string') return null;
+    // يدعم id (UUID/hex) أو _id (ObjectId)
+    const mongoose = require('mongoose');
+    if (mongoose.Types.ObjectId.isValid(id)) {
+        return { $or: [{ id }, { _id: id }] };
+    }
+    return { id };
+}
+
 // ============================================================
 // ✅ VALIDATORS
 // ============================================================
-
-/**
- * التحقق من صحة معرف الوسيلة
- * ✅ v9.1: server.js يستخدم randomId(8) — hex string بطول 16
- */
 const validateVesselId = [
     param('id')
-        .isString()
-        .trim()
+        .isString().trim()
         .isLength({ min: 1, max: 64 })
         .withMessage('معرف الوسيلة غير صالح')
         .matches(/^[a-zA-Z0-9_-]+$/)
         .withMessage('معرف الوسيلة يحتوي على رموز غير مسموحة')
 ];
 
-/**
- * ✅ v9.1: التحقق من صحة بيانات الوسيلة
- *    متوافق مع الحقول الحقيقية التي ترسلها الواجهة:
- *    name, num, len, region, zone, port, supp, status,
- *    break, fDate, eDate, ref, repairUnit, cat
- */
 const validateVessel = [
-    body('name')
-        .trim()
-        .notEmpty()
-        .withMessage('اسم الوسيلة مطلوب')
-        .isLength({ min: 2, max: 100 })
-        .withMessage('اسم الوسيلة يجب أن يكون بين 2 و 100 حرف'),
-
-    body('num')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 20 })
-        .withMessage('رقم الوسيلة طويل جداً'),
-
-    body('len')
-        .optional({ checkFalsy: true })
-        .isFloat({ min: 0, max: 1000 })
-        .withMessage('طول الوسيلة غير صالح')
-        .toFloat(),
-
-    body('region')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('المنطقة طويلة جداً'),
-
-    body('zone')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('المنطقة الفرعية طويلة جداً'),
-
-    body('port')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('الميناء طويل جداً'),
-
-    body('supp')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('حقل supp طويل جداً'),
-
-    body('status')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isIn(['صالح', 'صيانة', 'معطب', 'احتياط', 'active', 'inactive', 'maintenance', 'reserve'])
+    body('name').trim()
+        .notEmpty().withMessage('اسم الوسيلة مطلوب')
+        .isLength({ min: 2, max: 100 }).withMessage('اسم الوسيلة بين 2 و 100 حرف'),
+    body('num').optional({ checkFalsy: true }).trim().isLength({ max: 20 }),
+    body('len').optional({ checkFalsy: true }).isFloat({ min: 0, max: 1000 }).toFloat(),
+    body('region').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
+    body('zone').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
+    body('port').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
+    body('supp').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
+    body('status').optional({ checkFalsy: true }).trim()
+        .isIn(['صالح', 'صيانة', 'معطب', 'احتياط', 'طرح',
+               'active', 'inactive', 'maintenance', 'reserve'])
         .withMessage('حالة غير صالحة'),
-
-    body('break')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 200 })
-        .withMessage('وصف العطب طويل جداً'),
-
-    body('fDate')
-        .optional({ checkFalsy: true })
-        .isISO8601()
-        .withMessage('تاريخ البدء غير صالح'),
-
-    body('eDate')
-        .optional({ checkFalsy: true })
-        .isISO8601()
-        .withMessage('تاريخ الانتهاء غير صالح'),
-
-    body('ref')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('المرجع طويل جداً'),
-
-    body('repairUnit')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('وحدة الصيانة طويلة جداً'),
-
-    body('cat')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 50 })
-        .withMessage('الفئة طويلة جداً')
-];
-
-/**
- * ✅ v9.1: للتوافق مع الواجهات التي ترسل الحقول القديمة
- *    (type, location, specifications)
- */
-const validateVesselLegacy = [
-    body('name')
-        .trim()
-        .isLength({ min: 2, max: 100 })
-        .withMessage('اسم الوسيلة يجب أن يكون بين 2 و 100 حرف'),
-
-    body('type')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ max: 50 }),
-
-    body('status')
-        .optional({ checkFalsy: true })
-        .trim(),
-
-    body('location')
-        .optional({ checkFalsy: true })
-        .trim(),
-
-    body('specifications')
-        .optional()
-        .isObject()
-        .withMessage('المواصفات يجب أن تكون كائناً')
+    body('break').optional({ checkFalsy: true }).trim().isLength({ max: 200 }),
+    body('fDate').optional({ checkFalsy: true }).isISO8601(),
+    body('eDate').optional({ checkFalsy: true }).isISO8601(),
+    body('ref').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
+    body('repairUnit').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
+    body('cat').optional({ checkFalsy: true }).trim().isLength({ max: 50 })
 ];
 
 // ============================================================
-// 🛡️ GLOBAL MIDDLEWARE FOR ALL ROUTES
+// 🛡️ MIDDLEWARE
 // ============================================================
-
-/**
- * ✅ v9.1: كل مسارات vessels تتطلب مصادقة
- *    هذا يضمن أن req.user موجود قبل authorize
- */
 router.use(authenticate);
 
 // ============================================================
-// 📋 ROUTES
+// 📋 ROUTES — ⚠️ الترتيب مهم!
 // ============================================================
 
-/**
- * @route   GET /api/vessels
- * @desc    الحصول على جميع الوسائل
- * @access  Private (أي مستخدم مسجل)
- */
+/* ============================================================
+   📌 ROUTES متقدمة أولاً (قبل /:id)
+   ============================================================ */
+
+/* ✅ GET /api/vessels/disposed — قائمة المطروحة */
+router.get(
+    '/disposed',
+    requirePermission('vessels:read'),
+    async (req, res) => {
+        try {
+            const { q, region, zone, type, decision, from, to } = req.query;
+            const query = { status: 'طرح' };
+            if (region) query.region = region;
+            if (zone) query.zone = zone;
+            if (type) query.type = type;
+            if (decision) query.disposalDecision = new RegExp(decision, 'i');
+            if (from || to) {
+                query.disposalDate = {};
+                if (from) query.disposalDate.$gte = new Date(from);
+                if (to) query.disposalDate.$lte = new Date(to);
+            }
+            if (q) {
+                query.$or = [
+                    { name: new RegExp(q, 'i') },
+                    { num: new RegExp(q, 'i') },
+                    { ref: new RegExp(q, 'i') },
+                    { disposalReason: new RegExp(q, 'i') },
+                    { disposalDecision: new RegExp(q, 'i') }
+                ];
+            }
+            const vessels = await Vessel.find(query)
+                .sort({ disposalDate: -1, createdAt: -1 })
+                .limit(1000)
+                .lean();
+            res.json(vessels.map(formatVessel));
+        } catch (e) {
+            console.error('❌ [VESSELS] GET /disposed:', e.message);
+            res.status(500).json({ success: false, error: 'فشل تحميل المطروحة' });
+        }
+    }
+);
+
+/* ✅ GET /api/vessels/disposal-stats */
+router.get(
+    '/disposal-stats',
+    requirePermission('vessels:read'),
+    async (req, res) => {
+        try {
+            const [total, disposed, byRegion, byType] = await Promise.all([
+                Vessel.countDocuments(),
+                Vessel.countDocuments({ status: 'طرح' }),
+                Vessel.aggregate([
+                    { $match: { status: 'طرح' } },
+                    { $group: { _id: '$region', count: { $sum: 1 } } },
+                    { $sort: { count: -1 } }
+                ]),
+                Vessel.aggregate([
+                    { $match: { status: 'طرح' } },
+                    { $group: { _id: '$type', count: { $sum: 1 } } },
+                    { $sort: { count: -1 } }
+                ])
+            ]);
+            res.json({
+                success: true,
+                total,
+                disposed,
+                active: total - disposed,
+                disposedPercent: total > 0 ? Math.round((disposed / total) * 1000) / 10 : 0,
+                byRegion: byRegion.map(x => ({ region: x._id, count: x.count })),
+                byType: byType.map(x => ({ type: x._id, count: x.count }))
+            });
+        } catch (e) {
+            console.error('❌ [VESSELS] stats:', e.message);
+            res.status(500).json({ success: false, error: 'فشل الإحصائيات' });
+        }
+    }
+);
+
+/* ============================================================
+   📌 CRUD الأساسي
+   ============================================================ */
+
+/* GET /api/vessels */
 router.get(
     '/',
     requirePermission('vessels:read'),
     getVessels
 );
 
-/**
- * @route   GET /api/vessels/:id
- * @desc    الحصول على وسيلة واحدة
- * @access  Private
- */
-router.get(
-    '/:id',
-    validateVesselId,
-    checkValidation,
-    requirePermission('vessels:read'),
-    getVessel
-);
-
-/**
- * @route   POST /api/vessels
- * @desc    إنشاء وسيلة جديدة
- * @access  Private (Admin, Manager)
- */
+/* POST /api/vessels */
 router.post(
     '/',
     authorize('admin', 'manager'),
@@ -257,11 +246,20 @@ router.post(
     createVessel
 );
 
-/**
- * @route   PUT /api/vessels/:id
- * @desc    تحديث وسيلة
- * @access  Private (Admin, Manager)
- */
+/* ============================================================
+   📌 ROUTES خاصة بـ :id — بعد /disposed
+   ============================================================ */
+
+/* GET /api/vessels/:id */
+router.get(
+    '/:id',
+    validateVesselId,
+    checkValidation,
+    requirePermission('vessels:read'),
+    getVessel
+);
+
+/* PUT /api/vessels/:id */
 router.put(
     '/:id',
     authorize('admin', 'manager'),
@@ -272,11 +270,7 @@ router.put(
     updateVessel
 );
 
-/**
- * @route   PATCH /api/vessels/:id
- * @desc    تحديث جزئي للوسيلة (نفس صلاحيات PUT)
- * @access  Private (Admin, Manager)
- */
+/* PATCH /api/vessels/:id */
 router.patch(
     '/:id',
     authorize('admin', 'manager'),
@@ -287,11 +281,7 @@ router.patch(
     updateVessel
 );
 
-/**
- * @route   DELETE /api/vessels/:id
- * @desc    حذف وسيلة
- * @access  Private (Admin فقط)
- */
+/* DELETE /api/vessels/:id */
 router.delete(
     '/:id',
     authorize('admin'),
@@ -301,8 +291,237 @@ router.delete(
     deleteVessel
 );
 
-// ============================================================
-// 📤 EXPORTS
-// ============================================================
+/* ============================================================
+   ⚫ ROUTES الطرح
+   ============================================================ */
 
+/* POST /api/vessels/:id/dispose */
+router.post(
+    '/:id/dispose',
+    authorize('admin', 'manager'),
+    csrfProtection,
+    validateVesselId,
+    checkValidation,
+    async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const v = await Vessel.findOne(q);
+            if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+
+            if (v.status === 'طرح') {
+                return res.status(400).json({ success: false, error: 'المركب مطروح مسبقاً' });
+            }
+
+            const { reason, decision, disposedBy, notes, date } = req.body || {};
+            if (!reason || !String(reason).trim()) {
+                return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
+            }
+
+            await v.dispose({
+                reason: String(reason).trim(),
+                decision: decision ? String(decision).trim() : '',
+                disposedBy: disposedBy ? String(disposedBy).trim() : (req.user.name || req.user.username || ''),
+                notes: notes ? String(notes).trim() : '',
+                date
+            });
+
+            res.json({
+                success: true,
+                message: 'تم طرح الوسيلة بنجاح',
+                vessel: formatVessel(v)
+            });
+        } catch (e) {
+            console.error('❌ [VESSELS] dispose:', e.message);
+            res.status(500).json({ success: false, error: e.message || 'خطأ في الطرح' });
+        }
+    }
+);
+
+/* POST /api/vessels/:id/restore */
+router.post(
+    '/:id/restore',
+    authorize('admin', 'manager'),
+    csrfProtection,
+    validateVesselId,
+    checkValidation,
+    async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const v = await Vessel.findOne(q);
+            if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+
+            if (v.status !== 'طرح') {
+                return res.status(400).json({ success: false, error: 'المركب غير مطروح' });
+            }
+
+            const { newStatus } = req.body || {};
+            const allowed = ['صالح', 'صيانة', 'معطب', 'احتياط'];
+            const target = allowed.includes(newStatus) ? newStatus : 'صيانة';
+
+            await v.restore({ newStatus: target });
+
+            res.json({
+                success: true,
+                message: 'تم إلغاء الطرح بنجاح',
+                vessel: formatVessel(v)
+            });
+        } catch (e) {
+            console.error('❌ [VESSELS] restore:', e.message);
+            res.status(500).json({ success: false, error: 'خطأ في إلغاء الطرح' });
+        }
+    }
+);
+
+/* ============================================================
+   📸 ROUTES الصور
+   ============================================================ */
+if (upload) {
+    /* POST /api/vessels/:id/images */
+    router.post(
+        '/:id/images',
+        authorize('admin', 'manager'),
+        csrfProtection,
+        validateVesselId,
+        checkValidation,
+        upload.array('images', 5),
+        async (req, res) => {
+            try {
+                const q = buildIdQuery(req.params.id);
+                if (!q) {
+                    req.files?.forEach(f => fs.unlink(f.path, () => {}));
+                    return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+                }
+
+                const v = await Vessel.findOne(q);
+                if (!v) {
+                    req.files?.forEach(f => fs.unlink(f.path, () => {}));
+                    return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+                }
+
+                if (!req.files || req.files.length === 0) {
+                    return res.status(400).json({ success: false, error: 'لم يتم رفع أي صورة' });
+                }
+
+                const remaining = MAX_IMAGES - (v.images ? v.images.length : 0);
+                if (remaining <= 0) {
+                    req.files.forEach(f => fs.unlink(f.path, () => {}));
+                    return res.status(400).json({ success: false, error: `الحد الأقصى ${MAX_IMAGES} صور` });
+                }
+
+                const filesToAdd = req.files.slice(0, remaining);
+                const filesToDrop = req.files.slice(remaining);
+                filesToDrop.forEach(f => fs.unlink(f.path, () => {}));
+
+                const source = req.body.source === 'camera' ? 'camera' : 'upload';
+                const caption = typeof req.body.caption === 'string' ? req.body.caption.trim() : '';
+
+                const newImages = filesToAdd.map((file, idx) => ({
+                    filename: file.filename,
+                    originalName: file.originalname,
+                    url: `/uploads/vessels/${file.filename}`,
+                    size: file.size,
+                    mimetype: file.mimetype,
+                    caption,
+                    isPrimary: (!v.images || v.images.length === 0) && idx === 0,
+                    source,
+                    uploadedAt: new Date(),
+                    uploadedBy: req.user.name || req.user.username || 'system'
+                }));
+
+                v.images.push(...newImages);
+                await v.save();
+
+                res.json({
+                    success: true,
+                    message: `تم رفع ${newImages.length} صورة`,
+                    images: v.images,
+                    vessel: formatVessel(v)
+                });
+            } catch (e) {
+                console.error('❌ [VESSELS] upload:', e.message);
+                req.files?.forEach(f => fs.unlink(f.path, () => {}));
+                res.status(500).json({ success: false, error: 'خطأ في رفع الصور' });
+            }
+        }
+    );
+
+    /* DELETE /api/vessels/:id/images/:imageId */
+    router.delete(
+        '/:id/images/:imageId',
+        authorize('admin', 'manager'),
+        csrfProtection,
+        validateVesselId,
+        checkValidation,
+        async (req, res) => {
+            try {
+                const q = buildIdQuery(req.params.id);
+                if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+                const v = await Vessel.findOne(q);
+                if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+
+                const img = v.images.id(req.params.imageId);
+                if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
+
+                if (img.url) {
+                    const fp = path.join(__dirname, '..', img.url);
+                    fs.unlink(fp, () => {});
+                }
+
+                v.removeImage(req.params.imageId);
+                await v.save();
+
+                res.json({
+                    success: true,
+                    message: 'تم حذف الصورة',
+                    images: v.images
+                });
+            } catch (e) {
+                console.error('❌ [VESSELS] delete image:', e.message);
+                res.status(500).json({ success: false, error: 'خطأ في حذف الصورة' });
+            }
+        }
+    );
+
+    /* PATCH /api/vessels/:id/images/:imageId/primary */
+    router.patch(
+        '/:id/images/:imageId/primary',
+        authorize('admin', 'manager'),
+        csrfProtection,
+        validateVesselId,
+        checkValidation,
+        async (req, res) => {
+            try {
+                const q = buildIdQuery(req.params.id);
+                if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+                const v = await Vessel.findOne(q);
+                if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+
+                const img = v.images.id(req.params.imageId);
+                if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
+
+                v.setPrimaryImage(req.params.imageId);
+                await v.save();
+
+                res.json({
+                    success: true,
+                    message: 'تم تعيين الصورة الرئيسية',
+                    images: v.images
+                });
+            } catch (e) {
+                console.error('❌ [VESSELS] primary:', e.message);
+                res.status(500).json({ success: false, error: 'خطأ في التحديث' });
+            }
+        }
+    );
+}
+
+// ============================================================
+// 📤 EXPORT
+// ============================================================
 module.exports = router;
