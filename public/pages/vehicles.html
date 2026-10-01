@@ -1465,4 +1465,1747 @@
             </button>
         </div>
     </div>
+</div><script>
+(function() {
+    'use strict';
+
+    /* ═══════════════════════════════════════════════════════════
+       🔧 STATE
+       ═══════════════════════════════════════════════════════════ */
+    var _isDestroyed = false;
+    var _timeouts = [];
+    var _intervals = [];
+    var _listeners = [];
+    var _objectUrls = [];
+
+    var vehicles = [];
+    var vehicleImages = [];
+    var currentVehicleId = null;
+    var autoRefreshInterval = null;
+
+    var MAX_IMAGES = 10;
+    var MAX_FILE_SIZE = 5 * 1024 * 1024;
+    var ALLOWED_TYPES = /^image\/(jpeg|jpg|png|webp|gif)$/i;
+
+    // Gallery state
+    var _galleryImages = [];
+    var _galleryIndex = 0;
+    var _galleryZoom = 1;
+    var _galleryPanX = 0;
+    var _galleryPanY = 0;
+    var _galleryDragging = false;
+    var _galleryDragStartX = 0;
+    var _galleryDragStartY = 0;
+    var _gallerySlideshowTimer = null;
+    var _gallerySlideshowActive = false;
+    var _galleryCurrentVehicle = null;
+
+    // Mini upload state
+    var miniUploadImages = [];
+    var miniUploadVehicleId = null;
+
+    /* ═══════════════════════════════════════════════════════════
+       📚 DATA: MODELS / ZONES / REGIONS
+       ═══════════════════════════════════════════════════════════ */
+
+    // الطرازات حسب الماركة
+    var MODELS_BY_BRAND = {
+        'تويوتا': ['هايلوكس (Hilux)', 'لاند كروزر (Land Cruiser)', 'كورولا (Corolla)', 'كامري (Camry)', 'ياريس (Yaris)', 'راف 4 (RAV4)', 'هايس (Hiace)', 'برادو (Prado)', 'فورتشنر (Fortuner)', 'تندرا (Tundra)'],
+        'نيسان': ['نافارا (Navara)', 'باترول (Patrol)', 'صني (Sunny)', 'الترا (Altima)', 'اكستريل (X-Trail)', 'قشقاي (Qashqai)', 'أرمادا (Armada)', 'تيتان (Titan)', 'أورفان (Urvan)'],
+        'هوندا': ['سيفيك (Civic)', 'أكورد (Accord)', 'CR-V', 'HR-V', 'بايلوت (Pilot)', 'أوديسي (Odyssey)'],
+        'ميتسوبيشي': ['L200', 'باجيرو (Pajero)', 'أوتلاندر (Outlander)', 'لانسر (Lancer)', 'ASX', 'مونتيرو (Montero)'],
+        'سوزوكي': ['جيمني (Jimny)', 'فيتارا (Vitara)', 'سويفت (Swift)', 'بالينو (Baleno)', 'SX4'],
+        'مازدا': ['CX-5', 'CX-9', 'مازدا 3', 'مازدا 6', 'BT-50', 'MX-5'],
+        'إيسوزو': ['D-Max', 'MU-X', 'NPR', 'NQR', 'FVR'],
+        'دايهاتسو': ['تيريوس (Terios)', 'ماتيريا (Materia)', 'سيريون (Sirion)'],
+        'سوبارو': ['فورستر (Forester)', 'أوتباك (Outback)', 'إمبريزا (Impreza)', 'XV'],
+        'لكزس': ['LX570', 'GX460', 'RX350', 'ES350', 'NX300', 'LS500'],
+        'إنفينيتي': ['QX80', 'QX60', 'QX50', 'Q50'],
+        'فورد': ['F-150', 'F-250', 'F-350', 'رينجر (Ranger)', 'إكسبلورر (Explorer)', 'إكسبيديشن (Expedition)', 'إيدج (Edge)', 'فوكس (Focus)', 'موستانج (Mustang)', 'ترانزيت (Transit)', 'برونكو (Bronco)'],
+        'شيفروليه': ['سيلفرادو (Silverado)', 'تاهو (Tahoe)', 'صبوربان (Suburban)', 'كولورادو (Colorado)', 'إكوينوكس (Equinox)', 'ترافيرس (Traverse)', 'ماليبو (Malibu)', 'كامارو (Camaro)'],
+        'جيب': ['رانجلر (Wrangler)', 'جراند شيروكي (Grand Cherokee)', 'شيروكي (Cherokee)', 'رينيغيد (Renegade)', 'كومباس (Compass)', 'غلاديتور (Gladiator)'],
+        'دودج': ['رام 1500', 'رام 2500', 'رام 3500', 'دورانجو (Durango)', 'شارجر (Charger)', 'تشالنجر (Challenger)'],
+        'كاديلاك': ['إسكاليد (Escalade)', 'CT5', 'CT6', 'XT5', 'XT6'],
+        'جي إم سي': ['سييرا (Sierra)', 'يوكون (Yukon)', 'أكاديا (Acadia)', 'تيرين (Terrain)'],
+        'لينكولن': ['نافيجيتور (Navigator)', 'أفياتور (Aviator)', 'MKZ', 'كونتيننتال'],
+        'تسلا': ['Model S', 'Model 3', 'Model X', 'Model Y', 'Cybertruck'],
+        'هامر': ['H1', 'H2', 'H3', 'EV'],
+        'مرسيدس': ['Actros', 'Atego', 'Sprinter', 'Vito', 'G-Class', 'S-Class', 'E-Class', 'C-Class', 'GLE', 'GLC', 'Unimog'],
+        'بي إم دبليو': ['السلسلة 3', 'السلسلة 5', 'السلسلة 7', 'X1', 'X3', 'X5', 'X6', 'X7', 'i3', 'i8'],
+        'أودي': ['A4', 'A6', 'A8', 'Q3', 'Q5', 'Q7', 'Q8', 'e-tron'],
+        'فولكس فاجن': ['غولف (Golf)', 'باسات (Passat)', 'تيغوان (Tiguan)', 'تواريغ (Touareg)', 'أماروك (Amarok)', 'كادي (Caddy)', 'ترانسبورتر'],
+        'بورش': ['911', 'Cayenne', 'Macan', 'Panamera', 'Taycan'],
+        'أوبل': ['أسترا (Astra)', 'إنسيغنيا (Insignia)', 'موكا (Mokka)', 'كورسا (Corsa)', 'فيفارو (Vivaro)'],
+        'مان': ['TGX', 'TGS', 'TGL', 'TGM', 'TGE'],
+        'رينو': ['كليو (Clio)', 'ميغان (Megane)', 'كابتور (Captur)', 'كادجار (Kadjar)', 'داستر (Duster)', 'ترافيك (Trafic)', 'ماستر (Master)', 'كانغو (Kangoo)', 'سيمبول (Symbol)'],
+        'بيجو': ['208', '308', '508', '2008', '3008', '5008', 'بارتنر (Partner)', 'إكسبيرت (Expert)', 'بوكسر (Boxer)', 'ريفتر (Rifter)'],
+        'سيتروين': ['C3', 'C4', 'C5', 'C3 Aircross', 'C5 Aircross', 'بيرلينغو (Berlingo)', 'جامبي (Jumpy)', 'جامبر (Jumper)'],
+        'داسيا': ['ساندييرو (Sandero)', 'داستر (Duster)', 'لودجي (Lodgy)', 'دوكر (Dokker)', 'جوجر (Jogger)'],
+        'فيات': ['باندا (Panda)', '500', 'تيبو (Tipo)', 'دوكاتو (Ducato)', 'دوبلو (Doblo)', 'فولينو (Fullback)'],
+        'إيفيكو': ['Daily', 'Eurocargo', 'Stralis', 'Trakker', 'S-Way'],
+        'ألفا روميو': ['Giulia', 'Stelvio', 'Giulietta', 'MiTo'],
+        'فيراري': ['488', 'F8', 'Roma', 'Portofino', 'SF90'],
+        'لامبورغيني': ['Huracan', 'Aventador', 'Urus'],
+        'مازيراتي': ['Ghibli', 'Levante', 'Quattroporte'],
+        'هيونداي': ['إلنترا (Elantra)', 'سوناتا (Sonata)', 'توسان (Tucson)', 'سانتافي (Santa Fe)', 'أكسنت (Accent)', 'i10', 'i20', 'i30', 'H-1', 'ستاريا (Staria)'],
+        'كيا': ['سبورتاج (Sportage)', 'سورينتو (Sorento)', 'سيراتو (Cerato)', 'ريو (Rio)', 'بيكانتو (Picanto)', 'كارنفال (Carnival)', 'K2700'],
+        'سانغ يونغ': ['ريكستون (Rexton)', 'كوراندو (Korando)', 'تيفولي (Tivoli)', 'أكتيون (Actyon)'],
+        'جينيسيس': ['G70', 'G80', 'G90', 'GV70', 'GV80'],
+        'فولفو': ['XC40', 'XC60', 'XC90', 'S60', 'S90', 'V60', 'V90', 'FH', 'FM', 'FE'],
+        'سكانيا': ['R-Series', 'S-Series', 'G-Series', 'P-Series'],
+        'لاند روفر': ['ديفندر (Defender)', 'ديسكفري (Discovery)', 'رينج روفر (Range Rover)', 'رينج روفر سبورت', 'رينج روفر فيلار', 'إيفوك (Evoque)'],
+        'جاكوار': ['XE', 'XF', 'XJ', 'F-Pace', 'E-Pace', 'F-Type'],
+        'بنتلي': ['كونتيننتال (Continental)', 'فلاينغ سبير (Flying Spur)', 'بينتايجا (Bentayga)'],
+        'رولز رويس': ['فانتوم (Phantom)', 'غوست (Ghost)', 'كولينان (Cullinan)'],
+        'سكودا': ['أوكتافيا (Octavia)', 'سوبيرب (Superb)', 'كودياك (Kodiaq)', 'كاروك (Karoq)', 'فابيا (Fabia)', 'سكالا (Scala)'],
+        'تاترا': ['Phoenix', 'Tactic', 'Terra'],
+        'جيلي': ['كولراي (Coolray)', 'أوكافانغو (Okavango)', 'توجيلا (Tugella)', 'أزكارا (Azkarra)'],
+        'بي واي دي': ['تانغ (Tang)', 'سونغ (Song)', 'هان (Han)', 'يانغ وانغ', 'دولفين (Dolphin)'],
+        'شيري': ['تيجو 4 (Tiggo 4)', 'تيجو 7', 'تيجو 8', 'أريزو (Arrizo)'],
+        'هافال': ['H6', 'Jolion', 'H9', 'Dargo'],
+        'إم جي': ['ZS', 'HS', 'RX5', 'MG5', 'MG6'],
+        'دونغ فينغ': ['AX7', 'T5 EVO', 'Rich 6', 'H30 Cross'],
+        'فاو': ['Besturn', 'Hongqi', 'Jiefang', 'Vita'],
+        'فولفو شاحنات': ['FH', 'FH16', 'FM', 'FMX', 'FE', 'FL'],
+        'داف': ['XF', 'XG', 'CF', 'LF', 'XD'],
+        'رينو شاحنات': ['T-Series', 'C-Series', 'K-Series', 'D-Series', 'Master'],
+        'إيفيكو شاحنات': ['S-Way', 'Stralis', 'Trakker', 'Eurocargo', 'Daily'],
+        'سكانيا شاحنات': ['S-Series', 'R-Series', 'G-Series', 'P-Series', 'L-Series'],
+        'مان شاحنات': ['TGX', 'TGS', 'TGL', 'TGM', 'TGE'],
+        'مرسيدس شاحنات': ['Actros', 'Arocs', 'Atego', 'Antos', 'Econic', 'Zetros'],
+        'هينو': ['300 Series', '500 Series', '700 Series', 'Dutro', 'Ranger'],
+        'ياماها': ['XT660', 'XT1200', 'Ténéré 700', 'FJR1300', 'MT-07', 'MT-09', 'R1', 'R6'],
+        'كاواساكي': ['Ninja 650', 'Ninja 1000', 'Z900', 'Versys 650', 'KLR 650'],
+        'بي إم دبليو موتور': ['R 1250 GS', 'R 1250 RT', 'S 1000 RR', 'F 850 GS', 'G 310 R'],
+        'دوكاتي': ['Multistrada', 'Monster', 'Panigale', 'Scrambler', 'Diavel'],
+        'هارلي ديفيدسون': ['Sportster', 'Softail', 'Touring', 'CVO', 'Street']
+    };
+
+    // المناطق حسب الإقليم
+    var ZONES_BY_REGION = {
+        'إدارة إسناد الوحدات البحرية': ['تونس', 'بنزرت', 'سوسة', 'صفاقس', 'المنستير'],
+        'إدارة حرس السواحل': ['تونس', 'بنزرت', 'سوسة', 'صفاقس', 'جربة'],
+        'إقليم الحرس البحري بالشمال': ['تونس', 'بنزرت', 'طبرقة', 'منزل بورقيبة', 'غار الملح', 'رأس الجبل', 'منزل تميم', 'قليبية', 'الحمامات', 'سجنان'],
+        'إقليم الحرس البحري بالساحل': ['سوسة', 'المنستير', 'نابل', 'حمامات', 'المهدية', 'قصر هلال', 'هرقلة', 'شربان', 'المكنين', 'جمال'],
+        'إقليم الحرس البحري بالوسط': ['صفاقس', 'قرقنة', 'المهدية', 'الشابة', 'سيدي بوزيد', 'الوردانين', 'المزونة', 'جبنيانة', 'العامرة', 'ماطر'],
+        'إقليم الحرس البحري بالجنوب': ['جرجيس', 'جربة', 'قابس', 'بن قردان', 'مدنين', 'زازيس', 'حومة السوق', 'أجيم', 'ميدون', 'مارث'],
+        'وحدة الصيانة والإسناد البحري تونس': ['تونس', 'أريانة', 'بن عروس', 'منوبة'],
+        'وحدة الصيانة والإسناد البحري صفاقس': ['صفاقس', 'قرقنة', 'سيدي بوزيد'],
+        'وحدة الصيانة والإسناد البحري المنستير': ['المنستير', 'سوسة', 'المهدية'],
+        'وحدة الصيانة والإسناد البحري جرجيس': ['جرجيس', 'جربة', 'بن قردان', 'زازيس'],
+        'المجمع الأمني بقبيبة': ['قبيبة', 'تونس', 'بنزرت']
+    };
+
+    var REGION_LABELS_SHORT = {
+        'إدارة إسناد الوحدات البحرية': '🏛️ إسناد الوحدات',
+        'إدارة حرس السواحل': '🚢 حرس السواحل',
+        'إقليم الحرس البحري بالشمال': '🌊 الشمال',
+        'إقليم الحرس البحري بالساحل': '🌊 الساحل',
+        'إقليم الحرس البحري بالوسط': '🌊 الوسط',
+        'إقليم الحرس البحري بالجنوب': '🌊 الجنوب',
+        'وحدة الصيانة والإسناد البحري تونس': '🛠️ صيانة تونس',
+        'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ صيانة صفاقس',
+        'وحدة الصيانة والإسناد البحري المنستير': '🛠️ صيانة المنستير',
+        'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ صيانة جرجيس',
+        'المجمع الأمني بقبيبة': '🏛️ بقبيبة'
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       🧹 CLEANUP
+       ═══════════════════════════════════════════════════════════ */
+    function _cleanup() {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
+        _timeouts = [];
+        _intervals.forEach(function(id) { try { clearInterval(id); } catch(e) {} });
+        _intervals = [];
+        _listeners.forEach(function(l) {
+            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
+        });
+        _listeners = [];
+        _objectUrls.forEach(function(url) { try { URL.revokeObjectURL(url); } catch(e) {} });
+        _objectUrls = [];
+        stopSlideshow();
+    }
+    window._pageCleanup = window._pageCleanup || [];
+    window._pageCleanup.push(_cleanup);
+    window.addEventListener('beforeunload', _cleanup);
+    window.addEventListener('pagehide', _cleanup);
+
+    /* ═══════════════════════════════════════════════════════════
+       🔧 HELPERS
+       ═══════════════════════════════════════════════════════════ */
+    function $(sel, ctx) { return (ctx || document).querySelector(sel); }
+    function $$(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+        });
+    }
+
+    function formatDate(value) {
+        if (!value) return '—';
+        try {
+            var d = new Date(value);
+            if (isNaN(d.getTime())) return String(value);
+            return String(d.getDate()).padStart(2,'0') + '/' +
+                   String(d.getMonth()+1).padStart(2,'0') + '/' +
+                   d.getFullYear();
+        } catch (e) { return String(value); }
+    }
+
+    function on(el, type, fn, opts) {
+        if (!el) return;
+        el.addEventListener(type, fn, opts);
+        _listeners.push({ el: el, type: type, fn: fn });
+    }
+
+    function toast(msg, type, duration) {
+        if (_isDestroyed) return;
+        type = type || 'info';
+        duration = duration || 3000;
+        var existing = $('.veh-toast');
+        if (existing) existing.remove();
+        var t = document.createElement('div');
+        t.className = 'veh-toast ' + type;
+        var icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+        t.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span><span>' + escapeHtml(String(msg)) + '</span>';
+        document.body.appendChild(t);
+        var id = setTimeout(function() { if (t.parentNode) t.remove(); }, duration);
+        _timeouts.push(id);
+    }
+
+    function getToken() {
+        try {
+            return localStorage.getItem('marine_token')
+                || localStorage.getItem('token')
+                || localStorage.getItem('marine_auth_token')
+                || sessionStorage.getItem('token') || null;
+        } catch(e) { return null; }
+    }
+
+    function getCsrf() {
+        try {
+            var m = document.cookie.match(/marine_csrf=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : '';
+        } catch(e) { return ''; }
+    }
+
+    function authHeaders(includeCT) {
+        var h = { 'Accept': 'application/json' };
+        if (includeCT) h['Content-Type'] = 'application/json';
+        var t = getToken();
+        if (t) h['Authorization'] = 'Bearer ' + t;
+        var c = getCsrf();
+        if (c) h['X-CSRF-Token'] = c;
+        return h;
+    }
+
+    function apiFetch(url, opts) {
+        opts = opts || {};
+        var method = (opts.method || 'GET').toUpperCase();
+        var isSafe = ['GET','HEAD','OPTIONS'].indexOf(method) !== -1;
+        opts.headers = Object.assign({}, authHeaders(!isSafe), opts.headers || {});
+        opts.credentials = 'include';
+        return fetch(url, opts);
+    }
+
+    function hasPermission(name) {
+        if (window.capabilities && typeof window.capabilities[name] === 'boolean') {
+            return window.capabilities[name];
+        }
+        if (window.currentUser && window.currentUser.role) {
+            var r = String(window.currentUser.role).trim();
+            if (r === 'admin' || r === 'manager' || r === 'editor' || r === 'maintenance_unit') {
+                if (name === 'canDeleteVehicles') return r === 'admin';
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function getRegionShort(r) {
+        return REGION_LABELS_SHORT[r] || r || '—';
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       🔍 COMBOBOX HELPERS
+       ═══════════════════════════════════════════════════════════ */
+
+    // بحث داخل قائمة
+    function filterSelectOptions(selectEl, query) {
+        if (!selectEl) return;
+        var q = (query || '').trim().toLowerCase();
+        if (!q) {
+            $$('option', selectEl).forEach(function(opt) { opt.style.display = ''; });
+            $$('optgroup', selectEl).forEach(function(grp) { grp.style.display = ''; });
+            return;
+        }
+        $$('option', selectEl).forEach(function(opt) {
+            if (!opt.value) return;
+            var match = opt.textContent.toLowerCase().indexOf(q) !== -1 ||
+                        opt.value.toLowerCase().indexOf(q) !== -1;
+            opt.style.display = match ? '' : 'none';
+        });
+        $$('optgroup', selectEl).forEach(function(grp) {
+            var hasVisible = $$('option', grp).some(function(opt) { return opt.style.display !== 'none'; });
+            grp.style.display = hasVisible ? '' : 'none';
+        });
+    }
+
+    // ربط بحث Combobox بقائمة
+    function bindComboboxSearch(searchId, selectId) {
+        var search = $('#' + searchId);
+        var select = $('#' + selectId);
+        if (!search || !select) return;
+        on(search, 'input', function() {
+            filterSelectOptions(select, this.value);
+        });
+    }
+
+    // إظهار/إخفاء حقل الكتابة الحرة
+    function toggleFreeInput(selectId, freeInputId, hintId) {
+        var sel = $('#' + selectId);
+        var free = $('#' + freeInputId);
+        var hint = hintId ? $('#' + hintId) : null;
+        if (!sel || !free) return;
+
+        var handler = function() {
+            if (sel.value === 'أخرى' || sel.value === '__other__') {
+                free.style.display = 'block';
+                free.focus();
+                if (hint) hint.style.display = 'block';
+            } else {
+                free.style.display = 'none';
+                free.value = '';
+                if (hint) hint.style.display = 'none';
+            }
+        };
+        on(sel, 'change', handler);
+    }
+
+    // الحصول على القيمة النهائية (من select أو free input)
+    function getComboboxValue(selectId, freeInputId) {
+        var sel = $('#' + selectId);
+        var free = $('#' + freeInputId);
+        if (!sel) return '';
+        if ((sel.value === 'أخرى' || sel.value === '__other__') && free && free.value.trim()) {
+            return free.value.trim();
+        }
+        if (sel.value === 'أخرى' || sel.value === '__other__') {
+            return ''; // لم يكتب شيئاً
+        }
+        return sel.value;
+    }
+
+    // ضبط قيمة Combobox (للتعديل)
+    function setComboboxValue(selectId, freeInputId, hintId, value) {
+        var sel = $('#' + selectId);
+        var free = $('#' + freeInputId);
+        var hint = hintId ? $('#' + hintId) : null;
+        if (!sel) return;
+
+        if (!value) {
+            sel.value = '';
+            if (free) { free.style.display = 'none'; free.value = ''; }
+            if (hint) hint.style.display = 'none';
+            return;
+        }
+
+        var exists = Array.from(sel.options).some(function(opt) { return opt.value === value; });
+        if (exists) {
+            sel.value = value;
+            if (free) { free.style.display = 'none'; free.value = ''; }
+            if (hint) hint.style.display = 'none';
+        } else {
+            // قيمة غير موجودة → ضعها في الحقل الحر
+            if (free) {
+                sel.value = (sel.querySelector('option[value="__other__"]') ? '__other__' : 'أخرى');
+                free.style.display = 'block';
+                free.value = value;
+                if (hint) hint.style.display = 'block';
+            }
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       🎛️ DYNAMIC FIELDS
+       ═══════════════════════════════════════════════════════════ */
+
+    // تحديث الطرازات حسب الماركة
+    function updateModelsByBrand() {
+        var brandSel = $('#vehBrand');
+        var modelSel = $('#vehModel');
+        var modelSearch = $('#vehModelSearch');
+        var modelFree = $('#vehModelFree');
+        if (!brandSel || !modelSel) return;
+
+        // الماركة الفعلية (قد تكون في الحقل الحر)
+        var brand = getComboboxValue('vehBrand', 'vehBrandFree');
+        var current = modelSel.value;
+
+        if (!brand) {
+            modelSel.innerHTML = '<option value="">— اختر الماركة أولاً —</option>';
+            if (modelSearch) { modelSearch.style.display = 'none'; modelSearch.value = ''; }
+            if (modelFree) { modelFree.style.display = 'none'; modelFree.value = ''; }
+            return;
+        }
+
+        var models = MODELS_BY_BRAND[brand] || [];
+        var html = '<option value="">— اختر الطراز —</option>';
+        models.forEach(function(m) {
+            html += '<option value="' + escapeHtml(m) + '">' + escapeHtml(m) + '</option>';
+        });
+        html += '<optgroup label="⚙️ أخرى"><option value="أخرى">أخرى (اكتب يدوياً)</option></optgroup>';
+        modelSel.innerHTML = html;
+
+        // استعادة القيمة إن وُجدت
+        if (current && (models.indexOf(current) !== -1 || current === 'أخرى')) {
+            modelSel.value = current;
+        }
+
+        // إظهار البحث إن كان أكثر من 5 طرازات
+        if (modelSearch) {
+            modelSearch.style.display = models.length > 5 ? 'block' : 'none';
+            modelSearch.value = '';
+        }
+        if (modelFree) {
+            modelFree.style.display = 'none';
+            modelFree.value = '';
+        }
+        // أعد ضبط فلتر البحث
+        filterSelectOptions(modelSel, '');
+    }
+
+    // تحديث المناطق حسب الإقليم
+    function updateZonesByRegion() {
+        var regionVal = getComboboxValue('vehRegion', 'vehRegionFree');
+        var zoneSel = $('#vehZone');
+        var zoneSearch = $('#vehZoneSearch');
+        var zoneFree = $('#vehZoneFree');
+        if (!zoneSel) return;
+
+        var current = zoneSel.value;
+
+        if (!regionVal) {
+            zoneSel.innerHTML = '<option value="">— اختر الإقليم أولاً —</option>';
+            if (zoneSearch) { zoneSearch.style.display = 'none'; zoneSearch.value = ''; }
+            if (zoneFree) { zoneFree.style.display = 'none'; zoneFree.value = ''; }
+            return;
+        }
+
+        var zones = ZONES_BY_REGION[regionVal] || [];
+        var html = '<option value="">— اختر المنطقة —</option>';
+        zones.forEach(function(z) {
+            html += '<option value="' + escapeHtml(z) + '">' + escapeHtml(z) + '</option>';
+        });
+        html += '<optgroup label="⚙️ أخرى"><option value="أخرى">أخرى (اكتب يدوياً)</option></optgroup>';
+        zoneSel.innerHTML = html;
+
+        if (current && (zones.indexOf(current) !== -1 || current === 'أخرى')) {
+            zoneSel.value = current;
+        }
+
+        if (zoneSearch) {
+            zoneSearch.style.display = zones.length > 5 ? 'block' : 'none';
+            zoneSearch.value = '';
+        }
+        if (zoneFree) {
+            zoneFree.style.display = 'none';
+            zoneFree.value = '';
+        }
+        filterSelectOptions(zoneSel, '');
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       📸 IMAGE UPLOADER (main modal)
+       ═══════════════════════════════════════════════════════════ */
+    function updateSourceButtonsState() {
+        var isFull = vehicleImages.length >= MAX_IMAGES;
+        var c = $('#vehCaptureBtn'); if (c) c.disabled = isFull;
+        var b = $('#vehBrowseBtn'); if (b) b.disabled = isFull;
+    }
+
+    function initImagesUI() {
+        var dropzone = $('#vehImagesDropzone');
+        var input = $('#vehImagesInput');
+        var cameraInput = $('#vehCameraInput');
+        var captureBtn = $('#vehCaptureBtn');
+        var browseBtn = $('#vehBrowseBtn');
+
+        if (captureBtn && cameraInput) {
+            on(captureBtn, 'click', function() {
+                if (vehicleImages.length >= MAX_IMAGES) { toast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
+                cameraInput.click();
+            });
+            on(cameraInput, 'change', function(e) { handleFiles(e.target.files); cameraInput.value = ''; });
+        }
+        if (browseBtn && input) {
+            on(browseBtn, 'click', function() {
+                if (vehicleImages.length >= MAX_IMAGES) { toast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
+                input.click();
+            });
+        }
+        if (input) on(input, 'change', function(e) { handleFiles(e.target.files); input.value = ''; });
+        if (dropzone && input) {
+            on(dropzone, 'click', function() {
+                if (vehicleImages.length >= MAX_IMAGES) { toast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
+                input.click();
+            });
+            on(dropzone, 'dragover', function(e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+            on(dropzone, 'dragleave', function(e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+            on(dropzone, 'drop', function(e) {
+                e.preventDefault(); dropzone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+    }
+
+    function handleFiles(files) {
+        if (!files || files.length === 0) return;
+        var valid = [];
+        for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            if (!ALLOWED_TYPES.test(f.type)) { toast('❌ نوع غير مدعوم: ' + f.name, 'error'); continue; }
+            if (f.size > MAX_FILE_SIZE) { toast('❌ حجم كبير: ' + f.name, 'error'); continue; }
+            valid.push(f);
+        }
+        if (valid.length === 0) return;
+        var remaining = MAX_IMAGES - vehicleImages.length;
+        if (remaining <= 0) { toast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); updateSourceButtonsState(); return; }
+        if (valid.length > remaining) { toast('⚠️ تم قبول ' + remaining + ' صور فقط', 'info'); valid = valid.slice(0, remaining); }
+        vehicleImages = vehicleImages.concat(valid);
+        renderImagesPreview();
+    }
+
+    function renderImagesPreview() {
+        var gallery = $('#vehImagesGallery');
+        var count = $('#vehImagesCount');
+        if (count) count.textContent = '(' + vehicleImages.length + '/' + MAX_IMAGES + ')';
+        if (!gallery) return;
+        if (vehicleImages.length === 0) { gallery.innerHTML = ''; updateSourceButtonsState(); return; }
+
+        var html = '';
+        vehicleImages.forEach(function(img, idx) {
+            var preview = '';
+            var isFile = (img instanceof File);
+            if (isFile) { preview = URL.createObjectURL(img); _objectUrls.push(preview); }
+            else preview = img.url || '';
+            var isPrimary = isFile
+                ? (idx === 0 && !vehicleImages.some(function(x){ return x.isPrimary; }))
+                : !!img.isPrimary;
+
+            html +=
+                '<div class="veh-image-item' + (isPrimary ? ' is-primary' : '') + '" data-index="' + idx + '">' +
+                    '<img src="' + escapeHtml(preview) + '" alt="صورة" loading="lazy">' +
+                    '<span class="veh-image-primary-badge">⭐</span>' +
+                    '<div class="veh-image-actions">' +
+                        '<button type="button" class="set-primary" data-action="primary" data-idx="' + idx + '" title="رئيسية"><i class="fas fa-star"></i></button>' +
+                        '<button type="button" class="del" data-action="delete" data-idx="' + idx + '" title="حذف"><i class="fas fa-trash"></i></button>' +
+                    '</div>' +
+                '</div>';
+        });
+        gallery.innerHTML = html;
+
+        $$('[data-action]', gallery).forEach(function(btn) {
+            on(btn, 'click', function(e) {
+                e.stopPropagation();
+                var action = this.getAttribute('data-action');
+                var idx = parseInt(this.getAttribute('data-idx'), 10);
+                if (action === 'delete') removeImage(idx);
+                else if (action === 'primary') setPrimaryImage(idx);
+            });
+        });
+        updateSourceButtonsState();
+    }
+
+    function removeImage(idx) {
+        if (idx < 0 || idx >= vehicleImages.length) return;
+        var img = vehicleImages[idx];
+        if (img && img._id && currentVehicleId) {
+            apiFetch('/api/vehicles/' + encodeURIComponent(currentVehicleId) + '/images/' + encodeURIComponent(img._id), { method: 'DELETE' })
+                .then(function(r) { return r.json(); })
+                .then(function(d) { if (d.success) toast('🗑️ تم حذف الصورة', 'success'); })
+                .catch(function() {});
+        }
+        vehicleImages.splice(idx, 1);
+        renderImagesPreview();
+    }
+
+    function setPrimaryImage(idx) {
+        if (idx < 0 || idx >= vehicleImages.length) return;
+        var img = vehicleImages.splice(idx, 1)[0];
+        vehicleImages.unshift(img);
+        if (img && img._id && currentVehicleId) {
+            apiFetch('/api/vehicles/' + encodeURIComponent(currentVehicleId) + '/images/' + encodeURIComponent(img._id) + '/primary', { method: 'PATCH' })
+                .then(function(r) { return r.json(); })
+                .catch(function() {});
+        }
+        renderImagesPreview();
+        toast('⭐ تم تعيين الصورة الرئيسية', 'success');
+    }
+
+    async function uploadImages(vehicleId) {
+        var newFiles = vehicleImages.filter(function(img) { return img instanceof File; });
+        if (newFiles.length === 0) return true;
+        if (!vehicleId) return false;
+        var uploading = $('#vehImagesUploading');
+        if (uploading) uploading.style.display = 'flex';
+        try {
+            var fd = new FormData();
+            newFiles.forEach(function(img) { fd.append('images', img); });
+            var res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/images', {
+                method: 'POST',
+                headers: Object.assign(
+                    { 'Accept': 'application/json' },
+                    getToken() ? { 'Authorization': 'Bearer ' + getToken() } : {},
+                    getCsrf() ? { 'X-CSRF-Token': getCsrf() } : {}
+                ),
+                credentials: 'include',
+                body: fd
+            });
+            if (!res.ok) {
+                var err = await res.json().catch(function() { return {}; });
+                throw new Error(err.error || 'فشل رفع الصور');
+            }
+            return true;
+        } catch (e) {
+            toast('❌ ' + e.message, 'error');
+            return false;
+        } finally {
+            if (uploading) uploading.style.display = 'none';
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       📸 MINI UPLOAD (from gallery)
+       ═══════════════════════════════════════════════════════════ */
+    function openMiniUpload(vehicleId) {
+        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(vehicleId); });
+        if (!v) { toast('❌ الوسيلة غير موجودة', 'error'); return; }
+        miniUploadVehicleId = vehicleId;
+        miniUploadImages = (v.images || []).slice();
+        renderMiniPreview();
+        $('#vehMiniUploadModal').classList.add('active');
+    }
+
+    function closeMiniUpload() {
+        var m = $('#vehMiniUploadModal');
+        if (m) m.classList.remove('active');
+        miniUploadImages = [];
+        miniUploadVehicleId = null;
+    }
+
+    function renderMiniPreview() {
+        var gallery = $('#vehMiniGalleryPreview');
+        var count = $('#vehMiniImagesCount');
+        if (count) count.textContent = '(' + miniUploadImages.length + '/' + MAX_IMAGES + ')';
+        if (!gallery) return;
+        if (miniUploadImages.length === 0) { gallery.innerHTML = ''; return; }
+
+        var html = '';
+        miniUploadImages.forEach(function(img, idx) {
+            var preview = '';
+            var isFile = (img instanceof File);
+            if (isFile) { preview = URL.createObjectURL(img); _objectUrls.push(preview); }
+            else preview = img.url || '';
+            var isPrimary = isFile
+                ? (idx === 0 && !miniUploadImages.some(function(x){ return x.isPrimary; }))
+                : !!img.isPrimary;
+
+            html +=
+                '<div class="veh-image-item' + (isPrimary ? ' is-primary' : '') + '">' +
+                    '<img src="' + escapeHtml(preview) + '" alt="صورة" loading="lazy">' +
+                    '<span class="veh-image-primary-badge">⭐</span>' +
+                    '<div class="veh-image-actions">' +
+                        '<button type="button" class="set-primary" data-mini-action="primary" data-idx="' + idx + '" title="رئيسية"><i class="fas fa-star"></i></button>' +
+                        '<button type="button" class="del" data-mini-action="delete" data-idx="' + idx + '" title="حذف"><i class="fas fa-trash"></i></button>' +
+                    '</div>' +
+                '</div>';
+        });
+        gallery.innerHTML = html;
+
+        $$('[data-mini-action]', gallery).forEach(function(btn) {
+            on(btn, 'click', function(e) {
+                e.stopPropagation();
+                var action = this.getAttribute('data-mini-action');
+                var idx = parseInt(this.getAttribute('data-idx'), 10);
+                if (action === 'delete') {
+                    miniUploadImages.splice(idx, 1);
+                    renderMiniPreview();
+                } else if (action === 'primary') {
+                    var img = miniUploadImages.splice(idx, 1)[0];
+                    miniUploadImages.unshift(img);
+                    renderMiniPreview();
+                }
+            });
+        });
+    }
+
+    function handleMiniFiles(files) {
+        if (!files || files.length === 0) return;
+        var valid = [];
+        for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            if (!ALLOWED_TYPES.test(f.type)) { toast('❌ نوع غير مدعوم: ' + f.name, 'error'); continue; }
+            if (f.size > MAX_FILE_SIZE) { toast('❌ حجم كبير: ' + f.name, 'error'); continue; }
+            valid.push(f);
+        }
+        if (valid.length === 0) return;
+        var remaining = MAX_IMAGES - miniUploadImages.length;
+        if (remaining <= 0) { toast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
+        if (valid.length > remaining) { valid = valid.slice(0, remaining); }
+        miniUploadImages = miniUploadImages.concat(valid);
+        renderMiniPreview();
+    }
+
+    function initMiniUploadEvents() {
+        on($('#vehMiniUploadClose'), 'click', closeMiniUpload);
+        on($('#vehMiniUploadCancel'), 'click', closeMiniUpload);
+        on($('#vehMiniUploadModal'), 'click', function(e) { if (e.target === this) closeMiniUpload(); });
+
+        var dropzone = $('#vehMiniDropzone');
+        var input = $('#vehMiniImagesInput');
+        var cameraInput = $('#vehMiniCameraInput');
+
+        if (input) on(input, 'change', function(e) { handleMiniFiles(e.target.files); input.value = ''; });
+        if (cameraInput) on(cameraInput, 'change', function(e) { handleMiniFiles(e.target.files); cameraInput.value = ''; });
+
+        if ($('#vehMiniCaptureBtn')) on($('#vehMiniCaptureBtn'), 'click', function() { cameraInput.click(); });
+        if ($('#vehMiniBrowseBtn')) on($('#vehMiniBrowseBtn'), 'click', function() { input.click(); });
+
+        if (dropzone) {
+            on(dropzone, 'click', function() { input.click(); });
+            on(dropzone, 'dragover', function(e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+            on(dropzone, 'dragleave', function(e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+            on(dropzone, 'drop', function(e) {
+                e.preventDefault(); dropzone.classList.remove('dragover');
+                handleMiniFiles(e.dataTransfer.files);
+            });
+        }
+
+        on($('#vehMiniUploadSave'), 'click', saveMiniUpload);
+    }
+
+    async function saveMiniUpload() {
+        if (!miniUploadVehicleId) { toast('❌ لم يتم تحديد الوسيلة', 'error'); return; }
+        var btn = $('#vehMiniUploadSave');
+        var uploading = $('#vehMiniUploading');
+        if (btn) btn.disabled = true;
+        if (uploading) uploading.style.display = 'flex';
+
+        try {
+            // 1. حذف الصور المحذوفة
+            var original = vehicles.find(function(x) { return String(x.id || x._id) === String(miniUploadVehicleId); });
+            var originalImages = (original && original.images) || [];
+            var keptIds = miniUploadImages.filter(function(img) { return img && img._id; }).map(function(img) { return img._id; });
+            var toDelete = originalImages.filter(function(img) { return img._id && keptIds.indexOf(img._id) === -1; });
+
+            for (var i = 0; i < toDelete.length; i++) {
+                await apiFetch('/api/vehicles/' + encodeURIComponent(miniUploadVehicleId) + '/images/' + encodeURIComponent(toDelete[i]._id), { method: 'DELETE' }).catch(function() {});
+            }
+
+            // 2. رفع الصور الجديدة
+            var newFiles = miniUploadImages.filter(function(img) { return img instanceof File; });
+            if (newFiles.length > 0) {
+                var fd = new FormData();
+                newFiles.forEach(function(img) { fd.append('images', img); });
+                var res = await fetch('/api/vehicles/' + encodeURIComponent(miniUploadVehicleId) + '/images', {
+                    method: 'POST',
+                    headers: Object.assign(
+                        { 'Accept': 'application/json' },
+                        getToken() ? { 'Authorization': 'Bearer ' + getToken() } : {},
+                        getCsrf() ? { 'X-CSRF-Token': getCsrf() } : {}
+                    ),
+                    credentials: 'include',
+                    body: fd
+                });
+                if (!res.ok) throw new Error('فشل رفع الصور');
+            }
+
+            toast('✅ تم تحديث الصور بنجاح', 'success');
+            closeMiniUpload();
+
+            // 3. إعادة تحميل البيانات + تحديث المعرض
+            await loadVehicles();
+            var updated = vehicles.find(function(x) { return String(x.id || x._id) === String(miniUploadVehicleId); });
+            if (updated && $('#vehGalleryModal').classList.contains('active')) {
+                openGallery(updated);
+            }
+        } catch (err) {
+            toast('❌ ' + err.message, 'error');
+        } finally {
+            if (btn) btn.disabled = false;
+            if (uploading) uploading.style.display = 'none';
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       🖼️ PROFESSIONAL GALLERY
+       ═══════════════════════════════════════════════════════════ */
+    function openGallery(vehicle) {
+        if (!vehicle) return;
+        _galleryCurrentVehicle = vehicle;
+        _galleryImages = (vehicle.images || []).slice().filter(function(i) { return i && i.url; });
+        if (_galleryImages.length === 0 && vehicle.primaryImage && vehicle.primaryImage.url) {
+            _galleryImages = [vehicle.primaryImage];
+        }
+        var primaryIdx = _galleryImages.findIndex(function(i) { return i.isPrimary; });
+        if (primaryIdx > 0) {
+            var p = _galleryImages.splice(primaryIdx, 1)[0];
+            _galleryImages.unshift(p);
+        }
+        _galleryIndex = 0;
+        _galleryZoom = 1;
+        _galleryPanX = 0;
+        _galleryPanY = 0;
+
+        var modal = $('#vehGalleryModal');
+        var title = $('#vehGalleryTitle');
+        var subtitle = $('#vehGallerySubtitle');
+        var details = $('#vehGalleryDetails');
+        var changeBtn = $('#vehGalleryChangeBtn');
+
+        if (title) title.textContent = vehicle.plateNumber || vehicle.name || 'وسيلة';
+        if (subtitle) {
+            var parts = [];
+            if (vehicle.type) parts.push(vehicle.type);
+            if (vehicle.brand) parts.push(vehicle.brand);
+            if (vehicle.model) parts.push(vehicle.model);
+            if (vehicle.year) parts.push(vehicle.year);
+            if (vehicle.color) parts.push(vehicle.color);
+            subtitle.textContent = parts.join(' • ') || '—';
+        }
+
+        // إظهار زر تغيير الصور للمحررين فقط
+        if (changeBtn) {
+            var canEdit = hasPermission('canUpdateVehicles');
+            changeBtn.style.display = canEdit ? 'flex' : 'none';
+        }
+
+        if (details) {
+            if (vehicle.status === 'طرح' && vehicle.disposal) {
+                var d = vehicle.disposal;
+                var html = '';
+                if (d.reason) html += '<div class="veh-gallery-detail"><i class="fas fa-info-circle"></i> السبب: <strong>' + escapeHtml(d.reason) + '</strong></div>';
+                if (d.date) html += '<div class="veh-gallery-detail"><i class="fas fa-calendar"></i> التاريخ: <strong>' + escapeHtml(formatDate(d.date)) + '</strong></div>';
+                if (d.decision) html += '<div class="veh-gallery-detail"><i class="fas fa-file-alt"></i> القرار: <strong>' + escapeHtml(d.decision) + '</strong></div>';
+                if (d.disposedBy) html += '<div class="veh-gallery-detail"><i class="fas fa-user"></i> من قرر: <strong>' + escapeHtml(d.disposedBy) + '</strong></div>';
+                if (html) { details.innerHTML = html; details.style.display = 'flex'; }
+                else details.style.display = 'none';
+            } else details.style.display = 'none';
+        }
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        if (_galleryImages.length === 0) renderGalleryEmpty();
+        else { renderGalleryThumbs(); updateGalleryImage(); }
+    }
+
+    function closeGallery() {
+        var modal = $('#vehGalleryModal');
+        if (modal) modal.classList.remove('active');
+        document.body.style.overflow = '';
+        stopSlideshow();
+        _galleryImages = [];
+        _galleryIndex = 0;
+        _galleryCurrentVehicle = null;
+        resetZoomPan();
+    }
+
+    function renderGalleryEmpty() {
+        var stage = $('#vehGalleryStage');
+        var thumbs = $('#vehGalleryThumbs');
+        if (stage) {
+            stage.innerHTML = '<div class="veh-gallery-empty">' +
+                '<i class="fas fa-image"></i>' +
+                '<h3>لا توجد صور</h3>' +
+                '<p>انقر على "تغيير الصور" لإضافة صور</p>' +
+                '</div>';
+        }
+        if (thumbs) thumbs.innerHTML = '';
+        var counter = $('#vehGalleryCounter');
+        if (counter) counter.style.display = 'none';
+    }
+
+    function renderGalleryThumbs() {
+        var thumbs = $('#vehGalleryThumbs');
+        if (!thumbs) return;
+        var html = '';
+        _galleryImages.forEach(function(img, idx) {
+            html += '<div class="veh-gallery-thumb' + (idx === _galleryIndex ? ' active' : '') + '" data-idx="' + idx + '">' +
+                '<img src="' + escapeHtml(img.url) + '" alt="مصغرة" loading="lazy">' +
+                '</div>';
+        });
+        thumbs.innerHTML = html;
+        $$('.veh-gallery-thumb', thumbs).forEach(function(el) {
+            on(el, 'click', function() {
+                var idx = parseInt(this.getAttribute('data-idx'), 10);
+                if (!isNaN(idx)) {
+                    _galleryIndex = idx;
+                    resetZoomPan();
+                    updateGalleryImage();
+                    renderGalleryThumbs();
+                }
+            });
+        });
+    }
+
+    function updateGalleryImage() {
+        var img = $('#vehGalleryImg');
+        var counter = $('#vehGalleryCounter');
+        var prev = $('#vehGalleryPrev');
+        var next = $('#vehGalleryNext');
+
+        if (!img || _galleryImages.length === 0) return;
+        var current = _galleryImages[_galleryIndex];
+        img.src = current.url;
+        img.alt = 'صورة ' + (_galleryIndex + 1);
+
+        var nextIdx = (_galleryIndex + 1) % _galleryImages.length;
+        if (_galleryImages[nextIdx]) { var pre = new Image(); pre.src = _galleryImages[nextIdx].url; }
+
+        if (counter) {
+            counter.textContent = (_galleryIndex + 1) + ' / ' + _galleryImages.length;
+            counter.style.display = 'block';
+        }
+        if (prev) prev.disabled = _galleryIndex === 0;
+        if (next) next.disabled = _galleryIndex >= _galleryImages.length - 1;
+        applyTransform();
+    }
+
+    function applyTransform() {
+        var img = $('#vehGalleryImg');
+        var stage = $('#vehGalleryStage');
+        if (!img || !stage) return;
+        if (_galleryZoom <= 1) {
+            stage.classList.remove('zoomed');
+            img.style.transform = '';
+            _galleryZoom = 1; _galleryPanX = 0; _galleryPanY = 0;
+        } else {
+            stage.classList.add('zoomed');
+            img.style.transform = 'translate(' + _galleryPanX + 'px, ' + _galleryPanY + 'px) scale(' + _galleryZoom + ')';
+        }
+    }
+
+    function resetZoomPan() { _galleryZoom = 1; _galleryPanX = 0; _galleryPanY = 0; applyTransform(); }
+    function zoomIn() { _galleryZoom = Math.min(_galleryZoom + 0.25, 3); applyTransform(); }
+    function zoomOut() {
+        _galleryZoom = Math.max(_galleryZoom - 0.25, 1);
+        if (_galleryZoom <= 1) { _galleryZoom = 1; _galleryPanX = 0; _galleryPanY = 0; }
+        applyTransform();
+    }
+    function galleryPrev() {
+        if (_galleryIndex > 0) {
+            _galleryIndex--; resetZoomPan();
+            updateGalleryImage(); renderGalleryThumbs();
+        }
+    }
+    function galleryNext() {
+        if (_galleryIndex < _galleryImages.length - 1) {
+            _galleryIndex++; resetZoomPan();
+            updateGalleryImage(); renderGalleryThumbs();
+        }
+    }
+    function toggleSlideshow() { if (_gallerySlideshowActive) stopSlideshow(); else startSlideshow(); }
+    function startSlideshow() {
+        if (_galleryImages.length < 2) return;
+        _gallerySlideshowActive = true;
+        var btn = $('#vehGallerySlideshow');
+        if (btn) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-pause"></i>'; }
+        _gallerySlideshowTimer = setInterval(function() {
+            if (_galleryIndex < _galleryImages.length - 1) galleryNext();
+            else { _galleryIndex = 0; resetZoomPan(); updateGalleryImage(); renderGalleryThumbs(); }
+        }, 3000);
+        _intervals.push(_gallerySlideshowTimer);
+    }
+    function stopSlideshow() {
+        _gallerySlideshowActive = false;
+        if (_gallerySlideshowTimer) { clearInterval(_gallerySlideshowTimer); _gallerySlideshowTimer = null; }
+        var btn = $('#vehGallerySlideshow');
+        if (btn) { btn.classList.remove('active'); btn.innerHTML = '<i class="fas fa-play"></i>'; }
+    }
+    async function downloadImage() {
+        if (_galleryImages.length === 0) return;
+        var current = _galleryImages[_galleryIndex];
+        try {
+            toast('⬇️ جاري التحميل...', 'info', 1500);
+            var res = await fetch(current.url, { mode: 'cors' });
+            var blob = await res.blob();
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = 'vehicle-' + (_galleryIndex + 1) + '.jpg';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+        } catch (e) { window.open(current.url, '_blank'); }
+    }
+    function toggleFullscreen() {
+        var modal = $('#vehGalleryModal');
+        if (!document.fullscreenElement) {
+            if (modal.requestFullscreen) modal.requestFullscreen();
+            else if (modal.webkitRequestFullscreen) modal.webkitRequestFullscreen();
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        }
+    }
+
+    function initGalleryEvents() {
+        on($('#vehGalleryClose'), 'click', closeGallery);
+        on($('#vehGalleryPrev'), 'click', galleryPrev);
+        on($('#vehGalleryNext'), 'click', galleryNext);
+        on($('#vehGalleryZoomIn'), 'click', zoomIn);
+        on($('#vehGalleryZoomOut'), 'click', zoomOut);
+        on($('#vehGalleryReset'), 'click', resetZoomPan);
+        on($('#vehGallerySlideshow'), 'click', toggleSlideshow);
+        on($('#vehGalleryDownload'), 'click', downloadImage);
+        on($('#vehGalleryFullscreen'), 'click', toggleFullscreen);
+
+        // 🎯 زر تغيير الصور
+        on($('#vehGalleryChangeBtn'), 'click', function() {
+            if (!_galleryCurrentVehicle) return;
+            var id = _galleryCurrentVehicle.id || _galleryCurrentVehicle._id;
+            openMiniUpload(id);
+        });
+
+        on(document, 'keydown', function(e) {
+            var modal = $('#vehGalleryModal');
+            if (!modal || !modal.classList.contains('active')) return;
+            if (e.key === 'Escape') {
+                var miniModal = $('#vehMiniUploadModal');
+                if (miniModal && miniModal.classList.contains('active')) { closeMiniUpload(); return; }
+                closeGallery();
+            } else if (e.key === 'ArrowRight') galleryPrev();
+            else if (e.key === 'ArrowLeft') galleryNext();
+            else if (e.key === '+' || e.key === '=') zoomIn();
+            else if (e.key === '-') zoomOut();
+            else if (e.key === '0') resetZoomPan();
+            else if (e.key === ' ') { e.preventDefault(); toggleSlideshow(); }
+        });
+
+        on($('#vehGalleryModal'), 'click', function(e) { if (e.target === this) closeGallery(); });
+
+        var stage = $('#vehGalleryStage');
+        if (stage) {
+            on(stage, 'wheel', function(e) {
+                if (_galleryImages.length === 0) return;
+                e.preventDefault();
+                if (e.deltaY < 0) zoomIn();
+                else zoomOut();
+            }, { passive: false });
+
+            on(stage, 'mousedown', function(e) {
+                if (_galleryZoom <= 1) return;
+                _galleryDragging = true;
+                _galleryDragStartX = e.clientX - _galleryPanX;
+                _galleryDragStartY = e.clientY - _galleryPanY;
+                stage.classList.add('grabbing');
+            });
+            on(document, 'mousemove', function(e) {
+                if (!_galleryDragging) return;
+                _galleryPanX = e.clientX - _galleryDragStartX;
+                _galleryPanY = e.clientY - _galleryDragStartY;
+                applyTransform();
+            });
+            on(document, 'mouseup', function() {
+                if (_galleryDragging) { _galleryDragging = false; stage.classList.remove('grabbing'); }
+            });
+
+            var touchStartX = 0, touchStartY = 0, touchStartTime = 0, initialPinch = 0;
+            on(stage, 'touchstart', function(e) {
+                if (e.touches.length === 1) {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                    touchStartTime = Date.now();
+                    if (_galleryZoom > 1) {
+                        _galleryDragging = true;
+                        _galleryDragStartX = touchStartX - _galleryPanX;
+                        _galleryDragStartY = touchStartY - _galleryPanY;
+                    }
+                } else if (e.touches.length === 2) {
+                    initialPinch = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                }
+            }, { passive: true });
+            on(stage, 'touchmove', function(e) {
+                if (e.touches.length === 2 && initialPinch > 0) {
+                    var currentPinch = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    var scale = currentPinch / initialPinch;
+                    _galleryZoom = Math.max(1, Math.min(3, _galleryZoom * scale));
+                    initialPinch = currentPinch;
+                    applyTransform();
+                } else if (_galleryDragging && e.touches.length === 1 && _galleryZoom > 1) {
+                    _galleryPanX = e.touches[0].clientX - _galleryDragStartX;
+                    _galleryPanY = e.touches[0].clientY - _galleryDragStartY;
+                    applyTransform();
+                }
+            }, { passive: true });
+            on(stage, 'touchend', function(e) {
+                var dt = Date.now() - touchStartTime;
+                var dx = e.changedTouches[0].clientX - touchStartX;
+                var dy = e.changedTouches[0].clientY - touchStartY;
+                if (dt < 300 && Math.abs(dx) > 60 && Math.abs(dy) < 60 && _galleryZoom <= 1) {
+                    if (dx > 0) galleryNext();
+                    else galleryPrev();
+                }
+                _galleryDragging = false;
+                initialPinch = 0;
+            }, { passive: true });
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       📥 LOAD DATA
+       ═══════════════════════════════════════════════════════════ */
+    function loadVehicles() {
+        if (_isDestroyed) return Promise.resolve();
+        var tbody = $('#vehTableBody');
+        if (tbody && vehicles.length === 0) {
+            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-spinner fa-spin"></i><h3>جاري التحميل...</h3><p>يرجى الانتظار</p></div>';
+        }
+        return apiFetch('/api/vehicles?includeDisposed=true')
+            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+            .then(function(data) {
+                if (_isDestroyed) return;
+                vehicles = Array.isArray(data) ? data : (data.vehicles || []);
+                renderTable();
+                updateStats();
+                updateDisposalsBadge();
+                updateBrandsFilter();
+            })
+            .catch(function(err) {
+                if (tbody) {
+                    tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-exclamation-triangle" style="color:#f87171"></i><h3>فشل التحميل</h3><p>' + escapeHtml(err.message) + '</p></div>';
+                }
+            });
+    }
+
+    function updateStats() {
+        var total = vehicles.length;
+        var valid = vehicles.filter(function(v) { return v.status === 'صالحة'; }).length;
+        var broken = vehicles.filter(function(v) { return v.status === 'معطبة'; }).length;
+        var maint = vehicles.filter(function(v) { return v.status === 'صيانة'; }).length;
+        var disposed = vehicles.filter(function(v) { return v.status === 'طرح'; }).length;
+        var operational = total - disposed;
+        var eff = operational > 0 ? ((valid / operational) * 100).toFixed(1) : '0.0';
+        var el;
+        el = $('#vehStatTotal'); if (el) el.textContent = total;
+        el = $('#vehStatValid'); if (el) el.textContent = valid;
+        el = $('#vehStatBroken'); if (el) el.textContent = broken;
+        el = $('#vehStatMaint'); if (el) el.textContent = maint;
+        el = $('#vehStatDisposed'); if (el) el.textContent = disposed;
+        el = $('#vehStatEff'); if (el) el.textContent = eff + '%';
+    }
+
+    function updateDisposalsBadge() {
+        var count = vehicles.filter(function(v) { return v.status === 'طرح'; }).length;
+        var el = $('#vehDisposalsCount');
+        if (!el) return;
+        if (count > 0) { el.textContent = count; el.style.display = 'inline-block'; }
+        else el.style.display = 'none';
+    }
+
+    function getFiltered() {
+        var search = ($('#vehSearch') && $('#vehSearch').value || '').trim().toLowerCase();
+        var status = ($('#vehFilterStatus') && $('#vehFilterStatus').value) || 'active';
+        var type = ($('#vehFilterType') && $('#vehFilterType').value) || 'all';
+        var region = ($('#vehFilterRegion') && $('#vehFilterRegion').value) || 'all';
+        var brand = ($('#vehFilterBrand') && $('#vehFilterBrand').value) || 'all';
+        return vehicles.filter(function(v) {
+            if (status === 'active' && v.status === 'طرح') return false;
+            if (status !== 'all' && status !== 'active' && v.status !== status) return false;
+            if (type !== 'all' && v.type !== type) return false;
+            if (region !== 'all' && v.region !== region) return false;
+            if (brand !== 'all' && v.brand !== brand) return false;
+            if (search) {
+                var text = [
+                    v.plateNumber, v.region, v.zone, v.center, v.supplyPlace,
+                    v.type, v.brand, v.model, v.color, v.notes,
+                    v.year ? String(v.year) : ''
+                ].filter(Boolean).join(' ').toLowerCase();
+                if (text.indexOf(search) === -1) return false;
+            }
+            return true;
+        });
+    }
+
+    function renderTable() {
+        var tbody = $('#vehTableBody');
+        if (!tbody) return;
+        var filtered = getFiltered();
+        if (filtered.length === 0) {
+            var msg = vehicles.length === 0 ? 'لا توجد وسائل' : 'لا توجد نتائج مطابقة';
+            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-truck"></i><h3>' + msg + '</h3><p>حاول تغيير الفلاتر</p></div>';
+            return;
+        }
+        var canEdit = hasPermission('canUpdateVehicles');
+        var canDelete = hasPermission('canDeleteVehicles');
+        var canDispose = hasPermission('canDisposeVehicles');
+        var html = '';
+
+        filtered.forEach(function(v, idx) {
+            var id = v.id || v._id;
+            var isDisposed = v.status === 'طرح';
+            var statusCls = 'status-' + (v.status || 'صالحة');
+            var condCls = 'cond-' + (v.workCondition || 'جديدة');
+
+            var brandModel = '—';
+            if (v.brand || v.model || v.year || v.color) {
+                var parts = [];
+                if (v.brand) parts.push('<span class="veh-badge brand">' + escapeHtml(v.brand) + '</span>');
+                if (v.model) parts.push('<span class="veh-badge model">' + escapeHtml(v.model) + '</span>');
+                if (v.year) parts.push('<span class="veh-badge year">' + escapeHtml(v.year) + '</span>');
+                if (v.color) parts.push('<span class="veh-badge color">🎨 ' + escapeHtml(v.color) + '</span>');
+                brandModel = parts.join(' ');
+            }
+
+            var primaryImg = v.primaryImage || (v.images && v.images[0]);
+            var imagesCount = v.imagesCount || (v.images ? v.images.length : 0);
+            var thumbHtml;
+            if (primaryImg && primaryImg.url) {
+                thumbHtml = '<div class="veh-thumb-wrapper" data-action="gallery" data-id="' + escapeHtml(id) + '" title="انقر لعرض ' + imagesCount + ' صورة">' +
+                    '<img src="' + escapeHtml(primaryImg.url) + '" class="veh-thumb" alt="' + escapeHtml(v.plateNumber || '') + '" loading="lazy">' +
+                    (imagesCount > 1 ? '<span class="veh-thumb-badge">' + imagesCount + '</span>' : '') +
+                    '</div>';
+            } else {
+                thumbHtml = '<div class="veh-thumb-empty" data-action="gallery" data-id="' + escapeHtml(id) + '" title="لا توجد صور">' +
+                    '<i class="fas fa-camera"></i>' +
+                    '</div>';
+            }
+
+            var actions = '';
+            actions += '<button class="veh-act gallery" data-action="gallery" data-id="' + escapeHtml(id) + '" title="عرض الصور"><i class="fas fa-images"></i></button>';
+            if (isDisposed) {
+                actions += '<button class="veh-act restore" data-action="restore" data-id="' + escapeHtml(id) + '" title="استعادة"><i class="fas fa-undo"></i></button>';
+            } else {
+                if (canEdit) actions += '<button class="veh-act edit" data-action="edit" data-id="' + escapeHtml(id) + '" title="تعديل"><i class="fas fa-pen"></i></button>';
+                if (canDispose) actions += '<button class="veh-act dispose" data-action="dispose" data-id="' + escapeHtml(id) + '" title="طرح"><i class="fas fa-archive"></i></button>';
+            }
+            if (canDelete) actions += '<button class="veh-act delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف"><i class="fas fa-trash"></i></button>';
+
+            html +=
+                '<div class="veh-table-row' + (isDisposed ? ' disposed' : '') + '">' +
+                    '<div class="veh-cell center">' + (idx + 1) + '</div>' +
+                    '<div class="veh-cell thumb-cell">' + thumbHtml + '</div>' +
+                    '<div class="veh-cell center"><span class="veh-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
+                    '<div class="veh-cell">' + brandModel + '</div>' +
+                    '<div class="veh-cell"><span class="veh-plate">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
+                    '<div class="veh-cell"><span class="veh-badge region">' + escapeHtml(getRegionShort(v.region)) + '</span></div>' +
+                    '<div class="veh-cell">' + (v.zone ? '<span class="veh-badge zone">📍 ' + escapeHtml(v.zone) + '</span>' : '—') + '</div>' +
+                    '<div class="veh-cell">' + (v.center ? '<span class="veh-badge center-badge">🏢 ' + escapeHtml(v.center) + '</span>' : '—') + '</div>' +
+                    '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
+                    '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
+                    '<div class="veh-cell center">' + escapeHtml(formatDate(v.appointmentDate)) + '</div>' +
+                    '<div class="veh-cell center" style="color:#fca5a5;font-weight:800;">' + escapeHtml(formatDate(v.faultDate)) + '</div>' +
+                    '<div class="veh-cell">' + escapeHtml(v.notes || '—') + '</div>' +
+                    '<div class="veh-cell center"><div class="veh-actions-cell">' + actions + '</div></div>' +
+                '</div>';
+        });
+        tbody.innerHTML = html;
+
+        on(tbody, 'click', function(e) {
+            var target = e.target.closest('[data-action]');
+            if (!target) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var action = target.getAttribute('data-action');
+            var id = target.getAttribute('data-id');
+            if (!id) return;
+            if (action === 'gallery') openGalleryForVehicle(id);
+            else if (action === 'edit') openEditModal(id);
+            else if (action === 'dispose') openDisposeModal(id);
+            else if (action === 'restore') confirmRestore(id);
+            else if (action === 'delete') confirmDelete(id);
+        });
+    }
+
+    function openGalleryForVehicle(id) {
+        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
+        if (!v) { toast('❌ الوسيلة غير موجودة', 'error'); return; }
+        openGallery(v);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       📝 ADD / EDIT
+       ═══════════════════════════════════════════════════════════ */
+    function openAddModal() {
+        var modal = $('#vehModal');
+        if (!modal) return;
+        var title = $('#vehModalTitle');
+        if (title) title.textContent = 'إضافة وسيلة برية';
+
+        $('#vehId').value = '';
+
+        // Reset all combobox fields
+        resetComboboxField('vehType', 'vehTypeSearch', null, null);
+        resetComboboxField('vehBrand', 'vehBrandSearch', 'vehBrandFree', 'vehBrandHint');
+        $('#vehModel').innerHTML = '<option value="">— اختر الماركة أولاً —</option>';
+        $('#vehModelSearch').value = '';
+        $('#vehModelSearch').style.display = 'none';
+        $('#vehModelFree').style.display = 'none';
+        $('#vehModelFree').value = '';
+        resetComboboxField('vehColor', 'vehColorSearch', 'vehColorFree', null);
+        resetComboboxField('vehRegion', null, 'vehRegionFree', 'vehRegionHint');
+        $('#vehZone').innerHTML = '<option value="">— اختر الإقليم أولاً —</option>';
+        $('#vehZoneSearch').value = '';
+        $('#vehZoneSearch').style.display = 'none';
+        $('#vehZoneFree').style.display = 'none';
+        $('#vehZoneFree').value = '';
+
+        $('#vehPlate').value = '';
+        $('#vehYear').value = '';
+        $('#vehCenter').value = '';
+        $('#vehSupp').value = '';
+        $('#vehStatus').value = 'صالحة';
+        $('#vehCondition').value = 'جديدة';
+        $('#vehDate').value = '';
+        $('#vehFaultDate').value = '';
+        $('#vehNotes').value = '';
+        $('#vehFaultDateGroup').style.display = 'none';
+        $('#vehFaultDate').required = false;
+
+        vehicleImages = [];
+        currentVehicleId = null;
+        renderImagesPreview();
+        modal.classList.add('active');
+    }
+
+    function resetComboboxField(selectId, searchId, freeId, hintId) {
+        var sel = $('#' + selectId);
+        if (sel) { sel.value = ''; filterSelectOptions(sel, ''); }
+        var search = searchId ? $('#' + searchId) : null;
+        if (search) search.value = '';
+        var free = freeId ? $('#' + freeId) : null;
+        if (free) { free.style.display = 'none'; free.value = ''; }
+        var hint = hintId ? $('#' + hintId) : null;
+        if (hint) hint.style.display = 'none';
+    }
+
+    function openEditModal(id) {
+        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
+        if (!v) return;
+        var title = $('#vehModalTitle');
+        if (title) title.textContent = 'تعديل وسيلة برية';
+
+        $('#vehId').value = v.id || v._id || '';
+
+        // النوع
+        setComboboxValue('vehType', null, null, v.type || '');
+        var typeSearch = $('#vehTypeSearch'); if (typeSearch) typeSearch.value = '';
+        filterSelectOptions($('#vehType'), '');
+
+        // الماركة
+        setComboboxValue('vehBrand', 'vehBrandFree', 'vehBrandHint', v.brand || '');
+        var brandSearch = $('#vehBrandSearch'); if (brandSearch) brandSearch.value = '';
+        filterSelectOptions($('#vehBrand'), '');
+
+        // الطراز (بعد الماركة)
+        updateModelsByBrand();
+        setTimeout(function() {
+            setComboboxValue('vehModel', 'vehModelFree', null, v.model || '');
+            var mSearch = $('#vehModelSearch'); if (mSearch) mSearch.value = '';
+            filterSelectOptions($('#vehModel'), '');
+        }, 60);
+
+        // اللون
+        setComboboxValue('vehColor', 'vehColorFree', null, v.color || '');
+        var colorSearch = $('#vehColorSearch'); if (colorSearch) colorSearch.value = '';
+        filterSelectOptions($('#vehColor'), '');
+
+        // الإقليم
+        setComboboxValue('vehRegion', 'vehRegionFree', 'vehRegionHint', v.region || '');
+
+        // المنطقة (بعد الإقليم)
+        updateZonesByRegion();
+        setTimeout(function() {
+            setComboboxValue('vehZone', 'vehZoneFree', null, v.zone || '');
+            var zSearch = $('#vehZoneSearch'); if (zSearch) zSearch.value = '';
+            filterSelectOptions($('#vehZone'), '');
+        }, 60);
+
+        $('#vehPlate').value = v.plateNumber || '';
+        $('#vehYear').value = v.year || '';
+        $('#vehCenter').value = v.center || '';
+        $('#vehSupp').value = v.supplyPlace || '';
+        $('#vehStatus').value = v.status || 'صالحة';
+        $('#vehCondition').value = v.workCondition || 'جديدة';
+        $('#vehDate').value = v.appointmentDate || '';
+        $('#vehFaultDate').value = v.faultDate || '';
+        $('#vehNotes').value = v.notes || '';
+
+        if (v.status === 'معطبة') {
+            $('#vehFaultDateGroup').style.display = 'block';
+            $('#vehFaultDate').required = true;
+        } else {
+            $('#vehFaultDateGroup').style.display = 'none';
+            $('#vehFaultDate').required = false;
+        }
+
+        currentVehicleId = v.id || v._id;
+        vehicleImages = (v.images || []).slice();
+        renderImagesPreview();
+        $('#vehModal').classList.add('active');
+    }
+
+    function closeModal() {
+        var modal = $('#vehModal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    async function saveVehicle(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (_isDestroyed) return;
+
+        var id = $('#vehId').value.trim();
+
+        var payload = {
+            type: getComboboxValue('vehType', null),
+            plateNumber: $('#vehPlate').value.trim(),
+            brand: getComboboxValue('vehBrand', 'vehBrandFree'),
+            model: getComboboxValue('vehModel', 'vehModelFree'),
+            year: $('#vehYear').value ? Number($('#vehYear').value) : null,
+            color: getComboboxValue('vehColor', 'vehColorFree'),
+            region: getComboboxValue('vehRegion', 'vehRegionFree'),
+            zone: getComboboxValue('vehZone', 'vehZoneFree'),
+            center: $('#vehCenter').value.trim(),
+            supplyPlace: $('#vehSupp').value.trim(),
+            status: $('#vehStatus').value,
+            workCondition: $('#vehCondition').value,
+            appointmentDate: $('#vehDate').value || null,
+            faultDate: $('#vehFaultDate').value || null,
+            notes: $('#vehNotes').value.trim()
+        };
+
+        // التحقق
+        if (!payload.type) { toast('⚠️ النوع مطلوب', 'error'); return; }
+        if (!payload.plateNumber) { toast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
+        if (!payload.region) { toast('⚠️ الإقليم / الإدارة مطلوب', 'error'); return; }
+        if (!payload.zone) { toast('⚠️ المنطقة مطلوبة', 'error'); return; }
+        if (payload.status === 'معطبة' && !payload.faultDate) {
+            toast('⚠️ تاريخ العطب مطلوب', 'error');
+            return;
+        }
+
+        var btn = $('#vehSaveBtn');
+        var btnText = $('#vehSaveBtnText');
+        if (btn) btn.disabled = true;
+        if (btnText) btnText.textContent = 'جاري الحفظ...';
+
+        var isEdit = !!id;
+        var url = isEdit ? '/api/vehicles/' + encodeURIComponent(id) : '/api/vehicles';
+        var method = isEdit ? 'PUT' : 'POST';
+
+        try {
+            var res = await apiFetch(url, { method: method, body: JSON.stringify(payload) });
+            var result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'فشل الحفظ');
+
+            var savedId = (result.vehicle && (result.vehicle.id || result.vehicle._id)) || currentVehicleId || id;
+            if (vehicleImages.length > 0 && savedId) await uploadImages(savedId);
+
+            toast(isEdit ? '✅ تم تعديل الوسيلة' : '✅ تم إضافة الوسيلة', 'success');
+            closeModal();
+            loadVehicles();
+        } catch (err) {
+            toast('❌ ' + err.message, 'error');
+        } finally {
+            if (btn) btn.disabled = false;
+            if (btnText) btnText.textContent = 'حفظ';
+        }
+    }
+
+    function confirmDelete(id) {
+        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
+        if (!v) return;
+        if (!confirm('⚠️ هل تريد حذف الوسيلة "' + (v.plateNumber || '') + '"؟\n\nلا يمكن التراجع.')) return;
+        apiFetch('/api/vehicles/' + encodeURIComponent(id), { method: 'DELETE' })
+            .then(function(res) { return res.json(); })
+            .then(function(r) {
+                if (_isDestroyed) return;
+                if (!r.success) throw new Error(r.error || 'فشل الحذف');
+                toast('✅ تم حذف الوسيلة', 'success');
+                loadVehicles();
+            })
+            .catch(function(err) { toast('❌ ' + err.message, 'error'); });
+    }
+
+    function confirmRestore(id) {
+        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
+        if (!v) return;
+        if (!confirm('⚠️ استعادة الوسيلة "' + (v.plateNumber || '') + '" إلى "صالحة"؟')) return;
+        apiFetch('/api/vehicles/' + encodeURIComponent(id) + '/restore', {
+            method: 'POST',
+            body: JSON.stringify({ newStatus: 'صالحة' })
+        })
+            .then(function(res) { return res.json(); })
+            .then(function(r) {
+                if (_isDestroyed) return;
+                if (!r.success) throw new Error(r.error || 'فشل');
+                toast('✅ تم استعادة الوسيلة', 'success');
+                loadVehicles();
+            })
+            .catch(function(err) { toast('❌ ' + err.message, 'error'); });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       📦 DISPOSE
+       ═══════════════════════════════════════════════════════════ */
+    function openDisposeModal(id) {
+        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
+        if (!v) return;
+        if (v.status === 'طرح') { toast('⚠️ الوسيلة مطروحة مسبقاً', 'error'); return; }
+        $('#vehDisposeId').value = id;
+        $('#vehDisposeReason').value = '';
+        $('#vehDisposeDecision').value = '';
+        $('#vehDisposeBy').value = '';
+        $('#vehDisposeNotes').value = '';
+        $('#vehDisposeModal').classList.add('active');
+    }
+
+    function closeDisposeModal() {
+        var m = $('#vehDisposeModal');
+        if (m) m.classList.remove('active');
+    }
+
+    async function submitDispose(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (_isDestroyed) return;
+        var id = $('#vehDisposeId').value.trim();
+        var reason = $('#vehDisposeReason').value.trim();
+        var decision = $('#vehDisposeDecision').value.trim();
+        var disposedBy = $('#vehDisposeBy').value.trim();
+        var notes = $('#vehDisposeNotes').value.trim();
+        if (!reason) { toast('⚠️ سبب الطرح مطلوب', 'error'); return; }
+        var btn = $('#vehDisposeSubmit');
+        if (btn) btn.disabled = true;
+        try {
+            var res = await apiFetch('/api/vehicles/' + encodeURIComponent(id) + '/dispose', {
+                method: 'POST',
+                body: JSON.stringify({ reason: reason, decision: decision, disposedBy: disposedBy, notes: notes })
+            });
+            var r = await res.json();
+            if (!res.ok) throw new Error(r.error || 'فشل الطرح');
+            toast('⚫ تم طرح الوسيلة', 'success');
+            closeDisposeModal();
+            loadVehicles();
+        } catch (err) {
+            toast('❌ ' + err.message, 'error');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       🎛️ FILTERS / MISC
+       ═══════════════════════════════════════════════════════════ */
+    function toggleFaultDate() {
+        var status = $('#vehStatus').value;
+        var group = $('#vehFaultDateGroup');
+        var input = $('#vehFaultDate');
+        if (status === 'معطبة') {
+            group.style.display = 'block';
+            input.required = true;
+        } else {
+            group.style.display = 'none';
+            input.required = false;
+            input.value = '';
+        }
+    }
+
+    function initFilters() {
+        var regions = [
+            'إدارة إسناد الوحدات البحرية', 'إدارة حرس السواحل',
+            'إقليم الحرس البحري بالشمال', 'إقليم الحرس البحري بالساحل',
+            'إقليم الحرس البحري بالوسط', 'إقليم الحرس البحري بالجنوب',
+            'وحدة الصيانة والإسناد البحري تونس', 'وحدة الصيانة والإسناد البحري صفاقس',
+            'وحدة الصيانة والإسناد البحري المنستير', 'وحدة الصيانة والإسناد البحري جرجيس',
+            'المجمع الأمني بقبيبة'
+        ];
+        var regSel = $('#vehFilterRegion');
+        if (regSel) {
+            var html = '<option value="all">كل الإدارات والأقاليم</option>';
+            regions.forEach(function(r) {
+                html += '<option value="' + escapeHtml(r) + '">' + escapeHtml(getRegionShort(r)) + '</option>';
+            });
+            regSel.innerHTML = html;
+        }
+
+        var types = ['سيارة','كواد','شاحنة','شاحنة صهريج','حافلة','بيك أب','فان','جيب','دراجة','مدرعة','إسعاف','إطفاء','رافعة','جرافة','أخرى'];
+        var typeSel = $('#vehFilterType');
+        if (typeSel) {
+            var html2 = '<option value="all">كل الأنواع</option>';
+            types.forEach(function(t) { html2 += '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>'; });
+            typeSel.innerHTML = html2;
+        }
+
+        updateBrandsFilter();
+    }
+
+    function updateBrandsFilter() {
+        var sel = $('#vehFilterBrand');
+        if (!sel) return;
+        var brands = {};
+        vehicles.forEach(function(v) { if (v.brand) brands[v.brand] = true; });
+        var list = Object.keys(brands).sort();
+        var html = '<option value="all">كل الماركات</option>';
+        list.forEach(function(b) { html += '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>'; });
+        var current = sel.value;
+        sel.innerHTML = html;
+        if (current && brands[current]) sel.value = current;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       📊 EXPORT / PRINT
+       ═══════════════════════════════════════════════════════════ */
+    function exportExcel() {
+        try {
+            var filtered = getFiltered();
+            if (!filtered.length) { toast('⚠️ لا توجد بيانات', 'error'); return; }
+            var BOM = '\uFEFF';
+            var headers = ['#','النوع','الماركة','الطراز','السنة','اللون','رقم الوسيلة','الإقليم','المنطقة','المركز','مكان التعزيز','الحالة','حالة العمل','تاريخ التعيين','تاريخ العطب','ملاحظات'];
+            function esc(val) {
+                if (val == null) return '';
+                var s = String(val);
+                if (/[,"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+                return s;
+            }
+            var rows = [headers.map(esc).join(',')];
+            filtered.forEach(function(v, idx) {
+                rows.push([
+                    idx + 1, v.type, v.brand, v.model, v.year, v.color,
+                    v.plateNumber, v.region, v.zone, v.center, v.supplyPlace,
+                    v.status, v.workCondition, v.appointmentDate, v.faultDate, v.notes
+                ].map(esc).join(','));
+            });
+            var csv = BOM + rows.join('\r\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var date = new Date().toISOString().split('T')[0];
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'vehicles-' + date + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(url); }, 100);
+            toast('✅ تم تصدير ' + filtered.length + ' وسيلة', 'success');
+        } catch (err) {
+            toast('❌ فشل التصدير: ' + err.message, 'error');
+        }
+    }
+
+    function printPage() {
+        toast('🖨️ جاري الطباعة...', 'info', 1200);
+        _timeouts.push(setTimeout(function() { window.print(); }, 300));
+    }
+
+    function toggleAutoRefresh() {
+        var cb = $('#vehAutoRefresh');
+        if (!cb) return;
+        if (cb.checked) {
+            autoRefreshInterval = setInterval(function() {
+                if (!_isDestroyed && !document.hidden) loadVehicles();
+            }, 30000);
+            _intervals.push(autoRefreshInterval);
+            toast('🔄 التحديث التلقائي مفعّل', 'success');
+        } else {
+            if (autoRefreshInterval) { clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
+            toast('⏸️ التحديث التلقائي معطّل', 'info');
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       🚀 INIT
+       ═══════════════════════════════════════════════════════════ */
+    async function init() {
+        if (_isDestroyed) return;
+        console.log('🚛 Vehicles Pro v3.0 — Initializing...');
+
+        initFilters();
+        initImagesUI();
+        initGalleryEvents();
+        initMiniUploadEvents();
+
+        // Combobox searches
+        bindComboboxSearch('vehTypeSearch', 'vehType');
+        bindComboboxSearch('vehBrandSearch', 'vehBrand');
+        bindComboboxSearch('vehModelSearch', 'vehModel');
+        bindComboboxSearch('vehColorSearch', 'vehColor');
+        bindComboboxSearch('vehZoneSearch', 'vehZone');
+
+        // Free inputs
+        toggleFreeInput('vehBrand', 'vehBrandFree', 'vehBrandHint');
+        toggleFreeInput('vehModel', 'vehModelFree', null);
+        toggleFreeInput('vehColor', 'vehColorFree', null);
+        toggleFreeInput('vehRegion', 'vehRegionFree', 'vehRegionHint');
+        toggleFreeInput('vehZone', 'vehZoneFree', null);
+
+        // ربط الماركة بالطراز
+        on($('#vehBrand'), 'change', updateModelsByBrand);
+        on($('#vehBrandFree'), 'input', updateModelsByBrand);
+
+        // ربط الإقليم بالمنطقة
+        on($('#vehRegion'), 'change', updateZonesByRegion);
+        on($('#vehRegionFree'), 'input', updateZonesByRegion);
+
+        // Header actions
+        on($('#vehRefreshBtn'), 'click', function() {
+            toast('🔄 جاري التحديث...', 'info', 1200);
+            loadVehicles();
+        });
+        on($('#vehPrintBtn'), 'click', printPage);
+        on($('#vehExcelBtn'), 'click', exportExcel);
+        on($('#vehAddBtn'), 'click', openAddModal);
+        on($('#vehDisposalsBtn'), 'click', function() {
+            var sel = $('#vehFilterStatus');
+            if (sel) { sel.value = 'طرح'; renderTable(); }
+            toast('⚫ تم تصفية المطروحة', 'info', 1500);
+        });
+
+        // Modal events
+        on($('#vehModalClose'), 'click', closeModal);
+        on($('#vehCancelBtn'), 'click', closeModal);
+        on($('#vehModal'), 'click', function(e) { if (e.target === this) closeModal(); });
+        on($('#vehForm'), 'submit', saveVehicle);
+        on($('#vehStatus'), 'change', toggleFaultDate);
+
+        on($('#vehDisposeClose'), 'click', closeDisposeModal);
+        on($('#vehDisposeCancel'), 'click', closeDisposeModal);
+        on($('#vehDisposeModal'), 'click', function(e) { if (e.target === this) closeDisposeModal(); });
+        on($('#vehDisposeForm'), 'submit', submitDispose);
+
+        // Filters
+        on($('#vehSearch'), 'input', renderTable);
+        on($('#vehFilterStatus'), 'change', renderTable);
+        on($('#vehFilterType'), 'change', renderTable);
+        on($('#vehFilterRegion'), 'change', renderTable);
+        on($('#vehFilterBrand'), 'change', renderTable);
+        on($('#vehAutoRefresh'), 'change', toggleAutoRefresh);
+
+        await loadVehicles();
+        console.log('✅ Vehicles Pro v3.0 ready');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+            _timeouts.push(id);
+        });
+    } else {
+        var id2 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+        _timeouts.push(id2);
+    }
+
+})();
+</script>
 </div>
+    
