@@ -279,6 +279,255 @@
             box-shadow: 0 12px 32px var(--c-gold-glow);
         }
 
+        /* ═══════════════════════════════════════════════════════ */
+        /* 📸 قسم الصور                                          */
+        /* ═══════════════════════════════════════════════════════ */
+        .images-section {
+            grid-column: 1 / -1;
+            margin-top: 6px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(10, 16, 32, 0.5), rgba(18, 26, 44, 0.4));
+            border: 1px solid var(--c-border-soft);
+            border-radius: 12px;
+        }
+        .images-section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+        }
+        .images-section-title {
+            font-size: 12px; font-weight: 800;
+            color: var(--c-text-2); letter-spacing: 0.4px;
+            display: flex; align-items: center; gap: 8px;
+            text-transform: uppercase;
+        }
+        .images-section-title i { color: var(--c-gold-2); }
+        .images-count {
+            color: var(--c-gold-2); font-weight: 800; font-size: 11px;
+        }
+        .image-source-btns {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .source-btn {
+            padding: 8px 16px; border: none; border-radius: 10px;
+            font-weight: 800; font-size: 12px; cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex; align-items: center; gap: 7px;
+            font-family: var(--font); white-space: nowrap;
+            position: relative; overflow: hidden;
+        }
+        .source-btn i { font-size: 13px; }
+        .source-btn.camera {
+            background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
+            color: #060911;
+            box-shadow: 0 6px 18px var(--c-gold-glow);
+        }
+        .source-btn.camera:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 10px 26px var(--c-gold-glow);
+        }
+        .source-btn.browse {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(59,130,246,0.3);
+        }
+        .source-btn.browse:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 10px 26px rgba(59,130,246,0.45);
+        }
+        .source-btn:disabled {
+            opacity: 0.4; cursor: not-allowed;
+            transform: none !important; box-shadow: none !important;
+        }
+        .images-dropzone {
+            position: relative;
+            border: 2px dashed var(--c-border-mid);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: rgba(10, 16, 32, 0.4);
+        }
+        .images-dropzone:hover {
+            border-color: var(--c-gold-2);
+            background: rgba(230, 179, 30, 0.05);
+        }
+        .images-dropzone.dragover {
+            border-color: var(--c-emerald-1);
+            background: rgba(110, 231, 183, 0.08);
+            transform: scale(1.01);
+        }
+        .dropzone-content i {
+            font-size: 26px; color: var(--c-gold-2);
+            margin-bottom: 5px; display: block; opacity: 0.7;
+        }
+        .dropzone-title {
+            color: var(--c-text-2); font-size: 12px;
+            font-weight: 700; margin: 0 0 3px 0;
+        }
+        .dropzone-hint {
+            color: var(--c-text-4); font-size: 10.5px; margin: 0;
+        }
+        .images-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .image-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--c-border-soft);
+            background: rgba(10, 16, 32, 0.6);
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .image-item:hover {
+            border-color: var(--c-gold-2);
+            transform: scale(1.04);
+        }
+        .image-item.is-primary {
+            border-color: var(--c-gold-2);
+            box-shadow: 0 0 0 3px rgba(230, 179, 30, 0.2);
+        }
+        .image-item img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+        }
+        .image-primary-badge {
+            position: absolute;
+            top: 5px; right: 5px;
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            color: #060911;
+            font-size: 8.5px; font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 7px;
+            display: none;
+        }
+        .image-item.is-primary .image-primary-badge {
+            display: block;
+        }
+        .image-actions {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 6px;
+            gap: 4px;
+        }
+        .image-item:hover .image-actions { opacity: 1; }
+        .image-actions button {
+            width: 26px; height: 26px;
+            border: none; border-radius: 7px;
+            cursor: pointer; font-size: 11px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+        }
+        .image-actions .img-set-primary {
+            background: rgba(230, 179, 30, 0.9);
+            color: #060911;
+        }
+        .image-actions .img-delete {
+            background: rgba(239, 68, 68, 0.9);
+        }
+        .images-uploading {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; padding: 10px;
+            background: rgba(230, 179, 30, 0.08);
+            border-radius: 10px;
+            margin-top: 10px;
+            color: var(--c-gold-1);
+            font-size: 12px; font-weight: 700;
+        }
+        .uploading-spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(230, 179, 30, 0.2);
+            border-top-color: var(--c-gold-2);
+            border-radius: 50%;
+            animation: fleetSpin 0.8s linear infinite;
+        }
+        @keyframes fleetSpin { to { transform: rotate(360deg); } }
+
+        /* 📸 صورة مصغرة في الجدول */
+        .vessel-thumb {
+            width: 46px; height: 46px;
+            border-radius: 9px;
+            object-fit: cover;
+            border: 2px solid var(--c-border-mid);
+            cursor: pointer;
+            transition: all var(--transition);
+            display: block;
+            margin: 0 auto;
+            background: rgba(10,16,32,0.6);
+        }
+        .vessel-thumb:hover {
+            transform: scale(1.15);
+            border-color: var(--c-gold-2);
+            box-shadow: 0 4px 14px var(--c-gold-glow);
+        }
+        .vessel-thumb-empty {
+            width: 46px; height: 46px;
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(10,16,32,0.6);
+            border: 2px dashed var(--c-border-mid);
+            color: var(--c-text-4);
+            font-size: 16px;
+            margin: 0 auto;
+        }
+        .vessel-thumb-wrapper {
+            position: relative;
+            width: 46px; height: 46px;
+            margin: 0 auto;
+        }
+        .vessel-thumb-badge {
+            position: absolute;
+            bottom: -3px; right: -3px;
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            color: #060911;
+            font-size: 8.5px; font-weight: 900;
+            padding: 2px 5px;
+            border-radius: 7px;
+            border: 2px solid #060911;
+        }
+
+        /* Lightbox */
+        .fleet-lightbox {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(8px);
+            z-index: 100000;
+            display: none;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .fleet-lightbox.active { display: flex; }
+        .fleet-lightbox img {
+            max-width: 95vw; max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            object-fit: contain;
+        }
+        .fleet-lightbox-close {
+            position: absolute;
+            top: 20px; right: 20px;
+            width: 44px; height: 44px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            border-radius: 12px;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fleet-lightbox-close:hover { background: rgba(239,68,68,0.3); }
+
         .filter-bar {
             display: flex; flex-wrap: wrap; align-items: center;
             gap: 12px 16px; padding: 16px 24px;
@@ -357,7 +606,7 @@
         .table-wrapper { overflow-x: auto; padding: 0 24px 24px; width: 100%; }
         .table-wrapper table {
             width: 100%; border-collapse: separate; border-spacing: 0;
-            font-size: 13px; min-width: 1150px;
+            font-size: 13px; min-width: 1250px;
             border-radius: var(--radius); overflow: hidden;
             background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
             backdrop-filter: blur(20px);
@@ -806,12 +1055,17 @@
             .stat-card .number { font-size: 22px; }
             .input-grid { grid-template-columns: 1fr 1fr; padding: 12px 16px; margin: 0 16px 12px; gap: 8px; }
             .input-grid .btn-save { grid-column: span 2; }
+            .images-section { padding: 12px; }
+            .image-source-btns { width: 100%; }
+            .source-btn { flex: 1; justify-content: center; padding: 8px 10px; font-size: 11px; }
+            .images-gallery { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
             .filter-bar { padding: 14px 16px; margin: 0 16px 16px; gap: 10px 12px; }
             .filter-bar .search-input { flex: 1 1 100%; }
             .filter-bar select { min-width: 100%; }
             .table-wrapper { padding: 0 16px 16px; }
-            .table-wrapper table { font-size: 11.5px; min-width: 1000px; }
+            .table-wrapper table { font-size: 11.5px; min-width: 1100px; }
             thead th, tbody td { padding: 10px 8px; }
+            .vessel-thumb, .vessel-thumb-empty, .vessel-thumb-wrapper { width: 38px; height: 38px; }
             .fleet-toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
             .fleet-scroll-nav { right: 16px; bottom: 80px; gap: 8px; }
             .fleet-scroll-nav-btn { width: 42px; height: 42px; font-size: 16px; border-radius: 12px; }
@@ -835,7 +1089,8 @@
             #page-fleet { background: #fff !important; color: #12121a !important; }
             #page-fleet::before { display: none !important; }
             .fleet-header, .filter-bar, .input-grid, .action-btns,
-            .fleet-scroll-nav, .fleet-toast, .fleet-modal {
+            .fleet-scroll-nav, .fleet-toast, .fleet-modal,
+            .images-section, .fleet-lightbox {
                 display: none !important; visibility: hidden !important;
             }
         }
@@ -935,6 +1190,50 @@
             <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
             <option value="خارجي">🔧 خارجي</option>
         </select>
+
+        <!-- 📸 قسم الصور -->
+        <div class="images-section" id="imagesSection">
+            <div class="images-section-header">
+                <div class="images-section-title">
+                    <i class="fas fa-images"></i>
+                    صور المركب
+                    <span class="images-count" id="imagesCount">(0/10)</span>
+                </div>
+                <div class="image-source-btns">
+                    <button type="button" class="source-btn camera" id="captureBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>التقاط صورة</span>
+                    </button>
+                    <button type="button" class="source-btn browse" id="browseBtn">
+                        <i class="fas fa-folder-open"></i>
+                        <span>استيراد صور</span>
+                    </button>
+                </div>
+            </div>
+
+            <input type="file" id="imagesInput"
+                   accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                   multiple hidden>
+            <input type="file" id="cameraInput"
+                   accept="image/*"
+                   capture="environment"
+                   hidden>
+
+            <div class="images-dropzone" id="imagesDropzone">
+                <div class="dropzone-content">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p class="dropzone-title">أو اسحب الصور وأفلتها هنا</p>
+                    <p class="dropzone-hint">JPG, PNG, WEBP, GIF — حتى 5 MB لكل صورة</p>
+                </div>
+            </div>
+
+            <div class="images-gallery" id="imagesGallery"></div>
+            <div class="images-uploading" id="imagesUploading" style="display:none;">
+                <div class="uploading-spinner"></div>
+                <span>جاري رفع الصور...</span>
+            </div>
+        </div>
+
         <button id="saveVesselBtn" class="btn-save" onclick="addItem()">
             <i class="fas fa-save"></i> حفظ المركب
         </button>
@@ -990,6 +1289,7 @@
         <table>
             <thead>
                 <tr>
+                    <th style="width:60px;"><i class="fas fa-image"></i> صورة</th>
                     <th><i class="fas fa-ship"></i> الاسم</th>
                     <th><i class="fas fa-hashtag"></i> الرقم</th>
                     <th><i class="fas fa-ruler"></i> الطول</th>
@@ -1007,7 +1307,7 @@
             </thead>
             <tbody id="mainBody">
                 <tr>
-                    <td colspan="13" class="empty-state">
+                    <td colspan="14" class="empty-state">
                         <div class="spinner"></div>
                         <h3>جاري التحميل...</h3>
                         <p>يرجى الانتظار</p>
@@ -1092,6 +1392,12 @@
             </div>
         </div>
     </div>
+
+    <!-- LIGHTBOX -->
+    <div class="fleet-lightbox" id="fleetLightbox">
+        <button class="fleet-lightbox-close" id="fleetLightboxClose">×</button>
+        <img id="fleetLightboxImg" src="" alt="عرض كبير">
+    </div>
 </div>
 
 <script>
@@ -1100,6 +1406,14 @@
 
     var _isDestroyed = false;
     var _disposalsCount = 0;
+    var _objectUrls = [];
+
+    // 📸 متغيرات الصور
+    var fleetImages = [];
+    var currentVesselId = null;
+    var MAX_IMAGES = 10;
+    var MAX_FILE_SIZE = 5 * 1024 * 1024;
+    var ALLOWED_TYPES = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 
     function _fleetCleanup() {
         if (_isDestroyed) return;
@@ -1111,6 +1425,10 @@
                 try { delete window[k]; } catch(e) {}
             });
         } catch (e) {}
+        _objectUrls.forEach(function(url) {
+            try { URL.revokeObjectURL(url); } catch(e) {}
+        });
+        _objectUrls = [];
     }
     window._pageCleanup = window._pageCleanup || [];
     window._pageCleanup.push(_fleetCleanup);
@@ -1330,6 +1648,261 @@
         return 'زوارق مزدوجة';
     }
 
+    // ============================================================
+    // 📸 إدارة الصور
+    // ============================================================
+    function updateSourceButtonsState() {
+        var captureBtn = document.getElementById('captureBtn');
+        var browseBtn = document.getElementById('browseBtn');
+        var isFull = fleetImages.length >= MAX_IMAGES;
+        if (captureBtn) captureBtn.disabled = isFull;
+        if (browseBtn) browseBtn.disabled = isFull;
+    }
+
+    function initImagesUI() {
+        var dropzone = document.getElementById('imagesDropzone');
+        var input = document.getElementById('imagesInput');
+        var cameraInput = document.getElementById('cameraInput');
+        var captureBtn = document.getElementById('captureBtn');
+        var browseBtn = document.getElementById('browseBtn');
+
+        if (captureBtn && cameraInput) {
+            captureBtn.addEventListener('click', function() {
+                if (fleetImages.length >= MAX_IMAGES) {
+                    fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+                    return;
+                }
+                cameraInput.click();
+            });
+            cameraInput.addEventListener('change', function(e) {
+                handleFiles(e.target.files);
+                cameraInput.value = '';
+            });
+        }
+
+        if (browseBtn && input) {
+            browseBtn.addEventListener('click', function() {
+                if (fleetImages.length >= MAX_IMAGES) {
+                    fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+                    return;
+                }
+                input.click();
+            });
+        }
+
+        if (input) {
+            input.addEventListener('change', function(e) {
+                handleFiles(e.target.files);
+                input.value = '';
+            });
+        }
+
+        if (dropzone && input) {
+            dropzone.addEventListener('click', function() {
+                if (fleetImages.length >= MAX_IMAGES) {
+                    fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+                    return;
+                }
+                input.click();
+            });
+            dropzone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+            dropzone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+            });
+            dropzone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+    }
+
+    function handleFiles(files) {
+        if (!files || files.length === 0) return;
+
+        var valid = [];
+        for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            if (!ALLOWED_TYPES.test(f.type)) {
+                fleetToast('❌ نوع غير مدعوم: ' + f.name, 'error');
+                continue;
+            }
+            if (f.size > MAX_FILE_SIZE) {
+                fleetToast('❌ حجم كبير (الحد 5MB): ' + f.name, 'error');
+                continue;
+            }
+            valid.push(f);
+        }
+        if (valid.length === 0) return;
+
+        var remaining = MAX_IMAGES - fleetImages.length;
+        if (remaining <= 0) {
+            fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+            updateSourceButtonsState();
+            return;
+        }
+        if (valid.length > remaining) {
+            fleetToast('⚠️ تم قبول ' + remaining + ' صور فقط', 'info');
+            valid = valid.slice(0, remaining);
+        }
+
+        fleetImages = fleetImages.concat(valid);
+        renderImagesPreview();
+    }
+
+    function renderImagesPreview() {
+        var gallery = document.getElementById('imagesGallery');
+        var count = document.getElementById('imagesCount');
+
+        if (count) count.textContent = '(' + fleetImages.length + '/' + MAX_IMAGES + ')';
+        if (!gallery) return;
+
+        if (fleetImages.length === 0) {
+            gallery.innerHTML = '';
+            updateSourceButtonsState();
+            return;
+        }
+
+        var html = '';
+        fleetImages.forEach(function(img, idx) {
+            var preview = '';
+            var isFile = (img instanceof File);
+            if (isFile) {
+                preview = URL.createObjectURL(img);
+                _objectUrls.push(preview);
+            } else {
+                preview = img.url || '';
+            }
+            var isPrimary = isFile
+                ? (idx === 0 && !fleetImages.some(function(x){ return x.isPrimary; }))
+                : !!img.isPrimary;
+
+            html +=
+                '<div class="image-item' + (isPrimary ? ' is-primary' : '') + '" data-index="' + idx + '">' +
+                    '<img src="' + escapeHtml(preview) + '" alt="صورة" loading="lazy">' +
+                    '<span class="image-primary-badge">⭐ رئيسية</span>' +
+                    '<div class="image-actions">' +
+                        '<button type="button" class="img-set-primary" data-action="primary" data-idx="' + idx + '" title="تعيين كرئيسية">' +
+                            '<i class="fas fa-star"></i>' +
+                        '</button>' +
+                        '<button type="button" class="img-delete" data-action="delete" data-idx="' + idx + '" title="حذف">' +
+                            '<i class="fas fa-trash"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+        });
+        gallery.innerHTML = html;
+
+        gallery.querySelectorAll('[data-action]').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var action = this.getAttribute('data-action');
+                var idx = parseInt(this.getAttribute('data-idx'), 10);
+                if (action === 'delete') removeImage(idx);
+                else if (action === 'primary') setPrimaryImageLocal(idx);
+            });
+        });
+
+        gallery.querySelectorAll('.image-item img').forEach(function(imgEl) {
+            imgEl.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openLightbox(this.src);
+            });
+        });
+
+        updateSourceButtonsState();
+    }
+
+    function removeImage(idx) {
+        if (idx < 0 || idx >= fleetImages.length) return;
+        var img = fleetImages[idx];
+
+        if (img && img._id && currentVesselId) {
+            fetcher('/api/vessels/' + encodeURIComponent(currentVesselId) + '/images/' + encodeURIComponent(img._id), {
+                method: 'DELETE'
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(d) {
+                if (d.success) fleetToast('🗑️ تم حذف الصورة', 'success');
+            })
+            .catch(function() {});
+        }
+
+        fleetImages.splice(idx, 1);
+        renderImagesPreview();
+    }
+
+    function setPrimaryImageLocal(idx) {
+        if (idx < 0 || idx >= fleetImages.length) return;
+        var img = fleetImages.splice(idx, 1)[0];
+        fleetImages.unshift(img);
+
+        if (img && img._id && currentVesselId) {
+            fetcher('/api/vessels/' + encodeURIComponent(currentVesselId) + '/images/' + encodeURIComponent(img._id) + '/primary', {
+                method: 'PATCH'
+            })
+            .then(function(res) { return res.json(); })
+            .catch(function() {});
+        }
+        renderImagesPreview();
+        fleetToast('⭐ تم تعيين الصورة الرئيسية', 'success');
+    }
+
+    async function uploadImages(vesselId) {
+        var newFiles = fleetImages.filter(function(img) { return img instanceof File; });
+        if (newFiles.length === 0) return true;
+        if (!vesselId) return false;
+
+        var uploading = document.getElementById('imagesUploading');
+        if (uploading) uploading.style.display = 'flex';
+
+        try {
+            var formData = new FormData();
+            newFiles.forEach(function(img) { formData.append('images', img); });
+
+            var token = getToken();
+            var csrf = getCsrf();
+            var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/images', {
+                method: 'POST',
+                headers: Object.assign(
+                    { 'Accept': 'application/json' },
+                    token ? { 'Authorization': 'Bearer ' + token } : {},
+                    csrf ? { 'X-CSRF-Token': csrf } : {}
+                ),
+                credentials: 'include',
+                body: formData
+            });
+
+            if (!res.ok) {
+                var err = await res.json().catch(function() { return {}; });
+                throw new Error(err.error || 'فشل رفع الصور');
+            }
+            return true;
+        } catch (e) {
+            fleetToast('❌ ' + e.message, 'error');
+            return false;
+        } finally {
+            if (uploading) uploading.style.display = 'none';
+        }
+    }
+
+    function openLightbox(src) {
+        var lb = document.getElementById('fleetLightbox');
+        var img = document.getElementById('fleetLightboxImg');
+        if (!lb || !img) return;
+        img.src = src;
+        lb.classList.add('active');
+    }
+
+    function closeLightbox() {
+        var lb = document.getElementById('fleetLightbox');
+        if (lb) lb.classList.remove('active');
+    }
+
     function updateZones() {
         var regEl = document.getElementById('iReg');
         var zoneSel = document.getElementById('iZone');
@@ -1407,7 +1980,7 @@
         var mainBody = document.getElementById('mainBody');
         if (!mainBody) return;
 
-        mainBody.innerHTML = '<tr><td colspan="13" class="empty-state">' +
+        mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
             '<div class="spinner"></div><h3>جاري التحميل...</h3><p>يرجى الانتظار</p></td></tr>';
 
         try {
@@ -1474,7 +2047,7 @@
             populatePrintSummary(filtered);
 
             if (filtered.length === 0) {
-                mainBody.innerHTML = '<tr><td colspan="13" class="empty-state">' +
+                mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
                     '<span class="empty-icon"><i class="fas fa-inbox"></i></span>' +
                     '<h3>لا توجد مراكب</h3>' +
                     '<p>لم يتم العثور على أي مراكب مطابقة</p></td></tr>';
@@ -1507,6 +2080,22 @@
 
                 var isDamaged = status === 'معطب';
 
+                // 📸 الصورة المصغّرة
+                var primaryImg = v.primaryImage || (v.images && v.images[0]);
+                var thumbHtml = '';
+                if (primaryImg && primaryImg.url) {
+                    thumbHtml = '<div class="vessel-thumb-wrapper">' +
+                        '<img src="' + escapeHtml(primaryImg.url) + '" ' +
+                             'class="vessel-thumb" ' +
+                             'alt="' + escapeHtml(name) + '" ' +
+                             'loading="lazy" ' +
+                             'data-lightbox="' + escapeHtml(primaryImg.url) + '">' +
+                        (v.imagesCount > 1 ? '<span class="vessel-thumb-badge">' + v.imagesCount + '</span>' : '') +
+                        '</div>';
+                } else {
+                    thumbHtml = '<div class="vessel-thumb-empty"><i class="fas fa-image"></i></div>';
+                }
+
                 var editBtn = editable ?
                     '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>' : '';
 
@@ -1517,6 +2106,7 @@
                     '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')" title="حذف"><i class="fas fa-trash-alt"></i></button>' : '';
 
                 html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
+                    '<td>' + thumbHtml + '</td>' +
                     '<td class="vessel-name">' + escapeHtml(name) + '</td>' +
                     '<td>' + escapeHtml(number) + '</td>' +
                     '<td>' + escapeHtml(length) + '</td>' +
@@ -1534,10 +2124,18 @@
             });
             mainBody.innerHTML = html;
 
+            // 📸 فتح Lightbox من الجدول
+            mainBody.querySelectorAll('[data-lightbox]').forEach(function(img) {
+                img.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openLightbox(this.getAttribute('data-lightbox'));
+                });
+            });
+
         } catch (err) {
             console.error('❌ renderMain error:', err);
             if (_isDestroyed) return;
-            mainBody.innerHTML = '<tr><td colspan="13" class="empty-state">' +
+            mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
                 '<span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>' +
                 '<h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>' +
                 '<p style="color:rgba(255,255,255,0.3);">' + escapeHtml(err.message) + '</p>' +
@@ -1591,6 +2189,9 @@
             repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
         };
 
+        var btn = document.getElementById('saveVesselBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; }
+
         try {
             var response = await fetcher('/api/vessels', {
                 method: 'POST',
@@ -1601,13 +2202,31 @@
                 var error = await response.json();
                 throw new Error(error.error || 'فشل حفظ المركب');
             }
-            clearForm();
+
+            var result = await response.json();
+            var savedId = (result.vessel && (result.vessel._id || result.vessel.id))
+                       || result._id || result.id || null;
+
+            // 📸 رفع الصور الجديدة
+            if (fleetImages.length > 0 && savedId) {
+                await uploadImages(savedId);
+            }
+
+            resetForm();
             await renderMain();
             fleetToast('✅ تم حفظ المركب بنجاح', 'success');
-        } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
+        } catch (err) {
+            fleetToast('❌ ' + err.message, 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
+                btn.onclick = addItem;
+            }
+        }
     }
 
-    function clearForm() {
+    function resetForm() {
         ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(function(id) {
             var el = document.getElementById(id);
             if (el) el.value = '';
@@ -1617,7 +2236,14 @@
         if (iZone) iZone.innerHTML = '<option value="">المنطقة</option>';
         var iStat = document.getElementById('iStat'); if (iStat) iStat.value = 'صالح';
         var iRepairUnit = document.getElementById('iRepairUnit'); if (iRepairUnit) iRepairUnit.value = '';
+
+        // 📸 إعادة تعيين الصور
+        fleetImages = [];
+        currentVesselId = null;
+        renderImagesPreview();
     }
+
+    function clearForm() { resetForm(); }
 
     async function deleteItem(id, name) {
         if (_isDestroyed) return;
@@ -1667,6 +2293,11 @@
             el = document.getElementById('iRef'); if (el) el.value = v.ref || '';
             el = document.getElementById('iRepairUnit'); if (el) el.value = v.repairUnit || '';
 
+            // 📸 تحميل صور المركب
+            currentVesselId = v._id || v.id;
+            fleetImages = (v.images || []).slice();
+            renderImagesPreview();
+
             var saveBtn = document.getElementById('saveVesselBtn');
             if (saveBtn) {
                 saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
@@ -1699,6 +2330,9 @@
             repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
         };
 
+        var btn = document.getElementById('saveVesselBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...'; }
+
         try {
             var response = await fetcher('/api/vessels/' + id, {
                 method: 'PUT',
@@ -1709,7 +2343,13 @@
                 var error = await response.json();
                 throw new Error(error.error || 'فشل تحديث المركب');
             }
-            clearForm();
+
+            // 📸 رفع الصور الجديدة
+            if (fleetImages.length > 0) {
+                await uploadImages(id);
+            }
+
+            resetForm();
             var saveBtn = document.getElementById('saveVesselBtn');
             if (saveBtn) {
                 saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
@@ -1717,7 +2357,11 @@
             }
             await renderMain();
             fleetToast('✅ تم تحديث المركب بنجاح', 'success');
-        } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
+        } catch (err) {
+            fleetToast('❌ ' + err.message, 'error');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
     }
 
     function clearMainSearch() {
@@ -1837,11 +2481,9 @@
         }
     }
 
-    // 🆕 الانتقال لصفحة المطروحة — v3 (يستخدم loadPage — النظام الفعلي)
     function navigateToDisposals() {
         console.log('🚢 navigateToDisposals called');
 
-        // المحاولة 1: loadPage (النظام الأساسي في index.html)
         if (typeof window.loadPage === 'function') {
             try {
                 window.loadPage('disposals-vessels');
@@ -1852,7 +2494,6 @@
             }
         }
 
-        // المحاولة 2: navigateTo (إن وُجد)
         if (typeof window.navigateTo === 'function') {
             try {
                 window.navigateTo('disposals-vessels');
@@ -1863,7 +2504,6 @@
             }
         }
 
-        // المحاولة 3: URL مباشر (fallback)
         console.log('🔄 Using direct URL fallback');
         window.location.href = '/pages/disposals-vessels.html';
     }
@@ -1895,10 +2535,11 @@
             var counter = 0;
             rows.forEach(function(row) {
                 var cells = row.querySelectorAll('td');
-                if (cells.length < 12) return;
+                if (cells.length < 13) return;
                 counter++;
                 var values = [counter];
-                for (var i = 0; i < 12; i++) {
+                // تجاهل العمود الأول (الصورة) — نبدأ من الفهرس 1
+                for (var i = 1; i <= 13 && i < cells.length; i++) {
                     values.push(cells[i] ? cells[i].textContent.trim() : '');
                 }
                 csvRows.push(values.map(csvEscape).join(','));
@@ -1965,6 +2606,27 @@
         setTimeout(updateVisibility, 1500);
     }
 
+    function setupLightboxListeners() {
+        var closeBtn = document.getElementById('fleetLightboxClose');
+        if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+
+        var lb = document.getElementById('fleetLightbox');
+        if (lb) {
+            lb.addEventListener('click', function(e) {
+                if (e.target === lb) closeLightbox();
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var m = document.getElementById('fleetDisposeModal');
+                if (m && m.classList.contains('active')) closeDisposeModal();
+                var l = document.getElementById('fleetLightbox');
+                if (l && l.classList.contains('active')) closeLightbox();
+            }
+        });
+    }
+
     var _initialized = false;
 
     async function initPage() {
@@ -1973,11 +2635,13 @@
         if (!header) return false;
 
         _initialized = true;
-        console.log('🚀 Fleet v3.2 — Initializing...');
+        console.log('🚀 Fleet v4.0 — Initializing...');
 
         initFilters();
         initScrollButtons();
+        initImagesUI();
         setupDisposeListeners();
+        setupLightboxListeners();
 
         var token = getToken();
         if (!token) { window.location.href = '/index.html'; return true; }
@@ -2002,6 +2666,10 @@
         var addBtn = document.getElementById('saveVesselBtn');
         if (addBtn) addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
 
+        // إخفاء قسم الصور إذا لا يمكن الإضافة
+        var imagesSection = document.getElementById('imagesSection');
+        if (imagesSection && !canEdit()) imagesSection.style.display = 'none';
+
         var dispBtn = document.getElementById('fleetDisposalsBtn');
         if (dispBtn) {
             dispBtn.addEventListener('click', navigateToDisposals);
@@ -2010,7 +2678,7 @@
         updateZones();
         await renderMain();
 
-        console.log('✅ Fleet v3.2 ready');
+        console.log('✅ Fleet v4.0 ready');
         return true;
     }
 
@@ -2038,13 +2706,6 @@
                 if (e.target === modal) closeDisposeModal();
             });
         }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                var m = document.getElementById('fleetDisposeModal');
-                if (m && m.classList.contains('active')) closeDisposeModal();
-            }
-        });
     }
 
     if (document.readyState === 'loading') {
