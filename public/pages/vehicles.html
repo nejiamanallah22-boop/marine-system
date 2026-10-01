@@ -2,7 +2,7 @@
 <div id="page-vehicles">
 <style>
     /* ═══════════════════════════════════════════════════════════
-       🎨 TOKENS
+       🎨 DESIGN TOKENS
        ═══════════════════════════════════════════════════════════ */
     #page-vehicles {
         --c-bg-deepest: #060911;
@@ -24,6 +24,7 @@
         --c-red-2: #ef4444;
         --c-cyan-1: #67e8f9;
         --c-purple-1: #c4b5fd;
+        --c-purple-2: #8b5cf6;
         --c-slate-1: #94a3b8;
         --c-text-1: #f1f5f9;
         --c-text-2: #cbd5e1;
@@ -35,6 +36,7 @@
         --r-xl: 20px;
         --t-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
         --t-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        --t-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         --t-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         --font-main: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
         --font-mono: 'Courier New', ui-monospace, monospace;
@@ -81,102 +83,63 @@
 
     /* ═══════ HEADER ═══════ */
     .veh-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 18px 24px;
-        flex-wrap: wrap;
-        gap: 16px;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 18px 24px; flex-wrap: wrap; gap: 16px;
         background: linear-gradient(135deg, rgba(18,26,44,0.9), rgba(24,34,56,0.8));
         backdrop-filter: blur(24px) saturate(180%);
         -webkit-backdrop-filter: blur(24px) saturate(180%);
         border: 1px solid var(--c-border-mid);
-        border-radius: var(--r-lg);
-        margin-bottom: 20px;
+        border-radius: var(--r-lg); margin-bottom: 20px;
         box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 32px rgba(0,0,0,0.35);
     }
-    .veh-header-left {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        flex: 1 1 260px;
-        min-width: 0;
-    }
+    .veh-header-left { display: flex; align-items: center; gap: 14px; flex: 1 1 260px; min-width: 0; }
     .veh-header-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 14px;
+        width: 50px; height: 50px; border-radius: 14px;
         background: linear-gradient(135deg, var(--c-gold-2), var(--c-gold-3));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        color: #060911;
-        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; color: #060911; flex-shrink: 0;
         box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.08) inset;
     }
     .veh-header-text { min-width: 0; overflow: hidden; }
     .veh-header-text h1 {
-        font-size: 20px;
-        font-weight: 800;
+        font-size: 20px; font-weight: 800;
         background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin: 0 0 2px 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        margin: 0 0 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .veh-header-text p {
-        font-size: 12px;
-        color: var(--c-text-3);
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 12px; color: var(--c-text-3); margin: 0;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .veh-header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
     /* ═══════ BUTTONS ═══════ */
     .veh-btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: var(--r-md);
-        font-weight: 700;
-        font-size: 13px;
-        cursor: pointer;
+        padding: 10px 20px; border: none; border-radius: var(--r-md);
+        font-weight: 700; font-size: 13px; cursor: pointer;
         transition: all var(--t-base);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-family: var(--font-main);
-        white-space: nowrap;
-        line-height: 1;
+        display: inline-flex; align-items: center; gap: 8px;
+        font-family: var(--font-main); white-space: nowrap; line-height: 1;
     }
     .veh-btn i { font-size: 13px; }
     .veh-btn.primary {
         background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2), var(--c-gold-3));
-        color: #060911;
-        box-shadow: 0 8px 24px var(--c-gold-glow);
+        color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
     }
     .veh-btn.primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px var(--c-gold-glow); }
     .veh-btn.secondary {
         background: rgba(148,163,184,0.08);
-        border: 1px solid var(--c-border-mid);
-        color: var(--c-text-2);
+        border: 1px solid var(--c-border-mid); color: var(--c-text-2);
     }
     .veh-btn.secondary:hover { background: rgba(148,163,184,0.15); color: var(--c-text-1); transform: translateY(-2px); }
     .veh-btn.success {
         background: linear-gradient(135deg, var(--c-emerald-2), #059669);
-        color: #fff;
-        box-shadow: 0 8px 24px rgba(16,185,129,0.3);
+        color: #fff; box-shadow: 0 8px 24px rgba(16,185,129,0.3);
     }
     .veh-btn.success:hover { transform: translateY(-2px) scale(1.02); }
     .veh-btn.dark {
         background: linear-gradient(135deg, #475569, #1e293b);
-        color: var(--c-gold-1);
-        border: 1px solid rgba(247,215,116,0.25);
+        color: var(--c-gold-1); border: 1px solid rgba(247,215,116,0.25);
         box-shadow: 0 8px 24px rgba(15,23,42,0.5);
     }
     .veh-btn.dark:hover {
@@ -185,51 +148,26 @@
     }
     .veh-btn.dark .badge {
         background: linear-gradient(135deg, var(--c-red-2), #b91c1c);
-        color: #fff;
-        padding: 1px 8px;
-        border-radius: 10px;
-        font-size: 10px;
-        font-weight: 900;
-        margin-right: 4px;
-        min-width: 18px;
-        text-align: center;
-        display: inline-block;
+        color: #fff; padding: 1px 8px; border-radius: 10px;
+        font-size: 10px; font-weight: 900; margin-right: 4px;
+        min-width: 18px; text-align: center; display: inline-block;
     }
-    .veh-btn.danger {
-        background: linear-gradient(135deg, var(--c-red-2), #b91c1c);
-        color: #fff;
-    }
+    .veh-btn.danger { background: linear-gradient(135deg, var(--c-red-2), #b91c1c); color: #fff; }
     .veh-btn.danger:hover { transform: translateY(-2px) scale(1.02); }
     .veh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
     /* ═══════ STATS ═══════ */
-    .veh-stats {
-        display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 16px;
-        margin-bottom: 20px;
-    }
+    .veh-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
     .veh-stat {
         background: linear-gradient(135deg, rgba(24,34,56,0.85), rgba(18,26,44,0.95));
-        border: 1px solid var(--c-border-soft);
-        border-radius: var(--r-lg);
-        padding: 22px 16px 18px;
-        text-align: center;
-        transition: all var(--t-base);
-        position: relative;
-        overflow: hidden;
-        min-height: 110px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        border: 1px solid var(--c-border-soft); border-radius: var(--r-lg);
+        padding: 22px 16px 18px; text-align: center; transition: all var(--t-base);
+        position: relative; overflow: hidden; min-height: 110px;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
         color: var(--c-gold-1);
     }
     .veh-stat::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 4px;
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
         background: linear-gradient(90deg, transparent, currentColor, transparent);
     }
     .veh-stat:hover { transform: translateY(-5px); border-color: var(--c-border-strong); }
@@ -239,118 +177,67 @@
     .veh-stat.disposed { color: var(--c-slate-1); }
     .veh-stat.eff { color: var(--c-cyan-1); }
     .veh-stat .number {
-        font-size: 30px;
-        font-weight: 900;
-        line-height: 1;
-        color: currentColor;
-        text-shadow: 0 0 24px currentColor;
-        margin-bottom: 8px;
-        font-variant-numeric: tabular-nums;
+        font-size: 30px; font-weight: 900; line-height: 1;
+        color: currentColor; text-shadow: 0 0 24px currentColor;
+        margin-bottom: 8px; font-variant-numeric: tabular-nums;
     }
-    .veh-stat .label {
-        font-size: 11px;
-        color: rgba(203,213,225,0.75);
-        font-weight: 700;
-    }
+    .veh-stat .label { font-size: 11px; color: rgba(203,213,225,0.75); font-weight: 700; }
 
     /* ═══════ FILTERS ═══════ */
     .veh-filters {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px 14px;
-        padding: 16px 20px;
+        display: flex; flex-wrap: wrap; align-items: center;
+        gap: 12px 14px; padding: 16px 20px;
         background: rgba(18,26,44,0.6);
         border: 1px solid var(--c-border-soft);
-        border-radius: var(--r-lg);
-        margin-bottom: 20px;
+        border-radius: var(--r-lg); margin-bottom: 20px;
     }
-    .veh-search {
-        flex: 1 1 240px;
-        min-width: 200px;
-        position: relative;
-    }
+    .veh-search { flex: 1 1 240px; min-width: 200px; position: relative; }
     .veh-search input {
-        width: 100%;
-        padding: 10px 16px 10px 40px;
-        border-radius: var(--r-md);
-        border: 1px solid var(--c-border-mid);
-        background: rgba(10,16,32,0.7);
-        color: var(--c-text-1);
-        font-size: 12px;
-        font-weight: 600;
-        font-family: var(--font-main);
+        width: 100%; padding: 10px 16px 10px 40px;
+        border-radius: var(--r-md); border: 1px solid var(--c-border-mid);
+        background: rgba(10,16,32,0.7); color: var(--c-text-1);
+        font-size: 12px; font-weight: 600; font-family: var(--font-main);
         transition: all var(--t-base);
     }
     .veh-search input:focus {
-        outline: none;
-        border-color: var(--c-gold-2);
+        outline: none; border-color: var(--c-gold-2);
         box-shadow: 0 0 0 3px var(--c-gold-glow);
     }
     .veh-search input::placeholder { color: var(--c-text-4); }
     .veh-search i {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--c-gold-2);
-        font-size: 12px;
-        pointer-events: none;
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        color: var(--c-gold-2); font-size: 12px; pointer-events: none;
     }
     .veh-select {
-        padding: 10px 16px;
-        border-radius: var(--r-md);
+        padding: 10px 16px; border-radius: var(--r-md);
         border: 1px solid var(--c-border-mid);
-        background: rgba(10,16,32,0.7);
-        color: var(--c-text-1);
-        font-size: 12px;
-        font-weight: 600;
-        font-family: var(--font-main);
-        min-width: 150px;
-        cursor: pointer;
-        transition: all var(--t-base);
+        background: rgba(10,16,32,0.7); color: var(--c-text-1);
+        font-size: 12px; font-weight: 600; font-family: var(--font-main);
+        min-width: 150px; cursor: pointer; transition: all var(--t-base);
     }
     .veh-select:focus {
-        outline: none;
-        border-color: var(--c-gold-2);
+        outline: none; border-color: var(--c-gold-2);
         box-shadow: 0 0 0 3px var(--c-gold-glow);
     }
     .veh-select option { background: #0a1020; color: var(--c-text-1); }
     .veh-select optgroup { background: #0a1020; color: var(--c-gold-2); font-weight: 800; }
     .veh-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 9px 16px;
-        background: rgba(148,163,184,0.06);
-        border: 1px solid var(--c-border-mid);
-        border-radius: var(--r-md);
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--c-text-3);
-        transition: all var(--t-base);
-        white-space: nowrap;
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 9px 16px; background: rgba(148,163,184,0.06);
+        border: 1px solid var(--c-border-mid); border-radius: var(--r-md);
+        cursor: pointer; font-size: 12px; font-weight: 700;
+        color: var(--c-text-3); transition: all var(--t-base); white-space: nowrap;
     }
     .veh-toggle:hover { background: rgba(148,163,184,0.12); color: var(--c-text-1); }
     .veh-toggle input { display: none; }
     .veh-toggle .dot {
-        width: 34px;
-        height: 19px;
-        background: rgba(148,163,184,0.2);
-        border-radius: 11px;
-        position: relative;
-        transition: var(--t-base);
-        flex-shrink: 0;
+        width: 34px; height: 19px; background: rgba(148,163,184,0.2);
+        border-radius: 11px; position: relative; transition: var(--t-base); flex-shrink: 0;
     }
     .veh-toggle .dot::before {
-        content: '';
-        position: absolute;
-        top: 2px; right: 2px;
-        width: 15px; height: 15px;
-        background: #fff;
-        border-radius: 50%;
-        transition: var(--t-base);
+        content: ''; position: absolute; top: 2px; right: 2px;
+        width: 15px; height: 15px; background: #fff;
+        border-radius: 50%; transition: var(--t-base);
     }
     .veh-toggle input:checked ~ .dot { background: var(--c-emerald-1); }
     .veh-toggle input:checked ~ .dot::before { right: calc(100% - 17px); }
@@ -360,45 +247,22 @@
     .veh-table-wrap {
         background: rgba(24,34,56,0.55);
         border: 1px solid var(--c-border-soft);
-        border-radius: var(--r-lg);
-        overflow: hidden;
-        overflow-x: auto;
+        border-radius: var(--r-lg); overflow: hidden; overflow-x: auto;
         box-shadow: 0 12px 40px rgba(0,0,0,0.3);
     }
-    .veh-table-head,
-    .veh-table-row {
+    .veh-table-head, .veh-table-row {
         display: grid;
         grid-template-columns:
-            55px       /* # */
-            110px      /* صورة */
-            140px      /* النوع */
-            190px      /* الماركة/الطراز */
-            170px      /* رقم الوسيلة */
-            150px      /* الإدارة */
-            120px      /* المنطقة */
-            130px      /* المركز */
-            110px      /* الحالة */
-            120px      /* حالة العمل */
-            120px      /* تاريخ التعيين */
-            120px      /* تاريخ العطب */
-            180px      /* ملاحظات */
-            150px;     /* إجراءات */
-        gap: 10px;
-        padding: 14px 20px;
-        align-items: center;
-        font-size: 13px;
-        min-width: 1950px;
+            55px 110px 140px 190px 170px 150px 120px 130px
+            110px 120px 120px 120px 180px 150px;
+        gap: 10px; padding: 14px 20px; align-items: center;
+        font-size: 13px; min-width: 1950px;
     }
     .veh-table-head {
         background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.9));
-        font-size: 10.5px;
-        font-weight: 800;
-        color: #cbd5e1;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        position: sticky;
-        top: 0;
-        z-index: 2;
+        font-size: 10.5px; font-weight: 800; color: #cbd5e1;
+        text-transform: uppercase; letter-spacing: 0.8px;
+        position: sticky; top: 0; z-index: 2;
         border-bottom: 2px solid var(--c-gold-2);
     }
     .veh-table-head > div { display: flex; align-items: center; justify-content: center; }
@@ -411,105 +275,58 @@
     .veh-table-row:hover { background: rgba(247,215,116,0.05); }
     .veh-table-row.disposed {
         background: linear-gradient(90deg, rgba(100,116,139,0.15) 0%, transparent 60%) !important;
-        border-right: 3px solid var(--c-slate-1);
-        opacity: 0.75;
+        border-right: 3px solid var(--c-slate-1); opacity: 0.75;
     }
     .veh-cell {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        color: var(--c-text-2);
-        font-weight: 600;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        color: var(--c-text-2); font-weight: 600;
     }
     .veh-cell.center { text-align: center; }
     .veh-cell.thumb-cell {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 6px 0;
-        overflow: visible;
+        display: flex; align-items: center; justify-content: center;
+        padding: 6px 0; overflow: visible;
     }
 
     /* 📸 Thumbnail */
     .veh-thumb {
-        width: 78px;
-        height: 78px;
-        border-radius: 12px;
-        object-fit: cover;
-        border: 2.5px solid var(--c-border-mid);
-        cursor: pointer;
-        transition: all var(--t-base);
-        background: rgba(10,16,32,0.6);
-        display: block;
+        width: 78px; height: 78px; border-radius: 12px;
+        object-fit: cover; border: 2.5px solid var(--c-border-mid);
+        cursor: pointer; transition: all var(--t-base);
+        background: rgba(10,16,32,0.6); display: block;
         box-shadow: 0 4px 14px rgba(0,0,0,0.4);
     }
     .veh-thumb:hover {
-        transform: scale(1.1);
-        border-color: var(--c-gold-2);
+        transform: scale(1.1); border-color: var(--c-gold-2);
         box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 3px rgba(230,179,30,0.2);
     }
     .veh-thumb-empty {
-        width: 78px;
-        height: 78px;
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        background: linear-gradient(135deg, rgba(10,16,32,0.8), rgba(18,26,44,0.6));
-        border: 2.5px dashed var(--c-border-mid);
-        color: var(--c-text-4);
-        font-size: 20px;
-        margin: 0 auto;
-        cursor: pointer;
-        transition: all var(--t-base);
+        width: 78px; height: 78px; border-radius: 12px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 4px; background: linear-gradient(135deg, rgba(10,16,32,0.8), rgba(18,26,44,0.6));
+        border: 2.5px dashed var(--c-border-mid); color: var(--c-text-4);
+        font-size: 20px; margin: 0 auto; cursor: pointer; transition: all var(--t-base);
     }
-    .veh-thumb-empty:hover {
-        border-color: var(--c-gold-2);
-        color: var(--c-gold-2);
-        transform: scale(1.05);
-    }
+    .veh-thumb-empty:hover { border-color: var(--c-gold-2); color: var(--c-gold-2); transform: scale(1.05); }
     .veh-thumb-empty::after {
-        content: 'لا صور';
-        font-size: 9px;
-        font-weight: 800;
-        color: var(--c-text-4);
-        letter-spacing: 0.5px;
+        content: 'لا صور'; font-size: 9px; font-weight: 800;
+        color: var(--c-text-4); letter-spacing: 0.5px;
     }
     .veh-thumb-empty:hover::after { color: var(--c-gold-2); }
-    .veh-thumb-wrapper {
-        position: relative;
-        width: 78px;
-        height: 78px;
-        margin: 0 auto;
-    }
+    .veh-thumb-wrapper { position: relative; width: 78px; height: 78px; margin: 0 auto; }
     .veh-thumb-badge {
-        position: absolute;
-        bottom: -6px;
-        right: -6px;
+        position: absolute; bottom: -6px; right: -6px;
         background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        color: #060911;
-        font-size: 11px;
-        font-weight: 900;
-        padding: 3px 8px;
-        border-radius: 10px;
-        border: 2.5px solid #060911;
-        min-width: 24px;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        line-height: 1;
+        color: #060911; font-size: 11px; font-weight: 900;
+        padding: 3px 8px; border-radius: 10px;
+        border: 2.5px solid #060911; min-width: 24px;
+        text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); line-height: 1;
     }
     .veh-thumb-badge::before { content: '📷 '; font-size: 9px; }
 
     /* ═══════ BADGES ═══════ */
     .veh-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 800;
-        white-space: nowrap;
+        display: inline-block; padding: 4px 12px;
+        border-radius: 8px; font-size: 11px; font-weight: 800; white-space: nowrap;
     }
     .veh-badge.type { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
     .veh-badge.brand { background: rgba(230,179,30,0.15); color: var(--c-gold-1); border: 1px solid rgba(230,179,30,0.25); }
@@ -519,57 +336,38 @@
     .veh-badge.region { background: rgba(230,179,30,0.15); color: var(--c-gold-1); font-size: 10px; }
     .veh-badge.zone { background: rgba(16,185,129,0.15); color: var(--c-emerald-1); font-size: 10px; }
     .veh-badge.center-badge { background: rgba(139,92,246,0.15); color: var(--c-purple-1); font-size: 10px; }
-    .veh-badge.supp-badge { background: rgba(236,72,153,0.15); color: #f9a8d4; font-size: 10px; }
     .veh-badge.status-صالحة { background: linear-gradient(135deg, #059669, #10b981); color: #fff; }
     .veh-badge.status-معطبة { background: linear-gradient(135deg, #b91c1c, #ef4444); color: #fff; }
     .veh-badge.status-صيانة { background: linear-gradient(135deg, #b45309, #f59e0b); color: #fff; }
     .veh-badge.status-طرح {
         background: linear-gradient(135deg, #1e293b, #475569);
-        color: var(--c-gold-1);
-        border: 1px solid rgba(247,215,116,0.4);
+        color: var(--c-gold-1); border: 1px solid rgba(247,215,116,0.4);
     }
     .veh-badge.cond-جديدة { background: rgba(6,182,212,0.2); color: #67e8f9; }
     .veh-badge.cond-متوسطة { background: rgba(245,158,11,0.2); color: var(--c-amber-1); }
     .veh-badge.cond-قديمة { background: rgba(100,116,139,0.2); color: #cbd5e1; }
     .veh-plate {
-        font-family: var(--font-mono);
-        font-weight: 900;
-        color: var(--c-gold-1);
-        letter-spacing: 1px;
+        font-family: var(--font-mono); font-weight: 900;
+        color: var(--c-gold-1); letter-spacing: 1px;
         background: rgba(247,215,116,0.12);
         border: 1px solid rgba(247,215,116,0.3);
-        padding: 5px 12px;
-        border-radius: 8px;
-        display: inline-block;
-        font-size: 12px;
+        padding: 5px 12px; border-radius: 8px;
+        display: inline-block; font-size: 12px;
     }
 
     /* ═══════ ACTIONS ═══════ */
-    .veh-actions-cell {
-        display: flex;
-        gap: 4px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
+    .veh-actions-cell { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
     .veh-act {
-        width: 34px;
-        height: 34px;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        transition: all var(--t-base);
+        width: 34px; height: 34px; border: none; border-radius: 10px;
+        cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+        font-size: 13px; transition: all var(--t-base);
     }
     .veh-act.edit { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
     .veh-act.edit:hover { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; transform: translateY(-2px) scale(1.05); }
     .veh-act.gallery { background: rgba(139,92,246,0.15); color: var(--c-purple-1); border: 1px solid rgba(139,92,246,0.3); }
     .veh-act.gallery:hover {
         background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-        color: #fff;
-        transform: translateY(-2px) scale(1.05);
+        color: #fff; transform: translateY(-2px) scale(1.05);
         box-shadow: 0 6px 16px rgba(139,92,246,0.45);
     }
     .veh-act.dispose { background: rgba(100,116,139,0.15); color: var(--c-slate-1); border: 1px solid rgba(100,116,139,0.25); }
@@ -587,15 +385,12 @@
 
     /* ═══════ MODALS ═══════ */
     .veh-modal {
-        position: fixed;
-        inset: 0;
+        position: fixed; inset: 0;
         background: rgba(2,4,12,0.9);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        z-index: 99999;
-        display: none;
-        align-items: center;
-        justify-content: center;
+        z-index: 99999; display: none;
+        align-items: center; justify-content: center;
         padding: 20px;
         animation: vehModalIn 0.25s ease;
     }
@@ -605,11 +400,8 @@
         background: linear-gradient(135deg, rgba(24,34,56,0.98), rgba(15,20,32,0.99));
         border: 1px solid rgba(230,179,30,0.3);
         border-radius: var(--r-xl);
-        padding: 28px 32px;
-        width: 100%;
-        max-width: 820px;
-        max-height: 92vh;
-        overflow-y: auto;
+        padding: 28px 32px; width: 100%; max-width: 820px;
+        max-height: 92vh; overflow-y: auto;
         box-shadow: 0 32px 80px rgba(0,0,0,0.85);
         animation: vehModalBoxIn 0.35s var(--t-bounce);
     }
@@ -619,71 +411,46 @@
     }
     .veh-modal-box.dispose-box { border-color: rgba(100,116,139,0.4); max-width: 620px; }
     .veh-modal-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 22px;
-        padding-bottom: 18px;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 22px; padding-bottom: 18px;
         border-bottom: 1px solid var(--c-border-soft);
     }
     .veh-modal-head h3 {
-        font-size: 19px;
-        font-weight: 800;
-        color: var(--c-text-1);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 0;
+        font-size: 19px; font-weight: 800; color: var(--c-text-1);
+        display: flex; align-items: center; gap: 10px; margin: 0;
     }
     .veh-modal-head h3 i { color: var(--c-gold-2); }
     .veh-modal-close {
         background: rgba(148,163,184,0.08);
         border: 1px solid var(--c-border-mid);
         color: var(--c-text-3);
-        width: 38px;
-        height: 38px;
-        border-radius: var(--r-md);
-        cursor: pointer;
-        font-size: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all var(--t-base);
-        line-height: 1;
+        width: 38px; height: 38px; border-radius: var(--r-md);
+        cursor: pointer; font-size: 22px;
+        display: flex; align-items: center; justify-content: center;
+        transition: all var(--t-base); line-height: 1;
     }
     .veh-modal-close:hover {
-        background: rgba(239,68,68,0.2);
-        color: var(--c-red-1);
-        border-color: rgba(239,68,68,0.4);
-        transform: rotate(90deg);
+        background: rgba(239,68,68,0.2); color: var(--c-red-1);
+        border-color: rgba(239,68,68,0.4); transform: rotate(90deg);
     }
 
     .veh-form-group { margin-bottom: 18px; }
     .veh-form-group label {
-        display: block;
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--c-text-3);
-        margin-bottom: 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        display: block; font-size: 11px; font-weight: 700;
+        color: var(--c-text-3); margin-bottom: 8px;
+        text-transform: uppercase; letter-spacing: 0.5px;
     }
     .veh-form-group label .req { color: var(--c-red-1); }
     .veh-form-control {
-        width: 100%;
-        padding: 12px 16px;
+        width: 100%; padding: 12px 16px;
         background: rgba(10,16,32,0.7);
         border: 1px solid var(--c-border-mid);
         border-radius: var(--r-md);
-        color: var(--c-text-1);
-        font-family: var(--font-main);
-        font-size: 13px;
-        font-weight: 600;
-        transition: all var(--t-base);
+        color: var(--c-text-1); font-family: var(--font-main);
+        font-size: 13px; font-weight: 600; transition: all var(--t-base);
     }
     .veh-form-control:focus {
-        outline: none;
-        border-color: var(--c-gold-2);
+        outline: none; border-color: var(--c-gold-2);
         box-shadow: 0 0 0 3px var(--c-gold-glow);
     }
     .veh-form-control option { background: #0a1020; color: var(--c-text-1); }
@@ -691,163 +458,124 @@
     textarea.veh-form-control { resize: vertical; min-height: 80px; font-family: var(--font-main); }
     .veh-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-    .veh-modal-actions {
-        display: flex;
-        gap: 12px;
-        justify-content: flex-end;
-        margin-top: 24px;
-        padding-top: 20px;
-        border-top: 1px solid var(--c-border-soft);
-    }
-
-    /* Brand search helper */
-    .veh-brand-search {
+    /* ═══════ COMBOBOX (قائمة + بحث + كتابة حرة) ═══════ */
+    .veh-combobox { position: relative; }
+    .veh-combobox-search {
         margin-bottom: 6px;
         padding: 8px 12px !important;
         font-size: 12px !important;
+        background: rgba(10,16,32,0.9) !important;
     }
+    .veh-combobox-free {
+        margin-top: 6px;
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        background: rgba(16,185,129,0.05) !important;
+        border-color: rgba(16,185,129,0.3) !important;
+    }
+    .veh-combobox-free:focus {
+        border-color: var(--c-emerald-1) !important;
+        box-shadow: 0 0 0 3px rgba(16,185,129,0.2) !important;
+    }
+    .veh-combobox-hint {
+        display: block;
+        font-size: 10px;
+        color: var(--c-text-4);
+        margin-top: 4px;
+        font-weight: 600;
+    }
+    .veh-combobox-hint i { color: var(--c-emerald-1); margin-left: 4px; }
 
     /* ═══════ IMAGE UPLOADER ═══════ */
     .veh-images-count { color: var(--c-gold-2); font-weight: 800; font-size: 11px; margin-right: 6px; }
     .veh-image-source-btns {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        margin-bottom: 14px;
-        flex-wrap: wrap;
+        display: flex; gap: 12px; justify-content: center;
+        margin-bottom: 14px; flex-wrap: wrap;
     }
     .veh-source-btn {
-        padding: 11px 22px;
-        border: none;
-        border-radius: var(--r-md);
-        font-weight: 800;
-        font-size: 12px;
-        cursor: pointer;
+        padding: 11px 22px; border: none; border-radius: var(--r-md);
+        font-weight: 800; font-size: 12px; cursor: pointer;
         transition: all var(--t-base);
-        display: inline-flex;
-        align-items: center;
-        gap: 9px;
-        font-family: var(--font-main);
-        white-space: nowrap;
+        display: inline-flex; align-items: center; gap: 9px;
+        font-family: var(--font-main); white-space: nowrap;
     }
     .veh-source-btn i { font-size: 14px; }
     .veh-source-btn.camera {
         background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2), var(--c-gold-3));
-        color: #060911;
-        box-shadow: 0 8px 24px var(--c-gold-glow);
+        color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
     }
     .veh-source-btn.camera:hover:not(:disabled) { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 32px var(--c-gold-glow); }
     .veh-source-btn.browse {
         background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-        color: #fff;
-        box-shadow: 0 8px 24px rgba(59,130,246,0.3);
+        color: #fff; box-shadow: 0 8px 24px rgba(59,130,246,0.3);
     }
     .veh-source-btn.browse:hover:not(:disabled) { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 32px rgba(59,130,246,0.45); }
     .veh-source-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
     .veh-dropzone {
-        position: relative;
-        border: 2px dashed var(--c-border-mid);
-        border-radius: var(--r-md);
-        padding: 22px 16px;
-        text-align: center;
-        cursor: pointer;
-        transition: all var(--t-base);
-        background: rgba(10,16,32,0.4);
+        position: relative; border: 2px dashed var(--c-border-mid);
+        border-radius: var(--r-md); padding: 22px 16px;
+        text-align: center; cursor: pointer;
+        transition: all var(--t-base); background: rgba(10,16,32,0.4);
     }
     .veh-dropzone:hover { border-color: var(--c-gold-2); background: rgba(230,179,30,0.05); }
     .veh-dropzone.dragover {
-        border-color: var(--c-emerald-1);
-        background: rgba(110,231,183,0.08);
+        border-color: var(--c-emerald-1); background: rgba(110,231,183,0.08);
         transform: scale(1.01);
     }
     .veh-dropzone i {
-        font-size: 30px;
-        color: var(--c-gold-2);
-        margin-bottom: 8px;
-        display: block;
-        opacity: 0.75;
+        font-size: 30px; color: var(--c-gold-2);
+        margin-bottom: 8px; display: block; opacity: 0.75;
     }
     .veh-dropzone-title {
-        color: var(--c-text-1);
-        font-size: 13px;
-        font-weight: 700;
-        margin: 0 0 4px 0;
+        color: var(--c-text-1); font-size: 13px;
+        font-weight: 700; margin: 0 0 4px 0;
     }
     .veh-dropzone-hint { color: var(--c-text-4); font-size: 11px; margin: 0; }
     .veh-gallery-preview {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 10px;
-        margin-top: 14px;
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px; margin-top: 14px;
     }
     .veh-image-item {
-        position: relative;
-        aspect-ratio: 1;
-        border-radius: var(--r-md);
-        overflow: hidden;
+        position: relative; aspect-ratio: 1;
+        border-radius: var(--r-md); overflow: hidden;
         border: 2px solid var(--c-border-soft);
-        background: rgba(10,16,32,0.6);
-        cursor: pointer;
+        background: rgba(10,16,32,0.6); cursor: pointer;
         transition: all var(--t-base);
     }
     .veh-image-item:hover { border-color: var(--c-gold-2); transform: scale(1.03); }
     .veh-image-item.is-primary { border-color: var(--c-gold-2); box-shadow: 0 0 0 3px rgba(230,179,30,0.2); }
     .veh-image-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .veh-image-primary-badge {
-        position: absolute;
-        top: 6px; right: 6px;
+        position: absolute; top: 6px; right: 6px;
         background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        color: #060911;
-        font-size: 9px;
-        font-weight: 900;
-        padding: 2px 8px;
-        border-radius: 8px;
-        display: none;
+        color: #060911; font-size: 9px; font-weight: 900;
+        padding: 2px 8px; border-radius: 8px; display: none;
     }
     .veh-image-item.is-primary .veh-image-primary-badge { display: block; }
     .veh-image-actions {
-        position: absolute;
-        inset: 0;
+        position: absolute; inset: 0;
         background: linear-gradient(to top, rgba(0,0,0,0.85), transparent 60%);
-        opacity: 0;
-        transition: opacity var(--t-base);
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        padding: 8px;
-        gap: 6px;
+        opacity: 0; transition: opacity var(--t-base);
+        display: flex; align-items: flex-end; justify-content: center;
+        padding: 8px; gap: 6px;
     }
     .veh-image-item:hover .veh-image-actions { opacity: 1; }
     .veh-image-actions button {
-        width: 30px;
-        height: 30px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
+        width: 30px; height: 30px; border: none;
+        border-radius: 8px; cursor: pointer; font-size: 12px;
+        display: flex; align-items: center; justify-content: center; color: #fff;
     }
     .veh-image-actions .set-primary { background: rgba(230,179,30,0.9); color: #060911; }
     .veh-image-actions .del { background: rgba(239,68,68,0.9); }
     .veh-uploading {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 12px;
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; padding: 12px;
         background: rgba(230,179,30,0.08);
-        border-radius: var(--r-md);
-        margin-top: 10px;
-        color: var(--c-gold-1);
-        font-size: 12px;
-        font-weight: 700;
+        border-radius: var(--r-md); margin-top: 10px;
+        color: var(--c-gold-1); font-size: 12px; font-weight: 700;
     }
     .veh-spinner {
-        width: 20px;
-        height: 20px;
+        width: 20px; height: 20px;
         border: 2px solid rgba(230,179,30,0.2);
         border-top-color: var(--c-gold-2);
         border-radius: 50%;
@@ -857,11 +585,9 @@
 
     /* ═══════ PROFESSIONAL GALLERY ═══════ */
     .veh-gallery-modal {
-        position: fixed;
-        inset: 0;
+        position: fixed; inset: 0;
         background: rgba(0,0,0,0.98);
-        z-index: 100001;
-        display: none;
+        z-index: 100001; display: none;
         flex-direction: column;
         animation: vehGalIn 0.3s ease;
     }
@@ -869,96 +595,56 @@
     @keyframes vehGalIn { from { opacity: 0; } to { opacity: 1; } }
 
     .veh-gallery-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        display: flex; justify-content: space-between; align-items: center;
         padding: 14px 22px;
         background: linear-gradient(180deg, rgba(0,0,0,0.95), transparent);
-        z-index: 10;
-        flex-shrink: 0;
-        gap: 16px;
-        flex-wrap: wrap;
+        z-index: 10; flex-shrink: 0; gap: 16px; flex-wrap: wrap;
     }
-    .veh-gallery-info {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        min-width: 0;
-        flex: 1;
-    }
+    .veh-gallery-info { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
     .veh-gallery-info-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: var(--r-md);
+        width: 44px; height: 44px; border-radius: var(--r-md);
         background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        color: #060911;
-        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; color: #060911; flex-shrink: 0;
         box-shadow: 0 6px 20px var(--c-gold-glow);
     }
     .veh-gallery-info-text { min-width: 0; overflow: hidden; }
     .veh-gallery-info-text h3 {
-        font-size: 16px;
-        font-weight: 800;
-        color: var(--c-gold-1);
+        font-size: 16px; font-weight: 800; color: var(--c-gold-1);
         margin: 0 0 2px 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .veh-gallery-info-text p {
-        font-size: 12px;
-        color: rgba(203,213,225,0.7);
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 12px; color: rgba(203,213,225,0.7);
+        margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .veh-gallery-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .veh-gallery-tool {
-        width: 42px;
-        height: 42px;
-        border-radius: var(--r-md);
+        width: 42px; height: 42px; border-radius: var(--r-md);
         background: rgba(255,255,255,0.08);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,0.15);
-        color: #fff;
-        font-size: 16px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        color: #fff; font-size: 16px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
         transition: all var(--t-base);
     }
     .veh-gallery-tool:hover {
         background: rgba(230,179,30,0.3);
-        border-color: var(--c-gold-2);
-        color: var(--c-gold-1);
+        border-color: var(--c-gold-2); color: var(--c-gold-1);
         transform: translateY(-2px) scale(1.05);
     }
     .veh-gallery-tool.active {
         background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        color: #060911;
-        border-color: var(--c-gold-2);
+        color: #060911; border-color: var(--c-gold-2);
     }
     .veh-gallery-tool:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
     .veh-gallery-close {
-        width: 42px;
-        height: 42px;
-        border-radius: var(--r-md);
+        width: 42px; height: 42px; border-radius: var(--r-md);
         background: rgba(239,68,68,0.2);
         border: 1px solid rgba(239,68,68,0.4);
-        color: #fff;
-        font-size: 22px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all var(--t-base);
-        line-height: 1;
+        color: #fff; font-size: 22px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all var(--t-base); line-height: 1;
     }
     .veh-gallery-close:hover {
         background: rgba(239,68,68,0.5);
@@ -967,100 +653,110 @@
     }
 
     .veh-gallery-stage {
-        flex: 1;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        min-height: 0;
-        padding: 0 80px;
-        cursor: grab;
+        flex: 1; position: relative;
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden; min-height: 0;
+        padding: 0 80px; cursor: grab;
     }
     .veh-gallery-stage.grabbing { cursor: grabbing; }
     .veh-gallery-stage img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        border-radius: var(--r-md);
+        max-width: 100%; max-height: 100%;
+        object-fit: contain; border-radius: var(--r-md);
         box-shadow: 0 20px 80px rgba(0,0,0,0.9);
         transition: transform 0.15s ease;
-        user-select: none;
-        -webkit-user-drag: none;
-        display: block;
+        user-select: none; -webkit-user-drag: none; display: block;
     }
     .veh-gallery-stage.zoomed img {
-        cursor: grab;
-        max-width: none;
-        max-height: none;
+        cursor: grab; max-width: none; max-height: none;
     }
     .veh-gallery-stage.zoomed.grabbing img {
-        cursor: grabbing;
-        transition: none;
+        cursor: grabbing; transition: none;
     }
 
-    .veh-gallery-nav {
+    /* 🎯 زر تغيير الصور في وسط الصورة */
+    .veh-gallery-change-btn {
         position: absolute;
         top: 50%;
-        transform: translateY(-50%);
-        width: 56px;
-        height: 56px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, rgba(230,179,30,0.95), rgba(184,134,11,0.95));
+        color: #060911;
+        border: 2px solid rgba(255,255,255,0.3);
         border-radius: 50%;
+        width: 90px;
+        height: 90px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        cursor: pointer;
+        font-family: var(--font-main);
+        font-weight: 800;
+        font-size: 11px;
+        box-shadow: 0 12px 40px rgba(230,179,30,0.5), 0 0 0 8px rgba(230,179,30,0.15);
+        transition: all var(--t-base);
+        z-index: 6;
+        opacity: 0.85;
+    }
+    .veh-gallery-change-btn i {
+        font-size: 22px;
+        margin-bottom: 2px;
+    }
+    .veh-gallery-change-btn:hover {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.12);
+        box-shadow: 0 16px 52px rgba(230,179,30,0.7), 0 0 0 12px rgba(230,179,30,0.25);
+        border-color: rgba(255,255,255,0.5);
+    }
+    .veh-gallery-change-btn:active {
+        transform: translate(-50%, -50%) scale(0.98);
+    }
+    .veh-gallery-change-btn.hidden { display: none; }
+
+    .veh-gallery-nav {
+        position: absolute; top: 50%;
+        transform: translateY(-50%);
+        width: 56px; height: 56px; border-radius: 50%;
         background: rgba(0,0,0,0.6);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,0.2);
-        color: #fff;
-        font-size: 22px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all var(--t-base);
-        z-index: 5;
+        color: #fff; font-size: 22px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all var(--t-base); z-index: 5;
     }
     .veh-gallery-nav:hover {
         background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        color: #060911;
-        border-color: var(--c-gold-2);
+        color: #060911; border-color: var(--c-gold-2);
         transform: translateY(-50%) scale(1.1);
     }
     .veh-gallery-nav.prev { right: 14px; }
     .veh-gallery-nav.next { left: 14px; }
     .veh-gallery-nav:disabled { opacity: 0.25; cursor: not-allowed; }
     .veh-gallery-nav:disabled:hover {
-        background: rgba(0,0,0,0.6);
-        color: #fff;
+        background: rgba(0,0,0,0.6); color: #fff;
         border-color: rgba(255,255,255,0.2);
         transform: translateY(-50%);
     }
 
     .veh-gallery-counter {
-        position: absolute;
-        bottom: 120px;
-        left: 50%;
-        transform: translateX(-50%);
+        position: absolute; bottom: 20px;
+        left: 50%; transform: translateX(-50%);
         background: rgba(0,0,0,0.75);
         backdrop-filter: blur(12px);
         color: var(--c-gold-1);
-        padding: 8px 20px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 800;
+        padding: 8px 20px; border-radius: 20px;
+        font-size: 13px; font-weight: 800;
         border: 1px solid rgba(247,215,116,0.35);
-        letter-spacing: 0.5px;
-        z-index: 5;
-        direction: ltr;
+        letter-spacing: 0.5px; z-index: 5; direction: ltr;
     }
 
     .veh-gallery-thumbs {
-        display: flex;
-        gap: 8px;
+        display: flex; gap: 8px;
         padding: 14px 22px 18px;
         background: linear-gradient(0deg, rgba(0,0,0,0.95), transparent);
-        overflow-x: auto;
-        justify-content: center;
-        flex-shrink: 0;
-        scrollbar-width: thin;
+        overflow-x: auto; justify-content: center;
+        flex-shrink: 0; scrollbar-width: thin;
         scrollbar-color: var(--c-gold-2) transparent;
     }
     .veh-gallery-thumbs::-webkit-scrollbar { height: 6px; }
@@ -1069,81 +765,89 @@
         border-radius: 3px;
     }
     .veh-gallery-thumb {
-        width: 70px;
-        height: 70px;
-        flex-shrink: 0;
-        border-radius: 10px;
-        overflow: hidden;
-        cursor: pointer;
+        width: 70px; height: 70px; flex-shrink: 0;
+        border-radius: 10px; overflow: hidden; cursor: pointer;
         border: 3px solid transparent;
-        transition: all var(--t-base);
-        opacity: 0.5;
+        transition: all var(--t-base); opacity: 0.5;
         background: rgba(10,16,32,0.6);
     }
     .veh-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .veh-gallery-thumb:hover { opacity: 0.85; transform: translateY(-4px); }
     .veh-gallery-thumb.active {
-        border-color: var(--c-gold-2);
-        opacity: 1;
+        border-color: var(--c-gold-2); opacity: 1;
         box-shadow: 0 0 0 3px rgba(230,179,30,0.25), 0 8px 24px rgba(0,0,0,0.5);
         transform: translateY(-4px);
     }
 
     .veh-gallery-empty {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: var(--c-text-3);
-        gap: 16px;
-        padding: 40px;
+        flex: 1; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        color: var(--c-text-3); gap: 16px; padding: 40px;
     }
     .veh-gallery-empty i {
-        font-size: 80px;
-        color: var(--c-gold-2);
-        opacity: 0.35;
+        font-size: 80px; color: var(--c-gold-2); opacity: 0.35;
         filter: drop-shadow(0 0 30px var(--c-gold-glow));
     }
-    .veh-gallery-empty h3 { font-size: 18px; font-weight: 800; color: var(--c-text-2); margin: 0; }
+    .veh-gallery-empty h3 {
+        font-size: 18px; font-weight: 800;
+        color: var(--c-text-2); margin: 0;
+    }
     .veh-gallery-empty p { font-size: 13px; color: var(--c-text-4); margin: 0; }
 
     .veh-gallery-details {
         padding: 14px 22px;
         background: rgba(0,0,0,0.6);
         border-top: 1px solid rgba(230,179,30,0.15);
-        flex-shrink: 0;
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-        justify-content: center;
+        flex-shrink: 0; display: flex; gap: 20px;
+        flex-wrap: wrap; justify-content: center;
     }
     .veh-gallery-detail {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: var(--c-text-2);
+        display: flex; align-items: center; gap: 8px;
+        font-size: 12px; color: var(--c-text-2);
     }
     .veh-gallery-detail i { color: var(--c-gold-2); font-size: 14px; }
     .veh-gallery-detail strong { color: var(--c-text-1); font-weight: 800; }
 
+    /* ═══════ MINI UPLOAD MODAL (فوق المعرض) ═══════ */
+    .veh-mini-upload {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(12px);
+        z-index: 100002;
+        display: none; align-items: center; justify-content: center;
+        padding: 20px;
+        animation: vehModalIn 0.25s ease;
+    }
+    .veh-mini-upload.active { display: flex; }
+    .veh-mini-upload-box {
+        background: linear-gradient(135deg, rgba(24,34,56,0.98), rgba(15,20,32,0.99));
+        border: 2px solid rgba(230,179,30,0.4);
+        border-radius: var(--r-xl);
+        padding: 24px;
+        width: 100%; max-width: 560px;
+        max-height: 90vh; overflow-y: auto;
+        box-shadow: 0 32px 80px rgba(0,0,0,0.9), 0 0 60px rgba(230,179,30,0.2);
+        animation: vehModalBoxIn 0.35s var(--t-bounce);
+    }
+    .veh-mini-upload-head {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 18px; padding-bottom: 14px;
+        border-bottom: 1px solid var(--c-border-soft);
+    }
+    .veh-mini-upload-head h4 {
+        font-size: 16px; font-weight: 800;
+        color: var(--c-gold-1);
+        display: flex; align-items: center; gap: 10px; margin: 0;
+    }
+
     /* ═══════ TOAST ═══════ */
     .veh-toast {
-        position: fixed;
-        bottom: 28px;
-        left: 28px;
-        z-index: 999999;
-        max-width: 400px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 22px;
-        border-radius: var(--r-lg);
-        color: #fff;
-        font-family: var(--font-main);
-        font-size: 13px;
-        font-weight: 700;
+        position: fixed; bottom: 28px; left: 28px;
+        z-index: 999999; max-width: 400px;
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 22px; border-radius: var(--r-lg);
+        color: #fff; font-family: var(--font-main);
+        font-size: 13px; font-weight: 700;
         backdrop-filter: blur(20px);
         box-shadow: 0 12px 40px rgba(0,0,0,0.5);
         direction: rtl;
@@ -1182,12 +886,15 @@
         .veh-gallery-nav.next { left: 6px; }
         .veh-gallery-thumb { width: 56px; height: 56px; }
         .veh-gallery-counter { bottom: 100px; font-size: 11px; padding: 6px 14px; }
+        .veh-gallery-change-btn { width: 70px; height: 70px; font-size: 10px; }
+        .veh-gallery-change-btn i { font-size: 18px; }
     }
     @media print {
         #page-vehicles { background: #fff !important; color: #12121a !important; }
         #page-vehicles::before { display: none !important; }
         .veh-header-actions, .veh-filters, .veh-actions-cell,
-        .veh-modal, .veh-gallery-modal, .veh-toast { display: none !important; }
+        .veh-modal, .veh-gallery-modal, .veh-toast,
+        .veh-mini-upload { display: none !important; }
     }
 </style>
 
@@ -1203,8 +910,7 @@
         </div>
         <div class="veh-header-actions">
             <button class="veh-btn dark" id="vehDisposalsBtn">
-                <i class="fas fa-archive"></i>
-                المطروحة
+                <i class="fas fa-archive"></i> المطروحة
                 <span class="badge" id="vehDisposalsCount" style="display:none;">0</span>
             </button>
             <button class="veh-btn primary" id="vehRefreshBtn">
@@ -1239,11 +945,11 @@
             <i class="fas fa-search"></i>
         </div>
         <select class="veh-select" id="vehFilterRegion">
-            <option value="all">كل الإدارات والأقاليم</option>
+            <option value="all">كل الأقاليم</option>
         </select>
         <select class="veh-select" id="vehFilterStatus">
             <option value="active">✅ النشطة فقط</option>
-            <option value="all">📊 الكل (نشطة + مطروحة)</option>
+            <option value="all">📊 الكل</option>
             <option value="صالحة">✅ صالحة</option>
             <option value="معطبة">🔴 معطبة</option>
             <option value="صيانة">🔧 صيانة</option>
@@ -1270,7 +976,7 @@
             <div class="center">النوع</div>
             <div>الماركة / الطراز</div>
             <div>رقم الوسيلة</div>
-            <div>الإدارة / الإقليم</div>
+            <div>الإقليم</div>
             <div>المنطقة</div>
             <div>المركز</div>
             <div class="center">الحالة</div>
@@ -1302,181 +1008,278 @@
             <div class="veh-form-row">
                 <div class="veh-form-group">
                     <label>النوع <span class="req">*</span></label>
-                    <select class="veh-form-control" id="vehType" required>
-                        <option value="سيارة">🚗 سيارة</option>
-                        <option value="كواد">🛺 كواد</option>
-                        <option value="شاحنة">🚚 شاحنة</option>
-                        <option value="شاحنة صهريج">🚛 شاحنة صهريج</option>
-                        <option value="حافلة">🚌 حافلة</option>
-                        <option value="بيك أب">🛻 بيك أب</option>
-                        <option value="فان">🚐 فان</option>
-                        <option value="جيب">🚙 جيب</option>
-                        <option value="دراجة">🏍️ دراجة</option>
-                        <option value="مدرعة">🛡️ مدرعة</option>
-                        <option value="إسعاف">🚑 إسعاف</option>
-                        <option value="إطفاء">🚒 إطفاء</option>
-                        <option value="رافعة">🏗️ رافعة</option>
-                        <option value="جرافة">🚜 جرافة</option>
-                        <option value="أخرى">⚙️ أخرى</option>
-                    </select>
+                    <div class="veh-combobox">
+                        <input type="text" class="veh-form-control veh-combobox-search" id="vehTypeSearch" placeholder="🔍 ابحث عن نوع...">
+                        <select class="veh-form-control" id="vehType" required>
+                            <option value="">— اختر النوع —</option>
+                            <optgroup label="🚗 سيارات خفيفة">
+                                <option value="سيارة">🚗 سيارة</option>
+                                <option value="بيك أب">🛻 بيك أب</option>
+                                <option value="جيب">🚙 جيب</option>
+                                <option value="فان">🚐 فان</option>
+                                <option value="كواد">🛺 كواد</option>
+                            </optgroup>
+                            <optgroup label="🚚 شاحنات">
+                                <option value="شاحنة">🚚 شاحنة</option>
+                                <option value="شاحنة صهريج">🚛 شاحنة صهريج</option>
+                                <option value="شاحنة قلابة">🚛 شاحنة قلابة</option>
+                                <option value="شاحنة رافعة">🏗️ شاحنة رافعة</option>
+                            </optgroup>
+                            <optgroup label="🚌 حافلات">
+                                <option value="حافلة">🚌 حافلة</option>
+                                <option value="حافلة صغيرة">🚐 حافلة صغيرة</option>
+                            </optgroup>
+                            <optgroup label="🚨 طوارئ">
+                                <option value="إسعاف">🚑 إسعاف</option>
+                                <option value="إطفاء">🚒 إطفاء</option>
+                                <option value="مدرعة">🛡️ مدرعة</option>
+                            </optgroup>
+                            <optgroup label="⚙️ معدات ثقيلة">
+                                <option value="رافعة">🏗️ رافعة</option>
+                                <option value="جرافة">🚜 جرافة</option>
+                                <option value="حفارة">⛏️ حفارة</option>
+                                <option value="لودر">🚜 لودر</option>
+                            </optgroup>
+                            <optgroup label="🏍️ دراجات">
+                                <option value="دراجة">🏍️ دراجة</option>
+                                <option value="دراجة رباعية">🏍️ دراجة رباعية</option>
+                            </optgroup>
+                            <optgroup label="⚙️ أخرى">
+                                <option value="أخرى">⚙️ أخرى</option>
+                            </optgroup>
+                        </select>
+                    </div>
                 </div>
                 <div class="veh-form-group">
                     <label>رقم الوسيلة <span class="req">*</span></label>
                     <input type="text" class="veh-form-control" id="vehPlate" required placeholder="1234 تونس 5678" maxlength="50">
                 </div>
             </div>
+
             <div class="veh-form-row">
                 <div class="veh-form-group">
                     <label>الماركة</label>
-                    <input type="text" id="vehBrandSearch" class="veh-form-control veh-brand-search" placeholder="🔍 ابحث عن ماركة...">
-                    <select class="veh-form-control" id="vehBrand">
-                        <option value="">— اختر الماركة —</option>
-                        <optgroup label="🇯🇵 يابانية">
-                            <option value="تويوتا">تويوتا (Toyota)</option>
-                            <option value="نيسان">نيسان (Nissan)</option>
-                            <option value="هوندا">هوندا (Honda)</option>
-                            <option value="ميتسوبيشي">ميتسوبيشي (Mitsubishi)</option>
-                            <option value="سوزوكي">سوزوكي (Suzuki)</option>
-                            <option value="مازدا">مازدا (Mazda)</option>
-                            <option value="إيسوزو">إيسوزو (Isuzu)</option>
-                            <option value="دايهاتسو">دايهاتسو (Daihatsu)</option>
-                            <option value="سوبارو">سوبارو (Subaru)</option>
-                            <option value="لكزس">لكزس (Lexus)</option>
-                            <option value="إنفينيتي">إنفينيتي (Infiniti)</option>
-                        </optgroup>
-                        <optgroup label="🇺🇸 أمريكية">
-                            <option value="فورد">فورد (Ford)</option>
-                            <option value="شيفروليه">شيفروليه (Chevrolet)</option>
-                            <option value="جيب">جيب (Jeep)</option>
-                            <option value="دودج">دودج (Dodge)</option>
-                            <option value="كاديلاك">كاديلاك (Cadillac)</option>
-                            <option value="جي إم سي">جي إم سي (GMC)</option>
-                            <option value="لينكولن">لينكولن (Lincoln)</option>
-                            <option value="تسلا">تسلا (Tesla)</option>
-                            <option value="هامر">هامر (Hummer)</option>
-                        </optgroup>
-                        <optgroup label="🇩🇪 ألمانية">
-                            <option value="مرسيدس">مرسيدس-بنز (Mercedes-Benz)</option>
-                            <option value="بي إم دبليو">بي إم دبليو (BMW)</option>
-                            <option value="أودي">أودي (Audi)</option>
-                            <option value="فولكس فاجن">فولكس فاجن (Volkswagen)</option>
-                            <option value="بورش">بورش (Porsche)</option>
-                            <option value="أوبل">أوبل (Opel)</option>
-                            <option value="مان">مان (MAN)</option>
-                        </optgroup>
-                        <optgroup label="🇫🇷 فرنسية">
-                            <option value="رينو">رينو (Renault)</option>
-                            <option value="بيجو">بيجو (Peugeot)</option>
-                            <option value="سيتروين">سيتروين (Citroën)</option>
-                            <option value="داسيا">داسيا (Dacia)</option>
-                        </optgroup>
-                        <optgroup label="🇮🇹 إيطالية">
-                            <option value="فيات">فيات (Fiat)</option>
-                            <option value="إيفيكو">إيفيكو (Iveco)</option>
-                            <option value="ألفا روميو">ألفا روميو (Alfa Romeo)</option>
-                            <option value="فيراري">فيراري (Ferrari)</option>
-                            <option value="لامبورغيني">لامبورغيني (Lamborghini)</option>
-                            <option value="مازيراتي">مازيراتي (Maserati)</option>
-                        </optgroup>
-                        <optgroup label="🇰🇷 كورية">
-                            <option value="هيونداي">هيونداي (Hyundai)</option>
-                            <option value="كيا">كيا (Kia)</option>
-                            <option value="سانغ يونغ">سانغ يونغ (SsangYong)</option>
-                            <option value="جينيسيس">جينيسيس (Genesis)</option>
-                        </optgroup>
-                        <optgroup label="🇸🇪 سويدية">
-                            <option value="فولفو">فولفو (Volvo)</option>
-                            <option value="سكانيا">سكانيا (Scania)</option>
-                        </optgroup>
-                        <optgroup label="🇬🇧 بريطانية">
-                            <option value="لاند روفر">لاند روفر (Land Rover)</option>
-                            <option value="جاكوار">جاكوار (Jaguar)</option>
-                            <option value="بنتلي">بنتلي (Bentley)</option>
-                            <option value="رولز رويس">رولز رويس (Rolls-Royce)</option>
-                            <option value="أستون مارتن">أستون مارتن (Aston Martin)</option>
-                            <option value="لي لاند">لي لاند (Leyland)</option>
-                        </optgroup>
-                        <optgroup label="🇨🇿 تشيكية">
-                            <option value="سكودا">سكودا (Škoda)</option>
-                            <option value="تاترا">تاترا (Tatra)</option>
-                        </optgroup>
-                        <optgroup label="🇨🇳 صينية">
-                            <option value="جيلي">جيلي (Geely)</option>
-                            <option value="بي واي دي">بي واي دي (BYD)</option>
-                            <option value="شيري">شيري (Chery)</option>
-                            <option value="هافال">هافال (Haval)</option>
-                            <option value="إم جي">إم جي (MG)</option>
-                            <option value="دونغ فينغ">دونغ فينغ (Dongfeng)</option>
-                            <option value="فاو">فاو (FAW)</option>
-                        </optgroup>
-                        <optgroup label="🚛 شاحنات وحافلات">
-                            <option value="فولفو شاحنات">فولفو شاحنات (Volvo Trucks)</option>
-                            <option value="داف">داف (DAF)</option>
-                            <option value="رينو شاحنات">رينو شاحنات (Renault Trucks)</option>
-                            <option value="إيفيكو شاحنات">إيفيكو شاحنات (Iveco Trucks)</option>
-                            <option value="سكانيا شاحنات">سكانيا شاحنات (Scania Trucks)</option>
-                            <option value="مان شاحنات">مان شاحنات (MAN Trucks)</option>
-                            <option value="مرسيدس شاحنات">مرسيدس شاحنات (Mercedes Trucks)</option>
-                            <option value="هينو">هينو (Hino)</option>
-                        </optgroup>
-                        <optgroup label="🏍️ دراجات نارية">
-                            <option value="ياماها">ياماها (Yamaha)</option>
-                            <option value="كاواساكي">كاواساكي (Kawasaki)</option>
-                            <option value="بي إم دبليو موتور">بي إم دبليو موتور (BMW Motorrad)</option>
-                            <option value="دوكاتي">دوكاتي (Ducati)</option>
-                            <option value="هارلي ديفيدسون">هارلي ديفيدسون (Harley-Davidson)</option>
-                        </optgroup>
-                        <optgroup label="⚙️ أخرى">
-                            <option value="أخرى">أخرى</option>
-                        </optgroup>
-                    </select>
+                    <div class="veh-combobox">
+                        <input type="text" class="veh-form-control veh-combobox-search" id="vehBrandSearch" placeholder="🔍 ابحث عن ماركة...">
+                        <select class="veh-form-control" id="vehBrand">
+                            <option value="">— اختر الماركة —</option>
+                            <optgroup label="🇯🇵 يابانية">
+                                <option value="تويوتا">تويوتا (Toyota)</option>
+                                <option value="نيسان">نيسان (Nissan)</option>
+                                <option value="هوندا">هوندا (Honda)</option>
+                                <option value="ميتسوبيشي">ميتسوبيشي (Mitsubishi)</option>
+                                <option value="سوزوكي">سوزوكي (Suzuki)</option>
+                                <option value="مازدا">مازدا (Mazda)</option>
+                                <option value="إيسوزو">إيسوزو (Isuzu)</option>
+                                <option value="دايهاتسو">دايهاتسو (Daihatsu)</option>
+                                <option value="سوبارو">سوبارو (Subaru)</option>
+                                <option value="لكزس">لكزس (Lexus)</option>
+                                <option value="إنفينيتي">إنفينيتي (Infiniti)</option>
+                            </optgroup>
+                            <optgroup label="🇺🇸 أمريكية">
+                                <option value="فورد">فورد (Ford)</option>
+                                <option value="شيفروليه">شيفروليه (Chevrolet)</option>
+                                <option value="جيب">جيب (Jeep)</option>
+                                <option value="دودج">دودج (Dodge)</option>
+                                <option value="كاديلاك">كاديلاك (Cadillac)</option>
+                                <option value="جي إم سي">جي إم سي (GMC)</option>
+                                <option value="لينكولن">لينكولن (Lincoln)</option>
+                                <option value="تسلا">تسلا (Tesla)</option>
+                                <option value="هامر">هامر (Hummer)</option>
+                            </optgroup>
+                            <optgroup label="🇩🇪 ألمانية">
+                                <option value="مرسيدس">مرسيدس-بنز (Mercedes-Benz)</option>
+                                <option value="بي إم دبليو">بي إم دبليو (BMW)</option>
+                                <option value="أودي">أودي (Audi)</option>
+                                <option value="فولكس فاجن">فولكس فاجن (Volkswagen)</option>
+                                <option value="بورش">بورش (Porsche)</option>
+                                <option value="أوبل">أوبل (Opel)</option>
+                                <option value="مان">مان (MAN)</option>
+                            </optgroup>
+                            <optgroup label="🇫🇷 فرنسية">
+                                <option value="رينو">رينو (Renault)</option>
+                                <option value="بيجو">بيجو (Peugeot)</option>
+                                <option value="سيتروين">سيتروين (Citroën)</option>
+                                <option value="داسيا">داسيا (Dacia)</option>
+                            </optgroup>
+                            <optgroup label="🇮🇹 إيطالية">
+                                <option value="فيات">فيات (Fiat)</option>
+                                <option value="إيفيكو">إيفيكو (Iveco)</option>
+                                <option value="ألفا روميو">ألفا روميو (Alfa Romeo)</option>
+                                <option value="فيراري">فيراري (Ferrari)</option>
+                                <option value="لامبورغيني">لامبورغيني (Lamborghini)</option>
+                                <option value="مازيراتي">مازيراتي (Maserati)</option>
+                            </optgroup>
+                            <optgroup label="🇰🇷 كورية">
+                                <option value="هيونداي">هيونداي (Hyundai)</option>
+                                <option value="كيا">كيا (Kia)</option>
+                                <option value="سانغ يونغ">سانغ يونغ (SsangYong)</option>
+                                <option value="جينيسيس">جينيسيس (Genesis)</option>
+                            </optgroup>
+                            <optgroup label="🇸🇪 سويدية">
+                                <option value="فولفو">فولفو (Volvo)</option>
+                                <option value="سكانيا">سكانيا (Scania)</option>
+                            </optgroup>
+                            <optgroup label="🇬🇧 بريطانية">
+                                <option value="لاند روفر">لاند روفر (Land Rover)</option>
+                                <option value="جاكوار">جاكوار (Jaguar)</option>
+                                <option value="بنتلي">بنتلي (Bentley)</option>
+                                <option value="رولز رويس">رولز رويس (Rolls-Royce)</option>
+                            </optgroup>
+                            <optgroup label="🇨🇿 تشيكية">
+                                <option value="سكودا">سكودا (Škoda)</option>
+                                <option value="تاترا">تاترا (Tatra)</option>
+                            </optgroup>
+                            <optgroup label="🇨🇳 صينية">
+                                <option value="جيلي">جيلي (Geely)</option>
+                                <option value="بي واي دي">بي واي دي (BYD)</option>
+                                <option value="شيري">شيري (Chery)</option>
+                                <option value="هافال">هافال (Haval)</option>
+                                <option value="إم جي">إم جي (MG)</option>
+                                <option value="دونغ فينغ">دونغ فينغ (Dongfeng)</option>
+                                <option value="فاو">فاو (FAW)</option>
+                            </optgroup>
+                            <optgroup label="🚛 شاحنات وحافلات">
+                                <option value="فولفو شاحنات">فولفو شاحنات (Volvo Trucks)</option>
+                                <option value="داف">داف (DAF)</option>
+                                <option value="رينو شاحنات">رينو شاحنات (Renault Trucks)</option>
+                                <option value="إيفيكو شاحنات">إيفيكو شاحنات</option>
+                                <option value="سكانيا شاحنات">سكانيا شاحنات</option>
+                                <option value="مان شاحنات">مان شاحنات (MAN Trucks)</option>
+                                <option value="مرسيدس شاحنات">مرسيدس شاحنات</option>
+                                <option value="هينو">هينو (Hino)</option>
+                            </optgroup>
+                            <optgroup label="🏍️ دراجات نارية">
+                                <option value="ياماها">ياماها (Yamaha)</option>
+                                <option value="كاواساكي">كاواساكي (Kawasaki)</option>
+                                <option value="بي إم دبليو موتور">بي إم دبليو موتور</option>
+                                <option value="دوكاتي">دوكاتي (Ducati)</option>
+                                <option value="هارلي ديفيدسون">هارلي ديفيدسون</option>
+                            </optgroup>
+                            <optgroup label="⚙️ أخرى">
+                                <option value="أخرى">أخرى</option>
+                            </optgroup>
+                        </select>
+                        <span class="veh-combobox-hint" id="vehBrandHint" style="display:none;">
+                            <i class="fas fa-check-circle"></i> لا يوجد في القائمة — سيُحفظ كما هو
+                        </span>
+                        <input type="text" class="veh-form-control veh-combobox-free" id="vehBrandFree" style="display:none;" placeholder="✍️ اكتب الماركة يدوياً...">
+                    </div>
                 </div>
                 <div class="veh-form-group">
                     <label>الطراز</label>
-                    <input type="text" class="veh-form-control" id="vehModel" placeholder="Hilux، Daily..." maxlength="100">
+                    <div class="veh-combobox">
+                        <input type="text" class="veh-form-control veh-combobox-search" id="vehModelSearch" placeholder="🔍 ابحث عن طراز...">
+                        <select class="veh-form-control" id="vehModel">
+                            <option value="">— اختر الماركة أولاً —</option>
+                        </select>
+                        <input type="text" class="veh-form-control veh-combobox-free" id="vehModelFree" style="display:none;" placeholder="✍️ اكتب الطراز يدوياً...">
+                    </div>
                 </div>
             </div>
+
             <div class="veh-form-row">
+                <div class="veh-form-group">
+                    <label>اللون</label>
+                    <div class="veh-combobox">
+                        <input type="text" class="veh-form-control veh-combobox-search" id="vehColorSearch" placeholder="🔍 ابحث عن لون...">
+                        <select class="veh-form-control" id="vehColor">
+                            <option value="">— اختر اللون —</option>
+                            <optgroup label="⚪ ألوان أساسية">
+                                <option value="أبيض">⚪ أبيض</option>
+                                <option value="أسود">⚫ أسود</option>
+                                <option value="رمادي">🔘 رمادي</option>
+                                <option value="فضي">⚪ فضي</option>
+                            </optgroup>
+                            <optgroup label="🔴 ألوان دافئة">
+                                <option value="أحمر">🔴 أحمر</option>
+                                <option value="برتقالي">🟠 برتقالي</option>
+                                <option value="أصفر">🟡 أصفر</option>
+                                <option value="بني">🟤 بني</option>
+                                <option value="بيج">🟫 بيج</option>
+                            </optgroup>
+                            <optgroup label="🔵 ألوان باردة">
+                                <option value="أزرق">🔵 أزرق</option>
+                                <option value="أزرق فاتح">🩵 أزرق فاتح</option>
+                                <option value="أزرق داكن">🌊 أزرق داكن</option>
+                                <option value="أخضر">🟢 أخضر</option>
+                                <option value="أخضر زيتي">🫒 أخضر زيتي</option>
+                                <option value="تركواز">🩵 تركواز</option>
+                            </optgroup>
+                            <optgroup label="🎨 ألوان خاصة">
+                                <option value="كحلي">🌌 كحلي</option>
+                                <option value="بنفسجي">🟣 بنفسجي</option>
+                                <option value="وردي">🩷 وردي</option>
+                                <option value="ذهبي">🟡 ذهبي</option>
+                                <option value="نحاسي">🟠 نحاسي</option>
+                                <option value="كامو">🪖 كامو (تمويه)</option>
+                            </optgroup>
+                            <optgroup label="🎯 ألوان رسمية">
+                                <option value="أبيض وأسود">⬛⬜ أبيض وأسود</option>
+                                <option value="أزرق رسمي">🔷 أزرق رسمي</option>
+                                <option value="أخضر عسكري">🪖 أخضر عسكري</option>
+                                <option value="بيج صحراوي">🏜️ بيج صحراوي</option>
+                            </optgroup>
+                            <optgroup label="⚙️ أخرى">
+                                <option value="أخرى">أخرى</option>
+                            </optgroup>
+                        </select>
+                        <input type="text" class="veh-form-control veh-combobox-free" id="vehColorFree" style="display:none;" placeholder="✍️ اكتب اللون يدوياً...">
+                    </div>
+                </div>
                 <div class="veh-form-group">
                     <label>السنة</label>
                     <input type="number" class="veh-form-control" id="vehYear" placeholder="2020" min="1900" max="2100">
                 </div>
-                <div class="veh-form-group">
-                    <label>اللون</label>
-                    <input type="text" class="veh-form-control" id="vehColor" placeholder="أبيض، أسود..." maxlength="50">
+            </div>
+
+            <div class="veh-form-group">
+                <label>الإقليم / الإدارة <span class="req">*</span></label>
+                <div class="veh-combobox">
+                    <select class="veh-form-control" id="vehRegion" required>
+                        <option value="">— اختر —</option>
+                        <option value="إدارة إسناد الوحدات البحرية">🏛️ إدارة إسناد الوحدات البحرية</option>
+                        <option value="إدارة حرس السواحل">🚢 إدارة حرس السواحل</option>
+                        <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الشمال</option>
+                        <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الساحل</option>
+                        <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الوسط</option>
+                        <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الجنوب</option>
+                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة صيانة تونس</option>
+                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة صيانة صفاقس</option>
+                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة صيانة المنستير</option>
+                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة صيانة جرجيس</option>
+                        <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                        <option value="__other__">➕ إضافة إقليم آخر...</option>
+                    </select>
+                    <input type="text" class="veh-form-control veh-combobox-free" id="vehRegionFree" style="display:none;" placeholder="✍️ اكتب اسم الإقليم/الإدارة...">
+                    <span class="veh-combobox-hint" id="vehRegionHint" style="display:none;">
+                        <i class="fas fa-check-circle"></i> سيُحفظ الإقليم المُدخل
+                    </span>
                 </div>
             </div>
-            <div class="veh-form-group">
-                <label>الإدارة / الإقليم <span class="req">*</span></label>
-                <select class="veh-form-control" id="vehRegion" required>
-                    <option value="">— اختر —</option>
-                    <option value="إدارة إسناد الوحدات البحرية">🏛️ إدارة إسناد الوحدات البحرية</option>
-                    <option value="إدارة حرس السواحل">🚢 إدارة حرس السواحل</option>
-                    <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الشمال</option>
-                    <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الساحل</option>
-                    <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الوسط</option>
-                    <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الجنوب</option>
-                    <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة صيانة تونس</option>
-                    <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة صيانة صفاقس</option>
-                    <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة صيانة المنستير</option>
-                    <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة صيانة جرجيس</option>
-                    <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-                </select>
-            </div>
+
             <div class="veh-form-row">
                 <div class="veh-form-group">
                     <label>المنطقة <span class="req">*</span></label>
-                    <input type="text" class="veh-form-control" id="vehZone" required placeholder="تونس، بنزرت..." maxlength="100">
+                    <div class="veh-combobox">
+                        <input type="text" class="veh-form-control veh-combobox-search" id="vehZoneSearch" placeholder="🔍 ابحث عن منطقة...">
+                        <select class="veh-form-control" id="vehZone" required>
+                            <option value="">— اختر المنطقة —</option>
+                        </select>
+                        <input type="text" class="veh-form-control veh-combobox-free" id="vehZoneFree" style="display:none;" placeholder="✍️ اكتب المنطقة يدوياً...">
+                    </div>
                 </div>
                 <div class="veh-form-group">
                     <label>المركز</label>
                     <input type="text" class="veh-form-control" id="vehCenter" placeholder="مركز..." maxlength="200">
                 </div>
             </div>
+
             <div class="veh-form-group">
                 <label>مكان التعزيز</label>
                 <input type="text" class="veh-form-control" id="vehSupp" placeholder="مكان التعزيز..." maxlength="200">
             </div>
+
             <div class="veh-form-row">
                 <div class="veh-form-group">
                     <label>الحالة</label>
@@ -1495,6 +1298,7 @@
                     </select>
                 </div>
             </div>
+
             <div class="veh-form-row">
                 <div class="veh-form-group">
                     <label>تاريخ التعيين</label>
@@ -1607,1237 +1411,58 @@
             <button class="veh-gallery-close" id="vehGalleryClose" title="إغلاق (ESC)">×</button>
         </div>
     </div>
+
     <div class="veh-gallery-stage" id="vehGalleryStage">
         <button class="veh-gallery-nav prev" id="vehGalleryPrev" title="السابق"><i class="fas fa-chevron-right"></i></button>
         <img id="vehGalleryImg" src="" alt="صورة">
+
+        <!-- 🎯 زر تغيير الصور في وسط الصورة -->
+        <button class="veh-gallery-change-btn" id="vehGalleryChangeBtn" title="تغيير الصور" style="display:none;">
+            <i class="fas fa-camera-retro"></i>
+            <span>تغيير</span>
+            <span>الصور</span>
+        </button>
+
         <button class="veh-gallery-nav next" id="vehGalleryNext" title="التالي"><i class="fas fa-chevron-left"></i></button>
         <div class="veh-gallery-counter" id="vehGalleryCounter">0 / 0</div>
     </div>
+
     <div class="veh-gallery-details" id="vehGalleryDetails" style="display:none;"></div>
     <div class="veh-gallery-thumbs" id="vehGalleryThumbs"></div>
 </div>
 
-<script>
-(function() {
-    'use strict';
-
-    var _isDestroyed = false;
-    var _timeouts = [];
-    var _intervals = [];
-    var _listeners = [];
-    var _objectUrls = [];
-
-    var vehicles = [];
-    var vehicleImages = [];
-    var currentVehicleId = null;
-    var autoRefreshInterval = null;
-
-    var MAX_IMAGES = 10;
-    var MAX_FILE_SIZE = 5 * 1024 * 1024;
-    var ALLOWED_TYPES = /^image\/(jpeg|jpg|png|webp|gif)$/i;
-
-    var _galleryImages = [];
-    var _galleryIndex = 0;
-    var _galleryZoom = 1;
-    var _galleryPanX = 0;
-    var _galleryPanY = 0;
-    var _galleryDragging = false;
-    var _galleryDragStartX = 0;
-    var _galleryDragStartY = 0;
-    var _gallerySlideshowTimer = null;
-    var _gallerySlideshowActive = false;
-
-    function _cleanup() {
-        if (_isDestroyed) return;
-        _isDestroyed = true;
-        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
-        _timeouts = [];
-        _intervals.forEach(function(id) { try { clearInterval(id); } catch(e) {} });
-        _intervals = [];
-        _listeners.forEach(function(l) {
-            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
-        });
-        _listeners = [];
-        _objectUrls.forEach(function(url) { try { URL.revokeObjectURL(url); } catch(e) {} });
-        _objectUrls = [];
-        stopSlideshow();
-    }
-    window._pageCleanup = window._pageCleanup || [];
-    window._pageCleanup.push(_cleanup);
-    window.addEventListener('beforeunload', _cleanup);
-    window.addEventListener('pagehide', _cleanup);
-
-    function $(sel, ctx) { return (ctx || document).querySelector(sel); }
-    function $$(sel, ctx) { return Array.from((ctx || document).querySelectorAll(sel)); }
-
-    function escapeHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str).replace(/[&<>"']/g, function(m) {
-            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
-        });
-    }
-
-    function formatDate(value) {
-        if (!value) return '—';
-        try {
-            var d = new Date(value);
-            if (isNaN(d.getTime())) return String(value);
-            return String(d.getDate()).padStart(2,'0') + '/' +
-                   String(d.getMonth()+1).padStart(2,'0') + '/' +
-                   d.getFullYear();
-        } catch (e) { return String(value); }
-    }
-
-    function on(el, type, fn, opts) {
-        if (!el) return;
-        el.addEventListener(type, fn, opts);
-        _listeners.push({ el: el, type: type, fn: fn });
-    }
-
-    function toast(msg, type, duration) {
-        if (_isDestroyed) return;
-        type = type || 'info';
-        duration = duration || 3000;
-        var existing = $('.veh-toast');
-        if (existing) existing.remove();
-        var t = document.createElement('div');
-        t.className = 'veh-toast ' + type;
-        var icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
-        t.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span><span>' + escapeHtml(String(msg)) + '</span>';
-        document.body.appendChild(t);
-        var id = setTimeout(function() { if (t.parentNode) t.remove(); }, duration);
-        _timeouts.push(id);
-    }
-
-    function getToken() {
-        try {
-            return localStorage.getItem('marine_token')
-                || localStorage.getItem('token')
-                || localStorage.getItem('marine_auth_token')
-                || sessionStorage.getItem('token') || null;
-        } catch(e) { return null; }
-    }
-
-    function getCsrf() {
-        try {
-            var m = document.cookie.match(/marine_csrf=([^;]+)/);
-            return m ? decodeURIComponent(m[1]) : '';
-        } catch(e) { return ''; }
-    }
-
-    function authHeaders(includeCT) {
-        var h = { 'Accept': 'application/json' };
-        if (includeCT) h['Content-Type'] = 'application/json';
-        var t = getToken();
-        if (t) h['Authorization'] = 'Bearer ' + t;
-        var c = getCsrf();
-        if (c) h['X-CSRF-Token'] = c;
-        return h;
-    }
-
-    function apiFetch(url, opts) {
-        opts = opts || {};
-        var method = (opts.method || 'GET').toUpperCase();
-        var isSafe = ['GET','HEAD','OPTIONS'].indexOf(method) !== -1;
-        opts.headers = Object.assign({}, authHeaders(!isSafe), opts.headers || {});
-        opts.credentials = 'include';
-        return fetch(url, opts);
-    }
-
-    function hasPermission(name) {
-        if (window.capabilities && typeof window.capabilities[name] === 'boolean') {
-            return window.capabilities[name];
-        }
-        if (window.currentUser && window.currentUser.role) {
-            var r = String(window.currentUser.role).trim();
-            if (r === 'admin' || r === 'manager' || r === 'editor' || r === 'maintenance_unit') {
-                if (name === 'canDeleteVehicles') return r === 'admin';
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function getRegionShort(r) {
-        var map = {
-            'إدارة إسناد الوحدات البحرية': '🏛️ إسناد الوحدات',
-            'إدارة حرس السواحل': '🚢 حرس السواحل',
-            'إقليم الحرس البحري بالشمال': '🌊 الشمال',
-            'إقليم الحرس البحري بالساحل': '🌊 الساحل',
-            'إقليم الحرس البحري بالوسط': '🌊 الوسط',
-            'إقليم الحرس البحري بالجنوب': '🌊 الجنوب',
-            'وحدة الصيانة والإسناد البحري تونس': '🛠️ صيانة تونس',
-            'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ صيانة صفاقس',
-            'وحدة الصيانة والإسناد البحري المنستير': '🛠️ صيانة المنستير',
-            'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ صيانة جرجيس',
-            'المجمع الأمني بقبيبة': '🏛️ بقبيبة'
-        };
-        return map[r] || r || '—';
-    }
-
-    /* ═══════ IMAGE UPLOADER ═══════ */
-    function updateSourceButtonsState() {
-        var isFull = vehicleImages.length >= MAX_IMAGES;
-        var c = $('#vehCaptureBtn'); if (c) c.disabled = isFull;
-        var b = $('#vehBrowseBtn'); if (b) b.disabled = isFull;
-    }
-
-    function initImagesUI() {
-        var dropzone = $('#vehImagesDropzone');
-        var input = $('#vehImagesInput');
-        var cameraInput = $('#vehCameraInput');
-        var captureBtn = $('#vehCaptureBtn');
-        var browseBtn = $('#vehBrowseBtn');
-
-        if (captureBtn && cameraInput) {
-            on(captureBtn, 'click', function() {
-                if (vehicleImages.length >= MAX_IMAGES) { toast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
-                cameraInput.click();
-            });
-            on(cameraInput, 'change', function(e) { handleFiles(e.target.files); cameraInput.value = ''; });
-        }
-        if (browseBtn && input) {
-            on(browseBtn, 'click', function() {
-                if (vehicleImages.length >= MAX_IMAGES) { toast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
-                input.click();
-            });
-        }
-        if (input) on(input, 'change', function(e) { handleFiles(e.target.files); input.value = ''; });
-        if (dropzone && input) {
-            on(dropzone, 'click', function() {
-                if (vehicleImages.length >= MAX_IMAGES) { toast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
-                input.click();
-            });
-            on(dropzone, 'dragover', function(e) { e.preventDefault(); dropzone.classList.add('dragover'); });
-            on(dropzone, 'dragleave', function(e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
-            on(dropzone, 'drop', function(e) {
-                e.preventDefault();
-                dropzone.classList.remove('dragover');
-                handleFiles(e.dataTransfer.files);
-            });
-        }
-    }
-
-    function handleFiles(files) {
-        if (!files || files.length === 0) return;
-        var valid = [];
-        for (var i = 0; i < files.length; i++) {
-            var f = files[i];
-            if (!ALLOWED_TYPES.test(f.type)) { toast('❌ نوع غير مدعوم: ' + f.name, 'error'); continue; }
-            if (f.size > MAX_FILE_SIZE) { toast('❌ حجم كبير: ' + f.name, 'error'); continue; }
-            valid.push(f);
-        }
-        if (valid.length === 0) return;
-        var remaining = MAX_IMAGES - vehicleImages.length;
-        if (remaining <= 0) { toast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); updateSourceButtonsState(); return; }
-        if (valid.length > remaining) { toast('⚠️ تم قبول ' + remaining + ' صور فقط', 'info'); valid = valid.slice(0, remaining); }
-        vehicleImages = vehicleImages.concat(valid);
-        renderImagesPreview();
-    }
-
-    function renderImagesPreview() {
-        var gallery = $('#vehImagesGallery');
-        var count = $('#vehImagesCount');
-        if (count) count.textContent = '(' + vehicleImages.length + '/' + MAX_IMAGES + ')';
-        if (!gallery) return;
-        if (vehicleImages.length === 0) { gallery.innerHTML = ''; updateSourceButtonsState(); return; }
-
-        var html = '';
-        vehicleImages.forEach(function(img, idx) {
-            var preview = '';
-            var isFile = (img instanceof File);
-            if (isFile) { preview = URL.createObjectURL(img); _objectUrls.push(preview); }
-            else preview = img.url || '';
-            var isPrimary = isFile
-                ? (idx === 0 && !vehicleImages.some(function(x){ return x.isPrimary; }))
-                : !!img.isPrimary;
-
-            html +=
-                '<div class="veh-image-item' + (isPrimary ? ' is-primary' : '') + '" data-index="' + idx + '">' +
-                    '<img src="' + escapeHtml(preview) + '" alt="صورة" loading="lazy">' +
-                    '<span class="veh-image-primary-badge">⭐</span>' +
-                    '<div class="veh-image-actions">' +
-                        '<button type="button" class="set-primary" data-action="primary" data-idx="' + idx + '" title="رئيسية"><i class="fas fa-star"></i></button>' +
-                        '<button type="button" class="del" data-action="delete" data-idx="' + idx + '" title="حذف"><i class="fas fa-trash"></i></button>' +
-                    '</div>' +
-                '</div>';
-        });
-        gallery.innerHTML = html;
-
-        $$('[data-action]', gallery).forEach(function(btn) {
-            on(btn, 'click', function(e) {
-                e.stopPropagation();
-                var action = this.getAttribute('data-action');
-                var idx = parseInt(this.getAttribute('data-idx'), 10);
-                if (action === 'delete') removeImage(idx);
-                else if (action === 'primary') setPrimaryImage(idx);
-            });
-        });
-        updateSourceButtonsState();
-    }
-
-    function removeImage(idx) {
-        if (idx < 0 || idx >= vehicleImages.length) return;
-        var img = vehicleImages[idx];
-        if (img && img._id && currentVehicleId) {
-            apiFetch('/api/vehicles/' + encodeURIComponent(currentVehicleId) + '/images/' + encodeURIComponent(img._id), { method: 'DELETE' })
-                .then(function(r) { return r.json(); })
-                .then(function(d) { if (d.success) toast('🗑️ تم حذف الصورة', 'success'); })
-                .catch(function() {});
-        }
-        vehicleImages.splice(idx, 1);
-        renderImagesPreview();
-    }
-
-    function setPrimaryImage(idx) {
-        if (idx < 0 || idx >= vehicleImages.length) return;
-        var img = vehicleImages.splice(idx, 1)[0];
-        vehicleImages.unshift(img);
-        if (img && img._id && currentVehicleId) {
-            apiFetch('/api/vehicles/' + encodeURIComponent(currentVehicleId) + '/images/' + encodeURIComponent(img._id) + '/primary', { method: 'PATCH' })
-                .then(function(r) { return r.json(); })
-                .catch(function() {});
-        }
-        renderImagesPreview();
-        toast('⭐ تم تعيين الصورة الرئيسية', 'success');
-    }
-
-    async function uploadImages(vehicleId) {
-        var newFiles = vehicleImages.filter(function(img) { return img instanceof File; });
-        if (newFiles.length === 0) return true;
-        if (!vehicleId) return false;
-        var uploading = $('#vehImagesUploading');
-        if (uploading) uploading.style.display = 'flex';
-        try {
-            var fd = new FormData();
-            newFiles.forEach(function(img) { fd.append('images', img); });
-            var res = await fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/images', {
-                method: 'POST',
-                headers: Object.assign(
-                    { 'Accept': 'application/json' },
-                    getToken() ? { 'Authorization': 'Bearer ' + getToken() } : {},
-                    getCsrf() ? { 'X-CSRF-Token': getCsrf() } : {}
-                ),
-                credentials: 'include',
-                body: fd
-            });
-            if (!res.ok) {
-                var err = await res.json().catch(function() { return {}; });
-                throw new Error(err.error || 'فشل رفع الصور');
-            }
-            return true;
-        } catch (e) {
-            toast('❌ ' + e.message, 'error');
-            return false;
-        } finally {
-            if (uploading) uploading.style.display = 'none';
-        }
-    }
-
-    /* ═══════ PROFESSIONAL GALLERY ═══════ */
-    function openGallery(vehicle) {
-        if (!vehicle) return;
-        _galleryImages = (vehicle.images || []).slice().filter(function(i) { return i && i.url; });
-        if (_galleryImages.length === 0 && vehicle.primaryImage && vehicle.primaryImage.url) {
-            _galleryImages = [vehicle.primaryImage];
-        }
-        var primaryIdx = _galleryImages.findIndex(function(i) { return i.isPrimary; });
-        if (primaryIdx > 0) {
-            var p = _galleryImages.splice(primaryIdx, 1)[0];
-            _galleryImages.unshift(p);
-        }
-        _galleryIndex = 0;
-        _galleryZoom = 1;
-        _galleryPanX = 0;
-        _galleryPanY = 0;
-
-        var modal = $('#vehGalleryModal');
-        var title = $('#vehGalleryTitle');
-        var subtitle = $('#vehGallerySubtitle');
-        var details = $('#vehGalleryDetails');
-
-        if (title) title.textContent = vehicle.plateNumber || vehicle.name || 'وسيلة';
-        if (subtitle) {
-            var parts = [];
-            if (vehicle.type) parts.push(vehicle.type);
-            if (vehicle.brand) parts.push(vehicle.brand);
-            if (vehicle.model) parts.push(vehicle.model);
-            if (vehicle.year) parts.push(vehicle.year);
-            if (vehicle.color) parts.push(vehicle.color);
-            subtitle.textContent = parts.join(' • ') || '—';
-        }
-
-        if (details) {
-            if (vehicle.status === 'طرح' && vehicle.disposal) {
-                var d = vehicle.disposal;
-                var html = '';
-                if (d.reason) html += '<div class="veh-gallery-detail"><i class="fas fa-info-circle"></i> السبب: <strong>' + escapeHtml(d.reason) + '</strong></div>';
-                if (d.date) html += '<div class="veh-gallery-detail"><i class="fas fa-calendar"></i> التاريخ: <strong>' + escapeHtml(formatDate(d.date)) + '</strong></div>';
-                if (d.decision) html += '<div class="veh-gallery-detail"><i class="fas fa-file-alt"></i> القرار: <strong>' + escapeHtml(d.decision) + '</strong></div>';
-                if (d.disposedBy) html += '<div class="veh-gallery-detail"><i class="fas fa-user"></i> من قرر: <strong>' + escapeHtml(d.disposedBy) + '</strong></div>';
-                if (html) { details.innerHTML = html; details.style.display = 'flex'; }
-                else details.style.display = 'none';
-            } else details.style.display = 'none';
-        }
-
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-
-        if (_galleryImages.length === 0) renderGalleryEmpty();
-        else { renderGalleryThumbs(); updateGalleryImage(); }
-    }
-
-    function closeGallery() {
-        var modal = $('#vehGalleryModal');
-        if (modal) modal.classList.remove('active');
-        document.body.style.overflow = '';
-        stopSlideshow();
-        _galleryImages = [];
-        _galleryIndex = 0;
-        resetZoomPan();
-    }
-
-    function renderGalleryEmpty() {
-        var stage = $('#vehGalleryStage');
-        var thumbs = $('#vehGalleryThumbs');
-        if (stage) {
-            stage.innerHTML = '<div class="veh-gallery-empty">' +
-                '<i class="fas fa-image"></i>' +
-                '<h3>لا توجد صور</h3>' +
-                '<p>لم يتم رفع أي صور لهذه الوسيلة</p>' +
-                '</div>';
-        }
-        if (thumbs) thumbs.innerHTML = '';
-        var counter = $('#vehGalleryCounter');
-        if (counter) counter.style.display = 'none';
-    }
-
-    function renderGalleryThumbs() {
-        var thumbs = $('#vehGalleryThumbs');
-        if (!thumbs) return;
-        var html = '';
-        _galleryImages.forEach(function(img, idx) {
-            html += '<div class="veh-gallery-thumb' + (idx === _galleryIndex ? ' active' : '') + '" data-idx="' + idx + '">' +
-                '<img src="' + escapeHtml(img.url) + '" alt="مصغرة" loading="lazy">' +
-                '</div>';
-        });
-        thumbs.innerHTML = html;
-        $$('.veh-gallery-thumb', thumbs).forEach(function(el) {
-            on(el, 'click', function() {
-                var idx = parseInt(this.getAttribute('data-idx'), 10);
-                if (!isNaN(idx)) {
-                    _galleryIndex = idx;
-                    resetZoomPan();
-                    updateGalleryImage();
-                    renderGalleryThumbs();
-                }
-            });
-        });
-    }
-
-    function updateGalleryImage() {
-        var img = $('#vehGalleryImg');
-        var counter = $('#vehGalleryCounter');
-        var prev = $('#vehGalleryPrev');
-        var next = $('#vehGalleryNext');
-
-        if (!img || _galleryImages.length === 0) return;
-        var current = _galleryImages[_galleryIndex];
-        img.src = current.url;
-        img.alt = 'صورة ' + (_galleryIndex + 1);
-
-        var nextIdx = (_galleryIndex + 1) % _galleryImages.length;
-        if (_galleryImages[nextIdx]) { var pre = new Image(); pre.src = _galleryImages[nextIdx].url; }
-
-        if (counter) {
-            counter.textContent = (_galleryIndex + 1) + ' / ' + _galleryImages.length;
-            counter.style.display = 'block';
-        }
-        if (prev) prev.disabled = _galleryIndex === 0;
-        if (next) next.disabled = _galleryIndex >= _galleryImages.length - 1;
-        applyTransform();
-    }
-
-    function applyTransform() {
-        var img = $('#vehGalleryImg');
-        var stage = $('#vehGalleryStage');
-        if (!img || !stage) return;
-        if (_galleryZoom <= 1) {
-            stage.classList.remove('zoomed');
-            img.style.transform = '';
-            _galleryZoom = 1; _galleryPanX = 0; _galleryPanY = 0;
-        } else {
-            stage.classList.add('zoomed');
-            img.style.transform = 'translate(' + _galleryPanX + 'px, ' + _galleryPanY + 'px) scale(' + _galleryZoom + ')';
-        }
-    }
-
-    function resetZoomPan() { _galleryZoom = 1; _galleryPanX = 0; _galleryPanY = 0; applyTransform(); }
-    function zoomIn() { _galleryZoom = Math.min(_galleryZoom + 0.25, 3); applyTransform(); }
-    function zoomOut() {
-        _galleryZoom = Math.max(_galleryZoom - 0.25, 1);
-        if (_galleryZoom <= 1) { _galleryZoom = 1; _galleryPanX = 0; _galleryPanY = 0; }
-        applyTransform();
-    }
-    function galleryPrev() {
-        if (_galleryIndex > 0) {
-            _galleryIndex--;
-            resetZoomPan();
-            updateGalleryImage();
-            renderGalleryThumbs();
-        }
-    }
-    function galleryNext() {
-        if (_galleryIndex < _galleryImages.length - 1) {
-            _galleryIndex++;
-            resetZoomPan();
-            updateGalleryImage();
-            renderGalleryThumbs();
-        }
-    }
-    function toggleSlideshow() { if (_gallerySlideshowActive) stopSlideshow(); else startSlideshow(); }
-    function startSlideshow() {
-        if (_galleryImages.length < 2) return;
-        _gallerySlideshowActive = true;
-        var btn = $('#vehGallerySlideshow');
-        if (btn) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-pause"></i>'; }
-        _gallerySlideshowTimer = setInterval(function() {
-            if (_galleryIndex < _galleryImages.length - 1) galleryNext();
-            else { _galleryIndex = 0; resetZoomPan(); updateGalleryImage(); renderGalleryThumbs(); }
-        }, 3000);
-        _intervals.push(_gallerySlideshowTimer);
-    }
-    function stopSlideshow() {
-        _gallerySlideshowActive = false;
-        if (_gallerySlideshowTimer) { clearInterval(_gallerySlideshowTimer); _gallerySlideshowTimer = null; }
-        var btn = $('#vehGallerySlideshow');
-        if (btn) { btn.classList.remove('active'); btn.innerHTML = '<i class="fas fa-play"></i>'; }
-    }
-    async function downloadImage() {
-        if (_galleryImages.length === 0) return;
-        var current = _galleryImages[_galleryIndex];
-        try {
-            toast('⬇️ جاري التحميل...', 'info', 1500);
-            var res = await fetch(current.url, { mode: 'cors' });
-            var blob = await res.blob();
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url; a.download = 'vehicle-' + (_galleryIndex + 1) + '.jpg';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-        } catch (e) { window.open(current.url, '_blank'); }
-    }
-    function toggleFullscreen() {
-        var modal = $('#vehGalleryModal');
-        if (!document.fullscreenElement) {
-            if (modal.requestFullscreen) modal.requestFullscreen();
-            else if (modal.webkitRequestFullscreen) modal.webkitRequestFullscreen();
-        } else {
-            if (document.exitFullscreen) document.exitFullscreen();
-            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-        }
-    }
-
-    function initGalleryEvents() {
-        on($('#vehGalleryClose'), 'click', closeGallery);
-        on($('#vehGalleryPrev'), 'click', galleryPrev);
-        on($('#vehGalleryNext'), 'click', galleryNext);
-        on($('#vehGalleryZoomIn'), 'click', zoomIn);
-        on($('#vehGalleryZoomOut'), 'click', zoomOut);
-        on($('#vehGalleryReset'), 'click', resetZoomPan);
-        on($('#vehGallerySlideshow'), 'click', toggleSlideshow);
-        on($('#vehGalleryDownload'), 'click', downloadImage);
-        on($('#vehGalleryFullscreen'), 'click', toggleFullscreen);
-
-        on(document, 'keydown', function(e) {
-            var modal = $('#vehGalleryModal');
-            if (!modal || !modal.classList.contains('active')) return;
-            if (e.key === 'Escape') closeGallery();
-            else if (e.key === 'ArrowRight') galleryPrev();
-            else if (e.key === 'ArrowLeft') galleryNext();
-            else if (e.key === '+' || e.key === '=') zoomIn();
-            else if (e.key === '-') zoomOut();
-            else if (e.key === '0') resetZoomPan();
-            else if (e.key === ' ') { e.preventDefault(); toggleSlideshow(); }
-        });
-
-        on($('#vehGalleryModal'), 'click', function(e) { if (e.target === this) closeGallery(); });
-
-        var stage = $('#vehGalleryStage');
-        if (stage) {
-            on(stage, 'wheel', function(e) {
-                if (_galleryImages.length === 0) return;
-                e.preventDefault();
-                if (e.deltaY < 0) zoomIn();
-                else zoomOut();
-            }, { passive: false });
-
-            on(stage, 'mousedown', function(e) {
-                if (_galleryZoom <= 1) return;
-                _galleryDragging = true;
-                _galleryDragStartX = e.clientX - _galleryPanX;
-                _galleryDragStartY = e.clientY - _galleryPanY;
-                stage.classList.add('grabbing');
-            });
-            on(document, 'mousemove', function(e) {
-                if (!_galleryDragging) return;
-                _galleryPanX = e.clientX - _galleryDragStartX;
-                _galleryPanY = e.clientY - _galleryDragStartY;
-                applyTransform();
-            });
-            on(document, 'mouseup', function() {
-                if (_galleryDragging) { _galleryDragging = false; stage.classList.remove('grabbing'); }
-            });
-
-            var touchStartX = 0, touchStartY = 0, touchStartTime = 0, initialPinch = 0;
-            on(stage, 'touchstart', function(e) {
-                if (e.touches.length === 1) {
-                    touchStartX = e.touches[0].clientX;
-                    touchStartY = e.touches[0].clientY;
-                    touchStartTime = Date.now();
-                    if (_galleryZoom > 1) {
-                        _galleryDragging = true;
-                        _galleryDragStartX = touchStartX - _galleryPanX;
-                        _galleryDragStartY = touchStartY - _galleryPanY;
-                    }
-                } else if (e.touches.length === 2) {
-                    initialPinch = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                }
-            }, { passive: true });
-            on(stage, 'touchmove', function(e) {
-                if (e.touches.length === 2 && initialPinch > 0) {
-                    var currentPinch = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                    var scale = currentPinch / initialPinch;
-                    _galleryZoom = Math.max(1, Math.min(3, _galleryZoom * scale));
-                    initialPinch = currentPinch;
-                    applyTransform();
-                } else if (_galleryDragging && e.touches.length === 1 && _galleryZoom > 1) {
-                    _galleryPanX = e.touches[0].clientX - _galleryDragStartX;
-                    _galleryPanY = e.touches[0].clientY - _galleryDragStartY;
-                    applyTransform();
-                }
-            }, { passive: true });
-            on(stage, 'touchend', function(e) {
-                var dt = Date.now() - touchStartTime;
-                var dx = e.changedTouches[0].clientX - touchStartX;
-                var dy = e.changedTouches[0].clientY - touchStartY;
-                if (dt < 300 && Math.abs(dx) > 60 && Math.abs(dy) < 60 && _galleryZoom <= 1) {
-                    if (dx > 0) galleryNext();
-                    else galleryPrev();
-                }
-                _galleryDragging = false;
-                initialPinch = 0;
-            }, { passive: true });
-        }
-    }
-
-    /* ═══════ LOAD DATA ═══════ */
-    function loadVehicles() {
-        if (_isDestroyed) return;
-        var tbody = $('#vehTableBody');
-        if (tbody && vehicles.length === 0) {
-            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-spinner fa-spin"></i><h3>جاري التحميل...</h3><p>يرجى الانتظار</p></div>';
-        }
-        apiFetch('/api/vehicles?includeDisposed=true')
-            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-            .then(function(data) {
-                if (_isDestroyed) return;
-                vehicles = Array.isArray(data) ? data : (data.vehicles || []);
-                renderTable();
-                updateStats();
-                updateDisposalsBadge();
-                updateBrandsFilter();
-            })
-            .catch(function(err) {
-                if (tbody) {
-                    tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-exclamation-triangle" style="color:#f87171"></i><h3>فشل التحميل</h3><p>' + escapeHtml(err.message) + '</p></div>';
-                }
-            });
-    }
-
-    function updateStats() {
-        var total = vehicles.length;
-        var valid = vehicles.filter(function(v) { return v.status === 'صالحة'; }).length;
-        var broken = vehicles.filter(function(v) { return v.status === 'معطبة'; }).length;
-        var maint = vehicles.filter(function(v) { return v.status === 'صيانة'; }).length;
-        var disposed = vehicles.filter(function(v) { return v.status === 'طرح'; }).length;
-        var operational = total - disposed;
-        var eff = operational > 0 ? ((valid / operational) * 100).toFixed(1) : '0.0';
-        var el;
-        el = $('#vehStatTotal'); if (el) el.textContent = total;
-        el = $('#vehStatValid'); if (el) el.textContent = valid;
-        el = $('#vehStatBroken'); if (el) el.textContent = broken;
-        el = $('#vehStatMaint'); if (el) el.textContent = maint;
-        el = $('#vehStatDisposed'); if (el) el.textContent = disposed;
-        el = $('#vehStatEff'); if (el) el.textContent = eff + '%';
-    }
-
-    function updateDisposalsBadge() {
-        var count = vehicles.filter(function(v) { return v.status === 'طرح'; }).length;
-        var el = $('#vehDisposalsCount');
-        if (!el) return;
-        if (count > 0) { el.textContent = count; el.style.display = 'inline-block'; }
-        else el.style.display = 'none';
-    }
-
-    function getFiltered() {
-        var search = ($('#vehSearch') && $('#vehSearch').value || '').trim().toLowerCase();
-        var status = ($('#vehFilterStatus') && $('#vehFilterStatus').value) || 'active';
-        var type = ($('#vehFilterType') && $('#vehFilterType').value) || 'all';
-        var region = ($('#vehFilterRegion') && $('#vehFilterRegion').value) || 'all';
-        var brand = ($('#vehFilterBrand') && $('#vehFilterBrand').value) || 'all';
-        return vehicles.filter(function(v) {
-            if (status === 'active' && v.status === 'طرح') return false;
-            if (status !== 'all' && status !== 'active' && v.status !== status) return false;
-            if (type !== 'all' && v.type !== type) return false;
-            if (region !== 'all' && v.region !== region) return false;
-            if (brand !== 'all' && v.brand !== brand) return false;
-            if (search) {
-                var text = [
-                    v.plateNumber, v.region, v.zone, v.center, v.supplyPlace,
-                    v.type, v.brand, v.model, v.color, v.notes,
-                    v.year ? String(v.year) : ''
-                ].filter(Boolean).join(' ').toLowerCase();
-                if (text.indexOf(search) === -1) return false;
-            }
-            return true;
-        });
-    }
-
-    function renderTable() {
-        var tbody = $('#vehTableBody');
-        if (!tbody) return;
-        var filtered = getFiltered();
-        if (filtered.length === 0) {
-            var msg = vehicles.length === 0 ? 'لا توجد وسائل' : 'لا توجد نتائج مطابقة';
-            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-truck"></i><h3>' + msg + '</h3><p>حاول تغيير الفلاتر</p></div>';
-            return;
-        }
-        var canEdit = hasPermission('canUpdateVehicles');
-        var canDelete = hasPermission('canDeleteVehicles');
-        var canDispose = hasPermission('canDisposeVehicles');
-        var html = '';
-
-        filtered.forEach(function(v, idx) {
-            var id = v.id || v._id;
-            var isDisposed = v.status === 'طرح';
-            var statusCls = 'status-' + (v.status || 'صالحة');
-            var condCls = 'cond-' + (v.workCondition || 'جديدة');
-
-            var brandModel = '—';
-            if (v.brand || v.model || v.year || v.color) {
-                var parts = [];
-                if (v.brand) parts.push('<span class="veh-badge brand">' + escapeHtml(v.brand) + '</span>');
-                if (v.model) parts.push('<span class="veh-badge model">' + escapeHtml(v.model) + '</span>');
-                if (v.year) parts.push('<span class="veh-badge year">' + escapeHtml(v.year) + '</span>');
-                if (v.color) parts.push('<span class="veh-badge color">🎨 ' + escapeHtml(v.color) + '</span>');
-                brandModel = parts.join(' ');
-            }
-
-            var primaryImg = v.primaryImage || (v.images && v.images[0]);
-            var imagesCount = v.imagesCount || (v.images ? v.images.length : 0);
-            var thumbHtml;
-            if (primaryImg && primaryImg.url) {
-                thumbHtml = '<div class="veh-thumb-wrapper" data-action="gallery" data-id="' + escapeHtml(id) + '" title="انقر لعرض ' + imagesCount + ' صورة">' +
-                    '<img src="' + escapeHtml(primaryImg.url) + '" class="veh-thumb" alt="' + escapeHtml(v.plateNumber || '') + '" loading="lazy">' +
-                    (imagesCount > 1 ? '<span class="veh-thumb-badge">' + imagesCount + '</span>' : '') +
-                    '</div>';
-            } else {
-                thumbHtml = '<div class="veh-thumb-empty" data-action="gallery" data-id="' + escapeHtml(id) + '" title="لا توجد صور">' +
-                    '<i class="fas fa-camera"></i>' +
-                    '</div>';
-            }
-
-            var actions = '';
-            actions += '<button class="veh-act gallery" data-action="gallery" data-id="' + escapeHtml(id) + '" title="عرض الصور"><i class="fas fa-images"></i></button>';
-            if (isDisposed) {
-                actions += '<button class="veh-act restore" data-action="restore" data-id="' + escapeHtml(id) + '" title="استعادة"><i class="fas fa-undo"></i></button>';
-            } else {
-                if (canEdit) actions += '<button class="veh-act edit" data-action="edit" data-id="' + escapeHtml(id) + '" title="تعديل"><i class="fas fa-pen"></i></button>';
-                if (canDispose) actions += '<button class="veh-act dispose" data-action="dispose" data-id="' + escapeHtml(id) + '" title="طرح"><i class="fas fa-archive"></i></button>';
-            }
-            if (canDelete) actions += '<button class="veh-act delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف"><i class="fas fa-trash"></i></button>';
-
-            html +=
-                '<div class="veh-table-row' + (isDisposed ? ' disposed' : '') + '">' +
-                    '<div class="veh-cell center">' + (idx + 1) + '</div>' +
-                    '<div class="veh-cell thumb-cell">' + thumbHtml + '</div>' +
-                    '<div class="veh-cell center"><span class="veh-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
-                    '<div class="veh-cell">' + brandModel + '</div>' +
-                    '<div class="veh-cell"><span class="veh-plate">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
-                    '<div class="veh-cell"><span class="veh-badge region">' + escapeHtml(getRegionShort(v.region)) + '</span></div>' +
-                    '<div class="veh-cell">' + (v.zone ? '<span class="veh-badge zone">📍 ' + escapeHtml(v.zone) + '</span>' : '—') + '</div>' +
-                    '<div class="veh-cell">' + (v.center ? '<span class="veh-badge center-badge">🏢 ' + escapeHtml(v.center) + '</span>' : '—') + '</div>' +
-                    '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
-                    '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
-                    '<div class="veh-cell center">' + escapeHtml(formatDate(v.appointmentDate)) + '</div>' +
-                    '<div class="veh-cell center" style="color:#fca5a5;font-weight:800;">' + escapeHtml(formatDate(v.faultDate)) + '</div>' +
-                    '<div class="veh-cell">' + escapeHtml(v.notes || '—') + '</div>' +
-                    '<div class="veh-cell center"><div class="veh-actions-cell">' + actions + '</div></div>' +
-                '</div>';
-        });
-        tbody.innerHTML = html;
-
-        on(tbody, 'click', function(e) {
-            var target = e.target.closest('[data-action]');
-            if (!target) return;
-            e.preventDefault();
-            e.stopPropagation();
-            var action = target.getAttribute('data-action');
-            var id = target.getAttribute('data-id');
-            if (!id) return;
-            if (action === 'gallery') openGalleryForVehicle(id);
-            else if (action === 'edit') openEditModal(id);
-            else if (action === 'dispose') openDisposeModal(id);
-            else if (action === 'restore') confirmRestore(id);
-            else if (action === 'delete') confirmDelete(id);
-        });
-    }
-
-    function openGalleryForVehicle(id) {
-        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
-        if (!v) { toast('❌ الوسيلة غير موجودة', 'error'); return; }
-        openGallery(v);
-    }
-
-    /* ═══════ ADD/EDIT ═══════ */
-    function openAddModal() {
-        var modal = $('#vehModal');
-        if (!modal) return;
-        var title = $('#vehModalTitle');
-        if (title) title.textContent = 'إضافة وسيلة برية';
-
-        $('#vehId').value = '';
-        $('#vehPlate').value = '';
-        $('#vehRegion').value = '';
-        $('#vehType').value = 'سيارة';
-        $('#vehBrand').value = '';
-        $('#vehBrandSearch').value = '';
-        resetBrandFilter();
-        $('#vehModel').value = '';
-        $('#vehYear').value = '';
-        $('#vehColor').value = '';
-        $('#vehStatus').value = 'صالحة';
-        $('#vehCondition').value = 'جديدة';
-        $('#vehDate').value = '';
-        $('#vehFaultDate').value = '';
-        $('#vehNotes').value = '';
-        $('#vehZone').value = '';
-        $('#vehCenter').value = '';
-        $('#vehSupp').value = '';
-        $('#vehFaultDateGroup').style.display = 'none';
-        $('#vehFaultDate').required = false;
-
-        vehicleImages = [];
-        currentVehicleId = null;
-        renderImagesPreview();
-        modal.classList.add('active');
-    }
-
-    function openEditModal(id) {
-        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
-        if (!v) return;
-        var title = $('#vehModalTitle');
-        if (title) title.textContent = 'تعديل وسيلة برية';
-
-        $('#vehId').value = v.id || v._id || '';
-        $('#vehPlate').value = v.plateNumber || '';
-        $('#vehRegion').value = v.region || '';
-        $('#vehType').value = v.type || 'سيارة';
-
-        // Brand safe set
-        var brandSelect = $('#vehBrand');
-        var brandValue = v.brand || '';
-        $('#vehBrandSearch').value = '';
-        resetBrandFilter();
-        var exists = Array.from(brandSelect.options).some(function(opt) { return opt.value === brandValue; });
-        if (exists) {
-            brandSelect.value = brandValue;
-        } else if (brandValue) {
-            var opt = document.createElement('option');
-            opt.value = brandValue;
-            opt.textContent = brandValue + ' (غير مدرج)';
-            brandSelect.appendChild(opt);
-            brandSelect.value = brandValue;
-        } else {
-            brandSelect.value = '';
-        }
-
-        $('#vehModel').value = v.model || '';
-        $('#vehYear').value = v.year || '';
-        $('#vehColor').value = v.color || '';
-        $('#vehStatus').value = v.status || 'صالحة';
-        $('#vehCondition').value = v.workCondition || 'جديدة';
-        $('#vehDate').value = v.appointmentDate || '';
-        $('#vehFaultDate').value = v.faultDate || '';
-        $('#vehNotes').value = v.notes || '';
-        $('#vehZone').value = v.zone || '';
-        $('#vehCenter').value = v.center || '';
-        $('#vehSupp').value = v.supplyPlace || '';
-
-        if (v.status === 'معطبة') {
-            $('#vehFaultDateGroup').style.display = 'block';
-            $('#vehFaultDate').required = true;
-        } else {
-            $('#vehFaultDateGroup').style.display = 'none';
-            $('#vehFaultDate').required = false;
-        }
-
-        currentVehicleId = v.id || v._id;
-        vehicleImages = (v.images || []).slice();
-        renderImagesPreview();
-        $('#vehModal').classList.add('active');
-    }
-
-    function closeModal() {
-        var modal = $('#vehModal');
-        if (modal) modal.classList.remove('active');
-    }
-
-    function resetBrandFilter() {
-        var sel = $('#vehBrand');
-        if (!sel) return;
-        $$('option', sel).forEach(function(opt) { opt.style.display = ''; });
-        $$('optgroup', sel).forEach(function(grp) { grp.style.display = ''; });
-    }
-
-    function initBrandSearch() {
-        var search = $('#vehBrandSearch');
-        if (!search) return;
-        on(search, 'input', function() {
-            var q = this.value.trim().toLowerCase();
-            var sel = $('#vehBrand');
-            if (!sel) return;
-            if (!q) { resetBrandFilter(); return; }
-            $$('option', sel).forEach(function(opt) {
-                if (!opt.value) return;
-                var match = opt.textContent.toLowerCase().indexOf(q) !== -1 ||
-                            opt.value.toLowerCase().indexOf(q) !== -1;
-                opt.style.display = match ? '' : 'none';
-            });
-            $$('optgroup', sel).forEach(function(grp) {
-                var hasVisible = $$('option', grp).some(function(opt) { return opt.style.display !== 'none'; });
-                grp.style.display = hasVisible ? '' : 'none';
-            });
-        });
-    }
-
-    async function saveVehicle(e) {
-        if (e && e.preventDefault) e.preventDefault();
-        if (_isDestroyed) return;
-
-        var id = $('#vehId').value.trim();
-        var payload = {
-            plateNumber: $('#vehPlate').value.trim(),
-            region: $('#vehRegion').value.trim(),
-            zone: $('#vehZone').value.trim(),
-            center: $('#vehCenter').value.trim(),
-            supplyPlace: $('#vehSupp').value.trim(),
-            type: $('#vehType').value,
-            brand: $('#vehBrand').value.trim(),
-            model: $('#vehModel').value.trim(),
-            year: $('#vehYear').value ? Number($('#vehYear').value) : null,
-            color: $('#vehColor').value.trim(),
-            status: $('#vehStatus').value,
-            workCondition: $('#vehCondition').value,
-            appointmentDate: $('#vehDate').value || null,
-            faultDate: $('#vehFaultDate').value || null,
-            notes: $('#vehNotes').value.trim()
-        };
-
-        if (!payload.plateNumber) { toast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
-        if (!payload.region) { toast('⚠️ الإدارة / الإقليم مطلوب', 'error'); return; }
-        if (!payload.zone) { toast('⚠️ المنطقة مطلوبة', 'error'); return; }
-        if (payload.status === 'معطبة' && !payload.faultDate) {
-            toast('⚠️ تاريخ العطب مطلوب', 'error');
-            return;
-        }
-
-        var btn = $('#vehSaveBtn');
-        var btnText = $('#vehSaveBtnText');
-        if (btn) btn.disabled = true;
-        if (btnText) btnText.textContent = 'جاري الحفظ...';
-
-        var isEdit = !!id;
-        var url = isEdit ? '/api/vehicles/' + encodeURIComponent(id) : '/api/vehicles';
-        var method = isEdit ? 'PUT' : 'POST';
-
-        try {
-            var res = await apiFetch(url, { method: method, body: JSON.stringify(payload) });
-            var result = await res.json();
-            if (!res.ok) throw new Error(result.error || 'فشل الحفظ');
-            var savedId = (result.vehicle && (result.vehicle.id || result.vehicle._id)) || currentVehicleId || id;
-            if (vehicleImages.length > 0 && savedId) await uploadImages(savedId);
-            toast(isEdit ? '✅ تم تعديل الوسيلة' : '✅ تم إضافة الوسيلة', 'success');
-            closeModal();
-            loadVehicles();
-        } catch (err) {
-            toast('❌ ' + err.message, 'error');
-        } finally {
-            if (btn) btn.disabled = false;
-            if (btnText) btnText.textContent = 'حفظ';
-        }
-    }
-
-    function confirmDelete(id) {
-        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
-        if (!v) return;
-        if (!confirm('⚠️ هل تريد حذف الوسيلة "' + (v.plateNumber || '') + '"؟\n\nلا يمكن التراجع.')) return;
-        apiFetch('/api/vehicles/' + encodeURIComponent(id), { method: 'DELETE' })
-            .then(function(res) { return res.json(); })
-            .then(function(r) {
-                if (_isDestroyed) return;
-                if (!r.success) throw new Error(r.error || 'فشل الحذف');
-                toast('✅ تم حذف الوسيلة', 'success');
-                loadVehicles();
-            })
-            .catch(function(err) { toast('❌ ' + err.message, 'error'); });
-    }
-
-    function confirmRestore(id) {
-        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
-        if (!v) return;
-        if (!confirm('⚠️ استعادة الوسيلة "' + (v.plateNumber || '') + '" إلى "صالحة"؟')) return;
-        apiFetch('/api/vehicles/' + encodeURIComponent(id) + '/restore', {
-            method: 'POST',
-            body: JSON.stringify({ newStatus: 'صالحة' })
-        })
-            .then(function(res) { return res.json(); })
-            .then(function(r) {
-                if (_isDestroyed) return;
-                if (!r.success) throw new Error(r.error || 'فشل');
-                toast('✅ تم استعادة الوسيلة', 'success');
-                loadVehicles();
-            })
-            .catch(function(err) { toast('❌ ' + err.message, 'error'); });
-    }
-
-    /* ═══════ DISPOSE ═══════ */
-    function openDisposeModal(id) {
-        var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
-        if (!v) return;
-        if (v.status === 'طرح') { toast('⚠️ الوسيلة مطروحة مسبقاً', 'error'); return; }
-        $('#vehDisposeId').value = id;
-        $('#vehDisposeReason').value = '';
-        $('#vehDisposeDecision').value = '';
-        $('#vehDisposeBy').value = '';
-        $('#vehDisposeNotes').value = '';
-        $('#vehDisposeModal').classList.add('active');
-    }
-
-    function closeDisposeModal() {
-        var m = $('#vehDisposeModal');
-        if (m) m.classList.remove('active');
-    }
-
-    async function submitDispose(e) {
-        if (e && e.preventDefault) e.preventDefault();
-        if (_isDestroyed) return;
-        var id = $('#vehDisposeId').value.trim();
-        var reason = $('#vehDisposeReason').value.trim();
-        var decision = $('#vehDisposeDecision').value.trim();
-        var disposedBy = $('#vehDisposeBy').value.trim();
-        var notes = $('#vehDisposeNotes').value.trim();
-        if (!reason) { toast('⚠️ سبب الطرح مطلوب', 'error'); return; }
-        var btn = $('#vehDisposeSubmit');
-        if (btn) btn.disabled = true;
-        try {
-            var res = await apiFetch('/api/vehicles/' + encodeURIComponent(id) + '/dispose', {
-                method: 'POST',
-                body: JSON.stringify({ reason: reason, decision: decision, disposedBy: disposedBy, notes: notes })
-            });
-            var r = await res.json();
-            if (!res.ok) throw new Error(r.error || 'فشل الطرح');
-            toast('⚫ تم طرح الوسيلة', 'success');
-            closeDisposeModal();
-            loadVehicles();
-        } catch (err) {
-            toast('❌ ' + err.message, 'error');
-        } finally {
-            if (btn) btn.disabled = false;
-        }
-    }
-
-    /* ═══════ FILTERS ═══════ */
-    function toggleFaultDate() {
-        var status = $('#vehStatus').value;
-        var group = $('#vehFaultDateGroup');
-        var input = $('#vehFaultDate');
-        if (status === 'معطبة') {
-            group.style.display = 'block';
-            input.required = true;
-        } else {
-            group.style.display = 'none';
-            input.required = false;
-            input.value = '';
-        }
-    }
-
-    function initFilters() {
-        var regions = [
-            'إدارة إسناد الوحدات البحرية', 'إدارة حرس السواحل',
-            'إقليم الحرس البحري بالشمال', 'إقليم الحرس البحري بالساحل',
-            'إقليم الحرس البحري بالوسط', 'إقليم الحرس البحري بالجنوب',
-            'وحدة الصيانة والإسناد البحري تونس', 'وحدة الصيانة والإسناد البحري صفاقس',
-            'وحدة الصيانة والإسناد البحري المنستير', 'وحدة الصيانة والإسناد البحري جرجيس',
-            'المجمع الأمني بقبيبة'
-        ];
-        var regSel = $('#vehFilterRegion');
-        if (regSel) {
-            var html = '<option value="all">كل الإدارات والأقاليم</option>';
-            regions.forEach(function(r) {
-                html += '<option value="' + escapeHtml(r) + '">' + escapeHtml(getRegionShort(r)) + '</option>';
-            });
-            regSel.innerHTML = html;
-        }
-
-        var types = ['سيارة','كواد','شاحنة','شاحنة صهريج','حافلة','بيك أب','فان','جيب','دراجة','مدرعة','إسعاف','إطفاء','رافعة','جرافة','أخرى'];
-        var typeSel = $('#vehFilterType');
-        if (typeSel) {
-            var html2 = '<option value="all">كل الأنواع</option>';
-            types.forEach(function(t) { html2 += '<option value="' + escapeHtml(t) + '">' + escapeHtml(t) + '</option>'; });
-            typeSel.innerHTML = html2;
-        }
-
-        updateBrandsFilter();
-    }
-
-    function updateBrandsFilter() {
-        var sel = $('#vehFilterBrand');
-        if (!sel) return;
-        var brands = {};
-        vehicles.forEach(function(v) { if (v.brand) brands[v.brand] = true; });
-        var list = Object.keys(brands).sort();
-        var html = '<option value="all">كل الماركات</option>';
-        list.forEach(function(b) { html += '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>'; });
-        var current = sel.value;
-        sel.innerHTML = html;
-        if (current && brands[current]) sel.value = current;
-    }
-
-    /* ═══════ EXPORT & PRINT ═══════ */
-    function exportExcel() {
-        try {
-            var filtered = getFiltered();
-            if (!filtered.length) { toast('⚠️ لا توجد بيانات', 'error'); return; }
-            var BOM = '\uFEFF';
-            var headers = ['#','النوع','الماركة','الطراز','السنة','اللون','رقم الوسيلة','الإدارة','المنطقة','المركز','مكان التعزيز','الحالة','حالة العمل','تاريخ التعيين','تاريخ العطب','ملاحظات'];
-            function esc(val) {
-                if (val == null) return '';
-                var s = String(val);
-                if (/[,"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-                return s;
-            }
-            var rows = [headers.map(esc).join(',')];
-            filtered.forEach(function(v, idx) {
-                rows.push([
-                    idx + 1, v.type, v.brand, v.model, v.year, v.color,
-                    v.plateNumber, v.region, v.zone, v.center, v.supplyPlace,
-                    v.status, v.workCondition, v.appointmentDate, v.faultDate, v.notes
-                ].map(esc).join(','));
-            });
-            var csv = BOM + rows.join('\r\n');
-            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            var date = new Date().toISOString().split('T')[0];
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = 'vehicles-' + date + '.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(function() { URL.revokeObjectURL(url); }, 100);
-            toast('✅ تم تصدير ' + filtered.length + ' وسيلة', 'success');
-        } catch (err) {
-            toast('❌ فشل التصدير: ' + err.message, 'error');
-        }
-    }
-
-    function printPage() {
-        toast('🖨️ جاري الطباعة...', 'info', 1200);
-        _timeouts.push(setTimeout(function() { window.print(); }, 300));
-    }
-
-    function toggleAutoRefresh() {
-        var cb = $('#vehAutoRefresh');
-        if (!cb) return;
-        if (cb.checked) {
-            autoRefreshInterval = setInterval(function() {
-                if (!_isDestroyed && !document.hidden) loadVehicles();
-            }, 30000);
-            _intervals.push(autoRefreshInterval);
-            toast('🔄 التحديث التلقائي مفعّل', 'success');
-        } else {
-            if (autoRefreshInterval) { clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
-            toast('⏸️ التحديث التلقائي معطّل', 'info');
-        }
-    }
-
-    /* ═══════ INIT ═══════ */
-    async function init() {
-        if (_isDestroyed) return;
-        console.log('🚛 Vehicles Pro v2.0 — Initializing...');
-
-        initFilters();
-        initImagesUI();
-        initGalleryEvents();
-        initBrandSearch();
-
-        on($('#vehRefreshBtn'), 'click', function() {
-            toast('🔄 جاري التحديث...', 'info', 1200);
-            loadVehicles();
-        });
-        on($('#vehPrintBtn'), 'click', printPage);
-        on($('#vehExcelBtn'), 'click', exportExcel);
-        on($('#vehAddBtn'), 'click', openAddModal);
-        on($('#vehDisposalsBtn'), 'click', function() {
-            var sel = $('#vehFilterStatus');
-            if (sel) { sel.value = 'طرح'; renderTable(); }
-            toast('⚫ تم تصفية المطروحة', 'info', 1500);
-        });
-
-        on($('#vehModalClose'), 'click', closeModal);
-        on($('#vehCancelBtn'), 'click', closeModal);
-        on($('#vehModal'), 'click', function(e) { if (e.target === this) closeModal(); });
-        on($('#vehForm'), 'submit', saveVehicle);
-        on($('#vehStatus'), 'change', toggleFaultDate);
-
-        on($('#vehDisposeClose'), 'click', closeDisposeModal);
-        on($('#vehDisposeCancel'), 'click', closeDisposeModal);
-        on($('#vehDisposeModal'), 'click', function(e) { if (e.target === this) closeDisposeModal(); });
-        on($('#vehDisposeForm'), 'submit', submitDispose);
-
-        on(document, 'keydown', function(e) {
-            if (e.key === 'Escape') { closeModal(); closeDisposeModal(); }
-        });
-
-        on($('#vehSearch'), 'input', renderTable);
-        on($('#vehFilterStatus'), 'change', renderTable);
-        on($('#vehFilterType'), 'change', renderTable);
-        on($('#vehFilterRegion'), 'change', renderTable);
-        on($('#vehFilterBrand'), 'change', renderTable);
-        on($('#vehAutoRefresh'), 'change', toggleAutoRefresh);
-
-        await loadVehicles();
-        console.log('✅ Vehicles Pro v2.0 ready');
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
-            _timeouts.push(id);
-        });
-    } else {
-        var id2 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
-        _timeouts.push(id2);
-    }
-
-})();
-</script>
+<!-- MINI UPLOAD MODAL (فوق المعرض) -->
+<div class="veh-mini-upload" id="vehMiniUploadModal">
+    <div class="veh-mini-upload-box">
+        <div class="veh-mini-upload-head">
+            <h4><i class="fas fa-camera-retro"></i> تعديل صور الوسيلة</h4>
+            <button class="veh-modal-close" id="vehMiniUploadClose" type="button">×</button>
+        </div>
+        <div class="veh-images-count" style="text-align:center; margin-bottom:12px;" id="vehMiniImagesCount">(0/10)</div>
+        <div class="veh-image-source-btns">
+            <button type="button" class="veh-source-btn camera" id="vehMiniCaptureBtn">
+                <i class="fas fa-camera"></i><span>التقاط صورة</span>
+            </button>
+            <button type="button" class="veh-source-btn browse" id="vehMiniBrowseBtn">
+                <i class="fas fa-folder-open"></i><span>استيراد صور</span>
+            </button>
+        </div>
+        <input type="file" id="vehMiniImagesInput" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" multiple hidden>
+        <input type="file" id="vehMiniCameraInput" accept="image/*" capture="environment" hidden>
+        <div class="veh-dropzone" id="vehMiniDropzone">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p class="veh-dropzone-title">اسحب الصور وأفلتها هنا</p>
+            <p class="veh-dropzone-hint">JPG, PNG, WEBP — حتى 5 MB</p>
+        </div>
+        <div class="veh-gallery-preview" id="vehMiniGalleryPreview"></div>
+        <div class="veh-uploading" id="vehMiniUploading" style="display:none;">
+            <div class="veh-spinner"></div><span>جاري الرفع...</span>
+        </div>
+        <div class="veh-modal-actions" style="margin-top:20px;">
+            <button type="button" class="veh-btn secondary" id="vehMiniUploadCancel">إلغاء</button>
+            <button type="button" class="veh-btn primary" id="vehMiniUploadSave">
+                <i class="fas fa-save"></i> حفظ التغييرات
+            </button>
+        </div>
+    </div>
 </div>
