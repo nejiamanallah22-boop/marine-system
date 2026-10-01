@@ -1052,6 +1052,13 @@ function formatVessel(v) {
         ref: v.ref || '', repairUnit: v.repairUnit || '',
         cat: v.cat || '', category: v.cat || v.category || '',
         type: v.type || '', location: v.location || '',
+        // ✅ حقول الطرح
+        disposalDate: v.disposalDate || null,
+        disposalReason: v.disposalReason || '',
+        disposalDecision: v.disposalDecision || '',
+        disposedBy: v.disposedBy || '',
+        disposalNotes: v.disposalNotes || '',
+        disposedAt: v.disposedAt || null,
         createdAt: v.createdAt, updatedAt: v.updatedAt
     };
 }
@@ -1767,9 +1774,189 @@ function formatMaintenance(log) {
     // ============ VESSELS ============
     app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
         try {
-            const vessels = await Vessel.find().sort({ createdAt: -1 }).limit(500);
+            // ✅ استثناء المراكب المطروحة
+            const includeDisposed = req.query.includeDisposed === 'true';
+            const filter = includeDisposed ? {} : { status: { $ne: 'طرح' } };
+            
+            const vessels = await Vessel.find(filter).sort({ createdAt: -1 }).limit(500);
             res.json(vessels.map(formatVessel));
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+    });
+
+    // ============ VESSELS - DISPOSAL (الطرح) ============
+    
+    // 📥 GET /api/vessels/disposed — جلب المراكب المطروحة
+    app.get('/api/vessels/disposed', 
+        authenticateAccessToken, 
+        requirePermission('vessels:read'), 
+        async (req, res) => {
+        try {
+            const limit = Math.min(parseInt(req.query.limit) || 500, 1000);
+            
+            const disposed = await Vessel.find({ status: 'طرح' })
+                .sort({ disposalDate: -1, updatedAt: -1 })
+                .limit(limit);
+            
+            res.json({ 
+                success: true, 
+                count: disposed.length,
+                vessels: disposed.map(formatVessel) 
+            });
+        } catch (e) { 
+            console.error('❌ GET /api/vessels/disposed:', e.message);
+            res.status(500).json({ success: false, error: 'فشل التحميل' }); 
+        }
+    });
+
+    // 📊 GET /api/vessels/disposal-stats — إحصائيات الطرح
+    app.get('/api/vessels/disposal-stats',
+        authenticateAccessToken,
+        requirePermission('vessels:read'),
+        async (req, res) => {
+        try {
+            const [disposed, active] = await Promise.all([
+                Vessel.countDocuments({ status: 'طرح' }),
+                Vessel.countDocuments({ status: { $ne: 'طرح' } })
+            ]);
+            
+            res.json({ 
+                success: true, 
+                stats: { 
+                    disposed, 
+                    active,
+                    total: disposed + active
+                } 
+            });
+        } catch (e) { 
+            res.status(500).json({ success: false, error: 'فشل' }); 
+        }
+    });
+
+    // 📤 POST /api/vessels/:id/dispose — تسجيل طرح
+    app.post('/api/vessels/:id/dispose',
+        authenticateAccessToken,
+        csrfProtection,
+        requirePermission('vessels:update'),
+        async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const vessel = await Vessel.findOne(q);
+            if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+            
+            if (vessel.status === 'طرح') {
+                return res.status(400).json({ success: false, error: 'المركب مطروح بالفعل' });
+            }
+
+            const { reason, decisionNumber, decidedBy, notes } = req.body;
+            
+            if (!reason || !String(reason).trim()) {
+                return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
+            }
+
+            vessel.status = 'طرح';
+            vessel.stat = 'طرح';
+            vessel.disposalDate = new Date();
+            vessel.disposedAt = new Date();
+            vessel.disposalReason = String(reason).substring(0, 1000);
+            vessel.disposalDecision = String(decisionNumber || '').substring(0, 200);
+            vessel.disposedBy = String(decidedBy || req.user.name || req.user.username).substring(0, 200);
+            vessel.disposalNotes = String(notes || '').substring(0, 2000);
+            vessel.break = String(notes || reason).substring(0, 500);
+            vessel.updatedAt = new Date();
+            await vessel.save();
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'dispose',
+                resource: 'vessel',
+                resourceId: vessel.id,
+                resourceName: vessel.name,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            await notify({
+                type: 'warning',
+                category: 'vessel',
+                title: 'طرح مركب',
+                message: 'تم طرح "' + vessel.name + '"',
+                link: '/pages/disposals.html',
+                icon: 'archive',
+                actorName: req.user.name || req.user.username
+            });
+
+            res.json({ 
+                success: true, 
+                message: 'تم طرح المركب بنجاح',
+                vessel: formatVessel(vessel)
+            });
+        } catch (e) {
+            console.error('❌ POST /api/vessels/:id/dispose:', e.message);
+            res.status(500).json({ success: false, error: 'فشل الطرح' });
+        }
+    });
+
+    // 🔄 POST /api/vessels/:id/restore — إلغاء الطرح (للمسؤول)
+    app.post('/api/vessels/:id/restore',
+        authenticateAccessToken,
+        csrfProtection,
+        async (req, res) => {
+        try {
+            if (normalizeRole(req.user.role) !== 'admin') {
+                return res.status(403).json({ success: false, error: 'للمسؤول فقط' });
+            }
+
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const vessel = await Vessel.findOne(q);
+            if (!vessel) return res.status(404).json({ success: false, error: 'غير موجود' });
+            
+            if (vessel.status !== 'طرح') {
+                return res.status(400).json({ success: false, error: 'المركب ليس مطروحاً' });
+            }
+
+            if (typeof vessel.restore === 'function') {
+                await vessel.restore();
+            } else {
+                vessel.status = 'صالح';
+                vessel.stat = 'صالح';
+                vessel.disposalDate = null;
+                vessel.disposedAt = null;
+                vessel.disposalReason = '';
+                vessel.disposalDecision = '';
+                vessel.disposedBy = '';
+                vessel.disposalNotes = '';
+                vessel.break = '';
+                vessel.updatedAt = new Date();
+                await vessel.save();
+            }
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'restore',
+                resource: 'vessel',
+                resourceId: vessel.id,
+                resourceName: vessel.name,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            res.json({ 
+                success: true, 
+                message: 'تم إلغاء الطرح',
+                vessel: formatVessel(vessel)
+            });
+        } catch (e) {
+            console.error('❌ POST /api/vessels/:id/restore:', e.message);
+            res.status(500).json({ success: false, error: 'فشل إلغاء الطرح' });
+        }
     });
     app.post('/api/vessels', authenticateAccessToken, requirePermission('vessels:create'), csrfProtection, async (req, res) => {
         try {
