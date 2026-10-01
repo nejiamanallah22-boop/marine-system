@@ -2,8 +2,8 @@
 <div id="page-fleet">
     <style>
         /* ============================================================
-           🚢 FLEET PAGE — ULTRA PRO v2.0
-           ✨ Modern style + Excel Export (inspired by Efficiency/Vehicles)
+           🚢 FLEET PAGE — ULTRA PRO v3.0
+           ✨ + طرح احترافي (زر منفصل + Modal + صفحة مخصصة)
            ============================================================ */
 
         #page-fleet {
@@ -61,43 +61,27 @@
             66% { transform: translate(-3%, 2%) scale(0.97); }
         }
 
-        #page-fleet *, #page-fleet *::before, #page-fleet *::after {
-            box-sizing: border-box;
-        }
+        #page-fleet *, #page-fleet *::before, #page-fleet *::after { box-sizing: border-box; }
 
         #page-fleet ::-webkit-scrollbar { width: 8px; height: 8px; }
         #page-fleet ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
         #page-fleet ::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, var(--c-gold-2), var(--c-gold-3));
-            border-radius: 4px;
-            border: 2px solid transparent;
-            background-clip: padding-box;
+            border-radius: 4px; border: 2px solid transparent; background-clip: padding-box;
         }
 
         /* ===== HEADER ===== */
         .fleet-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 18px 24px;
-            flex-wrap: wrap;
-            gap: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 24px; flex-wrap: wrap; gap: 16px;
             background: linear-gradient(135deg, rgba(18, 26, 44, 0.9) 0%, rgba(24, 34, 56, 0.8) 100%);
             backdrop-filter: blur(24px) saturate(180%);
             -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border: 1px solid var(--c-border-mid);
-            border-radius: var(--radius);
-            margin: 16px 24px 20px;
-            position: relative;
+            border: 1px solid var(--c-border-mid); border-radius: var(--radius);
+            margin: 16px 24px 20px; position: relative;
             box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 32px rgba(0,0,0,0.35);
-            top: auto;
         }
-
-        .fleet-header-left {
-            display: flex; align-items: center; gap: 14px;
-            flex: 1 1 260px; min-width: 0;
-        }
-
+        .fleet-header-left { display: flex; align-items: center; gap: 14px; flex: 1 1 260px; min-width: 0; }
         .fleet-header-left .header-icon {
             width: 50px; height: 50px; border-radius: 14px;
             background: linear-gradient(135deg, var(--c-gold-2) 0%, var(--c-gold-3) 50%, #7c5c07 100%);
@@ -106,7 +90,6 @@
             position: relative; overflow: hidden; flex-shrink: 0;
             box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.08) inset;
             animation: fleetIconFloat 4s ease-in-out infinite;
-            border-radius: 14px;
         }
         .fleet-header-left .header-icon::before {
             content: ''; position: absolute; inset: 0;
@@ -118,29 +101,19 @@
             50% { transform: translateY(-3px) rotate(-2deg); }
         }
         .fleet-header-left .header-icon::after {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
+            content: ''; position: absolute; top: 0; left: -100%;
             width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-            animation: fleetShine 4s ease-in-out infinite;
-            pointer-events: none;
+            animation: fleetShine 4s ease-in-out infinite; pointer-events: none;
         }
-        @keyframes fleetShine {
-            0% { left: -100%; }
-            50%, 100% { left: 100%; }
-        }
+        @keyframes fleetShine { 0% { left: -100%; } 50%, 100% { left: 100%; } }
         .fleet-header-left .header-icon img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            border-radius: 14px;
-            display: none;
-            position: relative; z-index: 2;
+            width: 100%; height: 100%; object-fit: cover;
+            border-radius: 14px; display: none; position: relative; z-index: 2;
         }
         .fleet-header-left .header-icon.has-logo img { display: block; }
         .fleet-header-left .header-icon.has-logo {
-            animation: none;
-            background: transparent;
+            animation: none; background: transparent;
             box-shadow: 0 0 24px var(--c-gold-glow);
         }
         .fleet-header-left .header-icon.has-logo i { display: none; }
@@ -149,36 +122,24 @@
         .fleet-header-left h2 {
             font-size: 22px; font-weight: 800;
             background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-1) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin: 0 0 2px 0;
-            letter-spacing: -0.5px;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin: 0 0 2px 0; letter-spacing: -0.5px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .fleet-header-left p {
-            font-size: 12px;
-            color: var(--c-text-3);
-            margin: 0;
-            font-weight: 500;
+            font-size: 12px; color: var(--c-text-3); margin: 0; font-weight: 500;
             -webkit-text-fill-color: var(--c-text-3);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .fleet-header-actions {
-            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-            flex-shrink: 0;
-        }
+        .fleet-header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
 
         .fleet-header-actions .btn-action {
-            padding: 10px 20px;
-            border: none; border-radius: 12px;
-            font-weight: 700; font-size: 13px;
-            cursor: pointer;
+            padding: 10px 20px; border: none; border-radius: 12px;
+            font-weight: 700; font-size: 13px; cursor: pointer;
             transition: all var(--transition);
             display: inline-flex; align-items: center; gap: 8px;
-            font-family: var(--font);
-            white-space: nowrap; flex-shrink: 0;
+            font-family: var(--font); white-space: nowrap; flex-shrink: 0;
             line-height: 1; position: relative; overflow: hidden;
         }
         .fleet-header-actions .btn-action i { font-size: 13px; }
@@ -187,62 +148,63 @@
             background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
             pointer-events: none;
         }
-
         .fleet-header-actions .btn-action.primary {
             background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
-            color: #060911;
-            box-shadow: 0 8px 24px var(--c-gold-glow);
+            color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
         }
         .fleet-header-actions .btn-action.primary:hover {
             transform: translateY(-2px) scale(1.02);
             box-shadow: 0 12px 32px var(--c-gold-glow);
         }
-
         .fleet-header-actions .btn-action.secondary {
             background: linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(148, 163, 184, 0.04) 100%);
-            border: 1px solid var(--c-border-mid);
-            color: var(--c-text-2);
+            border: 1px solid var(--c-border-mid); color: var(--c-text-2);
             backdrop-filter: blur(8px);
         }
         .fleet-header-actions .btn-action.secondary:hover {
-            background: rgba(148, 163, 184, 0.15);
-            color: var(--c-text-1);
-            transform: translateY(-2px);
-            border-color: var(--c-border-strong);
+            background: rgba(148, 163, 184, 0.15); color: var(--c-text-1);
+            transform: translateY(-2px); border-color: var(--c-border-strong);
         }
-
         .fleet-header-actions .btn-action.success {
             background: linear-gradient(135deg, #10b981, #059669);
-            color: #fff;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+            color: #fff; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
         }
         .fleet-header-actions .btn-action.success:hover {
             transform: translateY(-2px) scale(1.02);
             box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
         }
 
-        /* ===== STATS ===== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 16px;
-            padding: 0 24px 20px;
-            width: 100%;
-            margin: 0;
+        /* 🆕 زر المطروحة */
+        .fleet-header-actions .btn-action.dark {
+            background: linear-gradient(135deg, #475569, #1e293b);
+            color: #f7d774;
+            border: 1px solid rgba(247, 215, 116, 0.25);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.5);
+        }
+        .fleet-header-actions .btn-action.dark:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.7), 0 0 24px rgba(247, 215, 116, 0.2);
+        }
+        .fleet-header-actions .btn-action.dark .badge-count {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: #fff; padding: 1px 8px; border-radius: 10px;
+            font-size: 10px; font-weight: 900; margin-right: 4px;
+            min-width: 18px; text-align: center; display: inline-block;
         }
 
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px; padding: 0 24px 20px; width: 100%; margin: 0;
+        }
         .stat-card {
             background: linear-gradient(135deg, rgba(24, 34, 56, 0.85) 0%, rgba(18, 26, 44, 0.95) 100%);
             backdrop-filter: blur(20px) saturate(160%);
             -webkit-backdrop-filter: blur(20px) saturate(160%);
-            border: 1px solid var(--c-border-soft);
-            border-radius: var(--radius);
-            padding: 22px 16px 18px;
-            text-align: center;
-            transition: all var(--transition);
-            cursor: default;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid var(--c-border-soft); border-radius: var(--radius);
+            padding: 22px 16px 18px; text-align: center;
+            transition: all var(--transition); cursor: default;
+            position: relative; overflow: hidden;
             min-width: 0; min-height: 110px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.25);
@@ -254,111 +216,75 @@
             filter: drop-shadow(0 0 8px currentColor);
         }
         .stat-card::after {
-            content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%;
+            content: ''; position: absolute; top: -50%; right: -50%;
+            width: 200%; height: 200%;
             background: radial-gradient(circle, currentColor 0%, transparent 40%);
             opacity: 0.06; pointer-events: none;
         }
         .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--c-border-strong);
+            transform: translateY(-5px); border-color: var(--c-border-strong);
             box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 20px 48px rgba(0,0,0,0.45), 0 0 40px currentColor;
         }
         .stat-card:hover::after { opacity: 0.15; }
-
         .stat-card .number {
             font-size: 30px; font-weight: 900; line-height: 1;
-            color: currentColor;
-            text-shadow: 0 0 24px currentColor, 0 0 8px currentColor;
-            letter-spacing: -1px;
-            position: relative; z-index: 1;
-            white-space: nowrap; margin-bottom: 8px;
-            font-variant-numeric: tabular-nums;
+            color: currentColor; text-shadow: 0 0 24px currentColor, 0 0 8px currentColor;
+            letter-spacing: -1px; position: relative; z-index: 1;
+            white-space: nowrap; margin-bottom: 8px; font-variant-numeric: tabular-nums;
         }
         .stat-card .number.gold { color: var(--c-gold-1); }
         .stat-card .number.green { color: var(--c-emerald-1); }
         .stat-card .number.yellow { color: var(--c-amber-1); }
         .stat-card .number.red { color: var(--c-red-1); }
         .stat-card .number.cyan { color: var(--c-cyan-1); }
-
         .stat-card .label {
-            font-size: 11px;
-            color: rgba(203, 213, 225, 0.75);
-            font-weight: 700;
-            position: relative; z-index: 1;
-            line-height: 1.3;
+            font-size: 11px; color: rgba(203, 213, 225, 0.75); font-weight: 700;
+            position: relative; z-index: 1; line-height: 1.3;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            max-width: 100%;
-            letter-spacing: 0.3px;
+            max-width: 100%; letter-spacing: 0.3px;
         }
-
         .stat-card .icon-bg {
-            position: absolute;
-            right: -10px; bottom: -10px;
-            font-size: 50px;
-            opacity: 0.04;
-            pointer-events: none;
-            color: currentColor;
+            position: absolute; right: -10px; bottom: -10px;
+            font-size: 50px; opacity: 0.04;
+            pointer-events: none; color: currentColor;
         }
 
         /* ===== INPUT GRID ===== */
         .input-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 10px;
             background: linear-gradient(135deg, rgba(18, 26, 44, 0.6) 0%, rgba(24, 34, 56, 0.5) 100%);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--c-border-soft);
-            padding: 16px 20px;
-            border-radius: var(--radius);
-            margin: 0 24px 16px;
-            transition: all var(--transition);
+            backdrop-filter: blur(20px); border: 1px solid var(--c-border-soft);
+            padding: 16px 20px; border-radius: var(--radius);
+            margin: 0 24px 16px; transition: all var(--transition);
             box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset;
         }
-
         .input-grid:hover {
             border-color: var(--c-border-mid);
             box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset, 0 12px 40px rgba(0,0,0,0.3);
         }
-
-        .input-grid input,
-        .input-grid select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--c-border-mid);
-            border-radius: var(--radius-sm);
+        .input-grid input, .input-grid select {
+            width: 100%; padding: 10px 14px;
+            border: 1px solid var(--c-border-mid); border-radius: var(--radius-sm);
             background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
-            color: var(--c-text-1);
-            font-size: 12px;
-            font-family: var(--font);
-            font-weight: 600;
-            transition: all var(--transition);
+            color: var(--c-text-1); font-size: 12px;
+            font-family: var(--font); font-weight: 600; transition: all var(--transition);
         }
-        .input-grid input:focus,
-        .input-grid select:focus {
-            border-color: var(--c-gold-2);
-            outline: none;
+        .input-grid input:focus, .input-grid select:focus {
+            border-color: var(--c-gold-2); outline: none;
             box-shadow: 0 0 0 3px var(--c-gold-glow);
             background: rgba(10, 16, 32, 0.9);
         }
         .input-grid input::placeholder { color: var(--c-text-4); }
         .input-grid select option { background: #0a1020; color: var(--c-text-1); }
-
         .input-grid .btn-save {
-            padding: 10px 18px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-weight: 800;
-            font-size: 13px;
-            cursor: pointer;
+            padding: 10px 18px; border: none; border-radius: var(--radius-sm);
+            font-weight: 800; font-size: 13px; cursor: pointer;
             transition: all var(--transition);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             font-family: var(--font);
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911;
-            box-shadow: 0 8px 24px var(--c-gold-glow);
+            color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
             position: relative; overflow: hidden;
         }
         .input-grid .btn-save::before {
@@ -373,362 +299,245 @@
 
         /* ===== FILTER BAR ===== */
         .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 12px 16px;
-            padding: 16px 24px;
+            display: flex; flex-wrap: wrap; align-items: center;
+            gap: 12px 16px; padding: 16px 24px;
             background: linear-gradient(135deg, rgba(18, 26, 44, 0.6) 0%, rgba(24, 34, 56, 0.5) 100%);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--c-border-soft);
-            border-radius: var(--radius);
-            margin: 0 24px 20px;
-            width: auto;
+            backdrop-filter: blur(20px); border: 1px solid var(--c-border-soft);
+            border-radius: var(--radius); margin: 0 24px 20px; width: auto;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset;
         }
-
-        .filter-bar .search-input {
-            flex: 2 1 200px;
-            min-width: 150px;
-            position: relative;
-        }
-
+        .filter-bar .search-input { flex: 2 1 200px; min-width: 150px; position: relative; }
         .filter-bar .search-input input {
-            width: 100%;
-            padding: 10px 16px 10px 40px;
-            border-radius: 10px;
-            border: 1px solid var(--c-border-mid);
+            width: 100%; padding: 10px 16px 10px 40px;
+            border-radius: 10px; border: 1px solid var(--c-border-mid);
             background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
-            color: var(--c-text-1);
-            font-size: 12px;
-            font-family: var(--font);
-            font-weight: 600;
-            transition: all var(--transition);
+            color: var(--c-text-1); font-size: 12px;
+            font-family: var(--font); font-weight: 600; transition: all var(--transition);
         }
         .filter-bar .search-input input:focus {
-            border-color: var(--c-gold-2);
-            outline: none;
+            border-color: var(--c-gold-2); outline: none;
             box-shadow: 0 0 0 3px var(--c-gold-glow);
             background: rgba(10, 16, 32, 0.9);
         }
         .filter-bar .search-input input::placeholder { color: var(--c-text-4); }
-
         .filter-bar .search-input .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
+            position: absolute; left: 14px; top: 50%;
             transform: translateY(-50%);
-            color: var(--c-gold-2);
-            font-size: 12px;
-            pointer-events: none;
+            color: var(--c-gold-2); font-size: 12px; pointer-events: none;
         }
-
         .filter-bar label {
-            font-size: 11px;
-            color: var(--c-text-3);
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-transform: uppercase;
-            white-space: nowrap;
+            font-size: 11px; color: var(--c-text-3); font-weight: 700;
+            display: flex; align-items: center; gap: 6px;
+            text-transform: uppercase; white-space: nowrap;
         }
         .filter-bar label i { color: var(--c-gold-2); }
-
         .filter-bar select {
-            padding: 10px 16px;
-            border-radius: 10px;
+            padding: 10px 16px; border-radius: 10px;
             border: 1px solid var(--c-border-mid);
             background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
-            color: var(--c-text-1);
-            font-size: 12px;
-            min-width: 140px;
-            cursor: pointer;
-            font-family: var(--font);
-            font-weight: 600;
+            color: var(--c-text-1); font-size: 12px; min-width: 140px;
+            cursor: pointer; font-family: var(--font); font-weight: 600;
             transition: all var(--transition);
         }
         .filter-bar select:focus {
-            outline: none;
-            border-color: var(--c-gold-2);
+            outline: none; border-color: var(--c-gold-2);
             box-shadow: 0 0 0 3px var(--c-gold-glow);
         }
         .filter-bar select option { background: #0a1020; color: var(--c-text-1); }
-
         .filter-bar .btn-filter {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-            position: relative; overflow: hidden;
+            padding: 10px 20px; border: none; border-radius: 10px;
+            font-weight: 700; font-size: 12px; cursor: pointer;
+            transition: all var(--transition); font-family: var(--font);
+            display: inline-flex; align-items: center; gap: 8px;
+            white-space: nowrap; position: relative; overflow: hidden;
         }
         .filter-bar .btn-filter::before {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
             pointer-events: none;
         }
-
         .filter-bar .btn-filter.primary {
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911;
-            box-shadow: 0 6px 20px var(--c-gold-glow);
+            color: #060911; box-shadow: 0 6px 20px var(--c-gold-glow);
         }
         .filter-bar .btn-filter.primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 28px var(--c-gold-glow);
         }
-
         .filter-bar .btn-filter.outline {
-            background: transparent;
-            border: 1px solid var(--c-border-mid);
+            background: transparent; border: 1px solid var(--c-border-mid);
             color: var(--c-text-3);
         }
         .filter-bar .btn-filter.outline:hover {
             background: rgba(148, 163, 184, 0.06);
-            color: var(--c-text-1);
-            border-color: var(--c-border-strong);
+            color: var(--c-text-1); border-color: var(--c-border-strong);
         }
 
         /* ===== TABLE ===== */
-        .table-wrapper {
-            overflow-x: auto;
-            padding: 0 24px 24px;
-            width: 100%;
-        }
-
+        .table-wrapper { overflow-x: auto; padding: 0 24px 24px; width: 100%; }
         .table-wrapper table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 13px;
-            min-width: 1100px;
-            border-radius: var(--radius);
-            overflow: hidden;
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            font-size: 13px; min-width: 1150px;
+            border-radius: var(--radius); overflow: hidden;
             background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
             backdrop-filter: blur(20px);
             box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
             border: 1px solid var(--c-border-soft);
         }
-
         thead {
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%);
             position: relative;
         }
         thead::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0;
             height: 3px;
             background: linear-gradient(90deg, transparent 0%, #f7d774 20%, #e6b31e 50%, #f7d774 80%, transparent 100%);
             box-shadow: 0 0 20px rgba(230, 179, 30, 0.5);
             pointer-events: none;
         }
-
         thead th {
-            padding: 14px 12px;
-            text-align: center;
-            font-weight: 800;
-            font-size: 10.5px;
-            text-transform: uppercase;
-            color: #cbd5e1;
-            letter-spacing: 1px;
-            white-space: nowrap;
-            border-bottom: none;
+            padding: 14px 12px; text-align: center;
+            font-weight: 800; font-size: 10.5px;
+            text-transform: uppercase; color: #cbd5e1;
+            letter-spacing: 1px; white-space: nowrap; border-bottom: none;
         }
         thead th i {
-            margin-left: 6px;
-            color: #f7d774;
-            font-size: 11px;
+            margin-left: 6px; color: #f7d774; font-size: 11px;
             filter: drop-shadow(0 0 6px rgba(247, 215, 116, 0.8));
         }
-
         tbody td {
             padding: 12px 10px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.06);
-            vertical-align: middle;
-            color: var(--c-text-2);
-            font-size: 13px;
-            text-align: center;
-            font-weight: 600;
+            vertical-align: middle; color: var(--c-text-2);
+            font-size: 13px; text-align: center; font-weight: 600;
             transition: all var(--transition);
         }
-
         tbody tr { transition: all var(--transition); background: transparent; }
         tbody tr:nth-child(even) { background: rgba(148, 163, 184, 0.02); }
         tbody tr:hover { background: rgba(247, 215, 116, 0.05); }
         tbody tr:last-child td { border-bottom: none; }
-
         tbody tr.damaged {
             background: linear-gradient(90deg, rgba(239, 68, 68, 0.10) 0%, rgba(239, 68, 68, 0.02) 50%, transparent 100%) !important;
             border-right: 3px solid #ef4444;
         }
-        tbody tr.damaged:hover {
-            background: rgba(239, 68, 68, 0.15) !important;
-        }
+        tbody tr.damaged:hover { background: rgba(239, 68, 68, 0.15) !important; }
 
         .vessel-name {
-            font-weight: 800;
-            color: #f1f5f9;
-            text-align: right;
-            padding-right: 16px;
+            font-weight: 800; color: #f1f5f9;
+            text-align: right; padding-right: 16px;
         }
-
         .status-badge {
-            padding: 5px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 800;
-            display: inline-block;
-            white-space: nowrap;
-            letter-spacing: 0.4px;
-            position: relative;
-            overflow: hidden;
+            padding: 5px 14px; border-radius: 20px;
+            font-size: 11px; font-weight: 800;
+            display: inline-block; white-space: nowrap;
+            letter-spacing: 0.4px; position: relative; overflow: hidden;
         }
         .status-badge::before {
-            content: '';
-            position: absolute;
-            inset: 0;
+            content: ''; position: absolute; inset: 0;
             background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
             pointer-events: none;
         }
-
         .status-badge.active {
             background: linear-gradient(135deg, #059669, #10b981);
-            color: #ffffff;
-            border: 1px solid var(--c-emerald-1);
+            color: #ffffff; border: 1px solid var(--c-emerald-1);
             box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
         }
         .status-badge.pending {
             background: linear-gradient(135deg, #b45309, #f59e0b);
-            color: #ffffff;
-            border: 1px solid var(--c-amber-1);
+            color: #ffffff; border: 1px solid var(--c-amber-1);
             box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
         }
         .status-badge.completed {
             background: linear-gradient(135deg, #0369a1, #0ea5e9);
-            color: #ffffff;
-            border: 1px solid #7dd3fc;
+            color: #ffffff; border: 1px solid #7dd3fc;
             box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
         }
         .status-badge.cancelled {
             background: linear-gradient(135deg, #64748b, #94a3b8);
-            color: #ffffff;
-            border: 1px solid #cbd5e1;
+            color: #ffffff; border: 1px solid #cbd5e1;
         }
         .status-badge.damaged {
             background: linear-gradient(135deg, #b91c1c, #ef4444);
-            color: #ffffff;
-            border: 1px solid var(--c-red-1);
+            color: #ffffff; border: 1px solid var(--c-red-1);
             box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
         }
-
-        .action-btns {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-            justify-content: center;
+        /* 🆕 شارة الطرح */
+        .status-badge.disposed {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: #f7d774; border: 1px solid rgba(247,215,116,0.4);
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.6);
         }
 
+        .action-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
         .btn-sm {
-            width: 34px;
-            height: 34px;
-            border: none;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
+            width: 34px; height: 34px; border: none; border-radius: 10px;
+            font-size: 13px; font-weight: 700; cursor: pointer;
             transition: all var(--transition);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-family: var(--font);
-            position: relative; overflow: hidden;
-            padding: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-family: var(--font); position: relative; overflow: hidden; padding: 0;
         }
         .btn-sm::before {
-            content: '';
-            position: absolute;
-            inset: 0;
+            content: ''; position: absolute; inset: 0;
             background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
         }
         .btn-sm:hover::before { opacity: 1; }
-
         .btn-sm.edit {
             background: rgba(59, 130, 246, 0.15);
-            color: #93c5fd;
-            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.25);
         }
         .btn-sm.edit:hover {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: #fff;
-            transform: translateY(-2px) scale(1.05);
+            color: #fff; transform: translateY(-2px) scale(1.05);
             box-shadow: 0 6px 16px rgba(59, 130, 246, 0.45);
         }
-
         .btn-sm.delete {
             background: rgba(239, 68, 68, 0.15);
-            color: var(--c-red-1);
-            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: var(--c-red-1); border: 1px solid rgba(239, 68, 68, 0.25);
         }
         .btn-sm.delete:hover {
             background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: #fff; transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45);
+        }
+        /* 🆕 زر الطرح */
+        .btn-sm.dispose {
+            background: rgba(15, 23, 42, 0.6);
+            color: #f7d774;
+            border: 1px solid rgba(247, 215, 116, 0.35);
+        }
+        .btn-sm.dispose:hover {
+            background: linear-gradient(135deg, #334155, #1e293b);
             color: #fff;
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45);
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.7), 0 0 20px rgba(247, 215, 116, 0.3);
+            border-color: var(--c-gold-2);
         }
 
         /* ===== EMPTY ===== */
         .empty-state { text-align: center; padding: 60px 20px; }
         .empty-state .empty-icon {
-            font-size: 3rem;
-            color: var(--c-gold-2);
-            opacity: 0.5;
-            display: block;
-            margin-bottom: 12px;
+            font-size: 3rem; color: var(--c-gold-2); opacity: 0.5;
+            display: block; margin-bottom: 12px;
             filter: drop-shadow(0 0 20px var(--c-gold-glow));
         }
         .empty-state .spinner {
-            width: 36px;
-            height: 36px;
+            width: 36px; height: 36px;
             border: 3px solid rgba(255,255,255,0.04);
             border-top-color: var(--c-gold-2);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
             margin: 0 auto 12px;
             box-shadow: 0 0 20px var(--c-gold-glow);
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .empty-state h3 {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--c-text-3);
-            margin-bottom: 4px;
-        }
+        .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--c-text-3); margin-bottom: 4px; }
         .empty-state p { font-size: 13px; color: var(--c-text-4); }
         .empty-state .retry-btn {
-            margin-top: 12px;
-            padding: 10px 24px;
-            border: none;
-            border-radius: 12px;
+            margin-top: 12px; padding: 10px 24px;
+            border: none; border-radius: 12px;
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all var(--transition);
+            color: #060911; font-weight: 700; font-size: 13px;
+            cursor: pointer; transition: all var(--transition);
             font-family: var(--font);
             display: inline-flex; align-items: center; gap: 8px;
         }
@@ -739,20 +548,12 @@
 
         /* ===== TOAST ===== */
         .fleet-toast {
-            position: fixed;
-            bottom: 28px;
-            left: 28px;
-            z-index: 999999;
-            max-width: 400px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 22px;
-            border-radius: 14px;
-            color: #fff;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 700;
+            position: fixed; bottom: 28px; left: 28px;
+            z-index: 999999; max-width: 400px;
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 22px; border-radius: 14px;
+            color: #fff; font-family: var(--font);
+            font-size: 13px; font-weight: 700;
             backdrop-filter: blur(20px);
             box-shadow: 0 12px 40px rgba(0,0,0,0.5);
             animation: fleetToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -773,9 +574,219 @@
             border: 1px solid rgba(147, 197, 253, 0.5);
             box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(59,130,246,0.3);
         }
+        .fleet-toast.warning {
+            background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(180,83,9,0.9));
+            border: 1px solid rgba(252, 211, 77, 0.5);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(245,158,11,0.3);
+        }
         @keyframes fleetToastIn {
             from { opacity: 0; transform: translateY(20px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ===== MODAL الطرح — 🆕 ===== */
+        .fleet-modal {
+            position: fixed; inset: 0;
+            background: rgba(2, 4, 12, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 99999;
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+            animation: fleetModalBgIn 0.25s ease-out;
+        }
+        @keyframes fleetModalBgIn { from { opacity: 0; } to { opacity: 1; } }
+        .fleet-modal.active { display: flex; }
+
+        .fleet-modal-box {
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.98) 0%, rgba(15, 20, 32, 0.99) 100%);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(247, 215, 116, 0.25);
+            border-radius: 20px;
+            padding: 28px 32px;
+            width: 100%; max-width: 640px;
+            max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.85), 0 0 60px rgba(230, 179, 30, 0.1);
+            animation: fleetModalBoxIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes fleetModalBoxIn {
+            from { transform: scale(0.9) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .fleet-modal-head {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 22px; padding-bottom: 18px;
+            border-bottom: 1px solid var(--c-border-soft);
+            position: relative;
+        }
+        .fleet-modal-head::after {
+            content: ''; position: absolute;
+            bottom: -1px; right: 0;
+            width: 120px; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--c-slate-1));
+            box-shadow: 0 0 12px rgba(148, 163, 184, 0.4);
+        }
+        .fleet-modal-head h3 {
+            font-size: 19px; font-weight: 800;
+            color: var(--c-text-1);
+            display: flex; align-items: center; gap: 10px; margin: 0;
+        }
+        .fleet-modal-head h3 i {
+            color: var(--c-slate-1);
+            filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.5));
+        }
+        .fleet-modal-close {
+            background: rgba(148, 163, 184, 0.08);
+            border: 1px solid var(--c-border-mid);
+            color: var(--c-text-3);
+            width: 38px; height: 38px; border-radius: 12px;
+            cursor: pointer; font-size: 22px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition); line-height: 1;
+        }
+        .fleet-modal-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--c-red-1);
+            border-color: rgba(239, 68, 68, 0.4);
+            transform: rotate(90deg);
+        }
+
+        /* تحذير الطرح */
+        .dispose-warning {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.08));
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex; align-items: flex-start; gap: 12px;
+        }
+        .dispose-warning .warn-icon {
+            font-size: 22px; color: #ef4444; flex-shrink: 0;
+            filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
+        }
+        .dispose-warning .warn-text {
+            color: #fecaca; font-size: 13px;
+            font-weight: 700; line-height: 1.6;
+        }
+        .dispose-warning .warn-text strong { color: #fff; font-weight: 900; }
+
+        /* عرض المركب المطروح */
+        .dispose-vessel-info {
+            background: linear-gradient(135deg, rgba(10, 16, 32, 0.7), rgba(18, 26, 44, 0.5));
+            border: 1px solid var(--c-border-soft);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center; gap: 12px;
+            flex-wrap: wrap;
+        }
+        .dispose-vessel-info .info-label {
+            font-size: 11px; font-weight: 800;
+            color: var(--c-text-4); letter-spacing: 0.5px;
+            text-transform: uppercase; margin-bottom: 4px;
+        }
+        .dispose-vessel-info .info-value {
+            font-size: 15px; font-weight: 900;
+            color: var(--c-gold-1);
+            text-shadow: 0 0 12px var(--c-gold-glow);
+        }
+        .dispose-vessel-info .info-sub {
+            font-size: 11px; color: var(--c-text-3); margin-top: 2px;
+        }
+
+        /* حقول النموذج */
+        .dispose-form-group { margin-bottom: 16px; }
+        .dispose-form-group label {
+            display: block; font-size: 11px; font-weight: 800;
+            color: var(--c-text-3); margin-bottom: 8px;
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        .dispose-form-group label .req { color: var(--c-red-1); }
+        .dispose-form-control {
+            width: 100%; padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(10, 16, 32, 0.7), rgba(18, 26, 44, 0.5));
+            border: 1px solid var(--c-border-mid);
+            border-radius: 12px;
+            color: var(--c-text-1);
+            font-family: var(--font); font-size: 13px; font-weight: 600;
+            transition: all var(--transition);
+        }
+        .dispose-form-control:focus {
+            outline: none; border-color: var(--c-gold-2);
+            background: rgba(10, 16, 32, 0.85);
+            box-shadow: 0 0 0 3px var(--c-gold-glow);
+        }
+        .dispose-form-control option { background: #0a1020; color: var(--c-text-1); }
+        textarea.dispose-form-control { resize: vertical; min-height: 90px; font-family: var(--font); }
+        .dispose-form-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+        }
+
+        /* تأكيد مزدوج */
+        .dispose-confirm {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(180, 83, 9, 0.04));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-top: 20px;
+            display: flex; align-items: flex-start; gap: 12px;
+        }
+        .dispose-confirm input[type="checkbox"] {
+            width: 20px; height: 20px;
+            margin-top: 2px; cursor: pointer;
+            accent-color: #f59e0b;
+            flex-shrink: 0;
+        }
+        .dispose-confirm label {
+            font-size: 12px; color: #fcd34d;
+            font-weight: 700; line-height: 1.6;
+            cursor: pointer; user-select: none;
+        }
+
+        /* أزرار الإجراء */
+        .fleet-modal-actions {
+            display: flex; gap: 12px;
+            margin-top: 26px; padding-top: 20px;
+            border-top: 1px solid var(--c-border-soft);
+        }
+        .fleet-modal-actions .btn-modal {
+            flex: 1; padding: 13px 20px;
+            border: none; border-radius: 12px;
+            font-family: var(--font); font-size: 13px;
+            font-weight: 800; cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            position: relative; overflow: hidden;
+        }
+        .fleet-modal-actions .btn-modal::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
+            pointer-events: none;
+        }
+        .fleet-modal-actions .btn-modal.cancel {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--c-text-2);
+            border: 1px solid var(--c-border-mid);
+        }
+        .fleet-modal-actions .btn-modal.cancel:hover {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--c-text-1);
+        }
+        .fleet-modal-actions .btn-modal.dispose-confirm-btn {
+            background: linear-gradient(135deg, #475569, #1e293b);
+            color: #f7d774;
+            border: 1px solid rgba(247, 215, 116, 0.35);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.5);
+        }
+        .fleet-modal-actions .btn-modal.dispose-confirm-btn:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.7), 0 0 24px rgba(247, 215, 116, 0.3);
+            border-color: var(--c-gold-2);
+        }
+        .fleet-modal-actions .btn-modal.dispose-confirm-btn:disabled {
+            opacity: 0.4; cursor: not-allowed;
+            filter: grayscale(0.5);
         }
 
         /* ===== SCROLL NAV ===== */
@@ -793,33 +804,23 @@
         .fleet-scroll-nav-btn {
             width: 48px; height: 48px; border-radius: 14px;
             border: 1px solid var(--c-border-mid);
-            background: linear-gradient(135deg, rgba(24, 34, 56, 0.95) 0%, rgba(18, 26, 44, 0.98) 100%);
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.95), rgba(18, 26, 44, 0.98));
             backdrop-filter: blur(20px) saturate(160%);
-            -webkit-backdrop-filter: blur(20px) saturate(160%);
             color: var(--c-gold-2);
             font-size: 18px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.3s ease;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
-            position: relative; overflow: hidden; padding: 0;
-        }
-        .fleet-scroll-nav-btn::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
-            opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+            padding: 0;
         }
         .fleet-scroll-nav-btn:hover {
             transform: translateY(-3px) scale(1.05);
-            border-color: var(--c-gold-2);
-            color: #060911;
+            border-color: var(--c-gold-2); color: #060911;
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             box-shadow: 0 12px 32px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.15) inset;
         }
-        .fleet-scroll-nav-btn:hover::before { opacity: 1; }
-        .fleet-scroll-nav-btn:active { transform: translateY(-1px) scale(0.98); }
-        .fleet-scroll-nav-btn i { position: relative; z-index: 1; pointer-events: none; }
 
-        /* ===== PRINT ONLY (unchanged) ===== */
+        /* ===== PRINT-ONLY ===== */
         .print-only { display: none; }
 
         /* ===== RESPONSIVE ===== */
@@ -853,11 +854,14 @@
             .filter-bar .search-input { flex: 1 1 100%; }
             .filter-bar select { min-width: 100%; }
             .table-wrapper { padding: 0 16px 16px; }
-            .table-wrapper table { font-size: 11.5px; min-width: 900px; }
+            .table-wrapper table { font-size: 11.5px; min-width: 1000px; }
             thead th, tbody td { padding: 10px 8px; }
             .fleet-toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
             .fleet-scroll-nav { right: 16px; bottom: 80px; gap: 8px; }
             .fleet-scroll-nav-btn { width: 42px; height: 42px; font-size: 16px; border-radius: 12px; }
+            .fleet-modal-box { padding: 22px 18px; }
+            .fleet-modal-head h3 { font-size: 16px; }
+            .dispose-form-row { grid-template-columns: 1fr; }
         }
         @media (max-width: 480px) {
             .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 12px 12px; }
@@ -872,9 +876,14 @@
             .input-grid .btn-save { grid-column: span 1; }
         }
 
-        /* ============================================================
-           🖨️ ملاحظة: أنماط الطباعة تُدار مركزياً من /css/print.css
-           ============================================================ */
+        @media print {
+            #page-fleet { background: #fff !important; color: #12121a !important; }
+            #page-fleet::before { display: none !important; }
+            .fleet-header, .filter-bar, .input-grid, .action-btns,
+            .fleet-scroll-nav, .fleet-toast, .fleet-modal {
+                display: none !important; visibility: hidden !important;
+            }
+        }
     </style>
 
     <!-- HEADER -->
@@ -890,6 +899,11 @@
             </div>
         </div>
         <div class="fleet-header-actions">
+            <button class="btn-action dark" id="fleetDisposalsBtn" title="عرض المراكب المطروحة">
+                <i class="fas fa-archive"></i>
+                المطروحة
+                <span class="badge-count" id="fleetDisposalsCount" style="display:none;">0</span>
+            </button>
             <button class="btn-action primary" onclick="refreshFleet()">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
@@ -906,7 +920,7 @@
     <div class="stats-grid" id="fleetStats">
         <div class="stat-card">
             <div class="number gold" id="totalVessels">0</div>
-            <div class="label">🚢 إجمالي المراكب</div>
+            <div class="label">🚢 إجمالي المراكب النشطة</div>
             <span class="icon-bg"><i class="fas fa-ship"></i></span>
         </div>
         <div class="stat-card">
@@ -997,6 +1011,16 @@
             <option value="الكل">🌍 جميع الأقاليم</option>
         </select>
 
+        <!-- 🆕 فلتر الحالة -->
+        <label><i class="fas fa-circle"></i> الحالة:</label>
+        <select id="fStatusMain" onchange="renderMain()">
+            <option value="all">جميع الحالات</option>
+            <option value="صالح">✅ صالح</option>
+            <option value="معطب">🔴 معطب</option>
+            <option value="صيانة">🔧 صيانة</option>
+            <option value="طرح">⚫ طرح</option>
+        </select>
+
         <button class="btn-filter primary" onclick="renderMain()">
             <i class="fas fa-filter"></i> فلترة
         </button>
@@ -1039,14 +1063,13 @@
                     <th><i class="fas fa-circle"></i> الحالة</th>
                     <th><i class="fas fa-wrench"></i> العطب</th>
                     <th><i class="fas fa-calendar"></i> التاريخ</th>
-                    <th><i class="fas fa-calendar-check"></i> الانتهاء</th>
                     <th><i class="fas fa-tools"></i> الوحدة المسؤولة</th>
                     <th><i class="fas fa-cog"></i> إجراء</th>
                 </tr>
             </thead>
             <tbody id="mainBody">
                 <tr>
-                    <td colspan="14" class="empty-state">
+                    <td colspan="13" class="empty-state">
                         <div class="spinner"></div>
                         <h3>جاري التحميل...</h3>
                         <p>يرجى الانتظار</p>
@@ -1058,924 +1081,1115 @@
 
     <!-- SCROLL NAV -->
     <div class="fleet-scroll-nav" id="fleetScrollNav" aria-hidden="true">
-        <button type="button" class="fleet-scroll-nav-btn" id="fleetScrollTop" title="أعلى الصفحة" aria-label="أعلى الصفحة">
+        <button type="button" class="fleet-scroll-nav-btn" id="fleetScrollTop" title="أعلى الصفحة">
             <i class="fas fa-chevron-up"></i>
         </button>
-        <button type="button" class="fleet-scroll-nav-btn" id="fleetScrollBottom" title="أسفل الصفحة" aria-label="أسفل الصفحة">
+        <button type="button" class="fleet-scroll-nav-btn" id="fleetScrollBottom" title="أسفل الصفحة">
             <i class="fas fa-chevron-down"></i>
         </button>
+    </div>
+
+    <!-- 🆕 MODAL الطرح -->
+    <div class="fleet-modal" id="fleetDisposeModal">
+        <div class="fleet-modal-box">
+            <div class="fleet-modal-head">
+                <h3><i class="fas fa-archive"></i> طرح المركب نهائياً</h3>
+                <button class="fleet-modal-close" id="fleetDisposeClose" type="button">×</button>
+            </div>
+
+            <!-- تحذير -->
+            <div class="dispose-warning">
+                <span class="warn-icon">⚠️</span>
+                <div class="warn-text">
+                    <strong>تحذير:</strong> هذا إجراء <strong>لا رجعة فيه</strong> — سيتم سحب المركب نهائياً من الخدمة ونقله إلى سجل المطروحة.
+                </div>
+            </div>
+
+            <!-- معلومات المركب -->
+            <div class="dispose-vessel-info">
+                <div>
+                    <div class="info-label">المركب</div>
+                    <div class="info-value" id="disposeVesselName">—</div>
+                    <div class="info-sub" id="disposeVesselSub">—</div>
+                </div>
+                <div style="text-align:left;">
+                    <div class="info-label">الرقم</div>
+                    <div class="info-value" id="disposeVesselNum">—</div>
+                </div>
+            </div>
+
+            <!-- نموذج الطرح -->
+            <input type="hidden" id="disposeVesselId">
+
+            <div class="dispose-form-group">
+                <label>⚠️ سبب الطرح <span class="req">*</span></label>
+                <textarea class="dispose-form-control" id="disposeReason"
+                    placeholder="اشرح سبب سحب المركب من الخدمة (تلف كامل، تقادم، إلخ)..." maxlength="1000"></textarea>
+            </div>
+
+            <div class="dispose-form-row">
+                <div class="dispose-form-group">
+                    <label>📋 رقم قرار الطرح</label>
+                    <input type="text" class="dispose-form-control" id="disposeDecision"
+                        placeholder="مثال: قرار عدد 2025/123" maxlength="200">
+                </div>
+                <div class="dispose-form-group">
+                    <label>👤 الجهة القارّة</label>
+                    <input type="text" class="dispose-form-control" id="disposeBy"
+                        placeholder="اسم المسؤول أو الجهة" maxlength="200">
+                </div>
+            </div>
+
+            <div class="dispose-form-group">
+                <label>📅 تاريخ الطرح</label>
+                <input type="date" class="dispose-form-control" id="disposeDate">
+            </div>
+
+            <div class="dispose-form-group">
+                <label>📝 ملاحظات إضافية</label>
+                <textarea class="dispose-form-control" id="disposeNotes"
+                    placeholder="ملاحظات اختيارية..." maxlength="2000"></textarea>
+            </div>
+
+            <!-- تأكيد مزدوج -->
+            <div class="dispose-confirm">
+                <input type="checkbox" id="disposeConfirmCheck">
+                <label for="disposeConfirmCheck">
+                    أُقرّ بأنني راجعت البيانات وأتحمّل مسؤولية قرار الطرح هذا
+                </label>
+            </div>
+
+            <!-- أزرار -->
+            <div class="fleet-modal-actions">
+                <button type="button" class="btn-modal cancel" id="fleetDisposeCancel">
+                    إلغاء
+                </button>
+                <button type="button" class="btn-modal dispose-confirm-btn" id="fleetDisposeConfirm" disabled>
+                    <i class="fas fa-archive"></i> تأكيد الطرح نهائياً
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    (function() {
-        'use strict';
+(function() {
+    'use strict';
 
-        var _isDestroyed = false;
+    var _isDestroyed = false;
+    var _disposalsCount = 0;
 
-        function _fleetCleanup() {
-            if (_isDestroyed) return;
-            _isDestroyed = true;
-            try {
-                delete window.renderMain;
-                delete window.addItem;
-                delete window.editItem;
-                delete window.updateItem;
-                delete window.deleteItem;
-                delete window.clearMainSearch;
-                delete window.updateZones;
-                delete window.refreshFleet;
-                delete window.printFleet;
-                delete window.exportFleetExcel;
-            } catch (e) {}
-        }
-
-        window._pageCleanup = window._pageCleanup || [];
-        window._pageCleanup.push(_fleetCleanup);
-        window.addEventListener('beforeunload', _fleetCleanup);
-        window.addEventListener('pagehide', _fleetCleanup);
-
-        // ============================================================
-        // ✅ الفئات والأقاليم — ثابتة داخل الصفحة
-        // ============================================================
-        var FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
-
-        var FIXED_REGIONS = [
-            'الشمال',
-            'الساحل',
-            'الوسط',
-            'الجنوب',
-            'وحدة الصيانة والإسناد البحري تونس',
-            'وحدة الصيانة والإسناد البحري المنستير',
-            'وحدة الصيانة والإسناد البحري صفاقس',
-            'وحدة الصيانة والإسناد البحري جرجيس',
-            'المجمع الأمني بقبيبة'
-        ];
-
-        var REGION_LABELS = {
-            'الشمال': '🗺️ الحرس البحري بالشمال',
-            'الساحل': '🗺️ الحرس البحري بالساحل',
-            'الوسط': '🗺️ الحرس البحري بالوسط',
-            'الجنوب': '🗺️ الحرس البحري بالجنوب',
-            'وحدة الصيانة والإسناد البحري تونس': '🛠️ وحدة الصيانة تونس',
-            'وحدة الصيانة والإسناد البحري المنستير': '🛠️ وحدة الصيانة المنستير',
-            'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ وحدة الصيانة صفاقس',
-            'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ وحدة الصيانة جرجيس',
-            'المجمع الأمني بقبيبة': '🏛️ المجمع الأمني بقبيبة'
-        };
-
-        var ZONES_DATA = {
-            "الشمال": ["تونس", "بنزرت", "طبرقة"],
-            "الساحل": ["سوسة", "المنستير", "نابل"],
-            "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-            "الجنوب": ["جرجيس", "جربة", "قابس"],
-            "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
-            "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
-            "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
-            "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
-            "المجمع الأمني بقبيبة": ["قبيبة"]
-        };
-
-        // ============================================================
-        // 🎨 LOGO
-        // ============================================================
-        function applyLogo() {
-            try {
-                var cachedLogo = localStorage.getItem('marine_logo');
-                if (!cachedLogo) return;
-                var iconDiv = document.getElementById('fleetHeaderIcon');
-                var img = document.getElementById('globalLogo');
-                if (img) { img.src = cachedLogo; img.style.display = 'block'; }
-                if (iconDiv) iconDiv.classList.add('has-logo');
-            } catch (e) {}
-        }
-
-        function syncLogoFromServer() {
-            var token = localStorage.getItem('marine_token') ||
-                        localStorage.getItem('token') ||
-                        localStorage.getItem('authToken') || null;
-            var headers = { 'Accept': 'application/json' };
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            fetch('/api/logo', { headers: headers, credentials: 'include' })
-                .then(function(r) { return r.ok ? r.json() : null; })
-                .then(function(data) {
-                    if (data && data.success && data.logo && data.logo.dataUrl) {
-                        try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch (e) {}
-                        applyLogo();
-                    }
-                }).catch(function() {});
-        }
-
-        applyLogo();
-        syncLogoFromServer();
-
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'marine_logo' && e.newValue) applyLogo();
-        });
-
-        // ============================================================
-        // 🖨️ PRINT DATE
-        // ============================================================
-        function updatePrintDate() {
-            try {
-                var now = new Date();
-                var dateStr = now.toLocaleDateString('ar-TN', {
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                });
-                var timeStr = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-                var header = document.getElementById('fleetHeader');
-                if (header) header.setAttribute('data-print-date', dateStr + ' - ' + timeStr);
-            } catch (e) {}
-        }
-
-        updatePrintDate();
-        window.addEventListener('beforeprint', updatePrintDate);
-
-        function printFleet() {
-            try {
-                updatePrintDate();
-                var confirmed = confirm(
-                    '🖨️ قبل الطباعة تأكد من:\n\n' +
-                    '1. الاتجاه: أفقي (Landscape)\n' +
-                    '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
-                    '3. الوجهة: PDF (اختياري)\n\n' +
-                    'هل تريد المتابعة؟'
-                );
-                if (!confirmed) return;
-                window.print();
-            } catch (e) { window.print(); }
-        }
-
-        // ============================================================
-        // 🆕 TOAST
-        // ============================================================
-        function fleetToast(msg, type, duration) {
-            if (_isDestroyed) return;
-            type = type || 'info';
-            duration = duration || 3000;
-            var existing = document.querySelector('.fleet-toast');
-            if (existing) existing.remove();
-            var toast = document.createElement('div');
-            toast.className = 'fleet-toast ' + type;
-            var icons = { success: '✅', error: '❌', info: 'ℹ️' };
-            var icon = document.createElement('span');
-            icon.textContent = icons[type] || 'ℹ️';
-            var text = document.createElement('span');
-            text.textContent = String(msg || '');
-            toast.appendChild(icon);
-            toast.appendChild(text);
-            document.body.appendChild(toast);
-            setTimeout(function() { if (toast.parentNode) toast.remove(); }, duration);
-        }
-
-        // ============================================================
-        // 🔐 RBAC
-        // ============================================================
-        var LEGACY_ROLE_MAP = {
-            'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
-            'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit',
-            'user': 'viewer', 'مشاهد': 'viewer'
-        };
-        var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-
-        function normalizeRole(role) {
-            if (!role) return 'viewer';
-            var r = String(role).trim();
-            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
-            return LEGACY_ROLE_MAP[r] || 'viewer';
-        }
-
-        // ============================================================
-        // TOKEN
-        // ============================================================
-        function getToken() {
-            return localStorage.getItem('marine_token') ||
-                   localStorage.getItem('token') ||
-                   localStorage.getItem('authToken') ||
-                   localStorage.getItem('accessToken') || null;
-        }
-
-        function fetcher(url, options) {
-            if (typeof window.apiFetch === 'function') {
-                return window.apiFetch(url, options || {});
-            }
-            var headers = Object.assign({}, (options && options.headers) || {});
-            var token = getToken();
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            if (!headers['Accept']) headers['Accept'] = 'application/json';
-            return fetch(url, Object.assign({}, options || {}, { headers: headers, credentials: 'include' }));
-        }
-
-        // ============================================================
-        // PERMISSIONS
-        // ============================================================
-        function getUser() { return window.currentUser || null; }
-
-        function canEdit() {
-            if (window.capabilities && typeof window.capabilities.canCreateVessels === 'boolean') {
-                return window.capabilities.canCreateVessels || window.capabilities.canUpdateVessels;
-            }
-            var user = getUser();
-            if (!user) return false;
-            var role = normalizeRole(user.role);
-            return ['admin', 'manager', 'editor', 'maintenance_unit'].indexOf(role) !== -1;
-        }
-
-        function canDelete() {
-            if (window.capabilities && typeof window.capabilities.canDeleteVessels === 'boolean') {
-                return window.capabilities.canDeleteVessels;
-            }
-            var user = getUser();
-            if (!user) return false;
-            return normalizeRole(user.role) === 'admin';
-        }
-
-        // ============================================================
-        // HELPERS
-        // ============================================================
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str).replace(/[&<>"']/g, function(m) {
-                return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+    function _fleetCleanup() {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+        try {
+            ['renderMain','addItem','editItem','updateItem','deleteItem','clearMainSearch',
+             'updateZones','refreshFleet','printFleet','exportFleetExcel',
+             'openDisposeModal','closeDisposeModal'].forEach(function(k) {
+                try { delete window[k]; } catch(e) {}
             });
-        }
+        } catch (e) {}
+    }
+    window._pageCleanup = window._pageCleanup || [];
+    window._pageCleanup.push(_fleetCleanup);
+    window.addEventListener('beforeunload', _fleetCleanup);
+    window.addEventListener('pagehide', _fleetCleanup);
 
-        function formatDate(val) {
-            if (!val) return '-';
-            try {
-                var d = new Date(val);
-                if (isNaN(d.getTime())) return escapeHtml(val);
-                return String(d.getDate()).padStart(2,'0') + '/' +
-                       String(d.getMonth()+1).padStart(2,'0') + '/' +
-                       d.getFullYear();
-            } catch (_) { return escapeHtml(val); }
-        }
+    // ============================================================
+    // 📋 CONSTANTS
+    // ============================================================
+    var FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 
-        function getCategory(len) {
-            var n = parseFloat(len);
-            if (isNaN(n)) return 'زوارق مزدوجة';
-            if (n === 11) return 'البروق';
-            if (n >= 8 && n <= 12) return 'صقور';
-            if (n > 12 && n <= 25) return 'خوافر';
-            if (n >= 30) return 'طوافات';
-            return 'زوارق مزدوجة';
-        }
+    var FIXED_REGIONS = [
+        'الشمال', 'الساحل', 'الوسط', 'الجنوب',
+        'وحدة الصيانة والإسناد البحري تونس',
+        'وحدة الصيانة والإسناد البحري المنستير',
+        'وحدة الصيانة والإسناد البحري صفاقس',
+        'وحدة الصيانة والإسناد البحري جرجيس',
+        'المجمع الأمني بقبيبة'
+    ];
 
-        function updateZones() {
-            var regEl = document.getElementById('iReg');
-            var zoneSel = document.getElementById('iZone');
-            if (!regEl || !zoneSel) return;
-            var reg = regEl.value;
-            zoneSel.innerHTML = '<option value="">المنطقة</option>';
-            if (ZONES_DATA[reg]) {
-                ZONES_DATA[reg].forEach(function(z) {
-                    zoneSel.innerHTML += '<option value="' + z + '">' + z + '</option>';
-                });
-            }
-        }
+    var REGION_LABELS = {
+        'الشمال': '🗺️ الحرس البحري بالشمال',
+        'الساحل': '🗺️ الحرس البحري بالساحل',
+        'الوسط': '🗺️ الحرس البحري بالوسط',
+        'الجنوب': '🗺️ الحرس البحري بالجنوب',
+        'وحدة الصيانة والإسناد البحري تونس': '🛠️ وحدة الصيانة تونس',
+        'وحدة الصيانة والإسناد البحري المنستير': '🛠️ وحدة الصيانة المنستير',
+        'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ وحدة الصيانة صفاقس',
+        'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ وحدة الصيانة جرجيس',
+        'المجمع الأمني بقبيبة': '🏛️ المجمع الأمني بقبيبة'
+    };
 
-        // ============================================================
-        // ✅ PRINT SUMMARY
-        // ============================================================
-        function populatePrintSummary(vessels) {
-            var body = document.getElementById('printSummaryBody');
-            if (!body) return;
+    var ZONES_DATA = {
+        "الشمال": ["تونس", "بنزرت", "طبرقة"],
+        "الساحل": ["سوسة", "المنستير", "نابل"],
+        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
+        "الجنوب": ["جرجيس", "جربة", "قابس"],
+        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
+        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
+        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+        "المجمع الأمني بقبيبة": ["قبيبة"]
+    };
 
-            var stats = {};
-            FIXED_CATEGORIES.forEach(function(c) {
-                stats[c] = { active: 0, maintenance: 0, damaged: 0, total: 0 };
-            });
+    // ============================================================
+    // 🎨 LOGO
+    // ============================================================
+    function applyLogo() {
+        try {
+            var cachedLogo = localStorage.getItem('marine_logo');
+            if (!cachedLogo) return;
+            var iconDiv = document.getElementById('fleetHeaderIcon');
+            var img = document.getElementById('globalLogo');
+            if (img) { img.src = cachedLogo; img.style.display = 'block'; }
+            if (iconDiv) iconDiv.classList.add('has-logo');
+        } catch (e) {}
+    }
 
-            (vessels || []).forEach(function(v) {
-                var cat = v.cat || getCategory(v.len);
-                if (!stats[cat]) {
-                    stats[cat] = { active: 0, maintenance: 0, damaged: 0, total: 0 };
+    function syncLogoFromServer() {
+        var token = localStorage.getItem('marine_token') || localStorage.getItem('token') || null;
+        var headers = { 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        fetch('/api/logo', { headers: headers, credentials: 'include' })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (data && data.success && data.logo && data.logo.dataUrl) {
+                    try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch(e) {}
+                    applyLogo();
                 }
-                stats[cat].total++;
-                if (v.status === 'صالح') stats[cat].active++;
-                else if (v.status === 'صيانة') stats[cat].maintenance++;
-                else if (v.status === 'معطب') stats[cat].damaged++;
-            });
+            }).catch(function() {});
+    }
 
-            var grand = { active: 0, maintenance: 0, damaged: 0, total: 0 };
-            var html = '';
+    applyLogo();
+    syncLogoFromServer();
 
-            Object.keys(stats).forEach(function(cat) {
-                var s = stats[cat];
-                grand.active += s.active;
-                grand.maintenance += s.maintenance;
-                grand.damaged += s.damaged;
-                grand.total += s.total;
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'marine_logo' && e.newValue) applyLogo();
+    });
 
-                var eff = s.total > 0 ? ((s.active / s.total) * 100).toFixed(1) : '0.0';
+    // ============================================================
+    // 🖨️ PRINT
+    // ============================================================
+    function updatePrintDate() {
+        try {
+            var now = new Date();
+            var ds = now.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            var ts = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
+            var header = document.getElementById('fleetHeader');
+            if (header) header.setAttribute('data-print-date', ds + ' - ' + ts);
+        } catch (e) {}
+    }
+    updatePrintDate();
+    window.addEventListener('beforeprint', updatePrintDate);
 
-                html += '<tr>' +
-                    '<td class="cat-name">' + escapeHtml(cat) + '</td>' +
-                    '<td class="num-active">' + s.active + '</td>' +
-                    '<td class="num-maint">' + s.maintenance + '</td>' +
-                    '<td class="num-damaged">' + s.damaged + '</td>' +
-                    '<td class="num-total">' + s.total + '</td>' +
-                    '<td class="num-eff">' + eff + '%</td>' +
-                '</tr>';
-            });
+    function printFleet() {
+        try {
+            updatePrintDate();
+            var confirmed = confirm(
+                '🖨️ قبل الطباعة تأكد من:\n\n' +
+                '1. الاتجاه: أفقي (Landscape)\n' +
+                '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
+                '3. الوجهة: PDF (اختياري)\n\n' +
+                'هل تريد المتابعة؟'
+            );
+            if (!confirmed) return;
+            window.print();
+        } catch (e) { window.print(); }
+    }
 
-            var grandEff = grand.total > 0 ? ((grand.active / grand.total) * 100).toFixed(1) : '0.0';
-            html += '<tr class="total-row">' +
-                '<td class="cat-name">الإجمالي</td>' +
-                '<td>' + grand.active + '</td>' +
-                '<td>' + grand.maintenance + '</td>' +
-                '<td>' + grand.damaged + '</td>' +
-                '<td>' + grand.total + '</td>' +
-                '<td>' + grandEff + '%</td>' +
-            '</tr>';
+    // ============================================================
+    // 🍞 TOAST
+    // ============================================================
+    function fleetToast(msg, type, duration) {
+        if (_isDestroyed) return;
+        type = type || 'info';
+        duration = duration || 3000;
+        var existing = document.querySelector('.fleet-toast');
+        if (existing) existing.remove();
+        var toast = document.createElement('div');
+        toast.className = 'fleet-toast ' + type;
+        var icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+        var icon = document.createElement('span');
+        icon.textContent = icons[type] || 'ℹ️';
+        var text = document.createElement('span');
+        text.textContent = String(msg || '');
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        document.body.appendChild(toast);
+        setTimeout(function() { if (toast.parentNode) toast.remove(); }, duration);
+    }
 
-            body.innerHTML = html;
+    // ============================================================
+    // 🔐 RBAC
+    // ============================================================
+    var LEGACY_ROLE_MAP = {
+        'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
+        'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit',
+        'user': 'viewer', 'مشاهد': 'viewer'
+    };
+    var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
+
+    function normalizeRole(role) {
+        if (!role) return 'viewer';
+        var r = String(role).trim();
+        if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
+        return LEGACY_ROLE_MAP[r] || 'viewer';
+    }
+
+    // ============================================================
+    // 🔑 TOKEN
+    // ============================================================
+    function getToken() {
+        return localStorage.getItem('marine_token') ||
+               localStorage.getItem('token') ||
+               localStorage.getItem('authToken') ||
+               localStorage.getItem('accessToken') || null;
+    }
+
+    function getCsrf() {
+        try {
+            var m = document.cookie.match(/marine_csrf=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : '';
+        } catch(e) { return ''; }
+    }
+
+    function fetcher(url, options) {
+        if (typeof window.apiFetch === 'function') {
+            return window.apiFetch(url, options || {});
         }
-
-        // ============================================================
-        // ✅ INIT FILTERS
-        // ============================================================
-        function initFilters() {
-            var fCatMain = document.getElementById('fCatMain');
-            var fRegMain = document.getElementById('fRegMain');
-
-            if (fCatMain) {
-                var catHtml = '<option value="الكل">📦 جميع الفئات</option>';
-                FIXED_CATEGORIES.forEach(function(c) {
-                    catHtml += '<option value="' + c + '">' + c + '</option>';
-                });
-                fCatMain.innerHTML = catHtml;
-            }
-
-            if (fRegMain) {
-                var regHtml = '<option value="الكل">🌍 جميع الأقاليم والوحدات</option>';
-                FIXED_REGIONS.forEach(function(r) {
-                    var label = REGION_LABELS[r] || r;
-                    regHtml += '<option value="' + r + '">' + label + '</option>';
-                });
-                fRegMain.innerHTML = regHtml;
-            }
+        var headers = Object.assign({}, (options && options.headers) || {});
+        var token = getToken();
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        if (!headers['Accept']) headers['Accept'] = 'application/json';
+        var method = ((options && options.method) || 'GET').toUpperCase();
+        if (['POST','PUT','PATCH','DELETE'].indexOf(method) !== -1) {
+            var csrf = getCsrf();
+            if (csrf && !headers['X-CSRF-Token']) headers['X-CSRF-Token'] = csrf;
         }
+        return fetch(url, Object.assign({}, options || {}, { headers: headers, credentials: 'include' }));
+    }
 
-        // ============================================================
-        // RENDER MAIN
-        // ============================================================
-        async function renderMain() {
-            if (_isDestroyed) return;
+    // ============================================================
+    // 🔐 PERMISSIONS
+    // ============================================================
+    function getUser() { return window.currentUser || null; }
 
-            var mainBody = document.getElementById('mainBody');
-            if (!mainBody) return;
+    function canEdit() {
+        if (window.capabilities && typeof window.capabilities.canCreateVessels === 'boolean') {
+            return window.capabilities.canCreateVessels || window.capabilities.canUpdateVessels;
+        }
+        var user = getUser();
+        if (!user) return false;
+        var role = normalizeRole(user.role);
+        return ['admin', 'manager', 'editor', 'maintenance_unit'].indexOf(role) !== -1;
+    }
 
-            mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
-                '<div class="spinner"></div>' +
-                '<h3>جاري التحميل...</h3>' +
-                '<p>يرجى الانتظار</p>' +
-                '</td></tr>';
+    function canDelete() {
+        if (window.capabilities && typeof window.capabilities.canDeleteVessels === 'boolean') {
+            return window.capabilities.canDeleteVessels;
+        }
+        var user = getUser();
+        if (!user) return false;
+        return normalizeRole(user.role) === 'admin';
+    }
 
-            try {
-                var token = getToken();
-                if (!token) {
+    // 🆕 صلاحية الطرح
+    function canDispose() {
+        var user = getUser();
+        if (!user) return false;
+        var role = normalizeRole(user.role);
+        // admin + manager فقط
+        return role === 'admin' || role === 'manager';
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+        });
+    }
+
+    function formatDate(val) {
+        if (!val) return '-';
+        try {
+            var d = new Date(val);
+            if (isNaN(d.getTime())) return escapeHtml(val);
+            return String(d.getDate()).padStart(2,'0') + '/' +
+                   String(d.getMonth()+1).padStart(2,'0') + '/' +
+                   d.getFullYear();
+        } catch (_) { return escapeHtml(val); }
+    }
+
+    function getCategory(len) {
+        var n = parseFloat(len);
+        if (isNaN(n)) return 'زوارق مزدوجة';
+        if (n === 11) return 'البروق';
+        if (n >= 8 && n <= 12) return 'صقور';
+        if (n > 12 && n <= 25) return 'خوافر';
+        if (n >= 30) return 'طوافات';
+        return 'زوارق مزدوجة';
+    }
+
+    function updateZones() {
+        var regEl = document.getElementById('iReg');
+        var zoneSel = document.getElementById('iZone');
+        if (!regEl || !zoneSel) return;
+        var reg = regEl.value;
+        zoneSel.innerHTML = '<option value="">المنطقة</option>';
+        if (ZONES_DATA[reg]) {
+            ZONES_DATA[reg].forEach(function(z) {
+                zoneSel.innerHTML += '<option value="' + z + '">' + z + '</option>';
+            });
+        }
+    }
+
+    // ============================================================
+    // ✅ PRINT SUMMARY
+    // ============================================================
+    function populatePrintSummary(vessels) {
+        var body = document.getElementById('printSummaryBody');
+        if (!body) return;
+        var stats = {};
+        FIXED_CATEGORIES.forEach(function(c) {
+            stats[c] = { active: 0, maintenance: 0, damaged: 0, total: 0 };
+        });
+        (vessels || []).forEach(function(v) {
+            var cat = v.cat || getCategory(v.len);
+            if (!stats[cat]) stats[cat] = { active: 0, maintenance: 0, damaged: 0, total: 0 };
+            stats[cat].total++;
+            if (v.status === 'صالح') stats[cat].active++;
+            else if (v.status === 'صيانة') stats[cat].maintenance++;
+            else if (v.status === 'معطب') stats[cat].damaged++;
+        });
+        var grand = { active: 0, maintenance: 0, damaged: 0, total: 0 };
+        var html = '';
+        Object.keys(stats).forEach(function(cat) {
+            var s = stats[cat];
+            grand.active += s.active;
+            grand.maintenance += s.maintenance;
+            grand.damaged += s.damaged;
+            grand.total += s.total;
+            var eff = s.total > 0 ? ((s.active / s.total) * 100).toFixed(1) : '0.0';
+            html += '<tr><td class="cat-name">' + escapeHtml(cat) + '</td>' +
+                '<td class="num-active">' + s.active + '</td>' +
+                '<td class="num-maint">' + s.maintenance + '</td>' +
+                '<td class="num-damaged">' + s.damaged + '</td>' +
+                '<td class="num-total">' + s.total + '</td>' +
+                '<td class="num-eff">' + eff + '%</td></tr>';
+        });
+        var grandEff = grand.total > 0 ? ((grand.active / grand.total) * 100).toFixed(1) : '0.0';
+        html += '<tr class="total-row"><td class="cat-name">الإجمالي</td>' +
+            '<td>' + grand.active + '</td><td>' + grand.maintenance + '</td>' +
+            '<td>' + grand.damaged + '</td><td>' + grand.total + '</td>' +
+            '<td>' + grandEff + '%</td></tr>';
+        body.innerHTML = html;
+    }
+
+    // ============================================================
+    // INIT FILTERS
+    // ============================================================
+    function initFilters() {
+        var fCatMain = document.getElementById('fCatMain');
+        var fRegMain = document.getElementById('fRegMain');
+        if (fCatMain) {
+            var catHtml = '<option value="الكل">📦 جميع الفئات</option>';
+            FIXED_CATEGORIES.forEach(function(c) {
+                catHtml += '<option value="' + c + '">' + c + '</option>';
+            });
+            fCatMain.innerHTML = catHtml;
+        }
+        if (fRegMain) {
+            var regHtml = '<option value="الكل">🌍 جميع الأقاليم والوحدات</option>';
+            FIXED_REGIONS.forEach(function(r) {
+                var label = REGION_LABELS[r] || r;
+                regHtml += '<option value="' + r + '">' + label + '</option>';
+            });
+            fRegMain.innerHTML = regHtml;
+        }
+    }
+
+    // ============================================================
+    // RENDER MAIN
+    // ============================================================
+    async function renderMain() {
+        if (_isDestroyed) return;
+        var mainBody = document.getElementById('mainBody');
+        if (!mainBody) return;
+
+        mainBody.innerHTML = '<tr><td colspan="13" class="empty-state">' +
+            '<div class="spinner"></div><h3>جاري التحميل...</h3><p>يرجى الانتظار</p></td></tr>';
+
+        try {
+            var token = getToken();
+            if (!token) { window.location.href = '/index.html'; return; }
+
+            var response = await fetcher('/api/vessels', { method: 'GET' });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('marine_token');
                     window.location.href = '/index.html';
                     return;
                 }
-
-                var response = await fetcher('/api/vessels', { method: 'GET' });
-
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        localStorage.removeItem('marine_token');
-                        window.location.href = '/index.html';
-                        return;
-                    }
-                    throw new Error('فشل تحميل البيانات (Status: ' + response.status + ')');
-                }
-
-                var vessels = await response.json();
-                if (_isDestroyed) return;
-
-                var total = vessels.length;
-                var active = vessels.filter(function(v) { return v.status === 'صالح'; }).length;
-                var maintenance = vessels.filter(function(v) { return v.status === 'صيانة'; }).length;
-                var damaged = vessels.filter(function(v) { return v.status === 'معطب'; }).length;
-                var eff = total > 0 ? ((active / total) * 100).toFixed(1) : '0.0';
-
-                var tv = document.getElementById('totalVessels');
-                var av = document.getElementById('activeVessels');
-                var mv = document.getElementById('maintenanceVessels');
-                var dv = document.getElementById('damagedVessels');
-                var ef = document.getElementById('efficiencyPercent');
-                if (tv) tv.textContent = total;
-                if (av) av.textContent = active;
-                if (mv) mv.textContent = maintenance;
-                if (dv) dv.textContent = damaged;
-                if (ef) ef.textContent = eff + '%';
-
-                var fCatMain = document.getElementById('fCatMain');
-                var fRegMain = document.getElementById('fRegMain');
-                var searchMain = document.getElementById('searchMain');
-
-                var catFilter = (fCatMain && fCatMain.value) || 'الكل';
-                var regFilter = (fRegMain && fRegMain.value) || 'الكل';
-                var search = ((searchMain && searchMain.value) || '').trim().toLowerCase();
-
-                var filtered = vessels.filter(function(v) {
-                    var vCat = v.cat || getCategory(v.len);
-                    var vReg = v.region || v.reg || '';
-                    var catMatch = (catFilter === 'الكل' || vCat === catFilter);
-                    var regMatch = (regFilter === 'الكل' || vReg === regFilter);
-                    return catMatch && regMatch;
-                });
-
-                if (search) {
-                    filtered = filtered.filter(function(v) {
-                        var text = [v.name, v.num, v.region || v.reg, v.zone, v.port, v.status, v.cat, v.repairUnit]
-                            .filter(Boolean).join(' ').toLowerCase();
-                        return text.indexOf(search) !== -1;
-                    });
-                }
-
-                populatePrintSummary(filtered);
-
-                if (filtered.length === 0) {
-                    mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
-                        '<span class="empty-icon"><i class="fas fa-inbox"></i></span>' +
-                        '<h3>لا توجد مراكب</h3>' +
-                        '<p>لم يتم العثور على أي مراكب مطابقة</p>' +
-                        '</td></tr>';
-                    return;
-                }
-
-                var editable = canEdit();
-                var deletable = canDelete();
-
-                var html = '';
-                filtered.forEach(function(v) {
-                    var id = v._id || v.id;
-                    var name = v.name || '-';
-                    var number = v.num || '-';
-                    var length = v.len || '-';
-                    var category = v.cat || getCategory(length);
-                    var region = v.region || v.reg || '-';
-                    var zone = v.zone || '-';
-                    var port = v.port || '-';
-                    var supp = v.supp || '-';
-                    var status = v.status || '-';
-                    var breakType = v.break || '-';
-                    var fDate = v.fDate;
-                    var eDate = v.eDate;
-                    var repairUnit = v.repairUnit || '-';
-
-                    var statusClass = status === 'صالح' ? 'active'
-                                    : (status === 'معطب' ? 'damaged'
-                                    : (status === 'صيانة' ? 'pending' : 'completed'));
-
-                    var isDamaged = status === 'معطب';
-
-                    var editBtn = editable ?
-                        '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>' : '';
-                    var delBtn = deletable ?
-                        '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')" title="حذف"><i class="fas fa-trash-alt"></i></button>' : '';
-
-                    html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
-                        '<td class="vessel-name">' + escapeHtml(name) + '</td>' +
-                        '<td>' + escapeHtml(number) + '</td>' +
-                        '<td>' + escapeHtml(length) + '</td>' +
-                        '<td>' + escapeHtml(category) + '</td>' +
-                        '<td>' + escapeHtml(region) + '</td>' +
-                        '<td>' + escapeHtml(zone) + '</td>' +
-                        '<td>' + escapeHtml(port) + '</td>' +
-                        '<td>' + escapeHtml(supp) + '</td>' +
-                        '<td><span class="status-badge ' + statusClass + '">' + escapeHtml(status) + '</span></td>' +
-                        '<td>' + escapeHtml(breakType) + '</td>' +
-                        '<td>' + formatDate(fDate) + '</td>' +
-                        '<td>' + formatDate(eDate) + '</td>' +
-                        '<td>' + escapeHtml(repairUnit) + '</td>' +
-                        '<td><div class="action-btns">' + editBtn + ' ' + delBtn + '</div></td>' +
-                    '</tr>';
-                });
-                mainBody.innerHTML = html;
-
-            } catch (err) {
-                console.error('❌ renderMain error:', err);
-                if (_isDestroyed) return;
-                mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
-                    '<span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>' +
-                    '<h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>' +
-                    '<p style="color:rgba(255,255,255,0.3);">' + escapeHtml(err.message) + '</p>' +
-                    '<button class="retry-btn" onclick="renderMain()">' +
-                    '<i class="fas fa-sync-alt"></i> إعادة المحاولة' +
-                    '</button></td></tr>';
+                throw new Error('فشل تحميل البيانات (Status: ' + response.status + ')');
             }
-        }
 
-        // ============================================================
-        // ADD / DELETE / EDIT / UPDATE
-        // ============================================================
-        async function addItem() {
+            var allVessels = await response.json();
             if (_isDestroyed) return;
-            if (!canEdit()) { alert('⚠️ ليس لديك صلاحية لإضافة مركب'); return; }
 
-            var nameEl = document.getElementById('iName');
-            if (!nameEl) return;
-            var name = nameEl.value.trim();
-            if (!name) { alert('⚠️ يرجى إدخال اسم المركب'); return; }
+            // 🆕 فصل المطروحة عن النشطة
+            var vessels = allVessels.filter(function(v) { return v.status !== 'طرح'; });
+            var disposedList = allVessels.filter(function(v) { return v.status === 'طرح'; });
+            _disposalsCount = disposedList.length;
+            updateDisposalsBadge();
 
-            var statEl = document.getElementById('iStat');
-            var dateEl = document.getElementById('iDate');
-            var status = statEl ? statEl.value : 'صالح';
-            var faultDate = dateEl ? dateEl.value : '';
-            if ((status === 'معطب' || status === 'صيانة') && !faultDate) {
-                alert('⚠️ تاريخ العطب مطلوب');
+            var total = vessels.length;
+            var active = vessels.filter(function(v) { return v.status === 'صالح'; }).length;
+            var maintenance = vessels.filter(function(v) { return v.status === 'صيانة'; }).length;
+            var damaged = vessels.filter(function(v) { return v.status === 'معطب'; }).length;
+            var eff = total > 0 ? ((active / total) * 100).toFixed(1) : '0.0';
+
+            var tv = document.getElementById('totalVessels'); if (tv) tv.textContent = total;
+            var av = document.getElementById('activeVessels'); if (av) av.textContent = active;
+            var mv = document.getElementById('maintenanceVessels'); if (mv) mv.textContent = maintenance;
+            var dv = document.getElementById('damagedVessels'); if (dv) dv.textContent = damaged;
+            var ef = document.getElementById('efficiencyPercent'); if (ef) ef.textContent = eff + '%';
+
+            var fCatMain = document.getElementById('fCatMain');
+            var fRegMain = document.getElementById('fRegMain');
+            var fStatusMain = document.getElementById('fStatusMain');
+            var searchMain = document.getElementById('searchMain');
+
+            var catFilter = (fCatMain && fCatMain.value) || 'الكل';
+            var regFilter = (fRegMain && fRegMain.value) || 'الكل';
+            var statusFilter = (fStatusMain && fStatusMain.value) || 'all';
+            var search = ((searchMain && searchMain.value) || '').trim().toLowerCase();
+
+            var filtered = vessels.filter(function(v) {
+                var vCat = v.cat || getCategory(v.len);
+                var vReg = v.region || v.reg || '';
+                var catMatch = (catFilter === 'الكل' || vCat === catFilter);
+                var regMatch = (regFilter === 'الكل' || vReg === regFilter);
+                var statusMatch = (statusFilter === 'all' || v.status === statusFilter);
+                return catMatch && regMatch && statusMatch;
+            });
+
+            if (search) {
+                filtered = filtered.filter(function(v) {
+                    var text = [v.name, v.num, v.region || v.reg, v.zone, v.port, v.status, v.cat, v.repairUnit]
+                        .filter(Boolean).join(' ').toLowerCase();
+                    return text.indexOf(search) !== -1;
+                });
+            }
+
+            populatePrintSummary(filtered);
+
+            if (filtered.length === 0) {
+                mainBody.innerHTML = '<tr><td colspan="13" class="empty-state">' +
+                    '<span class="empty-icon"><i class="fas fa-inbox"></i></span>' +
+                    '<h3>لا توجد مراكب</h3>' +
+                    '<p>لم يتم العثور على أي مراكب مطابقة</p></td></tr>';
                 return;
             }
 
-            var vessel = {
-                name: name,
-                num: (document.getElementById('iNum') || {}).value || '',
-                len: (document.getElementById('iLen') || {}).value || '',
-                region: (document.getElementById('iReg') || {}).value || '',
-                zone: (document.getElementById('iZone') || {}).value || '',
-                port: (document.getElementById('iPort') || {}).value || '',
-                supp: (document.getElementById('iSupp') || {}).value || '',
-                status: status,
-                break: (document.getElementById('iBreak') || {}).value || '',
-                fDate: faultDate,
-                eDate: (document.getElementById('iEnd') || {}).value || '',
-                ref: (document.getElementById('iRef') || {}).value || '',
-                repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
-            };
+            var editable = canEdit();
+            var deletable = canDelete();
+            var disposable = canDispose();
 
-            try {
-                var response = await fetcher('/api/vessels', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(vessel)
-                });
-                if (!response.ok) {
-                    var error = await response.json();
-                    throw new Error(error.error || 'فشل حفظ المركب');
-                }
-                clearForm();
-                await renderMain();
-                fleetToast('✅ تم حفظ المركب بنجاح', 'success');
-            } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
-        }
+            var html = '';
+            filtered.forEach(function(v) {
+                var id = v._id || v.id;
+                var name = v.name || '-';
+                var number = v.num || '-';
+                var length = v.len || '-';
+                var category = v.cat || getCategory(length);
+                var region = v.region || v.reg || '-';
+                var zone = v.zone || '-';
+                var port = v.port || '-';
+                var supp = v.supp || '-';
+                var status = v.status || '-';
+                var breakType = v.break || '-';
+                var fDate = v.fDate;
+                var repairUnit = v.repairUnit || '-';
 
-        function clearForm() {
-            var ids = ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'];
-            ids.forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.value = '';
+                var statusClass = status === 'صالح' ? 'active'
+                                : (status === 'معطب' ? 'damaged'
+                                : (status === 'صيانة' ? 'pending' : 'completed'));
+
+                var isDamaged = status === 'معطب';
+
+                var editBtn = editable ?
+                    '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>' : '';
+
+                // 🆕 زر الطرح (فقط admin/manager)
+                var disposeBtn = disposable ?
+                    '<button class="btn-sm dispose" onclick="openDisposeModal(\'' + id + '\')" title="طرح نهائي"><i class="fas fa-archive"></i></button>' : '';
+
+                var delBtn = deletable ?
+                    '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')" title="حذف"><i class="fas fa-trash-alt"></i></button>' : '';
+
+                html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
+                    '<td class="vessel-name">' + escapeHtml(name) + '</td>' +
+                    '<td>' + escapeHtml(number) + '</td>' +
+                    '<td>' + escapeHtml(length) + '</td>' +
+                    '<td>' + escapeHtml(category) + '</td>' +
+                    '<td>' + escapeHtml(region) + '</td>' +
+                    '<td>' + escapeHtml(zone) + '</td>' +
+                    '<td>' + escapeHtml(port) + '</td>' +
+                    '<td>' + escapeHtml(supp) + '</td>' +
+                    '<td><span class="status-badge ' + statusClass + '">' + escapeHtml(status) + '</span></td>' +
+                    '<td>' + escapeHtml(breakType) + '</td>' +
+                    '<td>' + formatDate(fDate) + '</td>' +
+                    '<td>' + escapeHtml(repairUnit) + '</td>' +
+                    '<td><div class="action-btns">' + editBtn + ' ' + disposeBtn + ' ' + delBtn + '</div></td>' +
+                '</tr>';
             });
-            var iReg = document.getElementById('iReg'); if (iReg) iReg.value = '';
-            var iZone = document.getElementById('iZone');
-            if (iZone) iZone.innerHTML = '<option value="">المنطقة</option>';
-            var iStat = document.getElementById('iStat'); if (iStat) iStat.value = 'صالح';
-            var iRepairUnit = document.getElementById('iRepairUnit'); if (iRepairUnit) iRepairUnit.value = '';
+            mainBody.innerHTML = html;
+
+        } catch (err) {
+            console.error('❌ renderMain error:', err);
+            if (_isDestroyed) return;
+            mainBody.innerHTML = '<tr><td colspan="13" class="empty-state">' +
+                '<span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>' +
+                '<h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>' +
+                '<p style="color:rgba(255,255,255,0.3);">' + escapeHtml(err.message) + '</p>' +
+                '<button class="retry-btn" onclick="renderMain()">' +
+                '<i class="fas fa-sync-alt"></i> إعادة المحاولة</button></td></tr>';
+        }
+    }
+
+    // 🆕 تحديث شارة المطروحة
+    function updateDisposalsBadge() {
+        var c = document.getElementById('fleetDisposalsCount');
+        if (!c) return;
+        if (_disposalsCount > 0) {
+            c.textContent = _disposalsCount;
+            c.style.display = 'inline-block';
+        } else {
+            c.style.display = 'none';
+        }
+    }
+
+    // ============================================================
+    // CRUD
+    // ============================================================
+    async function addItem() {
+        if (_isDestroyed) return;
+        if (!canEdit()) { alert('⚠️ ليس لديك صلاحية لإضافة مركب'); return; }
+
+        var nameEl = document.getElementById('iName');
+        if (!nameEl) return;
+        var name = nameEl.value.trim();
+        if (!name) { alert('⚠️ يرجى إدخال اسم المركب'); return; }
+
+        var statEl = document.getElementById('iStat');
+        var dateEl = document.getElementById('iDate');
+        var status = statEl ? statEl.value : 'صالح';
+        var faultDate = dateEl ? dateEl.value : '';
+        if ((status === 'معطب' || status === 'صيانة') && !faultDate) {
+            alert('⚠️ تاريخ العطب مطلوب');
+            return;
         }
 
-        async function deleteItem(id, name) {
-            if (_isDestroyed) return;
-            if (!canDelete()) { alert('⚠️ ليس لديك صلاحية للحذف'); return; }
-            if (!confirm('⚠️ هل أنت متأكد من حذف المركب "' + name + '"؟')) return;
+        var vessel = {
+            name: name,
+            num: (document.getElementById('iNum') || {}).value || '',
+            len: (document.getElementById('iLen') || {}).value || '',
+            region: (document.getElementById('iReg') || {}).value || '',
+            zone: (document.getElementById('iZone') || {}).value || '',
+            port: (document.getElementById('iPort') || {}).value || '',
+            supp: (document.getElementById('iSupp') || {}).value || '',
+            status: status,
+            break: (document.getElementById('iBreak') || {}).value || '',
+            fDate: faultDate,
+            eDate: (document.getElementById('iEnd') || {}).value || '',
+            ref: (document.getElementById('iRef') || {}).value || '',
+            repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
+        };
 
-            try {
-                var response = await fetcher('/api/vessels/' + id, { method: 'DELETE' });
-                if (!response.ok) {
-                    var error = await response.json();
-                    throw new Error(error.error || 'فشل حذف المركب');
-                }
-                await renderMain();
-                fleetToast('✅ تم حذف المركب بنجاح', 'success');
-            } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
+        try {
+            var response = await fetcher('/api/vessels', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(vessel)
+            });
+            if (!response.ok) {
+                var error = await response.json();
+                throw new Error(error.error || 'فشل حفظ المركب');
+            }
+            clearForm();
+            await renderMain();
+            fleetToast('✅ تم حفظ المركب بنجاح', 'success');
+        } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
+    }
+
+    function clearForm() {
+        ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        var iReg = document.getElementById('iReg'); if (iReg) iReg.value = '';
+        var iZone = document.getElementById('iZone');
+        if (iZone) iZone.innerHTML = '<option value="">المنطقة</option>';
+        var iStat = document.getElementById('iStat'); if (iStat) iStat.value = 'صالح';
+        var iRepairUnit = document.getElementById('iRepairUnit'); if (iRepairUnit) iRepairUnit.value = '';
+    }
+
+    async function deleteItem(id, name) {
+        if (_isDestroyed) return;
+        if (!canDelete()) { alert('⚠️ ليس لديك صلاحية للحذف'); return; }
+        if (!confirm('⚠️ هل أنت متأكد من حذف المركب "' + name + '"؟')) return;
+
+        try {
+            var response = await fetcher('/api/vessels/' + id, { method: 'DELETE' });
+            if (!response.ok) {
+                var error = await response.json();
+                throw new Error(error.error || 'فشل حذف المركب');
+            }
+            await renderMain();
+            fleetToast('✅ تم حذف المركب بنجاح', 'success');
+        } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
+    }
+
+    async function editItem(id) {
+        if (_isDestroyed) return;
+        if (!canEdit()) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
+
+        try {
+            var response = await fetcher('/api/vessels', { method: 'GET' });
+            if (!response.ok) throw new Error('فشل تحميل البيانات');
+            var vessels = await response.json();
+            var v = vessels.find(function(item) {
+                return String(item._id || item.id) === String(id);
+            });
+            if (!v) { alert('❌ المركب غير موجود'); return; }
+
+            var el;
+            el = document.getElementById('iName'); if (el) el.value = v.name || '';
+            el = document.getElementById('iNum'); if (el) el.value = v.num || '';
+            el = document.getElementById('iLen'); if (el) el.value = v.len || '';
+            el = document.getElementById('iReg'); if (el) el.value = v.region || v.reg || '';
+            updateZones();
+            setTimeout(function() {
+                var z = document.getElementById('iZone');
+                if (z) z.value = v.zone || '';
+            }, 50);
+            el = document.getElementById('iPort'); if (el) el.value = v.port || '';
+            el = document.getElementById('iSupp'); if (el) el.value = v.supp || '';
+            el = document.getElementById('iStat'); if (el) el.value = v.status || 'صالح';
+            el = document.getElementById('iBreak'); if (el) el.value = v.break || '';
+            el = document.getElementById('iDate'); if (el) el.value = v.fDate || '';
+            el = document.getElementById('iEnd'); if (el) el.value = v.eDate || '';
+            el = document.getElementById('iRef'); if (el) el.value = v.ref || '';
+            el = document.getElementById('iRepairUnit'); if (el) el.value = v.repairUnit || '';
+
+            var saveBtn = document.getElementById('saveVesselBtn');
+            if (saveBtn) {
+                saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
+                saveBtn.onclick = async function() { await updateItem(id); };
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
+    }
+
+    async function updateItem(id) {
+        if (_isDestroyed) return;
+        var nameEl = document.getElementById('iName');
+        if (!nameEl) return;
+        var name = nameEl.value.trim();
+        if (!name) { alert('⚠️ اسم المركب مطلوب'); return; }
+
+        var vessel = {
+            name: name,
+            num: (document.getElementById('iNum') || {}).value || '',
+            len: (document.getElementById('iLen') || {}).value || '',
+            region: (document.getElementById('iReg') || {}).value || '',
+            zone: (document.getElementById('iZone') || {}).value || '',
+            port: (document.getElementById('iPort') || {}).value || '',
+            supp: (document.getElementById('iSupp') || {}).value || '',
+            status: (document.getElementById('iStat') || {}).value || 'صالح',
+            break: (document.getElementById('iBreak') || {}).value || '',
+            fDate: (document.getElementById('iDate') || {}).value || '',
+            eDate: (document.getElementById('iEnd') || {}).value || '',
+            ref: (document.getElementById('iRef') || {}).value || '',
+            repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
+        };
+
+        try {
+            var response = await fetcher('/api/vessels/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(vessel)
+            });
+            if (!response.ok) {
+                var error = await response.json();
+                throw new Error(error.error || 'فشل تحديث المركب');
+            }
+            clearForm();
+            var saveBtn = document.getElementById('saveVesselBtn');
+            if (saveBtn) {
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
+                saveBtn.onclick = addItem;
+            }
+            await renderMain();
+            fleetToast('✅ تم تحديث المركب بنجاح', 'success');
+        } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
+    }
+
+    function clearMainSearch() {
+        var s = document.getElementById('searchMain'); if (s) s.value = '';
+        var c = document.getElementById('fCatMain'); if (c) c.value = 'الكل';
+        var r = document.getElementById('fRegMain'); if (r) r.value = 'الكل';
+        var st = document.getElementById('fStatusMain'); if (st) st.value = 'all';
+        renderMain();
+    }
+
+    function refreshFleet() { renderMain(); }
+
+    // ============================================================
+    // 🆕 MODAL الطرح
+    // ============================================================
+    var _disposeVesselData = null;
+
+    function openDisposeModal(vesselId) {
+        if (!canDispose()) {
+            fleetToast('⚠️ ليس لديك صلاحية الطرح', 'error');
+            return;
         }
-
-        async function editItem(id) {
-            if (_isDestroyed) return;
-            if (!canEdit()) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
-
-            try {
-                var response = await fetcher('/api/vessels', { method: 'GET' });
-                if (!response.ok) throw new Error('فشل تحميل البيانات');
-                var vessels = await response.json();
-                var v = vessels.find(function(item) {
-                    return String(item._id || item.id) === String(id);
+        fetcher('/api/vessels', { method: 'GET' })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(list) {
+                if (!list) throw new Error('فشل التحميل');
+                var v = list.find(function(x) {
+                    return String(x._id || x.id) === String(vesselId);
                 });
-                if (!v) { alert('❌ المركب غير موجود'); return; }
+                if (!v) throw new Error('المركب غير موجود');
 
-                var el;
-                el = document.getElementById('iName'); if (el) el.value = v.name || '';
-                el = document.getElementById('iNum'); if (el) el.value = v.num || '';
-                el = document.getElementById('iLen'); if (el) el.value = v.len || '';
-                el = document.getElementById('iReg'); if (el) el.value = v.region || v.reg || '';
-                updateZones();
-                setTimeout(function() {
-                    var z = document.getElementById('iZone');
-                    if (z) z.value = v.zone || '';
-                }, 50);
-                el = document.getElementById('iPort'); if (el) el.value = v.port || '';
-                el = document.getElementById('iSupp'); if (el) el.value = v.supp || '';
-                el = document.getElementById('iStat'); if (el) el.value = v.status || 'صالح';
-                el = document.getElementById('iBreak'); if (el) el.value = v.break || '';
-                el = document.getElementById('iDate'); if (el) el.value = v.fDate || '';
-                el = document.getElementById('iEnd'); if (el) el.value = v.eDate || '';
-                el = document.getElementById('iRef'); if (el) el.value = v.ref || '';
-                el = document.getElementById('iRepairUnit'); if (el) el.value = v.repairUnit || '';
-
-                var saveBtn = document.getElementById('saveVesselBtn');
-                if (saveBtn) {
-                    saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
-                    saveBtn.onclick = async function() { await updateItem(id); };
-                }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
-        }
-
-        async function updateItem(id) {
-            if (_isDestroyed) return;
-            var nameEl = document.getElementById('iName');
-            if (!nameEl) return;
-            var name = nameEl.value.trim();
-            if (!name) { alert('⚠️ اسم المركب مطلوب'); return; }
-
-            var vessel = {
-                name: name,
-                num: (document.getElementById('iNum') || {}).value || '',
-                len: (document.getElementById('iLen') || {}).value || '',
-                region: (document.getElementById('iReg') || {}).value || '',
-                zone: (document.getElementById('iZone') || {}).value || '',
-                port: (document.getElementById('iPort') || {}).value || '',
-                supp: (document.getElementById('iSupp') || {}).value || '',
-                status: (document.getElementById('iStat') || {}).value || 'صالح',
-                break: (document.getElementById('iBreak') || {}).value || '',
-                fDate: (document.getElementById('iDate') || {}).value || '',
-                eDate: (document.getElementById('iEnd') || {}).value || '',
-                ref: (document.getElementById('iRef') || {}).value || '',
-                repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
-            };
-
-            try {
-                var response = await fetcher('/api/vessels/' + id, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(vessel)
-                });
-                if (!response.ok) {
-                    var error = await response.json();
-                    throw new Error(error.error || 'فشل تحديث المركب');
-                }
-                clearForm();
-                var saveBtn = document.getElementById('saveVesselBtn');
-                if (saveBtn) {
-                    saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
-                    saveBtn.onclick = addItem;
-                }
-                await renderMain();
-                fleetToast('✅ تم تحديث المركب بنجاح', 'success');
-            } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
-        }
-
-        function clearMainSearch() {
-            var s = document.getElementById('searchMain'); if (s) s.value = '';
-            var c = document.getElementById('fCatMain'); if (c) c.value = 'الكل';
-            var r = document.getElementById('fRegMain'); if (r) r.value = 'الكل';
-            renderMain();
-        }
-
-        function refreshFleet() { renderMain(); }
-
-        // ============================================================
-        // 🆕 EXCEL EXPORT (CSV with BOM)
-        // ============================================================
-        function exportFleetExcel() {
-            if (_isDestroyed) return;
-            try {
-                var table = document.querySelector('.table-wrapper table');
-                if (!table) { fleetToast('⚠️ لا يوجد جدول للتصدير', 'error'); return; }
-
-                var rows = table.querySelectorAll('tbody tr');
-                if (!rows.length) { fleetToast('⚠️ لا توجد بيانات للتصدير', 'error'); return; }
-
-                // تحقق أن الجدول ليس فيه رسالة "لا توجد مراكب"
-                var firstRow = rows[0];
-                if (firstRow.querySelector('.empty-state')) {
-                    fleetToast('⚠️ لا توجد بيانات للتصدير', 'error');
+                if (v.status === 'طرح') {
+                    fleetToast('⚠️ المركب مطروح مسبقاً', 'warning');
                     return;
                 }
 
-                var BOM = '\uFEFF';
+                _disposeVesselData = v;
 
-                function csvEscape(val) {
-                    if (val === null || val === undefined) return '';
-                    var s = String(val).replace(/\s+/g, ' ').trim();
-                    if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
-                        return '"' + s.replace(/"/g, '""') + '"';
-                    }
-                    return s;
-                }
+                // ملء النموذج
+                setVal('disposeVesselId', v._id || v.id);
+                setText('disposeVesselName', v.name || '—');
+                setText('disposeVesselSub', (v.cat || getCategory(v.len)) + ' • ' + (v.region || v.reg || '—'));
+                setText('disposeVesselNum', v.num || '—');
 
-                // رؤوس الأعمدة بالعربية
-                var headers = [
-                    '#', 'الاسم', 'الرقم', 'الطول', 'الفئة',
-                    'الإقليم', 'المنطقة', 'الميناء', 'التعزيز',
-                    'الحالة', 'نوع العطب', 'تاريخ العطب', 'تاريخ الانتهاء',
-                    'الوحدة المسؤولة', 'المرجع'
-                ];
+                setVal('disposeReason', '');
+                setVal('disposeDecision', '');
+                setVal('disposeBy', getUser() ? (getUser().name || getUser().username || '') : '');
+                setVal('disposeDate', new Date().toISOString().split('T')[0]);
+                setVal('disposeNotes', '');
+                var chk = document.getElementById('disposeConfirmCheck');
+                if (chk) chk.checked = false;
+                var cbtn = document.getElementById('fleetDisposeConfirm');
+                if (cbtn) cbtn.disabled = true;
 
-                var csvRows = [];
-                csvRows.push(headers.map(csvEscape).join(','));
+                var modal = document.getElementById('fleetDisposeModal');
+                if (modal) modal.classList.add('active');
+            })
+            .catch(function(err) { fleetToast('❌ ' + err.message, 'error'); });
+    }
 
-                var counter = 0;
-                rows.forEach(function(row) {
-                    var cells = row.querySelectorAll('td');
-                    if (cells.length < 13) return; // تجاهل صفوف الخطأ
-                    counter++;
+    function closeDisposeModal() {
+        var modal = document.getElementById('fleetDisposeModal');
+        if (modal) modal.classList.remove('active');
+        _disposeVesselData = null;
+    }
 
-                    var values = [
-                        counter,
-                        cells[0] ? cells[0].textContent.trim() : '',   // الاسم
-                        cells[1] ? cells[1].textContent.trim() : '',   // الرقم
-                        cells[2] ? cells[2].textContent.trim() : '',   // الطول
-                        cells[3] ? cells[3].textContent.trim() : '',   // الفئة
-                        cells[4] ? cells[4].textContent.trim() : '',   // الإقليم
-                        cells[5] ? cells[5].textContent.trim() : '',   // المنطقة
-                        cells[6] ? cells[6].textContent.trim() : '',   // الميناء
-                        cells[7] ? cells[7].textContent.trim() : '',   // التعزيز
-                        cells[8] ? cells[8].textContent.trim() : '',   // الحالة
-                        cells[9] ? cells[9].textContent.trim() : '',   // العطب
-                        cells[10] ? cells[10].textContent.trim() : '', // التاريخ
-                        cells[11] ? cells[11].textContent.trim() : '', // الانتهاء
-                        cells[12] ? cells[12].textContent.trim() : '', // الوحدة المسؤولة
-                        ''                                             // المرجع (ليس معروض في الجدول)
-                    ];
+    function setVal(id, val) {
+        var el = document.getElementById(id);
+        if (el) el.value = val || '';
+    }
+    function setText(id, val) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = val || '—';
+    }
 
-                    csvRows.push(values.map(csvEscape).join(','));
-                });
+    async function confirmDispose() {
+        if (!_disposeVesselData) return;
 
-                var csv = BOM + csvRows.join('\r\n');
-                var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-
-                var now = new Date();
-                var dateStr = now.getFullYear() + '-' +
-                              String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                              String(now.getDate()).padStart(2, '0') + '_' +
-                              String(now.getHours()).padStart(2, '0') + '-' +
-                              String(now.getMinutes()).padStart(2, '0');
-                var filename = 'fleet_' + dateStr + '.csv';
-
-                if (window.navigator && window.navigator.msSaveBlob) {
-                    window.navigator.msSaveBlob(blob, filename);
-                } else {
-                    var url = URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    a.style.display = 'none';
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(function() {
-                        if (a.parentNode) a.parentNode.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }, 100);
-                }
-
-                fleetToast('✅ تم تصدير ' + counter + ' مركب', 'success');
-            } catch (err) {
-                console.error('❌ Excel export error:', err);
-                fleetToast('❌ فشل التصدير: ' + err.message, 'error');
-            }
+        var reason = (document.getElementById('disposeReason') || {}).value || '';
+        reason = reason.trim();
+        if (!reason) {
+            fleetToast('⚠️ سبب الطرح مطلوب', 'error');
+            return;
         }
 
-        // ============================================================
-        // ✅ SCROLL BUTTONS
-        // ============================================================
-        function initScrollButtons() {
-            var nav = document.getElementById('fleetScrollNav');
-            var btnTop = document.getElementById('fleetScrollTop');
-            var btnBottom = document.getElementById('fleetScrollBottom');
-            if (!nav || !btnTop || !btnBottom) return;
-
-            var SCROLL_THRESHOLD = 200;
-
-            function updateVisibility() {
-                var y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-                var docHeight = document.documentElement.scrollHeight;
-                var winHeight = window.innerHeight;
-                var hasScroll = docHeight > (winHeight + 100);
-                if (!hasScroll) { nav.classList.remove('visible'); return; }
-                if (y > SCROLL_THRESHOLD) nav.classList.add('visible');
-                else nav.classList.remove('visible');
-                btnTop.style.opacity = y > 50 ? '1' : '0.35';
-                btnTop.style.pointerEvents = y > 50 ? 'auto' : 'none';
-                var atBottom = (y + winHeight) >= (docHeight - 50);
-                btnBottom.style.opacity = atBottom ? '0.35' : '1';
-                btnBottom.style.pointerEvents = atBottom ? 'none' : 'auto';
-            }
-
-            btnTop.addEventListener('click', function() {
-                try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
-            });
-            btnBottom.addEventListener('click', function() {
-                var target = document.documentElement.scrollHeight;
-                try { window.scrollTo({ top: target, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, target); }
-            });
-
-            window.addEventListener('scroll', updateVisibility, { passive: true });
-            window.addEventListener('resize', updateVisibility, { passive: true });
-            updateVisibility();
-            setTimeout(updateVisibility, 500);
-            setTimeout(updateVisibility, 1500);
+        var chk = document.getElementById('disposeConfirmCheck');
+        if (!chk || !chk.checked) {
+            fleetToast('⚠️ يجب تأكيد الإقرار أولاً', 'error');
+            return;
         }
 
-        // ============================================================
-        // INIT
-        // ============================================================
-        var _initialized = false;
+        var id = _disposeVesselData._id || _disposeVesselData.id;
 
-        async function initPage() {
-            if (_isDestroyed || _initialized) return false;
+        var payload = {
+            reason: reason,
+            decision: (document.getElementById('disposeDecision') || {}).value || '',
+            disposedBy: (document.getElementById('disposeBy') || {}).value || '',
+            notes: (document.getElementById('disposeNotes') || {}).value || '',
+            date: (document.getElementById('disposeDate') || {}).value || null
+        };
 
-            var header = document.getElementById('fleetHeader');
-            if (!header) return false;
+        var btn = document.getElementById('fleetDisposeConfirm');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الطرح...'; }
 
-            _initialized = true;
-            console.log('🚀 Fleet — Initializing...');
+        try {
+            var response = await fetcher('/api/vessels/' + id + '/dispose', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            var data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'فشل الطرح');
 
-            initFilters();
-            initScrollButtons();
-
-            var token = getToken();
-            if (!token) {
-                window.location.href = '/index.html';
-                return true;
-            }
-
-            try {
-                var response = await fetcher('/api/auth/me', { method: 'GET' });
-                if (!response.ok) {
-                    localStorage.removeItem('marine_token');
-                    window.location.href = '/index.html';
-                    return true;
-                }
-                var data = await response.json();
-                if (data.success && data.user) {
-                    window.currentUser = data.user;
-                }
-            } catch (error) {
-                console.error('❌ Auth error:', error);
-                window.location.href = '/index.html';
-                return true;
-            }
-
-            if (_isDestroyed) return true;
-
-            var addBtn = document.getElementById('saveVesselBtn');
-            if (addBtn) addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
-
-            updateZones();
+            fleetToast('✅ تم طرح المركب بنجاح', 'success', 4000);
+            closeDisposeModal();
             await renderMain();
 
-            console.log('✅ Fleet ready');
+        } catch (err) {
+            fleetToast('❌ ' + err.message, 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-archive"></i> تأكيد الطرح نهائياً'; }
+        }
+    }
+
+    // 🆕 الانتقال لصفحة المطروحة
+    function navigateToDisposals() {
+        if (typeof window.navigateTo === 'function') {
+            window.navigateTo('disposals-vessels');
+        } else {
+            window.location.hash = '#disposals-vessels';
+            // fallback: ربما الصفحة موجودة في مسار آخر
+            setTimeout(function() {
+                if (window.location.hash !== '#disposals-vessels') {
+                    window.location.href = '/pages/disposals-vessels.html';
+                }
+            }, 500);
+        }
+    }
+
+    // ============================================================
+    // EXCEL EXPORT
+    // ============================================================
+    function exportFleetExcel() {
+        if (_isDestroyed) return;
+        try {
+            var table = document.querySelector('.table-wrapper table');
+            if (!table) { fleetToast('⚠️ لا يوجد جدول للتصدير', 'error'); return; }
+            var rows = table.querySelectorAll('tbody tr');
+            if (!rows.length) { fleetToast('⚠️ لا توجد بيانات للتصدير', 'error'); return; }
+            if (rows[0].querySelector('.empty-state')) {
+                fleetToast('⚠️ لا توجد بيانات للتصدير', 'error');
+                return;
+            }
+
+            var BOM = '\uFEFF';
+            function csvEscape(val) {
+                if (val === null || val === undefined) return '';
+                var s = String(val).replace(/\s+/g, ' ').trim();
+                if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
+                    return '"' + s.replace(/"/g, '""') + '"';
+                }
+                return s;
+            }
+
+            var headers = ['#','الاسم','الرقم','الطول','الفئة','الإقليم','المنطقة','الميناء','التعزيز','الحالة','نوع العطب','تاريخ العطب','الوحدة المسؤولة'];
+            var csvRows = [headers.map(csvEscape).join(',')];
+            var counter = 0;
+            rows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                if (cells.length < 12) return;
+                counter++;
+                var values = [counter];
+                for (var i = 0; i < 12; i++) {
+                    values.push(cells[i] ? cells[i].textContent.trim() : '');
+                }
+                csvRows.push(values.map(csvEscape).join(','));
+            });
+
+            var csv = BOM + csvRows.join('\r\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var now = new Date();
+            var ds = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' +
+                     String(now.getDate()).padStart(2,'0') + '_' +
+                     String(now.getHours()).padStart(2,'0') + '-' +
+                     String(now.getMinutes()).padStart(2,'0');
+            var filename = 'fleet_' + ds + '.csv';
+
+            if (window.navigator && window.navigator.msSaveBlob) {
+                window.navigator.msSaveBlob(blob, filename);
+            } else {
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url; a.download = filename; a.style.display = 'none';
+                document.body.appendChild(a); a.click();
+                setTimeout(function() {
+                    if (a.parentNode) a.parentNode.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            }
+            fleetToast('✅ تم تصدير ' + counter + ' مركب', 'success');
+        } catch (err) { fleetToast('❌ فشل التصدير: ' + err.message, 'error'); }
+    }
+
+    // ============================================================
+    // SCROLL BUTTONS
+    // ============================================================
+    function initScrollButtons() {
+        var nav = document.getElementById('fleetScrollNav');
+        var btnTop = document.getElementById('fleetScrollTop');
+        var btnBottom = document.getElementById('fleetScrollBottom');
+        if (!nav || !btnTop || !btnBottom) return;
+
+        function updateVisibility() {
+            var y = window.scrollY || window.pageYOffset || 0;
+            var docHeight = document.documentElement.scrollHeight;
+            var winHeight = window.innerHeight;
+            var hasScroll = docHeight > (winHeight + 100);
+            if (!hasScroll) { nav.classList.remove('visible'); return; }
+            if (y > 200) nav.classList.add('visible');
+            else nav.classList.remove('visible');
+            btnTop.style.opacity = y > 50 ? '1' : '0.35';
+            btnTop.style.pointerEvents = y > 50 ? 'auto' : 'none';
+            var atBottom = (y + winHeight) >= (docHeight - 50);
+            btnBottom.style.opacity = atBottom ? '0.35' : '1';
+            btnBottom.style.pointerEvents = atBottom ? 'none' : 'auto';
+        }
+
+        btnTop.addEventListener('click', function() {
+            try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0,0); }
+        });
+        btnBottom.addEventListener('click', function() {
+            var target = document.documentElement.scrollHeight;
+            try { window.scrollTo({ top: target, behavior: 'smooth' }); } catch(e) { window.scrollTo(0,target); }
+        });
+
+        window.addEventListener('scroll', updateVisibility, { passive: true });
+        window.addEventListener('resize', updateVisibility, { passive: true });
+        updateVisibility();
+        setTimeout(updateVisibility, 500);
+        setTimeout(updateVisibility, 1500);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    var _initialized = false;
+
+    async function initPage() {
+        if (_isDestroyed || _initialized) return false;
+        var header = document.getElementById('fleetHeader');
+        if (!header) return false;
+
+        _initialized = true;
+        console.log('🚀 Fleet v3.0 — Initializing...');
+
+        initFilters();
+        initScrollButtons();
+        setupDisposeListeners();
+
+        var token = getToken();
+        if (!token) { window.location.href = '/index.html'; return true; }
+
+        try {
+            var response = await fetcher('/api/auth/me', { method: 'GET' });
+            if (!response.ok) {
+                localStorage.removeItem('marine_token');
+                window.location.href = '/index.html';
+                return true;
+            }
+            var data = await response.json();
+            if (data.success && data.user) window.currentUser = data.user;
+        } catch (error) {
+            console.error('❌ Auth error:', error);
+            window.location.href = '/index.html';
             return true;
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initPage, { once: true });
-        } else {
-            initPage();
+        if (_isDestroyed) return true;
+
+        var addBtn = document.getElementById('saveVesselBtn');
+        if (addBtn) addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
+
+        // 🆕 زر المطروحة
+        var dispBtn = document.getElementById('fleetDisposalsBtn');
+        if (dispBtn) {
+            dispBtn.addEventListener('click', navigateToDisposals);
         }
 
-        var retry = setInterval(function() {
-            if (_initialized || _isDestroyed) {
-                clearInterval(retry);
-                return;
-            }
-            initPage();
-        }, 300);
-        setTimeout(function() { clearInterval(retry); }, 10000);
+        updateZones();
+        await renderMain();
 
-        if (typeof MutationObserver !== 'undefined' && document.body) {
-            var observer = new MutationObserver(function() {
-                if (_initialized) { observer.disconnect(); return; }
-                initPage();
+        console.log('✅ Fleet v3.0 ready');
+        return true;
+    }
+
+    function setupDisposeListeners() {
+        var closeBtn = document.getElementById('fleetDisposeClose');
+        if (closeBtn) closeBtn.addEventListener('click', closeDisposeModal);
+
+        var cancelBtn = document.getElementById('fleetDisposeCancel');
+        if (cancelBtn) cancelBtn.addEventListener('click', closeDisposeModal);
+
+        var confirmBtn = document.getElementById('fleetDisposeConfirm');
+        if (confirmBtn) confirmBtn.addEventListener('click', confirmDispose);
+
+        var checkEl = document.getElementById('disposeConfirmCheck');
+        if (checkEl) {
+            checkEl.addEventListener('change', function() {
+                var b = document.getElementById('fleetDisposeConfirm');
+                if (b) b.disabled = !this.checked;
             });
-            observer.observe(document.body, { childList: true, subtree: true });
-            setTimeout(function() { observer.disconnect(); }, 10000);
         }
 
-        window.renderMain = renderMain;
-        window.addItem = addItem;
-        window.editItem = editItem;
-        window.updateItem = updateItem;
-        window.deleteItem = deleteItem;
-        window.clearMainSearch = clearMainSearch;
-        window.updateZones = updateZones;
-        window.refreshFleet = refreshFleet;
-        window.printFleet = printFleet;
-        window.exportFleetExcel = exportFleetExcel;
-        window.initFilters = initFilters;
-        window.getToken = getToken;
+        var modal = document.getElementById('fleetDisposeModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeDisposeModal();
+            });
+        }
 
-    })();
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var m = document.getElementById('fleetDisposeModal');
+                if (m && m.classList.contains('active')) closeDisposeModal();
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPage, { once: true });
+    } else {
+        initPage();
+    }
+
+    var retry = setInterval(function() {
+        if (_initialized || _isDestroyed) { clearInterval(retry); return; }
+        initPage();
+    }, 300);
+    setTimeout(function() { clearInterval(retry); }, 10000);
+
+    // Expose
+    window.renderMain = renderMain;
+    window.addItem = addItem;
+    window.editItem = editItem;
+    window.updateItem = updateItem;
+    window.deleteItem = deleteItem;
+    window.clearMainSearch = clearMainSearch;
+    window.updateZones = updateZones;
+    window.refreshFleet = refreshFleet;
+    window.printFleet = printFleet;
+    window.exportFleetExcel = exportFleetExcel;
+    window.openDisposeModal = openDisposeModal;
+    window.closeDisposeModal = closeDisposeModal;
+
+})();
 </script>
 </div>
