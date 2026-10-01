@@ -598,7 +598,7 @@
             content: ''; position: absolute;
             bottom: -1px; right: 0;
             width: 120px; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--c-slate-1));
+            background: linear-gradient(90deg, transparent, #94a3b8);
             box-shadow: 0 0 12px rgba(148, 163, 184, 0.4);
         }
         .fleet-modal-head h3 {
@@ -607,7 +607,7 @@
             display: flex; align-items: center; gap: 10px; margin: 0;
         }
         .fleet-modal-head h3 i {
-            color: var(--c-slate-1);
+            color: #94a3b8;
             filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.5));
         }
         .fleet-modal-close {
@@ -1107,7 +1107,7 @@
         try {
             ['renderMain','addItem','editItem','updateItem','deleteItem','clearMainSearch',
              'updateZones','refreshFleet','printFleet','exportFleetExcel',
-             'openDisposeModal','closeDisposeModal'].forEach(function(k) {
+             'openDisposeModal','closeDisposeModal','navigateToDisposals'].forEach(function(k) {
                 try { delete window[k]; } catch(e) {}
             });
         } catch (e) {}
@@ -1837,38 +1837,35 @@
         }
     }
 
-    // 🆕 الانتقال لصفحة المطروحة — v2 (مع fallback مضمون)
+    // 🆕 الانتقال لصفحة المطروحة — v3 (يستخدم loadPage — النظام الفعلي)
     function navigateToDisposals() {
         console.log('🚢 navigateToDisposals called');
-        var navigated = false;
 
-        // المحاولة 1: عبر navigateTo
-        if (typeof window.navigateTo === 'function') {
+        // المحاولة 1: loadPage (النظام الأساسي في index.html)
+        if (typeof window.loadPage === 'function') {
             try {
-                window.navigateTo('disposals-vessels');
-                navigated = true;
-                console.log('✅ Called navigateTo(disposals-vessels)');
-
-                setTimeout(function() {
-                    var pageEl = document.getElementById('page-disposals-vessels');
-                    var hash = window.location.hash;
-                    if (!pageEl && hash !== '#disposals-vessels') {
-                        console.warn('⚠️ navigateTo failed — fallback to direct URL');
-                        window.location.href = '/pages/disposals-vessels.html';
-                    }
-                }, 700);
+                window.loadPage('disposals-vessels');
+                console.log('✅ Called loadPage(disposals-vessels)');
                 return;
             } catch (e) {
-                console.error('❌ navigateTo error:', e.message);
-                navigated = false;
+                console.error('❌ loadPage error:', e.message);
             }
         }
 
-        // المحاولة 2: URL مباشر
-        if (!navigated) {
-            console.log('🔄 Using direct URL');
-            window.location.href = '/pages/disposals-vessels.html';
+        // المحاولة 2: navigateTo (إن وُجد)
+        if (typeof window.navigateTo === 'function') {
+            try {
+                window.navigateTo('disposals-vessels');
+                console.log('✅ Called navigateTo(disposals-vessels)');
+                return;
+            } catch (e) {
+                console.error('❌ navigateTo error:', e.message);
+            }
         }
+
+        // المحاولة 3: URL مباشر (fallback)
+        console.log('🔄 Using direct URL fallback');
+        window.location.href = '/pages/disposals-vessels.html';
     }
 
     function exportFleetExcel() {
@@ -1976,7 +1973,7 @@
         if (!header) return false;
 
         _initialized = true;
-        console.log('🚀 Fleet v3.1 — Initializing...');
+        console.log('🚀 Fleet v3.2 — Initializing...');
 
         initFilters();
         initScrollButtons();
@@ -2013,7 +2010,7 @@
         updateZones();
         await renderMain();
 
-        console.log('✅ Fleet v3.1 ready');
+        console.log('✅ Fleet v3.2 ready');
         return true;
     }
 
