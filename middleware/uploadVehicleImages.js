@@ -1,6 +1,6 @@
 // ============================================================
 // 📤 middleware/uploadVehicleImages.js — v2.0
-// رفع صور الوسائل البرية → Cloudinary
+// رفع صور الوسائل البرية → Memory → Cloudinary
 // ============================================================
 
 'use strict';
@@ -31,7 +31,7 @@ module.exports = multer({
     storage,
     fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024,  // 5 MB
+        fileSize: 5 * 1024 * 1024,
         files: 10
     }
 });
