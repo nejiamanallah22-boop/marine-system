@@ -1,4 +1,8 @@
-// middleware/uploadVehicleImages.js
+// ============================================================
+// 📤 middleware/uploadVehicleImages.js
+// رفع صور الوسائل البرية
+// ============================================================
+
 'use strict';
 
 const multer = require('multer');
