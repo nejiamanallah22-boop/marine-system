@@ -1,5 +1,5 @@
 <!-- ═══════════════════════════════════════════════════════════
-     🚛 VEHICLES PAGE v12.0 — Ultra Pro + Cloudinary Images
+     🚛 VEHICLES PAGE v13.0 — Ultra Pro + Camera + Cloudinary
      ═══════════════════════════════════════════════════════════ -->
 <div id="page-vehicles">
 <style>
@@ -218,7 +218,7 @@
     .veh-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-text-2); font-weight: 600; }
     .veh-cell.center { text-align: center; }
 
-    /* 🆕 مصغّرة الصورة في الجدول */
+    /* 📸 مصغّرة الصورة */
     .veh-thumb {
         width: 50px; height: 50px;
         border-radius: 10px;
@@ -341,6 +341,11 @@
         cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center;
     }
     .veh-modal-close:hover { background: rgba(239,68,68,0.2); color: var(--c-red-1); }
+    .veh-modal-actions {
+        display: flex; gap: 12px; justify-content: flex-end;
+        margin-top: 24px; padding-top: 20px;
+        border-top: 1px solid var(--c-border-soft);
+    }
 
     .veh-form-group { margin-bottom: 18px; }
     .veh-form-group label {
@@ -373,16 +378,77 @@
         font-size: 11px;
         margin-right: 6px;
     }
+
+    /* أزرار اختيار مصدر الصورة */
+    .veh-image-source-btns {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+    }
+    .veh-source-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font);
+        white-space: nowrap;
+        position: relative;
+        overflow: hidden;
+    }
+    .veh-source-btn i { font-size: 16px; }
+    .veh-source-btn.camera {
+        background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
+        color: #060911;
+        box-shadow: 0 8px 24px var(--c-gold-glow);
+    }
+    .veh-source-btn.camera:hover:not(:disabled) {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 14px 36px var(--c-gold-glow);
+    }
+    .veh-source-btn.browse {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(59,130,246,0.3);
+    }
+    .veh-source-btn.browse:hover:not(:disabled) {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 14px 36px rgba(59,130,246,0.45);
+    }
+    .veh-source-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    .veh-source-btn::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%);
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+    }
+    .veh-source-btn:hover:not(:disabled)::after {
+        transform: translateX(100%);
+    }
+
     .veh-images-dropzone {
         position: relative;
         border: 2px dashed var(--c-border-mid);
         border-radius: 14px;
-        padding: 24px 16px;
+        padding: 20px 16px;
         text-align: center;
         cursor: pointer;
         transition: all var(--transition);
         background: rgba(10,16,32,0.4);
-        margin-bottom: 12px;
     }
     .veh-images-dropzone:hover {
         border-color: var(--c-gold-2);
@@ -395,21 +461,21 @@
         transform: scale(1.01);
     }
     .veh-dropzone-content i {
-        font-size: 36px;
+        font-size: 32px;
         color: var(--c-gold-2);
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         display: block;
         opacity: 0.7;
     }
     .veh-dropzone-title {
         color: var(--c-text-1);
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 700;
         margin: 0 0 4px 0;
     }
     .veh-dropzone-hint {
         color: var(--c-text-4);
-        font-size: 11px;
+        font-size: 10.5px;
         margin: 0;
     }
     .veh-images-gallery {
@@ -516,7 +582,7 @@
         to { transform: rotate(360deg); }
     }
 
-    /* نافذة معرض الصور الكبير */
+    /* Lightbox */
     .veh-lightbox {
         position: fixed;
         inset: 0;
@@ -567,6 +633,11 @@
         backdrop-filter: blur(20px);
         box-shadow: 0 12px 40px rgba(0,0,0,0.5);
         direction: rtl;
+        animation: vehToastIn 0.35s ease;
+    }
+    @keyframes vehToastIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
     .veh-toast.success { background: rgba(16,185,129,0.95); border: 1px solid rgba(110,231,183,0.5); }
     .veh-toast.error { background: rgba(239,68,68,0.95); border: 1px solid rgba(252,165,165,0.5); }
@@ -583,6 +654,8 @@
         .veh-modal-box { padding: 22px 18px; }
         .veh-toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
         .veh-images-gallery { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+        .veh-image-source-btns { gap: 8px; }
+        .veh-source-btn { padding: 10px 16px; font-size: 12px; flex: 1; justify-content: center; }
     }
 </style>
 
@@ -814,14 +887,37 @@
                     <span style="color:var(--c-text-4); font-weight:400;">(حتى 10 صور)</span>
                     <span class="veh-images-count" id="vehImagesCount">(0/10)</span>
                 </label>
+
+                <!-- 🆕 أزرار مصدر الصورة -->
+                <div class="veh-image-source-btns">
+                    <button type="button" class="veh-source-btn camera" id="vehCaptureBtn">
+                        <i class="fas fa-camera"></i>
+                        <span>التقاط صورة</span>
+                    </button>
+                    <button type="button" class="veh-source-btn browse" id="vehBrowseBtn">
+                        <i class="fas fa-folder-open"></i>
+                        <span>استيراد صور</span>
+                    </button>
+                </div>
+
+                <!-- Inputs مخفية -->
+                <input type="file" id="vehImagesInput"
+                       accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                       multiple hidden>
+                <input type="file" id="vehCameraInput"
+                       accept="image/*"
+                       capture="environment"
+                       hidden>
+
+                <!-- منطقة السحب والإفلات -->
                 <div class="veh-images-dropzone" id="vehImagesDropzone">
-                    <input type="file" id="vehImagesInput" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" multiple hidden>
                     <div class="veh-dropzone-content">
                         <i class="fas fa-cloud-upload-alt"></i>
-                        <p class="veh-dropzone-title">اسحب الصور هنا أو انقر للاختيار</p>
+                        <p class="veh-dropzone-title">أو اسحب الصور وأفلتها هنا</p>
                         <p class="veh-dropzone-hint">JPG, PNG, WEBP, GIF — حتى 5 MB لكل صورة</p>
                     </div>
                 </div>
+
                 <div class="veh-images-gallery" id="vehImagesGallery"></div>
                 <div class="veh-images-uploading" id="vehImagesUploading" style="display:none;">
                     <div class="veh-uploading-spinner"></div>
@@ -889,12 +985,13 @@
 <script>
 (function() {
     'use strict';
-    console.log('🚛 Vehicles Page v12.0 — Loading...');
+    console.log('🚛 Vehicles Page v13.0 — Loading...');
 
     var _isDestroyed = false;
     var _timeouts = [];
     var _intervals = [];
     var _listeners = [];
+    var _objectUrls = []; // لتتبع Blob URLs وتنظيفها
 
     function _vehCleanup() {
         if (_isDestroyed) return;
@@ -907,6 +1004,10 @@
             try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
         });
         _listeners = [];
+        _objectUrls.forEach(function(url) {
+            try { URL.revokeObjectURL(url); } catch(e) {}
+        });
+        _objectUrls = [];
         console.log('🧹 Vehicles cleanup done');
     }
     window._pageCleanup = window._pageCleanup || [];
@@ -993,76 +1094,149 @@
     }
 
     var vehicles = [];
-    var vehicleImages = [];       // الصور المحلية للرفع
+    var vehicleImages = [];       // الصور (File محلية + صور موجودة من السيرفر)
     var currentVehicleId = null;  // ID عند التعديل
     var autoRefreshInterval = null;
+
+    var MAX_IMAGES = 10;
+    var MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    var ALLOWED_TYPES = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 
     // ============================================================
     // 📸 إدارة الصور
     // ============================================================
+
+    /**
+     * تفعيل/تعطيل أزرار المصدر عند الوصول للحد الأقصى
+     */
+    function updateSourceButtonsState() {
+        var captureBtn = document.getElementById('vehCaptureBtn');
+        var browseBtn = document.getElementById('vehBrowseBtn');
+        var isFull = vehicleImages.length >= MAX_IMAGES;
+
+        if (captureBtn) captureBtn.disabled = isFull;
+        if (browseBtn) browseBtn.disabled = isFull;
+    }
+
+    /**
+     * تهيئة واجهة الصور: الكاميرا + الاستيراد + السحب والإفلات
+     */
     function initImagesUI() {
         var dropzone = document.getElementById('vehImagesDropzone');
         var input = document.getElementById('vehImagesInput');
-        if (!dropzone || !input) return;
+        var cameraInput = document.getElementById('vehCameraInput');
+        var captureBtn = document.getElementById('vehCaptureBtn');
+        var browseBtn = document.getElementById('vehBrowseBtn');
 
-        addSafeListener(dropzone, 'click', function() { input.click(); });
-        addSafeListener(input, 'change', function(e) {
-            handleFiles(e.target.files);
-            input.value = '';
-        });
-        addSafeListener(dropzone, 'dragover', function(e) {
-            e.preventDefault();
-            dropzone.classList.add('dragover');
-        });
-        addSafeListener(dropzone, 'dragleave', function(e) {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-        });
-        addSafeListener(dropzone, 'drop', function(e) {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
-        });
+        // 📷 زر الكاميرا — يفتح كاميرا الجهاز مباشرة
+        if (captureBtn && cameraInput) {
+            addSafeListener(captureBtn, 'click', function() {
+                if (vehicleImages.length >= MAX_IMAGES) {
+                    vehShowToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+                    return;
+                }
+                cameraInput.click();
+            });
+            addSafeListener(cameraInput, 'change', function(e) {
+                handleFiles(e.target.files);
+                cameraInput.value = '';
+            });
+        }
+
+        // 📁 زر استيراد الصور
+        if (browseBtn && input) {
+            addSafeListener(browseBtn, 'click', function() {
+                if (vehicleImages.length >= MAX_IMAGES) {
+                    vehShowToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+                    return;
+                }
+                input.click();
+            });
+        }
+
+        // Input المخفي (اختيار ملفات متعددة)
+        if (input) {
+            addSafeListener(input, 'change', function(e) {
+                handleFiles(e.target.files);
+                input.value = '';
+            });
+        }
+
+        // 🖱️ Dropzone — سحب وإفلات
+        if (dropzone && input) {
+            addSafeListener(dropzone, 'click', function() {
+                if (vehicleImages.length >= MAX_IMAGES) {
+                    vehShowToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+                    return;
+                }
+                input.click();
+            });
+            addSafeListener(dropzone, 'dragover', function(e) {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+            addSafeListener(dropzone, 'dragleave', function(e) {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+            });
+            addSafeListener(dropzone, 'drop', function(e) {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
     }
 
+    /**
+     * معالجة الملفات المختارة/المُسقطة
+     */
     function handleFiles(files) {
         if (!files || files.length === 0) return;
-        var valid = [];
-        var allowed = /jpeg|jpg|png|webp|gif/i;
 
+        var valid = [];
         for (var i = 0; i < files.length; i++) {
             var f = files[i];
-            if (!allowed.test(f.type)) {
+            if (!ALLOWED_TYPES.test(f.type)) {
                 vehShowToast('❌ نوع غير مدعوم: ' + f.name, 'error');
                 continue;
             }
-            if (f.size > 5 * 1024 * 1024) {
-                vehShowToast('❌ حجم كبير: ' + f.name, 'error');
+            if (f.size > MAX_FILE_SIZE) {
+                vehShowToast('❌ حجم كبير (الحد 5MB): ' + f.name, 'error');
                 continue;
             }
             valid.push(f);
         }
         if (valid.length === 0) return;
 
-        var remaining = 10 - vehicleImages.length;
+        var remaining = MAX_IMAGES - vehicleImages.length;
         if (remaining <= 0) {
-            vehShowToast('⚠️ الحد الأقصى 10 صور', 'error');
+            vehShowToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+            updateSourceButtonsState();
             return;
         }
-        valid = valid.slice(0, remaining);
+
+        if (valid.length > remaining) {
+            vehShowToast('⚠️ تم قبول ' + remaining + ' صور فقط (الحد ' + MAX_IMAGES + ')', 'info');
+            valid = valid.slice(0, remaining);
+        }
+
         vehicleImages = vehicleImages.concat(valid);
         renderImagesPreview();
     }
 
+    /**
+     * عرض معرض الصور المصغّرة
+     */
     function renderImagesPreview() {
         var gallery = document.getElementById('vehImagesGallery');
         var count = document.getElementById('vehImagesCount');
 
-        if (count) count.textContent = '(' + vehicleImages.length + '/10)';
+        if (count) count.textContent = '(' + vehicleImages.length + '/' + MAX_IMAGES + ')';
         if (!gallery) return;
 
         if (vehicleImages.length === 0) {
             gallery.innerHTML = '';
+            updateSourceButtonsState();
             return;
         }
 
@@ -1072,14 +1246,15 @@
             var isFile = (img instanceof File);
             if (isFile) {
                 preview = URL.createObjectURL(img);
+                _objectUrls.push(preview);
             } else {
                 preview = img.url || '';
             }
-            var isPrimary = isFile ? (idx === 0) : !!img.isPrimary;
+            var isPrimary = isFile ? (idx === 0 && !vehicleImages.some(function(x){ return x.isPrimary; })) : !!img.isPrimary;
 
             html +=
                 '<div class="veh-image-item' + (isPrimary ? ' is-primary' : '') + '" data-index="' + idx + '">' +
-                    '<img src="' + preview + '" alt="صورة">' +
+                    '<img src="' + escapeHtml(preview) + '" alt="صورة" loading="lazy">' +
                     '<span class="veh-image-primary-badge">⭐ رئيسية</span>' +
                     '<div class="veh-image-actions">' +
                         '<button type="button" class="veh-img-set-primary" data-action="primary" data-idx="' + idx + '" title="تعيين كرئيسية">' +
@@ -1093,6 +1268,7 @@
         });
         gallery.innerHTML = html;
 
+        // أحداث الأزرار داخل المعرض
         gallery.querySelectorAll('[data-action]').forEach(function(btn) {
             addSafeListener(btn, 'click', function(e) {
                 e.stopPropagation();
@@ -1103,39 +1279,48 @@
             });
         });
 
+        // فتح Lightbox
         gallery.querySelectorAll('.veh-image-item img').forEach(function(imgEl) {
-            addSafeListener(imgEl, 'click', function() {
+            addSafeListener(imgEl, 'click', function(e) {
+                e.stopPropagation();
                 openLightbox(this.src);
             });
         });
+
+        updateSourceButtonsState();
     }
 
+    /**
+     * حذف صورة (محلياً أو من السيرفر)
+     */
     function removeImage(idx) {
         if (idx < 0 || idx >= vehicleImages.length) return;
         var img = vehicleImages[idx];
+
+        // إذا كانت صورة موجودة على السيرفر → احذفها من الـ API
         if (img && img._id && currentVehicleId) {
-            // حذف من السيرفر
             apiFetch('/api/vehicles/' + encodeURIComponent(currentVehicleId) + '/images/' + encodeURIComponent(img._id), {
                 method: 'DELETE'
             })
             .then(function(res) { return res.json(); })
             .then(function(d) {
-                if (d.success) {
-                    vehShowToast('🗑️ تم حذف الصورة', 'success');
-                }
+                if (d.success) vehShowToast('🗑️ تم حذف الصورة', 'success');
             })
             .catch(function() {});
         }
+
         vehicleImages.splice(idx, 1);
         renderImagesPreview();
     }
 
+    /**
+     * تعيين صورة كرئيسية (محلياً + السيرفر)
+     */
     function setPrimaryImageLocal(idx) {
         if (idx < 0 || idx >= vehicleImages.length) return;
         var img = vehicleImages.splice(idx, 1)[0];
         vehicleImages.unshift(img);
 
-        // إذا كانت صورة موجودة على السيرفر
         if (img && img._id && currentVehicleId) {
             apiFetch('/api/vehicles/' + encodeURIComponent(currentVehicleId) + '/images/' + encodeURIComponent(img._id) + '/primary', {
                 method: 'PATCH'
@@ -1147,6 +1332,9 @@
         vehShowToast('⭐ تم تعيين الصورة الرئيسية', 'success');
     }
 
+    /**
+     * رفع الصور الجديدة إلى السيرفر
+     */
     async function uploadVehicleImages(vehicleId) {
         var newFiles = vehicleImages.filter(function(img) { return img instanceof File; });
         if (newFiles.length === 0) return true;
@@ -1199,7 +1387,7 @@
     }
 
     // ============================================================
-    // 📥 تحميل
+    // 📥 تحميل البيانات
     // ============================================================
     function vehLoad() {
         if (_isDestroyed) return;
@@ -1275,11 +1463,13 @@
         var tbody = document.getElementById('vehTableBody');
         if (!tbody) return;
         var filtered = getFiltered();
+
         if (!filtered.length) {
             var msg = vehicles.length === 0 ? 'لا توجد وسائل برية' : 'لا توجد نتائج مطابقة';
             tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-truck"></i><p>' + msg + '</p></div>';
             return;
         }
+
         var html = '';
         filtered.forEach(function(v, idx) {
             var statusCls = 'status-' + (v.status || 'صالحة');
@@ -1343,7 +1533,7 @@
         });
         tbody.innerHTML = html;
 
-        // أحداث الأزرار
+        // أحداث أزرار الإجراءات
         tbody.querySelectorAll('[data-action]').forEach(function(btn) {
             addSafeListener(btn, 'click', function(e) {
                 e.preventDefault();
@@ -1357,7 +1547,7 @@
             });
         });
 
-        // 📸 الصور: فتح Lightbox
+        // 📸 فتح Lightbox من الجدول
         tbody.querySelectorAll('[data-lightbox]').forEach(function(img) {
             addSafeListener(img, 'click', function(e) {
                 e.stopPropagation();
@@ -1374,6 +1564,7 @@
         var title = document.getElementById('vehModalTitle');
         if (!modal) return;
         if (title) title.textContent = 'إضافة وسيلة برية';
+
         document.getElementById('vehId').value = '';
         document.getElementById('vehPlate').value = '';
         document.getElementById('vehRegion').value = '';
@@ -1407,6 +1598,7 @@
         var modal = document.getElementById('vehModal');
         var title = document.getElementById('vehModalTitle');
         if (title) title.textContent = 'تعديل وسيلة برية';
+
         document.getElementById('vehId').value = v.id || '';
         document.getElementById('vehPlate').value = v.plateNumber || '';
         document.getElementById('vehRegion').value = v.region || '';
@@ -1432,7 +1624,7 @@
             document.getElementById('vehFaultDate').required = false;
         }
 
-        // تحميل الصور الموجودة
+        // تحميل الصور الموجودة من السيرفر
         currentVehicleId = v.id;
         vehicleImages = (v.images || []).slice();
         renderImagesPreview();
@@ -1445,7 +1637,7 @@
         if (modal) modal.classList.remove('active');
     }
 
-    function saveVehicle(e) {
+    async function saveVehicle(e) {
         if (e && e.preventDefault) e.preventDefault();
         if (_isDestroyed) return;
 
@@ -1468,6 +1660,7 @@
             notes: document.getElementById('vehNotes').value.trim()
         };
 
+        // التحقق
         if (!payload.plateNumber) { vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
         if (!payload.region) { vehShowToast('⚠️ الإدارة / الإقليم مطلوب', 'error'); return; }
         if (!payload.zone) { vehShowToast('⚠️ المنطقة مطلوبة', 'error'); return; }
@@ -1485,30 +1678,28 @@
         var url = isEdit ? '/api/vehicles/' + encodeURIComponent(id) : '/api/vehicles';
         var method = isEdit ? 'PUT' : 'POST';
 
-        apiFetch(url, { method: method, body: JSON.stringify(payload) })
-            .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
-            .then(async function(result) {
-                if (_isDestroyed) return;
-                if (!result.ok) throw new Error(result.data.error || 'فشل الحفظ');
+        try {
+            var res = await apiFetch(url, { method: method, body: JSON.stringify(payload) });
+            var result = await res.json();
 
-                var savedId = result.data.vehicle ? result.data.vehicle.id : currentVehicleId;
+            if (!res.ok) throw new Error(result.error || 'فشل الحفظ');
 
-                // 📸 رفع الصور الجديدة
-                if (vehicleImages.length > 0 && savedId) {
-                    await uploadVehicleImages(savedId);
-                }
+            var savedId = (result.vehicle && result.vehicle.id) || currentVehicleId || id;
 
-                vehShowToast(isEdit ? '✅ تم تعديل الوسيلة' : '✅ تم إضافة الوسيلة', 'success');
-                closeModal();
-                vehLoad();
-            })
-            .catch(function(err) {
-                vehShowToast('❌ ' + err.message, 'error');
-            })
-            .finally(function() {
-                if (btn) btn.disabled = false;
-                if (btnText) btnText.textContent = 'حفظ';
-            });
+            // 📸 رفع الصور الجديدة إن وُجدت
+            if (vehicleImages.length > 0 && savedId) {
+                await uploadVehicleImages(savedId);
+            }
+
+            vehShowToast(isEdit ? '✅ تم تعديل الوسيلة' : '✅ تم إضافة الوسيلة', 'success');
+            closeModal();
+            vehLoad();
+        } catch (err) {
+            vehShowToast('❌ ' + err.message, 'error');
+        } finally {
+            if (btn) btn.disabled = false;
+            if (btnText) btnText.textContent = 'حفظ';
+        }
     }
 
     function confirmDelete(id) {
@@ -1555,6 +1746,7 @@
     function submitDispose(e) {
         if (e && e.preventDefault) e.preventDefault();
         if (_isDestroyed) return;
+
         var id = document.getElementById('vehDisposeId').value.trim();
         var reason = document.getElementById('vehDisposeReason').value.trim();
         var decision = document.getElementById('vehDisposeDecision').value.trim();
@@ -1684,7 +1876,7 @@
 
     function init() {
         if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles Page v12.0...');
+        console.log('🚀 Initializing Vehicles Page v13.0...');
 
         // فلتر المنطقة
         var regionEl = document.getElementById('vehFilterRegion');
@@ -1715,7 +1907,7 @@
             typeEl.innerHTML = thtml;
         }
 
-        // 📸 تهيئة الصور
+        // 📸 تهيئة واجهة الصور
         initImagesUI();
 
         // أزرار Header
@@ -1763,7 +1955,7 @@
         addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
 
         vehLoad();
-        console.log('✅ Vehicles page v12.0 ready');
+        console.log('✅ Vehicles page v13.0 ready');
     }
 
     if (document.readyState === 'loading') {
@@ -1779,7 +1971,7 @@
     window.vehLoad = vehLoad;
     window.vehShowToast = vehShowToast;
 
-    console.log('✅ Vehicles Page v12.0 ready');
+    console.log('✅ Vehicles Page v13.0 ready');
 })();
 </script>
 </div>
