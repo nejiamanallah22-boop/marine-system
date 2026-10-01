@@ -1187,10 +1187,35 @@ function formatMaintenance(log) {
         return res.sendFile(fp);
     });
 
-    if (fs.existsSync(publicDir)) {
+       if (fs.existsSync(publicDir)) {
         app.use('/public', express.static(publicDir));
     }
 
+    // ============================================================
+    // 📸 خدمة ملفات رفع الوسائل البرية (صور)
+    // ============================================================
+    const uploadsDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    app.use('/uploads', express.static(uploadsDir, {
+        maxAge: isProduction ? '30d' : 0,
+        etag: true,
+        fallthrough: true,
+        setHeaders: (res, filePath) => {
+            // للصور فقط: نوع المحتوى وسماح بالعرض
+            if (/\.(jpe?g|png|webp|gif)$/i.test(filePath)) {
+                res.setHeader('X-Content-Type-Options', 'nosniff');
+                res.setHeader('Cache-Control',
+                    isProduction ? 'public, max-age=2592000, immutable' : 'no-cache');
+            } else {
+                // أي ملف آخر: منع العرض المباشر
+                res.setHeader('Content-Disposition', 'attachment');
+                res.setHeader('X-Content-Type-Options', 'nosniff');
+            }
+        }
+    }));
+    console.log('✅ Uploads served from:', uploadsDir);
     // ============ PUBLIC API ============
     app.get('/api/csrf-token', (req, res) => {
         const t = ensureCsrfToken(req, res);
