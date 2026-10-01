@@ -1,11 +1,6 @@
 <!-- public/pages/fleet.html -->
 <div id="page-fleet">
     <style>
-        /* ============================================================
-           🚢 FLEET PAGE — ULTRA PRO v3.0
-           ✨ + طرح احترافي (زر منفصل + Modal + صفحة مخصصة)
-           ============================================================ */
-
         #page-fleet {
             --c-border-soft: rgba(148, 163, 184, 0.08);
             --c-border-mid: rgba(148, 163, 184, 0.15);
@@ -27,7 +22,6 @@
             --radius: 16px;
             --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             --font: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
-
             width: 100%; max-width: 100%;
             padding: 0; margin: 0;
             font-family: var(--font);
@@ -42,10 +36,8 @@
             z-index: 2;
             overflow-x: hidden;
         }
-
         #page-fleet::before {
-            content: '';
-            position: fixed;
+            content: ''; position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background:
                 radial-gradient(circle 400px at 10% 20%, rgba(59, 130, 246, 0.06), transparent 70%),
@@ -60,9 +52,7 @@
             33% { transform: translate(3%, -2%) scale(1.05); }
             66% { transform: translate(-3%, 2%) scale(0.97); }
         }
-
         #page-fleet *, #page-fleet *::before, #page-fleet *::after { box-sizing: border-box; }
-
         #page-fleet ::-webkit-scrollbar { width: 8px; height: 8px; }
         #page-fleet ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
         #page-fleet ::-webkit-scrollbar-thumb {
@@ -70,7 +60,6 @@
             border-radius: 4px; border: 2px solid transparent; background-clip: padding-box;
         }
 
-        /* ===== HEADER ===== */
         .fleet-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 18px 24px; flex-wrap: wrap; gap: 16px;
@@ -118,7 +107,6 @@
         }
         .fleet-header-left .header-icon.has-logo i { display: none; }
         .fleet-header-left .header-icon.has-logo::after { display: none; }
-
         .fleet-header-left h2 {
             font-size: 22px; font-weight: 800;
             background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-1) 100%);
@@ -131,9 +119,7 @@
             -webkit-text-fill-color: var(--c-text-3);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
         .fleet-header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
-
         .fleet-header-actions .btn-action {
             padding: 10px 20px; border: none; border-radius: 12px;
             font-weight: 700; font-size: 13px; cursor: pointer;
@@ -173,8 +159,6 @@
             transform: translateY(-2px) scale(1.02);
             box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
         }
-
-        /* 🆕 زر المطروحة */
         .fleet-header-actions .btn-action.dark {
             background: linear-gradient(135deg, #475569, #1e293b);
             color: #f7d774;
@@ -192,7 +176,6 @@
             min-width: 18px; text-align: center; display: inline-block;
         }
 
-        /* ===== STATS ===== */
         .stats-grid {
             display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 16px; padding: 0 24px 20px; width: 100%; margin: 0;
@@ -249,7 +232,6 @@
             pointer-events: none; color: currentColor;
         }
 
-        /* ===== INPUT GRID ===== */
         .input-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 10px;
@@ -297,7 +279,6 @@
             box-shadow: 0 12px 32px var(--c-gold-glow);
         }
 
-        /* ===== FILTER BAR ===== */
         .filter-bar {
             display: flex; flex-wrap: wrap; align-items: center;
             gap: 12px 16px; padding: 16px 24px;
@@ -373,7 +354,6 @@
             color: var(--c-text-1); border-color: var(--c-border-strong);
         }
 
-        /* ===== TABLE ===== */
         .table-wrapper { overflow-x: auto; padding: 0 24px 24px; width: 100%; }
         .table-wrapper table {
             width: 100%; border-collapse: separate; border-spacing: 0;
@@ -461,7 +441,6 @@
             color: #ffffff; border: 1px solid var(--c-red-1);
             box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
         }
-        /* 🆕 شارة الطرح */
         .status-badge.disposed {
             background: linear-gradient(135deg, #1e293b, #334155);
             color: #f7d774; border: 1px solid rgba(247,215,116,0.4);
@@ -500,7 +479,6 @@
             color: #fff; transform: translateY(-2px) scale(1.05);
             box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45);
         }
-        /* 🆕 زر الطرح */
         .btn-sm.dispose {
             background: rgba(15, 23, 42, 0.6);
             color: #f7d774;
@@ -514,7 +492,6 @@
             border-color: var(--c-gold-2);
         }
 
-        /* ===== EMPTY ===== */
         .empty-state { text-align: center; padding: 60px 20px; }
         .empty-state .empty-icon {
             font-size: 3rem; color: var(--c-gold-2); opacity: 0.5;
@@ -546,7 +523,6 @@
             box-shadow: 0 8px 24px var(--c-gold-glow);
         }
 
-        /* ===== TOAST ===== */
         .fleet-toast {
             position: fixed; bottom: 28px; left: 28px;
             z-index: 999999; max-width: 400px;
@@ -584,7 +560,6 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* ===== MODAL الطرح — 🆕 ===== */
         .fleet-modal {
             position: fixed; inset: 0;
             background: rgba(2, 4, 12, 0.9);
@@ -613,7 +588,6 @@
             from { transform: scale(0.9) translateY(20px); opacity: 0; }
             to { transform: scale(1) translateY(0); opacity: 1; }
         }
-
         .fleet-modal-head {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 22px; padding-bottom: 18px;
@@ -651,8 +625,6 @@
             border-color: rgba(239, 68, 68, 0.4);
             transform: rotate(90deg);
         }
-
-        /* تحذير الطرح */
         .dispose-warning {
             background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.08));
             border: 1px solid rgba(239, 68, 68, 0.35);
@@ -670,8 +642,6 @@
             font-weight: 700; line-height: 1.6;
         }
         .dispose-warning .warn-text strong { color: #fff; font-weight: 900; }
-
-        /* عرض المركب المطروح */
         .dispose-vessel-info {
             background: linear-gradient(135deg, rgba(10, 16, 32, 0.7), rgba(18, 26, 44, 0.5));
             border: 1px solid var(--c-border-soft);
@@ -694,8 +664,6 @@
         .dispose-vessel-info .info-sub {
             font-size: 11px; color: var(--c-text-3); margin-top: 2px;
         }
-
-        /* حقول النموذج */
         .dispose-form-group { margin-bottom: 16px; }
         .dispose-form-group label {
             display: block; font-size: 11px; font-weight: 800;
@@ -719,11 +687,7 @@
         }
         .dispose-form-control option { background: #0a1020; color: var(--c-text-1); }
         textarea.dispose-form-control { resize: vertical; min-height: 90px; font-family: var(--font); }
-        .dispose-form-row {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-        }
-
-        /* تأكيد مزدوج */
+        .dispose-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .dispose-confirm {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(180, 83, 9, 0.04));
             border: 1px solid rgba(245, 158, 11, 0.3);
@@ -743,8 +707,6 @@
             font-weight: 700; line-height: 1.6;
             cursor: pointer; user-select: none;
         }
-
-        /* أزرار الإجراء */
         .fleet-modal-actions {
             display: flex; gap: 12px;
             margin-top: 26px; padding-top: 20px;
@@ -788,8 +750,6 @@
             opacity: 0.4; cursor: not-allowed;
             filter: grayscale(0.5);
         }
-
-        /* ===== SCROLL NAV ===== */
         .fleet-scroll-nav {
             position: fixed; right: 24px; bottom: 100px;
             display: flex; flex-direction: column; gap: 10px;
@@ -819,11 +779,7 @@
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             box-shadow: 0 12px 32px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.15) inset;
         }
-
-        /* ===== PRINT-ONLY ===== */
         .print-only { display: none; }
-
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 1100px) {
             .stats-grid { gap: 12px; padding: 0 20px 18px; }
             .stat-card { padding: 18px 12px 16px; }
@@ -875,7 +831,6 @@
             .input-grid { grid-template-columns: 1fr; }
             .input-grid .btn-save { grid-column: span 1; }
         }
-
         @media print {
             #page-fleet { background: #fff !important; color: #12121a !important; }
             #page-fleet::before { display: none !important; }
@@ -886,7 +841,6 @@
         }
     </style>
 
-    <!-- HEADER -->
     <div class="fleet-header" id="fleetHeader">
         <div class="fleet-header-left">
             <div class="header-icon" id="fleetHeaderIcon">
@@ -916,7 +870,6 @@
         </div>
     </div>
 
-    <!-- STATS CARDS -->
     <div class="stats-grid" id="fleetStats">
         <div class="stat-card">
             <div class="number gold" id="totalVessels">0</div>
@@ -945,12 +898,10 @@
         </div>
     </div>
 
-    <!-- INPUT FORM -->
     <div id="inputArea" class="input-grid">
         <input type="text" id="iName" placeholder="اسم المركب">
         <input type="text" id="iNum" placeholder="الرقم">
         <input type="number" id="iLen" placeholder="الطول (م)" step="0.1">
-
         <select id="iReg" onchange="updateZones()">
             <option value="">الإقليم</option>
             <option value="الشمال">🗺️ الشمال</option>
@@ -963,22 +914,18 @@
             <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
             <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
         </select>
-
         <select id="iZone"><option value="">المنطقة</option></select>
         <input type="text" id="iPort" placeholder="الميناء">
         <input type="text" id="iSupp" placeholder="مكان التعزيز">
-
         <select id="iStat">
             <option value="صالح">✅ صالح</option>
             <option value="معطب">❌ معطب</option>
             <option value="صيانة">🔧 صيانة</option>
         </select>
-
         <input type="text" id="iBreak" placeholder="نوع العطب">
         <input type="date" id="iDate">
         <input type="date" id="iEnd">
         <input type="text" id="iRef" placeholder="المرجع">
-
         <select id="iRepairUnit">
             <option value="">الوحدة المسؤولة عن الإصلاح</option>
             <option value="وحدة الصيانة تونس">🛠️ وحدة الصيانة تونس</option>
@@ -988,30 +935,24 @@
             <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
             <option value="خارجي">🔧 خارجي</option>
         </select>
-
         <button id="saveVesselBtn" class="btn-save" onclick="addItem()">
             <i class="fas fa-save"></i> حفظ المركب
         </button>
     </div>
 
-    <!-- FILTER BAR -->
     <div class="filter-bar">
         <div class="search-input">
             <input type="text" id="searchMain" placeholder="بحث في السجل..." onkeyup="renderMain()">
             <span class="search-icon"><i class="fas fa-search"></i></span>
         </div>
-
         <label><i class="fas fa-tag"></i> الفئة:</label>
         <select id="fCatMain" onchange="renderMain()">
             <option value="الكل">📦 جميع الفئات</option>
         </select>
-
         <label><i class="fas fa-map"></i> الإقليم:</label>
         <select id="fRegMain" onchange="renderMain()">
             <option value="الكل">🌍 جميع الأقاليم</option>
         </select>
-
-        <!-- 🆕 فلتر الحالة -->
         <label><i class="fas fa-circle"></i> الحالة:</label>
         <select id="fStatusMain" onchange="renderMain()">
             <option value="all">جميع الحالات</option>
@@ -1020,7 +961,6 @@
             <option value="صيانة">🔧 صيانة</option>
             <option value="طرح">⚫ طرح</option>
         </select>
-
         <button class="btn-filter primary" onclick="renderMain()">
             <i class="fas fa-filter"></i> فلترة
         </button>
@@ -1029,7 +969,6 @@
         </button>
     </div>
 
-    <!-- PRINT-ONLY SUMMARY -->
     <div class="print-only print-summary-section" id="printSummarySection">
         <div class="print-summary-title">📊 ملخص الأسطول حسب الفئات</div>
         <table class="print-summary-table">
@@ -1047,7 +986,6 @@
         </table>
     </div>
 
-    <!-- TABLE -->
     <div class="table-wrapper">
         <table>
             <thead>
@@ -1079,7 +1017,6 @@
         </table>
     </div>
 
-    <!-- SCROLL NAV -->
     <div class="fleet-scroll-nav" id="fleetScrollNav" aria-hidden="true">
         <button type="button" class="fleet-scroll-nav-btn" id="fleetScrollTop" title="أعلى الصفحة">
             <i class="fas fa-chevron-up"></i>
@@ -1089,23 +1026,18 @@
         </button>
     </div>
 
-    <!-- 🆕 MODAL الطرح -->
     <div class="fleet-modal" id="fleetDisposeModal">
         <div class="fleet-modal-box">
             <div class="fleet-modal-head">
                 <h3><i class="fas fa-archive"></i> طرح المركب نهائياً</h3>
                 <button class="fleet-modal-close" id="fleetDisposeClose" type="button">×</button>
             </div>
-
-            <!-- تحذير -->
             <div class="dispose-warning">
                 <span class="warn-icon">⚠️</span>
                 <div class="warn-text">
                     <strong>تحذير:</strong> هذا إجراء <strong>لا رجعة فيه</strong> — سيتم سحب المركب نهائياً من الخدمة ونقله إلى سجل المطروحة.
                 </div>
             </div>
-
-            <!-- معلومات المركب -->
             <div class="dispose-vessel-info">
                 <div>
                     <div class="info-label">المركب</div>
@@ -1117,16 +1049,12 @@
                     <div class="info-value" id="disposeVesselNum">—</div>
                 </div>
             </div>
-
-            <!-- نموذج الطرح -->
             <input type="hidden" id="disposeVesselId">
-
             <div class="dispose-form-group">
                 <label>⚠️ سبب الطرح <span class="req">*</span></label>
                 <textarea class="dispose-form-control" id="disposeReason"
                     placeholder="اشرح سبب سحب المركب من الخدمة (تلف كامل، تقادم، إلخ)..." maxlength="1000"></textarea>
             </div>
-
             <div class="dispose-form-row">
                 <div class="dispose-form-group">
                     <label>📋 رقم قرار الطرح</label>
@@ -1139,27 +1067,21 @@
                         placeholder="اسم المسؤول أو الجهة" maxlength="200">
                 </div>
             </div>
-
             <div class="dispose-form-group">
                 <label>📅 تاريخ الطرح</label>
                 <input type="date" class="dispose-form-control" id="disposeDate">
             </div>
-
             <div class="dispose-form-group">
                 <label>📝 ملاحظات إضافية</label>
                 <textarea class="dispose-form-control" id="disposeNotes"
                     placeholder="ملاحظات اختيارية..." maxlength="2000"></textarea>
             </div>
-
-            <!-- تأكيد مزدوج -->
             <div class="dispose-confirm">
                 <input type="checkbox" id="disposeConfirmCheck">
                 <label for="disposeConfirmCheck">
                     أُقرّ بأنني راجعت البيانات وأتحمّل مسؤولية قرار الطرح هذا
                 </label>
             </div>
-
-            <!-- أزرار -->
             <div class="fleet-modal-actions">
                 <button type="button" class="btn-modal cancel" id="fleetDisposeCancel">
                     إلغاء
@@ -1195,9 +1117,6 @@
     window.addEventListener('beforeunload', _fleetCleanup);
     window.addEventListener('pagehide', _fleetCleanup);
 
-    // ============================================================
-    // 📋 CONSTANTS
-    // ============================================================
     var FIXED_CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 
     var FIXED_REGIONS = [
@@ -1233,9 +1152,6 @@
         "المجمع الأمني بقبيبة": ["قبيبة"]
     };
 
-    // ============================================================
-    // 🎨 LOGO
-    // ============================================================
     function applyLogo() {
         try {
             var cachedLogo = localStorage.getItem('marine_logo');
@@ -1268,9 +1184,6 @@
         if (e.key === 'marine_logo' && e.newValue) applyLogo();
     });
 
-    // ============================================================
-    // 🖨️ PRINT
-    // ============================================================
     function updatePrintDate() {
         try {
             var now = new Date();
@@ -1298,9 +1211,6 @@
         } catch (e) { window.print(); }
     }
 
-    // ============================================================
-    // 🍞 TOAST
-    // ============================================================
     function fleetToast(msg, type, duration) {
         if (_isDestroyed) return;
         type = type || 'info';
@@ -1320,9 +1230,6 @@
         setTimeout(function() { if (toast.parentNode) toast.remove(); }, duration);
     }
 
-    // ============================================================
-    // 🔐 RBAC
-    // ============================================================
     var LEGACY_ROLE_MAP = {
         'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
         'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit',
@@ -1337,9 +1244,6 @@
         return LEGACY_ROLE_MAP[r] || 'viewer';
     }
 
-    // ============================================================
-    // 🔑 TOKEN
-    // ============================================================
     function getToken() {
         return localStorage.getItem('marine_token') ||
                localStorage.getItem('token') ||
@@ -1370,9 +1274,6 @@
         return fetch(url, Object.assign({}, options || {}, { headers: headers, credentials: 'include' }));
     }
 
-    // ============================================================
-    // 🔐 PERMISSIONS
-    // ============================================================
     function getUser() { return window.currentUser || null; }
 
     function canEdit() {
@@ -1394,18 +1295,13 @@
         return normalizeRole(user.role) === 'admin';
     }
 
-    // 🆕 صلاحية الطرح
     function canDispose() {
         var user = getUser();
         if (!user) return false;
         var role = normalizeRole(user.role);
-        // admin + manager فقط
         return role === 'admin' || role === 'manager';
     }
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
     function escapeHtml(str) {
         if (!str) return '';
         return String(str).replace(/[&<>"']/g, function(m) {
@@ -1447,9 +1343,6 @@
         }
     }
 
-    // ============================================================
-    // ✅ PRINT SUMMARY
-    // ============================================================
     function populatePrintSummary(vessels) {
         var body = document.getElementById('printSummaryBody');
         if (!body) return;
@@ -1489,9 +1382,6 @@
         body.innerHTML = html;
     }
 
-    // ============================================================
-    // INIT FILTERS
-    // ============================================================
     function initFilters() {
         var fCatMain = document.getElementById('fCatMain');
         var fRegMain = document.getElementById('fRegMain');
@@ -1512,9 +1402,6 @@
         }
     }
 
-    // ============================================================
-    // RENDER MAIN
-    // ============================================================
     async function renderMain() {
         if (_isDestroyed) return;
         var mainBody = document.getElementById('mainBody');
@@ -1540,7 +1427,6 @@
             var allVessels = await response.json();
             if (_isDestroyed) return;
 
-            // 🆕 فصل المطروحة عن النشطة
             var vessels = allVessels.filter(function(v) { return v.status !== 'طرح'; });
             var disposedList = allVessels.filter(function(v) { return v.status === 'طرح'; });
             _disposalsCount = disposedList.length;
@@ -1624,7 +1510,6 @@
                 var editBtn = editable ?
                     '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>' : '';
 
-                // 🆕 زر الطرح (فقط admin/manager)
                 var disposeBtn = disposable ?
                     '<button class="btn-sm dispose" onclick="openDisposeModal(\'' + id + '\')" title="طرح نهائي"><i class="fas fa-archive"></i></button>' : '';
 
@@ -1661,7 +1546,6 @@
         }
     }
 
-    // 🆕 تحديث شارة المطروحة
     function updateDisposalsBadge() {
         var c = document.getElementById('fleetDisposalsCount');
         if (!c) return;
@@ -1673,9 +1557,6 @@
         }
     }
 
-    // ============================================================
-    // CRUD
-    // ============================================================
     async function addItem() {
         if (_isDestroyed) return;
         if (!canEdit()) { alert('⚠️ ليس لديك صلاحية لإضافة مركب'); return; }
@@ -1849,9 +1730,6 @@
 
     function refreshFleet() { renderMain(); }
 
-    // ============================================================
-    // 🆕 MODAL الطرح
-    // ============================================================
     var _disposeVesselData = null;
 
     function openDisposeModal(vesselId) {
@@ -1875,7 +1753,6 @@
 
                 _disposeVesselData = v;
 
-                // ملء النموذج
                 setVal('disposeVesselId', v._id || v.id);
                 setText('disposeVesselName', v.name || '—');
                 setText('disposeVesselSub', (v.cat || getCategory(v.len)) + ' • ' + (v.region || v.reg || '—'));
@@ -1960,24 +1837,40 @@
         }
     }
 
-    // 🆕 الانتقال لصفحة المطروحة
+    // 🆕 الانتقال لصفحة المطروحة — v2 (مع fallback مضمون)
     function navigateToDisposals() {
+        console.log('🚢 navigateToDisposals called');
+        var navigated = false;
+
+        // المحاولة 1: عبر navigateTo
         if (typeof window.navigateTo === 'function') {
-            window.navigateTo('disposals-vessels');
-        } else {
-            window.location.hash = '#disposals-vessels';
-            // fallback: ربما الصفحة موجودة في مسار آخر
-            setTimeout(function() {
-                if (window.location.hash !== '#disposals-vessels') {
-                    window.location.href = '/pages/disposals-vessels.html';
-                }
-            }, 500);
+            try {
+                window.navigateTo('disposals-vessels');
+                navigated = true;
+                console.log('✅ Called navigateTo(disposals-vessels)');
+
+                setTimeout(function() {
+                    var pageEl = document.getElementById('page-disposals-vessels');
+                    var hash = window.location.hash;
+                    if (!pageEl && hash !== '#disposals-vessels') {
+                        console.warn('⚠️ navigateTo failed — fallback to direct URL');
+                        window.location.href = '/pages/disposals-vessels.html';
+                    }
+                }, 700);
+                return;
+            } catch (e) {
+                console.error('❌ navigateTo error:', e.message);
+                navigated = false;
+            }
+        }
+
+        // المحاولة 2: URL مباشر
+        if (!navigated) {
+            console.log('🔄 Using direct URL');
+            window.location.href = '/pages/disposals-vessels.html';
         }
     }
 
-    // ============================================================
-    // EXCEL EXPORT
-    // ============================================================
     function exportFleetExcel() {
         if (_isDestroyed) return;
         try {
@@ -2039,9 +1932,6 @@
         } catch (err) { fleetToast('❌ فشل التصدير: ' + err.message, 'error'); }
     }
 
-    // ============================================================
-    // SCROLL BUTTONS
-    // ============================================================
     function initScrollButtons() {
         var nav = document.getElementById('fleetScrollNav');
         var btnTop = document.getElementById('fleetScrollTop');
@@ -2078,9 +1968,6 @@
         setTimeout(updateVisibility, 1500);
     }
 
-    // ============================================================
-    // INIT
-    // ============================================================
     var _initialized = false;
 
     async function initPage() {
@@ -2089,7 +1976,7 @@
         if (!header) return false;
 
         _initialized = true;
-        console.log('🚀 Fleet v3.0 — Initializing...');
+        console.log('🚀 Fleet v3.1 — Initializing...');
 
         initFilters();
         initScrollButtons();
@@ -2118,7 +2005,6 @@
         var addBtn = document.getElementById('saveVesselBtn');
         if (addBtn) addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
 
-        // 🆕 زر المطروحة
         var dispBtn = document.getElementById('fleetDisposalsBtn');
         if (dispBtn) {
             dispBtn.addEventListener('click', navigateToDisposals);
@@ -2127,7 +2013,7 @@
         updateZones();
         await renderMain();
 
-        console.log('✅ Fleet v3.0 ready');
+        console.log('✅ Fleet v3.1 ready');
         return true;
     }
 
@@ -2176,7 +2062,6 @@
     }, 300);
     setTimeout(function() { clearInterval(retry); }, 10000);
 
-    // Expose
     window.renderMain = renderMain;
     window.addItem = addItem;
     window.editItem = editItem;
@@ -2189,6 +2074,7 @@
     window.exportFleetExcel = exportFleetExcel;
     window.openDisposeModal = openDisposeModal;
     window.closeDisposeModal = closeDisposeModal;
+    window.navigateToDisposals = navigateToDisposals;
 
 })();
 </script>
