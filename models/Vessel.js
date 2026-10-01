@@ -1,12 +1,30 @@
 /**
- * 🚢 نموذج الوسيلة البحرية — v2.2
- * @module models/Vessel
- * @description متوافق 100% مع server.js v11.1 — يدعم الطرح
+ * 🚢 نموذج الوسيلة البحرية — v2.3
+ * @description متوافق 100% مع server.js — يدعم الطرح + الصور
  */
 
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 
+// ============================================================
+// 🖼️ IMAGE SUB-SCHEMA
+// ============================================================
+const VesselImageSchema = new mongoose.Schema({
+    filename:     { type: String, default: '' },
+    originalName: { type: String, default: '' },
+    url:          { type: String, required: true },
+    size:         { type: Number, default: 0 },
+    mimetype:     { type: String, default: '' },
+    caption:      { type: String, default: '', maxlength: 200 },
+    isPrimary:    { type: Boolean, default: false },
+    source:       { type: String, enum: ['upload', 'camera'], default: 'upload' },
+    uploadedAt:   { type: Date, default: Date.now },
+    uploadedBy:   { type: String, default: 'system' }
+}, { _id: true });
+
+// ============================================================
+// 📋 MAIN SCHEMA
+// ============================================================
 const VesselSchema = new mongoose.Schema({
     id: {
         type: String,
@@ -42,24 +60,13 @@ const VesselSchema = new mongoose.Schema({
         type: String,
         default: 'صالح',
         enum: [
-            'صالح',
-            'معطب',
-            'صيانة',
-            'طرح',
-            'احتياط',
-            'نشط',
-            'غير نشط',
-            'active',
-            'inactive',
-            'maintenance',
-            'reserve'
+            'صالح', 'معطب', 'صيانة', 'طرح',
+            'احتياط', 'نشط', 'غير نشط',
+            'active', 'inactive', 'maintenance', 'reserve'
         ],
         trim: true
     },
-    stat: {
-        type: String,
-        default: 'صالح'
-    },
+    stat: { type: String, default: 'صالح' },
 
     // ============================================================
     // 🔧 معلومات الأعطال والصيانة
@@ -70,32 +77,18 @@ const VesselSchema = new mongoose.Schema({
     repairUnit: { type: String, default: '' },
 
     // ============================================================
-    // ⚫ حقول الطرح — v2.2
+    // ⚫ حقول الطرح
     // ============================================================
-    disposalDate: {
-        type: Date,
-        default: null
-    },
-    disposalReason: {
-        type: String,
-        default: '',
-        maxlength: 1000
-    },
-    disposalDecision: {
-        type: String,
-        default: '',
-        maxlength: 200
-    },
-    disposedBy: {
-        type: String,
-        default: '',
-        maxlength: 200
-    },
-    disposalNotes: {
-        type: String,
-        default: '',
-        maxlength: 2000
-    },
+    disposalDate:     { type: Date, default: null },
+    disposalReason:   { type: String, default: '', maxlength: 1000 },
+    disposalDecision: { type: String, default: '', maxlength: 200 },
+    disposedBy:       { type: String, default: '', maxlength: 200 },
+    disposalNotes:    { type: String, default: '', maxlength: 2000 },
+
+    // ============================================================
+    // 🖼️ الصور
+    // ============================================================
+    images: [VesselImageSchema],
 
     // ============================================================
     // 🔧 سجل الصيانة
@@ -125,7 +118,7 @@ const VesselSchema = new mongoose.Schema({
 // ============================================================
 VesselSchema.pre('save', function(next) {
     this.updatedAt = new Date();
-    // ✅ مزامنة stat مع status
+    // مزامنة stat مع status
     if (this.isModified('status')) {
         this.stat = this.status;
     }
@@ -175,24 +168,52 @@ VesselSchema.methods.changeStatus = async function(newStatus) {
     return this;
 };
 
-// ⚫ طريقة الطرح
-VesselSchema.methods.dispose = async function(reason, decisionNumber, decidedBy, notes) {
+// ⚫ طريقة الطرح — تقبل كائناً أو args مفردة
+VesselSchema.methods.dispose = async function(arg1, decisionNumber, decidedBy, notes) {
+    let reason, decision, byUser, noteText, dateVal;
+    
+    if (arg1 && typeof arg1 === 'object' && !Array.isArray(arg1)) {
+        reason    = arg1.reason;
+        decision  = arg1.decision;
+        byUser    = arg1.disposedBy;
+        noteText  = arg1.notes;
+        dateVal   = arg1.date;
+    } else {
+        reason    = arg1;
+        decision  = decisionNumber;
+        byUser    = decidedBy;
+        noteText  = notes;
+        dateVal   = null;
+    }
+    
     this.status = 'طرح';
     this.stat = 'طرح';
-    this.disposalDate = new Date();
-    this.disposalReason = String(reason || '').substring(0, 1000);
-    this.disposalDecision = String(decisionNumber || '').substring(0, 200);
-    this.disposedBy = String(decidedBy || '').substring(0, 200);
-    this.disposalNotes = String(notes || '').substring(0, 2000);
-    this.break = String(reason || '').substring(0, 500);
+    this.disposalDate = dateVal ? new Date(dateVal) : new Date();
+    this.disposalReason   = String(reason || '').substring(0, 1000);
+    this.disposalDecision = String(decision || '').substring(0, 200);
+    this.disposedBy       = String(byUser || '').substring(0, 200);
+    this.disposalNotes    = String(noteText || '').substring(0, 2000);
+    this.break            = String(reason || '').substring(0, 500);
     await this.save();
     return this;
 };
 
-// 🔓 طريقة إلغاء الطرح
-VesselSchema.methods.restore = async function() {
-    this.status = 'صالح';
-    this.stat = 'صالح';
+// 🔓 طريقة إلغاء الطرح — تقبل newStatus
+VesselSchema.methods.restore = async function(arg) {
+    let newStatus = 'صالح';
+    if (arg && typeof arg === 'object' && arg.newStatus) {
+        newStatus = arg.newStatus;
+    } else if (typeof arg === 'string') {
+        newStatus = arg;
+    }
+    
+    const allowed = ['صالح', 'صيانة', 'معطب', 'احتياط', 'نشط'];
+    if (!allowed.includes(newStatus)) {
+        newStatus = 'صيانة';
+    }
+    
+    this.status = newStatus;
+    this.stat = newStatus;
     this.disposalDate = null;
     this.disposalReason = '';
     this.disposalDecision = '';
@@ -201,6 +222,34 @@ VesselSchema.methods.restore = async function() {
     this.break = '';
     await this.save();
     return this;
+};
+
+// 🖼️ حذف صورة
+VesselSchema.methods.removeImage = function(imageId) {
+    if (!this.images) return false;
+    const img = this.images.id(imageId);
+    if (!img) return false;
+    const wasPrimary = img.isPrimary;
+    img.deleteOne();
+    if (wasPrimary && this.images.length > 0) {
+        this.images[0].isPrimary = true;
+    }
+    return true;
+};
+
+// ⭐ تعيين صورة رئيسية
+VesselSchema.methods.setPrimaryImage = function(imageId) {
+    if (!this.images) return false;
+    this.images.forEach(img => {
+        img.isPrimary = img._id.toString() === imageId.toString();
+    });
+    return true;
+};
+
+// 🔍 جلب الصورة الرئيسية
+VesselSchema.methods.getPrimaryImage = function() {
+    if (!this.images || this.images.length === 0) return null;
+    return this.images.find(i => i.isPrimary) || this.images[0];
 };
 
 // ============================================================
