@@ -1,0 +1,1128 @@
+<!-- public/pages/disposals-vessels.html -->
+<div id="page-disposals-vessels">
+<style>
+    #page-disposals-vessels {
+        --c-border-soft: rgba(148, 163, 184, 0.08);
+        --c-border-mid: rgba(148, 163, 184, 0.15);
+        --c-border-strong: rgba(148, 163, 184, 0.25);
+        --c-gold-1: #f7d774;
+        --c-gold-2: #e6b31e;
+        --c-gold-3: #b8860b;
+        --c-gold-glow: rgba(230, 179, 30, 0.35);
+        --c-emerald-1: #6ee7b7;
+        --c-amber-1: #fcd34d;
+        --c-red-1: #fca5a5;
+        --c-cyan-1: #67e8f9;
+        --c-purple-1: #c4b5fd;
+        --c-pink-1: #f9a8d4;
+        --c-slate-1: #94a3b8;
+        --c-text-1: #f1f5f9;
+        --c-text-2: #cbd5e1;
+        --c-text-3: #94a3b8;
+        --c-text-4: #64748b;
+        --radius: 16px;
+        --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        --font: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        width: 100%; max-width: 100%;
+        padding: 0; margin: 0;
+        font-family: var(--font);
+        background:
+            radial-gradient(ellipse 80% 50% at 20% 0%, rgba(100, 116, 139, 0.10), transparent 50%),
+            radial-gradient(ellipse 60% 40% at 80% 10%, rgba(230, 179, 30, 0.06), transparent 50%),
+            radial-gradient(ellipse 70% 50% at 50% 100%, rgba(239, 68, 68, 0.04), transparent 60%),
+            linear-gradient(180deg, #060911 0%, #0a1020 50%, #060911 100%);
+        color: var(--c-text-1);
+        min-height: 100vh;
+        position: relative;
+        z-index: 2;
+        overflow-x: hidden;
+    }
+    #page-disposals-vessels::before {
+        content: '';
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background:
+            radial-gradient(circle 400px at 10% 20%, rgba(100, 116, 139, 0.06), transparent 70%),
+            radial-gradient(circle 500px at 90% 60%, rgba(230, 179, 30, 0.05), transparent 70%);
+        z-index: -1; pointer-events: none;
+        animation: dvOrbsFloat 22s ease-in-out infinite;
+    }
+    @keyframes dvOrbsFloat {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(3%, -2%) scale(1.05); }
+        66% { transform: translate(-3%, 2%) scale(0.97); }
+    }
+    #page-disposals-vessels *,
+    #page-disposals-vessels *::before,
+    #page-disposals-vessels *::after { box-sizing: border-box; }
+    #page-disposals-vessels ::-webkit-scrollbar { width: 8px; height: 8px; }
+    #page-disposals-vessels ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
+    #page-disposals-vessels ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--c-slate-1), #475569);
+        border-radius: 4px; border: 2px solid transparent; background-clip: padding-box;
+    }
+    .dv-container { padding: 16px 24px 40px; max-width: 1700px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* HEADER */
+    .dv-header {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 18px 24px; flex-wrap: wrap; gap: 16px;
+        background: linear-gradient(135deg, rgba(18, 26, 44, 0.9) 0%, rgba(24, 34, 56, 0.8) 100%);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid var(--c-border-mid);
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 32px rgba(0,0,0,0.35);
+    }
+    .dv-header .title-section { display: flex; align-items: center; gap: 14px; flex: 1 1 260px; min-width: 0; }
+    .dv-header .title-icon {
+        width: 50px; height: 50px; border-radius: 14px;
+        background: linear-gradient(135deg, #475569 0%, #1e293b 50%, #0f172a 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px; color: #f7d774;
+        position: relative; overflow: hidden; flex-shrink: 0;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.6), 0 0 0 1px rgba(247, 215, 116, 0.2) inset;
+        animation: dvIconFloat 4s ease-in-out infinite;
+    }
+    .dv-header .title-icon::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    @keyframes dvIconFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-3px) rotate(-2deg); }
+    }
+    .dv-header .title-icon::after {
+        content: ''; position: absolute; top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(247, 215, 116, 0.25), transparent);
+        animation: dvShine 4s ease-in-out infinite; pointer-events: none;
+    }
+    @keyframes dvShine { 0% { left: -100%; } 50%, 100% { left: 100%; } }
+    .dv-header .header-text { min-width: 0; overflow: hidden; }
+    .dv-header .title {
+        font-size: 22px; font-weight: 800;
+        background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 50%, #cbd5e1 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text; margin: 0 0 2px 0; letter-spacing: -0.5px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dv-header .subtitle {
+        font-size: 12px; color: var(--c-text-3); margin: 0; font-weight: 500;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dv-header .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
+
+    /* BUTTONS */
+    .dv-btn {
+        padding: 10px 20px; border: none; border-radius: 12px;
+        font-weight: 700; font-size: 13px; cursor: pointer;
+        transition: all var(--transition);
+        display: inline-flex; align-items: center; gap: 8px;
+        font-family: var(--font); white-space: nowrap; flex-shrink: 0;
+        line-height: 1; position: relative; overflow: hidden;
+    }
+    .dv-btn i { font-size: 13px; }
+    .dv-btn::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    .dv-btn-primary {
+        background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
+        color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
+    }
+    .dv-btn-primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px var(--c-gold-glow); }
+    .dv-btn-secondary {
+        background: linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(148, 163, 184, 0.04) 100%);
+        border: 1px solid var(--c-border-mid); color: var(--c-text-2);
+        backdrop-filter: blur(8px);
+    }
+    .dv-btn-secondary:hover {
+        background: rgba(148, 163, 184, 0.15); color: var(--c-text-1);
+        transform: translateY(-2px); border-color: var(--c-border-strong);
+    }
+    .dv-btn-info {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: #fff; box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+    }
+    .dv-btn-info:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5); }
+    .dv-btn-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+    }
+    .dv-btn-success:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5); }
+    .dv-btn-dark {
+        background: linear-gradient(135deg, #475569, #1e293b);
+        color: #f7d774; border: 1px solid rgba(247, 215, 116, 0.25);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.5);
+    }
+    .dv-btn-dark:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px rgba(15, 23, 42, 0.7), 0 0 24px rgba(247, 215, 116, 0.2); }
+
+    /* INPUTS */
+    .dv-input, .dv-select {
+        padding: 10px 16px; border-radius: 10px;
+        border: 1px solid var(--c-border-mid);
+        background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
+        color: var(--c-text-1); font-family: var(--font);
+        font-size: 12px; font-weight: 600;
+        transition: all var(--transition); cursor: pointer;
+    }
+    .dv-input { flex: 1; min-width: 240px; cursor: text; }
+    .dv-input:focus, .dv-select:focus {
+        outline: none; border-color: var(--c-gold-2);
+        box-shadow: 0 0 0 3px var(--c-gold-glow);
+    }
+    .dv-input::placeholder { color: var(--c-text-4); }
+    .dv-select option, .dv-select optgroup { background: #0a1020; color: var(--c-text-1); padding: 8px; }
+
+    /* STATS */
+    .dv-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .dv-stat {
+        background: linear-gradient(135deg, rgba(24, 34, 56, 0.85) 0%, rgba(18, 26, 44, 0.95) 100%);
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        border: 1px solid var(--c-border-soft);
+        border-radius: var(--radius);
+        padding: 22px 16px 18px;
+        text-align: center;
+        transition: all var(--transition);
+        position: relative; overflow: hidden;
+        min-width: 0; min-height: 110px;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.25);
+        color: var(--c-slate-1);
+    }
+    .dv-stat::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+        background: linear-gradient(90deg, transparent 0%, currentColor 50%, transparent 100%);
+        filter: drop-shadow(0 0 8px currentColor);
+    }
+    .dv-stat::after {
+        content: ''; position: absolute; top: -50%; right: -50%;
+        width: 200%; height: 200%;
+        background: radial-gradient(circle, currentColor 0%, transparent 40%);
+        opacity: 0.06; pointer-events: none;
+    }
+    .dv-stat:hover {
+        transform: translateY(-5px); border-color: var(--c-border-strong);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 20px 48px rgba(0,0,0,0.45), 0 0 40px currentColor;
+    }
+    .dv-stat:hover::after { opacity: 0.15; }
+    .dv-stat.stat-total  { color: var(--c-gold-1); }
+    .dv-stat.stat-month  { color: var(--c-cyan-1); }
+    .dv-stat.stat-year   { color: var(--c-purple-1); }
+    .dv-stat.stat-reason { color: var(--c-red-1); }
+    .dv-stat .number {
+        font-size: 30px; font-weight: 900; line-height: 1;
+        color: currentColor;
+        text-shadow: 0 0 24px currentColor, 0 0 8px currentColor;
+        letter-spacing: -1px; position: relative; z-index: 1;
+        white-space: nowrap; margin-bottom: 8px; font-variant-numeric: tabular-nums;
+    }
+    .dv-stat .label {
+        font-size: 11px; color: rgba(203, 213, 225, 0.75); font-weight: 700;
+        position: relative; z-index: 1; line-height: 1.3;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+    }
+
+    /* FILTER BAR */
+    .dv-actions {
+        display: flex; flex-wrap: wrap; align-items: center;
+        gap: 12px 14px; padding: 16px 20px;
+        background: linear-gradient(135deg, rgba(18, 26, 44, 0.6) 0%, rgba(24, 34, 56, 0.5) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--c-border-soft);
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset;
+    }
+    .dv-actions > .dv-input, .dv-actions > .dv-select { min-width: 160px; }
+    .dv-actions > .dv-input { min-width: 260px; }
+
+    /* TABLE */
+    .dv-table-wrap {
+        background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        border: 1px solid var(--c-border-soft);
+        border-radius: var(--radius);
+        overflow: hidden; overflow-x: auto;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
+        transition: all var(--transition);
+    }
+    .dv-table-wrap:hover {
+        border-color: var(--c-border-mid);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .dv-table-head, .dv-table-row {
+        display: grid;
+        grid-template-columns: 50px 110px 140px 150px 1fr 120px 120px 140px 160px 120px;
+        gap: 8px; padding: 15px 22px;
+        align-items: center; font-size: 13px; min-width: 1500px;
+    }
+    .dv-table-head {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%);
+        font-size: 10.5px; font-weight: 800; color: #cbd5e1;
+        letter-spacing: 1px; text-transform: uppercase;
+        position: sticky; top: 0; z-index: 2;
+        backdrop-filter: blur(20px);
+        border-bottom: 2px solid #64748b;
+        box-shadow: 0 4px 20px rgba(100, 116, 139, 0.25);
+    }
+    .dv-table-head .dv-cell { color: #cbd5e1; font-weight: 800; }
+    .dv-table-row {
+        border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+        transition: all var(--transition); background: transparent;
+    }
+    .dv-table-row:nth-child(even) { background: rgba(148, 163, 184, 0.02); }
+    .dv-table-row:hover { background: rgba(100, 116, 139, 0.08); }
+    .dv-table-row:last-child { border-bottom: none; }
+    .dv-cell {
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        color: var(--c-text-2); font-weight: 600;
+    }
+    .dv-cell.center { text-align: center; }
+
+    /* BADGES */
+    .dv-badge {
+        display: inline-block; padding: 4px 12px;
+        border-radius: 8px; font-size: 11px; font-weight: 800;
+        letter-spacing: 0.3px; transition: var(--transition); white-space: nowrap;
+    }
+    .dv-badge.type    { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
+    .dv-badge.brand   { background: rgba(230,179,30,0.15); color: var(--c-gold-1); border: 1px solid rgba(230,179,30,0.25); }
+    .dv-badge.model   { background: rgba(148,163,184,0.08); color: var(--c-text-3); font-size: 10px; }
+    .dv-badge.year    { background: rgba(16,185,129,0.12); color: var(--c-emerald-1); font-size: 10px; }
+    .dv-badge.region  { background: rgba(230,179,30,0.15); color: var(--c-gold-1); font-size: 10px; border: 1px solid rgba(230,179,30,0.2); }
+    .dv-badge.zone    { background: rgba(16,185,129,0.15); color: var(--c-emerald-1); font-size: 10px; border: 1px solid rgba(16,185,129,0.25); }
+    .dv-badge.disposal {
+        background: linear-gradient(135deg, #1e293b, #334155);
+        color: #f7d774; border: 1px solid rgba(247, 215, 116, 0.4);
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.6);
+    }
+
+    /* ACTION BUTTONS */
+    .dv-action-btn {
+        width: 34px; height: 34px; border: none; border-radius: 10px;
+        cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 13px; transition: all var(--transition);
+        margin: 0 3px; position: relative; overflow: hidden;
+    }
+    .dv-action-btn::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
+        opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .dv-action-btn:hover::before { opacity: 1; }
+    .dv-action-btn.restore {
+        background: rgba(16,185,129,0.15);
+        color: var(--c-emerald-1);
+        border: 1px solid rgba(16,185,129,0.25);
+    }
+    .dv-action-btn.restore:hover {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff; transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 16px rgba(16,185,129,0.45);
+    }
+    .dv-action-btn.view {
+        background: rgba(59,130,246,0.15);
+        color: #93c5fd; border: 1px solid rgba(59,130,246,0.25);
+    }
+    .dv-action-btn.view:hover {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: #fff; transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 16px rgba(59,130,246,0.45);
+    }
+
+    /* EMPTY */
+    .dv-empty { padding: 80px 24px; text-align: center; color: var(--c-text-4); }
+    .dv-empty i {
+        font-size: 56px; margin-bottom: 20px;
+        opacity: 0.5; color: var(--c-slate-1);
+        display: block;
+        filter: drop-shadow(0 0 20px rgba(100, 116, 139, 0.5));
+    }
+    .dv-empty p { font-size: 14px; font-weight: 700; color: var(--c-text-3); }
+
+    /* DETAILS MODAL */
+    .dv-modal {
+        position: fixed; inset: 0;
+        background: rgba(2,4,12,0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 99999; display: none;
+        align-items: center; justify-content: center;
+        padding: 20px;
+        animation: dvModalBgIn 0.25s ease-out;
+    }
+    @keyframes dvModalBgIn { from { opacity: 0; } to { opacity: 1; } }
+    .dv-modal.active { display: flex; }
+    .dv-modal-box {
+        background: linear-gradient(135deg, rgba(24, 34, 56, 0.98) 0%, rgba(15, 20, 32, 0.99) 100%);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(247, 215, 116, 0.25);
+        border-radius: 20px;
+        padding: 28px 32px;
+        width: 100%; max-width: 720px;
+        max-height: 90vh; overflow-y: auto;
+        box-shadow: 0 32px 80px rgba(0,0,0,0.85), 0 0 60px rgba(247, 215, 116, 0.08);
+        animation: dvModalBoxIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes dvModalBoxIn {
+        from { transform: scale(0.9) translateY(20px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .dv-modal-head {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 22px; padding-bottom: 18px;
+        border-bottom: 1px solid var(--c-border-soft);
+        position: relative;
+    }
+    .dv-modal-head::after {
+        content: ''; position: absolute;
+        bottom: -1px; right: 0;
+        width: 120px; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--c-slate-1));
+        box-shadow: 0 0 12px rgba(148, 163, 184, 0.4);
+    }
+    .dv-modal-head h3 {
+        font-size: 19px; font-weight: 800;
+        color: var(--c-text-1);
+        display: flex; align-items: center; gap: 10px;
+        margin: 0;
+    }
+    .dv-modal-head h3 i {
+        color: var(--c-slate-1);
+        filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.5));
+    }
+    .dv-modal-close {
+        background: rgba(148, 163, 184, 0.08);
+        border: 1px solid var(--c-border-mid);
+        color: var(--c-text-3);
+        width: 38px; height: 38px; border-radius: 12px;
+        cursor: pointer; font-size: 22px;
+        display: flex; align-items: center; justify-content: center;
+        transition: all var(--transition); line-height: 1;
+    }
+    .dv-modal-close:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--c-red-1);
+        border-color: rgba(239, 68, 68, 0.4);
+        transform: rotate(90deg);
+    }
+    .dv-detail-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 14px; margin-bottom: 18px;
+    }
+    .dv-detail-item {
+        background: linear-gradient(135deg, rgba(10, 16, 32, 0.6), rgba(18, 26, 44, 0.4));
+        border: 1px solid var(--c-border-soft);
+        border-radius: 12px; padding: 14px 16px;
+    }
+    .dv-detail-item label {
+        display: block; font-size: 10px;
+        font-weight: 800; color: var(--c-text-4);
+        text-transform: uppercase;
+        letter-spacing: 0.8px; margin-bottom: 6px;
+    }
+    .dv-detail-item .dv-value {
+        font-size: 14px; font-weight: 700;
+        color: var(--c-text-1); word-break: break-word;
+    }
+    .dv-detail-item.full { grid-column: 1 / -1; }
+    .dv-detail-item.highlight {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(185, 28, 28, 0.04));
+        border-color: rgba(239, 68, 68, 0.25);
+    }
+    .dv-detail-item.highlight label { color: var(--c-red-1); }
+    .dv-detail-item.highlight .dv-value { color: #fecaca; }
+
+    /* TOAST */
+    .dv-toast {
+        position: fixed; bottom: 28px; left: 28px;
+        z-index: 999999; max-width: 400px;
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 22px; border-radius: 14px;
+        color: #fff; font-family: var(--font);
+        font-size: 13px; font-weight: 700;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        animation: dvToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        direction: rtl;
+    }
+    .dv-toast.success {
+        background: linear-gradient(135deg, rgba(16,185,129,0.95), rgba(5,150,105,0.9));
+        border: 1px solid rgba(110, 231, 183, 0.5);
+    }
+    .dv-toast.error {
+        background: linear-gradient(135deg, rgba(239,68,68,0.95), rgba(185,28,28,0.9));
+        border: 1px solid rgba(252, 165, 165, 0.5);
+    }
+    .dv-toast.info {
+        background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(29,78,216,0.9));
+        border: 1px solid rgba(147, 197, 253, 0.5);
+    }
+    @keyframes dvToastIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1100px) {
+        .dv-stats { gap: 12px; }
+        .dv-stat { padding: 18px 12px 16px; }
+        .dv-stat .number { font-size: 26px; }
+    }
+    @media (max-width: 1024px) {
+        .dv-header { flex-direction: column; align-items: stretch; padding: 16px 20px; }
+        .dv-header .header-actions { width: 100%; justify-content: flex-start; }
+        .dv-detail-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+        .dv-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .dv-stat .number { font-size: 24px; }
+    }
+    @media (max-width: 768px) {
+        .dv-container { padding: 14px 16px 60px; }
+        .dv-header { padding: 14px 18px; }
+        .dv-header .title { font-size: 18px; }
+        .dv-header .title-icon { width: 42px; height: 42px; font-size: 20px; border-radius: 12px; }
+        .dv-actions { padding: 14px; gap: 10px 12px; }
+        .dv-input, .dv-select { min-width: 100%; }
+        .dv-modal-box { padding: 22px 18px; }
+        .dv-modal-head h3 { font-size: 16px; }
+        .dv-toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+    }
+    @media (max-width: 480px) {
+        .dv-container { padding: 10px 12px 60px; }
+        .dv-header { padding: 14px; }
+        .dv-header .title { font-size: 16px; }
+        .dv-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .dv-stat { padding: 14px 10px; }
+        .dv-stat .number { font-size: 20px; }
+        .dv-stat .label { font-size: 10px; white-space: normal; line-height: 1.3; }
+    }
+</style>
+
+<div class="dv-container">
+
+    <div class="dv-header">
+        <div class="title-section">
+            <div class="title-icon"><i class="fas fa-archive"></i></div>
+            <div class="header-text">
+                <div class="title">المراكب البحرية المطروحة</div>
+                <div class="subtitle">سجل الوسائل البحرية المسحوبة نهائياً من الخدمة</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="dv-btn dv-btn-primary" id="dvRefreshBtn">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="dv-btn dv-btn-info" id="dvPrintBtn">
+                <i class="fas fa-print"></i> طباعة
+            </button>
+            <button class="dv-btn dv-btn-success" id="dvExcelBtn">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+            <button class="dv-btn dv-btn-dark" id="dvBackBtn" title="عودة إلى السجل العام">
+                <i class="fas fa-arrow-right"></i> السجل العام
+            </button>
+        </div>
+    </div>
+
+    <div class="dv-stats">
+        <div class="dv-stat stat-total">
+            <div class="number" id="dvStatTotal">0</div>
+            <div class="label">📊 إجمالي المطروحة</div>
+        </div>
+        <div class="dv-stat stat-month">
+            <div class="number" id="dvStatMonth">0</div>
+            <div class="label">📅 مطروحة هذا الشهر</div>
+        </div>
+        <div class="dv-stat stat-year">
+            <div class="number" id="dvStatYear">0</div>
+            <div class="label">🗓️ مطروحة هذه السنة</div>
+        </div>
+        <div class="dv-stat stat-reason">
+            <div class="number" id="dvStatTopReason">—</div>
+            <div class="label">⚠️ السبب الأكثر شيوعاً</div>
+        </div>
+    </div>
+
+    <div class="dv-actions">
+        <input type="text" class="dv-input" id="dvSearch" placeholder="🔍 ابحث بالاسم أو الرقم أو السبب أو رقم القرار...">
+        <select class="dv-select" id="dvFilterRegion">
+            <option value="all">كل الأقاليم والوحدات</option>
+        </select>
+        <select class="dv-select" id="dvFilterType">
+            <option value="all">كل الفئات</option>
+        </select>
+        <select class="dv-select" id="dvFilterYear">
+            <option value="all">كل السنوات</option>
+        </select>
+        <select class="dv-select" id="dvFilterSort">
+            <option value="recent">📅 الأحدث طرحاً</option>
+            <option value="oldest">📅 الأقدم طرحاً</option>
+            <option value="name">🔤 الاسم</option>
+            <option value="num">🔢 الرقم</option>
+        </select>
+    </div>
+
+    <div class="dv-table-wrap">
+        <div class="dv-table-head">
+            <div class="dv-cell center">#</div>
+            <div class="dv-cell">الاسم</div>
+            <div class="dv-cell center">الرقم</div>
+            <div class="dv-cell center">الطول / الفئة</div>
+            <div class="dv-cell">الإقليم / المنطقة</div>
+            <div class="dv-cell center">📅 تاريخ الطرح</div>
+            <div class="dv-cell">⚠️ سبب الطرح</div>
+            <div class="dv-cell center">📋 رقم القرار</div>
+            <div class="dv-cell">👤 من قرر الطرح</div>
+            <div class="dv-cell center">إجراءات</div>
+        </div>
+        <div id="dvTableBody">
+            <div class="dv-empty">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>جاري التحميل...</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="dv-modal" id="dvModal">
+    <div class="dv-modal-box">
+        <div class="dv-modal-head">
+            <h3><i class="fas fa-info-circle"></i> تفاصيل الطرح</h3>
+            <button class="dv-modal-close" id="dvModalClose" type="button">×</button>
+        </div>
+        <div id="dvModalBody"></div>
+        <div style="display:flex; gap:12px; margin-top:24px; padding-top:18px; border-top:1px solid rgba(148,163,184,0.1);">
+            <button type="button" class="dv-btn dv-btn-secondary" id="dvModalCancel" style="flex:1; justify-content:center;">
+                إغلاق
+            </button>
+            <button type="button" class="dv-btn dv-btn-success" id="dvModalRestore" style="flex:1; justify-content:center;">
+                <i class="fas fa-undo"></i> إلغاء الطرح (إعادة للخدمة)
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+    console.log('⚫ Disposals Vessels v1.0 — Loading...');
+
+    var _isDestroyed = false;
+    var _timeouts = [];
+    var _listeners = [];
+
+    var REGION_LABELS = {
+        'الشمال': '🗺️ الحرس البحري بالشمال',
+        'الساحل': '🗺️ الحرس البحري بالساحل',
+        'الوسط': '🗺️ الحرس البحري بالوسط',
+        'الجنوب': '🗺️ الحرس البحري بالجنوب',
+        'وحدة الصيانة والإسناد البحري تونس': '🛠️ وحدة الصيانة تونس',
+        'وحدة الصيانة والإسناد البحري المنستير': '🛠️ وحدة الصيانة المنستير',
+        'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ وحدة الصيانة صفاقس',
+        'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ وحدة الصيانة جرجيس',
+        'المجمع الأمني بقبيبة': '🏛️ المجمع الأمني بقبيبة'
+    };
+
+    function _dvCleanup() {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
+        _timeouts = [];
+        _listeners.forEach(function(l) {
+            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
+        });
+        _listeners = [];
+        console.log('🧹 Disposals Vessels cleanup done');
+    }
+    window._pageCleanup = window._pageCleanup || [];
+    window._pageCleanup.push(_dvCleanup);
+    window.addEventListener('beforeunload', _dvCleanup);
+    window.addEventListener('pagehide', _dvCleanup);
+
+    function getToken() {
+        try {
+            return localStorage.getItem('marine_token')
+                || localStorage.getItem('token')
+                || localStorage.getItem('marine_auth_token')
+                || sessionStorage.getItem('token')
+                || null;
+        } catch(e) { return null; }
+    }
+    function getCsrf() {
+        try {
+            var m = document.cookie.match(/marine_csrf=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : '';
+        } catch(e) { return ''; }
+    }
+    function authHeaders(includeCT) {
+        var h = { 'Accept': 'application/json' };
+        if (includeCT) h['Content-Type'] = 'application/json';
+        var t = getToken();
+        if (t) h['Authorization'] = 'Bearer ' + t;
+        var c = getCsrf();
+        if (c) h['X-CSRF-Token'] = c;
+        return h;
+    }
+    function apiFetch(url, opts) {
+        opts = opts || {};
+        var method = (opts.method || 'GET').toUpperCase();
+        var isSafe = ['GET', 'HEAD', 'OPTIONS'].indexOf(method) !== -1;
+        opts.headers = Object.assign({}, authHeaders(!isSafe), opts.headers || {});
+        opts.credentials = 'include';
+        return fetch(url, opts);
+    }
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/[&<>"']/g, function(m) {
+            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+        });
+    }
+    function addSafeListener(el, type, fn) {
+        if (!el) return;
+        el.addEventListener(type, fn);
+        _listeners.push({ el: el, type: type, fn: fn });
+    }
+    function dvToast(msg, type, duration) {
+        if (_isDestroyed) return;
+        type = type || 'info';
+        duration = duration || 3000;
+        var existing = document.querySelector('.dv-toast');
+        if (existing) existing.remove();
+        var toast = document.createElement('div');
+        toast.className = 'dv-toast ' + type;
+        var icons = { success: '✅', error: '❌', info: 'ℹ️' };
+        var icon = document.createElement('span');
+        icon.textContent = icons[type] || 'ℹ️';
+        var text = document.createElement('span');
+        text.textContent = String(msg || '');
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        document.body.appendChild(toast);
+        var id = setTimeout(function() { if (toast.parentNode) toast.remove(); }, duration);
+        _timeouts.push(id);
+    }
+    function getRegionShort(r) { return REGION_LABELS[r] || r || '—'; }
+    function formatDate(d) {
+        if (!d) return '—';
+        try {
+            var dt = new Date(d);
+            if (isNaN(dt.getTime())) return d;
+            var y = dt.getFullYear();
+            var m = String(dt.getMonth() + 1).padStart(2, '0');
+            var day = String(dt.getDate()).padStart(2, '0');
+            return day + '/' + m + '/' + y;
+        } catch(e) { return d; }
+    }
+    function getCategory(len) {
+        var n = parseFloat(len);
+        if (isNaN(n)) return 'زوارق مزدوجة';
+        if (n === 11) return 'البروق';
+        if (n >= 8 && n <= 12) return 'صقور';
+        if (n > 12 && n <= 25) return 'خوافر';
+        if (n >= 30) return 'طوافات';
+        return 'زوارق مزدوجة';
+    }
+
+    var disposals = [];
+    var currentViewId = null;
+
+    function loadDisposals() {
+        if (_isDestroyed) return;
+        var tbody = document.getElementById('dvTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<div class="dv-empty"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
+        }
+        apiFetch('/api/vessels/disposed')
+            .then(function(res) {
+                if (!res.ok) {
+                    // fallback
+                    return apiFetch('/api/vessels').then(function(r) { return r.json(); })
+                        .then(function(all) {
+                            if (!Array.isArray(all)) return [];
+                            return all.filter(function(v) { return v.status === 'طرح'; });
+                        });
+                }
+                return res.json();
+            })
+            .then(function(data) {
+                if (_isDestroyed) return;
+                var list = [];
+                if (Array.isArray(data)) {
+                    list = data;
+                } else if (data && Array.isArray(data.vessels)) {
+                    list = data.vessels;
+                }
+                disposals = list.filter(function(v) { return v.status === 'طرح'; });
+                renderStats();
+                populateFilters();
+                renderTable();
+            })
+            .catch(function(err) {
+                console.warn('⚠️ Load error:', err.message);
+                if (tbody) {
+                    tbody.innerHTML = '<div class="dv-empty"><i class="fas fa-exclamation-triangle" style="color:#f87171"></i><p>فشل تحميل البيانات</p></div>';
+                }
+            });
+    }
+
+    function renderStats() {
+        var total = disposals.length;
+        var now = new Date();
+        var curMonth = now.getMonth();
+        var curYear = now.getFullYear();
+        var month = 0, year = 0;
+        var reasons = {};
+        disposals.forEach(function(v) {
+            var d = v.disposalDate ? new Date(v.disposalDate) : null;
+            if (d && !isNaN(d.getTime())) {
+                if (d.getMonth() === curMonth && d.getFullYear() === curYear) month++;
+                if (d.getFullYear() === curYear) year++;
+            }
+            var r = (v.disposalReason || '').trim();
+            if (r) reasons[r] = (reasons[r] || 0) + 1;
+        });
+        var topReason = '—', maxCount = 0;
+        Object.keys(reasons).forEach(function(r) {
+            if (reasons[r] > maxCount) { maxCount = reasons[r]; topReason = r; }
+        });
+        if (topReason.length > 25) topReason = topReason.substring(0, 25) + '…';
+        var el;
+        el = document.getElementById('dvStatTotal'); if (el) el.textContent = total;
+        el = document.getElementById('dvStatMonth'); if (el) el.textContent = month;
+        el = document.getElementById('dvStatYear'); if (el) el.textContent = year;
+        el = document.getElementById('dvStatTopReason');
+        if (el) {
+            el.textContent = topReason;
+            el.style.fontSize = topReason.length > 15 ? '14px' : '20px';
+        }
+    }
+
+    function populateFilters() {
+        var regionEl = document.getElementById('dvFilterRegion');
+        if (regionEl) {
+            var regions = {};
+            disposals.forEach(function(v) { if (v.region || v.reg) regions[v.region || v.reg] = true; });
+            var html = '<option value="all">كل الأقاليم والوحدات</option>';
+            Object.keys(regions).sort().forEach(function(r) {
+                html += '<option value="' + escapeHtml(r) + '">' + escapeHtml(getRegionShort(r)) + '</option>';
+            });
+            regionEl.innerHTML = html;
+        }
+        var typeEl = document.getElementById('dvFilterType');
+        if (typeEl) {
+            var cats = {};
+            disposals.forEach(function(v) {
+                var c = v.cat || getCategory(v.len);
+                if (c) cats[c] = true;
+            });
+            var cHtml = '<option value="all">كل الفئات</option>';
+            Object.keys(cats).sort().forEach(function(c) {
+                cHtml += '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>';
+            });
+            typeEl.innerHTML = cHtml;
+        }
+        var yearEl = document.getElementById('dvFilterYear');
+        if (yearEl) {
+            var years = {};
+            disposals.forEach(function(v) {
+                if (v.disposalDate) {
+                    try {
+                        var y = new Date(v.disposalDate).getFullYear();
+                        if (!isNaN(y)) years[y] = true;
+                    } catch(e) {}
+                }
+            });
+            var ylist = Object.keys(years).map(Number).sort(function(a, b) { return b - a; });
+            var yHtml = '<option value="all">كل السنوات</option>';
+            ylist.forEach(function(y) { yHtml += '<option value="' + y + '">' + y + '</option>'; });
+            yearEl.innerHTML = yHtml;
+        }
+    }
+
+    function getFiltered() {
+        var searchEl = document.getElementById('dvSearch');
+        var regionEl = document.getElementById('dvFilterRegion');
+        var typeEl = document.getElementById('dvFilterType');
+        var yearEl = document.getElementById('dvFilterYear');
+        var sortEl = document.getElementById('dvFilterSort');
+        var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+        var region = regionEl ? regionEl.value : 'all';
+        var type = typeEl ? typeEl.value : 'all';
+        var year = yearEl ? yearEl.value : 'all';
+        var sort = sortEl ? sortEl.value : 'recent';
+
+        var filtered = disposals.filter(function(v) {
+            var vReg = v.region || v.reg || '';
+            var vCat = v.cat || getCategory(v.len);
+            if (region !== 'all' && vReg !== region) return false;
+            if (type !== 'all' && vCat !== type) return false;
+            if (year !== 'all') {
+                var y = v.disposalDate ? new Date(v.disposalDate).getFullYear() : null;
+                if (String(y) !== String(year)) return false;
+            }
+            if (search) {
+                var text = ((v.name || '') + ' ' + (v.num || '') + ' ' +
+                            (v.region || v.reg || '') + ' ' + (v.zone || '') + ' ' +
+                            (v.port || '') + ' ' + (v.cat || '') + ' ' +
+                            (v.disposalReason || '') + ' ' +
+                            (v.disposalDecision || '') + ' ' + (v.disposedBy || '')).toLowerCase();
+                if (text.indexOf(search) === -1) return false;
+            }
+            return true;
+        });
+
+        filtered.sort(function(a, b) {
+            if (sort === 'recent' || sort === 'oldest') {
+                var da = a.disposalDate ? new Date(a.disposalDate).getTime() : 0;
+                var db = b.disposalDate ? new Date(b.disposalDate).getTime() : 0;
+                return sort === 'recent' ? db - da : da - db;
+            }
+            if (sort === 'name') {
+                return String(a.name || '').localeCompare(String(b.name || ''), 'ar');
+            }
+            if (sort === 'num') {
+                return String(a.num || '').localeCompare(String(b.num || ''), 'ar');
+            }
+            return 0;
+        });
+        return filtered;
+    }
+
+    function renderTable() {
+        var tbody = document.getElementById('dvTableBody');
+        if (!tbody) return;
+        var filtered = getFiltered();
+        if (!filtered.length) {
+            var msg = disposals.length === 0 ? 'لا توجد مراكب مطروحة حتى الآن' : 'لا توجد نتائج مطابقة';
+            tbody.innerHTML = '<div class="dv-empty"><i class="fas fa-archive"></i><p>' + msg + '</p></div>';
+            return;
+        }
+        var html = '';
+        filtered.forEach(function(v, idx) {
+            var id = v._id || v.id;
+            var name = v.name || '—';
+            var num = v.num || '—';
+            var len = v.len || '—';
+            var cat = v.cat || getCategory(v.len);
+            var region = v.region || v.reg || '—';
+            var zone = v.zone || '—';
+            var disposalDate = v.disposalDate || v.disposedAt;
+            var reason = v.disposalReason || '—';
+            var decision = v.disposalDecision || '—';
+            var by = v.disposedBy || '—';
+
+            html +=
+                '<div class="dv-table-row">' +
+                    '<div class="dv-cell center">' + (idx + 1) + '</div>' +
+                    '<div class="dv-cell" title="' + escapeHtml(name) + '"><strong style="color:#f1f5f9;">' + escapeHtml(name) + '</strong></div>' +
+                    '<div class="dv-cell center">' + escapeHtml(num) + '</div>' +
+                    '<div class="dv-cell center"><span class="dv-badge type">' + escapeHtml(len) + 'م</span> <span class="dv-badge brand">' + escapeHtml(cat) + '</span></div>' +
+                    '<div class="dv-cell" title="' + escapeHtml(region) + ' / ' + escapeHtml(zone) + '"><span class="dv-badge region">' + escapeHtml(getRegionShort(region)) + '</span> <span class="dv-badge zone">📍 ' + escapeHtml(zone) + '</span></div>' +
+                    '<div class="dv-cell center">' + formatDate(disposalDate) + '</div>' +
+                    '<div class="dv-cell" title="' + escapeHtml(reason) + '">' + escapeHtml(reason.length > 40 ? reason.substring(0, 40) + '…' : reason) + '</div>' +
+                    '<div class="dv-cell center">' + (decision !== '—' ? '<span class="dv-badge disposal">' + escapeHtml(decision) + '</span>' : '—') + '</div>' +
+                    '<div class="dv-cell" title="' + escapeHtml(by) + '">' + escapeHtml(by) + '</div>' +
+                    '<div class="dv-cell center">' +
+                        '<button type="button" class="dv-action-btn view" data-action="view" data-id="' + escapeHtml(id) + '" title="عرض التفاصيل"><i class="fas fa-eye"></i></button>' +
+                        '<button type="button" class="dv-action-btn restore" data-action="restore" data-id="' + escapeHtml(id) + '" title="إلغاء الطرح"><i class="fas fa-undo"></i></button>' +
+                    '</div>' +
+                '</div>';
+        });
+        tbody.innerHTML = html;
+        tbody.querySelectorAll('[data-action]').forEach(function(btn) {
+            addSafeListener(btn, 'click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var action = this.getAttribute('data-action');
+                var id = this.getAttribute('data-id');
+                if (action === 'view') openDetailsModal(id);
+                else if (action === 'restore') restoreVessel(id);
+            });
+        });
+    }
+
+    function openDetailsModal(id) {
+        var v = disposals.find(function(x) { return String(x._id || x.id) === String(id); });
+        if (!v) return;
+        currentViewId = id;
+        var body = document.getElementById('dvModalBody');
+        if (!body) return;
+        var region = v.region || v.reg || '—';
+        var cat = v.cat || getCategory(v.len);
+        var disposalDate = v.disposalDate || v.disposedAt;
+        body.innerHTML =
+            '<div class="dv-detail-grid">' +
+                '<div class="dv-detail-item"><label>الاسم</label><div class="dv-value"><strong style="color:#f7d774;">' + escapeHtml(v.name || '—') + '</strong></div></div>' +
+                '<div class="dv-detail-item"><label>الرقم</label><div class="dv-value">' + escapeHtml(v.num || '—') + '</div></div>' +
+                '<div class="dv-detail-item"><label>الطول</label><div class="dv-value">' + escapeHtml(v.len || '—') + ' متر</div></div>' +
+                '<div class="dv-detail-item"><label>الفئة</label><div class="dv-value">' + escapeHtml(cat) + '</div></div>' +
+                '<div class="dv-detail-item full"><label>الإقليم</label><div class="dv-value">' + escapeHtml(getRegionShort(region)) + '</div></div>' +
+                '<div class="dv-detail-item"><label>المنطقة</label><div class="dv-value">' + escapeHtml(v.zone || '—') + '</div></div>' +
+                '<div class="dv-detail-item"><label>الميناء</label><div class="dv-value">' + escapeHtml(v.port || '—') + '</div></div>' +
+                '<div class="dv-detail-item full highlight"><label>⚠️ سبب الطرح</label><div class="dv-value">' + escapeHtml(v.disposalReason || '—') + '</div></div>' +
+                '<div class="dv-detail-item"><label>📋 رقم القرار</label><div class="dv-value">' + escapeHtml(v.disposalDecision || '—') + '</div></div>' +
+                '<div class="dv-detail-item"><label>👤 من قرر الطرح</label><div class="dv-value">' + escapeHtml(v.disposedBy || '—') + '</div></div>' +
+                '<div class="dv-detail-item"><label>📅 تاريخ الطرح</label><div class="dv-value">' + formatDate(disposalDate) + '</div></div>' +
+                '<div class="dv-detail-item"><label>📅 تاريخ العطب الأصلي</label><div class="dv-value">' + formatDate(v.fDate) + '</div></div>' +
+                (v.disposalNotes ? '<div class="dv-detail-item full"><label>📝 ملاحظات الطرح</label><div class="dv-value">' + escapeHtml(v.disposalNotes) + '</div></div>' : '') +
+                (v.break ? '<div class="dv-detail-item full"><label>⚠️ العطب الأصلي</label><div class="dv-value">' + escapeHtml(v.break) + '</div></div>' : '') +
+            '</div>';
+        var modal = document.getElementById('dvModal');
+        if (modal) modal.classList.add('active');
+    }
+
+    function closeDetailsModal() {
+        var modal = document.getElementById('dvModal');
+        if (modal) modal.classList.remove('active');
+        currentViewId = null;
+    }
+
+    function restoreVessel(id) {
+        var v = disposals.find(function(x) { return String(x._id || x.id) === String(id); });
+        if (!v) return;
+        if (!confirm('⚠️ هل تريد إلغاء طرح المركب "' + (v.name || '') + '" وإعادته للخدمة؟\n\nملاحظة: سيتم وضعه في حالة "صيانة" افتراضياً.')) return;
+
+        apiFetch('/api/vessels/' + encodeURIComponent(id) + '/restore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newStatus: 'صيانة' })
+        })
+            .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
+            .then(function(result) {
+                if (!result.ok) throw new Error(result.data.error || 'فشل إلغاء الطرح');
+                dvToast('✅ تم إلغاء الطرح — المركب عاد للخدمة', 'success');
+                closeDetailsModal();
+                loadDisposals();
+            })
+            .catch(function(err) {
+                dvToast('❌ ' + err.message, 'error');
+            });
+    }
+
+    function dvPrint() {
+        dvToast('🖨️ جاري تحضير الطباعة...', 'info', 1500);
+        _timeouts.push(setTimeout(function() { window.print(); }, 300));
+    }
+
+    function dvExportExcel() {
+        try {
+            var filtered = getFiltered();
+            if (!filtered.length) { dvToast('⚠️ لا توجد بيانات', 'error'); return; }
+            var BOM = '\uFEFF';
+            var headers = ['#','الاسم','الرقم','الطول','الفئة','الإقليم','المنطقة','الميناء','تاريخ الطرح','سبب الطرح','رقم القرار','من قرر الطرح'];
+            function csvEscape(val) {
+                if (val === null || val === undefined) return '';
+                var s = String(val);
+                if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
+                    return '"' + s.replace(/"/g, '""') + '"';
+                }
+                return s;
+            }
+            var rows = [headers.map(csvEscape).join(',')];
+            filtered.forEach(function(v, idx) {
+                var region = v.region || v.reg || '';
+                var cat = v.cat || getCategory(v.len);
+                var disposalDate = v.disposalDate || v.disposedAt;
+                rows.push([
+                    csvEscape(idx + 1),
+                    csvEscape(v.name || ''),
+                    csvEscape(v.num || ''),
+                    csvEscape(v.len || ''),
+                    csvEscape(cat),
+                    csvEscape(region),
+                    csvEscape(v.zone || ''),
+                    csvEscape(v.port || ''),
+                    csvEscape(formatDate(disposalDate)),
+                    csvEscape(v.disposalReason || ''),
+                    csvEscape(v.disposalDecision || ''),
+                    csvEscape(v.disposedBy || '')
+                ].join(','));
+            });
+            var csv = BOM + rows.join('\r\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var now = new Date();
+            var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            var filename = 'disposals_vessels_' + dateStr + '.csv';
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            _timeouts.push(setTimeout(function() {
+                if (a.parentNode) a.parentNode.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100));
+            dvToast('✅ تم تصدير ' + filtered.length + ' مركب مطروح', 'success');
+        } catch (err) {
+            console.error('Excel error:', err);
+            dvToast('❌ فشل التصدير: ' + err.message, 'error');
+        }
+    }
+
+    function init() {
+        if (_isDestroyed) return;
+        console.log('🚀 Initializing Disposals Vessels...');
+        addSafeListener(document.getElementById('dvRefreshBtn'), 'click', function() {
+            dvToast('🔄 جاري التحديث...', 'info', 1200);
+            loadDisposals();
+        });
+        addSafeListener(document.getElementById('dvPrintBtn'), 'click', dvPrint);
+        addSafeListener(document.getElementById('dvExcelBtn'), 'click', dvExportExcel);
+        addSafeListener(document.getElementById('dvBackBtn'), 'click', function() {
+            if (typeof window.navigateTo === 'function') {
+                window.navigateTo('fleet');
+            } else {
+                window.location.hash = '#fleet';
+                setTimeout(function() {
+                    if (!window.location.hash || window.location.hash === '#fleet') {
+                        window.location.href = '/pages/fleet.html';
+                    }
+                }, 300);
+            }
+        });
+        addSafeListener(document.getElementById('dvSearch'), 'input', renderTable);
+        addSafeListener(document.getElementById('dvFilterRegion'), 'change', renderTable);
+        addSafeListener(document.getElementById('dvFilterType'), 'change', renderTable);
+        addSafeListener(document.getElementById('dvFilterYear'), 'change', renderTable);
+        addSafeListener(document.getElementById('dvFilterSort'), 'change', renderTable);
+        addSafeListener(document.getElementById('dvModalClose'), 'click', closeDetailsModal);
+        addSafeListener(document.getElementById('dvModalCancel'), 'click', closeDetailsModal);
+        addSafeListener(document.getElementById('dvModalRestore'), 'click', function() {
+            if (currentViewId) restoreVessel(currentViewId);
+        });
+        var modal = document.getElementById('dvModal');
+        if (modal) addSafeListener(modal, 'click', function(e) {
+            if (e.target === modal) closeDetailsModal();
+        });
+        addSafeListener(document, 'keydown', function(e) {
+            if (e.key === 'Escape') closeDetailsModal();
+        });
+        loadDisposals();
+        console.log('✅ Disposals Vessels ready');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+            _timeouts.push(id);
+        });
+    } else {
+        var id0 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
+        _timeouts.push(id0);
+    }
+})();
+</script>
+</div>
