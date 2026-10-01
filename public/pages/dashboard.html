@@ -1,11 +1,6 @@
 <!-- public/pages/dashboard.html -->
 <div id="page-dashboard">
     <style>
-        /* ============================================================
-           🚀 DASHBOARD — ULTRA MODERN v10.0
-           ✨ Aurora + Bento + Neon Glow Design
-           ============================================================ */
-
         #page-dashboard {
             --c-border-soft: rgba(148, 163, 184, 0.08);
             --c-border-mid: rgba(148, 163, 184, 0.15);
@@ -32,6 +27,7 @@
             --c-red-glow: rgba(248, 113, 113, 0.4);
             --c-cyan-1: #67e8f9;
             --c-cyan-2: #06b6d4;
+            --c-slate-1: #94a3b8;
             --c-text-1: #f1f5f9;
             --c-text-2: #cbd5e1;
             --c-text-3: #94a3b8;
@@ -57,7 +53,6 @@
             overflow-x: hidden;
         }
 
-        /* 🌌 Aurora background */
         #page-dashboard::before {
             content: '';
             position: fixed;
@@ -361,7 +356,7 @@
         /* ===== STATS GRID (BENTO) ===== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: 16px;
             padding: 0 24px 20px;
             width: 100%;
@@ -477,6 +472,12 @@
             border: 1px solid rgba(248, 113, 113, 0.35);
             box-shadow: 0 0 24px rgba(248, 113, 113, 0.3);
         }
+        .stat-card .stat-icon.slate {
+            background: linear-gradient(135deg, rgba(100, 116, 139, 0.25), rgba(100, 116, 139, 0.08));
+            color: var(--c-slate-1);
+            border: 1px solid rgba(100, 116, 139, 0.35);
+            box-shadow: 0 0 24px rgba(100, 116, 139, 0.3);
+        }
 
         .stat-card .stat-change {
             font-size: 11px;
@@ -496,6 +497,11 @@
             background: rgba(248, 113, 113, 0.12);
             color: var(--c-red-1);
             border: 1px solid rgba(248, 113, 113, 0.25);
+        }
+        .stat-card .stat-change.neutral {
+            background: rgba(100, 116, 139, 0.15);
+            color: var(--c-slate-1);
+            border: 1px solid rgba(100, 116, 139, 0.3);
         }
 
         .stat-card .number {
@@ -519,6 +525,7 @@
         .stat-card .number.blue { color: var(--c-blue-1); }
         .stat-card .number.pink { color: var(--c-pink-1); }
         .stat-card .number.red { color: var(--c-red-1); }
+        .stat-card .number.slate { color: var(--c-slate-1); }
 
         .stat-card .label {
             font-size: 12px;
@@ -869,7 +876,6 @@
             .bottom-grid { grid-template-columns: 1fr; }
         }
 
-        /* KPI cards داخل bottom-grid */
         .bottom-grid .chart-card > div[style*="grid"] > div {
             background: linear-gradient(135deg, rgba(24, 34, 56, 0.9) 0%, rgba(15, 22, 38, 0.95) 100%) !important;
             border: 1px solid var(--c-border-soft) !important;
@@ -929,7 +935,7 @@
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1200px) {
-            .stats-grid { gap: 14px; padding: 0 20px 18px; }
+            .stats-grid { gap: 14px; padding: 0 20px 18px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .stat-card { padding: 20px 16px 16px; }
             .stat-card .number { font-size: 30px; }
             .dash-header, .welcome-banner { margin-left: 20px; margin-right: 20px; }
@@ -965,30 +971,22 @@
             .dash-header-actions .btn-action { padding: 9px 14px; font-size: 11px; }
         }
 
-        /* ============================================================
-           🖨️ PROFESSIONAL PRINT STYLES — v1.0
-           ============================================================ */
         @media print {
             @page { size: A4 landscape; margin: 12mm 10mm; }
             @page :first { margin-top: 8mm; }
-
             html, body {
-                background: #ffffff !important;
-                color: #1a1a1a !important;
+                background: #ffffff !important; color: #1a1a1a !important;
                 font-family: 'Cairo', 'Segoe UI', sans-serif !important;
                 font-size: 10pt !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-
             button, .btn, .btn-action, .btn-sm, .btn-filter, .btn-save, .btn-cancel, .btn-close,
-            .dash-header-actions, .header-actions, .fleet-header-actions, .users-header-actions,
-            .filter-bar, .input-grid, .action-btns, .chart-actions, .view-all,
+            .dash-header-actions, .header-actions, .filter-bar, .input-grid, .action-btns, .chart-actions, .view-all,
             .toast, .toast-container, #toastContainer, nav, .sidebar, .navbar, .no-print {
                 display: none !important;
             }
-
-            .dash-header, .fleet-header, .users-header {
+            .dash-header {
                 display: flex !important;
                 background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%) !important;
                 color: #ffffff !important;
@@ -996,242 +994,44 @@
                 margin: 0 0 6mm !important;
                 border-radius: 8px !important;
                 border: 2px solid #e6b31e !important;
-                position: relative !important;
                 page-break-inside: avoid;
                 page-break-after: avoid;
             }
-
-            .dash-header-left h2, .fleet-header h2, .users-header h2 {
-                color: #e6b31e !important;
-                font-size: 16pt !important;
-                font-weight: 800 !important;
-                -webkit-text-fill-color: #e6b31e !important;
-                background: none !important;
-                margin: 0 0 4pt 0 !important;
-            }
-            .dash-header-left p, .fleet-header p, .users-header p {
-                color: rgba(255,255,255,0.75) !important;
-                font-size: 10pt !important;
-                -webkit-text-fill-color: rgba(255,255,255,0.75) !important;
-            }
-
-            .header-icon, #dashHeaderIcon, #fleetHeaderIcon {
+            .dash-header-left h2 { color: #e6b31e !important; font-size: 16pt !important; font-weight: 800 !important; -webkit-text-fill-color: #e6b31e !important; background: none !important; margin: 0 0 4pt 0 !important; }
+            .dash-header-left p { color: rgba(255,255,255,0.75) !important; font-size: 10pt !important; -webkit-text-fill-color: rgba(255,255,255,0.75) !important; }
+            .header-icon, #dashHeaderIcon {
                 width: 48px !important; height: 48px !important;
                 border: 2px solid #e6b31e !important;
-                background: #0a1628 !important;
-                box-shadow: none !important;
-                animation: none !important;
-                overflow: hidden !important;
+                background: #0a1628 !important; box-shadow: none !important; animation: none !important;
             }
-            .header-icon img, #globalLogo {
-                display: block !important;
-                width: 100% !important;
-                height: 100% !important;
-                object-fit: contain !important;
-            }
-            .header-icon i { color: #e6b31e !important; }
-
-            .dash-header::after, .fleet-header::after, .users-header::after {
+            .dash-header::after {
                 content: "طُبع بتاريخ: " attr(data-print-date);
-                position: absolute;
-                bottom: 4mm; left: 8mm;
-                font-size: 9pt;
-                color: rgba(255,255,255,0.7) !important;
-                direction: rtl;
+                position: absolute; bottom: 4mm; left: 8mm;
+                font-size: 9pt; color: rgba(255,255,255,0.7) !important; direction: rtl;
             }
-
-            .welcome-banner {
-                background: #f8f9fc !important;
-                border: 2px solid #e6b31e !important;
-                color: #0a1628 !important;
-                padding: 5mm !important;
-                margin: 0 0 5mm !important;
-                border-radius: 6px !important;
-                backdrop-filter: none !important;
-                page-break-inside: avoid;
-            }
-            .welcome-banner .greeting { color: #0a1628 !important; font-size: 12pt !important; font-weight: 800 !important; }
-            .welcome-banner .greeting span { color: #c99a0e !important; -webkit-text-fill-color: #c99a0e !important; }
-            .welcome-banner .date-time, .welcome-banner .date-time span { color: #4b5563 !important; font-size: 9pt !important; }
-            .welcome-banner .status-badge {
-                background: #ecfdf5 !important;
-                color: #047857 !important;
-                border: 1px solid #047857 !important;
-                font-size: 8pt !important;
-                animation: none !important;
-            }
-
-            .stats-grid {
-                display: grid !important;
-                grid-template-columns: repeat(5, 1fr) !important;
-                gap: 4mm !important;
-                margin: 0 0 5mm !important;
-                padding: 0 !important;
-                page-break-inside: avoid;
-            }
-            .stat-card {
-                background: #f8f9fc !important;
-                border: 2px solid #e6b31e !important;
-                border-radius: 6px !important;
-                padding: 4mm 3mm !important;
-                text-align: center !important;
-                box-shadow: none !important;
-                backdrop-filter: none !important;
-                position: relative !important;
-                overflow: visible !important;
-                color: #0a1628 !important;
-            }
+            .welcome-banner { background: #f8f9fc !important; border: 2px solid #e6b31e !important; color: #0a1628 !important; padding: 5mm !important; margin: 0 0 5mm !important; page-break-inside: avoid; }
+            .stats-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 4mm !important; margin: 0 0 5mm !important; padding: 0 !important; page-break-inside: avoid; }
+            .stat-card { background: #f8f9fc !important; border: 2px solid #e6b31e !important; border-radius: 6px !important; padding: 4mm 3mm !important; text-align: center !important; box-shadow: none !important; backdrop-filter: none !important; color: #0a1628 !important; }
             .stat-card::before, .stat-card::after { display: none !important; }
-            .stat-card .stat-top { justify-content: center !important; margin-bottom: 2mm !important; }
-            .stat-card .stat-icon {
-                width: 30px !important; height: 30px !important;
-                border-radius: 50% !important;
-                border: 1px solid #e6b31e !important;
-                background: #ffffff !important;
-                color: #0a1628 !important;
-                font-size: 12pt !important;
-            }
-            .stat-card .stat-change { display: none !important; }
-            .stat-card .number {
-                color: #0a1628 !important;
-                font-size: 18pt !important;
-                font-weight: 800 !important;
-                line-height: 1 !important;
-                margin: 2mm 0 !important;
-                background: none !important;
-                -webkit-text-fill-color: #0a1628 !important;
-                text-shadow: none !important;
-            }
+            .stat-card .number { color: #0a1628 !important; font-size: 16pt !important; font-weight: 800 !important; background: none !important; -webkit-text-fill-color: #0a1628 !important; text-shadow: none !important; }
             .stat-card .number.gold { color: #c99a0e !important; -webkit-text-fill-color: #c99a0e !important; }
             .stat-card .number.green { color: #047857 !important; -webkit-text-fill-color: #047857 !important; }
             .stat-card .number.purple { color: #6d28d9 !important; -webkit-text-fill-color: #6d28d9 !important; }
             .stat-card .number.blue { color: #1d4ed8 !important; -webkit-text-fill-color: #1d4ed8 !important; }
             .stat-card .number.pink { color: #be185d !important; -webkit-text-fill-color: #be185d !important; }
-            .stat-card .number.red { color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; }
-            .stat-card .label { color: #4b5563 !important; font-size: 9pt !important; font-weight: 700 !important; }
-            .stat-card .stat-bottom { margin-top: 2mm !important; padding-top: 2mm !important; border-top: 1px solid #e5e7eb !important; }
-            .stat-card .sub-label, .stat-card .sub-label span { color: #6b7280 !important; font-size: 8pt !important; }
-
-            .charts-grid {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr !important;
-                gap: 5mm !important;
-                page-break-inside: avoid;
-                margin: 0 0 5mm !important;
-                padding: 0 !important;
-            }
-            .chart-card, .activity-card {
-                background: #f8f9fc !important;
-                border: 2px solid #e6b31e !important;
-                border-radius: 6px !important;
-                padding: 4mm !important;
-                page-break-inside: avoid;
-                box-shadow: none !important;
-                backdrop-filter: none !important;
-            }
+            .stat-card .number.slate { color: #334155 !important; -webkit-text-fill-color: #334155 !important; }
+            .stat-card .label { color: #4b5563 !important; font-size: 9pt !important; }
+            .chart-card, .activity-card { background: #f8f9fc !important; border: 2px solid #e6b31e !important; border-radius: 6px !important; padding: 4mm !important; page-break-inside: avoid; box-shadow: none !important; backdrop-filter: none !important; }
             .chart-card::before, .activity-card::before { display: none !important; }
-            .chart-card .chart-header {
-                border-bottom: 1px solid #e6b31e !important;
-                padding-bottom: 2mm !important;
-                margin-bottom: 3mm !important;
-            }
-            .chart-card .chart-header h4, .activity-card .activity-header h4 {
-                color: #0a1628 !important;
-                font-size: 11pt !important;
-                font-weight: 800 !important;
-            }
-            .chart-card .chart-header h4 i, .activity-card .activity-header h4 i { color: #c99a0e !important; }
-            .chart-card canvas { max-height: 65mm !important; width: 100% !important; }
-
-            .activity-item {
-                page-break-inside: avoid;
-                border-bottom: 1px solid #e5e7eb !important;
-                padding: 2mm 0 !important;
-                gap: 3mm !important;
-            }
-            .activity-item .activity-icon {
-                width: 28px !important; height: 28px !important;
-                border: 1px solid #e6b31e !important;
-                background: #ffffff !important;
-                color: #0a1628 !important;
-                border-radius: 50% !important;
-            }
-            .activity-item .activity-icon::before { display: none !important; }
-            .activity-item .activity-text { color: #1f2937 !important; font-size: 9pt !important; }
-            .activity-item .activity-text strong { color: #0a1628 !important; font-weight: 800 !important; }
-            .activity-item .activity-time { color: #6b7280 !important; font-size: 8pt !important; }
-            .activity-item .activity-status {
-                border: 1px solid currentColor !important;
-                background: #ffffff !important;
-                font-size: 7pt !important;
-                padding: 1mm 2.5mm !important;
-                animation: none !important;
-            }
-            .activity-item .activity-status.success { color: #047857 !important; }
-            .activity-item .activity-status.warning { color: #b45309 !important; }
-            .activity-item .activity-status.danger { color: #b91c1c !important; }
-
-            .bottom-grid {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr !important;
-                gap: 5mm !important;
-                padding: 0 !important;
-                page-break-inside: avoid;
-            }
-            .bottom-grid .chart-card > div[style*="grid"] {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr !important;
-                gap: 3mm !important;
-            }
-            .bottom-grid .chart-card > div[style*="grid"] > div {
-                background: #ffffff !important;
-                border: 1px solid #e6b31e !important;
-                border-radius: 4px !important;
-                padding: 3mm !important;
-            }
-            .bottom-grid .chart-card > div[style*="grid"] > div::before { display: none !important; }
-            .bottom-grid .chart-card > div[style*="grid"] > div > div:first-child {
-                color: #0a1628 !important;
-                font-size: 14pt !important;
-                font-weight: 800 !important;
-            }
-            .bottom-grid .chart-card > div[style*="grid"] > div > div:last-child {
-                color: #4b5563 !important;
-                font-size: 8pt !important;
-            }
-
-            .empty-state { padding: 15mm !important; color: #6b7280 !important; }
-            .empty-state .spinner { display: none !important; }
-
-            #page-dashboard::after {
-                content: "🚢 منظومة الوسائل البحرية — وثيقة رسمية";
-                display: block;
-                text-align: center;
-                font-size: 8pt;
-                color: #6b7280;
-                border-top: 2px solid #e6b31e;
-                padding-top: 3mm;
-                margin-top: 6mm;
-            }
-
-            h1, h2, h3, h4, h5, h6 { page-break-after: avoid; color: #0a1628 !important; }
-            tr, img, .stat-card, .chart-card, .activity-item { page-break-inside: avoid; }
-
-            * {
-                box-shadow: none !important;
-                text-shadow: none !important;
-                animation: none !important;
-                transition: none !important;
-            }
-
+            .chart-card .chart-header h4, .activity-card .activity-header h4 { color: #0a1628 !important; font-size: 11pt !important; font-weight: 800 !important; }
+            .chart-card canvas { max-height: 65mm !important; }
+            .activity-item { page-break-inside: avoid; border-bottom: 1px solid #e5e7eb !important; padding: 2mm 0 !important; }
+            * { box-shadow: none !important; text-shadow: none !important; animation: none !important; transition: none !important; }
             #page-dashboard::before { display: none !important; }
-            .dash-header .status-badge { display: none !important; }
         }
     </style>
 
-    <!-- ============================================================
-    HEADER
-    ============================================================ -->
+    <!-- HEADER -->
     <div class="dash-header" id="dashHeader">
         <div class="dash-header-left">
             <div class="header-icon" id="dashHeaderIcon">
@@ -1250,9 +1050,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    WELCOME BANNER
-    ============================================================ -->
+    <!-- WELCOME BANNER -->
     <div class="welcome-banner">
         <div>
             <div class="greeting">🌅 مرحباً بك، <span id="userNameDisplay">المستخدم</span></div>
@@ -1272,9 +1070,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    STATS CARDS
-    ============================================================ -->
+    <!-- STATS CARDS (6 بطاقات: + المطروحة) -->
     <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
             <div class="stat-top">
@@ -1325,6 +1121,19 @@
             </div>
         </div>
 
+        <!-- 🆕 بطاقة المطروحة -->
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon slate"><i class="fas fa-archive"></i></div>
+                <span class="stat-change neutral">— مستقر</span>
+            </div>
+            <div class="number slate" id="disposedVessels">0</div>
+            <div class="label">⚫ المراكب المطروحة</div>
+            <div class="stat-bottom">
+                <span class="sub-label"><i class="fas fa-info-circle" style="color:#94a3b8;"></i> خارج الخدمة</span>
+            </div>
+        </div>
+
         <div class="stat-card">
             <div class="stat-top">
                 <div class="stat-icon pink"><i class="fas fa-sync-alt"></i></div>
@@ -1338,9 +1147,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    CHARTS SECTION
-    ============================================================ -->
+    <!-- CHARTS SECTION -->
     <div class="charts-grid">
         <div class="chart-card">
             <div class="chart-header">
@@ -1366,9 +1173,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    BOTTOM GRID
-    ============================================================ -->
+    <!-- BOTTOM GRID -->
     <div class="bottom-grid">
         <div class="activity-card">
             <div class="activity-header">
@@ -1393,12 +1198,12 @@
                     <span class="activity-status success">مكتمل</span>
                 </div>
                 <div class="activity-item">
-                    <div class="activity-icon purple"><i class="fas fa-user"></i></div>
+                    <div class="activity-icon slate"><i class="fas fa-archive"></i></div>
                     <div class="activity-content">
-                        <div class="activity-text"><strong>أحمد محمد</strong> قام بتسجيل الدخول</div>
-                        <div class="activity-time">منذ 32 دقيقة</div>
+                        <div class="activity-text"><strong>خافرة 02</strong> تم طرحها من الخدمة</div>
+                        <div class="activity-time">منذ 25 دقيقة</div>
                     </div>
-                    <span class="activity-status success">نشط</span>
+                    <span class="activity-status warning">طرح</span>
                 </div>
                 <div class="activity-item">
                     <div class="activity-icon red"><i class="fas fa-exclamation-triangle"></i></div>
@@ -1409,12 +1214,12 @@
                     <span class="activity-status danger">عاجل</span>
                 </div>
                 <div class="activity-item">
-                    <div class="activity-icon blue"><i class="fas fa-tools"></i></div>
+                    <div class="activity-icon purple"><i class="fas fa-user"></i></div>
                     <div class="activity-content">
-                        <div class="activity-text"><strong>وحدة الصيانة تونس</strong> تم تحديث الجدول</div>
+                        <div class="activity-text"><strong>أحمد محمد</strong> قام بتسجيل الدخول</div>
                         <div class="activity-time">منذ ساعتين</div>
                     </div>
-                    <span class="activity-status warning">قيد التنفيذ</span>
+                    <span class="activity-status success">نشط</span>
                 </div>
             </div>
         </div>
@@ -1437,87 +1242,55 @@
                     <div style="font-size:11px;color:rgba(255,255,255,0.3);">مهمة مكتملة</div>
                 </div>
                 <div style="background:rgba(255,255,255,0.02);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.04);">
-                    <div style="font-size:20px;font-weight:800;color:#f472b6;">3</div>
-                    <div style="font-size:11px;color:rgba(255,255,255,0.3);">تنبيهات نشطة</div>
+                    <div style="font-size:20px;font-weight:800;color:#94a3b8;" id="quickDisposedCount">0</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.3);">⚫ مطروحة</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-    JAVASCRIPT (v9.2.3 — unchanged)
-    ============================================================ -->
     <script>
         (function() {
             'use strict';
 
-            console.log('📊 Dashboard v10.0 — loading...');
+            console.log('📊 Dashboard v10.1 — loading...');
 
             var _dashboardIntervals = [];
             var _dashboardTimeouts = [];
             var _isDestroyed = false;
-
             var _statsLoading = false;
             var _statsAbort = null;
 
             function _dashboardCleanup() {
                 if (_isDestroyed) return;
                 _isDestroyed = true;
-
-                _dashboardIntervals.forEach(function(id) {
-                    try { clearInterval(id); } catch (e) {}
-                });
+                _dashboardIntervals.forEach(function(id) { try { clearInterval(id); } catch (e) {} });
                 _dashboardIntervals = [];
-
                 try {
-                    if (_statsAbort) {
-                        _statsAbort.abort();
-                        _statsAbort = null;
-                    }
+                    if (_statsAbort) { _statsAbort.abort(); _statsAbort = null; }
                 } catch (e) {}
-
-                _dashboardTimeouts.forEach(function(id) {
-                    try { clearTimeout(id); } catch (e) {}
-                });
+                _dashboardTimeouts.forEach(function(id) { try { clearTimeout(id); } catch (e) {} });
                 _dashboardTimeouts = [];
-
                 try {
-                    if (window._perfChart) {
-                        window._perfChart.destroy();
-                        window._perfChart = null;
-                    }
-                    if (window._distChart) {
-                        window._distChart.destroy();
-                        window._distChart = null;
-                    }
+                    if (window._perfChart) { window._perfChart.destroy(); window._perfChart = null; }
+                    if (window._distChart) { window._distChart.destroy(); window._distChart = null; }
                 } catch (e) {}
-
                 console.log('🧹 Dashboard cleanup done');
             }
 
             window._pageCleanup = window._pageCleanup || [];
             window._pageCleanup.push(_dashboardCleanup);
-
             window.addEventListener('beforeunload', _dashboardCleanup);
             window.addEventListener('pagehide', _dashboardCleanup);
 
-            // ============================================================
-            // ✅ LOGO APPLY (Dynamic)
-            // ============================================================
             function applyLogo() {
                 try {
                     var cachedLogo = localStorage.getItem('marine_logo');
                     if (!cachedLogo) return;
-
                     var iconDiv = document.getElementById('dashHeaderIcon');
                     var img = document.getElementById('globalLogo');
-                    if (img) {
-                        img.src = cachedLogo;
-                        img.style.display = 'block';
-                    }
-                    if (iconDiv) {
-                        iconDiv.classList.add('has-logo');
-                    }
+                    if (img) { img.src = cachedLogo; img.style.display = 'block'; }
+                    if (iconDiv) iconDiv.classList.add('has-logo');
                 } catch (e) {}
             }
 
@@ -1527,7 +1300,6 @@
                             localStorage.getItem('authToken') || null;
                 var headers = { 'Accept': 'application/json' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
-
                 fetch('/api/logo', { headers: headers, credentials: 'include' })
                     .then(function(r) { return r.ok ? r.json() : null; })
                     .then(function(data) {
@@ -1542,43 +1314,24 @@
             syncLogoFromServer();
 
             window.addEventListener('storage', function(e) {
-                if (e.key === 'marine_logo' && e.newValue) {
-                    applyLogo();
-                }
+                if (e.key === 'marine_logo' && e.newValue) applyLogo();
             });
 
-            // ============================================================
-            // 🖨️ PRINT DATE
-            // ============================================================
             function updatePrintDate() {
                 try {
                     var now = new Date();
-                    var dateStr = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                    var timeStr = now.toLocaleTimeString('ar-TN', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    var fullDate = dateStr + ' - ' + timeStr;
-
+                    var dateStr = now.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    var timeStr = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
                     var header = document.getElementById('dashHeader');
-                    if (header) header.setAttribute('data-print-date', fullDate);
-                } catch (e) {
-                    console.debug('🖨️ updatePrintDate (safe):', e.message);
-                }
+                    if (header) header.setAttribute('data-print-date', dateStr + ' - ' + timeStr);
+                } catch (e) {}
             }
-
             updatePrintDate();
             window.addEventListener('beforeprint', updatePrintDate);
 
             window.printDashboard = function() {
                 try {
                     updatePrintDate();
-
                     var confirmed = confirm(
                         '🖨️ قبل الطباعة تأكد من:\n\n' +
                         '1. الاتجاه: أفقي (Landscape)\n' +
@@ -1587,116 +1340,84 @@
                         'هل تريد المتابعة؟'
                     );
                     if (!confirmed) return;
-
                     window.print();
-                } catch (e) {
-                    console.error('❌ printDashboard error:', e);
-                    window.print();
-                }
+                } catch (e) { window.print(); }
             };
 
-            // ============================================================
-            // ⏰ DATE & TIME
-            // ============================================================
             function updateDateTime() {
                 try {
                     if (_isDestroyed) return;
-
                     var now = new Date();
-                    var date = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                    var time = now.toLocaleTimeString('ar-TN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-
+                    var date = now.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    var time = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     var dateEl = document.getElementById('currentDate');
                     var timeEl = document.getElementById('currentTime');
-
                     if (dateEl) dateEl.textContent = date;
                     if (timeEl) timeEl.textContent = time;
-                } catch (e) {
-                    console.debug('⏰ updateDateTime (safe):', e.message);
-                }
+                } catch (e) {}
             }
-
             updateDateTime();
-            var _dateTimeIntervalId = setInterval(updateDateTime, 1000);
-            _dashboardIntervals.push(_dateTimeIntervalId);
+            _dashboardIntervals.push(setInterval(updateDateTime, 1000));
 
-            // ============================================================
-            // USER NAME
-            // ============================================================
             var userNameEl = document.getElementById('userNameDisplay');
             if (userNameEl) {
                 var userName = localStorage.getItem('userName') || 'المستخدم';
                 userNameEl.textContent = userName;
             }
 
-            // ============================================================
-            // STATS
-            // ============================================================
             function applyStatsToDOM(data) {
-                if (!data || typeof data !== 'object') {
-                    data = {};
-                }
-
+                if (!data || typeof data !== 'object') data = {};
                 var safe = {
                     totalVessels:        Number(data.totalVessels) || 0,
                     activeVessels:       Number(data.activeVessels) || 0,
                     maintenanceVessels:  Number(data.maintenanceVessels) || 0,
-                    efficiencyRate:      (typeof data.efficiencyRate === 'string'
-                                            ? data.efficiencyRate
-                                            : (Number(data.efficiencyRate) || 0) + '%'),
+                    disposedVessels:     Number(data.disposedVessels) || 0,
+                    efficiencyRate:      (typeof data.efficiencyRate === 'string' ? data.efficiencyRate : (Number(data.efficiencyRate) || 0) + '%'),
                     totalUsers:          Number(data.totalUsers) || 0,
                     newUsers:            Number(data.newUsers) || 0,
                     pendingMaintenance:  Number(data.pendingMaintenance) || 0,
                     overdueMaintenance:  Number(data.overdueMaintenance) || 0,
                     operationsToday:     Number(data.operationsToday) || 0
                 };
-
                 Object.keys(safe).forEach(function(id) {
                     var el = document.getElementById(id);
                     if (el) el.textContent = safe[id];
                 });
+                var quickEl = document.getElementById('quickDisposedCount');
+                if (quickEl) quickEl.textContent = safe.disposedVessels;
             }
 
             function computeStatsFromVessels(vessels) {
                 if (!Array.isArray(vessels)) vessels = [];
                 vessels = vessels.filter(function(v) { return v && typeof v === 'object'; });
 
-                var total = vessels.length;
+                var active = vessels.filter(function(v) { return v.status !== 'طرح'; });
+                var disposed = vessels.filter(function(v) { return v.status === 'طرح'; });
 
-                var active = vessels.filter(function(v) {
+                var total = active.length;
+                var act = active.filter(function(v) {
                     if (v.active === false) return false;
                     if (v.status === 'maintenance' || v.status === 'repair' || v.status === 'صيانة') return false;
                     if (v.status === 'معطب' || v.status === 'damaged') return false;
                     return true;
                 }).length;
 
-                var maintenance = vessels.filter(function(v) {
-                    return v.status === 'maintenance' ||
-                           v.status === 'repair' ||
-                           v.status === 'صيانة' ||
-                           v.status === 'معطب' ||
-                           v.status === 'damaged';
+                var maint = active.filter(function(v) {
+                    return v.status === 'maintenance' || v.status === 'repair' || v.status === 'صيانة' ||
+                           v.status === 'معطب' || v.status === 'damaged';
                 }).length;
 
-                var efficiency = total > 0 ? Math.round((active / total) * 100) : 0;
+                var eff = total > 0 ? Math.round((act / total) * 100) : 0;
 
                 return {
                     totalVessels: total,
-                    activeVessels: active,
-                    maintenanceVessels: maintenance,
-                    efficiencyRate: efficiency + '%',
+                    activeVessels: act,
+                    maintenanceVessels: maint,
+                    disposedVessels: disposed.length,
+                    efficiencyRate: eff + '%',
                     totalUsers: 0,
                     newUsers: 0,
-                    pendingMaintenance: maintenance,
+                    pendingMaintenance: maint,
                     overdueMaintenance: 0,
                     operationsToday: 0
                 };
@@ -1705,29 +1426,23 @@
             async function updateStats() {
                 if (_isDestroyed) return;
                 if (_statsLoading) return;
-
                 _statsLoading = true;
 
-                if (_statsAbort) {
-                    try { _statsAbort.abort(); } catch (e) {}
-                }
+                if (_statsAbort) { try { _statsAbort.abort(); } catch (e) {} }
                 _statsAbort = new AbortController();
 
                 var timeoutId = setTimeout(function() {
-                    if (_statsAbort) {
-                        try { _statsAbort.abort(); } catch (e) {}
-                    }
+                    if (_statsAbort) { try { _statsAbort.abort(); } catch (e) {} }
                 }, 8000);
 
                 try {
                     var token = localStorage.getItem('marine_token') ||
                                 localStorage.getItem('token') ||
                                 localStorage.getItem('authToken') || null;
-
                     var headers = { 'Accept': 'application/json' };
                     if (token) headers['Authorization'] = 'Bearer ' + token;
 
-                    var res = await fetch('/api/vessels', {
+                    var res = await fetch('/api/vessels?includeDisposed=true', {
                         method: 'GET',
                         headers: headers,
                         credentials: 'include',
@@ -1736,21 +1451,17 @@
                     });
 
                     clearTimeout(timeoutId);
-
                     if (_isDestroyed) return;
 
                     if (!res.ok) {
-                        console.warn('[STATS] API returned', res.status, '→ showing 0');
+                        console.warn('[STATS] API', res.status, '→ showing 0');
                         applyStatsToDOM({});
                         window._realVessels = [];
-                        if (window._distChart) {
-                            updateDistributionChart(window._currentDistMode, []);
-                        }
+                        if (window._distChart) updateDistributionChart(window._currentDistMode, []);
                         return;
                     }
 
                     var json = await res.json().catch(function() { return null; });
-
                     var vessels = [];
                     if (Array.isArray(json)) vessels = json;
                     else if (json && Array.isArray(json.vessels)) vessels = json.vessels;
@@ -1758,42 +1469,26 @@
                     else if (json && json.data && Array.isArray(json.data.vessels)) vessels = json.data.vessels;
 
                     if (!vessels || vessels.length === 0) {
-                        console.log('[STATS] No vessels → showing 0');
                         applyStatsToDOM({});
                         window._realVessels = [];
-                        if (window._distChart) {
-                            updateDistributionChart(window._currentDistMode, []);
-                        }
+                        if (window._distChart) updateDistributionChart(window._currentDistMode, []);
                         return;
                     }
 
                     var stats = computeStatsFromVessels(vessels);
                     applyStatsToDOM(stats);
-
                     window._realVessels = vessels;
-
-                    if (window._distChart) {
-                        updateDistributionChart(window._currentDistMode, vessels);
-                    }
-
-                    console.log('[STATS] Updated from', vessels.length, 'vessels →', stats);
+                    if (window._distChart) updateDistributionChart(window._currentDistMode, vessels);
+                    console.log('[STATS]', vessels.length, 'vessels →', stats);
 
                 } catch (err) {
                     clearTimeout(timeoutId);
-
                     if (_isDestroyed) return;
-                    if (err && err.name === 'AbortError') {
-                        console.debug('[STATS] Aborted (safe)');
-                        return;
-                    }
-
-                    console.warn('[STATS] Fetch error → showing 0:', err && err.message);
+                    if (err && err.name === 'AbortError') return;
+                    console.warn('[STATS] Fetch error:', err && err.message);
                     applyStatsToDOM({});
                     window._realVessels = [];
-                    if (window._distChart) {
-                        updateDistributionChart(window._currentDistMode, []);
-                    }
-
+                    if (window._distChart) updateDistributionChart(window._currentDistMode, []);
                 } finally {
                     _statsLoading = false;
                     _statsAbort = null;
@@ -1802,21 +1497,11 @@
 
             updateStats();
 
-            // ============================================================
-            // 🎨 CHARTS
-            // ============================================================
-            var CHART_COLORS = [
-                '#f5d76e','#60a5fa','#a78bfa','#f472b6','#4ade80',
-                '#fbbf24','#06b6d4','#f97316','#8b5cf6','#10b981'
-            ];
-            var CHART_BORDERS = [
-                '#c99a0e','#3b82f6','#7c3aed','#db2777','#16a34a',
-                '#d97706','#0891b2','#ea580c','#6d28d9','#059669'
-            ];
+            var CHART_COLORS = ['#f5d76e','#60a5fa','#a78bfa','#f472b6','#4ade80','#fbbf24','#06b6d4','#f97316','#8b5cf6','#10b981'];
+            var CHART_BORDERS = ['#c99a0e','#3b82f6','#7c3aed','#db2777','#16a34a','#d97706','#0891b2','#ea580c','#6d28d9','#059669'];
 
             function initCharts() {
                 if (_isDestroyed) return;
-
                 var perfCtx = document.getElementById('performanceChart');
                 if (perfCtx && typeof Chart !== 'undefined') {
                     try {
@@ -1829,53 +1514,32 @@
                                     data: [0, 0, 0, 0, 0, 0, 0],
                                     borderColor: '#e6b31e',
                                     backgroundColor: 'rgba(230,179,30,0.08)',
-                                    fill: true,
-                                    tension: 0.4,
+                                    fill: true, tension: 0.4,
                                     pointBackgroundColor: '#f5d76e',
                                     pointBorderColor: '#0a1628',
-                                    pointBorderWidth: 2,
-                                    pointRadius: 4
+                                    pointBorderWidth: 2, pointRadius: 4
                                 }, {
                                     label: 'الصيانة',
                                     data: [0, 0, 0, 0, 0, 0, 0],
                                     borderColor: '#a78bfa',
                                     backgroundColor: 'rgba(167,139,250,0.08)',
-                                    fill: true,
-                                    tension: 0.4,
+                                    fill: true, tension: 0.4,
                                     pointBackgroundColor: '#a78bfa',
                                     pointBorderColor: '#0a1628',
-                                    pointBorderWidth: 2,
-                                    pointRadius: 4
+                                    pointBorderWidth: 2, pointRadius: 4
                                 }]
                             },
                             options: {
-                                responsive: true,
-                                maintainAspectRatio: true,
-                                plugins: {
-                                    legend: {
-                                        labels: {
-                                            color: 'rgba(255,255,255,0.4)',
-                                            font: { family: 'Cairo, sans-serif', size: 11 }
-                                        }
-                                    }
-                                },
+                                responsive: true, maintainAspectRatio: true,
+                                plugins: { legend: { labels: { color: 'rgba(255,255,255,0.4)', font: { family: 'Cairo, sans-serif', size: 11 } } } },
                                 scales: {
-                                    x: {
-                                        grid: { color: 'rgba(255,255,255,0.04)' },
-                                        ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif', size: 10 } }
-                                    },
-                                    y: {
-                                        grid: { color: 'rgba(255,255,255,0.04)' },
-                                        ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif', size: 10 } },
-                                        beginAtZero: true
-                                    }
+                                    x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif', size: 10 } } },
+                                    y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif', size: 10 } }, beginAtZero: true }
                                 }
                             }
                         });
                         window._perfChart = perfChart;
-                    } catch (e) {
-                        console.warn('⚠️ Performance chart error:', e.message);
-                    }
+                    } catch (e) { console.warn('⚠️ perf chart:', e.message); }
                 }
 
                 var distCtx = document.getElementById('distributionChart');
@@ -1888,35 +1552,19 @@
                                 datasets: [{
                                     data: [1],
                                     backgroundColor: ['rgba(255,255,255,0.06)'],
-                                    borderColor: '#0a1628',
-                                    borderWidth: 3,
-                                    hoverOffset: 8
+                                    borderColor: '#0a1628', borderWidth: 3, hoverOffset: 8
                                 }]
                             },
                             options: {
-                                responsive: true,
-                                maintainAspectRatio: true,
-                                cutout: '60%',
+                                responsive: true, maintainAspectRatio: true, cutout: '60%',
                                 plugins: {
                                     legend: {
                                         position: 'bottom',
-                                        labels: {
-                                            color: 'rgba(255,255,255,0.55)',
-                                            font: { family: 'Cairo, sans-serif', size: 11 },
-                                            padding: 12,
-                                            usePointStyle: true,
-                                            pointStyle: 'circle',
-                                            boxWidth: 8,
-                                            boxHeight: 8
-                                        }
+                                        labels: { color: 'rgba(255,255,255,0.55)', font: { family: 'Cairo, sans-serif', size: 11 }, padding: 12, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8 }
                                     },
                                     tooltip: {
-                                        backgroundColor: 'rgba(10,22,40,0.95)',
-                                        titleColor: '#f5d76e',
-                                        bodyColor: '#e2e8f0',
-                                        borderColor: '#e6b31e',
-                                        borderWidth: 1,
-                                        padding: 12,
+                                        backgroundColor: 'rgba(10,22,40,0.95)', titleColor: '#f5d76e', bodyColor: '#e2e8f0',
+                                        borderColor: '#e6b31e', borderWidth: 1, padding: 12,
                                         titleFont: { family: 'Cairo, sans-serif', size: 12, weight: 'bold' },
                                         bodyFont: { family: 'Cairo, sans-serif', size: 11 },
                                         callbacks: {
@@ -1932,15 +1580,12 @@
                             }
                         });
                         window._distChart = distChart;
-                    } catch (e) {
-                        console.warn('⚠️ Distribution chart error:', e.message);
-                    }
+                    } catch (e) { console.warn('⚠️ dist chart:', e.message); }
                 }
             }
 
             function updateDistributionChart(mode, vessels) {
                 if (!window._distChart) return;
-
                 if (!Array.isArray(vessels) || vessels.length === 0) {
                     window._distChart.data.labels = ['لا توجد بيانات'];
                     window._distChart.data.datasets[0].data = [1];
@@ -1949,13 +1594,12 @@
                     window._distChart.update('none');
                     return;
                 }
-
                 mode = mode || 'category';
+                // استثناء المطروحة من الرسم
+                var activeVessels = vessels.filter(function(v) { return v.status !== 'طرح'; });
                 var counts = {};
-
-                vessels.forEach(function(v) {
+                activeVessels.forEach(function(v) {
                     if (!v || typeof v !== 'object') return;
-
                     var key;
                     if (mode === 'region') {
                         key = v.region || v.reg || 'غير محدد';
@@ -1969,17 +1613,13 @@
                                 else if (n > 12 && n <= 25) key = 'خوافر';
                                 else if (n >= 30) key = 'طوافات';
                                 else key = 'زوارق مزدوجة';
-                            } else {
-                                key = 'غير محدد';
-                            }
+                            } else key = 'غير محدد';
                         }
                     }
-
                     counts[key] = (counts[key] || 0) + 1;
                 });
 
-                var entries = Object.keys(counts)
-                    .map(function(k) { return { label: k, value: counts[k] }; })
+                var entries = Object.keys(counts).map(function(k) { return { label: k, value: counts[k] }; })
                     .sort(function(a, b) { return b.value - a.value; });
 
                 if (entries.length === 0) {
@@ -1992,13 +1632,8 @@
 
                 var labels = entries.map(function(e) { return e.label; });
                 var data = entries.map(function(e) { return e.value; });
-
-                var colors = labels.map(function(_, i) {
-                    return CHART_COLORS[i % CHART_COLORS.length];
-                });
-                var borders = labels.map(function(_, i) {
-                    return CHART_BORDERS[i % CHART_BORDERS.length];
-                });
+                var colors = labels.map(function(_, i) { return CHART_COLORS[i % CHART_COLORS.length]; });
+                var borders = labels.map(function(_, i) { return CHART_BORDERS[i % CHART_BORDERS.length]; });
 
                 window._distChart.data.labels = labels;
                 window._distChart.data.datasets[0].data = data;
@@ -2006,8 +1641,6 @@
                 window._distChart.data.datasets[0].borderColor = borders;
                 window._distChart.data.datasets[0].borderWidth = 2;
                 window._distChart.update();
-
-                console.log('[CHART] Distribution updated:', mode, counts);
             }
 
             window._realVessels = [];
@@ -2024,24 +1657,15 @@
                 document.querySelectorAll('.chart-card .chart-actions button').forEach(function(b) {
                     b.classList.toggle('active', b.textContent.trim() === type);
                 });
-
-                var mode = 'category';
-                if (type === 'region' || type === 'الإقليم') mode = 'region';
-
+                var mode = (type === 'region' || type === 'الإقليم') ? 'region' : 'category';
                 window._currentDistMode = mode;
-
-                if (window._distChart) {
-                    updateDistributionChart(mode, window._realVessels || []);
-                }
-
+                if (window._distChart) updateDistributionChart(mode, window._realVessels || []);
                 showToast('📊 تم التبديل إلى ' + type, 'info');
             };
 
             window.exportDashboard = function() {
                 showToast('📥 جاري تصدير التقرير...', 'info');
-                var id = setTimeout(function() {
-                    showToast('✅ تم تصدير التقرير بنجاح', 'success');
-                }, 1500);
+                var id = setTimeout(function() { showToast('✅ تم تصدير التقرير بنجاح', 'success'); }, 1500);
                 _dashboardTimeouts.push(id);
             };
 
@@ -2051,20 +1675,14 @@
                 var orig = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
-
                 Promise.resolve(updateStats()).finally(function() {
-                    if (btn) {
-                        btn.innerHTML = orig;
-                        btn.disabled = false;
-                    }
+                    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
                     showToast('✅ تم تحديث لوحة القيادة', 'success');
                 });
             };
 
             var refreshBtn = document.getElementById('refreshBtn');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', window.refreshDashboard);
-            }
+            if (refreshBtn) refreshBtn.addEventListener('click', window.refreshDashboard);
 
             function showToast(msg, type) {
                 var old = document.querySelector('.toast');
@@ -2086,8 +1704,7 @@
 
             function init() {
                 if (_isDestroyed) return;
-                console.log('🚀 Initializing Dashboard v10.0...');
-
+                console.log('🚀 Initializing Dashboard v10.1...');
                 if (typeof Chart === 'undefined') {
                     var script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
@@ -2110,7 +1727,6 @@
                         }
                     }, 300);
                 }
-
                 console.log('✅ Dashboard loaded successfully');
             }
 
@@ -2123,7 +1739,6 @@
             window.updateStats = updateStats;
             window.initCharts = initCharts;
             window.updateDistributionChart = updateDistributionChart;
-
         })();
     </script>
 </div>
