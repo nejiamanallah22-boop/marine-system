@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>سجل النشاطات</title>
+    <style>
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .activity-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #f5d76e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .activity-title i { color: #e6b31e; }
+
+        .activity-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(145deg, #111e3a, #0a1628);
+            border: 1px solid rgba(230,179,30,0.08);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .stat-icon.create  { background: rgba(34,197,94,0.12);  color: #4ade80; }
+        .stat-icon.update  { background: rgba(59,130,246,0.12); color: #60a5fa; }
+        .stat-icon.delete  { background: rgba(239,68,68,0.12);  color: #f87171; }
+        .stat-icon.login   { background: rgba(230,179,30,0.12); color: #f5d76e; }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: #e8edf5;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+        }
+
+        .activity-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.02);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(230,179,30,0.04);
+        }
+        .filter-input, .filter-select {
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(230,179,30,0.08);
+            border-radius: 8px;
+            color: #e8edf5;
+            font-size: 13px;
+            font-family: 'Cairo', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .filter-input:focus, .filter-select:focus {
+            border-color: #e6b31e;
+        }
+        .filter-input { flex: 1; min-width: 200px; }
+        .filter-select option { background: #0a1628; color: #e8edf5; }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 14px;
+            padding: 14px 16px;
+            background: linear-gradient(145deg, #0f1a2e, #0a1628);
+            border: 1px solid rgba(230,179,30,0.06);
+            border-radius: 10px;
+            border-right: 3px solid #e6b31e;
+            transition: all 0.2s;
+        }
+        .activity-item:hover {
+            background: linear-gradient(145deg, #12203a, #0d1930);
+            border-color: rgba(230,179,30,0.15);
+        }
+        .activity-item.create { border-right-color: #22c55e; }
+        .activity-item.update { border-right-color: #3b82f6; }
+        .activity-item.delete { border-right-color: #ef4444; }
+        .activity-item.login  { border-right-color: #e6b31e; }
+
+        .activity-item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .activity-item.create .activity-item-icon { background: rgba(34,197,94,0.12);  color: #4ade80; }
+        .activity-item.update .activity-item-icon { background: rgba(59,130,246,0.12); color: #60a5fa; }
+        .activity-item.delete .activity-item-icon { background: rgba(239,68,68,0.12);  color: #f87171; }
+        .activity-item.login  .activity-item-icon { background: rgba(230,179,30,0.12); color: #f5d76e; }
+
+        .activity-item-body { flex: 1; min-width: 0; }
+
+        .activity-item-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e8edf5;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .activity-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .activity-badge.create { background: rgba(34,197,94,0.15);  color: #4ade80; }
+        .activity-badge.update { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .activity-badge.delete { background: rgba(239,68,68,0.15);  color: #f87171; }
+        .activity-badge.login  { background: rgba(230,179,30,0.15); color: #f5d76e; }
+
+        .activity-item-meta {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+        }
+        .activity-item-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .activity-item-meta i {
+            color: #e6b31e;
+            font-size: 11px;
+            opacity: 0.6;
+        }
+
+        .activity-empty, .activity-loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.3);
+            font-size: 14px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            border: 1px dashed rgba(230,179,30,0.1);
+        }
+        .activity-empty i, .activity-loading i {
+            display: block;
+            font-size: 40px;
+            margin-bottom: 14px;
+            color: rgba(230,179,30,0.2);
+        }
+        .activity-loading i { animation: spin 1s linear infinite; color: #e6b31e; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 16px;
+        }
+        .pagination button {
+            background: rgba(230,179,30,0.08);
+            border: 1px solid rgba(230,179,30,0.15);
+            color: #f5d76e;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: rgba(230,179,30,0.15);
+            transform: translateY(-1px);
+        }
+        .pagination button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .pagination .page-info {
+            color: rgba(255,255,255,0.4);
+            font-size: 13px;
+        }
+
+        @media (max-width: 640px) {
+            .activity-title { font-size: 17px; }
+            .activity-item { padding: 12px; gap: 10px; }
+            .activity-item-icon { width: 34px; height: 34px; font-size: 14px; }
+            .activity-item-meta { gap: 10px; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="activity-header">
+    <div class="activity-title">
+        <i class="fas fa-history"></i>
+        <span>سجل النشاطات</span>
+    </div>
+    <button onclick="window.activityLog?.refresh()" class="pagination" style="background:rgba(230,179,30,0.08);border:1px solid rgba(230,179,30,0.15);color:#f5d76e;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:inherit;">
+        <i class="fas fa-sync-alt"></i> تحديث
+    </button>
+</div>
+
+<div class="activity-stats" id="activityStats">
+    <div class="stat-card">
+        <div class="stat-icon create"><i class="fas fa-plus"></i></div>
+        <div>
+            <div class="stat-value" id="statCreate">0</div>
+            <div class="stat-label">إضافات</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon update"><i class="fas fa-edit"></i></div>
+        <div>
+            <div class="stat-value" id="statUpdate">0</div>
+            <div class="stat-label">تعديلات</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon delete"><i class="fas fa-trash"></i></div>
+        <div>
+            <div class="stat-value" id="statDelete">0</div>
+            <div class="stat-label">حذف</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon login"><i class="fas fa-sign-in-alt"></i></div>
+        <div>
+            <div class="stat-value" id="statLogin">0</div>
+            <div class="stat-label">دخول</div>
+        </div>
+    </div>
+</div>
+
+<div class="activity-filters">
+    <input type="text" class="filter-input" id="activitySearch" placeholder="🔍 بحث بالاسم، المورد، أو المستخدم...">
+    <select class="filter-select" id="filterAction">
+        <option value="">كل الإجراءات</option>
+        <option value="create">إضافة</option>
+        <option value="update">تعديل</option>
+        <option value="delete">حذف</option>
+        <option value="login">تسجيل دخول</option>
+        <option value="logout">تسجيل خروج</option>
+    </select>
+    <select class="filter-select" id="filterResource">
+        <option value="">كل الموارد</option>
+        <option value="vessel">المراكب</option>
+        <option value="maintenance">الصيانة</option>
+        <option value="user">المستخدمين</option>
+        <option value="note">الملاحظات</option>
+    </select>
+</div>
+
+<div id="activityList" class="activity-list">
+    <div class="activity-loading">
+        <i class="fas fa-spinner"></i>
+        جاري التحميل...
+    </div>
+</div>
+
+<div class="pagination" id="activityPagination" style="display:none;">
+    <button id="prevPage" disabled><i class="fas fa-chevron-right"></i> السابق</button>
+    <span class="page-info" id="pageInfo">صفحة 1 من 1</span>
+    <button id="nextPage" disabled>التالي <i class="fas fa-chevron-left"></i></button>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('📋 Activity Log page loading...');
+
+    const PAGE_SIZE = 20;
+
+    // ===== الحالة =====
+    const state = {
+        allActivities: [],
+        filtered: [],
+        currentPage: 1,
+        searchQuery: '',
+        filterAction: '',
+        filterResource: '',
+        isLoading: false
+    };
+
+    // ===== مساعدات =====
+    const ACTION_LABELS = {
+        create: 'إضافة',
+        update: 'تعديل',
+        delete: 'حذف',
+        login: 'تسجيل دخول',
+        logout: 'تسجيل خروج',
+        view: 'عرض'
+    };
+
+    const ACTION_ICONS = {
+        create: 'fa-plus',
+        update: 'fa-edit',
+        delete: 'fa-trash',
+        login: 'fa-sign-in-alt',
+        logout: 'fa-sign-out-alt',
+        view: 'fa-eye'
+    };
+
+    const RESOURCE_LABELS = {
+        vessel: 'مركب',
+        maintenance: 'صيانة',
+        user: 'مستخدم',
+        note: 'ملاحظة',
+        system: 'النظام'
+    };
+
+    function escapeHTML(s) {
+        if (s === null || s === undefined) return '';
+        return String(s).replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+        }[m]));
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '—';
+        try {
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleString('ar-TN', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        } catch (e) { return '—'; }
+    }
+
+    function getActionClass(action) {
+        if (action === 'create') return 'create';
+        if (action === 'update') return 'update';
+        if (action === 'delete') return 'delete';
+        if (action === 'login' || action === 'logout') return 'login';
+        return 'login';
+    }
+
+    // ===== جلب البيانات =====
+    async function fetchActivities() {
+        state.isLoading = true;
+        renderLoading();
+
+        try {
+            // ✅ استخدام apiFetch العالمي إن وُجد (يدعم تجديد التوكن)
+            const fetcher = (typeof window.apiFetch === 'function') ? window.apiFetch : fetch;
+            const response = await fetcher('/api/logs', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    renderError('🚫 ليس لديك صلاحية عرض السجل');
+                    return;
+                }
+                throw new Error('HTTP ' + response.status);
+            }
+
+            const data = await response.json();
+            state.allActivities = Array.isArray(data) ? data : [];
+
+            console.log('📋 Loaded', state.allActivities.length, 'activities');
+
+            applyFilters();
+            updateStats();
+
+        } catch (e) {
+            console.error('❌ Fetch activities error:', e);
+            renderError('❌ فشل تحميل السجل: ' + e.message);
+        } finally {
+            state.isLoading = false;
+        }
+    }
+
+    // ===== الفلترة =====
+    function applyFilters() {
+        const q = state.searchQuery.toLowerCase().trim();
+
+        state.filtered = state.allActivities.filter(a => {
+            // فلتر الإجراء
+            if (state.filterAction && a.action !== state.filterAction) return false;
+
+            // فلتر المورد
+            if (state.filterResource && a.resource !== state.filterResource) return false;
+
+            // البحث النصي
+            if (q) {
+                const haystack = [
+                    a.userName || '',
+                    a.resourceName || '',
+                    a.resource || '',
+                    a.action || '',
+                    JSON.stringify(a.details || {})
+                ].join(' ').toLowerCase();
+
+                if (!haystack.includes(q)) return false;
+            }
+
+            return true;
+        });
+
+        state.currentPage = 1;
+        render();
+        renderPagination();
+    }
+
+    // ===== الإحصائيات =====
+    function updateStats() {
+        const s = state.allActivities;
+        const count = (action) => s.filter(a => a.action === action).length;
+
+        const el1 = document.getElementById('statCreate');
+        const el2 = document.getElementById('statUpdate');
+        const el3 = document.getElementById('statDelete');
+        const el4 = document.getElementById('statLogin');
+
+        if (el1) el1.textContent = count('create');
+        if (el2) el2.textContent = count('update');
+        if (el3) el3.textContent = count('delete');
+        if (el4) el4.textContent = count('login');
+    }
+
+    // ===== الرسم =====
+    function renderLoading() {
+        const list = document.getElementById('activityList');
+        if (!list) return;
+        list.innerHTML =
+            '<div class="activity-loading">' +
+                '<i class="fas fa-spinner"></i>' +
+                'جاري التحميل...' +
+            '</div>';
+    }
+
+    function renderError(msg) {
+        const list = document.getElementById('activityList');
+        if (!list) return;
+        list.innerHTML =
+            '<div class="activity-empty">' +
+                '<i class="fas fa-exclamation-triangle" style="color:#f87171;"></i>' +
+                escapeHTML(msg) +
+            '</div>';
+    }
+
+    function render() {
+        const list = document.getElementById('activityList');
+        if (!list) return;
+
+        if (state.filtered.length === 0) {
+            list.innerHTML =
+                '<div class="activity-empty">' +
+                    '<i class="fas fa-inbox"></i>' +
+                    'لا توجد نشاطات مطابقة' +
+                '</div>';
+            return;
+        }
+
+        const start = (state.currentPage - 1) * PAGE_SIZE;
+        const pageItems = state.filtered.slice(start, start + PAGE_SIZE);
+
+        list.innerHTML = pageItems.map(a => {
+            const actionClass = getActionClass(a.action);
+            const actionLabel = ACTION_LABELS[a.action] || a.action || 'نشاط';
+            const actionIcon = ACTION_ICONS[a.action] || 'fa-circle';
+            const resourceLabel = RESOURCE_LABELS[a.resource] || a.resource || '';
+
+            const userName = escapeHTML(a.userName || 'مستخدم غير معروف');
+            const resourceName = escapeHTML(a.resourceName || '');
+            const time = formatDate(a.timestamp);
+
+            let details = '';
+            if (a.details && typeof a.details === 'object') {
+                const parts = [];
+                if (a.details.reason) parts.push('السبب: ' + a.details.reason);
+                if (a.details.username && a.action === 'login') parts.push('حساب: ' + a.details.username);
+                details = parts.join(' • ');
+            }
+
+            return '<div class="activity-item ' + actionClass + '">' +
+                '<div class="activity-item-icon">' +
+                    '<i class="fas ' + actionIcon + '"></i>' +
+                '</div>' +
+                '<div class="activity-item-body">' +
+                    '<div class="activity-item-title">' +
+                        '<span class="activity-badge ' + actionClass + '">' + escapeHTML(actionLabel) + '</span>' +
+                        (resourceLabel ? '<span>' + escapeHTML(resourceLabel) + '</span>' : '') +
+                        (resourceName ? '<span style="color:#f5d76e;">"' + resourceName + '"</span>' : '') +
+                    '</div>' +
+                    '<div class="activity-item-meta">' +
+                        '<span><i class="fas fa-user"></i> ' + userName + '</span>' +
+                        '<span><i class="fas fa-clock"></i> ' + escapeHTML(time) + '</span>' +
+                        (details ? '<span><i class="fas fa-info-circle"></i> ' + escapeHTML(details) + '</span>' : '') +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderPagination() {
+        const total = state.filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+        const pag = document.getElementById('activityPagination');
+        const info = document.getElementById('pageInfo');
+        const prev = document.getElementById('prevPage');
+        const next = document.getElementById('nextPage');
+
+        if (!pag) return;
+
+        if (total === 0) {
+            pag.style.display = 'none';
+            return;
+        }
+
+        pag.style.display = 'flex';
+
+        if (info) info.textContent = 'صفحة ' + state.currentPage + ' من ' + totalPages + ' (' + total + ' نشاط)';
+        if (prev) prev.disabled = state.currentPage <= 1;
+        if (next) next.disabled = state.currentPage >= totalPages;
+    }
+
+    function goToPage(n) {
+        const totalPages = Math.max(1, Math.ceil(state.filtered.length / PAGE_SIZE));
+        if (n < 1 || n > totalPages) return;
+        state.currentPage = n;
+        render();
+        renderPagination();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ===== ربط الأحداث =====
+    function bindEvents() {
+        const search = document.getElementById('activitySearch');
+        const fAction = document.getElementById('filterAction');
+        const fResource = document.getElementById('filterResource');
+        const prev = document.getElementById('prevPage');
+        const next = document.getElementById('nextPage');
+
+        let debounceTimer = null;
+        if (search) {
+            search.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    state.searchQuery = this.value;
+                    applyFilters();
+                }, 300);
+            });
+        }
+
+        if (fAction) {
+            fAction.addEventListener('change', function() {
+                state.filterAction = this.value;
+                applyFilters();
+            });
+        }
+
+        if (fResource) {
+            fResource.addEventListener('change', function() {
+                state.filterResource = this.value;
+                applyFilters();
+            });
+        }
+
+        if (prev) prev.addEventListener('click', () => goToPage(state.currentPage - 1));
+        if (next) next.addEventListener('click', () => goToPage(state.currentPage + 1));
+
+        // اختصار: Escape يمسح البحث
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && search && document.activeElement === search) {
+                search.value = '';
+                state.searchQuery = '';
+                applyFilters();
+            }
+        });
+    }
+
+    // ===== API عام للصفحة =====
+    window.activityLog = {
+        refresh: fetchActivities,
+        state: state
+    };
+
+    // ===== تشغيل =====
+    bindEvents();
+    fetchActivities();
+
+    console.log('✅ Activity Log ready');
+})();
+</script>
+
+</body>
+</html>
