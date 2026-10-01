@@ -497,7 +497,302 @@
             border: 2px solid #060911;
         }
 
-        /* Lightbox */
+        /* 🖼️ زر عرض الصور */
+        .btn-view-images {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex; align-items: center; gap: 6px;
+            font-family: var(--font);
+            white-space: nowrap;
+        }
+        .btn-view-images:hover {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: #fff;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+        }
+        .btn-view-images .badge {
+            background: rgba(255,255,255,0.25);
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 900;
+            min-width: 16px;
+            text-align: center;
+        }
+        .btn-view-images:hover .badge {
+            background: rgba(255,255,255,0.35);
+        }
+
+        /* ═══════════════════════════════════════════════════════ */
+        /* 🖼️ معرض صور المركبات المطروحة                          */
+        /* ═══════════════════════════════════════════════════════ */
+        .vessel-gallery-modal {
+            position: fixed; inset: 0;
+            background: rgba(2, 4, 12, 0.96);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 100001;
+            display: none;
+            align-items: center; justify-content: center;
+            padding: 20px;
+            animation: galleryFadeIn 0.25s ease;
+        }
+        .vessel-gallery-modal.active { display: flex; }
+        @keyframes galleryFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .vessel-gallery-box {
+            width: 100%; max-width: 1200px;
+            max-height: 92vh;
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.98), rgba(15, 20, 32, 0.99));
+            border: 1px solid rgba(230, 179, 30, 0.35);
+            border-radius: 20px;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.9), 0 0 60px rgba(230, 179, 30, 0.15);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            animation: galleryBoxIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes galleryBoxIn {
+            from { transform: scale(0.92) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .vessel-gallery-head {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.9));
+            border-bottom: 2px solid var(--c-gold-2);
+            flex-shrink: 0;
+        }
+        .vessel-gallery-head-info {
+            display: flex; align-items: center; gap: 14px;
+            min-width: 0; flex: 1;
+        }
+        .vessel-gallery-head-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #060911;
+            flex-shrink: 0;
+            box-shadow: 0 6px 20px var(--c-gold-glow);
+        }
+        .vessel-gallery-head-text { min-width: 0; overflow: hidden; }
+        .vessel-gallery-head-text h3 {
+            font-size: 17px; font-weight: 800;
+            color: var(--c-gold-1);
+            margin: 0 0 3px 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .vessel-gallery-head-text p {
+            font-size: 12px; color: var(--c-text-3);
+            margin: 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .vessel-gallery-head-text p strong {
+            color: var(--c-text-2); font-weight: 800;
+        }
+        .vessel-gallery-close {
+            width: 40px; height: 40px;
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid var(--c-border-mid);
+            color: var(--c-text-3);
+            border-radius: 12px;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition);
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .vessel-gallery-close:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: var(--c-red-1);
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: rotate(90deg);
+        }
+
+        .vessel-gallery-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+        }
+        .vessel-gallery-body::-webkit-scrollbar { width: 8px; }
+        .vessel-gallery-body::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--c-gold-2), var(--c-gold-3));
+            border-radius: 4px;
+        }
+
+        .vessel-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .vessel-gallery-thumb {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--c-border-mid);
+            background: rgba(10, 16, 32, 0.6);
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .vessel-gallery-thumb:hover {
+            border-color: var(--c-gold-2);
+            transform: scale(1.03);
+            box-shadow: 0 8px 24px rgba(230, 179, 30, 0.35);
+        }
+        .vessel-gallery-thumb img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+        }
+        .vessel-gallery-thumb-badge {
+            position: absolute;
+            top: 8px; right: 8px;
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            color: #060911;
+            font-size: 9px; font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .vessel-gallery-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--c-text-4);
+        }
+        .vessel-gallery-empty i {
+            font-size: 64px;
+            color: var(--c-gold-2);
+            opacity: 0.4;
+            display: block;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 0 20px var(--c-gold-glow));
+        }
+        .vessel-gallery-empty h4 {
+            font-size: 16px; font-weight: 800;
+            color: var(--c-text-3);
+            margin: 0 0 6px 0;
+        }
+        .vessel-gallery-empty p {
+            font-size: 13px;
+            color: var(--c-text-4);
+            margin: 0;
+        }
+
+        /* عارض الصورة الكبير */
+        .vessel-viewer {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 100002;
+            display: none;
+            align-items: center; justify-content: center;
+        }
+        .vessel-viewer.active { display: flex; }
+        .vessel-viewer img {
+            max-width: 92vw;
+            max-height: 88vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 80px rgba(0,0,0,0.9);
+            object-fit: contain;
+            animation: viewerImgIn 0.3s ease;
+        }
+        @keyframes viewerImgIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .vessel-viewer-nav {
+            position: absolute;
+            top: 50%; transform: translateY(-50%);
+            width: 56px; height: 56px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 14px;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition);
+            z-index: 2;
+        }
+        .vessel-viewer-nav:hover {
+            background: rgba(230, 179, 30, 0.3);
+            border-color: var(--c-gold-2);
+            color: var(--c-gold-1);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .vessel-viewer-nav.prev { right: 20px; }
+        .vessel-viewer-nav.next { left: 20px; }
+        .vessel-viewer-nav:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+            transform: translateY(-50%);
+        }
+        .vessel-viewer-close {
+            position: absolute;
+            top: 20px; left: 20px;
+            width: 48px; height: 48px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 12px;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition);
+            z-index: 2;
+        }
+        .vessel-viewer-close:hover {
+            background: rgba(239, 68, 68, 0.4);
+            border-color: rgba(239, 68, 68, 0.7);
+            transform: rotate(90deg);
+        }
+        .vessel-viewer-counter {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            color: #f7d774;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid rgba(247, 215, 116, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 768px) {
+            .vessel-gallery-modal { padding: 10px; }
+            .vessel-gallery-box { max-height: 95vh; border-radius: 16px; }
+            .vessel-gallery-head { padding: 14px 16px; }
+            .vessel-gallery-head-text h3 { font-size: 15px; }
+            .vessel-gallery-body { padding: 14px; }
+            .vessel-gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 8px;
+            }
+            .vessel-viewer-nav {
+                width: 44px; height: 44px; font-size: 18px;
+            }
+            .vessel-viewer-nav.prev { right: 10px; }
+            .vessel-viewer-nav.next { left: 10px; }
+            .vessel-viewer-close { top: 12px; left: 12px; width: 42px; height: 42px; }
+        }
+
+        /* Lightbox البسيط (للصور النشطة) */
         .fleet-lightbox {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.95);
@@ -606,7 +901,7 @@
         .table-wrapper { overflow-x: auto; padding: 0 24px 24px; width: 100%; }
         .table-wrapper table {
             width: 100%; border-collapse: separate; border-spacing: 0;
-            font-size: 13px; min-width: 1250px;
+            font-size: 13px; min-width: 1300px;
             border-radius: var(--radius); overflow: hidden;
             background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
             backdrop-filter: blur(20px);
@@ -696,7 +991,7 @@
             box-shadow: 0 4px 16px rgba(15, 23, 42, 0.6);
         }
 
-        .action-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+        .action-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; align-items: center; }
         .btn-sm {
             width: 34px; height: 34px; border: none; border-radius: 10px;
             font-size: 13px; font-weight: 700; cursor: pointer;
@@ -1090,7 +1385,7 @@
             #page-fleet::before { display: none !important; }
             .fleet-header, .filter-bar, .input-grid, .action-btns,
             .fleet-scroll-nav, .fleet-toast, .fleet-modal,
-            .images-section, .fleet-lightbox {
+            .images-section, .fleet-lightbox, .vessel-gallery-modal, .vessel-viewer {
                 display: none !important; visibility: hidden !important;
             }
         }
@@ -1393,10 +1688,42 @@
         </div>
     </div>
 
-    <!-- LIGHTBOX -->
+    <!-- LIGHTBOX البسيط -->
     <div class="fleet-lightbox" id="fleetLightbox">
         <button class="fleet-lightbox-close" id="fleetLightboxClose">×</button>
         <img id="fleetLightboxImg" src="" alt="عرض كبير">
+    </div>
+
+    <!-- 🖼️ معرض صور المركبات المطروحة -->
+    <div class="vessel-gallery-modal" id="vesselGalleryModal">
+        <div class="vessel-gallery-box">
+            <div class="vessel-gallery-head">
+                <div class="vessel-gallery-head-info">
+                    <div class="vessel-gallery-head-icon">
+                        <i class="fas fa-ship"></i>
+                    </div>
+                    <div class="vessel-gallery-head-text">
+                        <h3 id="vesselGalleryTitle">—</h3>
+                        <p>الرقم: <strong id="vesselGalleryNumber">—</strong> • عدد الصور: <strong id="vesselGalleryCount">0</strong></p>
+                    </div>
+                </div>
+                <button class="vessel-gallery-close" id="vesselGalleryClose" type="button" title="إغلاق">×</button>
+            </div>
+            <div class="vessel-gallery-body" id="vesselGalleryBody"></div>
+        </div>
+    </div>
+
+    <!-- 🔍 عارض الصورة الكبير -->
+    <div class="vessel-viewer" id="vesselViewer">
+        <button class="vessel-viewer-close" id="vesselViewerClose" type="button" title="إغلاق">×</button>
+        <button class="vessel-viewer-nav prev" id="vesselViewerPrev" type="button" title="السابق">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <img id="vesselViewerImg" src="" alt="صورة المركب">
+        <button class="vessel-viewer-nav next" id="vesselViewerNext" type="button" title="التالي">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="vessel-viewer-counter" id="vesselViewerCounter">0 / 0</div>
     </div>
 </div>
 
@@ -1415,13 +1742,20 @@
     var MAX_FILE_SIZE = 5 * 1024 * 1024;
     var ALLOWED_TYPES = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 
+    // 🖼️ متغيرات معرض الصور
+    var _galleryVessel = null;
+    var _galleryImages = [];
+    var _galleryIndex = 0;
+
     function _fleetCleanup() {
         if (_isDestroyed) return;
         _isDestroyed = true;
         try {
             ['renderMain','addItem','editItem','updateItem','deleteItem','clearMainSearch',
              'updateZones','refreshFleet','printFleet','exportFleetExcel',
-             'openDisposeModal','closeDisposeModal','navigateToDisposals'].forEach(function(k) {
+             'openDisposeModal','closeDisposeModal','navigateToDisposals',
+             'openVesselGallery','closeVesselGallery','openVesselGalleryById',
+             'viewVesselImages'].forEach(function(k) {
                 try { delete window[k]; } catch(e) {}
             });
         } catch (e) {}
@@ -1903,6 +2237,190 @@
         if (lb) lb.classList.remove('active');
     }
 
+    // ============================================================
+    // 🖼️ معرض صور المركبات (Lightbox Gallery)
+    // ============================================================
+    function openVesselGallery(vessel) {
+        if (!vessel) return;
+
+        _galleryVessel = vessel;
+        _galleryImages = (vessel.images || []).slice();
+        _galleryIndex = 0;
+
+        // ترتيب: الصورة الرئيسية أولاً
+        var primaryIdx = _galleryImages.findIndex(function(img) { return img.isPrimary; });
+        if (primaryIdx > 0) {
+            var p = _galleryImages.splice(primaryIdx, 1)[0];
+            _galleryImages.unshift(p);
+        }
+
+        var modal = document.getElementById('vesselGalleryModal');
+        var title = document.getElementById('vesselGalleryTitle');
+        var number = document.getElementById('vesselGalleryNumber');
+        var count = document.getElementById('vesselGalleryCount');
+        var body = document.getElementById('vesselGalleryBody');
+
+        if (!modal || !body) return;
+
+        if (title) title.textContent = vessel.name || 'مركب بدون اسم';
+        if (number) number.textContent = vessel.num || '—';
+        if (count) count.textContent = _galleryImages.length;
+
+        if (_galleryImages.length === 0) {
+            body.innerHTML =
+                '<div class="vessel-gallery-empty">' +
+                    '<i class="fas fa-image"></i>' +
+                    '<h4>لا توجد صور لهذا المركب</h4>' +
+                    '<p>لم يتم رفع أي صور عند تسجيل المركب</p>' +
+                '</div>';
+        } else {
+            var html = '<div class="vessel-gallery-grid">';
+            _galleryImages.forEach(function(img, idx) {
+                var url = img.url || '';
+                if (!url) return;
+                html +=
+                    '<div class="vessel-gallery-thumb" data-idx="' + idx + '">' +
+                        '<img src="' + escapeHtml(url) + '" alt="صورة ' + (idx + 1) + '" loading="lazy">' +
+                        (img.isPrimary ? '<span class="vessel-gallery-thumb-badge">⭐ رئيسية</span>' : '') +
+                    '</div>';
+            });
+            html += '</div>';
+            body.innerHTML = html;
+
+            body.querySelectorAll('.vessel-gallery-thumb').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var idx = parseInt(this.getAttribute('data-idx'), 10);
+                    if (!isNaN(idx)) openVesselViewer(idx);
+                });
+            });
+        }
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeVesselGallery() {
+        var modal = document.getElementById('vesselGalleryModal');
+        if (modal) modal.classList.remove('active');
+        _galleryVessel = null;
+        _galleryImages = [];
+        _galleryIndex = 0;
+        var viewer = document.getElementById('vesselViewer');
+        if (!viewer || !viewer.classList.contains('active')) {
+            document.body.style.overflow = '';
+        }
+    }
+
+    function openVesselViewer(idx) {
+        if (idx < 0 || idx >= _galleryImages.length) return;
+        _galleryIndex = idx;
+
+        var viewer = document.getElementById('vesselViewer');
+        var img = document.getElementById('vesselViewerImg');
+        var counter = document.getElementById('vesselViewerCounter');
+        var prevBtn = document.getElementById('vesselViewerPrev');
+        var nextBtn = document.getElementById('vesselViewerNext');
+
+        if (!viewer || !img) return;
+
+        var current = _galleryImages[idx];
+        img.src = current.url || '';
+
+        if (counter) counter.textContent = (idx + 1) + ' / ' + _galleryImages.length;
+        if (prevBtn) prevBtn.disabled = (idx === 0);
+        if (nextBtn) nextBtn.disabled = (idx >= _galleryImages.length - 1);
+
+        viewer.classList.add('active');
+    }
+
+    function closeVesselViewer() {
+        var viewer = document.getElementById('vesselViewer');
+        if (viewer) viewer.classList.remove('active');
+        var img = document.getElementById('vesselViewerImg');
+        if (img) img.src = '';
+
+        var modal = document.getElementById('vesselGalleryModal');
+        if (!modal || !modal.classList.contains('active')) {
+            document.body.style.overflow = '';
+        }
+    }
+
+    function navigateVesselViewer(direction) {
+        var newIdx = _galleryIndex + direction;
+        if (newIdx < 0 || newIdx >= _galleryImages.length) return;
+        openVesselViewer(newIdx);
+    }
+
+    function setupVesselGalleryListeners() {
+        var closeBtn = document.getElementById('vesselGalleryClose');
+        if (closeBtn) closeBtn.addEventListener('click', closeVesselGallery);
+
+        var modal = document.getElementById('vesselGalleryModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeVesselGallery();
+            });
+        }
+
+        var viewerClose = document.getElementById('vesselViewerClose');
+        if (viewerClose) viewerClose.addEventListener('click', closeVesselViewer);
+
+        var viewerPrev = document.getElementById('vesselViewerPrev');
+        if (viewerPrev) viewerPrev.addEventListener('click', function() { navigateVesselViewer(-1); });
+
+        var viewerNext = document.getElementById('vesselViewerNext');
+        if (viewerNext) viewerNext.addEventListener('click', function() { navigateVesselViewer(1); });
+
+        var viewer = document.getElementById('vesselViewer');
+        if (viewer) {
+            viewer.addEventListener('click', function(e) {
+                if (e.target === viewer) closeVesselViewer();
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            var viewerActive = document.getElementById('vesselViewer').classList.contains('active');
+            var modalActive = document.getElementById('vesselGalleryModal').classList.contains('active');
+
+            if (!viewerActive && !modalActive) return;
+
+            if (e.key === 'Escape') {
+                if (viewerActive) closeVesselViewer();
+                else if (modalActive) closeVesselGallery();
+            } else if (viewerActive) {
+                if (e.key === 'ArrowRight') navigateVesselViewer(-1);
+                else if (e.key === 'ArrowLeft') navigateVesselViewer(1);
+            }
+        });
+    }
+
+    // 🆕 دالة عامة لفتح المعرض من خارج الصفحة (لصفحة المطروحة)
+    window.openVesselGalleryById = function(vesselId) {
+        fetcher('/api/vessels', { method: 'GET' })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(list) {
+                if (!list) throw new Error('فشل التحميل');
+                var v = list.find(function(x) {
+                    return String(x._id || x.id) === String(vesselId);
+                });
+                if (!v) throw new Error('المركب غير موجود');
+                openVesselGallery(v);
+            })
+            .catch(function(err) { fleetToast('❌ ' + err.message, 'error'); });
+    };
+
+    // 🆕 دالة عامة للاستخدام من صفحات أخرى
+    window.viewVesselImages = function(vesselId) {
+        window.openVesselGalleryById(vesselId);
+    };
+
+    window.openVesselGallery = openVesselGallery;
+    window.closeVesselGallery = closeVesselGallery;
+    window.closeVesselViewer = closeVesselViewer;
+
+    // ============================================================
+    // 📋 الوظائف الأساسية
+    // ============================================================
     function updateZones() {
         var regEl = document.getElementById('iReg');
         var zoneSel = document.getElementById('iZone');
@@ -2124,7 +2642,7 @@
             });
             mainBody.innerHTML = html;
 
-            // 📸 فتح Lightbox من الجدول
+            // 📸 فتح Lightbox البسيط من الجدول
             mainBody.querySelectorAll('[data-lightbox]').forEach(function(img) {
                 img.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -2237,7 +2755,6 @@
         var iStat = document.getElementById('iStat'); if (iStat) iStat.value = 'صالح';
         var iRepairUnit = document.getElementById('iRepairUnit'); if (iRepairUnit) iRepairUnit.value = '';
 
-        // 📸 إعادة تعيين الصور
         fleetImages = [];
         currentVesselId = null;
         renderImagesPreview();
@@ -2344,7 +2861,6 @@
                 throw new Error(error.error || 'فشل تحديث المركب');
             }
 
-            // 📸 رفع الصور الجديدة
             if (fleetImages.length > 0) {
                 await uploadImages(id);
             }
@@ -2487,7 +3003,6 @@
         if (typeof window.loadPage === 'function') {
             try {
                 window.loadPage('disposals-vessels');
-                console.log('✅ Called loadPage(disposals-vessels)');
                 return;
             } catch (e) {
                 console.error('❌ loadPage error:', e.message);
@@ -2497,14 +3012,12 @@
         if (typeof window.navigateTo === 'function') {
             try {
                 window.navigateTo('disposals-vessels');
-                console.log('✅ Called navigateTo(disposals-vessels)');
                 return;
             } catch (e) {
                 console.error('❌ navigateTo error:', e.message);
             }
         }
 
-        console.log('🔄 Using direct URL fallback');
         window.location.href = '/pages/disposals-vessels.html';
     }
 
@@ -2635,13 +3148,14 @@
         if (!header) return false;
 
         _initialized = true;
-        console.log('🚀 Fleet v4.0 — Initializing...');
+        console.log('🚀 Fleet v5.0 — Initializing...');
 
         initFilters();
         initScrollButtons();
         initImagesUI();
         setupDisposeListeners();
         setupLightboxListeners();
+        setupVesselGalleryListeners();
 
         var token = getToken();
         if (!token) { window.location.href = '/index.html'; return true; }
@@ -2666,7 +3180,6 @@
         var addBtn = document.getElementById('saveVesselBtn');
         if (addBtn) addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
 
-        // إخفاء قسم الصور إذا لا يمكن الإضافة
         var imagesSection = document.getElementById('imagesSection');
         if (imagesSection && !canEdit()) imagesSection.style.display = 'none';
 
@@ -2678,7 +3191,7 @@
         updateZones();
         await renderMain();
 
-        console.log('✅ Fleet v4.0 ready');
+        console.log('✅ Fleet v5.0 ready');
         return true;
     }
 
