@@ -14,7 +14,6 @@
             --c-red-1: #fca5a5;
             --c-cyan-1: #67e8f9;
             --c-purple-1: #c4b5fd;
-            --c-pink-1: #f9a8d4;
             --c-slate-1: #94a3b8;
             --c-text-1: #f1f5f9;
             --c-text-2: #cbd5e1;
@@ -22,11 +21,9 @@
             --c-text-4: #64748b;
             --radius-sm: 10px;
             --radius: 16px;
-            --radius-lg: 20px;
             --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             --t-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             --font: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            --font-mono: 'Courier New', ui-monospace, monospace;
             width: 100%; max-width: 100%;
             padding: 0; margin: 0;
             font-family: var(--font);
@@ -50,12 +47,6 @@
                 radial-gradient(circle 350px at 50% 90%, rgba(16, 185, 129, 0.05), transparent 70%);
             z-index: -1;
             pointer-events: none;
-            animation: fleetOrbsFloat 20s ease-in-out infinite;
-        }
-        @keyframes fleetOrbsFloat {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(3%, -2%) scale(1.05); }
-            66% { transform: translate(-3%, 2%) scale(0.97); }
         }
         #page-fleet *, #page-fleet *::before, #page-fleet *::after { box-sizing: border-box; }
         #page-fleet ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -73,7 +64,7 @@
             backdrop-filter: blur(24px) saturate(180%);
             -webkit-backdrop-filter: blur(24px) saturate(180%);
             border: 1px solid var(--c-border-mid); border-radius: var(--radius);
-            margin: 16px 24px 20px; position: relative;
+            margin: 16px 24px 20px;
             box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 32px rgba(0,0,0,0.35);
         }
         .fleet-header-left { display: flex; align-items: center; gap: 14px; flex: 1 1 260px; min-width: 0; }
@@ -82,12 +73,13 @@
             background: linear-gradient(135deg, var(--c-gold-2) 0%, var(--c-gold-3) 50%, #7c5c07 100%);
             display: flex; align-items: center; justify-content: center;
             font-size: 24px; color: #060911;
-            position: relative; overflow: hidden; flex-shrink: 0;
+            flex-shrink: 0;
             box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.08) inset;
+            position: relative; overflow: hidden;
         }
         .fleet-header-left .header-icon img {
             width: 100%; height: 100%; object-fit: cover;
-            border-radius: 14px; display: none; position: relative; z-index: 2;
+            border-radius: 14px; display: none;
         }
         .fleet-header-left .header-icon.has-logo img { display: block; }
         .fleet-header-left .header-icon.has-logo i { display: none; }
@@ -95,12 +87,11 @@
             font-size: 22px; font-weight: 800;
             background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-1) 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text; margin: 0 0 2px 0; letter-spacing: -0.5px;
+            background-clip: text; margin: 0 0 2px 0;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .fleet-header-left p {
-            font-size: 12px; color: var(--c-text-3); margin: 0; font-weight: 500;
-            -webkit-text-fill-color: var(--c-text-3);
+            font-size: 12px; color: var(--c-text-3); margin: 0;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .fleet-header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
@@ -109,12 +100,10 @@
             font-weight: 700; font-size: 13px; cursor: pointer;
             transition: all var(--transition);
             display: inline-flex; align-items: center; gap: 8px;
-            font-family: var(--font); white-space: nowrap; flex-shrink: 0;
-            line-height: 1; position: relative; overflow: hidden;
+            font-family: var(--font); white-space: nowrap;
         }
-        .fleet-header-actions .btn-action i { font-size: 13px; }
         .fleet-header-actions .btn-action.primary {
-            background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2), var(--c-gold-3));
             color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
         }
         .fleet-header-actions .btn-action.primary:hover {
@@ -131,20 +120,15 @@
         }
         .fleet-header-actions .btn-action.success {
             background: linear-gradient(135deg, #10b981, #059669);
-            color: #fff; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+            color: #fff;
         }
-        .fleet-header-actions .btn-action.success:hover {
-            transform: translateY(-2px) scale(1.02);
-        }
+        .fleet-header-actions .btn-action.success:hover { transform: translateY(-2px) scale(1.02); }
         .fleet-header-actions .btn-action.dark {
             background: linear-gradient(135deg, #475569, #1e293b);
             color: #f7d774;
             border: 1px solid rgba(247, 215, 116, 0.25);
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.5);
         }
-        .fleet-header-actions .btn-action.dark:hover {
-            transform: translateY(-2px) scale(1.02);
-        }
+        .fleet-header-actions .btn-action.dark:hover { transform: translateY(-2px) scale(1.02); }
         .fleet-header-actions .btn-action.dark .badge-count {
             background: linear-gradient(135deg, #ef4444, #b91c1c);
             color: #fff; padding: 1px 8px; border-radius: 10px;
@@ -155,30 +139,27 @@
         /* ═══════ STATS ═══════ */
         .stats-grid {
             display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 16px; padding: 0 24px 20px; width: 100%; margin: 0;
+            gap: 16px; padding: 0 24px 20px;
         }
         .stat-card {
             background: linear-gradient(135deg, rgba(24, 34, 56, 0.85) 0%, rgba(18, 26, 44, 0.95) 100%);
-            backdrop-filter: blur(20px) saturate(160%);
             border: 1px solid var(--c-border-soft); border-radius: var(--radius);
             padding: 22px 16px 18px; text-align: center;
             transition: all var(--transition);
             position: relative; overflow: hidden;
-            min-width: 0; min-height: 110px;
+            min-height: 110px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             color: var(--c-gold-1);
         }
         .stat-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, transparent 0%, currentColor 50%, transparent 100%);
+            background: linear-gradient(90deg, transparent, currentColor, transparent);
         }
-        .stat-card:hover {
-            transform: translateY(-5px); border-color: var(--c-border-strong);
-        }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--c-border-strong); }
         .stat-card .number {
             font-size: 30px; font-weight: 900; line-height: 1;
             color: currentColor; text-shadow: 0 0 24px currentColor;
-            margin-bottom: 8px; font-variant-numeric: tabular-nums;
+            margin-bottom: 8px;
         }
         .stat-card .number.gold { color: var(--c-gold-1); }
         .stat-card .number.green { color: var(--c-emerald-1); }
@@ -187,8 +168,6 @@
         .stat-card .number.cyan { color: var(--c-cyan-1); }
         .stat-card .label {
             font-size: 11px; color: rgba(203, 213, 225, 0.75); font-weight: 700;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            max-width: 100%;
         }
         .stat-card .icon-bg {
             position: absolute; right: -10px; bottom: -10px;
@@ -200,22 +179,21 @@
         .input-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 10px;
-            background: linear-gradient(135deg, rgba(18, 26, 44, 0.6) 0%, rgba(24, 34, 56, 0.5) 100%);
-            backdrop-filter: blur(20px); border: 1px solid var(--c-border-soft);
+            background: rgba(18, 26, 44, 0.6);
+            border: 1px solid var(--c-border-soft);
             padding: 16px 20px; border-radius: var(--radius);
-            margin: 0 24px 16px; transition: all var(--transition);
+            margin: 0 24px 16px;
         }
         .input-grid input, .input-grid select {
             width: 100%; padding: 10px 14px;
             border: 1px solid var(--c-border-mid); border-radius: var(--radius-sm);
             background: rgba(10, 16, 32, 0.8);
             color: var(--c-text-1); font-size: 12px;
-            font-family: var(--font); font-weight: 600; transition: all var(--transition);
+            font-family: var(--font); font-weight: 600;
         }
         .input-grid input:focus, .input-grid select:focus {
             border-color: var(--c-gold-2); outline: none;
             box-shadow: 0 0 0 3px var(--c-gold-glow);
-            background: rgba(10, 16, 32, 0.95);
         }
         .input-grid input::placeholder { color: var(--c-text-4); }
         .input-grid select option { background: #0a1020; color: var(--c-text-1); }
@@ -231,7 +209,6 @@
         }
         .input-grid .btn-save:hover {
             transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 12px 32px var(--c-gold-glow);
         }
 
         /* ═══════ COMBOBOX ═══════ */
@@ -269,7 +246,7 @@
         }
         .images-section-title {
             font-size: 12px; font-weight: 800;
-            color: var(--c-text-2); letter-spacing: 0.4px;
+            color: var(--c-text-2);
             display: flex; align-items: center; gap: 8px;
             text-transform: uppercase;
         }
@@ -286,27 +263,19 @@
         .source-btn.camera {
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             color: #060911;
-            box-shadow: 0 6px 18px var(--c-gold-glow);
         }
-        .source-btn.camera:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.03);
-        }
+        .source-btn.camera:hover:not(:disabled) { transform: translateY(-2px) scale(1.03); }
         .source-btn.browse {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: #fff;
-            box-shadow: 0 6px 18px rgba(59,130,246,0.3);
         }
-        .source-btn.browse:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.03);
-        }
+        .source-btn.browse:hover:not(:disabled) { transform: translateY(-2px) scale(1.03); }
         .source-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .images-dropzone {
             border: 2px dashed var(--c-border-mid);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            cursor: pointer;
+            border-radius: 12px; padding: 16px;
+            text-align: center; cursor: pointer;
             transition: all var(--transition);
             background: rgba(10, 16, 32, 0.4);
         }
@@ -331,21 +300,16 @@
         .images-gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
-            gap: 8px;
-            margin-top: 12px;
+            gap: 8px; margin-top: 12px;
         }
         .image-item {
             position: relative; aspect-ratio: 1;
             border-radius: 10px; overflow: hidden;
             border: 2px solid var(--c-border-soft);
             background: rgba(10, 16, 32, 0.6);
-            cursor: pointer;
-            transition: all var(--transition);
+            cursor: pointer; transition: all var(--transition);
         }
-        .image-item:hover {
-            border-color: var(--c-gold-2);
-            transform: scale(1.04);
-        }
+        .image-item:hover { border-color: var(--c-gold-2); transform: scale(1.04); }
         .image-item.is-primary {
             border-color: var(--c-gold-2);
             box-shadow: 0 0 0 3px rgba(230, 179, 30, 0.2);
@@ -369,8 +333,7 @@
         .image-actions button {
             width: 26px; height: 26px; border: none; border-radius: 7px;
             cursor: pointer; font-size: 11px;
-            display: flex; align-items: center; justify-content: center;
-            color: #fff;
+            display: flex; align-items: center; justify-content: center; color: #fff;
         }
         .image-actions .img-set-primary { background: rgba(230, 179, 30, 0.9); color: #060911; }
         .image-actions .img-delete { background: rgba(239, 68, 68, 0.9); }
@@ -386,72 +349,52 @@
             border: 2px solid rgba(230, 179, 30, 0.2);
             border-top-color: var(--c-gold-2);
             border-radius: 50%;
-            animation: fleetSpin 0.8s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
-        @keyframes fleetSpin { to { transform: rotate(360deg); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ═══════ THUMBNAIL (صورة كبيرة واضحة) ═══════ */
+        /* ═══════ THUMBNAIL ═══════ */
         .vessel-thumb {
             width: 78px; height: 78px;
-            border-radius: 12px;
-            object-fit: cover;
+            border-radius: 12px; object-fit: cover;
             border: 2.5px solid var(--c-border-mid);
-            cursor: pointer;
-            transition: all var(--transition);
-            display: block;
-            margin: 0 auto;
+            cursor: pointer; transition: all var(--transition);
+            display: block; margin: 0 auto;
             background: rgba(10,16,32,0.6);
             box-shadow: 0 4px 14px rgba(0,0,0,0.4);
         }
         .vessel-thumb:hover {
-            transform: scale(1.1);
-            border-color: var(--c-gold-2);
+            transform: scale(1.1); border-color: var(--c-gold-2);
             box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 3px rgba(230,179,30,0.2);
         }
         .vessel-thumb-empty {
-            width: 78px; height: 78px;
-            border-radius: 12px;
+            width: 78px; height: 78px; border-radius: 12px;
             display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: 4px;
+            align-items: center; justify-content: center; gap: 4px;
             background: linear-gradient(135deg, rgba(10,16,32,0.8), rgba(18,26,44,0.6));
             border: 2.5px dashed var(--c-border-mid);
-            color: var(--c-text-4);
-            font-size: 20px;
-            margin: 0 auto;
-            cursor: pointer;
-            transition: all var(--transition);
+            color: var(--c-text-4); font-size: 20px;
+            margin: 0 auto; cursor: pointer; transition: all var(--transition);
         }
         .vessel-thumb-empty:hover {
-            border-color: var(--c-gold-2);
-            color: var(--c-gold-2);
+            border-color: var(--c-gold-2); color: var(--c-gold-2);
             transform: scale(1.05);
         }
         .vessel-thumb-empty::after {
-            content: 'لا صور';
-            font-size: 9px; font-weight: 800;
-            color: var(--c-text-4);
-            letter-spacing: 0.5px;
+            content: 'لا صور'; font-size: 9px; font-weight: 800;
+            color: var(--c-text-4); letter-spacing: 0.5px;
         }
-        .vessel-thumb-empty:hover::after { color: var(--c-gold-2); }
         .vessel-thumb-wrapper {
-            position: relative;
-            width: 78px; height: 78px;
-            margin: 0 auto;
+            position: relative; width: 78px; height: 78px; margin: 0 auto;
         }
         .vessel-thumb-badge {
-            position: absolute;
-            bottom: -6px; right: -6px;
+            position: absolute; bottom: -6px; right: -6px;
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911;
-            font-size: 11px; font-weight: 900;
-            padding: 3px 8px;
-            border-radius: 10px;
+            color: #060911; font-size: 11px; font-weight: 900;
+            padding: 3px 8px; border-radius: 10px;
             border: 2.5px solid #060911;
-            min-width: 24px;
-            text-align: center;
+            min-width: 24px; text-align: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            line-height: 1;
         }
         .vessel-thumb-badge::before { content: '📷 '; font-size: 9px; }
 
@@ -475,7 +418,6 @@
             border-color: var(--c-gold-2); outline: none;
             box-shadow: 0 0 0 3px var(--c-gold-glow);
         }
-        .filter-bar .search-input input::placeholder { color: var(--c-text-4); }
         .filter-bar .search-input .search-icon {
             position: absolute; left: 14px; top: 50%;
             transform: translateY(-50%);
@@ -508,7 +450,7 @@
         }
         .filter-bar .btn-filter.primary {
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911; box-shadow: 0 6px 20px var(--c-gold-glow);
+            color: #060911;
         }
         .filter-bar .btn-filter.primary:hover { transform: translateY(-2px); }
         .filter-bar .btn-filter.outline {
@@ -516,8 +458,7 @@
             color: var(--c-text-3);
         }
         .filter-bar .btn-filter.outline:hover {
-            background: rgba(148, 163, 184, 0.06);
-            color: var(--c-text-1);
+            background: rgba(148, 163, 184, 0.06); color: var(--c-text-1);
         }
 
         /* ═══════ TABLE ═══════ */
@@ -530,39 +471,27 @@
             border: 1px solid var(--c-border-soft);
         }
         thead {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%);
-            position: relative;
-        }
-        thead::after {
-            content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, transparent 0%, #f7d774 20%, #e6b31e 50%, #f7d774 80%, transparent 100%);
-            pointer-events: none;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.9));
         }
         thead th {
             padding: 14px 12px; text-align: center;
             font-weight: 800; font-size: 10.5px;
             text-transform: uppercase; color: #cbd5e1;
-            letter-spacing: 1px; white-space: nowrap; border-bottom: none;
+            letter-spacing: 1px; white-space: nowrap;
         }
-        thead th i {
-            margin-left: 6px; color: #f7d774; font-size: 11px;
-        }
+        thead th i { color: #f7d774; font-size: 11px; margin-left: 4px; }
         tbody td {
             padding: 12px 10px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.06);
             vertical-align: middle; color: var(--c-text-2);
             font-size: 13px; text-align: center; font-weight: 600;
         }
-        tbody tr { transition: all var(--transition); }
         tbody tr:nth-child(even) { background: rgba(148, 163, 184, 0.02); }
         tbody tr:hover { background: rgba(247, 215, 116, 0.05); }
-        tbody tr:last-child td { border-bottom: none; }
         tbody tr.damaged {
-            background: linear-gradient(90deg, rgba(239, 68, 68, 0.10) 0%, rgba(239, 68, 68, 0.02) 50%, transparent 100%) !important;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.10), transparent) !important;
             border-right: 3px solid #ef4444;
         }
-
         .vessel-name {
             font-weight: 800; color: #f1f5f9;
             text-align: right; padding-right: 16px;
@@ -571,60 +500,45 @@
             padding: 5px 14px; border-radius: 20px;
             font-size: 11px; font-weight: 800;
             display: inline-block; white-space: nowrap;
-            letter-spacing: 0.4px;
         }
         .status-badge.active {
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: #ffffff; border: 1px solid var(--c-emerald-1);
+            background: linear-gradient(135deg, #059669, #10b981); color: #fff;
         }
         .status-badge.pending {
-            background: linear-gradient(135deg, #b45309, #f59e0b);
-            color: #ffffff; border: 1px solid var(--c-amber-1);
-        }
-        .status-badge.completed {
-            background: linear-gradient(135deg, #0369a1, #0ea5e9);
-            color: #ffffff; border: 1px solid #7dd3fc;
-        }
-        .status-badge.cancelled {
-            background: linear-gradient(135deg, #64748b, #94a3b8);
-            color: #ffffff; border: 1px solid #cbd5e1;
+            background: linear-gradient(135deg, #b45309, #f59e0b); color: #fff;
         }
         .status-badge.damaged {
-            background: linear-gradient(135deg, #b91c1c, #ef4444);
-            color: #ffffff; border: 1px solid var(--c-red-1);
+            background: linear-gradient(135deg, #b91c1c, #ef4444); color: #fff;
         }
-        .status-badge.disposed {
-            background: linear-gradient(135deg, #1e293b, #334155);
-            color: #f7d774; border: 1px solid rgba(247,215,116,0.4);
+        .status-badge.completed {
+            background: linear-gradient(135deg, #0369a1, #0ea5e9); color: #fff;
         }
-
         .action-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; align-items: center; }
         .btn-sm {
             width: 34px; height: 34px; border: none; border-radius: 10px;
             font-size: 13px; font-weight: 700; cursor: pointer;
             transition: all var(--transition);
             display: inline-flex; align-items: center; justify-content: center;
-            font-family: var(--font); padding: 0;
+            padding: 0;
         }
         .btn-sm.edit {
-            background: rgba(59, 130, 246, 0.15);
-            color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.25);
+            background: rgba(59, 130, 246, 0.15); color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.25);
         }
         .btn-sm.edit:hover {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: #fff; transform: translateY(-2px) scale(1.05);
         }
         .btn-sm.delete {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--c-red-1); border: 1px solid rgba(239, 68, 68, 0.25);
+            background: rgba(239, 68, 68, 0.15); color: var(--c-red-1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
         }
         .btn-sm.delete:hover {
             background: linear-gradient(135deg, #ef4444, #b91c1c);
             color: #fff; transform: translateY(-2px) scale(1.05);
         }
         .btn-sm.dispose {
-            background: rgba(15, 23, 42, 0.6);
-            color: #f7d774;
+            background: rgba(15, 23, 42, 0.6); color: #f7d774;
             border: 1px solid rgba(247, 215, 116, 0.35);
         }
         .btn-sm.dispose:hover {
@@ -632,8 +546,7 @@
             color: #fff; transform: translateY(-2px) scale(1.05);
         }
         .btn-sm.gallery {
-            background: rgba(139, 92, 246, 0.15);
-            color: #c4b5fd;
+            background: rgba(139, 92, 246, 0.15); color: #c4b5fd;
             border: 1px solid rgba(139, 92, 246, 0.3);
         }
         .btn-sm.gallery:hover {
@@ -654,7 +567,6 @@
             border-radius: 50%; animation: spin 0.8s linear infinite;
             margin: 0 auto 12px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
         .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--c-text-3); margin-bottom: 4px; }
         .empty-state p { font-size: 13px; color: var(--c-text-4); }
 
@@ -692,7 +604,7 @@
             border: 1px solid rgba(252, 211, 77, 0.5);
         }
 
-        /* ═══════ MODAL ═══════ */
+        /* ═══════ MODALS ═══════ */
         .fleet-modal {
             position: fixed; inset: 0;
             background: rgba(2, 4, 12, 0.9);
@@ -700,12 +612,10 @@
             z-index: 99999;
             display: none; align-items: center; justify-content: center;
             padding: 20px;
-            animation: fleetModalBgIn 0.25s ease-out;
         }
-        @keyframes fleetModalBgIn { from { opacity: 0; } to { opacity: 1; } }
         .fleet-modal.active { display: flex; }
         .fleet-modal-box {
-            background: linear-gradient(135deg, rgba(24, 34, 56, 0.98) 0%, rgba(15, 20, 32, 0.99) 100%);
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.98), rgba(15, 20, 32, 0.99));
             border: 1px solid rgba(247, 215, 116, 0.25);
             border-radius: 20px;
             padding: 28px 32px;
@@ -746,9 +656,8 @@
         .dispose-warning {
             background: rgba(239, 68, 68, 0.15);
             border: 1px solid rgba(239, 68, 68, 0.35);
-            border-radius: 12px;
-            padding: 14px 18px;
-            margin-bottom: 20px;
+            border-radius: 12px; padding: 14px 18px;
+            margin-bottom: 16px;
             display: flex; align-items: flex-start; gap: 12px;
         }
         .dispose-warning .warn-icon { font-size: 22px; color: #ef4444; flex-shrink: 0; }
@@ -757,9 +666,8 @@
         .dispose-vessel-info {
             background: rgba(10, 16, 32, 0.7);
             border: 1px solid var(--c-border-soft);
-            border-radius: 12px;
-            padding: 14px 18px;
-            margin-bottom: 20px;
+            border-radius: 12px; padding: 14px 18px;
+            margin-bottom: 14px;
             display: flex; justify-content: space-between; align-items: center; gap: 12px;
             flex-wrap: wrap;
         }
@@ -773,6 +681,72 @@
             color: var(--c-gold-1);
         }
         .dispose-vessel-info .info-sub { font-size: 11px; color: var(--c-text-3); margin-top: 2px; }
+
+        /* 🖼️ معرض مصغر داخل تفاصيل الطرح */
+        .dispose-images-preview {
+            background: rgba(10, 16, 32, 0.5);
+            border: 1px solid var(--c-border-soft);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+        }
+        .dispose-images-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; gap: 10px; flex-wrap: wrap;
+        }
+        .dispose-images-title {
+            font-size: 11px; font-weight: 800;
+            color: var(--c-text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .dispose-images-title i { color: var(--c-gold-2); }
+        .dispose-images-count { color: var(--c-gold-2); font-weight: 800; font-size: 11px; }
+        .dispose-view-gallery-btn {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: #fff; border: none;
+            padding: 6px 14px; border-radius: 8px;
+            font-size: 11px; font-weight: 800;
+            cursor: pointer; transition: all var(--transition);
+            display: inline-flex; align-items: center; gap: 6px;
+            font-family: var(--font);
+        }
+        .dispose-view-gallery-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+        }
+        .dispose-images-grid {
+            display: flex; gap: 8px;
+            overflow-x: auto; padding: 4px 2px;
+            scrollbar-width: thin;
+        }
+        .dispose-images-grid::-webkit-scrollbar { height: 4px; }
+        .dispose-images-grid::-webkit-scrollbar-thumb {
+            background: var(--c-gold-2); border-radius: 2px;
+        }
+        .dispose-thumb {
+            width: 68px; height: 68px;
+            border-radius: 10px; object-fit: cover;
+            border: 2px solid var(--c-border-mid);
+            cursor: pointer; transition: all var(--transition);
+            flex-shrink: 0;
+            background: rgba(10, 16, 32, 0.6);
+        }
+        .dispose-thumb:hover {
+            transform: scale(1.08);
+            border-color: var(--c-gold-2);
+            box-shadow: 0 4px 14px var(--c-gold-glow);
+        }
+        .dispose-images-empty {
+            text-align: center; padding: 14px;
+            color: var(--c-text-4); font-size: 12px; font-weight: 600;
+        }
+        .dispose-images-empty i {
+            font-size: 24px; color: var(--c-gold-2);
+            opacity: 0.4; margin-bottom: 4px; display: block;
+        }
+
         .dispose-form-group { margin-bottom: 16px; }
         .dispose-form-group label {
             display: block; font-size: 11px; font-weight: 800;
@@ -797,21 +771,18 @@
         .dispose-confirm {
             background: rgba(245, 158, 11, 0.08);
             border: 1px solid rgba(245, 158, 11, 0.3);
-            border-radius: 12px;
-            padding: 14px 18px;
+            border-radius: 12px; padding: 14px 18px;
             margin-top: 20px;
             display: flex; align-items: flex-start; gap: 12px;
         }
         .dispose-confirm input[type="checkbox"] {
             width: 20px; height: 20px;
             margin-top: 2px; cursor: pointer;
-            accent-color: #f59e0b;
-            flex-shrink: 0;
+            accent-color: #f59e0b; flex-shrink: 0;
         }
         .dispose-confirm label {
             font-size: 12px; color: #fcd34d;
-            font-weight: 700; line-height: 1.6;
-            cursor: pointer;
+            font-weight: 700; line-height: 1.6; cursor: pointer;
         }
         .fleet-modal-actions {
             display: flex; gap: 12px;
@@ -833,7 +804,6 @@
         }
         .fleet-modal-actions .btn-modal.cancel:hover {
             background: rgba(148, 163, 184, 0.2);
-            color: var(--c-text-1);
         }
         .fleet-modal-actions .btn-modal.dispose-confirm-btn {
             background: linear-gradient(135deg, #475569, #1e293b);
@@ -841,7 +811,7 @@
             border: 1px solid rgba(247, 215, 116, 0.35);
         }
         .fleet-modal-actions .btn-modal.dispose-confirm-btn:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.02);
+            transform: translateY(-2px);
             border-color: var(--c-gold-2);
         }
         .fleet-modal-actions .btn-modal.dispose-confirm-btn:disabled {
@@ -856,7 +826,6 @@
             z-index: 100003;
             display: none; align-items: center; justify-content: center;
             padding: 20px;
-            animation: fleetModalBgIn 0.25s ease;
         }
         .fleet-mini-upload.active { display: flex; }
         .fleet-mini-upload-box {
@@ -866,8 +835,7 @@
             padding: 24px;
             width: 100%; max-width: 560px;
             max-height: 90vh; overflow-y: auto;
-            box-shadow: 0 32px 80px rgba(0,0,0,0.9), 0 0 60px rgba(230,179,30,0.2);
-            animation: fleetModalBoxIn 0.35s var(--t-bounce);
+            box-shadow: 0 32px 80px rgba(0,0,0,0.9);
         }
         .fleet-mini-upload-head {
             display: flex; justify-content: space-between; align-items: center;
@@ -885,12 +853,9 @@
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.98);
             z-index: 100002;
-            display: none;
-            flex-direction: column;
-            animation: galleryFadeIn 0.3s ease;
+            display: none; flex-direction: column;
         }
         .fleet-pro-gallery.active { display: flex; }
-        @keyframes galleryFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .fleet-pro-top {
             display: flex; justify-content: space-between; align-items: center;
@@ -907,8 +872,7 @@
         }
         .fleet-pro-info-text { min-width: 0; overflow: hidden; }
         .fleet-pro-info-text h3 {
-            font-size: 16px; font-weight: 800;
-            color: var(--c-gold-1);
+            font-size: 16px; font-weight: 800; color: var(--c-gold-1);
             margin: 0 0 2px 0;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
@@ -936,7 +900,6 @@
         .fleet-pro-tool.active {
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             color: #060911;
-            border-color: var(--c-gold-2);
         }
         .fleet-pro-tool:disabled { opacity: 0.3; cursor: not-allowed; }
         .fleet-pro-close {
@@ -949,10 +912,8 @@
         }
         .fleet-pro-close:hover {
             background: rgba(239,68,68,0.5);
-            border-color: #ef4444;
             transform: rotate(90deg) scale(1.05);
         }
-
         .fleet-pro-stage {
             flex: 1; position: relative;
             display: flex; align-items: center; justify-content: center;
@@ -984,29 +945,21 @@
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             width: 90px; height: 90px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             gap: 4px;
             cursor: pointer;
             font-family: var(--font);
-            font-weight: 800;
-            font-size: 11px;
+            font-weight: 800; font-size: 11px;
             box-shadow: 0 12px 40px rgba(230,179,30,0.5), 0 0 0 8px rgba(230,179,30,0.15);
             transition: all var(--transition);
-            z-index: 6;
-            opacity: 0.85;
+            z-index: 6; opacity: 0.85;
         }
         .fleet-pro-change-btn i { font-size: 22px; margin-bottom: 2px; }
         .fleet-pro-change-btn:hover {
             opacity: 1;
             transform: translate(-50%, -50%) scale(1.12);
             box-shadow: 0 16px 52px rgba(230,179,30,0.7), 0 0 0 12px rgba(230,179,30,0.25);
-            border-color: rgba(255,255,255,0.5);
-        }
-        .fleet-pro-change-btn:active {
-            transform: translate(-50%, -50%) scale(0.98);
         }
         .fleet-pro-change-btn.hidden { display: none; }
 
@@ -1023,7 +976,7 @@
         }
         .fleet-pro-nav:hover {
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911; border-color: var(--c-gold-2);
+            color: #060911;
             transform: translateY(-50%) scale(1.1);
         }
         .fleet-pro-nav.prev { right: 14px; }
@@ -1039,9 +992,8 @@
             padding: 8px 20px; border-radius: 20px;
             font-size: 13px; font-weight: 800;
             border: 1px solid rgba(247,215,116,0.35);
-            letter-spacing: 0.5px; z-index: 5; direction: ltr;
+            z-index: 5; direction: ltr;
         }
-
         .fleet-pro-thumbs {
             display: flex; gap: 8px;
             padding: 14px 22px 18px;
@@ -1060,10 +1012,9 @@
         .fleet-pro-thumb:hover { opacity: 0.85; transform: translateY(-4px); }
         .fleet-pro-thumb.active {
             border-color: var(--c-gold-2); opacity: 1;
-            box-shadow: 0 0 0 3px rgba(230,179,30,0.25), 0 8px 24px rgba(0,0,0,0.5);
+            box-shadow: 0 0 0 3px rgba(230,179,30,0.25);
             transform: translateY(-4px);
         }
-
         .fleet-pro-empty {
             flex: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
@@ -1081,8 +1032,6 @@
         /* ═══════ RESPONSIVE ═══════ */
         @media (max-width: 1100px) {
             .stats-grid { gap: 12px; padding: 0 20px 18px; }
-            .stat-card { padding: 18px 12px 16px; }
-            .stat-card .number { font-size: 26px; }
             .fleet-header, .filter-bar { margin-left: 20px; margin-right: 20px; }
             .input-grid { margin-left: 20px; margin-right: 20px; }
             .table-wrapper { padding: 0 20px 20px; }
@@ -1101,7 +1050,6 @@
             .images-section { padding: 12px; }
             .image-source-btns { width: 100%; }
             .source-btn { flex: 1; justify-content: center; }
-            .images-gallery { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
             .filter-bar { padding: 14px 16px; margin: 0 16px 16px; }
             .filter-bar .search-input { flex: 1 1 100%; }
             .table-wrapper { padding: 0 16px 16px; }
@@ -1119,7 +1067,6 @@
         }
         @media print {
             #page-fleet { background: #fff !important; color: #12121a !important; }
-            #page-fleet::before { display: none !important; }
             .fleet-header, .filter-bar, .input-grid, .action-btns,
             .fleet-toast, .fleet-modal, .images-section,
             .fleet-mini-upload, .fleet-pro-gallery {
@@ -1189,12 +1136,10 @@
 
     <!-- INPUT GRID -->
     <div id="inputArea" class="input-grid">
-        <!-- المعطيات الرئيسية — لا تُلمس -->
         <input type="text" id="iName" placeholder="اسم المركب">
         <input type="text" id="iNum" placeholder="الرقم">
         <input type="number" id="iLen" placeholder="الطول (م)" step="0.1">
 
-        <!-- الإقليم -->
         <div class="fleet-combobox">
             <select id="iReg">
                 <option value="">الإقليم</option>
@@ -1212,27 +1157,21 @@
             <input type="text" class="fleet-combobox-free" id="iRegFree" placeholder="✍️ اكتب الإقليم..." style="display:none;">
         </div>
 
-        <!-- المنطقة -->
         <div class="fleet-combobox">
             <input type="text" class="fleet-combobox-search" id="iZoneSearch" placeholder="🔍 ابحث منطقة...">
             <select id="iZone"><option value="">المنطقة</option></select>
             <input type="text" class="fleet-combobox-free" id="iZoneFree" placeholder="✍️ اكتب المنطقة..." style="display:none;">
         </div>
 
-        <!-- الميناء -->
         <input type="text" id="iPort" placeholder="الميناء">
-
-        <!-- مكان التعزيز -->
         <input type="text" id="iSupp" placeholder="مكان التعزيز">
 
-        <!-- الحالة -->
         <select id="iStat">
             <option value="صالح">✅ صالح</option>
             <option value="معطب">❌ معطب</option>
             <option value="صيانة">🔧 صيانة</option>
         </select>
 
-        <!-- نوع العطب -->
         <div class="fleet-combobox">
             <input type="text" class="fleet-combobox-search" id="iBreakSearch" placeholder="🔍 ابحث نوع عطب...">
             <select id="iBreak">
@@ -1271,14 +1210,10 @@
             <input type="text" class="fleet-combobox-free" id="iBreakFree" placeholder="✍️ اكتب نوع العطب..." style="display:none;">
         </div>
 
-        <!-- التاريخ -->
         <input type="date" id="iDate">
         <input type="date" id="iEnd">
-
-        <!-- المرجع -->
         <input type="text" id="iRef" placeholder="المرجع">
 
-        <!-- الوحدة المسؤولة -->
         <div class="fleet-combobox">
             <select id="iRepairUnit">
                 <option value="">الوحدة المسؤولة عن الإصلاح</option>
@@ -1293,7 +1228,7 @@
             <input type="text" class="fleet-combobox-free" id="iRepairUnitFree" placeholder="✍️ اكتب الوحدة..." style="display:none;">
         </div>
 
-        <!-- IMAGES SECTION -->
+        <!-- IMAGES -->
         <div class="images-section" id="imagesSection">
             <div class="images-section-header">
                 <div class="images-section-title">
@@ -1303,12 +1238,10 @@
                 </div>
                 <div class="image-source-btns">
                     <button type="button" class="source-btn camera" id="captureBtn">
-                        <i class="fas fa-camera"></i>
-                        <span>التقاط صورة</span>
+                        <i class="fas fa-camera"></i><span>التقاط صورة</span>
                     </button>
                     <button type="button" class="source-btn browse" id="browseBtn">
-                        <i class="fas fa-folder-open"></i>
-                        <span>استيراد صور</span>
+                        <i class="fas fa-folder-open"></i><span>استيراد صور</span>
                     </button>
                 </div>
             </div>
@@ -1409,6 +1342,7 @@
                     <strong>تحذير:</strong> هذا إجراء <strong>لا رجعة فيه</strong> — سيتم سحب المركب نهائياً من الخدمة ونقله إلى سجل المطروحة.
                 </div>
             </div>
+
             <div class="dispose-vessel-info">
                 <div>
                     <div class="info-label">المركب</div>
@@ -1420,6 +1354,23 @@
                     <div class="info-value" id="disposeVesselNum">—</div>
                 </div>
             </div>
+
+            <!-- 🖼️ معرض صور المركب داخل تفاصيل الطرح -->
+            <div class="dispose-images-preview" id="disposeImagesPreview">
+                <div class="dispose-images-header">
+                    <div class="dispose-images-title">
+                        <i class="fas fa-images"></i>
+                        صور المركب
+                        <span class="dispose-images-count" id="disposeImagesCount">(0)</span>
+                    </div>
+                    <button type="button" class="dispose-view-gallery-btn" id="disposeViewGalleryBtn">
+                        <i class="fas fa-expand"></i>
+                        عرض المعرض الكامل
+                    </button>
+                </div>
+                <div class="dispose-images-grid" id="disposeImagesGrid"></div>
+            </div>
+
             <input type="hidden" id="disposeVesselId">
             <div class="dispose-form-group">
                 <label>⚠️ سبب الطرح <span class="req">*</span></label>
@@ -1428,11 +1379,11 @@
             <div class="dispose-form-row">
                 <div class="dispose-form-group">
                     <label>📋 رقم قرار الطرح</label>
-                    <input type="text" class="dispose-form-control" id="disposeDecision" placeholder="مثال: قرار عدد 2025/123" maxlength="200">
+                    <input type="text" class="dispose-form-control" id="disposeDecision" placeholder="قرار عدد 2025/123" maxlength="200">
                 </div>
                 <div class="dispose-form-group">
                     <label>👤 الجهة القارّة</label>
-                    <input type="text" class="dispose-form-control" id="disposeBy" placeholder="اسم المسؤول أو الجهة" maxlength="200">
+                    <input type="text" class="dispose-form-control" id="disposeBy" placeholder="اسم المسؤول" maxlength="200">
                 </div>
             </div>
             <div class="dispose-form-group">
@@ -1618,7 +1569,6 @@
         "المجمع الأمني بقبيبة": ["قبيبة", "تونس", "بنزرت"]
     };
 
-    /* ═══════ HELPERS ═══════ */
     function $(s, c) { return (c || document).querySelector(s); }
     function $$(s, c) { return Array.from((c || document).querySelectorAll(s)); }
 
@@ -1741,7 +1691,6 @@
         return role === 'admin' || role === 'manager';
     }
 
-    /* ═══════ COMBOBOX HELPERS ═══════ */
     function filterSelectOptions(selectEl, query) {
         if (!selectEl) return;
         var q = (query || '').trim().toLowerCase();
@@ -1817,7 +1766,6 @@
         }
     }
 
-    /* ═══════ DYNAMIC FIELDS ═══════ */
     function updateZones() {
         var regionVal = getComboboxValue('iReg', 'iRegFree');
         var zoneSel = $('#iZone');
@@ -1852,7 +1800,7 @@
         filterSelectOptions(zoneSel, '');
     }
 
-    /* ═══════ IMAGE UPLOADER ═══════ */
+    /* ═══════ IMAGES ═══════ */
     function updateSourceButtonsState() {
         var isFull = fleetImages.length >= MAX_IMAGES;
         var c = $('#captureBtn'); if (c) c.disabled = isFull;
@@ -1920,7 +1868,6 @@
         var count = $('#imagesCount');
         if (count) count.textContent = '(' + fleetImages.length + '/' + MAX_IMAGES + ')';
         if (!gallery) return;
-
         if (fleetImages.length === 0) { gallery.innerHTML = ''; updateSourceButtonsState(); return; }
 
         var html = '';
@@ -2017,9 +1964,8 @@
 
     /* ═══════ MINI UPLOAD ═══════ */
     function openMiniUpload(vesselId) {
-        var v = null;
         fetcher('/api/vessels').then(function(r) { return r.json(); }).then(function(list) {
-            v = list.find(function(x) { return String(x._id || x.id) === String(vesselId); });
+            var v = list.find(function(x) { return String(x._id || x.id) === String(vesselId); });
             if (!v) { fleetToast('❌ المركب غير موجود', 'error'); return; }
             miniUploadVesselId = vesselId;
             miniUploadImages = (v.images || []).slice();
@@ -2057,8 +2003,8 @@
                     '<img src="' + escapeHtml(preview) + '" alt="صورة" loading="lazy">' +
                     '<span class="image-primary-badge">⭐</span>' +
                     '<div class="image-actions">' +
-                        '<button type="button" class="img-set-primary" data-mini-action="primary" data-idx="' + idx + '" title="رئيسية"><i class="fas fa-star"></i></button>' +
-                        '<button type="button" class="img-delete" data-mini-action="delete" data-idx="' + idx + '" title="حذف"><i class="fas fa-trash"></i></button>' +
+                        '<button type="button" class="img-set-primary" data-mini-action="primary" data-idx="' + idx + '"><i class="fas fa-star"></i></button>' +
+                        '<button type="button" class="img-delete" data-mini-action="delete" data-idx="' + idx + '"><i class="fas fa-trash"></i></button>' +
                     '</div>' +
                 '</div>';
         });
@@ -2139,10 +2085,8 @@
         if (uploading) uploading.style.display = 'flex';
 
         try {
-            // حذف المحذوفات
-            var original = null;
             var list = await fetcher('/api/vessels').then(function(r) { return r.json(); });
-            original = list.find(function(x) { return String(x._id || x.id) === String(miniUploadVesselId); });
+            var original = list.find(function(x) { return String(x._id || x.id) === String(miniUploadVesselId); });
             var originalImages = (original && original.images) || [];
             var keptIds = miniUploadImages.filter(function(img) { return img && img._id; }).map(function(img) { return img._id; });
             var toDelete = originalImages.filter(function(img) { return img._id && keptIds.indexOf(img._id) === -1; });
@@ -2151,7 +2095,6 @@
                 await fetcher('/api/vessels/' + encodeURIComponent(miniUploadVesselId) + '/images/' + encodeURIComponent(toDelete[i]._id), { method: 'DELETE' }).catch(function() {});
             }
 
-            // رفع الجديد
             var newFiles = miniUploadImages.filter(function(img) { return img instanceof File; });
             if (newFiles.length > 0) {
                 var fd = new FormData();
@@ -2169,14 +2112,12 @@
                 if (!res.ok) throw new Error('فشل رفع الصور');
             }
 
-            fleetToast('✅ تم تحديث الصور بنجاح', 'success');
+            fleetToast('✅ تم تحديث الصور', 'success');
             closeMiniUpload();
             await renderMain();
 
-            // إعادة فتح المعرض
-            var updated = null;
             var list2 = await fetcher('/api/vessels').then(function(r) { return r.json(); });
-            updated = list2.find(function(x) { return String(x._id || x.id) === String(miniUploadVesselId); });
+            var updated = list2.find(function(x) { return String(x._id || x.id) === String(miniUploadVesselId); });
             if (updated && $('#fleetProGallery').classList.contains('active')) {
                 openVesselGallery(updated);
             }
@@ -2188,7 +2129,7 @@
         }
     }
 
-    /* ═══════ PROFESSIONAL GALLERY ═══════ */
+    /* ═══════ GALLERY ═══════ */
     function openVesselGallery(vessel) {
         if (!vessel) return;
         _galleryCurrentVessel = vessel;
@@ -2402,7 +2343,6 @@
         var fs = $('#fleetProFullscreen');
         if (fs) fs.addEventListener('click', toggleFullscreen);
 
-        // 🎯 زر تغيير الصور
         var changeBtn = $('#fleetProChangeBtn');
         if (changeBtn) {
             changeBtn.addEventListener('click', function() {
@@ -2456,7 +2396,6 @@
                 if (_galleryDragging) { _galleryDragging = false; stage.classList.remove('grabbing'); }
             });
 
-            // Touch
             var tStartX = 0, tStartY = 0, tStartTime = 0, initialPinch = 0;
             stage.addEventListener('touchstart', function(e) {
                 if (e.touches.length === 1) {
@@ -2505,7 +2444,6 @@
         }
     }
 
-    // Public API
     window.openVesselGallery = openVesselGallery;
     window.closeVesselGallery = closeVesselGallery;
     window.openVesselGalleryById = function(vesselId) {
@@ -2517,45 +2455,8 @@
     };
     window.viewVesselImages = function(vesselId) { window.openVesselGalleryById(vesselId); };
 
-    /* ═══════ LOAD / RENDER ═══════ */
+    /* ═══════ RENDER ═══════ */
     var _allVessels = [];
-
-    function populatePrintSummary(vessels) {
-        var body = document.getElementById('printSummaryBody');
-        if (!body) return;
-        var stats = {};
-        FIXED_CATEGORIES.forEach(function(c) { stats[c] = { active: 0, maintenance: 0, damaged: 0, total: 0 }; });
-        (vessels || []).forEach(function(v) {
-            var cat = v.cat || getCategory(v.len);
-            if (!stats[cat]) stats[cat] = { active: 0, maintenance: 0, damaged: 0, total: 0 };
-            stats[cat].total++;
-            if (v.status === 'صالح') stats[cat].active++;
-            else if (v.status === 'صيانة') stats[cat].maintenance++;
-            else if (v.status === 'معطب') stats[cat].damaged++;
-        });
-        var grand = { active: 0, maintenance: 0, damaged: 0, total: 0 };
-        var html = '';
-        Object.keys(stats).forEach(function(cat) {
-            var s = stats[cat];
-            grand.active += s.active;
-            grand.maintenance += s.maintenance;
-            grand.damaged += s.damaged;
-            grand.total += s.total;
-            var eff = s.total > 0 ? ((s.active / s.total) * 100).toFixed(1) : '0.0';
-            html += '<tr><td class="cat-name">' + escapeHtml(cat) + '</td>' +
-                '<td class="num-active">' + s.active + '</td>' +
-                '<td class="num-maint">' + s.maintenance + '</td>' +
-                '<td class="num-damaged">' + s.damaged + '</td>' +
-                '<td class="num-total">' + s.total + '</td>' +
-                '<td class="num-eff">' + eff + '%</td></tr>';
-        });
-        var grandEff = grand.total > 0 ? ((grand.active / grand.total) * 100).toFixed(1) : '0.0';
-        html += '<tr class="total-row"><td class="cat-name">الإجمالي</td>' +
-            '<td>' + grand.active + '</td><td>' + grand.maintenance + '</td>' +
-            '<td>' + grand.damaged + '</td><td>' + grand.total + '</td>' +
-            '<td>' + grandEff + '%</td></tr>';
-        body.innerHTML = html;
-    }
 
     function initFilters() {
         var fCatMain = $('#fCatMain');
@@ -2594,7 +2495,7 @@
                     window.location.href = '/index.html';
                     return;
                 }
-                throw new Error('فشل تحميل البيانات (Status: ' + response.status + ')');
+                throw new Error('فشل تحميل البيانات');
             }
 
             var allVessels = await response.json();
@@ -2639,8 +2540,6 @@
                 });
             }
 
-            populatePrintSummary(filtered);
-
             if (filtered.length === 0) {
                 mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
                     '<span class="empty-icon"><i class="fas fa-inbox"></i></span>' +
@@ -2674,17 +2573,16 @@
 
                 var isDamaged = status === 'معطب';
 
-                // 📸 thumbnail
                 var primaryImg = v.primaryImage || (v.images && v.images[0]);
                 var imagesCount = v.imagesCount || (v.images ? v.images.length : 0);
                 var thumbHtml;
                 if (primaryImg && primaryImg.url) {
-                    thumbHtml = '<div class="vessel-thumb-wrapper" data-action="gallery" data-id="' + escapeHtml(id) + '" title="انقر لعرض ' + imagesCount + ' صورة">' +
+                    thumbHtml = '<div class="vessel-thumb-wrapper" data-action="gallery" data-id="' + escapeHtml(id) + '">' +
                         '<img src="' + escapeHtml(primaryImg.url) + '" class="vessel-thumb" alt="' + escapeHtml(name) + '" loading="lazy">' +
                         (imagesCount > 1 ? '<span class="vessel-thumb-badge">' + imagesCount + '</span>' : '') +
                         '</div>';
                 } else {
-                    thumbHtml = '<div class="vessel-thumb-empty" data-action="gallery" data-id="' + escapeHtml(id) + '" title="لا توجد صور">' +
+                    thumbHtml = '<div class="vessel-thumb-empty" data-action="gallery" data-id="' + escapeHtml(id) + '">' +
                         '<i class="fas fa-camera"></i>' +
                         '</div>';
                 }
@@ -2714,12 +2612,12 @@
             });
             mainBody.innerHTML = html;
 
-            mainBody.addEventListener('click', function(e) {
-                var target = e.target.closest('[data-action="gallery"]');
-                if (!target) return;
-                var id = target.getAttribute('data-id');
-                if (!id) return;
-                window.openVesselGalleryById(id);
+            mainBody.querySelectorAll('[data-action="gallery"]').forEach(function(el) {
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var id = this.getAttribute('data-id');
+                    if (id) window.openVesselGalleryById(id);
+                });
             });
 
         } catch (err) {
@@ -2946,9 +2844,7 @@
     function refreshFleet() { renderMain(); }
 
     function printFleet() {
-        try {
-            window.print();
-        } catch (e) { window.print(); }
+        try { window.print(); } catch (e) { window.print(); }
     }
 
     function exportFleetExcel() {
@@ -3001,6 +2897,7 @@
         } catch (err) { fleetToast('❌ فشل التصدير: ' + err.message, 'error'); }
     }
 
+    /* ═══════ DISPOSE ═══════ */
     var _disposeVesselData = null;
 
     function openDisposeModal(vesselId) {
@@ -3015,6 +2912,10 @@
             $('#disposeVesselName').textContent = v.name || '—';
             $('#disposeVesselSub').textContent = (v.cat || getCategory(v.len)) + ' • ' + (v.region || v.reg || '—');
             $('#disposeVesselNum').textContent = v.num || '—';
+
+            // 🖼️ عرض صور المركب
+            renderDisposeImages(v);
+
             $('#disposeReason').value = '';
             $('#disposeDecision').value = '';
             $('#disposeBy').value = getUser() ? (getUser().name || getUser().username || '') : '';
@@ -3025,6 +2926,59 @@
 
             $('#fleetDisposeModal').classList.add('active');
         }).catch(function(err) { fleetToast('❌ ' + err.message, 'error'); });
+    }
+
+    // 🖼️ عرض صور المركب في تفاصيل الطرح
+    function renderDisposeImages(vessel) {
+        var grid = $('#disposeImagesGrid');
+        var count = $('#disposeImagesCount');
+        var viewBtn = $('#disposeViewGalleryBtn');
+        if (!grid) return;
+
+        var images = (vessel.images || []).slice().filter(function(i) { return i && i.url; });
+        if (images.length === 0 && vessel.primaryImage && vessel.primaryImage.url) {
+            images = [vessel.primaryImage];
+        }
+
+        if (count) count.textContent = '(' + images.length + ')';
+
+        if (images.length === 0) {
+            grid.innerHTML =
+                '<div class="dispose-images-empty" style="width:100%;">' +
+                    '<i class="fas fa-image"></i>' +
+                    'لا توجد صور لهذا المركب' +
+                '</div>';
+            if (viewBtn) viewBtn.style.display = 'none';
+            return;
+        }
+
+        if (viewBtn) {
+            viewBtn.style.display = 'inline-flex';
+            // إعادة ربط listener
+            var newBtn = viewBtn.cloneNode(true);
+            viewBtn.parentNode.replaceChild(newBtn, viewBtn);
+            newBtn.addEventListener('click', function() {
+                closeDisposeModal();
+                openVesselGallery(vessel);
+            });
+        }
+
+        var html = '';
+        images.forEach(function(img, idx) {
+            html += '<img src="' + escapeHtml(img.url) + '" ' +
+                    'class="dispose-thumb" ' +
+                    'alt="صورة ' + (idx + 1) + '" ' +
+                    'loading="lazy" ' +
+                    'data-dispose-thumb-idx="' + idx + '">';
+        });
+        grid.innerHTML = html;
+
+        grid.querySelectorAll('[data-dispose-thumb-idx]').forEach(function(thumb) {
+            thumb.addEventListener('click', function() {
+                closeDisposeModal();
+                openVesselGallery(vessel);
+            });
+        });
     }
 
     function closeDisposeModal() {
@@ -3116,7 +3070,7 @@
         if (!header) return false;
 
         _initialized = true;
-        console.log('🚀 Fleet v6.0 — Initializing...');
+        console.log('🚀 Fleet v7.0 — Initializing...');
 
         initFilters();
         initImagesUI();
@@ -3124,23 +3078,19 @@
         initMiniUploadEvents();
         setupDisposeListeners();
 
-        // Combobox searches
         bindComboboxSearch('iZoneSearch', 'iZone');
         bindComboboxSearch('iBreakSearch', 'iBreak');
 
-        // Free inputs
         toggleFreeInput('iReg', 'iRegFree', ['__other__']);
         toggleFreeInput('iZone', 'iZoneFree', ['__other__']);
         toggleFreeInput('iBreak', 'iBreakFree', ['أخرى']);
         toggleFreeInput('iRepairUnit', 'iRepairUnitFree', ['__other__']);
 
-        // Region → Zone dynamic
         var regSel = $('#iReg');
         if (regSel) regSel.addEventListener('change', updateZones);
         var regFree = $('#iRegFree');
         if (regFree) regFree.addEventListener('input', updateZones);
 
-        // Header buttons
         var refreshBtn = $('#fleetRefreshBtn');
         if (refreshBtn) refreshBtn.addEventListener('click', function() { renderMain(); });
         var printBtn = $('#fleetPrintBtn');
@@ -3177,7 +3127,7 @@
         updateZones();
         await renderMain();
 
-        console.log('✅ Fleet v6.0 ready');
+        console.log('✅ Fleet v7.0 ready');
         return true;
     }
 
