@@ -1,6 +1,6 @@
 // ============================================================
-// 🚛 Vehicle Model — الوسائل البرية v6.0
-// الماركة + الطراز + السنة + اللون
+// 🚛 Vehicle Model — الوسائل البرية v6.1
+// + 🆕 الصور + 🆕 الطرح
 // ============================================================
 
 'use strict';
@@ -30,7 +30,7 @@ const VEHICLE_TYPES = [
 const VEHICLE_TYPES_VALUES = VEHICLE_TYPES.map(t => t.value);
 
 // ============================================================
-// 📋 VEHICLE BRANDS — ماركات السيارات (22 ماركة)
+// 📋 VEHICLE BRANDS
 // ============================================================
 const VEHICLE_BRANDS = [
     { value: 'تويوتا',       label: '🚗 تويوتا (Toyota)' },
@@ -63,17 +63,17 @@ const VEHICLE_BRANDS_VALUES = VEHICLE_BRANDS.map(b => b.value);
 // 📋 VEHICLE COLORS
 // ============================================================
 const VEHICLE_COLORS = [
-    { value: 'أبيض',       label: '⚪ أبيض' },
-    { value: 'أسود',       label: '⚫ أسود' },
-    { value: 'رمادي',      label: '🩶 رمادي' },
-    { value: 'فضي',        label: '⚪ فضي' },
-    { value: 'أحمر',       label: '🔴 أحمر' },
-    { value: 'أزرق',       label: '🔵 أزرق' },
-    { value: 'أخضر',       label: '🟢 أخضر' },
-    { value: 'أصفر',       label: '🟡 أصفر' },
-    { value: 'بني',        label: '🟤 بني' },
-    { value: 'بيج',        label: '🟠 بيج' },
-    { value: 'أخرى',       label: '⚙️ أخرى' }
+    { value: 'أبيض',   label: '⚪ أبيض' },
+    { value: 'أسود',   label: '⚫ أسود' },
+    { value: 'رمادي',  label: '🩶 رمادي' },
+    { value: 'فضي',    label: '⚪ فضي' },
+    { value: 'أحمر',   label: '🔴 أحمر' },
+    { value: 'أزرق',   label: '🔵 أزرق' },
+    { value: 'أخضر',   label: '🟢 أخضر' },
+    { value: 'أصفر',   label: '🟡 أصفر' },
+    { value: 'بني',    label: '🟤 بني' },
+    { value: 'بيج',    label: '🟠 بيج' },
+    { value: 'أخرى',   label: '⚙️ أخرى' }
 ];
 const VEHICLE_COLORS_VALUES = VEHICLE_COLORS.map(c => c.value);
 
@@ -84,9 +84,9 @@ const VEHICLE_REGIONS = [
     { value: 'إدارة إسناد الوحدات البحرية', label: '🏛️ إدارة إسناد الوحدات البحرية', group: 'الإدارات المركزية' },
     { value: 'إدارة حرس السواحل',          label: '🚢 إدارة حرس السواحل',          group: 'الإدارات المركزية' },
     { value: 'إقليم الحرس البحري بالشمال', label: '🌊 إقليم الحرس البحري بالشمال', group: 'الأقاليم البحرية' },
-    { value: 'إقليم الحرس البحري بالساحل',  label: '🌊 إقليم الحرس البحري بالساحل',  group: 'الأقاليم البحرية' },
-    { value: 'إقليم الحرس البحري بالوسط',   label: '🌊 إقليم الحرس البحري بالوسط',   group: 'الأقاليم البحرية' },
-    { value: 'إقليم الحرس البحري بالجنوب',  label: '🌊 إقليم الحرس البحري بالجنوب',  group: 'الأقاليم البحرية' },
+    { value: 'إقليم الحرس البحري بالساحل', label: '🌊 إقليم الحرس البحري بالساحل', group: 'الأقاليم البحرية' },
+    { value: 'إقليم الحرس البحري بالوسط',  label: '🌊 إقليم الحرس البحري بالوسط',  group: 'الأقاليم البحرية' },
+    { value: 'إقليم الحرس البحري بالجنوب', label: '🌊 إقليم الحرس البحري بالجنوب', group: 'الأقاليم البحرية' },
     { value: 'وحدة الصيانة والإسناد البحري تونس',     label: '🛠️ وحدة الصيانة تونس',     group: 'وحدات الصيانة' },
     { value: 'وحدة الصيانة والإسناد البحري صفاقس',    label: '🛠️ وحدة الصيانة صفاقس',    group: 'وحدات الصيانة' },
     { value: 'وحدة الصيانة والإسناد البحري المنستير', label: '🛠️ وحدة الصيانة المنستير', group: 'وحدات الصيانة' },
@@ -121,12 +121,13 @@ const VEHICLE_ZONES_ALL = [
 ];
 
 // ============================================================
-// 📋 STATUS
+// 📋 STATUS — 🆕 أضفنا "طرح"
 // ============================================================
 const VEHICLE_STATUS = [
     { value: 'صالحة', label: '✅ صالحة' },
     { value: 'معطبة', label: '🔴 معطبة' },
-    { value: 'صيانة', label: '🔧 صيانة' }
+    { value: 'صيانة', label: '🔧 صيانة' },
+    { value: 'طرح',   label: '⚫ طرح (سحب نهائي)' }  // 🆕
 ];
 const VEHICLE_STATUS_VALUES = VEHICLE_STATUS.map(s => s.value);
 
@@ -141,7 +142,23 @@ const VEHICLE_CONDITIONS = [
 const VEHICLE_CONDITIONS_VALUES = VEHICLE_CONDITIONS.map(c => c.value);
 
 // ============================================================
-// 📋 SCHEMA
+// 🖼️ IMAGE SUB-SCHEMA
+// ============================================================
+const vehicleImageSchema = new mongoose.Schema({
+    filename:     { type: String, default: '' },
+    originalName: { type: String, default: '' },
+    url:          { type: String, required: true },
+    size:         { type: Number, default: 0 },
+    mimetype:     { type: String, default: '' },
+    caption:      { type: String, default: '', maxlength: 200 },
+    isPrimary:    { type: Boolean, default: false },
+    source:       { type: String, enum: ['upload', 'camera'], default: 'upload' },
+    uploadedAt:   { type: Date, default: Date.now },
+    uploadedBy:   { type: String, default: 'system' }
+}, { _id: true });
+
+// ============================================================
+// 📋 MAIN SCHEMA
 // ============================================================
 const vehicleSchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true, sparse: true, index: true },
@@ -185,6 +202,18 @@ const vehicleSchema = new mongoose.Schema({
     appointmentDate: { type: String, default: null },
     faultDate: { type: String, default: null },
     notes: { type: String, trim: true, default: '', maxlength: 1000 },
+
+    // 🆕 حقول الطرح
+    disposalDate:     { type: Date, default: null },
+    disposalReason:   { type: String, trim: true, default: '', maxlength: 1000 },
+    disposalDecision: { type: String, trim: true, default: '', maxlength: 100 },
+    disposedBy:       { type: String, trim: true, default: '', maxlength: 100 },
+    disposalNotes:    { type: String, trim: true, default: '', maxlength: 1000 },
+    disposedAt:       { type: Date, default: null },
+
+    // 🆕 الصور
+    images: [vehicleImageSchema],
+
     createdBy: { type: String, default: 'system' }
 }, {
     timestamps: true, versionKey: false, collection: 'vehicles'
@@ -194,11 +223,14 @@ vehicleSchema.index({ status: 1, type: 1 });
 vehicleSchema.index({ region: 1, zone: 1 });
 vehicleSchema.index({ brand: 1, model: 1 });
 vehicleSchema.index({ createdAt: -1 });
+vehicleSchema.index({ disposedAt: -1 });      // 🆕 للأداء في صفحة الطرح
+vehicleSchema.index({ status: 1, disposedAt: -1 });
 
 // ============================================================
 // 🎯 VIRTUALS
 // ============================================================
 vehicleSchema.virtual('isOperational').get(function() { return this.status === 'صالحة'; });
+vehicleSchema.virtual('isDisposed').get(function() { return this.status === 'طرح'; });
 vehicleSchema.virtual('typeLabel').get(function() {
     const t = VEHICLE_TYPES.find(x => x.value === this.type);
     return t ? t.label : this.type;
@@ -218,6 +250,87 @@ vehicleSchema.virtual('fullName').get(function() {
     if (this.year) parts.push('(' + this.year + ')');
     return parts.join(' ') || this.type;
 });
+vehicleSchema.virtual('primaryImage').get(function() {
+    if (!this.images || this.images.length === 0) return null;
+    return this.images.find(i => i.isPrimary) || this.images[0];
+});
+vehicleSchema.virtual('imagesCount').get(function() {
+    return (this.images || []).length;
+});
+
+// ============================================================
+// ⚙️ METHODS — 🆕 الطرح
+// ============================================================
+
+/**
+ * طرح وسيلة (سحب نهائي)
+ */
+vehicleSchema.methods.dispose = function({ reason, decision, disposedBy, notes, date } = {}) {
+    if (!reason || !String(reason).trim()) {
+        throw new Error('سبب الطرح مطلوب');
+    }
+    this.status = 'طرح';
+    this.disposalReason = String(reason).trim();
+    this.disposalDecision = decision ? String(decision).trim() : '';
+    this.disposedBy = disposedBy ? String(disposedBy).trim() : '';
+    this.disposalNotes = notes ? String(notes).trim() : '';
+    this.disposalDate = date ? new Date(date) : new Date();
+    this.disposedAt = new Date();
+    return this;
+};
+
+/**
+ * إلغاء الطرح — إعادة الوسيلة للخدمة
+ */
+vehicleSchema.methods.restore = function({ newStatus } = {}) {
+    const allowed = ['صالحة', 'صيانة', 'معطبة'];
+    const target = allowed.includes(newStatus) ? newStatus : 'صيانة';
+
+    this.status = target;
+    this.disposalReason = '';
+    this.disposalDecision = '';
+    this.disposedBy = '';
+    this.disposalNotes = '';
+    this.disposalDate = null;
+    this.disposedAt = null;
+    return this;
+};
+
+// ============================================================
+// 🖼️ METHODS — الصور
+// ============================================================
+
+/**
+ * حذف صورة + إعادة تعيين الرئيسية إذا لزم
+ */
+vehicleSchema.methods.removeImage = function(imageId) {
+    const img = this.images.id(imageId);
+    if (!img) return false;
+    const wasPrimary = img.isPrimary;
+    img.deleteOne();
+    if (wasPrimary && this.images.length > 0) {
+        this.images[0].isPrimary = true;
+    }
+    return true;
+};
+
+/**
+ * تعيين صورة كرئيسية
+ */
+vehicleSchema.methods.setPrimaryImage = function(imageId) {
+    this.images.forEach(img => {
+        img.isPrimary = img._id.toString() === imageId.toString();
+    });
+    return this;
+};
+
+/**
+ * الحصول على الصورة الرئيسية
+ */
+vehicleSchema.methods.getPrimaryImage = function() {
+    if (!this.images || this.images.length === 0) return null;
+    return this.images.find(i => i.isPrimary) || this.images[0];
+};
 
 // ============================================================
 // 📤 EXPORT
