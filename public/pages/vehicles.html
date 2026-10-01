@@ -1,2982 +1,675 @@
-<!-- ═══════════════════════════════════════════════════════════
-     🚛 VEHICLES PAGE v10.1 — Ultra Pro + Images System
-     ═══════════════════════════════════════════════════════════ -->
-<div id="page-vehicles">
-<style>
-    #page-vehicles {
-        --c-border-soft: rgba(148, 163, 184, 0.08);
-        --c-border-mid: rgba(148, 163, 184, 0.15);
-        --c-border-strong: rgba(148, 163, 184, 0.25);
-        --c-gold-1: #f7d774;
-        --c-gold-2: #e6b31e;
-        --c-gold-3: #b8860b;
-        --c-gold-glow: rgba(230, 179, 30, 0.35);
-        --c-emerald-1: #6ee7b7;
-        --c-amber-1: #fcd34d;
-        --c-red-1: #fca5a5;
-        --c-cyan-1: #67e8f9;
-        --c-purple-1: #c4b5fd;
-        --c-pink-1: #f9a8d4;
-        --c-text-1: #f1f5f9;
-        --c-text-2: #cbd5e1;
-        --c-text-3: #94a3b8;
-        --c-text-4: #64748b;
-        --radius-sm: 10px;
-        --radius: 16px;
-        --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        --font: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
-        width: 100%; max-width: 100%;
-        padding: 0; margin: 0;
-        font-family: var(--font);
-        background:
-            radial-gradient(ellipse 80% 50% at 20% 0%, rgba(59, 130, 246, 0.08), transparent 50%),
-            radial-gradient(ellipse 60% 40% at 80% 10%, rgba(230, 179, 30, 0.06), transparent 50%),
-            radial-gradient(ellipse 70% 50% at 50% 100%, rgba(16, 185, 129, 0.05), transparent 60%),
-            linear-gradient(180deg, #060911 0%, #0a1020 50%, #060911 100%);
-        color: var(--c-text-1);
-        min-height: 100vh;
-        position: relative;
-        z-index: 2;
-        overflow-x: hidden;
-    }
-    #page-vehicles::before {
-        content: '';
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background:
-            radial-gradient(circle 400px at 10% 20%, rgba(59, 130, 246, 0.06), transparent 70%),
-            radial-gradient(circle 500px at 90% 60%, rgba(230, 179, 30, 0.05), transparent 70%),
-            radial-gradient(circle 350px at 50% 90%, rgba(16, 185, 129, 0.05), transparent 70%);
-        z-index: -1; pointer-events: none;
-        animation: vehOrbsFloat 20s ease-in-out infinite;
-    }
-    @keyframes vehOrbsFloat {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(3%, -2%) scale(1.05); }
-        66% { transform: translate(-3%, 2%) scale(0.97); }
-    }
-    #page-vehicles *, #page-vehicles *::before, #page-vehicles *::after { box-sizing: border-box; }
-    #page-vehicles ::-webkit-scrollbar { width: 8px; height: 8px; }
-    #page-vehicles ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
-    #page-vehicles ::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, var(--c-gold-2), var(--c-gold-3));
-        border-radius: 4px; border: 2px solid transparent; background-clip: padding-box;
-    }
-    .veh-container { padding: 16px 24px 40px; max-width: 1700px; margin: 0 auto; position: relative; z-index: 1; }
-
-    /* HEADER */
-    .veh-header {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 18px 24px; flex-wrap: wrap; gap: 16px;
-        background: linear-gradient(135deg, rgba(18, 26, 44, 0.9) 0%, rgba(24, 34, 56, 0.8) 100%);
-        backdrop-filter: blur(24px) saturate(180%);
-        -webkit-backdrop-filter: blur(24px) saturate(180%);
-        border: 1px solid var(--c-border-mid); border-radius: var(--radius);
-        margin-bottom: 20px; position: relative;
-        box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 32px rgba(0,0,0,0.35);
-    }
-    .veh-header .title-section { display: flex; align-items: center; gap: 14px; flex: 1 1 260px; min-width: 0; }
-    .veh-header .title-icon {
-        width: 50px; height: 50px; border-radius: 14px;
-        background: linear-gradient(135deg, var(--c-gold-2) 0%, var(--c-gold-3) 50%, #7c5c07 100%);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 24px; color: #060911;
-        position: relative; overflow: hidden; flex-shrink: 0;
-        box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.08) inset;
-        animation: vehIconFloat 4s ease-in-out infinite;
-    }
-    .veh-header .title-icon::before {
-        content: ''; position: absolute; inset: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
-        pointer-events: none;
-    }
-    @keyframes vehIconFloat {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-3px) rotate(-2deg); }
-    }
-    .veh-header .title-icon::after {
-        content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-        animation: vehShine 4s ease-in-out infinite; pointer-events: none;
-    }
-    @keyframes vehShine { 0% { left: -100%; } 50%, 100% { left: 100%; } }
-    .veh-header .header-text { min-width: 0; overflow: hidden; }
-    .veh-header .title {
-        font-size: 22px; font-weight: 800;
-        background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-1) 100%);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        background-clip: text; margin: 0 0 2px 0; letter-spacing: -0.5px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .veh-header .subtitle {
-        font-size: 12px; color: var(--c-text-3); margin: 0; font-weight: 500;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .veh-header .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
-
-    /* BUTTONS */
-    .veh-btn {
-        padding: 10px 20px; border: none; border-radius: 12px;
-        font-weight: 700; font-size: 13px; cursor: pointer;
-        transition: all var(--transition);
-        display: inline-flex; align-items: center; gap: 8px;
-        font-family: var(--font); white-space: nowrap; flex-shrink: 0;
-        line-height: 1; position: relative; overflow: hidden;
-    }
-    .veh-btn i { font-size: 13px; }
-    .veh-btn::before {
-        content: ''; position: absolute; inset: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
-        pointer-events: none;
-    }
-    .veh-btn-primary {
-        background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
-        color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
-    }
-    .veh-btn-primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px var(--c-gold-glow); }
-    .veh-btn-secondary {
-        background: linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(148, 163, 184, 0.04) 100%);
-        border: 1px solid var(--c-border-mid); color: var(--c-text-2); backdrop-filter: blur(8px);
-    }
-    .veh-btn-secondary:hover {
-        background: rgba(148, 163, 184, 0.15); color: var(--c-text-1);
-        transform: translateY(-2px); border-color: var(--c-border-strong);
-    }
-    .veh-btn-info {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff;
-        box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
-    }
-    .veh-btn-info:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5); }
-    .veh-btn-success {
-        background: linear-gradient(135deg, #10b981, #059669); color: #fff;
-        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
-    }
-    .veh-btn-success:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5); }
-
-    /* INPUTS */
-    .veh-input, .veh-select {
-        padding: 10px 16px; border-radius: 10px;
-        border: 1px solid var(--c-border-mid);
-        background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
-        color: var(--c-text-1); font-family: var(--font);
-        font-size: 12px; font-weight: 600;
-        transition: all var(--transition); cursor: pointer;
-    }
-    .veh-input { flex: 1; min-width: 240px; cursor: text; }
-    .veh-input:focus, .veh-select:focus {
-        outline: none; border-color: var(--c-gold-2);
-        box-shadow: 0 0 0 3px var(--c-gold-glow);
-    }
-    .veh-input::placeholder { color: var(--c-text-4); }
-    .veh-select option, .veh-select optgroup { background: #0a1020; color: var(--c-text-1); padding: 8px; }
-    .veh-select optgroup { font-weight: 700; color: var(--c-gold-1); }
-
-    /* AUTO TOGGLE */
-    .veh-auto-toggle {
-        display: inline-flex; align-items: center; gap: 10px; padding: 9px 16px;
-        background: linear-gradient(135deg, rgba(148, 163, 184, 0.06), rgba(148, 163, 184, 0.02));
-        border: 1px solid var(--c-border-mid); border-radius: 10px;
-        cursor: pointer; font-size: 12px; font-weight: 700;
-        color: var(--c-text-3); transition: all var(--transition);
-        user-select: none; white-space: nowrap;
-    }
-    .veh-auto-toggle:hover {
-        background: rgba(148, 163, 184, 0.12); color: var(--c-text-1);
-        border-color: var(--c-border-strong);
-    }
-    .veh-auto-toggle input { display: none; }
-    .veh-auto-toggle .toggle-dot {
-        width: 34px; height: 19px; background: rgba(148, 163, 184, 0.2);
-        border-radius: 11px; position: relative; transition: var(--transition); flex-shrink: 0;
-    }
-    .veh-auto-toggle .toggle-dot::before {
-        content: ''; position: absolute; top: 2px; right: 2px;
-        width: 15px; height: 15px; background: #fff; border-radius: 50%;
-        transition: var(--transition); box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    .veh-auto-toggle input:checked ~ .toggle-dot {
-        background: var(--c-emerald-1); box-shadow: 0 0 12px rgba(110, 231, 183, 0.6);
-    }
-    .veh-auto-toggle input:checked ~ .toggle-dot::before { right: calc(100% - 17px); }
-    .veh-auto-toggle input:checked ~ .toggle-label { color: var(--c-emerald-1); }
-
-    /* STATS */
-    .veh-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
-    .veh-stat {
-        background: linear-gradient(135deg, rgba(24, 34, 56, 0.85) 0%, rgba(18, 26, 44, 0.95) 100%);
-        backdrop-filter: blur(20px) saturate(160%);
-        -webkit-backdrop-filter: blur(20px) saturate(160%);
-        border: 1px solid var(--c-border-soft); border-radius: var(--radius);
-        padding: 22px 16px 18px; text-align: center;
-        transition: all var(--transition); position: relative; overflow: hidden;
-        min-width: 0; min-height: 110px;
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.25);
-        color: var(--c-gold-1);
-    }
-    .veh-stat::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-        background: linear-gradient(90deg, transparent 0%, currentColor 50%, transparent 100%);
-        filter: drop-shadow(0 0 8px currentColor);
-    }
-    .veh-stat::after {
-        content: ''; position: absolute; top: -50%; right: -50%;
-        width: 200%; height: 200%;
-        background: radial-gradient(circle, currentColor 0%, transparent 40%);
-        opacity: 0.06; pointer-events: none;
-    }
-    .veh-stat:hover {
-        transform: translateY(-5px); border-color: var(--c-border-strong);
-        box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 20px 48px rgba(0,0,0,0.45), 0 0 40px currentColor;
-    }
-    .veh-stat:hover::after { opacity: 0.15; }
-    .veh-stat.stat-valid  { color: var(--c-emerald-1); }
-    .veh-stat.stat-maint  { color: var(--c-amber-1); }
-    .veh-stat.stat-broken { color: var(--c-red-1); }
-    .veh-stat.stat-eff    { color: var(--c-cyan-1); }
-    .veh-stat .number {
-        font-size: 30px; font-weight: 900; line-height: 1;
-        color: currentColor;
-        text-shadow: 0 0 24px currentColor, 0 0 8px currentColor;
-        letter-spacing: -1px; position: relative; z-index: 1;
-        white-space: nowrap; margin-bottom: 8px;
-        font-variant-numeric: tabular-nums;
-    }
-    .veh-stat .label {
-        font-size: 11px; color: rgba(203, 213, 225, 0.75); font-weight: 700;
-        position: relative; z-index: 1; line-height: 1.3;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-    }
-
-    /* FILTER BAR */
-    .veh-actions {
-        display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px;
-        padding: 16px 20px;
-        background: linear-gradient(135deg, rgba(18, 26, 44, 0.6) 0%, rgba(24, 34, 56, 0.5) 100%);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--c-border-soft); border-radius: var(--radius);
-        margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset;
-    }
-    .veh-actions > .veh-input, .veh-actions > .veh-select { min-width: 160px; }
-    .veh-actions > .veh-input { min-width: 260px; }
-
-    /* TABLE */
-    .veh-table-wrap {
-        background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
-        backdrop-filter: blur(20px) saturate(160%);
-        -webkit-backdrop-filter: blur(20px) saturate(160%);
-        border: 1px solid var(--c-border-soft); border-radius: var(--radius);
-        overflow: hidden; overflow-x: auto;
-        box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
-        transition: all var(--transition);
-    }
-    .veh-table-wrap:hover {
-        border-color: var(--c-border-mid);
-        box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 16px 48px rgba(0,0,0,0.4);
-    }
-    .veh-table-head, .veh-table-row {
-        display: grid;
-        grid-template-columns: 50px 60px 110px 190px 150px 1fr 130px 130px 120px 100px 110px 120px 130px 1fr 100px;
-        gap: 8px; padding: 15px 22px; align-items: center;
-        font-size: 13px; min-width: 2150px;
-    }
-    .veh-table-head {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%);
-        font-size: 10.5px; font-weight: 800; color: #cbd5e1;
-        letter-spacing: 1px; text-transform: uppercase;
-        position: sticky; top: 0; z-index: 2;
-        backdrop-filter: blur(20px);
-        border-bottom: 2px solid var(--c-gold-2);
-        box-shadow: 0 4px 20px rgba(230, 179, 30, 0.25);
-    }
-    .veh-table-head .veh-cell { color: #cbd5e1; font-weight: 800; }
-    .veh-table-row {
-        border-bottom: 1px solid rgba(148, 163, 184, 0.06);
-        transition: all var(--transition); background: transparent;
-    }
-    .veh-table-row:nth-child(even) { background: rgba(148, 163, 184, 0.02); }
-    .veh-table-row:hover { background: rgba(247, 215, 116, 0.05); }
-    .veh-table-row:last-child { border-bottom: none; }
-    .veh-cell {
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        color: var(--c-text-2); font-weight: 600;
-    }
-    .veh-cell.center { text-align: center; }
-
-    /* BADGES */
-    .veh-badge {
-        display: inline-block; padding: 4px 12px; border-radius: 8px;
-        font-size: 11px; font-weight: 800; letter-spacing: 0.3px;
-        transition: var(--transition); white-space: nowrap;
-    }
-    .veh-badge.type    { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
-    .veh-badge.brand   { background: rgba(230,179,30,0.15); color: var(--c-gold-1); border: 1px solid rgba(230,179,30,0.25); }
-    .veh-badge.model   { background: rgba(148,163,184,0.08); color: var(--c-text-3); font-size: 10px; }
-    .veh-badge.year    { background: rgba(16,185,129,0.12); color: var(--c-emerald-1); font-size: 10px; }
-    .veh-badge.region  { background: rgba(230,179,30,0.15); color: var(--c-gold-1); font-size: 10px; border: 1px solid rgba(230,179,30,0.2); }
-    .veh-badge.center  { background: rgba(139,92,246,0.15); color: var(--c-purple-1); font-size: 10px; border: 1px solid rgba(139,92,246,0.25); }
-    .veh-badge.supp    { background: rgba(236,72,153,0.15); color: var(--c-pink-1); font-size: 10px; border: 1px solid rgba(236,72,153,0.25); }
-    .veh-badge.zone    { background: rgba(16,185,129,0.15); color: var(--c-emerald-1); font-size: 10px; border: 1px solid rgba(16,185,129,0.25); }
-    .veh-badge.status-صالحة {
-        background: linear-gradient(135deg, #059669, #10b981); color: #fff;
-        border: 1px solid var(--c-emerald-1); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
-    }
-    .veh-badge.status-معطبة {
-        background: linear-gradient(135deg, #b91c1c, #ef4444); color: #fff;
-        border: 1px solid var(--c-red-1); box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
-    }
-    .veh-badge.status-صيانة {
-        background: linear-gradient(135deg, #b45309, #f59e0b); color: #fff;
-        border: 1px solid var(--c-amber-1); box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
-    }
-    .veh-badge.status-طرح {
-        background: linear-gradient(135deg, #1e293b, #334155); color: #fff;
-        border: 1px solid rgba(148,163,184,0.5); box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-    }
-    .veh-badge.cond-جديدة { background: rgba(6,182,212,0.2); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
-    .veh-badge.cond-متوسطة { background: rgba(245,158,11,0.2); color: var(--c-amber-1); border: 1px solid rgba(245,158,11,0.3); }
-    .veh-badge.cond-قديمة { background: rgba(100,116,139,0.2); color: #cbd5e1; border: 1px solid rgba(100,116,139,0.3); }
-    .veh-plate {
-        font-family: 'Courier New', monospace; font-weight: 900; color: var(--c-gold-1);
-        letter-spacing: 1.5px;
-        background: linear-gradient(135deg, rgba(247,215,116,0.12), rgba(247,215,116,0.06));
-        border: 1px solid rgba(247,215,116,0.3); padding: 5px 12px;
-        border-radius: 8px; display: inline-block; font-size: 12px;
-        box-shadow: 0 0 16px rgba(247, 215, 116, 0.15);
-    }
-
-    /* ACTION BTNS */
-    .veh-action-btn {
-        width: 34px; height: 34px; border: none; border-radius: 10px; cursor: pointer;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: 13px; transition: all var(--transition); margin: 0 3px;
-        position: relative; overflow: hidden;
-    }
-    .veh-action-btn::before {
-        content: ''; position: absolute; inset: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
-        opacity: 0; transition: opacity 0.3s; pointer-events: none;
-    }
-    .veh-action-btn:hover::before { opacity: 1; }
-    .veh-action-btn.edit {
-        background: rgba(59,130,246,0.15); color: #93c5fd;
-        border: 1px solid rgba(59,130,246,0.25);
-    }
-    .veh-action-btn.edit:hover {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff;
-        transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 16px rgba(59,130,246,0.45);
-    }
-    .veh-action-btn.delete {
-        background: rgba(239,68,68,0.15); color: var(--c-red-1);
-        border: 1px solid rgba(239,68,68,0.25);
-    }
-    .veh-action-btn.delete:hover {
-        background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;
-        transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 16px rgba(239,68,68,0.45);
-    }
-
-    /* EMPTY */
-    .veh-empty { padding: 80px 24px; text-align: center; color: var(--c-text-4); }
-    .veh-empty i {
-        font-size: 56px; margin-bottom: 20px; opacity: 0.5;
-        color: var(--c-gold-2); display: block;
-        filter: drop-shadow(0 0 20px var(--c-gold-glow));
-    }
-    .veh-empty p { font-size: 14px; font-weight: 700; color: var(--c-text-3); }
-
-    /* MODAL */
-    .veh-modal {
-        position: fixed; inset: 0;
-        background: rgba(2,4,12,0.85);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        z-index: 99999; display: none; align-items: center; justify-content: center;
-        padding: 20px; animation: vehModalBgIn 0.25s ease-out;
-    }
-    @keyframes vehModalBgIn { from { opacity: 0; } to { opacity: 1; } }
-    .veh-modal.active { display: flex; }
-    .veh-modal-box {
-        background: linear-gradient(135deg, rgba(24, 34, 56, 0.98) 0%, rgba(15, 20, 32, 0.99) 100%);
-        backdrop-filter: blur(24px);
-        border: 1px solid rgba(230, 179, 30, 0.3); border-radius: 20px;
-        padding: 28px 32px; width: 100%; max-width: 720px;
-        max-height: 90vh; overflow-y: auto;
-        box-shadow: 0 32px 80px rgba(0,0,0,0.85), 0 0 60px rgba(230, 179, 30, 0.1);
-        animation: vehModalBoxIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    @keyframes vehModalBoxIn {
-        from { transform: scale(0.9) translateY(20px); opacity: 0; }
-        to { transform: scale(1) translateY(0); opacity: 1; }
-    }
-    .veh-modal-head {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 22px; padding-bottom: 18px;
-        border-bottom: 1px solid var(--c-border-soft); position: relative;
-    }
-    .veh-modal-head::after {
-        content: ''; position: absolute; bottom: -1px; right: 0;
-        width: 120px; height: 2px;
-        background: linear-gradient(90deg, transparent, var(--c-gold-2));
-        box-shadow: 0 0 12px var(--c-gold-glow);
-    }
-    .veh-modal-head h3 {
-        font-size: 19px; font-weight: 800; color: var(--c-text-1);
-        display: flex; align-items: center; gap: 10px; margin: 0;
-    }
-    .veh-modal-head h3 i { color: var(--c-gold-2); filter: drop-shadow(0 0 10px var(--c-gold-glow)); }
-    .veh-modal-close {
-        background: rgba(148, 163, 184, 0.08); border: 1px solid var(--c-border-mid);
-        color: var(--c-text-3); width: 38px; height: 38px; border-radius: 12px;
-        cursor: pointer; font-size: 22px;
-        display: flex; align-items: center; justify-content: center;
-        transition: all var(--transition); line-height: 1;
-    }
-    .veh-modal-close:hover {
-        background: rgba(239, 68, 68, 0.2); color: var(--c-red-1);
-        border-color: rgba(239, 68, 68, 0.4); transform: rotate(90deg);
-    }
-    .veh-form-group { margin-bottom: 18px; }
-    .veh-form-group label {
-        display: block; font-size: 11px; font-weight: 700;
-        color: var(--c-text-3); margin-bottom: 8px;
-        letter-spacing: 0.5px; text-transform: uppercase;
-    }
-    .veh-form-group label .req { color: var(--c-red-1); }
-    .veh-form-control {
-        width: 100%; padding: 12px 16px;
-        background: linear-gradient(135deg, rgba(10, 16, 32, 0.7) 0%, rgba(18, 26, 44, 0.5) 100%);
-        border: 1px solid var(--c-border-mid); border-radius: 12px;
-        color: var(--c-text-1); font-family: var(--font);
-        font-size: 13px; font-weight: 600; transition: all var(--transition);
-    }
-    .veh-form-control:focus {
-        outline: none; border-color: var(--c-gold-2);
-        background: rgba(10, 16, 32, 0.85);
-        box-shadow: 0 0 0 3px var(--c-gold-glow);
-    }
-    .veh-form-control:disabled { opacity: 0.4; cursor: not-allowed; }
-    .veh-form-control option, .veh-form-control optgroup { background: #0a1020; color: var(--c-text-1); }
-    textarea.veh-form-control { resize: vertical; min-height: 80px; font-family: var(--font); }
-    .veh-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .veh-form-row.three { grid-template-columns: 1fr 1fr 1fr; }
-    .veh-modal-actions {
-        display: flex; gap: 12px; margin-top: 26px; padding-top: 20px;
-        border-top: 1px solid var(--c-border-soft);
-    }
-    .veh-modal-actions .veh-btn { flex: 1; justify-content: center; padding: 13px; }
-
-    /* TOAST */
-    .veh-toast {
-        position: fixed; bottom: 28px; left: 28px; z-index: 999999;
-        max-width: 400px; display: flex; align-items: center; gap: 12px;
-        padding: 14px 22px; border-radius: 14px; color: #fff;
-        font-family: var(--font); font-size: 13px; font-weight: 700;
-        backdrop-filter: blur(20px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-        animation: vehToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        direction: rtl;
-    }
-    .veh-toast.success {
-        background: linear-gradient(135deg, rgba(16,185,129,0.95), rgba(5,150,105,0.9));
-        border: 1px solid rgba(110, 231, 183, 0.5);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(16,185,129,0.3);
-    }
-    .veh-toast.error {
-        background: linear-gradient(135deg, rgba(239,68,68,0.95), rgba(185,28,28,0.9));
-        border: 1px solid rgba(252, 165, 165, 0.5);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(239,68,68,0.3);
-    }
-    .veh-toast.info {
-        background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(29,78,216,0.9));
-        border: 1px solid rgba(147, 197, 253, 0.5);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(59,130,246,0.3);
-    }
-    @keyframes vehToastIn {
-        from { opacity: 0; transform: translateY(20px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    /* SCROLL NAV */
-    .veh-scroll-nav {
-        position: fixed; right: 24px; bottom: 100px;
-        display: flex; flex-direction: column; gap: 10px;
-        z-index: 9998; opacity: 0; visibility: hidden;
-        transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
-        pointer-events: none; transform: translateY(10px);
-    }
-    .veh-scroll-nav.visible { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0); }
-    .veh-scroll-nav-btn {
-        width: 48px; height: 48px; border-radius: 14px;
-        border: 1px solid var(--c-border-mid);
-        background: linear-gradient(135deg, rgba(24, 34, 56, 0.95) 0%, rgba(18, 26, 44, 0.98) 100%);
-        backdrop-filter: blur(20px) saturate(160%);
-        -webkit-backdrop-filter: blur(20px) saturate(160%);
-        color: var(--c-gold-2); font-size: 18px; cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
-        position: relative; overflow: hidden; padding: 0;
-    }
-    .veh-scroll-nav-btn::before {
-        content: ''; position: absolute; inset: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
-        opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
-    }
-    .veh-scroll-nav-btn:hover {
-        transform: translateY(-3px) scale(1.05);
-        border-color: var(--c-gold-2); color: #060911;
-        background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        box-shadow: 0 12px 32px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.15) inset;
-    }
-    .veh-scroll-nav-btn:hover::before { opacity: 1; }
-    .veh-scroll-nav-btn:active { transform: translateY(-1px) scale(0.98); }
-    .veh-scroll-nav-btn i { position: relative; z-index: 1; pointer-events: none; }
-
-    /* ============ IMAGES SYSTEM ============ */
-    .veh-thumb-wrapper { position: relative; display: inline-block; cursor: pointer; line-height: 0; }
-    .veh-thumb-img {
-        width: 46px; height: 46px; border-radius: 10px; object-fit: cover;
-        border: 2px solid var(--c-border-mid);
-        background: linear-gradient(135deg, rgba(10,16,32,.8), rgba(18,26,44,.6));
-        transition: all .3s cubic-bezier(.4,0,.2,1); display: block;
-    }
-    .veh-thumb-wrapper:hover .veh-thumb-img {
-        transform: scale(1.18); border-color: var(--c-gold-2);
-        box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 2px rgba(247,215,116,.3);
-    }
-    .veh-thumb-count {
-        position: absolute; bottom: -4px; left: -4px;
-        background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        color: #060911; font-size: 10px; font-weight: 900;
-        padding: 2px 7px; border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,.4), 0 0 12px var(--c-gold-glow);
-        pointer-events: none; letter-spacing: -.3px;
-    }
-    .veh-thumb-camera {
-        position: absolute; top: -4px; right: -4px;
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: #fff; font-size: 8px; padding: 2px 4px;
-        border-radius: 8px; box-shadow: 0 2px 8px rgba(16,185,129,.5);
-        pointer-events: none; line-height: 1;
-    }
-    .veh-no-image {
-        width: 46px; height: 46px; border-radius: 10px;
-        border: 2px dashed rgba(148,163,184,.25);
-        background: linear-gradient(135deg, rgba(10,16,32,.5), rgba(18,26,44,.3));
-        display: flex; align-items: center; justify-content: center;
-        color: var(--c-text-4); font-size: 16px; cursor: pointer;
-        transition: all .25s; margin: 0 auto;
-    }
-    .veh-no-image:hover {
-        border-color: var(--c-gold-2); color: var(--c-gold-1);
-        background: rgba(230,179,30,.08); transform: scale(1.1);
-        box-shadow: 0 4px 16px var(--c-gold-glow);
-    }
-    .veh-images-section {
-        margin-top: 20px; padding-top: 18px;
-        border-top: 1px dashed var(--c-border-mid);
-    }
-    .veh-images-title {
-        font-size: 12px; font-weight: 800; color: var(--c-gold-1);
-        margin: 0 0 14px 0; letter-spacing: .5px;
-        display: flex; align-items: center; gap: 8px; text-transform: uppercase;
-    }
-    .veh-images-title i { filter: drop-shadow(0 0 8px var(--c-gold-glow)); }
-    .veh-upload-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-    .veh-upload-btn {
-        display: flex; flex-direction: column; align-items: center; gap: 6px;
-        padding: 14px 8px; border: 2px solid var(--c-border-mid); border-radius: 12px;
-        background: linear-gradient(135deg, rgba(10,16,32,.6), rgba(18,26,44,.4));
-        color: var(--c-text-2); font-family: var(--font); font-size: 11px; font-weight: 700;
-        cursor: pointer; transition: all .3s cubic-bezier(.4,0,.2,1);
-        position: relative; overflow: hidden;
-    }
-    .veh-upload-btn::before {
-        content: ''; position: absolute; inset: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,.08) 0%, transparent 50%);
-        pointer-events: none;
-    }
-    .veh-upload-btn:hover {
-        border-color: var(--c-gold-2); color: var(--c-gold-1);
-        background: rgba(230,179,30,.08); transform: translateY(-3px);
-        box-shadow: 0 8px 24px rgba(0,0,0,.4), 0 0 24px var(--c-gold-glow);
-    }
-    .veh-upload-btn.camera:hover {
-        border-color: var(--c-emerald-1); color: var(--c-emerald-1);
-        background: rgba(16,185,129,.08);
-        box-shadow: 0 8px 24px rgba(0,0,0,.4), 0 0 24px rgba(16,185,129,.3);
-    }
-    .veh-upload-btn.url:hover {
-        border-color: var(--c-cyan-1); color: var(--c-cyan-1);
-        background: rgba(6,182,212,.08);
-        box-shadow: 0 8px 24px rgba(0,0,0,.4), 0 0 24px rgba(6,182,212,.3);
-    }
-    .veh-upload-btn .icon { font-size: 22px; line-height: 1; }
-    .veh-dropzone {
-        border: 2px dashed var(--c-border-mid); border-radius: 12px;
-        padding: 22px 16px; text-align: center; cursor: pointer;
-        transition: all .3s;
-        background: linear-gradient(135deg, rgba(10,16,32,.4), rgba(18,26,44,.3));
-        margin-bottom: 14px;
-    }
-    .veh-dropzone:hover, .veh-dropzone.dragover {
-        border-color: var(--c-gold-2); background: rgba(230,179,30,.08); transform: scale(1.01);
-    }
-    .veh-dropzone .dz-icon {
-        font-size: 28px; margin-bottom: 8px; display: block;
-        filter: drop-shadow(0 0 12px var(--c-gold-glow));
-    }
-    .veh-dropzone p { margin: 4px 0; color: var(--c-text-3); font-size: 12px; font-weight: 600; }
-    .veh-dropzone small { color: var(--c-text-4); font-size: 10px; }
-    .veh-dropzone b { color: var(--c-gold-1); }
-    .veh-images-grid {
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-        gap: 10px; margin: 12px 0;
-    }
-    .veh-image-card {
-        position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1;
-        border: 2px solid var(--c-border-mid);
-        background: linear-gradient(135deg, rgba(10,16,32,.6), rgba(18,26,44,.4));
-        transition: all .25s;
-    }
-    .veh-image-card:hover {
-        border-color: var(--c-gold-2);
-        box-shadow: 0 8px 20px rgba(0,0,0,.4); transform: translateY(-2px);
-    }
-    .veh-image-card img {
-        width: 100%; height: 100%; object-fit: cover; display: block;
-        cursor: pointer; transition: transform .4s;
-    }
-    .veh-image-card:hover img { transform: scale(1.08); }
-    .veh-image-actions {
-        position: absolute; inset: 0;
-        background: linear-gradient(to top, rgba(0,0,0,.75) 0%, transparent 50%);
-        display: flex; align-items: flex-end; justify-content: center;
-        gap: 6px; padding: 8px; opacity: 0; transition: opacity .25s;
-    }
-    .veh-image-card:hover .veh-image-actions { opacity: 1; }
-    .veh-image-actions button {
-        width: 30px; height: 30px; border-radius: 8px;
-        border: 1px solid rgba(255,255,255,.2);
-        background: rgba(255,255,255,.15);
-        backdrop-filter: blur(10px); color: #fff; font-size: 13px;
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: all .2s;
-    }
-    .veh-image-actions button:hover {
-        background: var(--c-gold-2); color: #060911;
-        transform: scale(1.15); border-color: var(--c-gold-1);
-    }
-    .veh-image-actions button.del:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
-    .veh-image-card.is-primary {
-        border-color: var(--c-gold-2);
-        box-shadow: 0 0 0 2px var(--c-gold-glow), 0 8px 24px rgba(230,179,30,.3);
-    }
-    .veh-image-card.is-primary::before {
-        content: '⭐ رئيسية';
-        position: absolute; top: 4px; right: 4px;
-        background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        color: #060911; font-size: 9px; font-weight: 800;
-        padding: 3px 7px; border-radius: 8px; z-index: 2;
-        box-shadow: 0 4px 12px rgba(0,0,0,.4); letter-spacing: -.2px;
-    }
-    .veh-image-card .src-badge {
-        position: absolute; bottom: 4px; right: 4px;
-        background: rgba(16,185,129,.9); color: #fff;
-        font-size: 9px; padding: 2px 5px; border-radius: 6px; z-index: 2; font-weight: 700;
-    }
-
-    /* CAMERA MODAL */
-    .veh-camera-modal {
-        position: fixed; inset: 0; background: rgba(0,0,0,.96);
-        backdrop-filter: blur(12px); z-index: 100001;
-        display: none; align-items: center; justify-content: center;
-        padding: 16px; animation: vehModalBgIn .25s ease-out;
-    }
-    .veh-camera-modal.active { display: flex; }
-    .veh-camera-box {
-        width: 100%; max-width: 720px;
-        background: linear-gradient(135deg, #0a1020 0%, #1a2030 100%);
-        border: 1px solid rgba(230,179,30,.3); border-radius: 20px;
-        overflow: hidden; display: flex; flex-direction: column;
-        box-shadow: 0 32px 80px rgba(0,0,0,.9), 0 0 60px rgba(230,179,30,.15);
-    }
-    .veh-camera-head {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 14px 20px; background: rgba(15,23,42,.9);
-        border-bottom: 1px solid var(--c-border-mid);
-    }
-    .veh-camera-head h3 {
-        margin: 0; font-size: 15px; font-weight: 800;
-        color: var(--c-gold-1); display: flex; align-items: center; gap: 8px;
-    }
-    .veh-camera-close {
-        background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3);
-        color: var(--c-red-1); width: 36px; height: 36px; border-radius: 10px;
-        cursor: pointer; font-size: 18px; transition: all .25s;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .veh-camera-close:hover { background: #ef4444; color: #fff; transform: rotate(90deg); }
-    .veh-camera-stage {
-        position: relative; background: #000; aspect-ratio: 4/3;
-        display: flex; align-items: center; justify-content: center; overflow: hidden;
-    }
-    #vehCameraVideo { width: 100%; height: 100%; object-fit: cover; }
-    .veh-camera-flash {
-        position: absolute; inset: 0; background: #fff; opacity: 0;
-        pointer-events: none; animation: vehFlash .35s ease-out;
-    }
-    @keyframes vehFlash { 0% { opacity: 0; } 30% { opacity: .9; } 100% { opacity: 0; } }
-    .veh-camera-controls {
-        display: flex; align-items: center; justify-content: center;
-        gap: 24px; padding: 18px; background: rgba(15,23,42,.9);
-    }
-    .veh-cam-btn {
-        width: 52px; height: 52px; border-radius: 50%;
-        background: rgba(148,163,184,.1);
-        border: 2px solid var(--c-border-strong);
-        color: #fff; font-size: 20px; cursor: pointer;
-        transition: all .25s; display: flex; align-items: center; justify-content: center;
-    }
-    .veh-cam-btn:hover {
-        background: var(--c-gold-2); color: #060911;
-        border-color: var(--c-gold-1); transform: scale(1.1);
-        box-shadow: 0 8px 24px var(--c-gold-glow);
-    }
-    .veh-capture-btn {
-        width: 74px !important; height: 74px !important;
-        background: #fff !important; border: 4px solid var(--c-gold-2) !important;
-        padding: 0; position: relative;
-    }
-    .veh-capture-inner {
-        width: 52px; height: 52px; border-radius: 50%;
-        background: linear-gradient(135deg, #ef4444, #b91c1c);
-        transition: transform .15s; box-shadow: 0 0 20px rgba(239,68,68,.5);
-    }
-    .veh-capture-btn:active .veh-capture-inner { transform: scale(.85); }
-    .veh-capture-btn:hover {
-        transform: scale(1.05) !important;
-        box-shadow: 0 8px 32px rgba(247,215,116,.6) !important;
-    }
-    .veh-camera-hint {
-        text-align: center; color: var(--c-text-3); font-size: 11px;
-        padding: 10px 20px 16px; background: rgba(15,23,42,.9);
-        border-top: 1px solid var(--c-border-soft);
-    }
-
-    /* URL MODAL */
-    .veh-url-modal {
-        position: fixed; inset: 0; background: rgba(2,4,12,.85);
-        backdrop-filter: blur(12px); z-index: 100001;
-        display: none; align-items: center; justify-content: center;
-        padding: 20px; animation: vehModalBgIn .25s ease-out;
-    }
-    .veh-url-modal.active { display: flex; }
-    .veh-url-box {
-        background: linear-gradient(135deg, rgba(24,34,56,.98), rgba(15,20,32,.99));
-        border: 1px solid rgba(6,182,212,.3); border-radius: 20px;
-        width: 100%; max-width: 500px; overflow: hidden;
-        box-shadow: 0 32px 80px rgba(0,0,0,.85), 0 0 60px rgba(6,182,212,.1);
-    }
-    .veh-url-head {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 16px 22px; background: linear-gradient(135deg, #0891b2, #0e7490);
-    }
-    .veh-url-head h3 {
-        margin: 0; font-size: 15px; color: #fff;
-        display: flex; align-items: center; gap: 8px; font-weight: 800;
-    }
-    .veh-url-close {
-        background: rgba(255,255,255,.15); border: none; color: #fff;
-        width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
-        font-size: 18px; transition: all .25s;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .veh-url-close:hover { background: rgba(255,255,255,.3); transform: rotate(90deg); }
-    .veh-url-body { padding: 20px 22px; }
-    .veh-url-body label {
-        display: block; font-size: 11px; font-weight: 800;
-        color: var(--c-text-3); margin: 12px 0 6px;
-        letter-spacing: .5px; text-transform: uppercase;
-    }
-    .veh-url-body label:first-child { margin-top: 0; }
-    .veh-url-body input {
-        width: 100%; padding: 12px 16px;
-        background: linear-gradient(135deg, rgba(10,16,32,.7), rgba(18,26,44,.5));
-        border: 1px solid var(--c-border-mid); border-radius: 10px;
-        color: var(--c-text-1); font-family: var(--font);
-        font-size: 13px; font-weight: 600; transition: all .25s;
-    }
-    .veh-url-body input:focus {
-        outline: none; border-color: var(--c-cyan-1);
-        box-shadow: 0 0 0 3px rgba(6,182,212,.2);
-    }
-    .veh-url-preview {
-        margin: 16px 0; min-height: 0; text-align: center;
-    }
-    .veh-url-preview img {
-        max-width: 100%; max-height: 200px; border-radius: 10px;
-        border: 2px solid var(--c-border-mid);
-        box-shadow: 0 8px 24px rgba(0,0,0,.3);
-    }
-    .veh-url-actions { display: flex; gap: 10px; margin-top: 16px; }
-    .veh-url-actions button {
-        flex: 1; padding: 12px; border: none; border-radius: 10px;
-        font-family: var(--font); font-size: 13px; font-weight: 700;
-        cursor: pointer; transition: all .25s;
-    }
-    .veh-url-actions .btn-preview {
-        background: rgba(148,163,184,.15); color: var(--c-text-2);
-        border: 1px solid var(--c-border-mid);
-    }
-    .veh-url-actions .btn-preview:hover { background: rgba(148,163,184,.25); color: var(--c-text-1); }
-    .veh-url-actions .btn-add {
-        background: linear-gradient(135deg, #0891b2, #0e7490); color: #fff;
-        box-shadow: 0 8px 24px rgba(6,182,212,.3);
-    }
-    .veh-url-actions .btn-add:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 32px rgba(6,182,212,.5);
-    }
-
-    /* LIGHTBOX */
-    .veh-gallery {
-        position: fixed; inset: 0; background: rgba(2,4,12,.97);
-        backdrop-filter: blur(16px); z-index: 100002;
-        display: none; align-items: center; justify-content: center;
-        opacity: 0; transition: opacity .3s;
-    }
-    .veh-gallery.active { display: flex; opacity: 1; }
-    .veh-gallery-stage {
-        position: relative; max-width: 90vw; max-height: 80vh;
-        display: flex; align-items: center; justify-content: center; overflow: hidden;
-    }
-    #vehGalleryImage {
-        max-width: 90vw; max-height: 80vh; object-fit: contain;
-        border-radius: 14px;
-        box-shadow: 0 32px 80px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.05);
-        transition: transform .3s ease;
-        user-select: none; -webkit-user-drag: none;
-    }
-    .veh-gallery-caption {
-        position: absolute; bottom: 20px; left: 50%;
-        transform: translateX(-50%); color: #e2e8f0; font-size: 13px;
-        background: rgba(0,0,0,.7); backdrop-filter: blur(10px);
-        padding: 8px 20px; border-radius: 20px;
-        white-space: nowrap; max-width: 80vw;
-        overflow: hidden; text-overflow: ellipsis;
-        border: 1px solid rgba(255,255,255,.1);
-    }
-    .veh-gallery-close {
-        position: absolute; top: 20px; right: 20px;
-        width: 50px; height: 50px; border-radius: 14px;
-        background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3);
-        color: var(--c-red-1); font-size: 24px; cursor: pointer;
-        transition: all .3s;
-        display: flex; align-items: center; justify-content: center; z-index: 10;
-    }
-    .veh-gallery-close:hover {
-        background: #ef4444; color: #fff;
-        transform: rotate(90deg) scale(1.1);
-        box-shadow: 0 8px 32px rgba(239,68,68,.5);
-    }
-    .veh-gallery-counter {
-        position: absolute; top: 20px; left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0,0,0,.6); backdrop-filter: blur(10px);
-        color: var(--c-gold-1); padding: 8px 20px; border-radius: 20px;
-        font-size: 13px; font-weight: 800; letter-spacing: 1px;
-        border: 1px solid rgba(247,215,116,.3); z-index: 10;
-    }
-    .veh-gallery-nav {
-        position: absolute; top: 50%; transform: translateY(-50%);
-        width: 58px; height: 58px; border-radius: 50%;
-        background: rgba(255,255,255,.08);
-        border: 1px solid rgba(255,255,255,.15);
-        color: #fff; font-size: 24px; cursor: pointer;
-        transition: all .3s;
-        display: flex; align-items: center; justify-content: center;
-        backdrop-filter: blur(10px); z-index: 10;
-    }
-    .veh-gallery-nav:hover {
-        background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        color: #060911; transform: translateY(-50%) scale(1.15);
-        box-shadow: 0 12px 32px var(--c-gold-glow);
-        border-color: var(--c-gold-1);
-    }
-    .veh-gallery-prev { right: 24px; }
-    .veh-gallery-next { left: 24px; }
-    .veh-gallery-toolbar {
-        position: absolute; bottom: 110px; left: 50%;
-        transform: translateX(-50%);
-        display: flex; gap: 8px;
-        background: rgba(0,0,0,.6); backdrop-filter: blur(12px);
-        padding: 8px; border-radius: 30px;
-        border: 1px solid rgba(255,255,255,.1); z-index: 10;
-    }
-    .veh-gallery-toolbar button {
-        width: 42px; height: 42px; border-radius: 50%;
-        background: rgba(255,255,255,.08); border: none;
-        color: #fff; font-size: 16px; cursor: pointer;
-        transition: all .25s;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .veh-gallery-toolbar button:hover {
-        background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-        color: #060911; transform: scale(1.15);
-        box-shadow: 0 6px 20px var(--c-gold-glow);
-    }
-    .veh-gallery-thumbs {
-        position: absolute; bottom: 20px; left: 50%;
-        transform: translateX(-50%);
-        display: flex; gap: 8px; padding: 8px;
-        background: rgba(0,0,0,.6); backdrop-filter: blur(12px);
-        border-radius: 14px; max-width: 90vw; overflow-x: auto;
-        border: 1px solid rgba(255,255,255,.1);
-        scrollbar-width: thin; z-index: 10;
-    }
-    .veh-gallery-thumbs::-webkit-scrollbar { height: 4px; }
-    .veh-gallery-thumbs::-webkit-scrollbar-thumb { background: var(--c-gold-2); border-radius: 4px; }
-    .veh-gallery-thumb {
-        width: 56px; height: 56px; border-radius: 10px; object-fit: cover;
-        cursor: pointer; border: 2px solid transparent; opacity: .55;
-        transition: all .25s; flex-shrink: 0; background: #0a1020;
-    }
-    .veh-gallery-thumb:hover { opacity: 1; transform: translateY(-4px); }
-    .veh-gallery-thumb.active {
-        border-color: var(--c-gold-2); opacity: 1;
-        box-shadow: 0 0 20px var(--c-gold-glow), 0 0 0 2px rgba(247,215,116,.3);
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 1100px) {
-        .veh-stats { gap: 12px; }
-        .veh-stat { padding: 18px 12px 16px; }
-        .veh-stat .number { font-size: 26px; }
-        .veh-stat .label { font-size: 10.5px; }
-    }
-    @media (max-width: 1024px) {
-        .veh-header { flex-direction: column; align-items: stretch; padding: 16px 20px; }
-        .veh-header .header-actions { width: 100%; justify-content: flex-start; }
-    }
-    @media (max-width: 900px) {
-        .veh-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .veh-stat .number { font-size: 24px; }
-    }
-    @media (max-width: 768px) {
-        .veh-container { padding: 14px 16px 60px; }
-        .veh-header { padding: 14px 18px; }
-        .veh-header .title { font-size: 18px; }
-        .veh-header .title-icon { width: 42px; height: 42px; font-size: 20px; border-radius: 12px; }
-        .veh-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-        .veh-stat { padding: 16px 12px 14px; min-height: 100px; }
-        .veh-stat .number { font-size: 22px; }
-        .veh-actions { padding: 14px; gap: 10px 12px; }
-        .veh-input, .veh-select { min-width: 100%; }
-        .veh-form-row, .veh-form-row.three { grid-template-columns: 1fr; }
-        .veh-modal-box { padding: 22px 18px; }
-        .veh-modal-head h3 { font-size: 16px; }
-        .veh-toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
-        .veh-scroll-nav { right: 16px; bottom: 80px; gap: 8px; }
-        .veh-scroll-nav-btn { width: 42px; height: 42px; font-size: 16px; border-radius: 12px; }
-        .veh-upload-buttons { grid-template-columns: 1fr; }
-        .veh-upload-btn { flex-direction: row; justify-content: center; padding: 12px; }
-        .veh-gallery-nav { width: 46px; height: 46px; font-size: 18px; }
-        .veh-gallery-prev { right: 8px; }
-        .veh-gallery-next { left: 8px; }
-        .veh-gallery-close { top: 10px; right: 10px; width: 42px; height: 42px; }
-        .veh-gallery-thumb { width: 46px; height: 46px; }
-        .veh-gallery-toolbar { bottom: 90px; }
-        .veh-gallery-toolbar button { width: 38px; height: 38px; font-size: 14px; }
-    }
-    @media (max-width: 480px) {
-        .veh-container { padding: 10px 12px 60px; }
-        .veh-header { padding: 14px; }
-        .veh-header .title { font-size: 16px; }
-        .veh-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
-        .veh-stat { padding: 14px 10px; }
-        .veh-stat .number { font-size: 20px; }
-        .veh-stat .label { font-size: 10px; white-space: normal; line-height: 1.3; }
-    }
-
-    /* PRINT */
-    @media print {
-        #page-vehicles { background: #ffffff !important; color: #12121a !important; padding: 0 !important; margin: 0 !important; }
-        #page-vehicles::before { display: none !important; }
-        .veh-header, .veh-actions, .veh-action-btn, .veh-auto-toggle,
-        .veh-modal, .veh-toast, .veh-scroll-nav,
-        .veh-header .header-actions,
-        .veh-images-section, .veh-camera-modal, .veh-url-modal, .veh-gallery {
-            display: none !important; visibility: hidden !important;
-            height: 0 !important; width: 0 !important; opacity: 0 !important; overflow: hidden !important;
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚛 الوسائل البرية</title>
+    <link rel="stylesheet" href="/css/vehicle-images.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #f7fafc;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
         }
-        .veh-container { padding: 0 !important; max-width: 100% !important; }
-        .veh-stats {
-            display: grid !important; grid-template-columns: repeat(5, 1fr) !important;
-            gap: 0 !important; padding: 4mm 0 !important; margin: 0 0 6mm 0 !important;
-            background: none !important; border: none !important;
-            border-top: 1pt solid #12121a !important; border-bottom: 1pt solid #12121a !important;
-            border-radius: 0 !important; backdrop-filter: none !important;
-        }
-        .veh-stat {
-            background: none !important; border: none !important;
-            padding: 0 2mm !important; text-align: center !important;
-            color: #0a0a12 !important; box-shadow: none !important;
-        }
-        .veh-stat::before, .veh-stat::after { display: none !important; }
-        .veh-stat .number {
-            color: #0a0a12 !important; -webkit-text-fill-color: #0a0a12 !important;
-            text-shadow: none !important; font-size: 16pt !important;
-        }
-        .veh-stat .label {
-            color: #6b6b78 !important; -webkit-text-fill-color: #6b6b78 !important; font-size: 7pt !important;
-        }
-        .veh-stat.stat-valid .number { color: #10b981 !important; -webkit-text-fill-color: #10b981 !important; }
-        .veh-stat.stat-broken .number { color: #ef4444 !important; -webkit-text-fill-color: #ef4444 !important; }
-        .veh-stat.stat-maint .number { color: #f59e0b !important; -webkit-text-fill-color: #f59e0b !important; }
-        .veh-stat.stat-eff .number { color: #06b6d4 !important; -webkit-text-fill-color: #06b6d4 !important; }
-        .veh-table-wrap {
-            background: none !important; border: none !important; border-radius: 0 !important;
-            backdrop-filter: none !important; overflow: visible !important; box-shadow: none !important;
-        }
-        .veh-table-head, .veh-table-row {
-            display: grid !important;
-            grid-template-columns: 20px 0px 110px 80px 90px 70px 70px 70px 50px 50px 60px 60px 1fr 0px !important;
-            gap: 2px !important; padding: 1.3mm 1.3mm !important;
-            align-items: center !important; font-size: 7pt !important;
-            min-width: 0 !important; width: 100% !important;
-            position: static !important; backdrop-filter: none !important;
-            background: none !important; box-shadow: none !important;
-        }
-        .veh-table-head {
-            background: #0a0e1a !important; color: #f7d774 !important;
-            -webkit-text-fill-color: #f7d774 !important;
-            border-top: 1pt solid #0a0e1a !important; border-bottom: 2pt solid #f7d774 !important;
-            font-size: 6pt !important; font-weight: 800 !important;
-        }
-        .veh-table-head .veh-cell { color: #f7d774 !important; -webkit-text-fill-color: #f7d774 !important; font-weight: 900 !important; }
-        .veh-table-row {
-            background: #ffffff !important; color: #23232b !important;
-            border-bottom: 0.5pt solid #cbd5e1 !important;
-            break-inside: avoid !important; page-break-inside: avoid !important;
-        }
-        .veh-table-row:nth-child(even) { background: #f1f5f9 !important; }
-        .veh-table-head .veh-cell:last-child,
-        .veh-table-row .veh-cell:last-child { display: none !important; }
-        .veh-table-head .veh-cell:nth-child(2),
-        .veh-table-row .veh-cell:nth-child(2) { display: none !important; }
-        .veh-cell {
-            color: #23232b !important; -webkit-text-fill-color: #23232b !important;
-            text-align: center !important; word-break: break-word !important;
-            overflow: visible !important; background: none !important;
-        }
-        .veh-table-row .veh-cell:nth-child(13) {
-            color: #dc2626 !important; -webkit-text-fill-color: #dc2626 !important; font-weight: 900 !important;
-        }
-        .veh-badge {
-            display: inline-block !important; padding: 0.4mm 1.8mm !important;
-            border-radius: 3px !important; font-size: 6pt !important; font-weight: 700 !important;
-            border: 0.75pt solid currentColor !important;
-            background: #ffffff !important; white-space: nowrap !important;
-            box-shadow: none !important; color: #23232b !important; -webkit-text-fill-color: #23232b !important;
-        }
-        .veh-badge.status-صالحة {
-            background: #10b981 !important; color: #ffffff !important;
-            -webkit-text-fill-color: #ffffff !important;
-            border: 1pt solid #047857 !important; font-weight: 900 !important;
-        }
-        .veh-badge.status-معطبة {
-            background: #ef4444 !important; color: #ffffff !important;
-            -webkit-text-fill-color: #ffffff !important;
-            border: 1pt solid #b91c1c !important; font-weight: 900 !important;
-        }
-        .veh-badge.status-صيانة {
-            background: #f59e0b !important; color: #ffffff !important;
-            -webkit-text-fill-color: #ffffff !important;
-            border: 1pt solid #b45309 !important; font-weight: 900 !important;
-        }
-        .veh-badge.status-طرح {
-            background: #1e293b !important; color: #ffffff !important;
-            -webkit-text-fill-color: #ffffff !important;
-            border: 1pt solid #0f172a !important; font-weight: 900 !important;
-        }
-        .veh-badge.type { background: #3b82f6 !important; color: #fff !important; -webkit-text-fill-color: #fff !important; border: 1pt solid #1d4ed8 !important; }
-        .veh-badge.brand { background: #fbbf24 !important; color: #1f2937 !important; -webkit-text-fill-color: #1f2937 !important; border: 1pt solid #b45309 !important; }
-        .veh-badge.region { background: #8b5cf6 !important; color: #fff !important; -webkit-text-fill-color: #fff !important; border: 1pt solid #6d28d9 !important; }
-        .veh-badge.center { background: #a78bfa !important; color: #fff !important; -webkit-text-fill-color: #fff !important; border: 1pt solid #7c3aed !important; }
-        .veh-badge.supp { background: #ec4899 !important; color: #fff !important; -webkit-text-fill-color: #fff !important; border: 1pt solid #be185d !important; }
-        .veh-badge.zone { background: #34d399 !important; color: #064e3b !important; -webkit-text-fill-color: #064e3b !important; border: 1pt solid #047857 !important; }
-        .veh-badge.cond-جديدة { background: #06b6d4 !important; color: #fff !important; -webkit-text-fill-color: #fff !important; border: 1pt solid #0e7490 !important; }
-        .veh-badge.cond-متوسطة { background: #f59e0b !important; color: #fff !important; -webkit-text-fill-color: #fff !important; border: 1pt solid #b45309 !important; }
-        .veh-badge.cond-قديمة { background: #64748b !important; color: #fff !important; -webkit-text-fill-color: #fff !important; border: 1pt solid #334155 !important; }
-        .veh-plate {
-            font-family: 'Courier New', monospace !important; font-weight: 900 !important;
-            color: #0a0a12 !important; -webkit-text-fill-color: #0a0a12 !important;
-            background: #fef3c7 !important; border: 1.5pt solid #1a2332 !important;
-            padding: 0.4mm 1.3mm !important; border-radius: 2px !important;
-            font-size: 6.5pt !important; display: inline-block !important; box-shadow: none !important;
-        }
-        .veh-thumb-wrapper, .veh-thumb-img, .veh-no-image { display: none !important; }
-    }
-</style>
+        .container { max-width: 1400px; margin: 0 auto; }
 
-<div class="veh-container">
+        /* Header */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(135deg, #2c5282, #3182ce);
+            color: #fff; padding: 18px 24px;
+            border-radius: 12px; margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(49,130,206,.25);
+        }
+        header h1 { margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; }
+        .header-actions { display: flex; gap: 10px; }
+        .header-actions button {
+            padding: 10px 16px; border: none; border-radius: 8px;
+            background: rgba(255,255,255,.15); color: #fff;
+            font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all .2s;
+        }
+        .header-actions button:hover { background: rgba(255,255,255,.25); transform: translateY(-2px); }
 
-    <!-- HEADER -->
-    <div class="veh-header">
-        <div class="title-section">
-            <div class="title-icon"><i class="fas fa-truck"></i></div>
-            <div class="header-text">
-                <div class="title">الوسائل البرية - الحرس البحري</div>
-                <div class="subtitle">إدارة متقدمة للسيارات والوسائل البرية</div>
-            </div>
-        </div>
+        /* Stats */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px; margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #fff; padding: 18px;
+            border-radius: 12px; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+            border-right: 4px solid #3182ce;
+        }
+        .stat-card .value { font-size: 26px; font-weight: 700; color: #2d3748; }
+        .stat-card .label { font-size: 13px; color: #718096; margin-top: 4px; }
+        .stat-card.green  { border-color: #38a169; }
+        .stat-card.orange { border-color: #dd6b20; }
+        .stat-card.red    { border-color: #e53e3e; }
+        .stat-card.dark   { border-color: #2d3748; }
+
+        /* Filters */
+        .filters {
+            background: #fff; padding: 16px; border-radius: 12px;
+            margin-bottom: 20px; display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+        }
+        .filters input, .filters select {
+            padding: 10px 12px; border: 2px solid #e2e8f0;
+            border-radius: 8px; font-size: 14px; font-family: inherit;
+            background: #f7fafc; transition: border .2s;
+        }
+        .filters input:focus, .filters select:focus {
+            outline: none; border-color: #3182ce; background: #fff;
+        }
+
+        /* Table */
+        .table-wrap {
+            background: #fff; border-radius: 12px; overflow: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 1400px; }
+        thead { background: #2c5282; color: #fff; }
+        th, td {
+            padding: 12px 10px; text-align: right;
+            font-size: 13px; border-bottom: 1px solid #edf2f7;
+            white-space: nowrap;
+        }
+        th { font-weight: 600; font-size: 13px; }
+        tbody tr:hover { background: #f7fafc; }
+        tbody td:nth-child(2) { width: 60px; }
+
+        .badge {
+            display: inline-block; padding: 4px 10px;
+            border-radius: 12px; font-size: 11px; font-weight: 600;
+        }
+        .badge-success { background: #c6f6d5; color: #22543d; }
+        .badge-warning { background: #fefcbf; color: #744210; }
+        .badge-danger  { background: #fed7d7; color: #742a2a; }
+        .badge-dark    { background: #e2e8f0; color: #2d3748; }
+
+        td button {
+            padding: 6px 10px; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 13px; margin: 0 2px;
+            background: #edf2f7; transition: all .2s;
+        }
+        td button:hover { background: #3182ce; color: #fff; transform: scale(1.05); }
+
+        /* Modal */
+        .modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+            z-index: 9999; display: none;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: #fff; border-radius: 14px;
+            width: 100%; max-width: 700px;
+            max-height: 90vh; overflow-y: auto;
+            padding: 24px;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 12px;
+            border-bottom: 2px solid #edf2f7;
+        }
+        .modal-header h2 { margin: 0; font-size: 18px; }
+        .modal-close {
+            background: none; border: none; font-size: 22px;
+            cursor: pointer; color: #718096;
+        }
+        .modal-close:hover { color: #e53e3e; }
+
+        .form-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 12px; margin-bottom: 16px;
+        }
+        .form-grid.full { grid-template-columns: 1fr; }
+        .form-group label {
+            display: block; margin-bottom: 4px;
+            font-size: 12px; font-weight: 600; color: #4a5568;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%; padding: 9px 12px;
+            border: 2px solid #e2e8f0; border-radius: 8px;
+            font-size: 13px; font-family: inherit;
+            box-sizing: border-box; transition: border .2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none; border-color: #3182ce;
+        }
+        .form-group textarea { min-height: 60px; resize: vertical; }
+
+        .modal-footer {
+            display: flex; gap: 10px; justify-content: flex-end;
+            margin-top: 20px; padding-top: 16px;
+            border-top: 2px solid #edf2f7;
+        }
+        .modal-footer button {
+            padding: 10px 22px; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all .2s;
+        }
+        .btn-cancel { background: #edf2f7; color: #4a5568; }
+        .btn-save   { background: #3182ce; color: #fff; }
+        .btn-save:hover   { background: #2c5282; }
+        .btn-cancel:hover { background: #e2e8f0; }
+
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+            header { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <h1>🚛 الوسائل البرية</h1>
         <div class="header-actions">
-            <button class="veh-btn veh-btn-primary" id="vehRefreshBtn" title="تحديث">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="veh-btn veh-btn-info" id="vehPrintBtn">
-                <i class="fas fa-print"></i> طباعة
-            </button>
-            <button class="veh-btn veh-btn-success" id="vehExcelBtn">
-                <i class="fas fa-file-excel"></i> Excel
-            </button>
+            <button onclick="loadVehicles()">🔄 تحديث</button>
+            <button onclick="window.print()">🖨️ طباعة</button>
+            <button onclick="openVehicleModal()">➕ إضافة</button>
         </div>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">        <div class="value" id="statTotal">0</div>   <div class="label">📊 المجموع</div></div>
+        <div class="stat-card green">  <div class="value" id="statReady">0</div>   <div class="label">✅ صالحة</div></div>
+        <div class="stat-card orange"> <div class="value" id="statMaint">0</div>   <div class="label">🔧 صيانة</div></div>
+        <div class="stat-card red">    <div class="value" id="statBroken">0</div>  <div class="label">🔴 معطبة</div></div>
+        <div class="stat-card dark">   <div class="value" id="statDisposed">0</div><div class="label">⚫ مطروحة</div></div>
     </div>
 
-    <!-- STATS -->
-    <div class="veh-stats">
-        <div class="veh-stat">
-            <div class="number" id="vehStatTotal">0</div>
-            <div class="label">📊 المجموع</div>
-        </div>
-        <div class="veh-stat stat-valid">
-            <div class="number" id="vehStatValid">0</div>
-            <div class="label">✅ صالحة</div>
-        </div>
-        <div class="veh-stat stat-maint">
-            <div class="number" id="vehStatMaint">0</div>
-            <div class="label">🔧 تحت الصيانة</div>
-        </div>
-        <div class="veh-stat stat-broken">
-            <div class="number" id="vehStatBroken">0</div>
-            <div class="label">🔴 معطبة</div>
-        </div>
-        <div class="veh-stat stat-eff">
-            <div class="number" id="vehStatEff">0%</div>
-            <div class="label">📈 نسبة الجاهزية</div>
-        </div>
-    </div>
-
-    <!-- FILTER BAR -->
-    <div class="veh-actions">
-        <button class="veh-btn veh-btn-primary" id="vehAddBtn">
-            <i class="fas fa-plus"></i> إضافة وسيلة
-        </button>
-        <input type="text" class="veh-input" id="vehSearch" placeholder="🔍 ابحث برقم الوسيلة أو الماركة أو المركز...">
-        <select class="veh-select" id="vehFilterRegion">
-            <option value="all">كل الإدارات والأقاليم</option>
-            <optgroup label="🏛️ الإدارات المركزية">
-                <option value="إدارة إسناد الوحدات البحرية">🏛️ إسناد الوحدات</option>
-                <option value="إدارة حرس السواحل">🚢 حرس السواحل</option>
-            </optgroup>
-            <optgroup label="🌊 الأقاليم البحرية">
-                <option value="إقليم الحرس البحري بالشمال">🌊 الشمال</option>
-                <option value="إقليم الحرس البحري بالساحل">🌊 الساحل</option>
-                <option value="إقليم الحرس البحري بالوسط">🌊 الوسط</option>
-                <option value="إقليم الحرس البحري بالجنوب">🌊 الجنوب</option>
-            </optgroup>
-            <optgroup label="🛠️ وحدات الصيانة">
-                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ صيانة تونس</option>
-                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ صيانة صفاقس</option>
-                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ صيانة المنستير</option>
-                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ صيانة جرجيس</option>
-            </optgroup>
-            <optgroup label="🏛️ أخرى">
-                <option value="المجمع الأمني بقبيبة">🏛️ بقبيبة</option>
-            </optgroup>
-        </select>
-        <select class="veh-select" id="vehFilterZone"><option value="all">كل المناطق</option></select>
-        <select class="veh-select" id="vehFilterCenter"><option value="all">كل المراكز</option></select>
-        <select class="veh-select" id="vehFilterSupp"><option value="all">كل أماكن التعزيز</option></select>
-        <select class="veh-select" id="vehFilterBrand"><option value="all">كل الماركات</option></select>
-        <select class="veh-select" id="vehFilterStatus">
-            <option value="all">كل الحالات</option>
+    <!-- Filters -->
+    <div class="filters">
+        <input type="text" id="filterSearch" placeholder="🔍 بحث..." oninput="applyFilters()">
+        <select id="filterStatus" onchange="applyFilters()">
+            <option value="">📊 كل الحالات</option>
             <option value="صالحة">✅ صالحة</option>
             <option value="معطبة">🔴 معطبة</option>
             <option value="صيانة">🔧 صيانة</option>
             <option value="طرح">⚫ طرح</option>
         </select>
-        <select class="veh-select" id="vehFilterType">
-            <option value="all">كل الأنواع</option>
-            <option value="سيارة">🚗 سيارة</option>
-            <option value="كواد">🛺 كواد</option>
-            <option value="شاحنة">🚚 شاحنة</option>
-            <option value="شاحنة صهريج">🚛 شاحنة صهريج</option>
-            <option value="حافلة">🚌 حافلة</option>
-            <option value="بيك أب">🛻 بيك أب</option>
-            <option value="فان">🚐 فان</option>
-            <option value="جيب">🚙 جيب</option>
-            <option value="دراجة">🏍️ دراجة</option>
-            <option value="مدرعة">🛡️ مدرعة</option>
-            <option value="إسعاف">🚑 إسعاف</option>
-            <option value="إطفاء">🚒 إطفاء</option>
-            <option value="رافعة">🏗️ رافعة</option>
-            <option value="جرافة">🚜 جرافة</option>
-            <option value="أخرى">⚙️ أخرى</option>
+        <select id="filterType" onchange="applyFilters()">
+            <option value="">🚗 كل الأنواع</option>
         </select>
-        <select class="veh-select" id="vehFilterImages">
-            <option value="all">كل الصور</option>
-            <option value="with">📸 مع صور</option>
-            <option value="without">🚫 بدون صور</option>
+        <select id="filterBrand" onchange="applyFilters()">
+            <option value="">🏷️ كل الماركات</option>
         </select>
-        <label class="veh-auto-toggle" title="تحديث تلقائي كل 30 ثانية">
-            <input type="checkbox" id="vehAutoRefresh">
-            <span class="toggle-dot"></span>
-            <span class="toggle-label">تحديث تلقائي</span>
-        </label>
     </div>
 
-    <!-- TABLE -->
-    <div class="veh-table-wrap">
-        <div class="veh-table-head">
-            <div class="veh-cell center">#</div>
-            <div class="veh-cell center">📸</div>
-            <div class="veh-cell center">النوع</div>
-            <div class="veh-cell">الماركة / الطراز</div>
-            <div class="veh-cell">رقم الوسيلة</div>
-            <div class="veh-cell">الإدارة / الإقليم</div>
-            <div class="veh-cell">المنطقة</div>
-            <div class="veh-cell">المركز</div>
-            <div class="veh-cell">مكان التعزيز</div>
-            <div class="veh-cell center">الحالة</div>
-            <div class="veh-cell center">حالة العمل</div>
-            <div class="veh-cell center">تاريخ التعيين</div>
-            <div class="veh-cell center">⚠️ تاريخ العطب</div>
-            <div class="veh-cell">ملاحظات</div>
-            <div class="veh-cell center">إجراءات</div>
-        </div>
-        <div id="vehTableBody">
-            <div class="veh-empty">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>جاري التحميل...</p>
-            </div>
-        </div>
+    <!-- Table -->
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>📸</th>
+                    <th>النوع</th>
+                    <th>الماركة</th>
+                    <th>رقم الوسيلة</th>
+                    <th>الإدارة</th>
+                    <th>المنطقة</th>
+                    <th>المركز</th>
+                    <th>الحالة</th>
+                    <th>حالة العمل</th>
+                    <th>تاريخ التعيين</th>
+                    <th>ملاحظات</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="vehiclesTableBody">
+                <tr><td colspan="13" style="text-align:center;padding:30px;color:#a0aec0;">⏳ جاري التحميل...</td></tr>
+            </tbody>
+        </table>
     </div>
 
 </div>
 
-<!-- SCROLL NAV -->
-<div class="veh-scroll-nav" id="vehScrollNav" aria-hidden="true">
-    <button type="button" class="veh-scroll-nav-btn" id="vehScrollTop" title="أعلى الصفحة">
-        <i class="fas fa-chevron-up"></i>
-    </button>
-    <button type="button" class="veh-scroll-nav-btn" id="vehScrollBottom" title="أسفل الصفحة">
-        <i class="fas fa-chevron-down"></i>
-    </button>
-</div>
-
-<!-- MODAL -->
-<div class="veh-modal" id="vehModal">
-    <div class="veh-modal-box">
-        <div class="veh-modal-head">
-            <h3><i class="fas fa-truck"></i> <span id="vehModalTitle">إضافة وسيلة برية</span></h3>
-            <button class="veh-modal-close" id="vehModalClose" type="button">×</button>
+<!-- ========== Modal إضافة/تعديل ========== -->
+<div class="modal" id="vehicleModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">➕ إضافة وسيلة</h2>
+            <button class="modal-close" onclick="closeVehicleModal()">✕</button>
         </div>
 
-        <form id="vehForm" autocomplete="off">
-            <input type="hidden" id="vehId">
-
-            <div class="veh-form-row">
-                <div class="veh-form-group">
-                    <label>النوع <span class="req">*</span></label>
-                    <select class="veh-form-control" id="vehType" required>
-                        <option value="سيارة">🚗 سيارة</option>
-                        <option value="كواد">🛺 كواد (دراجة رباعية)</option>
-                        <option value="شاحنة">🚚 شاحنة</option>
-                        <option value="شاحنة صهريج">🚛 شاحنة صهريج</option>
-                        <option value="حافلة">🚌 حافلة</option>
-                        <option value="بيك أب">🛻 بيك أب</option>
-                        <option value="فان">🚐 فان</option>
-                        <option value="جيب">🚙 جيب (4x4)</option>
-                        <option value="دراجة">🏍️ دراجة</option>
-                        <option value="مدرعة">🛡️ مدرعة</option>
-                        <option value="إسعاف">🚑 إسعاف</option>
-                        <option value="إطفاء">🚒 إطفاء</option>
-                        <option value="رافعة">🏗️ رافعة</option>
-                        <option value="جرافة">🚜 جرافة</option>
-                        <option value="أخرى">⚙️ أخرى</option>
-                    </select>
+        <form id="vehicleForm" onsubmit="saveVehicle(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>النوع *</label>
+                    <input type="text" id="vehType" required>
                 </div>
-                <div class="veh-form-group">
-                    <label>رقم الوسيلة <span class="req">*</span></label>
-                    <input type="text" class="veh-form-control" id="vehPlate" required placeholder="مثال: 1234 تونس 5678" maxlength="50">
-                </div>
-            </div>
-
-            <div class="veh-form-row">
-                <div class="veh-form-group">
+                <div class="form-group">
                     <label>الماركة</label>
-                    <select class="veh-form-control" id="vehBrand">
-                        <option value="">— اختر الماركة —</option>
-                        <option value="تويوتا">🚗 تويوتا (Toyota)</option>
-                        <option value="فورد">🚗 فورد (Ford)</option>
-                        <option value="إيفيكو">🚚 إيفيكو (Iveco)</option>
-                        <option value="مرسيدس">🚗 مرسيدس (Mercedes)</option>
-                        <option value="رينو">🚗 رينو (Renault)</option>
-                        <option value="بيجو">🚗 بيجو (Peugeot)</option>
-                        <option value="ستروين">🚗 ستروين (Citroën)</option>
-                        <option value="فولكس فاغن">🚗 فولكس فاغن (Volkswagen)</option>
-                        <option value="نيسان">🚗 نيسان (Nissan)</option>
-                        <option value="ميتسوبيشي">🚗 ميتسوبيشي (Mitsubishi)</option>
-                        <option value="هيونداي">🚗 هيونداي (Hyundai)</option>
-                        <option value="كيا">🚗 كيا (Kia)</option>
-                        <option value="شيفروليه">🚗 شيفروليه (Chevrolet)</option>
-                        <option value="جيب">🚙 جيب (Jeep)</option>
-                        <option value="سكودا">🚗 سكودا (Škoda)</option>
-                        <option value="فيات">🚗 فيات (Fiat)</option>
-                        <option value="مان">🚚 مان (MAN)</option>
-                        <option value="سكانيا">🚚 سكانيا (Scania)</option>
-                        <option value="فولفو">🚚 فولفو (Volvo)</option>
-                        <option value="داف">🚚 داف (DAF)</option>
-                        <option value="هينو">🚚 هينو (Hino)</option>
-                        <option value="ايسوزو">🚚 ايسوزو (Isuzu)</option>
-                        <option value="أخرى">⚙️ أخرى</option>
-                    </select>
+                    <input type="text" id="vehBrand">
                 </div>
-                <div class="veh-form-group">
+                <div class="form-group">
                     <label>الطراز</label>
-                    <input type="text" class="veh-form-control" id="vehModel" placeholder="مثال: Hilux, Daily, Ranger" maxlength="100" list="vehModelsList">
-                    <datalist id="vehModelsList"></datalist>
+                    <input type="text" id="vehModel">
                 </div>
-            </div>
-
-            <div class="veh-form-row">
-                <div class="veh-form-group">
+                <div class="form-group">
                     <label>السنة</label>
-                    <input type="number" class="veh-form-control" id="vehYear" placeholder="2020" min="1900" max="2100">
+                    <input type="number" id="vehYear" min="1950" max="2100">
                 </div>
-                <div class="veh-form-group">
+                <div class="form-group">
                     <label>اللون</label>
-                    <select class="veh-form-control" id="vehColor">
-                        <option value="">— اختر اللون —</option>
-                        <option value="أبيض">⚪ أبيض</option>
-                        <option value="أسود">⚫ أسود</option>
-                        <option value="رمادي">🩶 رمادي</option>
-                        <option value="فضي">⚪ فضي</option>
-                        <option value="أحمر">🔴 أحمر</option>
-                        <option value="أزرق">🔵 أزرق</option>
-                        <option value="أخضر">🟢 أخضر</option>
-                        <option value="أصفر">🟡 أصفر</option>
-                        <option value="بني">🟤 بني</option>
-                        <option value="بيج">🟠 بيج</option>
-                        <option value="أخرى">⚙️ أخرى</option>
-                    </select>
+                    <input type="text" id="vehColor">
                 </div>
-            </div>
-
-            <div class="veh-form-group">
-                <label>الإدارة / الإقليم <span class="req">*</span></label>
-                <select class="veh-form-control" id="vehRegion" required>
-                    <option value="">— اختر الإدارة / الإقليم —</option>
-                    <optgroup label="🏛️ الإدارات المركزية">
-                        <option value="إدارة إسناد الوحدات البحرية">🏛️ إدارة إسناد الوحدات البحرية</option>
-                        <option value="إدارة حرس السواحل">🚢 إدارة حرس السواحل</option>
-                    </optgroup>
-                    <optgroup label="🌊 الأقاليم البحرية">
-                        <option value="إقليم الحرس البحري بالشمال">🌊 إقليم الحرس البحري بالشمال</option>
-                        <option value="إقليم الحرس البحري بالساحل">🌊 إقليم الحرس البحري بالساحل</option>
-                        <option value="إقليم الحرس البحري بالوسط">🌊 إقليم الحرس البحري بالوسط</option>
-                        <option value="إقليم الحرس البحري بالجنوب">🌊 إقليم الحرس البحري بالجنوب</option>
-                    </optgroup>
-                    <optgroup label="🛠️ وحدات الصيانة والإسناد">
-                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة والإسناد البحري تونس</option>
-                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة والإسناد البحري صفاقس</option>
-                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة والإسناد البحري المنستير</option>
-                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة والإسناد البحري جرجيس</option>
-                    </optgroup>
-                    <optgroup label="🏛️ أخرى">
-                        <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-                    </optgroup>
-                </select>
-            </div>
-
-            <div class="veh-form-group" id="vehZoneGroup">
-                <label>المنطقة <span class="req">*</span></label>
-                <select class="veh-form-control" id="vehZone" required disabled>
-                    <option value="">— اختر الإدارة / الإقليم أولاً —</option>
-                </select>
-            </div>
-
-            <div class="veh-form-group" id="vehCenterGroup">
-                <label>المركز</label>
-                <select class="veh-form-control" id="vehCenter" disabled>
-                    <option value="">— اختر المنطقة أولاً —</option>
-                </select>
-            </div>
-
-            <div class="veh-form-group" id="vehSuppGroup">
-                <label>مكان التعزيز</label>
-                <input type="text" class="veh-form-control" id="vehSupp" placeholder="✍️ اكتب مكان التعزيز يدوياً..." list="vehSuppList" maxlength="200" autocomplete="off">
-                <datalist id="vehSuppList"></datalist>
-            </div>
-
-            <div class="veh-form-row">
-                <div class="veh-form-group">
+                <div class="form-group">
+                    <label>رقم الوسيلة *</label>
+                    <input type="text" id="vehNumber" required>
+                </div>
+                <div class="form-group">
+                    <label>الإدارة</label>
+                    <input type="text" id="vehAdmin">
+                </div>
+                <div class="form-group">
+                    <label>المنطقة</label>
+                    <input type="text" id="vehRegion">
+                </div>
+                <div class="form-group">
+                    <label>المركز</label>
+                    <input type="text" id="vehCenter">
+                </div>
+                <div class="form-group">
+                    <label>مكان التعزيز</label>
+                    <input type="text" id="vehPlace">
+                </div>
+                <div class="form-group">
                     <label>الحالة</label>
-                    <select class="veh-form-control" id="vehStatus">
+                    <select id="vehStatus">
                         <option value="صالحة">✅ صالحة</option>
                         <option value="معطبة">🔴 معطبة</option>
                         <option value="صيانة">🔧 صيانة</option>
-                        <option value="طرح">⚫ طرح (سحب نهائي)</option>
+                        <option value="طرح">⚫ طرح</option>
                     </select>
                 </div>
-                <div class="veh-form-group">
+                <div class="form-group">
                     <label>حالة العمل</label>
-                    <select class="veh-form-control" id="vehCondition">
-                        <option value="جديدة">✨ جديدة</option>
-                        <option value="متوسطة">⚖️ متوسطة</option>
-                        <option value="قديمة">⏳ قديمة</option>
-                    </select>
+                    <input type="text" id="vehWorkStatus">
                 </div>
-            </div>
-
-            <div class="veh-form-row">
-                <div class="veh-form-group">
+                <div class="form-group">
                     <label>تاريخ التعيين</label>
-                    <input type="date" class="veh-form-control" id="vehDate">
+                    <input type="date" id="vehAssignDate">
                 </div>
-                <div class="veh-form-group" id="vehFaultDateGroup" style="display:none;">
-                    <label>⚠️ تاريخ العطب <span class="req">*</span></label>
-                    <input type="date" class="veh-form-control" id="vehFaultDate">
-                </div>
-            </div>
-
-            <!-- حقول الطرح -->
-            <div id="vehDisposalFields" style="display:none;">
-                <div class="veh-form-group">
-                    <label>⚠️ سبب الطرح <span class="req">*</span></label>
-                    <textarea class="veh-form-control" id="vehDisposalReason" placeholder="سبب سحب الوسيلة نهائياً..." maxlength="1000"></textarea>
-                </div>
-                <div class="veh-form-row">
-                    <div class="veh-form-group">
-                        <label>📋 رقم قرار الطرح</label>
-                        <input type="text" class="veh-form-control" id="vehDisposalDecision" placeholder="مثال: قرار عدد 2025/123" maxlength="100">
-                    </div>
-                    <div class="veh-form-group">
-                        <label>👤 من قرر الطرح</label>
-                        <input type="text" class="veh-form-control" id="vehDisposedBy" placeholder="اسم الجهة أو المسؤول" maxlength="100">
-                    </div>
-                </div>
-                <div class="veh-form-group">
-                    <label>📅 تاريخ الطرح</label>
-                    <input type="date" class="veh-form-control" id="vehDisposalDate">
+                <div class="form-group">
+                    <label>تاريخ العطب</label>
+                    <input type="date" id="vehBreakDate">
                 </div>
             </div>
 
-            <div class="veh-form-group">
+            <div class="form-group" style="margin-bottom:12px;">
                 <label>ملاحظات</label>
-                <textarea class="veh-form-control" id="vehNotes" placeholder="ملاحظات إضافية..." maxlength="1000"></textarea>
+                <textarea id="vehNotes"></textarea>
             </div>
 
-            <!-- IMAGES SECTION -->
-            <div class="veh-images-section">
-                <h4 class="veh-images-title">
-                    <i class="fas fa-images"></i>
-                    صور الوسيلة
-                </h4>
+            <!-- 🆕 قسم الصور -->
+            <div class="image-upload-section">
+                <h4>📸 صور الوسيلة</h4>
 
-                <div id="vehCurrentImages" class="veh-images-grid"></div>
+                <div id="currentImages" class="current-images-grid"></div>
 
-                <div class="veh-upload-buttons">
-                    <button type="button" class="veh-upload-btn" id="vehBtnDevice">
+                <div class="upload-buttons">
+                    <button type="button" class="upload-btn"
+                            onclick="document.getElementById('imageInput').click()">
                         <span class="icon">📁</span>
                         <span>من الجهاز</span>
                     </button>
-                    <button type="button" class="veh-upload-btn camera" id="vehBtnCamera">
+
+                    <button type="button" class="upload-btn camera" onclick="Camera.open()">
                         <span class="icon">📷</span>
                         <span>التقاط مباشر</span>
                     </button>
-                    <button type="button" class="veh-upload-btn url" id="vehBtnUrl">
+
+                    <button type="button" class="upload-btn" onclick="UrlImporter.open()">
                         <span class="icon">🔗</span>
                         <span>استيراد برابط</span>
                     </button>
                 </div>
 
-                <input type="file" id="vehImageInput" accept="image/*" multiple hidden>
-                <input type="file" id="vehCameraInput" accept="image/*" capture="environment" hidden>
+                <input type="file" id="imageInput"  accept="image/*" multiple hidden>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
 
-                <div class="veh-dropzone" id="vehDropzone">
-                    <span class="dz-icon">📤</span>
-                    <p>اسحب الصور وأفلتها هنا، أو الصقها بـ <b>Ctrl+V</b></p>
-                    <small>JPG, PNG, WEBP — حتى 5MB (10 صور كحد أقصى)</small>
+                <div id="dropZone" class="drop-zone">
+                    <div class="drop-icon">📤</div>
+                    <p>أو اسحب الصور وأفلتها هنا، أو الصقها بـ <b>Ctrl+V</b></p>
+                    <small>JPG, PNG, WEBP — حتى 5MB لكل صورة (10 صور كحد أقصى)</small>
                 </div>
 
-                <div id="vehNewImages" class="veh-images-grid"></div>
+                <div id="newImagesPreview" class="new-images-grid"></div>
             </div>
 
-            <div class="veh-modal-actions">
-                <button type="button" class="veh-btn veh-btn-secondary" id="vehCancelBtn">إلغاء</button>
-                <button type="submit" class="veh-btn veh-btn-primary" id="vehSaveBtn">
-                    <i class="fas fa-save"></i>
-                    <span id="vehSaveBtnText">حفظ</span>
-                </button>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeVehicleModal()">إلغاء</button>
+                <button type="submit" class="btn-save">💾 حفظ</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- CAMERA MODAL -->
-<div class="veh-camera-modal" id="vehCameraModal">
-    <div class="veh-camera-box">
-        <div class="veh-camera-head">
-            <h3><i class="fas fa-camera"></i> التقاط صورة</h3>
-            <button type="button" class="veh-camera-close" id="vehCameraClose">✕</button>
+<!-- ========== 📷 نافذة الكاميرا ========== -->
+<div id="cameraModal" class="camera-modal">
+    <div class="camera-container">
+        <div class="camera-header">
+            <h3>📷 التقاط صورة</h3>
+            <button type="button" onclick="Camera.close()" class="camera-close">✕</button>
         </div>
-        <div class="veh-camera-stage">
-            <video id="vehCameraVideo" autoplay playsinline muted></video>
-            <canvas id="vehCameraCanvas" hidden></canvas>
+        <div class="camera-stage">
+            <video id="cameraVideo" autoplay playsinline muted></video>
+            <canvas id="cameraCanvas" hidden></canvas>
         </div>
-        <div class="veh-camera-controls">
-            <button type="button" class="veh-cam-btn" id="vehCameraSwitch" title="تبديل الكاميرا">🔄</button>
-            <button type="button" class="veh-cam-btn veh-capture-btn" id="vehCameraCapture" title="التقاط">
-                <span class="veh-capture-inner"></span>
+        <div class="camera-controls">
+            <button type="button" onclick="Camera.switchCamera()" class="cam-btn" title="تبديل">🔄</button>
+            <button type="button" onclick="Camera.capture()" class="cam-btn capture-btn" title="التقاط">
+                <span class="capture-inner"></span>
             </button>
-            <button type="button" class="veh-cam-btn" id="vehCameraFallback" title="من الجهاز">📁</button>
+            <button type="button" onclick="Camera.fallbackToFileInput()" class="cam-btn" title="من الجهاز">📁</button>
         </div>
-        <div class="veh-camera-hint">💡 يمكنك التقاط عدة صور — ستُضاف تلقائياً</div>
+        <div class="camera-hint">💡 يمكنك التقاط عدة صور — ستُضاف تلقائياً</div>
     </div>
 </div>
 
-<!-- URL MODAL -->
-<div class="veh-url-modal" id="vehUrlModal">
-    <div class="veh-url-box">
-        <div class="veh-url-head">
+<!-- ========== 🔗 نافذة استيراد رابط ========== -->
+<div id="urlModal" class="url-modal">
+    <div class="url-container">
+        <div class="url-header">
             <h3>🔗 استيراد صورة من رابط</h3>
-            <button type="button" class="veh-url-close" id="vehUrlClose">✕</button>
+            <button type="button" onclick="UrlImporter.close()" class="url-close">✕</button>
         </div>
-        <div class="veh-url-body">
+        <div class="url-body">
             <label>رابط الصورة:</label>
-            <input type="url" id="vehUrlInput" placeholder="https://example.com/image.jpg" dir="ltr">
+            <input type="url" id="urlInput" placeholder="https://example.com/image.jpg" dir="ltr">
 
             <label>وصف الصورة (اختياري):</label>
-            <input type="text" id="vehUrlCaption" placeholder="مثال: صورة أمامية">
+            <input type="text" id="urlCaption" placeholder="مثال: صورة أمامية">
 
-            <div id="vehUrlPreview" class="veh-url-preview"></div>
+            <div id="urlPreview" class="url-preview"></div>
 
-            <div class="veh-url-actions">
-                <button type="button" class="btn-preview" id="vehUrlPreviewBtn">👁️ معاينة</button>
-                <button type="button" class="btn-add" id="vehUrlAddBtn">➕ إضافة</button>
+            <div class="url-actions">
+                <button type="button" onclick="UrlImporter.preview()" class="btn-secondary">👁️ معاينة</button>
+                <button type="button" onclick="UrlImporter.add()"     class="btn-primary">➕ إضافة</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- LIGHTBOX GALLERY -->
-<div class="veh-gallery" id="vehGallery" role="dialog" aria-modal="true" aria-hidden="true">
-    <button class="veh-gallery-close" id="vehGalleryClose" aria-label="إغلاق">✕</button>
-    <div class="veh-gallery-counter"><span id="vehGalleryCurrent">1</span> / <span id="vehGalleryTotal">1</span></div>
-    <button class="veh-gallery-nav veh-gallery-prev" id="vehGalleryPrev" aria-label="السابق">❮</button>
-    <div class="veh-gallery-stage" id="vehGalleryStage">
-        <img id="vehGalleryImage" src="" alt="">
-        <div class="veh-gallery-caption" id="vehGalleryCaption"></div>
+<!-- ========== 🖼️ Lightbox ========== -->
+<div id="imageGallery" class="gallery-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <button type="button" class="gallery-close" onclick="closeGallery()" aria-label="إغلاق">✕</button>
+    <div class="gallery-counter">
+        <span id="galleryCurrent">1</span> / <span id="galleryTotal">1</span>
     </div>
-    <button class="veh-gallery-nav veh-gallery-next" id="vehGalleryNext" aria-label="التالي">❯</button>
-    <div class="veh-gallery-toolbar">
-        <button type="button" id="vehGalleryZoomIn" title="تكبير">🔍+</button>
-        <button type="button" id="vehGalleryZoomOut" title="تصغير">🔍−</button>
-        <button type="button" id="vehGalleryReset" title="الحجم الأصلي">↺</button>
-        <button type="button" id="vehGalleryDownload" title="تحميل">⬇️</button>
+    <button type="button" class="gallery-nav gallery-prev" onclick="galleryPrev()" aria-label="السابق">❮</button>
+    <div class="gallery-stage" onclick="if(event.target===this) closeGallery()">
+        <img id="galleryMainImage" class="gallery-main-img" src="" alt="">
+        <div id="galleryCaption" class="gallery-caption"></div>
     </div>
-    <div class="veh-gallery-thumbs" id="vehGalleryThumbs"></div>
+    <button type="button" class="gallery-nav gallery-next" onclick="galleryNext()" aria-label="التالي">❯</button>
+    <div class="gallery-toolbar">
+        <button type="button" onclick="galleryZoom(1)"     title="تكبير">🔍+</button>
+        <button type="button" onclick="galleryZoom(-1)"    title="تصغير">🔍−</button>
+        <button type="button" onclick="galleryResetZoom()" title="الحجم الأصلي">↺</button>
+        <button type="button" onclick="galleryDownload()"  title="تحميل">⬇️</button>
+    </div>
+    <div class="gallery-thumbs" id="galleryThumbs"></div>
 </div>
 
+<!-- ========== Scripts ========== -->
+<script src="/js/vehicle-images.js"></script>
 <script>
-(function() {
-    'use strict';
-    console.log('🚛 Vehicles Page v10.1 (Ultra Pro + Images) - Loading...');
+/* ============================================================
+   منطق الصفحة
+   ============================================================ */
+let allVehicles = [];
 
-    var _isDestroyed = false;
-    var _timeouts = [];
-    var _intervals = [];
-    var _listeners = [];
-
-    function _vehCleanup() {
-        if (_isDestroyed) return;
-        _isDestroyed = true;
-        _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
-        _timeouts = [];
-        _intervals.forEach(function(id) { try { clearInterval(id); } catch(e) {} });
-        _intervals = [];
-        _listeners.forEach(function(l) {
-            try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
+async function loadVehicles() {
+    try {
+        const res = await fetch('/api/vehicles', {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
         });
-        _listeners = [];
-        console.log('🧹 Vehicles cleanup done');
-    }
-    window._pageCleanup = window._pageCleanup || [];
-    window._pageCleanup.push(_vehCleanup);
-    window.addEventListener('beforeunload', _vehCleanup);
-    window.addEventListener('pagehide', _vehCleanup);
+        if (!res.ok) throw new Error('فشل التحميل');
+        allVehicles = await res.json();
+        vehiclesCache = allVehicles;
 
-    function getToken() {
-        try {
-            return localStorage.getItem('marine_token')
-                || localStorage.getItem('token')
-                || localStorage.getItem('marine_auth_token')
-                || sessionStorage.getItem('token')
-                || null;
-        } catch(e) { return null; }
+        updateStats(allVehicles);
+        populateFilters(allVehicles);
+        applyFilters();
+    } catch (err) {
+        console.error(err);
+        document.getElementById('vehiclesTableBody').innerHTML = `
+            <tr><td colspan="13" style="text-align:center;padding:30px;color:#e53e3e;">
+                ❌ ${escapeHtml(err.message)}
+            </td></tr>
+        `;
     }
-    function getCsrf() {
-        try {
-            var m = document.cookie.match(/marine_csrf=([^;]+)/);
-            return m ? decodeURIComponent(m[1]) : '';
-        } catch(e) { return ''; }
-    }
-    function authHeaders(includeContentType) {
-        var h = { 'Accept': 'application/json' };
-        if (includeContentType) h['Content-Type'] = 'application/json';
-        var t = getToken();
-        if (t) h['Authorization'] = 'Bearer ' + t;
-        var c = getCsrf();
-        if (c) h['X-CSRF-Token'] = c;
-        return h;
-    }
-    function apiFetch(url, opts) {
-        opts = opts || {};
-        var method = (opts.method || 'GET').toUpperCase();
-        var isSafe = ['GET', 'HEAD', 'OPTIONS'].indexOf(method) !== -1;
-        opts.headers = Object.assign({}, authHeaders(!isSafe), opts.headers || {});
-        opts.credentials = 'include';
-        return fetch(url, opts);
-    }
-    function escapeHtml(s) {
-        if (s == null) return '';
-        return String(s).replace(/[&<>"']/g, function(m) {
-            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
-        });
-    }
-    function addSafeListener(el, type, fn) {
-        if (!el) return;
-        el.addEventListener(type, fn);
-        _listeners.push({ el: el, type: type, fn: fn });
-    }
-    function vehShowToast(msg, type, duration) {
-        if (_isDestroyed) return;
-        type = type || 'info';
-        duration = duration || 3000;
-        var existing = document.querySelector('.veh-toast');
-        if (existing) existing.remove();
-        var toast = document.createElement('div');
-        toast.className = 'veh-toast ' + type;
-        var icons = { success: '✅', error: '❌', info: 'ℹ️' };
-        var icon = document.createElement('span');
-        icon.textContent = icons[type] || 'ℹ️';
-        var text = document.createElement('span');
-        text.textContent = String(msg || '');
-        toast.appendChild(icon);
-        toast.appendChild(text);
-        document.body.appendChild(toast);
-        var id = setTimeout(function() { if (toast.parentNode) toast.remove(); }, duration);
-        _timeouts.push(id);
+}
+
+function updateStats(list) {
+    document.getElementById('statTotal').textContent    = list.length;
+    document.getElementById('statReady').textContent    = list.filter(v => v.status === 'صالحة').length;
+    document.getElementById('statMaint').textContent    = list.filter(v => v.status === 'صيانة').length;
+    document.getElementById('statBroken').textContent   = list.filter(v => v.status === 'معطبة').length;
+    document.getElementById('statDisposed').textContent = list.filter(v => v.status === 'طرح').length;
+}
+
+function populateFilters(list) {
+    const types  = [...new Set(list.map(v => v.type).filter(Boolean))];
+    const brands = [...new Set(list.map(v => v.brand).filter(Boolean))];
+
+    const typeSel = document.getElementById('filterType');
+    const brandSel = document.getElementById('filterBrand');
+
+    typeSel.innerHTML = '<option value="">🚗 كل الأنواع</option>' +
+        types.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+
+    brandSel.innerHTML = '<option value="">🏷️ كل الماركات</option>' +
+        brands.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+}
+
+function applyFilters() {
+    const q      = document.getElementById('filterSearch').value.trim().toLowerCase();
+    const status = document.getElementById('filterStatus').value;
+    const type   = document.getElementById('filterType').value;
+    const brand  = document.getElementById('filterBrand').value;
+
+    const filtered = allVehicles.filter(v => {
+        if (status && v.status !== status) return false;
+        if (type && v.type !== type) return false;
+        if (brand && v.brand !== brand) return false;
+        if (q) {
+            const hay = [v.vehicleNumber, v.type, v.brand, v.administration, v.region, v.center]
+                .filter(Boolean).join(' ').toLowerCase();
+            if (!hay.includes(q)) return false;
+        }
+        return true;
+    });
+
+    renderTable(filtered);
+}
+
+function renderTable(vehicles) {
+    const tbody = document.getElementById('vehiclesTableBody');
+    if (vehicles.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:30px;color:#a0aec0;">
+            لا توجد نتائج
+        </td></tr>`;
+        return;
     }
 
-    /* DATA */
-    var ZONES_DATA = {
-        'إدارة إسناد الوحدات البحرية': ['الإدارة المركزية بتونس'],
-        'إدارة حرس السواحل': ['الإدارة المركزية بتونس'],
-        'إقليم الحرس البحري بالشمال': ['تونس', 'بنزرت', 'طبرقة'],
-        'إقليم الحرس البحري بالساحل': ['سوسة', 'المنستير', 'نابل'],
-        'إقليم الحرس البحري بالوسط': ['صفاقس', 'المهدية', 'قرقنة'],
-        'إقليم الحرس البحري بالجنوب': ['جرجيس', 'جربة', 'قابس'],
-        'وحدة الصيانة والإسناد البحري تونس': ['تونس'],
-        'وحدة الصيانة والإسناد البحري صفاقس': ['صفاقس'],
-        'وحدة الصيانة والإسناد البحري المنستير': ['المنستير'],
-        'وحدة الصيانة والإسناد البحري جرجيس': ['جرجيس'],
-        'المجمع الأمني بقبيبة': ['قبيبة "صفاقس"']
+    tbody.innerHTML = vehicles.map((v, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td>${renderVehicleThumb(v)}</td>
+            <td>${escapeHtml(v.type || '-')}</td>
+            <td>${escapeHtml(v.brand || '-')}</td>
+            <td>${escapeHtml(v.vehicleNumber || '-')}</td>
+            <td>${escapeHtml(v.administration || '-')}</td>
+            <td>${escapeHtml(v.region || '-')}</td>
+            <td>${escapeHtml(v.center || '-')}</td>
+            <td>${statusBadge(v.status)}</td>
+            <td>${escapeHtml(v.workStatus || '-')}</td>
+            <td>${formatDate(v.assignmentDate)}</td>
+            <td>${escapeHtml(v.notes || '-')}</td>
+            <td>
+                <button onclick="openVehicleModal('${v._id}')" title="تعديل">✏️</button>
+                <button onclick="deleteVehicle('${v._id}')" title="حذف">🗑️</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function statusBadge(status) {
+    const map = {
+        'صالحة': 'badge-success',
+        'معطبة': 'badge-danger',
+        'صيانة': 'badge-warning',
+        'طرح':   'badge-dark'
     };
-    var CENTERS_DATA = {
-        'تونس': ['مركز تونس المدينة', 'مركز حلق الوادي', 'مركز المرسى', 'مركز قمرت', 'مركز رادس'],
-        'بنزرت': ['مركز بنزرت', 'مركز غار الملح', 'مركز منزل بورقيبة', 'مركز رأس الجبل', 'مركز العالية'],
-        'طبرقة': ['مركز طبرقة', 'مركز عين دراهم', 'مركز غار الدماء'],
-        'سوسة': ['مركز سوسة', 'مركز هرقلة', 'مركز القلعة الكبرى', 'مركز المساكن'],
-        'المنستير': ['مركز المنستير', 'مركز المكنين', 'مركز جمال', 'مركز بني حسان', 'مركز الساحلين'],
-        'نابل': ['مركز نابل', 'مركز الحمامات', 'مركز قربة', 'مركز منزل تميم', 'مركز الهوارية'],
-        'صفاقس': ['مركز صفاقس', 'مركز ساقية الزيت', 'مركز ساقية الدائر', 'مركز طينة', 'مركز قرقنة'],
-        'المهدية': ['مركز المهدية', 'مركز قصور الساف', 'مركز الجم', 'مركز الشابة'],
-        'قرقنة': ['مركز قرقنة الشمالية', 'مركز قرقنة الجنوبية'],
-        'جرجيس': ['مركز جرجيس', 'مركز بنقردان', 'مركز جرجيس الشمالية'],
-        'جربة': ['مركز جربة حومة السوق', 'مركز جربة ميدون', 'مركز جربة أجيم'],
-        'قابس': ['مركز قابس', 'مركز قابس الجنوبية', 'مركز غنوش', 'مركز مارث'],
-        'الإدارة المركزية بتونس': ['مركز الإدارة المركزية'],
-        'قبيبة "صفاقس"': ['مركز قبيبة']
-    };
-    var SUPPLY_DATA = {};
-    var MODELS_DATA = {
-        'تويوتا': ['Hilux', 'Land Cruiser', 'RAV4', 'Corolla', 'Camry', 'Yaris', 'Hiace'],
-        'فورد': ['Ranger', 'F-150', 'Transit', 'Explorer', 'Focus'],
-        'إيفيكو': ['Daily', 'Eurocargo', 'Stralis', 'Trakker'],
-        'مرسيدس': ['Sprinter', 'Actros', 'Atego', 'G-Class', 'Vito'],
-        'رينو': ['Kangoo', 'Master', 'Duster', 'Clio'],
-        'بيجو': ['Partner', 'Boxer', '3008', '5008', '208'],
-        'نيسان': ['Navara', 'Patrol', 'Qashqai', 'NV200'],
-        'ميتسوبيشي': ['L200', 'Pajero', 'Canter', 'Outlander'],
-        'هيونداي': ['Tucson', 'Santa Fe', 'H1', 'Accent'],
-        'كيا': ['Sportage', 'Sorento', 'K2700'],
-        'شيفروليه': ['Silverado', 'Colorado', 'Tahoe'],
-        'جيب': ['Wrangler', 'Grand Cherokee', 'Compass']
-    };
-    var REGION_LABELS = {
-        'إدارة إسناد الوحدات البحرية': '🏛️ إسناد الوحدات',
-        'إدارة حرس السواحل': '🚢 حرس السواحل',
-        'إقليم الحرس البحري بالشمال': '🌊 الشمال',
-        'إقليم الحرس البحري بالساحل': '🌊 الساحل',
-        'إقليم الحرس البحري بالوسط': '🌊 الوسط',
-        'إقليم الحرس البحري بالجنوب': '🌊 الجنوب',
-        'وحدة الصيانة والإسناد البحري تونس': '🛠️ صيانة تونس',
-        'وحدة الصيانة والإسناد البحري صفاقس': '🛠️ صيانة صفاقس',
-        'وحدة الصيانة والإسناد البحري المنستير': '🛠️ صيانة المنستير',
-        'وحدة الصيانة والإسناد البحري جرجيس': '🛠️ صيانة جرجيس',
-        'المجمع الأمني بقبيبة': '🏛️ بقبيبة'
-    };
-    function getRegionShort(region) {
-        if (!region) return '—';
-        return REGION_LABELS[region] || region;
-    }
-    function getAllZones() {
-        var set = {};
-        Object.keys(ZONES_DATA).forEach(function(reg) {
-            ZONES_DATA[reg].forEach(function(z) { set[z] = true; });
-        });
-        return Object.keys(set);
-    }
-    function getAllCenters() {
-        var set = {};
-        Object.keys(CENTERS_DATA).forEach(function(zone) {
-            CENTERS_DATA[zone].forEach(function(c) { set[c] = true; });
-        });
-        return Object.keys(set);
-    }
+    return `<span class="badge ${map[status] || ''}">${escapeHtml(status || '-')}</span>`;
+}
 
-    var vehicles = [];
-    var vehiclesCache = [];
-    var currentVehicleId = null;
-    var autoRefreshInterval = null;
-    var MAX_IMAGES = 10;
+function formatDate(d) {
+    if (!d) return '-';
+    try { return new Date(d).toLocaleDateString('ar-TN'); }
+    catch { return '-'; }
+}
 
-    function renderVehicleThumb(v) {
-        var imgs = v.images || [];
-        if (imgs.length === 0) {
-            return '<div class="veh-no-image" data-action="add-image" data-id="' + escapeHtml(v.id) + '" title="لا توجد صور — انقر للإضافة">📷+</div>';
-        }
-        var primary = imgs.find(function(i) { return i.isPrimary; }) || imgs[0];
-        var countBadge = imgs.length > 1 ? '<span class="veh-thumb-count">' + imgs.length + '</span>' : '';
-        var camBadge = imgs.some(function(i) { return i.source === 'camera'; }) ? '<span class="veh-thumb-camera">📷</span>' : '';
-        return '<div class="veh-thumb-wrapper" data-action="gallery" data-id="' + escapeHtml(v.id) + '" title="عرض الصور (' + imgs.length + ')">' +
-            '<img src="' + escapeHtml(primary.url) + '" class="veh-thumb-img" loading="lazy" onerror="this.parentElement.outerHTML=\'<div class=&quot;veh-no-image&quot;>⚠️</div>\'">' +
-            countBadge + camBadge +
-        '</div>';
-    }
+async function openVehicleModal(vehicleId = null) {
+    currentVehicleId = vehicleId;
+    ImageUploader.reset();
 
-    function vehLoad() {
-        if (_isDestroyed) return;
-        var tbody = document.getElementById('vehTableBody');
-        if (tbody && vehicles.length === 0) {
-            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>';
-        }
-        apiFetch('/api/vehicles')
-            .then(function(res) {
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.json();
-            })
-            .then(function(data) {
-                if (_isDestroyed) return;
-                vehicles = Array.isArray(data) ? data : [];
-                vehiclesCache = vehicles;
-                renderTable();
-                updateStats();
-                refreshSuppFilter();
-            })
-            .catch(function(err) {
-                console.warn('⚠️ Load error:', err.message);
-                if (tbody) {
-                    tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-exclamation-triangle" style="color:#f87171"></i><p>فشل تحميل البيانات</p></div>';
-                }
-            });
-    }
+    if (vehicleId) {
+        document.getElementById('modalTitle').textContent = '✏️ تعديل وسيلة';
+        const v = allVehicles.find(x => x._id === vehicleId)
+              || await (await fetch(`/api/vehicles/${vehicleId}`)).json();
 
-    function updateStats() {
-        var total = vehicles.length;
-        var valid = vehicles.filter(function(v) { return v.status === 'صالحة'; }).length;
-        var broken = vehicles.filter(function(v) { return v.status === 'معطبة'; }).length;
-        var maint = vehicles.filter(function(v) { return v.status === 'صيانة'; }).length;
-        var eff = total > 0 ? ((valid / total) * 100).toFixed(1) : '0.0';
-        var el;
-        el = document.getElementById('vehStatTotal'); if (el) el.textContent = total;
-        el = document.getElementById('vehStatValid'); if (el) el.textContent = valid;
-        el = document.getElementById('vehStatBroken'); if (el) el.textContent = broken;
-        el = document.getElementById('vehStatMaint'); if (el) el.textContent = maint;
-        el = document.getElementById('vehStatEff'); if (el) el.textContent = eff + '%';
-    }
+        document.getElementById('vehType').value      = v.type || '';
+        document.getElementById('vehBrand').value     = v.brand || '';
+        document.getElementById('vehModel').value     = v.model || '';
+        document.getElementById('vehYear').value      = v.year || '';
+        document.getElementById('vehColor').value     = v.color || '';
+        document.getElementById('vehNumber').value    = v.vehicleNumber || '';
+        document.getElementById('vehAdmin').value     = v.administration || '';
+        document.getElementById('vehRegion').value    = v.region || '';
+        document.getElementById('vehCenter').value    = v.center || '';
+        document.getElementById('vehPlace').value     = v.reinforcementPlace || '';
+        document.getElementById('vehStatus').value    = v.status || 'صالحة';
+        document.getElementById('vehWorkStatus').value= v.workStatus || '';
+        document.getElementById('vehAssignDate').value= v.assignmentDate ? v.assignmentDate.split('T')[0] : '';
+        document.getElementById('vehBreakDate').value = v.breakdownDate ? v.breakdownDate.split('T')[0] : '';
+        document.getElementById('vehNotes').value     = v.notes || '';
 
-    function getFiltered() {
-        var searchEl = document.getElementById('vehSearch');
-        var statusEl = document.getElementById('vehFilterStatus');
-        var typeEl = document.getElementById('vehFilterType');
-        var regionEl = document.getElementById('vehFilterRegion');
-        var zoneEl = document.getElementById('vehFilterZone');
-        var centerEl = document.getElementById('vehFilterCenter');
-        var suppEl = document.getElementById('vehFilterSupp');
-        var brandEl = document.getElementById('vehFilterBrand');
-        var imagesEl = document.getElementById('vehFilterImages');
-        var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
-        var status = statusEl ? statusEl.value : 'all';
-        var type = typeEl ? typeEl.value : 'all';
-        var region = regionEl ? regionEl.value : 'all';
-        var zone = zoneEl ? zoneEl.value : 'all';
-        var center = centerEl ? centerEl.value : 'all';
-        var supp = suppEl ? suppEl.value : 'all';
-        var brand = brandEl ? brandEl.value : 'all';
-        var imagesFilter = imagesEl ? imagesEl.value : 'all';
-        return vehicles.filter(function(v) {
-            if (status !== 'all' && v.status !== status) return false;
-            if (type !== 'all' && v.type !== type) return false;
-            if (region !== 'all' && v.region !== region) return false;
-            if (zone !== 'all' && v.zone !== zone) return false;
-            if (center !== 'all' && v.center !== center) return false;
-            if (supp !== 'all' && v.supplyPlace !== supp) return false;
-            if (brand !== 'all' && v.brand !== brand) return false;
-            if (imagesFilter === 'with' && (!v.images || v.images.length === 0)) return false;
-            if (imagesFilter === 'without' && v.images && v.images.length > 0) return false;
-            if (search) {
-                var text = ((v.plateNumber || '') + ' ' + (v.region || '') + ' ' + (v.zone || '') + ' ' +
-                           (v.center || '') + ' ' + (v.supplyPlace || '') + ' ' +
-                           (v.type || '') + ' ' + (v.brand || '') + ' ' + (v.model || '') + ' ' +
-                           (v.color || '') + ' ' + (v.notes || '')).toLowerCase();
-                if (text.indexOf(search) === -1) return false;
-            }
-            return true;
-        });
-    }
-
-    function renderTable() {
-        var tbody = document.getElementById('vehTableBody');
-        if (!tbody) return;
-        var filtered = getFiltered();
-        if (!filtered.length) {
-            var msg = vehicles.length === 0 ? 'لا توجد وسائل برية' : 'لا توجد نتائج مطابقة';
-            tbody.innerHTML = '<div class="veh-empty"><i class="fas fa-truck"></i><p>' + msg + '</p></div>';
-            return;
-        }
-        var html = '';
-        filtered.forEach(function(v, idx) {
-            var statusCls = 'status-' + (v.status || 'صالحة');
-            var condCls = 'cond-' + (v.workCondition || 'جديدة');
-            var dateStr = v.appointmentDate || '—';
-            var faultStr = v.faultDate || '—';
-            var notes = v.notes || '—';
-            var regionShort = getRegionShort(v.region);
-            var zone = v.zone || '—';
-            var center = v.center || '—';
-            var supply = v.supplyPlace || '—';
-            var brandModel = '—';
-            if (v.brand || v.model || v.year) {
-                var parts = [];
-                if (v.brand) parts.push('<span class="veh-badge brand">' + escapeHtml(v.brand) + '</span>');
-                if (v.model) parts.push('<span class="veh-badge model">' + escapeHtml(v.model) + '</span>');
-                if (v.year) parts.push('<span class="veh-badge year">' + escapeHtml(v.year) + '</span>');
-                brandModel = parts.join(' ');
-            }
-            if (v.color) {
-                brandModel += ' <span style="color:rgba(148,163,184,0.6);font-size:10px">(' + escapeHtml(v.color) + ')</span>';
-            }
-            html +=
-                '<div class="veh-table-row">' +
-                    '<div class="veh-cell center">' + (idx + 1) + '</div>' +
-                    '<div class="veh-cell center">' + renderVehicleThumb(v) + '</div>' +
-                    '<div class="veh-cell center"><span class="veh-badge type">' + escapeHtml(v.type || '—') + '</span></div>' +
-                    '<div class="veh-cell">' + brandModel + '</div>' +
-                    '<div class="veh-cell"><span class="veh-plate">' + escapeHtml(v.plateNumber || '—') + '</span></div>' +
-                    '<div class="veh-cell" title="' + escapeHtml(v.region || '') + '"><span class="veh-badge region">' + escapeHtml(regionShort) + '</span></div>' +
-                    '<div class="veh-cell" title="' + escapeHtml(v.zone || '') + '"><span class="veh-badge zone">📍 ' + escapeHtml(zone) + '</span></div>' +
-                    '<div class="veh-cell" title="' + escapeHtml(v.center || '') + '">' + (v.center ? '<span class="veh-badge center">🏢 ' + escapeHtml(center) + '</span>' : '—') + '</div>' +
-                    '<div class="veh-cell" title="' + escapeHtml(v.supplyPlace || '') + '">' + (v.supplyPlace ? '<span class="veh-badge supp">🎯 ' + escapeHtml(supply) + '</span>' : '—') + '</div>' +
-                    '<div class="veh-cell center"><span class="veh-badge ' + statusCls + '">' + escapeHtml(v.status || '—') + '</span></div>' +
-                    '<div class="veh-cell center"><span class="veh-badge ' + condCls + '">' + escapeHtml(v.workCondition || '—') + '</span></div>' +
-                    '<div class="veh-cell center">' + escapeHtml(dateStr) + '</div>' +
-                    '<div class="veh-cell center" style="color:#fca5a5;font-weight:800;">' + escapeHtml(faultStr) + '</div>' +
-                    '<div class="veh-cell" title="' + escapeHtml(notes) + '">' + escapeHtml(notes) + '</div>' +
-                    '<div class="veh-cell center">' +
-                        '<button type="button" class="veh-action-btn edit" data-action="edit" data-id="' + escapeHtml(v.id) + '" title="تعديل"><i class="fas fa-pen"></i></button>' +
-                        '<button type="button" class="veh-action-btn delete" data-action="delete" data-id="' + escapeHtml(v.id) + '" title="حذف"><i class="fas fa-trash"></i></button>' +
-                    '</div>' +
-                '</div>';
-        });
-        tbody.innerHTML = html;
-        tbody.querySelectorAll('[data-action]').forEach(function(btn) {
-            addSafeListener(btn, 'click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var action = this.getAttribute('data-action');
-                var id = this.getAttribute('data-id');
-                if (action === 'edit') openEditModal(id);
-                else if (action === 'delete') confirmDelete(id);
-                else if (action === 'gallery') Gallery.open(id);
-                else if (action === 'add-image') openAddImageFor(id);
-            });
-        });
-    }
-
-    function openAddImageFor(vehicleId) {
-        openEditModal(vehicleId);
-        _timeouts.push(setTimeout(function() {
-            var section = document.querySelector('.veh-images-section');
-            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 400));
-    }
-
-    function refreshSuppFilter() {
-        var el = document.getElementById('vehFilterSupp');
-        if (!el) return;
-        var cur = el.value || 'all';
-        var set = {};
-        vehicles.forEach(function(v) { if (v.supplyPlace) set[v.supplyPlace] = true; });
-        var list = Object.keys(set).sort();
-        var html = '<option value="all">كل أماكن التعزيز</option>';
-        list.forEach(function(s) {
-            html += '<option value="' + escapeHtml(s) + '">🎯 ' + escapeHtml(s) + '</option>';
-        });
-        el.innerHTML = html;
-        if (cur && cur !== 'all' && set[cur]) el.value = cur;
-        else el.value = 'all';
-    }
-
-    /* Gallery */
-    var Gallery = {
-        images: [], currentIndex: 0, zoomLevel: 1, vehicleId: null, isOpen: false,
-        open: function(vehicleId) {
-            var vehicle = vehiclesCache.find(function(v) { return v.id === vehicleId; });
-            if (!vehicle || !vehicle.images || vehicle.images.length === 0) {
-                vehShowToast('لا توجد صور لهذه الوسيلة', 'info');
-                return;
-            }
-            this.vehicleId = vehicleId;
-            this.images = vehicle.images;
-            this.currentIndex = 0;
-            this.zoomLevel = 1;
-            this.isOpen = true;
-            var thumbs = document.getElementById('vehGalleryThumbs');
-            if (thumbs) {
-                thumbs.innerHTML = this.images.map(function(img, i) {
-                    return '<img src="' + escapeHtml(img.url) + '" class="veh-gallery-thumb ' + (i === 0 ? 'active' : '') + '" data-index="' + i + '" alt="">';
-                }).join('');
-                thumbs.querySelectorAll('.veh-gallery-thumb').forEach(function(el) {
-                    addSafeListener(el, 'click', function() {
-                        Gallery.goTo(parseInt(this.getAttribute('data-index'), 10));
-                    });
-                });
-            }
-            var totalEl = document.getElementById('vehGalleryTotal');
-            if (totalEl) totalEl.textContent = this.images.length;
-            this.render();
-            var overlay = document.getElementById('vehGallery');
-            if (overlay) {
-                overlay.classList.add('active');
-                overlay.setAttribute('aria-hidden', 'false');
-            }
-            document.body.style.overflow = 'hidden';
-        },
-        close: function() {
-            var overlay = document.getElementById('vehGallery');
-            if (overlay) {
-                overlay.classList.remove('active');
-                overlay.setAttribute('aria-hidden', 'true');
-            }
-            document.body.style.overflow = '';
-            this.isOpen = false;
-            this.resetZoom();
-        },
-        goTo: function(index) {
-            if (index < 0 || index >= this.images.length) return;
-            this.currentIndex = index;
-            this.resetZoom();
-            this.render();
-        },
-        next: function() { this.goTo((this.currentIndex + 1) % this.images.length); },
-        prev: function() { this.goTo((this.currentIndex - 1 + this.images.length) % this.images.length); },
-        render: function() {
-            var img = this.images[this.currentIndex];
-            var mainImg = document.getElementById('vehGalleryImage');
-            if (mainImg) {
-                mainImg.src = img.url;
-                mainImg.alt = img.caption || ('صورة ' + (this.currentIndex + 1));
-            }
-            var curEl = document.getElementById('vehGalleryCurrent');
-            if (curEl) curEl.textContent = this.currentIndex + 1;
-            var capEl = document.getElementById('vehGalleryCaption');
-            if (capEl) capEl.textContent = img.caption || '';
-            document.querySelectorAll('.veh-gallery-thumb').forEach(function(el, i) {
-                el.classList.toggle('active', i === Gallery.currentIndex);
-                if (i === Gallery.currentIndex) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                }
-            });
-        },
-        zoom: function(dir) {
-            this.zoomLevel = Math.max(0.5, Math.min(4, this.zoomLevel + dir * 0.25));
-            var img = document.getElementById('vehGalleryImage');
-            if (img) img.style.transform = 'scale(' + this.zoomLevel + ')';
-        },
-        resetZoom: function() {
-            this.zoomLevel = 1;
-            var img = document.getElementById('vehGalleryImage');
-            if (img) img.style.transform = 'scale(1)';
-        },
-        download: function() {
-            var img = this.images[this.currentIndex];
-            var a = document.createElement('a');
-            a.href = img.url;
-            a.download = img.originalName || ('vehicle-' + this.vehicleId + '-' + (this.currentIndex + 1) + '.jpg');
-            a.target = '_blank';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-    };
-
-    /* Camera */
-    var Camera = {
-        stream: null, facingMode: 'environment', isOpen: false,
-        open: function() {
-            var modal = document.getElementById('vehCameraModal');
-            if (!modal) return;
-            modal.classList.add('active');
-            this.isOpen = true;
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                vehShowToast('المتصفح لا يدعم الكاميرا', 'error');
-                this.close();
-                this.fallback();
-                return;
-            }
-            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                vehShowToast('الكاميرا تتطلب HTTPS', 'warning');
-                this.close();
-                this.fallback();
-                return;
-            }
-            this.start();
-        },
-        start: function() {
-            var self = this;
-            this.stop();
-            navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: this.facingMode }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-                audio: false
-            }).then(function(stream) {
-                self.stream = stream;
-                var video = document.getElementById('vehCameraVideo');
-                if (video) { video.srcObject = stream; video.play().catch(function(){}); }
-            }).catch(function(err) {
-                console.error('Camera error:', err);
-                var msg = 'تعذّر الوصول للكاميرا. ';
-                if (err.name === 'NotAllowedError') msg += 'يرجى السماح بالوصول.';
-                else if (err.name === 'NotFoundError') msg += 'لا توجد كاميرا.';
-                else msg += err.message;
-                vehShowToast(msg, 'error');
-                self.close();
-                self.fallback();
-            });
-        },
-        stop: function() {
-            if (this.stream) {
-                this.stream.getTracks().forEach(function(t) { t.stop(); });
-                this.stream = null;
-            }
-        },
-        close: function() {
-            this.stop();
-            var modal = document.getElementById('vehCameraModal');
-            if (modal) modal.classList.remove('active');
-            this.isOpen = false;
-        },
-        switch: function() {
-            this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
-            vehShowToast(this.facingMode === 'user' ? '🤳 الكاميرا الأمامية' : '📷 الكاميرا الخلفية', 'info', 1200);
-            this.start();
-        },
-        capture: function() {
-            var video = document.getElementById('vehCameraVideo');
-            var canvas = document.getElementById('vehCameraCanvas');
-            if (!video || !video.videoWidth) {
-                vehShowToast('الكاميرا لم تجهز بعد', 'warning');
-                return;
-            }
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            var ctx = canvas.getContext('2d');
-            if (this.facingMode === 'user') {
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
-            }
-            ctx.drawImage(video, 0, 0);
-            canvas.toBlob(function(blob) {
-                if (!blob) return;
-                var file = new File([blob], 'capture-' + Date.now() + '.jpg', { type: 'image/jpeg' });
-                file._source = 'camera';
-                ImageUploader.pendingFiles.push(file);
-                ImageUploader.renderPreview();
-                var flash = document.createElement('div');
-                flash.className = 'veh-camera-flash';
-                var stage = document.querySelector('.veh-camera-stage');
-                if (stage) {
-                    stage.appendChild(flash);
-                    setTimeout(function() { flash.remove(); }, 400);
-                }
-                if (navigator.vibrate) navigator.vibrate(30);
-                vehShowToast('📸 تم التقاط الصورة', 'success', 1200);
-            }, 'image/jpeg', 0.92);
-        },
-        fallback: function() {
-            this.close();
-            setTimeout(function() {
-                var input = document.getElementById('vehCameraInput');
-                if (input) input.click();
-            }, 200);
-        }
-    };
-
-    /* URL Importer */
-    var UrlImporter = {
-        open: function() {
-            var modal = document.getElementById('vehUrlModal');
-            if (!modal) return;
-            modal.classList.add('active');
-            var i = document.getElementById('vehUrlInput'); if (i) i.value = '';
-            var c = document.getElementById('vehUrlCaption'); if (c) c.value = '';
-            var p = document.getElementById('vehUrlPreview'); if (p) p.innerHTML = '';
-            setTimeout(function() {
-                var el = document.getElementById('vehUrlInput');
-                if (el) el.focus();
-            }, 200);
-        },
-        close: function() {
-            var modal = document.getElementById('vehUrlModal');
-            if (modal) modal.classList.remove('active');
-        },
-        isValidUrl: function(str) {
-            try {
-                var u = new URL(str);
-                return u.protocol === 'http:' || u.protocol === 'https:';
-            } catch(e) { return false; }
-        },
-        preview: function() {
-            var input = document.getElementById('vehUrlInput');
-            var preview = document.getElementById('vehUrlPreview');
-            if (!input || !preview) return;
-            var url = input.value.trim();
-            if (!this.isValidUrl(url)) {
-                vehShowToast('الرجاء إدخال رابط صحيح', 'error');
-                return;
-            }
-            preview.innerHTML = '<div style="padding:16px;color:#94a3b8;font-size:12px;">⏳ جاري التحميل...</div>';
-            var img = new Image();
-            img.onload = function() {
-                preview.innerHTML = '<img src="' + escapeHtml(url) + '" alt="معاينة"><p style="margin:8px 0 0;font-size:11px;color:#10b981;">✅ رابط صالح</p>';
-            };
-            img.onerror = function() {
-                preview.innerHTML = '<p style="color:#ef4444;font-size:12px;padding:12px;">❌ تعذّر تحميل الصورة</p>';
-            };
-            img.src = url;
-        },
-        add: function() {
-            var self = this;
-            var input = document.getElementById('vehUrlInput');
-            var captionInput = document.getElementById('vehUrlCaption');
-            if (!input) return;
-            var url = input.value.trim();
-            var caption = captionInput ? captionInput.value.trim() : '';
-            if (!this.isValidUrl(url)) {
-                vehShowToast('الرجاء إدخال رابط صحيح', 'error');
-                return;
-            }
-            vehShowToast('⏳ جاري التحميل...', 'info', 1500);
-            fetch(url, { mode: 'cors' })
-                .then(function(r) {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.blob();
-                })
-                .then(function(blob) {
-                    if (!blob.type.startsWith('image/')) throw new Error('ليس صورة');
-                    if (blob.size > 5 * 1024 * 1024) throw new Error('الحجم > 5MB');
-                    var filename = 'imported-' + Date.now() + '.jpg';
-                    try {
-                        var u = new URL(url);
-                        var name = decodeURIComponent(u.pathname.split('/').pop());
-                        if (name && name.indexOf('.') !== -1) filename = name;
-                    } catch(e) {}
-                    var file = new File([blob], filename, { type: blob.type });
-                    file._source = 'upload';
-                    if (caption) file.caption = caption;
-                    ImageUploader.pendingFiles.push(file);
-                    ImageUploader.renderPreview();
-                    vehShowToast('✅ تم استيراد الصورة', 'success');
-                    self.close();
-                })
-                .catch(function(err) {
-                    vehShowToast('❌ فشل الاستيراد: ' + err.message, 'error');
-                });
-        }
-    };
-
-    /* Image Uploader */
-    var ImageUploader = {
-        pendingFiles: [],
-        init: function() {
-            var dropZone = document.getElementById('vehDropzone');
-            var inputFile = document.getElementById('vehImageInput');
-            var inputCamera = document.getElementById('vehCameraInput');
-            if (inputFile) {
-                addSafeListener(inputFile, 'change', function(e) {
-                    ImageUploader.handleFiles(e.target.files);
-                    e.target.value = '';
-                });
-            }
-            if (inputCamera) {
-                addSafeListener(inputCamera, 'change', function(e) {
-                    ImageUploader.handleFiles(e.target.files, 'camera');
-                    e.target.value = '';
-                });
-            }
-            if (dropZone) {
-                addSafeListener(dropZone, 'click', function() {
-                    if (inputFile) inputFile.click();
-                });
-                ['dragenter', 'dragover'].forEach(function(evt) {
-                    addSafeListener(dropZone, evt, function(e) {
-                        e.preventDefault();
-                        dropZone.classList.add('dragover');
-                    });
-                });
-                ['dragleave', 'drop'].forEach(function(evt) {
-                    addSafeListener(dropZone, evt, function(e) {
-                        e.preventDefault();
-                        dropZone.classList.remove('dragover');
-                    });
-                });
-                addSafeListener(dropZone, 'drop', function(e) {
-                    ImageUploader.handleFiles(e.dataTransfer.files);
-                });
-            }
-            addSafeListener(document, 'paste', function(e) {
-                var modal = document.getElementById('vehModal');
-                if (!modal || !modal.classList.contains('active')) return;
-                var items = e.clipboardData && e.clipboardData.items;
-                if (!items) return;
-                var files = [];
-                for (var i = 0; i < items.length; i++) {
-                    if (items[i].type.indexOf('image/') === 0) {
-                        var f = items[i].getAsFile();
-                        if (f) files.push(f);
-                    }
-                }
-                if (files.length) ImageUploader.handleFiles(files);
-            });
-        },
-        handleFiles: function(files, source) {
-            source = source || 'upload';
-            var valid = Array.prototype.slice.call(files).filter(function(f) {
-                if (f.type.indexOf('image/') !== 0) {
-                    vehShowToast('الملف ' + f.name + ' ليس صورة', 'error');
-                    return false;
-                }
-                if (f.size > 5 * 1024 * 1024) {
-                    vehShowToast('الصورة ' + f.name + ' أكبر من 5MB', 'error');
-                    return false;
-                }
-                f._source = source;
-                return true;
-            });
-            this.pendingFiles = this.pendingFiles.concat(valid);
-            if (this.pendingFiles.length > MAX_IMAGES) {
-                vehShowToast('الحد الأقصى ' + MAX_IMAGES + ' صور', 'warning');
-                this.pendingFiles = this.pendingFiles.slice(0, MAX_IMAGES);
-            }
-            this.renderPreview();
-        },
-        renderPreview: function() {
-            var container = document.getElementById('vehNewImages');
-            if (!container) return;
-            container.innerHTML = this.pendingFiles.map(function(file, i) {
-                return '<div class="veh-image-card">' +
-                    '<img src="' + URL.createObjectURL(file) + '" alt="">' +
-                    '<div class="veh-image-actions">' +
-                        '<button type="button" class="del" data-idx="' + i + '" title="حذف">🗑️</button>' +
-                    '</div>' +
-                    (file._source === 'camera' ? '<span class="src-badge">📷</span>' : '') +
-                '</div>';
-            }).join('');
-            container.querySelectorAll('[data-idx]').forEach(function(btn) {
-                addSafeListener(btn, 'click', function() {
-                    ImageUploader.removePending(parseInt(this.getAttribute('data-idx'), 10));
-                });
-            });
-        },
-        removePending: function(index) {
-            this.pendingFiles.splice(index, 1);
-            this.renderPreview();
-        },
-        uploadAll: function(vehicleId) {
-            if (this.pendingFiles.length === 0) return Promise.resolve(true);
-            var formData = new FormData();
-            this.pendingFiles.forEach(function(f) {
-                formData.append('images', f);
-                if (f._source) formData.append('source', f._source);
-            });
-            var headers = {};
-            var t = getToken();
-            if (t) headers['Authorization'] = 'Bearer ' + t;
-            var c = getCsrf();
-            if (c) headers['X-CSRF-Token'] = c;
-            return fetch('/api/vehicles/' + encodeURIComponent(vehicleId) + '/images', {
-                method: 'POST',
-                headers: headers,
-                credentials: 'include',
-                body: formData
-            }).then(function(res) {
-                return res.json().then(function(d) { return { ok: res.ok, data: d }; });
-            }).then(function(result) {
-                if (!result.ok) throw new Error(result.data.error || 'فشل الرفع');
-                vehShowToast('تم رفع ' + ImageUploader.pendingFiles.length + ' صورة', 'success');
-                ImageUploader.pendingFiles = [];
-                ImageUploader.renderPreview();
-                return result.data.images;
-            });
-        },
-        renderCurrent: function(images) {
-            var container = document.getElementById('vehCurrentImages');
-            if (!container) return;
-            if (!images || images.length === 0) {
-                container.innerHTML = '<p style="color:#64748b;text-align:center;padding:14px;font-size:12px;">لا توجد صور بعد</p>';
-                return;
-            }
-            var vid = currentVehicleId;
-            container.innerHTML = images.map(function(img) {
-                return '<div class="veh-image-card ' + (img.isPrimary ? 'is-primary' : '') + '">' +
-                    '<img src="' + escapeHtml(img.url) + '" data-gallery="' + escapeHtml(vid) + '" alt="">' +
-                    '<div class="veh-image-actions">' +
-                        '<button type="button" data-primary="' + img._id + '" title="تعيين كرئيسية">⭐</button>' +
-                        '<button type="button" class="del" data-delete="' + img._id + '" title="حذف">🗑️</button>' +
-                    '</div>' +
-                    (img.source === 'camera' ? '<span class="src-badge">📷</span>' : '') +
-                '</div>';
-            }).join('');
-            container.querySelectorAll('[data-gallery]').forEach(function(el) {
-                addSafeListener(el, 'click', function() {
-                    Gallery.open(this.getAttribute('data-gallery'));
-                });
-            });
-            container.querySelectorAll('[data-primary]').forEach(function(el) {
-                addSafeListener(el, 'click', function(e) {
-                    e.stopPropagation();
-                    ImageUploader.setPrimary(this.getAttribute('data-primary'));
-                });
-            });
-            container.querySelectorAll('[data-delete]').forEach(function(el) {
-                addSafeListener(el, 'click', function(e) {
-                    e.stopPropagation();
-                    ImageUploader.deleteImage(this.getAttribute('data-delete'));
-                });
-            });
-        },
-        deleteImage: function(imageId) {
-            if (!confirm('حذف هذه الصورة؟')) return;
-            apiFetch('/api/vehicles/' + encodeURIComponent(currentVehicleId) + '/images/' + imageId, { method: 'DELETE' })
-                .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
-                .then(function(result) {
-                    if (!result.ok) throw new Error(result.data.error || 'فشل الحذف');
-                    ImageUploader.renderCurrent(result.data.images);
-                    var v = vehicles.find(function(x) { return x.id === currentVehicleId; });
-                    if (v) v.images = result.data.images;
-                    vehShowToast('✅ تم حذف الصورة', 'success');
-                })
-                .catch(function(err) { vehShowToast('❌ ' + err.message, 'error'); });
-        },
-        setPrimary: function(imageId) {
-            apiFetch('/api/vehicles/' + encodeURIComponent(currentVehicleId) + '/images/' + imageId + '/primary', { method: 'PATCH' })
-                .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
-                .then(function(result) {
-                    if (!result.ok) throw new Error(result.data.error || 'فشل التحديث');
-                    ImageUploader.renderCurrent(result.data.images);
-                    var v = vehicles.find(function(x) { return x.id === currentVehicleId; });
-                    if (v) v.images = result.data.images;
-                    vehShowToast('⭐ تم تعيين الصورة الرئيسية', 'success');
-                })
-                .catch(function(err) { vehShowToast('❌ ' + err.message, 'error'); });
-        },
-        reset: function() {
-            this.pendingFiles = [];
-            this.renderPreview();
-            var cur = document.getElementById('vehCurrentImages');
-            if (cur) cur.innerHTML = '';
-        }
-    };
-
-    function updateZoneOptions(selectedZone) {
-        var regionEl = document.getElementById('vehRegion');
-        var zoneEl = document.getElementById('vehZone');
-        var zoneGroupEl = document.getElementById('vehZoneGroup');
-        if (!regionEl || !zoneEl) return;
-        var region = regionEl.value;
-        zoneEl.innerHTML = '';
-        if (!region) {
-            zoneEl.disabled = true;
-            zoneEl.innerHTML = '<option value="">— اختر الإدارة / الإقليم أولاً —</option>';
-            if (zoneGroupEl) zoneGroupEl.style.display = 'block';
-            updateCenterOptions();
-            return;
-        }
-        var zones = ZONES_DATA[region] || [];
-        if (!zones.length) {
-            zoneEl.disabled = true;
-            zoneEl.innerHTML = '<option value="">— لا توجد مناطق —</option>';
-            if (zoneGroupEl) zoneGroupEl.style.display = 'block';
-            updateCenterOptions();
-            return;
-        }
-        if (zones.length === 1) {
-            zoneEl.disabled = true;
-            zoneEl.innerHTML = '<option value="' + escapeHtml(zones[0]) + '" selected>' + escapeHtml(zones[0]) + '</option>';
-            if (zoneGroupEl) zoneGroupEl.style.display = 'block';
-            updateCenterOptions(zones[0]);
-            return;
-        }
-        if (zoneGroupEl) zoneGroupEl.style.display = 'block';
-        zoneEl.disabled = false;
-        var html = '<option value="">— اختر المنطقة —</option>';
-        zones.forEach(function(z) {
-            var sel = (z === selectedZone) ? ' selected' : '';
-            html += '<option value="' + escapeHtml(z) + '"' + sel + '>' + escapeHtml(z) + '</option>';
-        });
-        zoneEl.innerHTML = html;
-        updateCenterOptions(selectedZone);
-    }
-
-    function updateCenterOptions(selectedCenter) {
-        var zoneEl = document.getElementById('vehZone');
-        var centerEl = document.getElementById('vehCenter');
-        if (!zoneEl || !centerEl) return;
-        var zone = zoneEl.value;
-        centerEl.innerHTML = '';
-        if (!zone) {
-            centerEl.disabled = true;
-            centerEl.innerHTML = '<option value="">— اختر المنطقة أولاً —</option>';
-            updateSupplyOptions();
-            return;
-        }
-        var centers = CENTERS_DATA[zone] || [];
-        if (!centers.length) {
-            centerEl.disabled = true;
-            centerEl.innerHTML = '<option value="">— لا توجد مراكز —</option>';
-            updateSupplyOptions();
-            return;
-        }
-        centerEl.disabled = false;
-        var html = '<option value="">— اختر المركز —</option>';
-        centers.forEach(function(c) {
-            var sel = (c === selectedCenter) ? ' selected' : '';
-            html += '<option value="' + escapeHtml(c) + '"' + sel + '>' + escapeHtml(c) + '</option>';
-        });
-        centerEl.innerHTML = html;
-        updateSupplyOptions();
-    }
-
-    function updateSupplyOptions(selectedSupply) {
-        var centerEl = document.getElementById('vehCenter');
-        var suppEl = document.getElementById('vehSupp');
-        var listEl = document.getElementById('vehSuppList');
-        if (!suppEl) return;
-        var center = centerEl ? centerEl.value : '';
-        var supplies = SUPPLY_DATA[center] || [];
-        if (listEl) {
-            var html = '';
-            supplies.forEach(function(s) {
-                html += '<option value="' + escapeHtml(s) + '"></option>';
-            });
-            listEl.innerHTML = html;
-        }
-        if (selectedSupply !== undefined && selectedSupply !== null) {
-            suppEl.value = selectedSupply;
-        }
-    }
-
-    function updateModelsList() {
-        var brandEl = document.getElementById('vehBrand');
-        var listEl = document.getElementById('vehModelsList');
-        if (!brandEl || !listEl) return;
-        var models = MODELS_DATA[brandEl.value] || [];
-        var html = '';
-        models.forEach(function(m) { html += '<option value="' + escapeHtml(m) + '">'; });
-        listEl.innerHTML = html;
-    }
-
-    function toggleFaultDate() {
-        var statusEl = document.getElementById('vehStatus');
-        var groupEl = document.getElementById('vehFaultDateGroup');
-        var inputEl = document.getElementById('vehFaultDate');
-        var disposalEl = document.getElementById('vehDisposalFields');
-        var disposalReason = document.getElementById('vehDisposalReason');
-        if (!statusEl || !groupEl) return;
-        var status = statusEl.value;
-        if (status === 'معطبة') {
-            groupEl.style.display = 'block';
-            if (inputEl) inputEl.required = true;
-        } else {
-            groupEl.style.display = 'none';
-            if (inputEl) { inputEl.required = false; inputEl.value = ''; }
-        }
-        if (disposalEl) {
-            if (status === 'طرح') {
-                disposalEl.style.display = 'block';
-                if (disposalReason) disposalReason.required = true;
-            } else {
-                disposalEl.style.display = 'none';
-                if (disposalReason) disposalReason.required = false;
-            }
-        }
-    }
-
-    function openAddModal() {
-        var modal = document.getElementById('vehModal');
-        var title = document.getElementById('vehModalTitle');
-        if (!modal) return;
-        currentVehicleId = null;
-        ImageUploader.reset();
-        if (title) title.textContent = 'إضافة وسيلة برية';
-        ['vehId','vehPlate','vehModel','vehYear','vehColor','vehDate','vehFaultDate','vehNotes','vehDisposalReason','vehDisposalDecision','vehDisposedBy','vehDisposalDate'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        var el;
-        el = document.getElementById('vehRegion'); if (el) el.value = '';
-        el = document.getElementById('vehType'); if (el) el.value = 'سيارة';
-        el = document.getElementById('vehBrand'); if (el) el.value = '';
-        el = document.getElementById('vehStatus'); if (el) el.value = 'صالحة';
-        el = document.getElementById('vehCondition'); if (el) el.value = 'جديدة';
-        el = document.getElementById('vehSupp'); if (el) el.value = '';
-        el = document.getElementById('vehFaultDateGroup'); if (el) el.style.display = 'none';
-        el = document.getElementById('vehDisposalFields'); if (el) el.style.display = 'none';
-        updateZoneOptions();
-        updateModelsList();
-        modal.classList.add('active');
-        _timeouts.push(setTimeout(function() {
-            var p = document.getElementById('vehPlate');
-            if (p) p.focus();
-        }, 100));
-    }
-
-    function openEditModal(id) {
-        var v = vehicles.find(function(x) { return x.id === id; });
-        if (!v) return;
-        var modal = document.getElementById('vehModal');
-        var title = document.getElementById('vehModalTitle');
-        if (!modal) return;
-        currentVehicleId = id;
-        ImageUploader.reset();
-        if (title) title.textContent = 'تعديل وسيلة برية';
-        var setVal = function(elId, val) {
-            var el = document.getElementById(elId);
-            if (el) el.value = val || '';
-        };
-        setVal('vehId', v.id);
-        setVal('vehPlate', v.plateNumber);
-        setVal('vehRegion', v.region);
-        setVal('vehType', v.type || 'سيارة');
-        setVal('vehBrand', v.brand);
-        setVal('vehModel', v.model);
-        setVal('vehYear', v.year);
-        setVal('vehColor', v.color);
-        setVal('vehStatus', v.status || 'صالحة');
-        setVal('vehCondition', v.workCondition || 'جديدة');
-        setVal('vehDate', v.appointmentDate);
-        setVal('vehFaultDate', v.faultDate);
-        setVal('vehNotes', v.notes);
-        setVal('vehDisposalReason', v.disposalReason);
-        setVal('vehDisposalDecision', v.disposalDecision);
-        setVal('vehDisposedBy', v.disposedBy);
-        setVal('vehDisposalDate', v.disposalDate);
-        updateZoneOptions(v.zone || '');
-        updateCenterOptions(v.center || '');
-        updateSupplyOptions(v.supplyPlace || '');
-        updateModelsList();
-        toggleFaultDate();
         ImageUploader.renderCurrent(v.images || []);
-        modal.classList.add('active');
-    }
-
-    function closeModal() {
-        var modal = document.getElementById('vehModal');
-        if (modal) modal.classList.remove('active');
-        Camera.close();
-        UrlImporter.close();
-        currentVehicleId = null;
-        ImageUploader.reset();
-    }
-
-    function saveVehicle(e) {
-        if (e && e.preventDefault) e.preventDefault();
-        if (_isDestroyed) return;
-        var id = document.getElementById('vehId').value.trim();
-        var plateNumber = document.getElementById('vehPlate').value.trim();
-        var region = document.getElementById('vehRegion').value.trim();
-        var zone = document.getElementById('vehZone').value.trim();
-        var center = document.getElementById('vehCenter').value.trim();
-        var supplyEl = document.getElementById('vehSupp');
-        var supplyPlace = supplyEl ? supplyEl.value.trim() : '';
-        var type = document.getElementById('vehType').value;
-        var brand = document.getElementById('vehBrand').value.trim();
-        var model = document.getElementById('vehModel').value.trim();
-        var yearEl = document.getElementById('vehYear');
-        var year = yearEl && yearEl.value ? Number(yearEl.value) : null;
-        var color = document.getElementById('vehColor').value;
-        var status = document.getElementById('vehStatus').value;
-        var workCondition = document.getElementById('vehCondition').value;
-        var appointmentDate = document.getElementById('vehDate').value || null;
-        var faultDate = document.getElementById('vehFaultDate').value || null;
-        var notes = document.getElementById('vehNotes').value.trim();
-        var disposalReason = document.getElementById('vehDisposalReason') ? document.getElementById('vehDisposalReason').value.trim() : '';
-        var disposalDecision = document.getElementById('vehDisposalDecision') ? document.getElementById('vehDisposalDecision').value.trim() : '';
-        var disposedBy = document.getElementById('vehDisposedBy') ? document.getElementById('vehDisposedBy').value.trim() : '';
-        var disposalDate = document.getElementById('vehDisposalDate') ? document.getElementById('vehDisposalDate').value || null : null;
-        if (!plateNumber) { vehShowToast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
-        if (!region) { vehShowToast('⚠️ الإدارة / الإقليم مطلوب', 'error'); return; }
-        if (!zone) { vehShowToast('⚠️ المنطقة مطلوبة', 'error'); return; }
-        if (status === 'معطبة' && !faultDate) { vehShowToast('⚠️ تاريخ العطب مطلوب', 'error'); return; }
-        if (status === 'طرح' && !disposalReason) { vehShowToast('⚠️ سبب الطرح مطلوب', 'error'); return; }
-        var payload = {
-            plateNumber: plateNumber, region: region, zone: zone, center: center,
-            supplyPlace: supplyPlace, type: type, brand: brand, model: model,
-            year: year, color: color, status: status, workCondition: workCondition,
-            appointmentDate: appointmentDate, faultDate: faultDate, notes: notes,
-            disposalReason: disposalReason, disposalDecision: disposalDecision,
-            disposedBy: disposedBy, disposalDate: disposalDate
-        };
-        var btn = document.getElementById('vehSaveBtn');
-        var btnText = document.getElementById('vehSaveBtnText');
-        if (btn) btn.disabled = true;
-        if (btnText) btnText.textContent = 'جاري الحفظ...';
-        var isEdit = !!id;
-        var url = isEdit ? '/api/vehicles/' + encodeURIComponent(id) : '/api/vehicles';
-        var method = isEdit ? 'PUT' : 'POST';
-        apiFetch(url, { method: method, body: JSON.stringify(payload) })
-            .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
-            .then(function(result) {
-                if (_isDestroyed) return;
-                if (!result.ok) throw new Error(result.data.error || 'فشل الحفظ');
-                var vehicleId = isEdit ? id : result.data.id;
-                if (!vehicleId) throw new Error('لم يتم استلام معرف الوسيلة');
-                return ImageUploader.uploadAll(vehicleId).then(function() {
-                    vehShowToast(isEdit ? '✅ تم تعديل الوسيلة' : '✅ تم إضافة الوسيلة', 'success');
-                    closeModal();
-                    vehLoad();
-                });
-            })
-            .catch(function(err) {
-                console.warn('❌ Save error:', err.message);
-                vehShowToast('❌ ' + err.message, 'error');
-            })
-            .finally(function() {
-                if (btn) btn.disabled = false;
-                if (btnText) btnText.textContent = 'حفظ';
-            });
-    }
-
-    function confirmDelete(id) {
-        var v = vehicles.find(function(x) { return x.id === id; });
-        if (!v) return;
-        if (!confirm('⚠️ هل تريد حذف الوسيلة "' + v.plateNumber + '"؟')) return;
-        apiFetch('/api/vehicles/' + encodeURIComponent(id), { method: 'DELETE' })
-            .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
-            .then(function(result) {
-                if (_isDestroyed) return;
-                if (!result.ok) throw new Error(result.data.error || 'فشل الحذف');
-                vehShowToast('✅ تم حذف الوسيلة', 'success');
-                vehLoad();
-            })
-            .catch(function(err) { vehShowToast('❌ ' + err.message, 'error'); });
-    }
-
-    function vehPrint() {
-        if (_isDestroyed) return;
-        vehShowToast('🖨️ جاري تحضير الطباعة...', 'info', 1500);
-        _timeouts.push(setTimeout(function() { window.print(); }, 300));
-    }
-
-    function vehExportExcel() {
-        if (_isDestroyed) return;
-        try {
-            var filtered = getFiltered();
-            if (!filtered.length) { vehShowToast('⚠️ لا توجد بيانات', 'error'); return; }
-            var BOM = '\uFEFF';
-            var headers = ['#','النوع','الماركة','الطراز','السنة','اللون','رقم الوسيلة','الإدارة / الإقليم','المنطقة','المركز','مكان التعزيز','الحالة','حالة العمل','تاريخ التعيين','تاريخ العطب','عدد الصور','ملاحظات'];
-            function csvEscape(val) {
-                if (val === null || val === undefined) return '';
-                var s = String(val);
-                if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
-                    return '"' + s.replace(/"/g, '""') + '"';
-                }
-                return s;
-            }
-            var rows = [];
-            rows.push(headers.map(csvEscape).join(','));
-            filtered.forEach(function(v, idx) {
-                rows.push([
-                    csvEscape(idx + 1), csvEscape(v.type || ''), csvEscape(v.brand || ''),
-                    csvEscape(v.model || ''), csvEscape(v.year || ''), csvEscape(v.color || ''),
-                    csvEscape(v.plateNumber || ''), csvEscape(v.region || ''), csvEscape(v.zone || ''),
-                    csvEscape(v.center || ''), csvEscape(v.supplyPlace || ''), csvEscape(v.status || ''),
-                    csvEscape(v.workCondition || ''), csvEscape(v.appointmentDate || ''),
-                    csvEscape(v.faultDate || ''), csvEscape((v.images || []).length),
-                    csvEscape(v.notes || '')
-                ].join(','));
-            });
-            var csv = BOM + rows.join('\r\n');
-            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            var now = new Date();
-            var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + '_' + String(now.getHours()).padStart(2, '0') + '-' + String(now.getMinutes()).padStart(2, '0');
-            var filename = 'vehicles_' + dateStr + '.csv';
-            if (window.navigator && window.navigator.msSaveBlob) {
-                window.navigator.msSaveBlob(blob, filename);
-            } else {
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                _timeouts.push(setTimeout(function() {
-                    if (a.parentNode) a.parentNode.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100));
-            }
-            vehShowToast('✅ تم تصدير ' + filtered.length + ' وسيلة', 'success');
-        } catch (err) {
-            console.error('❌ Excel error:', err);
-            vehShowToast('❌ فشل التصدير: ' + err.message, 'error');
-        }
-    }
-
-    function toggleAutoRefresh() {
-        var cb = document.getElementById('vehAutoRefresh');
-        if (!cb) return;
-        if (cb.checked) {
-            autoRefreshInterval = setInterval(function() {
-                if (!_isDestroyed && !document.hidden) vehLoad();
-            }, 30000);
-            _intervals.push(autoRefreshInterval);
-            vehShowToast('🔄 التحديث التلقائي مُفعَّل', 'success');
-        } else {
-            if (autoRefreshInterval) { clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
-            vehShowToast('⏸️ التحديث التلقائي مُعطَّل', 'info');
-        }
-    }
-
-    function initScrollButtons() {
-        var nav = document.getElementById('vehScrollNav');
-        var btnTop = document.getElementById('vehScrollTop');
-        var btnBottom = document.getElementById('vehScrollBottom');
-        if (!nav || !btnTop || !btnBottom) return;
-        var SCROLL_THRESHOLD = 200;
-        function updateVisibility() {
-            var y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-            var docHeight = document.documentElement.scrollHeight;
-            var winHeight = window.innerHeight;
-            var hasScroll = docHeight > (winHeight + 100);
-            if (!hasScroll) { nav.classList.remove('visible'); return; }
-            if (y > SCROLL_THRESHOLD) nav.classList.add('visible');
-            else nav.classList.remove('visible');
-            btnTop.style.opacity = y > 50 ? '1' : '0.35';
-            btnTop.style.pointerEvents = y > 50 ? 'auto' : 'none';
-            var atBottom = (y + winHeight) >= (docHeight - 50);
-            btnBottom.style.opacity = atBottom ? '0.35' : '1';
-            btnBottom.style.pointerEvents = atBottom ? 'none' : 'auto';
-        }
-        addSafeListener(btnTop, 'click', function() {
-            try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
-        });
-        addSafeListener(btnBottom, 'click', function() {
-            var target = document.documentElement.scrollHeight;
-            try { window.scrollTo({ top: target, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, target); }
-        });
-        addSafeListener(window, 'scroll', updateVisibility);
-        addSafeListener(window, 'resize', updateVisibility);
-        updateVisibility();
-        _timeouts.push(setTimeout(updateVisibility, 500));
-        _timeouts.push(setTimeout(updateVisibility, 1500));
-    }
-
-    function init() {
-        if (_isDestroyed) return;
-        console.log('🚀 Initializing Vehicles v10.1...');
-        ImageUploader.init();
-        var filterZoneEl = document.getElementById('vehFilterZone');
-        if (filterZoneEl) {
-            var zonesAll = getAllZones();
-            var zHtml = '<option value="all">كل المناطق</option>';
-            zonesAll.forEach(function(z) { zHtml += '<option value="' + escapeHtml(z) + '">📍 ' + escapeHtml(z) + '</option>'; });
-            filterZoneEl.innerHTML = zHtml;
-        }
-        var filterCenterEl = document.getElementById('vehFilterCenter');
-        if (filterCenterEl) {
-            var centersAll = getAllCenters();
-            var cHtml = '<option value="all">كل المراكز</option>';
-            centersAll.forEach(function(c) { cHtml += '<option value="' + escapeHtml(c) + '">🏢 ' + escapeHtml(c) + '</option>'; });
-            filterCenterEl.innerHTML = cHtml;
-        }
-        refreshSuppFilter();
-        var filterBrandEl = document.getElementById('vehFilterBrand');
-        if (filterBrandEl) {
-            var brands = ['تويوتا','فورد','إيفيكو','مرسيدس','رينو','بيجو','ستروين','فولكس فاغن','نيسان','ميتسوبيشي','هيونداي','كيا','شيفروليه','جيب','سكودا','فيات','مان','سكانيا','فولفو','داف','هينو','ايسوزو','أخرى'];
-            var bHtml = '<option value="all">كل الماركات</option>';
-            brands.forEach(function(b) { bHtml += '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>'; });
-            filterBrandEl.innerHTML = bHtml;
-        }
-        addSafeListener(document.getElementById('vehAddBtn'), 'click', openAddModal);
-        addSafeListener(document.getElementById('vehModalClose'), 'click', closeModal);
-        addSafeListener(document.getElementById('vehCancelBtn'), 'click', closeModal);
-        var modal = document.getElementById('vehModal');
-        if (modal) {
-            addSafeListener(modal, 'click', function(e) { if (e.target === modal) closeModal(); });
-        }
-        addSafeListener(document, 'keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (Gallery.isOpen) { Gallery.close(); return; }
-                if (Camera.isOpen) { Camera.close(); return; }
-                var urlModal = document.getElementById('vehUrlModal');
-                if (urlModal && urlModal.classList.contains('active')) { UrlImporter.close(); return; }
-                closeModal();
-            }
-            if (Gallery.isOpen) {
-                if (e.key === 'ArrowRight') Gallery.next();
-                else if (e.key === 'ArrowLeft') Gallery.prev();
-                else if (e.key === '+' || e.key === '=') Gallery.zoom(1);
-                else if (e.key === '-') Gallery.zoom(-1);
-                else if (e.key === '0') Gallery.resetZoom();
-            }
-        });
-        var form = document.getElementById('vehForm');
-        if (form) addSafeListener(form, 'submit', saveVehicle);
-        addSafeListener(document.getElementById('vehRefreshBtn'), 'click', function() {
-            vehShowToast('🔄 جاري التحديث...', 'info', 1500);
-            vehLoad();
-        });
-        addSafeListener(document.getElementById('vehPrintBtn'), 'click', vehPrint);
-        addSafeListener(document.getElementById('vehExcelBtn'), 'click', vehExportExcel);
-        addSafeListener(document.getElementById('vehSearch'), 'input', renderTable);
-        addSafeListener(document.getElementById('vehFilterStatus'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterType'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterZone'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterCenter'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterSupp'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterBrand'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterImages'), 'change', renderTable);
-        addSafeListener(document.getElementById('vehFilterRegion'), 'change', function() {
-            var region = this.value;
-            var zoneEl = document.getElementById('vehFilterZone');
-            var centerEl = document.getElementById('vehFilterCenter');
-            if (zoneEl) {
-                if (region === 'all') {
-                    var zonesAll = getAllZones();
-                    var html = '<option value="all">كل المناطق</option>';
-                    zonesAll.forEach(function(z) { html += '<option value="' + escapeHtml(z) + '">📍 ' + escapeHtml(z) + '</option>'; });
-                    zoneEl.innerHTML = html;
-                } else {
-                    var zones = ZONES_DATA[region] || [];
-                    var html2 = '<option value="all">كل المناطق</option>';
-                    zones.forEach(function(z) { html2 += '<option value="' + escapeHtml(z) + '">📍 ' + escapeHtml(z) + '</option>'; });
-                    zoneEl.innerHTML = html2;
-                }
-            }
-            if (centerEl) centerEl.innerHTML = '<option value="all">كل المراكز</option>';
-            var suppEl = document.getElementById('vehFilterSupp');
-            if (suppEl) suppEl.value = 'all';
-            renderTable();
-        });
-        addSafeListener(document.getElementById('vehFilterZone'), 'change', function() {
-            var zone = this.value;
-            var centerEl = document.getElementById('vehFilterCenter');
-            if (centerEl) {
-                if (zone === 'all') {
-                    var centersAll = getAllCenters();
-                    var html = '<option value="all">كل المراكز</option>';
-                    centersAll.forEach(function(c) { html += '<option value="' + escapeHtml(c) + '">🏢 ' + escapeHtml(c) + '</option>'; });
-                    centerEl.innerHTML = html;
-                } else {
-                    var centers = CENTERS_DATA[zone] || [];
-                    var html2 = '<option value="all">كل المراكز</option>';
-                    centers.forEach(function(c) { html2 += '<option value="' + escapeHtml(c) + '">🏢 ' + escapeHtml(c) + '</option>'; });
-                    centerEl.innerHTML = html2;
-                }
-            }
-            var suppEl = document.getElementById('vehFilterSupp');
-            if (suppEl) suppEl.value = 'all';
-            renderTable();
-        });
-        addSafeListener(document.getElementById('vehFilterCenter'), 'change', function() {
-            var suppEl = document.getElementById('vehFilterSupp');
-            if (suppEl) suppEl.value = 'all';
-            renderTable();
-        });
-        addSafeListener(document.getElementById('vehRegion'), 'change', function() { updateZoneOptions(); });
-        addSafeListener(document.getElementById('vehZone'), 'change', function() { updateCenterOptions(); });
-        addSafeListener(document.getElementById('vehCenter'), 'change', function() { updateSupplyOptions(); });
-        addSafeListener(document.getElementById('vehBrand'), 'change', function() { updateModelsList(); });
-        addSafeListener(document.getElementById('vehStatus'), 'change', toggleFaultDate);
-        addSafeListener(document.getElementById('vehAutoRefresh'), 'change', toggleAutoRefresh);
-        addSafeListener(document.getElementById('vehBtnDevice'), 'click', function() {
-            var i = document.getElementById('vehImageInput');
-            if (i) i.click();
-        });
-        addSafeListener(document.getElementById('vehBtnCamera'), 'click', function() { Camera.open(); });
-        addSafeListener(document.getElementById('vehBtnUrl'), 'click', function() { UrlImporter.open(); });
-        addSafeListener(document.getElementById('vehCameraClose'), 'click', function() { Camera.close(); });
-        addSafeListener(document.getElementById('vehCameraSwitch'), 'click', function() { Camera.switch(); });
-        addSafeListener(document.getElementById('vehCameraCapture'), 'click', function() { Camera.capture(); });
-        addSafeListener(document.getElementById('vehCameraFallback'), 'click', function() { Camera.fallback(); });
-        var camModal = document.getElementById('vehCameraModal');
-        if (camModal) addSafeListener(camModal, 'click', function(e) { if (e.target === camModal) Camera.close(); });
-        addSafeListener(document.getElementById('vehUrlClose'), 'click', function() { UrlImporter.close(); });
-        addSafeListener(document.getElementById('vehUrlPreviewBtn'), 'click', function() { UrlImporter.preview(); });
-        addSafeListener(document.getElementById('vehUrlAddBtn'), 'click', function() { UrlImporter.add(); });
-        var urlModal = document.getElementById('vehUrlModal');
-        if (urlModal) addSafeListener(urlModal, 'click', function(e) { if (e.target === urlModal) UrlImporter.close(); });
-        addSafeListener(document.getElementById('vehGalleryClose'), 'click', function() { Gallery.close(); });
-        addSafeListener(document.getElementById('vehGalleryPrev'), 'click', function() { Gallery.prev(); });
-        addSafeListener(document.getElementById('vehGalleryNext'), 'click', function() { Gallery.next(); });
-        addSafeListener(document.getElementById('vehGalleryZoomIn'), 'click', function() { Gallery.zoom(1); });
-        addSafeListener(document.getElementById('vehGalleryZoomOut'), 'click', function() { Gallery.zoom(-1); });
-        addSafeListener(document.getElementById('vehGalleryReset'), 'click', function() { Gallery.resetZoom(); });
-        addSafeListener(document.getElementById('vehGalleryDownload'), 'click', function() { Gallery.download(); });
-        var galleryStage = document.getElementById('vehGalleryStage');
-        if (galleryStage) addSafeListener(galleryStage, 'click', function(e) { if (e.target === galleryStage) Gallery.close(); });
-        initScrollButtons();
-        vehLoad();
-        console.log('✅ Vehicles v10.1 ready');
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            var id = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
-            _timeouts.push(id);
-        });
     } else {
-        var id0 = setTimeout(function() { if (!_isDestroyed) init(); }, 50);
-        _timeouts.push(id0);
+        document.getElementById('modalTitle').textContent = '➕ إضافة وسيلة';
+        document.getElementById('vehicleForm').reset();
+        ImageUploader.renderCurrent([]);
     }
-    window.vehLoad = vehLoad;
-    window.vehShowToast = vehShowToast;
-    window.vehPrint = vehPrint;
-    window.vehExportExcel = vehExportExcel;
-})();
+
+    document.getElementById('vehicleModal').classList.add('active');
+}
+
+function closeVehicleModal() {
+    Camera.close();
+    UrlImporter.close();
+    document.getElementById('vehicleModal').classList.remove('active');
+    currentVehicleId = null;
+    ImageUploader.reset();
+}
+
+async function saveVehicle(e) {
+    e.preventDefault();
+
+    const payload = {
+        type:      document.getElementById('vehType').value.trim(),
+        brand:     document.getElementById('vehBrand').value.trim(),
+        model:     document.getElementById('vehModel').value.trim(),
+        year:      document.getElementById('vehYear').value || null,
+        color:     document.getElementById('vehColor').value.trim(),
+        vehicleNumber: document.getElementById('vehNumber').value.trim(),
+        administration: document.getElementById('vehAdmin').value.trim(),
+        region:    document.getElementById('vehRegion').value.trim(),
+        center:    document.getElementById('vehCenter').value.trim(),
+        reinforcementPlace: document.getElementById('vehPlace').value.trim(),
+        status:    document.getElementById('vehStatus').value,
+        workStatus: document.getElementById('vehWorkStatus').value.trim(),
+        assignmentDate: document.getElementById('vehAssignDate').value || null,
+        breakdownDate:  document.getElementById('vehBreakDate').value || null,
+        notes:     document.getElementById('vehNotes').value.trim()
+    };
+
+    try {
+        let vehicleId = currentVehicleId;
+
+        if (currentVehicleId) {
+            const res = await fetch(`/api/vehicles/${currentVehicleId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`
+                },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error((await res.json()).error || 'فشل التحديث');
+        } else {
+            const res = await fetch('/api/vehicles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'فشل الإنشاء');
+            vehicleId = data._id;
+        }
+
+        if (ImageUploader.pendingFiles.length > 0) {
+            const ok = await ImageUploader.uploadAll(vehicleId);
+            if (!ok) showToast('⚠️ حُفظت الوسيلة، لكن فشل رفع الصور', 'warning');
+        }
+
+        showToast('✅ تم الحفظ بنجاح', 'success');
+        closeVehicleModal();
+        loadVehicles();
+    } catch (err) {
+        console.error(err);
+        showToast('❌ ' + err.message, 'error');
+    }
+}
+
+async function deleteVehicle(id) {
+    if (!confirm('هل أنت متأكد من حذف هذه الوسيلة وجميع صورها؟')) return;
+    try {
+        const res = await fetch(`/api/vehicles/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (!res.ok) throw new Error('فشل الحذف');
+        showToast('✅ تم الحذف', 'success');
+        loadVehicles();
+    } catch (err) {
+        showToast('❌ ' + err.message, 'error');
+    }
+}
+
+// تشغيل
+document.addEventListener('DOMContentLoaded', loadVehicles);
 </script>
-</div>
+</body>
+</html>
