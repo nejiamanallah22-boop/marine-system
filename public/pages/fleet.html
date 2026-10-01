@@ -14,14 +14,19 @@
             --c-red-1: #fca5a5;
             --c-cyan-1: #67e8f9;
             --c-purple-1: #c4b5fd;
+            --c-pink-1: #f9a8d4;
+            --c-slate-1: #94a3b8;
             --c-text-1: #f1f5f9;
             --c-text-2: #cbd5e1;
             --c-text-3: #94a3b8;
             --c-text-4: #64748b;
             --radius-sm: 10px;
             --radius: 16px;
+            --radius-lg: 20px;
             --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            --t-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             --font: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Courier New', ui-monospace, monospace;
             width: 100%; max-width: 100%;
             padding: 0; margin: 0;
             font-family: var(--font);
@@ -60,6 +65,7 @@
             border-radius: 4px; border: 2px solid transparent; background-clip: padding-box;
         }
 
+        /* ═══════ HEADER ═══════ */
         .fleet-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 18px 24px; flex-wrap: wrap; gap: 16px;
@@ -78,35 +84,13 @@
             font-size: 24px; color: #060911;
             position: relative; overflow: hidden; flex-shrink: 0;
             box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.08) inset;
-            animation: fleetIconFloat 4s ease-in-out infinite;
         }
-        .fleet-header-left .header-icon::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
-            pointer-events: none;
-        }
-        @keyframes fleetIconFloat {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-3px) rotate(-2deg); }
-        }
-        .fleet-header-left .header-icon::after {
-            content: ''; position: absolute; top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-            animation: fleetShine 4s ease-in-out infinite; pointer-events: none;
-        }
-        @keyframes fleetShine { 0% { left: -100%; } 50%, 100% { left: 100%; } }
         .fleet-header-left .header-icon img {
             width: 100%; height: 100%; object-fit: cover;
             border-radius: 14px; display: none; position: relative; z-index: 2;
         }
         .fleet-header-left .header-icon.has-logo img { display: block; }
-        .fleet-header-left .header-icon.has-logo {
-            animation: none; background: transparent;
-            box-shadow: 0 0 24px var(--c-gold-glow);
-        }
         .fleet-header-left .header-icon.has-logo i { display: none; }
-        .fleet-header-left .header-icon.has-logo::after { display: none; }
         .fleet-header-left h2 {
             font-size: 22px; font-weight: 800;
             background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-1) 100%);
@@ -129,11 +113,6 @@
             line-height: 1; position: relative; overflow: hidden;
         }
         .fleet-header-actions .btn-action i { font-size: 13px; }
-        .fleet-header-actions .btn-action::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
-            pointer-events: none;
-        }
         .fleet-header-actions .btn-action.primary {
             background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
             color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
@@ -143,13 +122,12 @@
             box-shadow: 0 12px 32px var(--c-gold-glow);
         }
         .fleet-header-actions .btn-action.secondary {
-            background: linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(148, 163, 184, 0.04) 100%);
+            background: rgba(148, 163, 184, 0.08);
             border: 1px solid var(--c-border-mid); color: var(--c-text-2);
-            backdrop-filter: blur(8px);
         }
         .fleet-header-actions .btn-action.secondary:hover {
             background: rgba(148, 163, 184, 0.15); color: var(--c-text-1);
-            transform: translateY(-2px); border-color: var(--c-border-strong);
+            transform: translateY(-2px);
         }
         .fleet-header-actions .btn-action.success {
             background: linear-gradient(135deg, #10b981, #059669);
@@ -157,7 +135,6 @@
         }
         .fleet-header-actions .btn-action.success:hover {
             transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
         }
         .fleet-header-actions .btn-action.dark {
             background: linear-gradient(135deg, #475569, #1e293b);
@@ -167,7 +144,6 @@
         }
         .fleet-header-actions .btn-action.dark:hover {
             transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.7), 0 0 24px rgba(247, 215, 116, 0.2);
         }
         .fleet-header-actions .btn-action.dark .badge-count {
             background: linear-gradient(135deg, #ef4444, #b91c1c);
@@ -176,6 +152,7 @@
             min-width: 18px; text-align: center; display: inline-block;
         }
 
+        /* ═══════ STATS ═══════ */
         .stats-grid {
             display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 16px; padding: 0 24px 20px; width: 100%; margin: 0;
@@ -183,37 +160,25 @@
         .stat-card {
             background: linear-gradient(135deg, rgba(24, 34, 56, 0.85) 0%, rgba(18, 26, 44, 0.95) 100%);
             backdrop-filter: blur(20px) saturate(160%);
-            -webkit-backdrop-filter: blur(20px) saturate(160%);
             border: 1px solid var(--c-border-soft); border-radius: var(--radius);
             padding: 22px 16px 18px; text-align: center;
-            transition: all var(--transition); cursor: default;
+            transition: all var(--transition);
             position: relative; overflow: hidden;
             min-width: 0; min-height: 110px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.25);
             color: var(--c-gold-1);
         }
         .stat-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
             background: linear-gradient(90deg, transparent 0%, currentColor 50%, transparent 100%);
-            filter: drop-shadow(0 0 8px currentColor);
-        }
-        .stat-card::after {
-            content: ''; position: absolute; top: -50%; right: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle, currentColor 0%, transparent 40%);
-            opacity: 0.06; pointer-events: none;
         }
         .stat-card:hover {
             transform: translateY(-5px); border-color: var(--c-border-strong);
-            box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 20px 48px rgba(0,0,0,0.45), 0 0 40px currentColor;
         }
-        .stat-card:hover::after { opacity: 0.15; }
         .stat-card .number {
             font-size: 30px; font-weight: 900; line-height: 1;
-            color: currentColor; text-shadow: 0 0 24px currentColor, 0 0 8px currentColor;
-            letter-spacing: -1px; position: relative; z-index: 1;
-            white-space: nowrap; margin-bottom: 8px; font-variant-numeric: tabular-nums;
+            color: currentColor; text-shadow: 0 0 24px currentColor;
+            margin-bottom: 8px; font-variant-numeric: tabular-nums;
         }
         .stat-card .number.gold { color: var(--c-gold-1); }
         .stat-card .number.green { color: var(--c-emerald-1); }
@@ -222,9 +187,8 @@
         .stat-card .number.cyan { color: var(--c-cyan-1); }
         .stat-card .label {
             font-size: 11px; color: rgba(203, 213, 225, 0.75); font-weight: 700;
-            position: relative; z-index: 1; line-height: 1.3;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            max-width: 100%; letter-spacing: 0.3px;
+            max-width: 100%;
         }
         .stat-card .icon-bg {
             position: absolute; right: -10px; bottom: -10px;
@@ -232,33 +196,30 @@
             pointer-events: none; color: currentColor;
         }
 
+        /* ═══════ INPUT GRID ═══════ */
         .input-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 10px;
             background: linear-gradient(135deg, rgba(18, 26, 44, 0.6) 0%, rgba(24, 34, 56, 0.5) 100%);
             backdrop-filter: blur(20px); border: 1px solid var(--c-border-soft);
             padding: 16px 20px; border-radius: var(--radius);
             margin: 0 24px 16px; transition: all var(--transition);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset;
-        }
-        .input-grid:hover {
-            border-color: var(--c-border-mid);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset, 0 12px 40px rgba(0,0,0,0.3);
         }
         .input-grid input, .input-grid select {
             width: 100%; padding: 10px 14px;
             border: 1px solid var(--c-border-mid); border-radius: var(--radius-sm);
-            background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
+            background: rgba(10, 16, 32, 0.8);
             color: var(--c-text-1); font-size: 12px;
             font-family: var(--font); font-weight: 600; transition: all var(--transition);
         }
         .input-grid input:focus, .input-grid select:focus {
             border-color: var(--c-gold-2); outline: none;
             box-shadow: 0 0 0 3px var(--c-gold-glow);
-            background: rgba(10, 16, 32, 0.9);
+            background: rgba(10, 16, 32, 0.95);
         }
         .input-grid input::placeholder { color: var(--c-text-4); }
         .input-grid select option { background: #0a1020; color: var(--c-text-1); }
+        .input-grid select optgroup { background: #0a1020; color: var(--c-gold-2); font-weight: 800; }
         .input-grid .btn-save {
             padding: 10px 18px; border: none; border-radius: var(--radius-sm);
             font-weight: 800; font-size: 13px; cursor: pointer;
@@ -267,26 +228,38 @@
             font-family: var(--font);
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
-            position: relative; overflow: hidden;
-        }
-        .input-grid .btn-save::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
-            pointer-events: none;
         }
         .input-grid .btn-save:hover {
             transform: translateY(-2px) scale(1.02);
             box-shadow: 0 12px 32px var(--c-gold-glow);
         }
 
-        /* ═══════════════════════════════════════════════════════ */
-        /* 📸 قسم الصور                                          */
-        /* ═══════════════════════════════════════════════════════ */
+        /* ═══════ COMBOBOX ═══════ */
+        .fleet-combobox { position: relative; width: 100%; }
+        .fleet-combobox-search {
+            margin-bottom: 4px;
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+            background: rgba(10,16,32,0.9) !important;
+        }
+        .fleet-combobox-free {
+            margin-top: 4px;
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+            background: rgba(16,185,129,0.05) !important;
+            border-color: rgba(16,185,129,0.3) !important;
+        }
+        .fleet-combobox-free:focus {
+            border-color: var(--c-emerald-1) !important;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.2) !important;
+        }
+
+        /* ═══════ IMAGES SECTION ═══════ */
         .images-section {
             grid-column: 1 / -1;
             margin-top: 6px;
             padding: 14px 16px;
-            background: linear-gradient(135deg, rgba(10, 16, 32, 0.5), rgba(18, 26, 44, 0.4));
+            background: rgba(10, 16, 32, 0.5);
             border: 1px solid var(--c-border-soft);
             border-radius: 12px;
         }
@@ -301,29 +274,22 @@
             text-transform: uppercase;
         }
         .images-section-title i { color: var(--c-gold-2); }
-        .images-count {
-            color: var(--c-gold-2); font-weight: 800; font-size: 11px;
-        }
-        .image-source-btns {
-            display: flex; gap: 8px; flex-wrap: wrap;
-        }
+        .images-count { color: var(--c-gold-2); font-weight: 800; font-size: 11px; }
+        .image-source-btns { display: flex; gap: 8px; flex-wrap: wrap; }
         .source-btn {
             padding: 8px 16px; border: none; border-radius: 10px;
             font-weight: 800; font-size: 12px; cursor: pointer;
             transition: all var(--transition);
             display: inline-flex; align-items: center; gap: 7px;
             font-family: var(--font); white-space: nowrap;
-            position: relative; overflow: hidden;
         }
-        .source-btn i { font-size: 13px; }
         .source-btn.camera {
-            background: linear-gradient(135deg, var(--c-gold-1) 0%, var(--c-gold-2) 50%, var(--c-gold-3) 100%);
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             color: #060911;
             box-shadow: 0 6px 18px var(--c-gold-glow);
         }
         .source-btn.camera:hover:not(:disabled) {
             transform: translateY(-2px) scale(1.03);
-            box-shadow: 0 10px 26px var(--c-gold-glow);
         }
         .source-btn.browse {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
@@ -332,14 +298,10 @@
         }
         .source-btn.browse:hover:not(:disabled) {
             transform: translateY(-2px) scale(1.03);
-            box-shadow: 0 10px 26px rgba(59,130,246,0.45);
         }
-        .source-btn:disabled {
-            opacity: 0.4; cursor: not-allowed;
-            transform: none !important; box-shadow: none !important;
-        }
+        .source-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
         .images-dropzone {
-            position: relative;
             border: 2px dashed var(--c-border-mid);
             border-radius: 12px;
             padding: 16px;
@@ -355,7 +317,6 @@
         .images-dropzone.dragover {
             border-color: var(--c-emerald-1);
             background: rgba(110, 231, 183, 0.08);
-            transform: scale(1.01);
         }
         .dropzone-content i {
             font-size: 26px; color: var(--c-gold-2);
@@ -365,9 +326,8 @@
             color: var(--c-text-2); font-size: 12px;
             font-weight: 700; margin: 0 0 3px 0;
         }
-        .dropzone-hint {
-            color: var(--c-text-4); font-size: 10.5px; margin: 0;
-        }
+        .dropzone-hint { color: var(--c-text-4); font-size: 10.5px; margin: 0; }
+
         .images-gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
@@ -375,10 +335,8 @@
             margin-top: 12px;
         }
         .image-item {
-            position: relative;
-            aspect-ratio: 1;
-            border-radius: 10px;
-            overflow: hidden;
+            position: relative; aspect-ratio: 1;
+            border-radius: 10px; overflow: hidden;
             border: 2px solid var(--c-border-soft);
             background: rgba(10, 16, 32, 0.6);
             cursor: pointer;
@@ -392,58 +350,36 @@
             border-color: var(--c-gold-2);
             box-shadow: 0 0 0 3px rgba(230, 179, 30, 0.2);
         }
-        .image-item img {
-            width: 100%; height: 100%;
-            object-fit: cover; display: block;
-        }
+        .image-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .image-primary-badge {
-            position: absolute;
-            top: 5px; right: 5px;
+            position: absolute; top: 5px; right: 5px;
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911;
-            font-size: 8.5px; font-weight: 900;
-            padding: 2px 7px;
-            border-radius: 7px;
-            display: none;
+            color: #060911; font-size: 8.5px; font-weight: 900;
+            padding: 2px 7px; border-radius: 7px; display: none;
         }
-        .image-item.is-primary .image-primary-badge {
-            display: block;
-        }
+        .image-item.is-primary .image-primary-badge { display: block; }
         .image-actions {
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.85), transparent 60%);
-            opacity: 0;
-            transition: opacity 0.2s;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding: 6px;
-            gap: 4px;
+            opacity: 0; transition: opacity 0.2s;
+            display: flex; align-items: flex-end; justify-content: center;
+            padding: 6px; gap: 4px;
         }
         .image-item:hover .image-actions { opacity: 1; }
         .image-actions button {
-            width: 26px; height: 26px;
-            border: none; border-radius: 7px;
+            width: 26px; height: 26px; border: none; border-radius: 7px;
             cursor: pointer; font-size: 11px;
             display: flex; align-items: center; justify-content: center;
             color: #fff;
         }
-        .image-actions .img-set-primary {
-            background: rgba(230, 179, 30, 0.9);
-            color: #060911;
-        }
-        .image-actions .img-delete {
-            background: rgba(239, 68, 68, 0.9);
-        }
+        .image-actions .img-set-primary { background: rgba(230, 179, 30, 0.9); color: #060911; }
+        .image-actions .img-delete { background: rgba(239, 68, 68, 0.9); }
         .images-uploading {
             display: flex; align-items: center; justify-content: center;
             gap: 10px; padding: 10px;
             background: rgba(230, 179, 30, 0.08);
-            border-radius: 10px;
-            margin-top: 10px;
-            color: var(--c-gold-1);
-            font-size: 12px; font-weight: 700;
+            border-radius: 10px; margin-top: 10px;
+            color: var(--c-gold-1); font-size: 12px; font-weight: 700;
         }
         .uploading-spinner {
             width: 18px; height: 18px;
@@ -454,395 +390,90 @@
         }
         @keyframes fleetSpin { to { transform: rotate(360deg); } }
 
-        /* 📸 صورة مصغرة في الجدول */
+        /* ═══════ THUMBNAIL (صورة كبيرة واضحة) ═══════ */
         .vessel-thumb {
-            width: 46px; height: 46px;
-            border-radius: 9px;
+            width: 78px; height: 78px;
+            border-radius: 12px;
             object-fit: cover;
-            border: 2px solid var(--c-border-mid);
+            border: 2.5px solid var(--c-border-mid);
             cursor: pointer;
             transition: all var(--transition);
             display: block;
             margin: 0 auto;
             background: rgba(10,16,32,0.6);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
         }
         .vessel-thumb:hover {
-            transform: scale(1.15);
+            transform: scale(1.1);
             border-color: var(--c-gold-2);
-            box-shadow: 0 4px 14px var(--c-gold-glow);
+            box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 3px rgba(230,179,30,0.2);
         }
         .vessel-thumb-empty {
-            width: 46px; height: 46px;
-            border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(10,16,32,0.6);
-            border: 2px dashed var(--c-border-mid);
+            width: 78px; height: 78px;
+            border-radius: 12px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 4px;
+            background: linear-gradient(135deg, rgba(10,16,32,0.8), rgba(18,26,44,0.6));
+            border: 2.5px dashed var(--c-border-mid);
             color: var(--c-text-4);
-            font-size: 16px;
+            font-size: 20px;
             margin: 0 auto;
+            cursor: pointer;
+            transition: all var(--transition);
         }
+        .vessel-thumb-empty:hover {
+            border-color: var(--c-gold-2);
+            color: var(--c-gold-2);
+            transform: scale(1.05);
+        }
+        .vessel-thumb-empty::after {
+            content: 'لا صور';
+            font-size: 9px; font-weight: 800;
+            color: var(--c-text-4);
+            letter-spacing: 0.5px;
+        }
+        .vessel-thumb-empty:hover::after { color: var(--c-gold-2); }
         .vessel-thumb-wrapper {
             position: relative;
-            width: 46px; height: 46px;
+            width: 78px; height: 78px;
             margin: 0 auto;
         }
         .vessel-thumb-badge {
             position: absolute;
-            bottom: -3px; right: -3px;
+            bottom: -6px; right: -6px;
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             color: #060911;
-            font-size: 8.5px; font-weight: 900;
-            padding: 2px 5px;
-            border-radius: 7px;
-            border: 2px solid #060911;
-        }
-
-        /* 🖼️ زر عرض الصور */
-        .btn-view-images {
-            background: rgba(139, 92, 246, 0.15);
-            color: #c4b5fd;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            padding: 6px 12px;
+            font-size: 11px; font-weight: 900;
+            padding: 3px 8px;
             border-radius: 10px;
-            font-size: 11px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all var(--transition);
-            display: inline-flex; align-items: center; gap: 6px;
-            font-family: var(--font);
-            white-space: nowrap;
-        }
-        .btn-view-images:hover {
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-            color: #fff;
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
-        }
-        .btn-view-images .badge {
-            background: rgba(255,255,255,0.25);
-            padding: 1px 6px;
-            border-radius: 8px;
-            font-size: 10px;
-            font-weight: 900;
-            min-width: 16px;
+            border: 2.5px solid #060911;
+            min-width: 24px;
             text-align: center;
-        }
-        .btn-view-images:hover .badge {
-            background: rgba(255,255,255,0.35);
-        }
-
-        /* ═══════════════════════════════════════════════════════ */
-        /* 🖼️ معرض صور المركبات المطروحة                          */
-        /* ═══════════════════════════════════════════════════════ */
-        .vessel-gallery-modal {
-            position: fixed; inset: 0;
-            background: rgba(2, 4, 12, 0.96);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            z-index: 100001;
-            display: none;
-            align-items: center; justify-content: center;
-            padding: 20px;
-            animation: galleryFadeIn 0.25s ease;
-        }
-        .vessel-gallery-modal.active { display: flex; }
-        @keyframes galleryFadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .vessel-gallery-box {
-            width: 100%; max-width: 1200px;
-            max-height: 92vh;
-            background: linear-gradient(135deg, rgba(24, 34, 56, 0.98), rgba(15, 20, 32, 0.99));
-            border: 1px solid rgba(230, 179, 30, 0.35);
-            border-radius: 20px;
-            box-shadow: 0 32px 80px rgba(0,0,0,0.9), 0 0 60px rgba(230, 179, 30, 0.15);
-            display: flex; flex-direction: column;
-            overflow: hidden;
-            animation: galleryBoxIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        @keyframes galleryBoxIn {
-            from { transform: scale(0.92) translateY(20px); opacity: 0; }
-            to { transform: scale(1) translateY(0); opacity: 1; }
-        }
-
-        .vessel-gallery-head {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 18px 24px;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.9));
-            border-bottom: 2px solid var(--c-gold-2);
-            flex-shrink: 0;
-        }
-        .vessel-gallery-head-info {
-            display: flex; align-items: center; gap: 14px;
-            min-width: 0; flex: 1;
-        }
-        .vessel-gallery-head-icon {
-            width: 44px; height: 44px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: #060911;
-            flex-shrink: 0;
-            box-shadow: 0 6px 20px var(--c-gold-glow);
-        }
-        .vessel-gallery-head-text { min-width: 0; overflow: hidden; }
-        .vessel-gallery-head-text h3 {
-            font-size: 17px; font-weight: 800;
-            color: var(--c-gold-1);
-            margin: 0 0 3px 0;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .vessel-gallery-head-text p {
-            font-size: 12px; color: var(--c-text-3);
-            margin: 0;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .vessel-gallery-head-text p strong {
-            color: var(--c-text-2); font-weight: 800;
-        }
-        .vessel-gallery-close {
-            width: 40px; height: 40px;
-            background: rgba(148, 163, 184, 0.1);
-            border: 1px solid var(--c-border-mid);
-            color: var(--c-text-3);
-            border-radius: 12px;
-            font-size: 22px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all var(--transition);
-            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             line-height: 1;
         }
-        .vessel-gallery-close:hover {
-            background: rgba(239, 68, 68, 0.25);
-            color: var(--c-red-1);
-            border-color: rgba(239, 68, 68, 0.5);
-            transform: rotate(90deg);
-        }
+        .vessel-thumb-badge::before { content: '📷 '; font-size: 9px; }
 
-        .vessel-gallery-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 24px;
-        }
-        .vessel-gallery-body::-webkit-scrollbar { width: 8px; }
-        .vessel-gallery-body::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, var(--c-gold-2), var(--c-gold-3));
-            border-radius: 4px;
-        }
-
-        .vessel-gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 12px;
-        }
-        .vessel-gallery-thumb {
-            position: relative;
-            aspect-ratio: 1;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid var(--c-border-mid);
-            background: rgba(10, 16, 32, 0.6);
-            cursor: pointer;
-            transition: all var(--transition);
-        }
-        .vessel-gallery-thumb:hover {
-            border-color: var(--c-gold-2);
-            transform: scale(1.03);
-            box-shadow: 0 8px 24px rgba(230, 179, 30, 0.35);
-        }
-        .vessel-gallery-thumb img {
-            width: 100%; height: 100%;
-            object-fit: cover; display: block;
-        }
-        .vessel-gallery-thumb-badge {
-            position: absolute;
-            top: 8px; right: 8px;
-            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911;
-            font-size: 9px; font-weight: 900;
-            padding: 3px 8px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        }
-
-        .vessel-gallery-empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--c-text-4);
-        }
-        .vessel-gallery-empty i {
-            font-size: 64px;
-            color: var(--c-gold-2);
-            opacity: 0.4;
-            display: block;
-            margin-bottom: 16px;
-            filter: drop-shadow(0 0 20px var(--c-gold-glow));
-        }
-        .vessel-gallery-empty h4 {
-            font-size: 16px; font-weight: 800;
-            color: var(--c-text-3);
-            margin: 0 0 6px 0;
-        }
-        .vessel-gallery-empty p {
-            font-size: 13px;
-            color: var(--c-text-4);
-            margin: 0;
-        }
-
-        /* عارض الصورة الكبير */
-        .vessel-viewer {
-            position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.98);
-            z-index: 100002;
-            display: none;
-            align-items: center; justify-content: center;
-        }
-        .vessel-viewer.active { display: flex; }
-        .vessel-viewer img {
-            max-width: 92vw;
-            max-height: 88vh;
-            border-radius: 12px;
-            box-shadow: 0 20px 80px rgba(0,0,0,0.9);
-            object-fit: contain;
-            animation: viewerImgIn 0.3s ease;
-        }
-        @keyframes viewerImgIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .vessel-viewer-nav {
-            position: absolute;
-            top: 50%; transform: translateY(-50%);
-            width: 56px; height: 56px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            border-radius: 14px;
-            font-size: 22px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all var(--transition);
-            z-index: 2;
-        }
-        .vessel-viewer-nav:hover {
-            background: rgba(230, 179, 30, 0.3);
-            border-color: var(--c-gold-2);
-            color: var(--c-gold-1);
-            transform: translateY(-50%) scale(1.1);
-        }
-        .vessel-viewer-nav.prev { right: 20px; }
-        .vessel-viewer-nav.next { left: 20px; }
-        .vessel-viewer-nav:disabled {
-            opacity: 0.25;
-            cursor: not-allowed;
-            transform: translateY(-50%);
-        }
-        .vessel-viewer-close {
-            position: absolute;
-            top: 20px; left: 20px;
-            width: 48px; height: 48px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            border-radius: 12px;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all var(--transition);
-            z-index: 2;
-        }
-        .vessel-viewer-close:hover {
-            background: rgba(239, 68, 68, 0.4);
-            border-color: rgba(239, 68, 68, 0.7);
-            transform: rotate(90deg);
-        }
-        .vessel-viewer-counter {
-            position: absolute;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(12px);
-            color: #f7d774;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 800;
-            border: 1px solid rgba(247, 215, 116, 0.3);
-            letter-spacing: 0.5px;
-        }
-
-        @media (max-width: 768px) {
-            .vessel-gallery-modal { padding: 10px; }
-            .vessel-gallery-box { max-height: 95vh; border-radius: 16px; }
-            .vessel-gallery-head { padding: 14px 16px; }
-            .vessel-gallery-head-text h3 { font-size: 15px; }
-            .vessel-gallery-body { padding: 14px; }
-            .vessel-gallery-grid {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                gap: 8px;
-            }
-            .vessel-viewer-nav {
-                width: 44px; height: 44px; font-size: 18px;
-            }
-            .vessel-viewer-nav.prev { right: 10px; }
-            .vessel-viewer-nav.next { left: 10px; }
-            .vessel-viewer-close { top: 12px; left: 12px; width: 42px; height: 42px; }
-        }
-
-        /* Lightbox البسيط (للصور النشطة) */
-        .fleet-lightbox {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(8px);
-            z-index: 100000;
-            display: none;
-            align-items: center; justify-content: center;
-            padding: 20px;
-        }
-        .fleet-lightbox.active { display: flex; }
-        .fleet-lightbox img {
-            max-width: 95vw; max-height: 90vh;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            object-fit: contain;
-        }
-        .fleet-lightbox-close {
-            position: absolute;
-            top: 20px; right: 20px;
-            width: 44px; height: 44px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-            border-radius: 12px;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .fleet-lightbox-close:hover { background: rgba(239,68,68,0.3); }
-
+        /* ═══════ FILTER BAR ═══════ */
         .filter-bar {
             display: flex; flex-wrap: wrap; align-items: center;
             gap: 12px 16px; padding: 16px 24px;
-            background: linear-gradient(135deg, rgba(18, 26, 44, 0.6) 0%, rgba(24, 34, 56, 0.5) 100%);
-            backdrop-filter: blur(20px); border: 1px solid var(--c-border-soft);
-            border-radius: var(--radius); margin: 0 24px 20px; width: auto;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2) inset;
+            background: rgba(18, 26, 44, 0.6);
+            border: 1px solid var(--c-border-soft);
+            border-radius: var(--radius); margin: 0 24px 20px;
         }
         .filter-bar .search-input { flex: 2 1 200px; min-width: 150px; position: relative; }
         .filter-bar .search-input input {
             width: 100%; padding: 10px 16px 10px 40px;
             border-radius: 10px; border: 1px solid var(--c-border-mid);
-            background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
+            background: rgba(10, 16, 32, 0.8);
             color: var(--c-text-1); font-size: 12px;
-            font-family: var(--font); font-weight: 600; transition: all var(--transition);
+            font-family: var(--font); font-weight: 600;
         }
         .filter-bar .search-input input:focus {
             border-color: var(--c-gold-2); outline: none;
             box-shadow: 0 0 0 3px var(--c-gold-glow);
-            background: rgba(10, 16, 32, 0.9);
         }
         .filter-bar .search-input input::placeholder { color: var(--c-text-4); }
         .filter-bar .search-input .search-icon {
@@ -859,10 +490,9 @@
         .filter-bar select {
             padding: 10px 16px; border-radius: 10px;
             border: 1px solid var(--c-border-mid);
-            background: linear-gradient(135deg, rgba(10, 16, 32, 0.8) 0%, rgba(18, 26, 44, 0.6) 100%);
+            background: rgba(10, 16, 32, 0.8);
             color: var(--c-text-1); font-size: 12px; min-width: 140px;
             cursor: pointer; font-family: var(--font); font-weight: 600;
-            transition: all var(--transition);
         }
         .filter-bar select:focus {
             outline: none; border-color: var(--c-gold-2);
@@ -874,38 +504,29 @@
             font-weight: 700; font-size: 12px; cursor: pointer;
             transition: all var(--transition); font-family: var(--font);
             display: inline-flex; align-items: center; gap: 8px;
-            white-space: nowrap; position: relative; overflow: hidden;
-        }
-        .filter-bar .btn-filter::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
-            pointer-events: none;
+            white-space: nowrap;
         }
         .filter-bar .btn-filter.primary {
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             color: #060911; box-shadow: 0 6px 20px var(--c-gold-glow);
         }
-        .filter-bar .btn-filter.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px var(--c-gold-glow);
-        }
+        .filter-bar .btn-filter.primary:hover { transform: translateY(-2px); }
         .filter-bar .btn-filter.outline {
             background: transparent; border: 1px solid var(--c-border-mid);
             color: var(--c-text-3);
         }
         .filter-bar .btn-filter.outline:hover {
             background: rgba(148, 163, 184, 0.06);
-            color: var(--c-text-1); border-color: var(--c-border-strong);
+            color: var(--c-text-1);
         }
 
+        /* ═══════ TABLE ═══════ */
         .table-wrapper { overflow-x: auto; padding: 0 24px 24px; width: 100%; }
         .table-wrapper table {
             width: 100%; border-collapse: separate; border-spacing: 0;
-            font-size: 13px; min-width: 1300px;
+            font-size: 13px; min-width: 1400px;
             border-radius: var(--radius); overflow: hidden;
-            background: linear-gradient(135deg, rgba(24, 34, 56, 0.55) 0%, rgba(18, 26, 44, 0.75) 100%);
-            backdrop-filter: blur(20px);
-            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 40px rgba(0,0,0,0.3);
+            background: rgba(24, 34, 56, 0.55);
             border: 1px solid var(--c-border-soft);
         }
         thead {
@@ -916,7 +537,6 @@
             content: ''; position: absolute; bottom: 0; left: 0; right: 0;
             height: 3px;
             background: linear-gradient(90deg, transparent 0%, #f7d774 20%, #e6b31e 50%, #f7d774 80%, transparent 100%);
-            box-shadow: 0 0 20px rgba(230, 179, 30, 0.5);
             pointer-events: none;
         }
         thead th {
@@ -927,16 +547,14 @@
         }
         thead th i {
             margin-left: 6px; color: #f7d774; font-size: 11px;
-            filter: drop-shadow(0 0 6px rgba(247, 215, 116, 0.8));
         }
         tbody td {
             padding: 12px 10px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.06);
             vertical-align: middle; color: var(--c-text-2);
             font-size: 13px; text-align: center; font-weight: 600;
-            transition: all var(--transition);
         }
-        tbody tr { transition: all var(--transition); background: transparent; }
+        tbody tr { transition: all var(--transition); }
         tbody tr:nth-child(even) { background: rgba(148, 163, 184, 0.02); }
         tbody tr:hover { background: rgba(247, 215, 116, 0.05); }
         tbody tr:last-child td { border-bottom: none; }
@@ -944,7 +562,6 @@
             background: linear-gradient(90deg, rgba(239, 68, 68, 0.10) 0%, rgba(239, 68, 68, 0.02) 50%, transparent 100%) !important;
             border-right: 3px solid #ef4444;
         }
-        tbody tr.damaged:hover { background: rgba(239, 68, 68, 0.15) !important; }
 
         .vessel-name {
             font-weight: 800; color: #f1f5f9;
@@ -954,27 +571,19 @@
             padding: 5px 14px; border-radius: 20px;
             font-size: 11px; font-weight: 800;
             display: inline-block; white-space: nowrap;
-            letter-spacing: 0.4px; position: relative; overflow: hidden;
-        }
-        .status-badge::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
-            pointer-events: none;
+            letter-spacing: 0.4px;
         }
         .status-badge.active {
             background: linear-gradient(135deg, #059669, #10b981);
             color: #ffffff; border: 1px solid var(--c-emerald-1);
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
         }
         .status-badge.pending {
             background: linear-gradient(135deg, #b45309, #f59e0b);
             color: #ffffff; border: 1px solid var(--c-amber-1);
-            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
         }
         .status-badge.completed {
             background: linear-gradient(135deg, #0369a1, #0ea5e9);
             color: #ffffff; border: 1px solid #7dd3fc;
-            box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
         }
         .status-badge.cancelled {
             background: linear-gradient(135deg, #64748b, #94a3b8);
@@ -983,12 +592,10 @@
         .status-badge.damaged {
             background: linear-gradient(135deg, #b91c1c, #ef4444);
             color: #ffffff; border: 1px solid var(--c-red-1);
-            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
         }
         .status-badge.disposed {
             background: linear-gradient(135deg, #1e293b, #334155);
             color: #f7d774; border: 1px solid rgba(247,215,116,0.4);
-            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.6);
         }
 
         .action-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; align-items: center; }
@@ -997,14 +604,8 @@
             font-size: 13px; font-weight: 700; cursor: pointer;
             transition: all var(--transition);
             display: inline-flex; align-items: center; justify-content: center;
-            font-family: var(--font); position: relative; overflow: hidden; padding: 0;
+            font-family: var(--font); padding: 0;
         }
-        .btn-sm::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
-            opacity: 0; transition: opacity 0.3s; pointer-events: none;
-        }
-        .btn-sm:hover::before { opacity: 1; }
         .btn-sm.edit {
             background: rgba(59, 130, 246, 0.15);
             color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.25);
@@ -1012,7 +613,6 @@
         .btn-sm.edit:hover {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: #fff; transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.45);
         }
         .btn-sm.delete {
             background: rgba(239, 68, 68, 0.15);
@@ -1021,7 +621,6 @@
         .btn-sm.delete:hover {
             background: linear-gradient(135deg, #ef4444, #b91c1c);
             color: #fff; transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45);
         }
         .btn-sm.dispose {
             background: rgba(15, 23, 42, 0.6);
@@ -1030,17 +629,23 @@
         }
         .btn-sm.dispose:hover {
             background: linear-gradient(135deg, #334155, #1e293b);
-            color: #fff;
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.7), 0 0 20px rgba(247, 215, 116, 0.3);
-            border-color: var(--c-gold-2);
+            color: #fff; transform: translateY(-2px) scale(1.05);
+        }
+        .btn-sm.gallery {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        .btn-sm.gallery:hover {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: #fff; transform: translateY(-2px) scale(1.05);
         }
 
+        /* ═══════ EMPTY ═══════ */
         .empty-state { text-align: center; padding: 60px 20px; }
         .empty-state .empty-icon {
             font-size: 3rem; color: var(--c-gold-2); opacity: 0.5;
             display: block; margin-bottom: 12px;
-            filter: drop-shadow(0 0 20px var(--c-gold-glow));
         }
         .empty-state .spinner {
             width: 36px; height: 36px;
@@ -1048,25 +653,12 @@
             border-top-color: var(--c-gold-2);
             border-radius: 50%; animation: spin 0.8s linear infinite;
             margin: 0 auto 12px;
-            box-shadow: 0 0 20px var(--c-gold-glow);
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--c-text-3); margin-bottom: 4px; }
         .empty-state p { font-size: 13px; color: var(--c-text-4); }
-        .empty-state .retry-btn {
-            margin-top: 12px; padding: 10px 24px;
-            border: none; border-radius: 12px;
-            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911; font-weight: 700; font-size: 13px;
-            cursor: pointer; transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex; align-items: center; gap: 8px;
-        }
-        .empty-state .retry-btn:hover {
-            transform: translateY(-2px) scale(1.04);
-            box-shadow: 0 8px 24px var(--c-gold-glow);
-        }
 
+        /* ═══════ TOAST ═══════ */
         .fleet-toast {
             position: fixed; bottom: 28px; left: 28px;
             z-index: 999999; max-width: 400px;
@@ -1076,39 +668,35 @@
             font-size: 13px; font-weight: 700;
             backdrop-filter: blur(20px);
             box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-            animation: fleetToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             direction: rtl;
-        }
-        .fleet-toast.success {
-            background: linear-gradient(135deg, rgba(16,185,129,0.95), rgba(5,150,105,0.9));
-            border: 1px solid rgba(110, 231, 183, 0.5);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(16,185,129,0.3);
-        }
-        .fleet-toast.error {
-            background: linear-gradient(135deg, rgba(239,68,68,0.95), rgba(185,28,28,0.9));
-            border: 1px solid rgba(252, 165, 165, 0.5);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(239,68,68,0.3);
-        }
-        .fleet-toast.info {
-            background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(29,78,216,0.9));
-            border: 1px solid rgba(147, 197, 253, 0.5);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(59,130,246,0.3);
-        }
-        .fleet-toast.warning {
-            background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(180,83,9,0.9));
-            border: 1px solid rgba(252, 211, 77, 0.5);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(245,158,11,0.3);
+            animation: fleetToastIn 0.35s var(--t-bounce);
         }
         @keyframes fleetToastIn {
             from { opacity: 0; transform: translateY(20px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
+        .fleet-toast.success {
+            background: linear-gradient(135deg, rgba(16,185,129,0.95), rgba(5,150,105,0.9));
+            border: 1px solid rgba(110, 231, 183, 0.5);
+        }
+        .fleet-toast.error {
+            background: linear-gradient(135deg, rgba(239,68,68,0.95), rgba(185,28,28,0.9));
+            border: 1px solid rgba(252, 165, 165, 0.5);
+        }
+        .fleet-toast.info {
+            background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(29,78,216,0.9));
+            border: 1px solid rgba(147, 197, 253, 0.5);
+        }
+        .fleet-toast.warning {
+            background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(180,83,9,0.9));
+            border: 1px solid rgba(252, 211, 77, 0.5);
+        }
 
+        /* ═══════ MODAL ═══════ */
         .fleet-modal {
             position: fixed; inset: 0;
             background: rgba(2, 4, 12, 0.9);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             z-index: 99999;
             display: none; align-items: center; justify-content: center;
             padding: 20px;
@@ -1116,17 +704,15 @@
         }
         @keyframes fleetModalBgIn { from { opacity: 0; } to { opacity: 1; } }
         .fleet-modal.active { display: flex; }
-
         .fleet-modal-box {
             background: linear-gradient(135deg, rgba(24, 34, 56, 0.98) 0%, rgba(15, 20, 32, 0.99) 100%);
-            backdrop-filter: blur(24px);
             border: 1px solid rgba(247, 215, 116, 0.25);
             border-radius: 20px;
             padding: 28px 32px;
             width: 100%; max-width: 640px;
             max-height: 90vh; overflow-y: auto;
-            box-shadow: 0 32px 80px rgba(0,0,0,0.85), 0 0 60px rgba(230, 179, 30, 0.1);
-            animation: fleetModalBoxIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 32px 80px rgba(0,0,0,0.85);
+            animation: fleetModalBoxIn 0.35s var(--t-bounce);
         }
         @keyframes fleetModalBoxIn {
             from { transform: scale(0.9) translateY(20px); opacity: 0; }
@@ -1136,24 +722,13 @@
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 22px; padding-bottom: 18px;
             border-bottom: 1px solid var(--c-border-soft);
-            position: relative;
-        }
-        .fleet-modal-head::after {
-            content: ''; position: absolute;
-            bottom: -1px; right: 0;
-            width: 120px; height: 2px;
-            background: linear-gradient(90deg, transparent, #94a3b8);
-            box-shadow: 0 0 12px rgba(148, 163, 184, 0.4);
         }
         .fleet-modal-head h3 {
             font-size: 19px; font-weight: 800;
             color: var(--c-text-1);
             display: flex; align-items: center; gap: 10px; margin: 0;
         }
-        .fleet-modal-head h3 i {
-            color: #94a3b8;
-            filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.5));
-        }
+        .fleet-modal-head h3 i { color: #94a3b8; }
         .fleet-modal-close {
             background: rgba(148, 163, 184, 0.08);
             border: 1px solid var(--c-border-mid);
@@ -1166,28 +741,21 @@
         .fleet-modal-close:hover {
             background: rgba(239, 68, 68, 0.2);
             color: var(--c-red-1);
-            border-color: rgba(239, 68, 68, 0.4);
             transform: rotate(90deg);
         }
         .dispose-warning {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.08));
+            background: rgba(239, 68, 68, 0.15);
             border: 1px solid rgba(239, 68, 68, 0.35);
             border-radius: 12px;
             padding: 14px 18px;
             margin-bottom: 20px;
             display: flex; align-items: flex-start; gap: 12px;
         }
-        .dispose-warning .warn-icon {
-            font-size: 22px; color: #ef4444; flex-shrink: 0;
-            filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
-        }
-        .dispose-warning .warn-text {
-            color: #fecaca; font-size: 13px;
-            font-weight: 700; line-height: 1.6;
-        }
+        .dispose-warning .warn-icon { font-size: 22px; color: #ef4444; flex-shrink: 0; }
+        .dispose-warning .warn-text { color: #fecaca; font-size: 13px; font-weight: 700; line-height: 1.6; }
         .dispose-warning .warn-text strong { color: #fff; font-weight: 900; }
         .dispose-vessel-info {
-            background: linear-gradient(135deg, rgba(10, 16, 32, 0.7), rgba(18, 26, 44, 0.5));
+            background: rgba(10, 16, 32, 0.7);
             border: 1px solid var(--c-border-soft);
             border-radius: 12px;
             padding: 14px 18px;
@@ -1197,43 +765,37 @@
         }
         .dispose-vessel-info .info-label {
             font-size: 11px; font-weight: 800;
-            color: var(--c-text-4); letter-spacing: 0.5px;
+            color: var(--c-text-4);
             text-transform: uppercase; margin-bottom: 4px;
         }
         .dispose-vessel-info .info-value {
             font-size: 15px; font-weight: 900;
             color: var(--c-gold-1);
-            text-shadow: 0 0 12px var(--c-gold-glow);
         }
-        .dispose-vessel-info .info-sub {
-            font-size: 11px; color: var(--c-text-3); margin-top: 2px;
-        }
+        .dispose-vessel-info .info-sub { font-size: 11px; color: var(--c-text-3); margin-top: 2px; }
         .dispose-form-group { margin-bottom: 16px; }
         .dispose-form-group label {
             display: block; font-size: 11px; font-weight: 800;
             color: var(--c-text-3); margin-bottom: 8px;
-            letter-spacing: 0.5px; text-transform: uppercase;
+            text-transform: uppercase;
         }
         .dispose-form-group label .req { color: var(--c-red-1); }
         .dispose-form-control {
             width: 100%; padding: 12px 16px;
-            background: linear-gradient(135deg, rgba(10, 16, 32, 0.7), rgba(18, 26, 44, 0.5));
+            background: rgba(10, 16, 32, 0.7);
             border: 1px solid var(--c-border-mid);
             border-radius: 12px;
             color: var(--c-text-1);
             font-family: var(--font); font-size: 13px; font-weight: 600;
-            transition: all var(--transition);
         }
         .dispose-form-control:focus {
             outline: none; border-color: var(--c-gold-2);
-            background: rgba(10, 16, 32, 0.85);
             box-shadow: 0 0 0 3px var(--c-gold-glow);
         }
-        .dispose-form-control option { background: #0a1020; color: var(--c-text-1); }
         textarea.dispose-form-control { resize: vertical; min-height: 90px; font-family: var(--font); }
         .dispose-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .dispose-confirm {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(180, 83, 9, 0.04));
+            background: rgba(245, 158, 11, 0.08);
             border: 1px solid rgba(245, 158, 11, 0.3);
             border-radius: 12px;
             padding: 14px 18px;
@@ -1249,7 +811,7 @@
         .dispose-confirm label {
             font-size: 12px; color: #fcd34d;
             font-weight: 700; line-height: 1.6;
-            cursor: pointer; user-select: none;
+            cursor: pointer;
         }
         .fleet-modal-actions {
             display: flex; gap: 12px;
@@ -1263,12 +825,6 @@
             font-weight: 800; cursor: pointer;
             transition: all var(--transition);
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            position: relative; overflow: hidden;
-        }
-        .fleet-modal-actions .btn-modal::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 50%);
-            pointer-events: none;
         }
         .fleet-modal-actions .btn-modal.cancel {
             background: rgba(148, 163, 184, 0.1);
@@ -1283,114 +839,296 @@
             background: linear-gradient(135deg, #475569, #1e293b);
             color: #f7d774;
             border: 1px solid rgba(247, 215, 116, 0.35);
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.5);
         }
         .fleet-modal-actions .btn-modal.dispose-confirm-btn:hover:not(:disabled) {
             transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.7), 0 0 24px rgba(247, 215, 116, 0.3);
             border-color: var(--c-gold-2);
         }
         .fleet-modal-actions .btn-modal.dispose-confirm-btn:disabled {
             opacity: 0.4; cursor: not-allowed;
-            filter: grayscale(0.5);
         }
-        .fleet-scroll-nav {
-            position: fixed; right: 24px; bottom: 100px;
-            display: flex; flex-direction: column; gap: 10px;
-            z-index: 9998; opacity: 0; visibility: hidden;
-            transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
-            pointer-events: none; transform: translateY(10px);
+
+        /* ═══════ MINI UPLOAD ═══════ */
+        .fleet-mini-upload {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            z-index: 100003;
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+            animation: fleetModalBgIn 0.25s ease;
         }
-        .fleet-scroll-nav.visible {
-            opacity: 1; visibility: visible;
-            pointer-events: auto; transform: translateY(0);
+        .fleet-mini-upload.active { display: flex; }
+        .fleet-mini-upload-box {
+            background: linear-gradient(135deg, rgba(24,34,56,0.98), rgba(15,20,32,0.99));
+            border: 2px solid rgba(230,179,30,0.4);
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 100%; max-width: 560px;
+            max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.9), 0 0 60px rgba(230,179,30,0.2);
+            animation: fleetModalBoxIn 0.35s var(--t-bounce);
         }
-        .fleet-scroll-nav-btn {
-            width: 48px; height: 48px; border-radius: 14px;
-            border: 1px solid var(--c-border-mid);
-            background: linear-gradient(135deg, rgba(24, 34, 56, 0.95), rgba(18, 26, 44, 0.98));
-            backdrop-filter: blur(20px) saturate(160%);
-            color: var(--c-gold-2);
-            font-size: 18px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
-            padding: 0;
+        .fleet-mini-upload-head {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 18px; padding-bottom: 14px;
+            border-bottom: 1px solid var(--c-border-soft);
         }
-        .fleet-scroll-nav-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            border-color: var(--c-gold-2); color: #060911;
+        .fleet-mini-upload-head h4 {
+            font-size: 16px; font-weight: 800;
+            color: var(--c-gold-1);
+            display: flex; align-items: center; gap: 10px; margin: 0;
+        }
+
+        /* ═══════ PROFESSIONAL GALLERY ═══════ */
+        .fleet-pro-gallery {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.98);
+            z-index: 100002;
+            display: none;
+            flex-direction: column;
+            animation: galleryFadeIn 0.3s ease;
+        }
+        .fleet-pro-gallery.active { display: flex; }
+        @keyframes galleryFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .fleet-pro-top {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 22px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.95), transparent);
+            z-index: 10; flex-shrink: 0; gap: 16px; flex-wrap: wrap;
+        }
+        .fleet-pro-info { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
+        .fleet-pro-info-icon {
+            width: 44px; height: 44px; border-radius: 12px;
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            box-shadow: 0 12px 32px var(--c-gold-glow), 0 0 0 1px rgba(255,255,255,0.15) inset;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #060911; flex-shrink: 0;
         }
-        .print-only { display: none; }
+        .fleet-pro-info-text { min-width: 0; overflow: hidden; }
+        .fleet-pro-info-text h3 {
+            font-size: 16px; font-weight: 800;
+            color: var(--c-gold-1);
+            margin: 0 0 2px 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .fleet-pro-info-text p {
+            font-size: 12px; color: rgba(203,213,225,0.7);
+            margin: 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .fleet-pro-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .fleet-pro-tool {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition);
+        }
+        .fleet-pro-tool:hover {
+            background: rgba(230,179,30,0.3);
+            border-color: var(--c-gold-2);
+            color: var(--c-gold-1);
+            transform: translateY(-2px) scale(1.05);
+        }
+        .fleet-pro-tool.active {
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            color: #060911;
+            border-color: var(--c-gold-2);
+        }
+        .fleet-pro-tool:disabled { opacity: 0.3; cursor: not-allowed; }
+        .fleet-pro-close {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: rgba(239,68,68,0.2);
+            border: 1px solid rgba(239,68,68,0.4);
+            color: #fff; font-size: 22px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition); line-height: 1;
+        }
+        .fleet-pro-close:hover {
+            background: rgba(239,68,68,0.5);
+            border-color: #ef4444;
+            transform: rotate(90deg) scale(1.05);
+        }
+
+        .fleet-pro-stage {
+            flex: 1; position: relative;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; min-height: 0;
+            padding: 0 80px; cursor: grab;
+        }
+        .fleet-pro-stage.grabbing { cursor: grabbing; }
+        .fleet-pro-stage img {
+            max-width: 100%; max-height: 100%;
+            object-fit: contain; border-radius: 12px;
+            box-shadow: 0 20px 80px rgba(0,0,0,0.9);
+            transition: transform 0.15s ease;
+            user-select: none; -webkit-user-drag: none; display: block;
+        }
+        .fleet-pro-stage.zoomed img {
+            cursor: grab; max-width: none; max-height: none;
+        }
+        .fleet-pro-stage.zoomed.grabbing img {
+            cursor: grabbing; transition: none;
+        }
+
+        /* 🎯 زر تغيير الصور في وسط الصورة */
+        .fleet-pro-change-btn {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(230,179,30,0.95), rgba(184,134,11,0.95));
+            color: #060911;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            width: 90px; height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            font-family: var(--font);
+            font-weight: 800;
+            font-size: 11px;
+            box-shadow: 0 12px 40px rgba(230,179,30,0.5), 0 0 0 8px rgba(230,179,30,0.15);
+            transition: all var(--transition);
+            z-index: 6;
+            opacity: 0.85;
+        }
+        .fleet-pro-change-btn i { font-size: 22px; margin-bottom: 2px; }
+        .fleet-pro-change-btn:hover {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.12);
+            box-shadow: 0 16px 52px rgba(230,179,30,0.7), 0 0 0 12px rgba(230,179,30,0.25);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .fleet-pro-change-btn:active {
+            transform: translate(-50%, -50%) scale(0.98);
+        }
+        .fleet-pro-change-btn.hidden { display: none; }
+
+        .fleet-pro-nav {
+            position: absolute; top: 50%;
+            transform: translateY(-50%);
+            width: 56px; height: 56px; border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; font-size: 22px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition); z-index: 5;
+        }
+        .fleet-pro-nav:hover {
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            color: #060911; border-color: var(--c-gold-2);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .fleet-pro-nav.prev { right: 14px; }
+        .fleet-pro-nav.next { left: 14px; }
+        .fleet-pro-nav:disabled { opacity: 0.25; cursor: not-allowed; }
+
+        .fleet-pro-counter {
+            position: absolute; bottom: 100px;
+            left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(12px);
+            color: var(--c-gold-1);
+            padding: 8px 20px; border-radius: 20px;
+            font-size: 13px; font-weight: 800;
+            border: 1px solid rgba(247,215,116,0.35);
+            letter-spacing: 0.5px; z-index: 5; direction: ltr;
+        }
+
+        .fleet-pro-thumbs {
+            display: flex; gap: 8px;
+            padding: 14px 22px 18px;
+            background: linear-gradient(0deg, rgba(0,0,0,0.95), transparent);
+            overflow-x: auto; justify-content: center;
+            flex-shrink: 0;
+        }
+        .fleet-pro-thumb {
+            width: 70px; height: 70px; flex-shrink: 0;
+            border-radius: 10px; overflow: hidden; cursor: pointer;
+            border: 3px solid transparent;
+            transition: all var(--transition); opacity: 0.5;
+            background: rgba(10,16,32,0.6);
+        }
+        .fleet-pro-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .fleet-pro-thumb:hover { opacity: 0.85; transform: translateY(-4px); }
+        .fleet-pro-thumb.active {
+            border-color: var(--c-gold-2); opacity: 1;
+            box-shadow: 0 0 0 3px rgba(230,179,30,0.25), 0 8px 24px rgba(0,0,0,0.5);
+            transform: translateY(-4px);
+        }
+
+        .fleet-pro-empty {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            color: var(--c-text-3); gap: 16px; padding: 40px;
+        }
+        .fleet-pro-empty i {
+            font-size: 80px; color: var(--c-gold-2); opacity: 0.35;
+        }
+        .fleet-pro-empty h3 {
+            font-size: 18px; font-weight: 800;
+            color: var(--c-text-2); margin: 0;
+        }
+        .fleet-pro-empty p { font-size: 13px; color: var(--c-text-4); margin: 0; }
+
+        /* ═══════ RESPONSIVE ═══════ */
         @media (max-width: 1100px) {
             .stats-grid { gap: 12px; padding: 0 20px 18px; }
             .stat-card { padding: 18px 12px 16px; }
             .stat-card .number { font-size: 26px; }
-            .stat-card .label { font-size: 10.5px; }
             .fleet-header, .filter-bar { margin-left: 20px; margin-right: 20px; }
             .input-grid { margin-left: 20px; margin-right: 20px; }
             .table-wrapper { padding: 0 20px 20px; }
         }
-        @media (max-width: 1024px) {
-            .fleet-header { flex-direction: column; align-items: stretch; padding: 16px 20px; }
-            .fleet-header-actions { width: 100%; justify-content: flex-start; }
-        }
         @media (max-width: 900px) {
             .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .stat-card .number { font-size: 24px; }
         }
         @media (max-width: 768px) {
-            .fleet-header { padding: 14px 18px; margin: 14px 16px 16px; gap: 12px; }
+            .fleet-header { flex-direction: column; align-items: stretch; padding: 14px 18px; margin: 14px 16px 16px; }
+            .fleet-header-actions { width: 100%; }
             .fleet-header-left h2 { font-size: 18px; }
-            .fleet-header-left .header-icon { width: 42px; height: 42px; font-size: 18px; border-radius: 12px; }
             .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 0 16px 16px; }
-            .stat-card { padding: 16px 12px 14px; min-height: 100px; }
             .stat-card .number { font-size: 22px; }
             .input-grid { grid-template-columns: 1fr 1fr; padding: 12px 16px; margin: 0 16px 12px; gap: 8px; }
             .input-grid .btn-save { grid-column: span 2; }
             .images-section { padding: 12px; }
             .image-source-btns { width: 100%; }
-            .source-btn { flex: 1; justify-content: center; padding: 8px 10px; font-size: 11px; }
+            .source-btn { flex: 1; justify-content: center; }
             .images-gallery { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
-            .filter-bar { padding: 14px 16px; margin: 0 16px 16px; gap: 10px 12px; }
+            .filter-bar { padding: 14px 16px; margin: 0 16px 16px; }
             .filter-bar .search-input { flex: 1 1 100%; }
-            .filter-bar select { min-width: 100%; }
             .table-wrapper { padding: 0 16px 16px; }
-            .table-wrapper table { font-size: 11.5px; min-width: 1100px; }
-            thead th, tbody td { padding: 10px 8px; }
-            .vessel-thumb, .vessel-thumb-empty, .vessel-thumb-wrapper { width: 38px; height: 38px; }
             .fleet-toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
-            .fleet-scroll-nav { right: 16px; bottom: 80px; gap: 8px; }
-            .fleet-scroll-nav-btn { width: 42px; height: 42px; font-size: 16px; border-radius: 12px; }
-            .fleet-modal-box { padding: 22px 18px; }
-            .fleet-modal-head h3 { font-size: 16px; }
+            .fleet-pro-tool { width: 38px; height: 38px; font-size: 14px; }
+            .fleet-pro-close { width: 38px; height: 38px; font-size: 20px; }
+            .fleet-pro-stage { padding: 0 50px; }
+            .fleet-pro-nav { width: 44px; height: 44px; font-size: 18px; }
+            .fleet-pro-nav.prev { right: 6px; }
+            .fleet-pro-nav.next { left: 6px; }
+            .fleet-pro-thumb { width: 56px; height: 56px; }
+            .fleet-pro-change-btn { width: 70px; height: 70px; font-size: 10px; }
+            .fleet-pro-change-btn i { font-size: 18px; }
             .dispose-form-row { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 12px 12px; }
-            .stat-card { padding: 12px 8px 10px; min-height: 90px; }
-            .stat-card .number { font-size: 20px; }
-            .stat-card .label { font-size: 10px; white-space: normal; line-height: 1.3; }
-            .fleet-header-left .header-icon { width: 38px; height: 38px; font-size: 16px; }
-            .fleet-header-left h2 { font-size: 16px; }
-            .fleet-header-actions { gap: 6px; }
-            .fleet-header-actions .btn-action { padding: 8px 14px; font-size: 12px; }
-            .input-grid { grid-template-columns: 1fr; }
-            .input-grid .btn-save { grid-column: span 1; }
         }
         @media print {
             #page-fleet { background: #fff !important; color: #12121a !important; }
             #page-fleet::before { display: none !important; }
             .fleet-header, .filter-bar, .input-grid, .action-btns,
-            .fleet-scroll-nav, .fleet-toast, .fleet-modal,
-            .images-section, .fleet-lightbox, .vessel-gallery-modal, .vessel-viewer {
-                display: none !important; visibility: hidden !important;
+            .fleet-toast, .fleet-modal, .images-section,
+            .fleet-mini-upload, .fleet-pro-gallery {
+                display: none !important;
             }
         }
     </style>
 
+    <!-- HEADER -->
     <div class="fleet-header" id="fleetHeader">
         <div class="fleet-header-left">
             <div class="header-icon" id="fleetHeaderIcon">
@@ -1408,18 +1146,19 @@
                 المطروحة
                 <span class="badge-count" id="fleetDisposalsCount" style="display:none;">0</span>
             </button>
-            <button class="btn-action primary" onclick="refreshFleet()">
+            <button class="btn-action primary" id="fleetRefreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button class="btn-action secondary" onclick="printFleet()">
+            <button class="btn-action secondary" id="fleetPrintBtn">
                 <i class="fas fa-print"></i> طباعة
             </button>
-            <button class="btn-action success" onclick="exportFleetExcel()">
+            <button class="btn-action success" id="fleetExcelBtn">
                 <i class="fas fa-file-excel"></i> تصدير Excel
             </button>
         </div>
     </div>
 
+    <!-- STATS -->
     <div class="stats-grid" id="fleetStats">
         <div class="stat-card">
             <div class="number gold" id="totalVessels">0</div>
@@ -1448,45 +1187,113 @@
         </div>
     </div>
 
+    <!-- INPUT GRID -->
     <div id="inputArea" class="input-grid">
+        <!-- المعطيات الرئيسية — لا تُلمس -->
         <input type="text" id="iName" placeholder="اسم المركب">
         <input type="text" id="iNum" placeholder="الرقم">
         <input type="number" id="iLen" placeholder="الطول (م)" step="0.1">
-        <select id="iReg" onchange="updateZones()">
-            <option value="">الإقليم</option>
-            <option value="الشمال">🗺️ الشمال</option>
-            <option value="الساحل">🗺️ الساحل</option>
-            <option value="الوسط">🗺️ الوسط</option>
-            <option value="الجنوب">🗺️ الجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-        </select>
-        <select id="iZone"><option value="">المنطقة</option></select>
+
+        <!-- الإقليم -->
+        <div class="fleet-combobox">
+            <select id="iReg">
+                <option value="">الإقليم</option>
+                <option value="الشمال">🗺️ الشمال</option>
+                <option value="الساحل">🗺️ الساحل</option>
+                <option value="الوسط">🗺️ الوسط</option>
+                <option value="الجنوب">🗺️ الجنوب</option>
+                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                <option value="__other__">➕ إضافة إقليم آخر...</option>
+            </select>
+            <input type="text" class="fleet-combobox-free" id="iRegFree" placeholder="✍️ اكتب الإقليم..." style="display:none;">
+        </div>
+
+        <!-- المنطقة -->
+        <div class="fleet-combobox">
+            <input type="text" class="fleet-combobox-search" id="iZoneSearch" placeholder="🔍 ابحث منطقة...">
+            <select id="iZone"><option value="">المنطقة</option></select>
+            <input type="text" class="fleet-combobox-free" id="iZoneFree" placeholder="✍️ اكتب المنطقة..." style="display:none;">
+        </div>
+
+        <!-- الميناء -->
         <input type="text" id="iPort" placeholder="الميناء">
+
+        <!-- مكان التعزيز -->
         <input type="text" id="iSupp" placeholder="مكان التعزيز">
+
+        <!-- الحالة -->
         <select id="iStat">
             <option value="صالح">✅ صالح</option>
             <option value="معطب">❌ معطب</option>
             <option value="صيانة">🔧 صيانة</option>
         </select>
-        <input type="text" id="iBreak" placeholder="نوع العطب">
+
+        <!-- نوع العطب -->
+        <div class="fleet-combobox">
+            <input type="text" class="fleet-combobox-search" id="iBreakSearch" placeholder="🔍 ابحث نوع عطب...">
+            <select id="iBreak">
+                <option value="">نوع العطب</option>
+                <optgroup label="⚙️ محرك">
+                    <option value="عطب محرك">عطب محرك</option>
+                    <option value="تسريب زيت">تسريب زيت</option>
+                    <option value="ارتفاع حرارة">ارتفاع حرارة</option>
+                    <option value="عطب مضخة">عطب مضخة</option>
+                    <option value="عطب مروحة">عطب مروحة</option>
+                </optgroup>
+                <optgroup label="⚡ كهرباء">
+                    <option value="عطب كهربائي">عطب كهربائي</option>
+                    <option value="عطب بطارية">عطب بطارية</option>
+                    <option value="عطب مولد">عطب مولد</option>
+                    <option value="عطب أضواء">عطب أضواء</option>
+                    <option value="عطب لوحة قيادة">عطب لوحة قيادة</option>
+                </optgroup>
+                <optgroup label="⛵ هيكل وميكانيك">
+                    <option value="عطب دفة">عطب دفة</option>
+                    <option value="تسريب هيكل">تسريب هيكل</option>
+                    <option value="عطب رفاص">عطب رفاص</option>
+                    <option value="عطب دعامة">عطب دعامة</option>
+                    <option value="تشقق الهيكل">تشقق الهيكل</option>
+                </optgroup>
+                <optgroup label="📡 إلكترونيات">
+                    <option value="عطب رادار">عطب رادار</option>
+                    <option value="عطب GPS">عطب GPS</option>
+                    <option value="عطب اتصالات">عطب اتصالات</option>
+                    <option value="عطب سونار">عطب سونار</option>
+                </optgroup>
+                <optgroup label="⚙️ أخرى">
+                    <option value="أخرى">أخرى (اكتب يدوياً)</option>
+                </optgroup>
+            </select>
+            <input type="text" class="fleet-combobox-free" id="iBreakFree" placeholder="✍️ اكتب نوع العطب..." style="display:none;">
+        </div>
+
+        <!-- التاريخ -->
         <input type="date" id="iDate">
         <input type="date" id="iEnd">
-        <input type="text" id="iRef" placeholder="المرجع">
-        <select id="iRepairUnit">
-            <option value="">الوحدة المسؤولة عن الإصلاح</option>
-            <option value="وحدة الصيانة تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-            <option value="خارجي">🔧 خارجي</option>
-        </select>
 
-        <!-- 📸 قسم الصور -->
+        <!-- المرجع -->
+        <input type="text" id="iRef" placeholder="المرجع">
+
+        <!-- الوحدة المسؤولة -->
+        <div class="fleet-combobox">
+            <select id="iRepairUnit">
+                <option value="">الوحدة المسؤولة عن الإصلاح</option>
+                <option value="وحدة الصيانة تونس">🛠️ وحدة الصيانة تونس</option>
+                <option value="وحدة الصيانة المنستير">🛠️ وحدة الصيانة المنستير</option>
+                <option value="وحدة الصيانة صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                <option value="وحدة الصيانة جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                <option value="خارجي">🔧 خارجي</option>
+                <option value="__other__">➕ إضافة وحدة أخرى...</option>
+            </select>
+            <input type="text" class="fleet-combobox-free" id="iRepairUnitFree" placeholder="✍️ اكتب الوحدة..." style="display:none;">
+        </div>
+
+        <!-- IMAGES SECTION -->
         <div class="images-section" id="imagesSection">
             <div class="images-section-header">
                 <div class="images-section-title">
@@ -1505,15 +1312,8 @@
                     </button>
                 </div>
             </div>
-
-            <input type="file" id="imagesInput"
-                   accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                   multiple hidden>
-            <input type="file" id="cameraInput"
-                   accept="image/*"
-                   capture="environment"
-                   hidden>
-
+            <input type="file" id="imagesInput" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" multiple hidden>
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
             <div class="images-dropzone" id="imagesDropzone">
                 <div class="dropzone-content">
                     <i class="fas fa-cloud-upload-alt"></i>
@@ -1521,7 +1321,6 @@
                     <p class="dropzone-hint">JPG, PNG, WEBP, GIF — حتى 5 MB لكل صورة</p>
                 </div>
             </div>
-
             <div class="images-gallery" id="imagesGallery"></div>
             <div class="images-uploading" id="imagesUploading" style="display:none;">
                 <div class="uploading-spinner"></div>
@@ -1534,6 +1333,7 @@
         </button>
     </div>
 
+    <!-- FILTER BAR -->
     <div class="filter-bar">
         <div class="search-input">
             <input type="text" id="searchMain" placeholder="بحث في السجل..." onkeyup="renderMain()">
@@ -1563,28 +1363,12 @@
         </button>
     </div>
 
-    <div class="print-only print-summary-section" id="printSummarySection">
-        <div class="print-summary-title">📊 ملخص الأسطول حسب الفئات</div>
-        <table class="print-summary-table">
-            <thead>
-                <tr>
-                    <th style="width: 25%;">الفئة</th>
-                    <th>صالح</th>
-                    <th>صيانة</th>
-                    <th>معطب</th>
-                    <th>الإجمالي</th>
-                    <th>نسبة الجاهزية</th>
-                </tr>
-            </thead>
-            <tbody id="printSummaryBody"></tbody>
-        </table>
-    </div>
-
+    <!-- TABLE -->
     <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
-                    <th style="width:60px;"><i class="fas fa-image"></i> صورة</th>
+                    <th style="width:100px;"><i class="fas fa-image"></i> صورة</th>
                     <th><i class="fas fa-ship"></i> الاسم</th>
                     <th><i class="fas fa-hashtag"></i> الرقم</th>
                     <th><i class="fas fa-ruler"></i> الطول</th>
@@ -1612,15 +1396,7 @@
         </table>
     </div>
 
-    <div class="fleet-scroll-nav" id="fleetScrollNav" aria-hidden="true">
-        <button type="button" class="fleet-scroll-nav-btn" id="fleetScrollTop" title="أعلى الصفحة">
-            <i class="fas fa-chevron-up"></i>
-        </button>
-        <button type="button" class="fleet-scroll-nav-btn" id="fleetScrollBottom" title="أسفل الصفحة">
-            <i class="fas fa-chevron-down"></i>
-        </button>
-    </div>
-
+    <!-- DISPOSE MODAL -->
     <div class="fleet-modal" id="fleetDisposeModal">
         <div class="fleet-modal-box">
             <div class="fleet-modal-head">
@@ -1647,19 +1423,16 @@
             <input type="hidden" id="disposeVesselId">
             <div class="dispose-form-group">
                 <label>⚠️ سبب الطرح <span class="req">*</span></label>
-                <textarea class="dispose-form-control" id="disposeReason"
-                    placeholder="اشرح سبب سحب المركب من الخدمة (تلف كامل، تقادم، إلخ)..." maxlength="1000"></textarea>
+                <textarea class="dispose-form-control" id="disposeReason" placeholder="اشرح سبب سحب المركب من الخدمة..." maxlength="1000"></textarea>
             </div>
             <div class="dispose-form-row">
                 <div class="dispose-form-group">
                     <label>📋 رقم قرار الطرح</label>
-                    <input type="text" class="dispose-form-control" id="disposeDecision"
-                        placeholder="مثال: قرار عدد 2025/123" maxlength="200">
+                    <input type="text" class="dispose-form-control" id="disposeDecision" placeholder="مثال: قرار عدد 2025/123" maxlength="200">
                 </div>
                 <div class="dispose-form-group">
                     <label>👤 الجهة القارّة</label>
-                    <input type="text" class="dispose-form-control" id="disposeBy"
-                        placeholder="اسم المسؤول أو الجهة" maxlength="200">
+                    <input type="text" class="dispose-form-control" id="disposeBy" placeholder="اسم المسؤول أو الجهة" maxlength="200">
                 </div>
             </div>
             <div class="dispose-form-group">
@@ -1668,8 +1441,7 @@
             </div>
             <div class="dispose-form-group">
                 <label>📝 ملاحظات إضافية</label>
-                <textarea class="dispose-form-control" id="disposeNotes"
-                    placeholder="ملاحظات اختيارية..." maxlength="2000"></textarea>
+                <textarea class="dispose-form-control" id="disposeNotes" placeholder="ملاحظات اختيارية..." maxlength="2000"></textarea>
             </div>
             <div class="dispose-confirm">
                 <input type="checkbox" id="disposeConfirmCheck">
@@ -1678,9 +1450,7 @@
                 </label>
             </div>
             <div class="fleet-modal-actions">
-                <button type="button" class="btn-modal cancel" id="fleetDisposeCancel">
-                    إلغاء
-                </button>
+                <button type="button" class="btn-modal cancel" id="fleetDisposeCancel">إلغاء</button>
                 <button type="button" class="btn-modal dispose-confirm-btn" id="fleetDisposeConfirm" disabled>
                     <i class="fas fa-archive"></i> تأكيد الطرح نهائياً
                 </button>
@@ -1688,42 +1458,76 @@
         </div>
     </div>
 
-    <!-- LIGHTBOX البسيط -->
-    <div class="fleet-lightbox" id="fleetLightbox">
-        <button class="fleet-lightbox-close" id="fleetLightboxClose">×</button>
-        <img id="fleetLightboxImg" src="" alt="عرض كبير">
-    </div>
-
-    <!-- 🖼️ معرض صور المركبات المطروحة -->
-    <div class="vessel-gallery-modal" id="vesselGalleryModal">
-        <div class="vessel-gallery-box">
-            <div class="vessel-gallery-head">
-                <div class="vessel-gallery-head-info">
-                    <div class="vessel-gallery-head-icon">
-                        <i class="fas fa-ship"></i>
-                    </div>
-                    <div class="vessel-gallery-head-text">
-                        <h3 id="vesselGalleryTitle">—</h3>
-                        <p>الرقم: <strong id="vesselGalleryNumber">—</strong> • عدد الصور: <strong id="vesselGalleryCount">0</strong></p>
-                    </div>
+    <!-- PROFESSIONAL GALLERY -->
+    <div class="fleet-pro-gallery" id="fleetProGallery">
+        <div class="fleet-pro-top">
+            <div class="fleet-pro-info">
+                <div class="fleet-pro-info-icon"><i class="fas fa-ship"></i></div>
+                <div class="fleet-pro-info-text">
+                    <h3 id="fleetProTitle">—</h3>
+                    <p id="fleetProSubtitle">—</p>
                 </div>
-                <button class="vessel-gallery-close" id="vesselGalleryClose" type="button" title="إغلاق">×</button>
             </div>
-            <div class="vessel-gallery-body" id="vesselGalleryBody"></div>
+            <div class="fleet-pro-tools">
+                <button class="fleet-pro-tool" id="fleetProZoomOut" title="تصغير"><i class="fas fa-search-minus"></i></button>
+                <button class="fleet-pro-tool" id="fleetProZoomIn" title="تكبير"><i class="fas fa-search-plus"></i></button>
+                <button class="fleet-pro-tool" id="fleetProReset" title="إعادة ضبط"><i class="fas fa-compress"></i></button>
+                <button class="fleet-pro-tool" id="fleetProSlideshow" title="عرض تلقائي"><i class="fas fa-play"></i></button>
+                <button class="fleet-pro-tool" id="fleetProDownload" title="تحميل"><i class="fas fa-download"></i></button>
+                <button class="fleet-pro-tool" id="fleetProFullscreen" title="ملء الشاشة"><i class="fas fa-expand"></i></button>
+                <button class="fleet-pro-close" id="fleetProClose" title="إغلاق">×</button>
+            </div>
         </div>
+        <div class="fleet-pro-stage" id="fleetProStage">
+            <button class="fleet-pro-nav prev" id="fleetProPrev"><i class="fas fa-chevron-right"></i></button>
+            <img id="fleetProImg" src="" alt="صورة">
+            <button class="fleet-pro-change-btn hidden" id="fleetProChangeBtn" title="تغيير الصور">
+                <i class="fas fa-camera-retro"></i>
+                <span>تغيير</span>
+                <span>الصور</span>
+            </button>
+            <button class="fleet-pro-nav next" id="fleetProNext"><i class="fas fa-chevron-left"></i></button>
+            <div class="fleet-pro-counter" id="fleetProCounter">0 / 0</div>
+        </div>
+        <div class="fleet-pro-thumbs" id="fleetProThumbs"></div>
     </div>
 
-    <!-- 🔍 عارض الصورة الكبير -->
-    <div class="vessel-viewer" id="vesselViewer">
-        <button class="vessel-viewer-close" id="vesselViewerClose" type="button" title="إغلاق">×</button>
-        <button class="vessel-viewer-nav prev" id="vesselViewerPrev" type="button" title="السابق">
-            <i class="fas fa-chevron-right"></i>
-        </button>
-        <img id="vesselViewerImg" src="" alt="صورة المركب">
-        <button class="vessel-viewer-nav next" id="vesselViewerNext" type="button" title="التالي">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        <div class="vessel-viewer-counter" id="vesselViewerCounter">0 / 0</div>
+    <!-- MINI UPLOAD -->
+    <div class="fleet-mini-upload" id="fleetMiniUploadModal">
+        <div class="fleet-mini-upload-box">
+            <div class="fleet-mini-upload-head">
+                <h4><i class="fas fa-camera-retro"></i> تعديل صور المركب</h4>
+                <button class="fleet-modal-close" id="fleetMiniUploadClose" type="button">×</button>
+            </div>
+            <div class="images-count" style="text-align:center; margin-bottom:12px;" id="fleetMiniImagesCount">(0/10)</div>
+            <div class="image-source-btns">
+                <button type="button" class="source-btn camera" id="fleetMiniCaptureBtn">
+                    <i class="fas fa-camera"></i><span>التقاط صورة</span>
+                </button>
+                <button type="button" class="source-btn browse" id="fleetMiniBrowseBtn">
+                    <i class="fas fa-folder-open"></i><span>استيراد صور</span>
+                </button>
+            </div>
+            <input type="file" id="fleetMiniImagesInput" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" multiple hidden>
+            <input type="file" id="fleetMiniCameraInput" accept="image/*" capture="environment" hidden>
+            <div class="images-dropzone" id="fleetMiniDropzone">
+                <div class="dropzone-content">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p class="dropzone-title">اسحب الصور وأفلتها هنا</p>
+                    <p class="dropzone-hint">JPG, PNG, WEBP — حتى 5 MB</p>
+                </div>
+            </div>
+            <div class="images-gallery" id="fleetMiniGalleryPreview"></div>
+            <div class="images-uploading" id="fleetMiniUploading" style="display:none;">
+                <div class="uploading-spinner"></div><span>جاري الرفع...</span>
+            </div>
+            <div class="fleet-modal-actions" style="margin-top:20px;">
+                <button type="button" class="btn-modal cancel" id="fleetMiniUploadCancel">إلغاء</button>
+                <button type="button" class="btn-modal dispose-confirm-btn" id="fleetMiniUploadSave">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1735,17 +1539,26 @@
     var _disposalsCount = 0;
     var _objectUrls = [];
 
-    // 📸 متغيرات الصور
     var fleetImages = [];
     var currentVesselId = null;
     var MAX_IMAGES = 10;
     var MAX_FILE_SIZE = 5 * 1024 * 1024;
     var ALLOWED_TYPES = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 
-    // 🖼️ متغيرات معرض الصور
-    var _galleryVessel = null;
     var _galleryImages = [];
     var _galleryIndex = 0;
+    var _galleryZoom = 1;
+    var _galleryPanX = 0;
+    var _galleryPanY = 0;
+    var _galleryDragging = false;
+    var _galleryDragStartX = 0;
+    var _galleryDragStartY = 0;
+    var _gallerySlideshowTimer = null;
+    var _gallerySlideshowActive = false;
+    var _galleryCurrentVessel = null;
+
+    var miniUploadImages = [];
+    var miniUploadVesselId = null;
 
     function _fleetCleanup() {
         if (_isDestroyed) return;
@@ -1763,6 +1576,7 @@
             try { URL.revokeObjectURL(url); } catch(e) {}
         });
         _objectUrls = [];
+        stopSlideshow();
     }
     window._pageCleanup = window._pageCleanup || [];
     window._pageCleanup.push(_fleetCleanup);
@@ -1793,74 +1607,47 @@
     };
 
     var ZONES_DATA = {
-        "الشمال": ["تونس", "بنزرت", "طبرقة"],
-        "الساحل": ["سوسة", "المنستير", "نابل"],
-        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"],
-        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
-        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
-        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
-        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
-        "المجمع الأمني بقبيبة": ["قبيبة"]
+        "الشمال": ["تونس", "بنزرت", "طبرقة", "منزل بورقيبة", "غار الملح", "رأس الجبل", "منزل تميم", "قليبية"],
+        "الساحل": ["سوسة", "المنستير", "نابل", "حمامات", "المهدية", "قصر هلال", "هرقلة", "شربان"],
+        "الوسط": ["صفاقس", "المهدية", "قرقنة", "الوردانين", "المزونة", "جبنيانة", "العامرة"],
+        "الجنوب": ["جرجيس", "جربة", "قابس", "بن قردان", "مدنين", "زازيس", "حومة السوق", "أجيم"],
+        "وحدة الصيانة والإسناد البحري تونس": ["تونس", "أريانة", "بن عروس", "منوبة"],
+        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير", "سوسة", "المهدية"],
+        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس", "قرقنة", "سيدي بوزيد"],
+        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس", "جربة", "بن قردان"],
+        "المجمع الأمني بقبيبة": ["قبيبة", "تونس", "بنزرت"]
     };
 
-    function applyLogo() {
-        try {
-            var cachedLogo = localStorage.getItem('marine_logo');
-            if (!cachedLogo) return;
-            var iconDiv = document.getElementById('fleetHeaderIcon');
-            var img = document.getElementById('globalLogo');
-            if (img) { img.src = cachedLogo; img.style.display = 'block'; }
-            if (iconDiv) iconDiv.classList.add('has-logo');
-        } catch (e) {}
+    /* ═══════ HELPERS ═══════ */
+    function $(s, c) { return (c || document).querySelector(s); }
+    function $$(s, c) { return Array.from((c || document).querySelectorAll(s)); }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+        });
     }
 
-    function syncLogoFromServer() {
-        var token = localStorage.getItem('marine_token') || localStorage.getItem('token') || null;
-        var headers = { 'Accept': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-        fetch('/api/logo', { headers: headers, credentials: 'include' })
-            .then(function(r) { return r.ok ? r.json() : null; })
-            .then(function(data) {
-                if (data && data.success && data.logo && data.logo.dataUrl) {
-                    try { localStorage.setItem('marine_logo', data.logo.dataUrl); } catch(e) {}
-                    applyLogo();
-                }
-            }).catch(function() {});
+    function formatDate(val) {
+        if (!val) return '-';
+        try {
+            var d = new Date(val);
+            if (isNaN(d.getTime())) return escapeHtml(val);
+            return String(d.getDate()).padStart(2,'0') + '/' +
+                   String(d.getMonth()+1).padStart(2,'0') + '/' +
+                   d.getFullYear();
+        } catch (_) { return escapeHtml(val); }
     }
 
-    applyLogo();
-    syncLogoFromServer();
-
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'marine_logo' && e.newValue) applyLogo();
-    });
-
-    function updatePrintDate() {
-        try {
-            var now = new Date();
-            var ds = now.toLocaleDateString('ar-TN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            var ts = now.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-            var header = document.getElementById('fleetHeader');
-            if (header) header.setAttribute('data-print-date', ds + ' - ' + ts);
-        } catch (e) {}
-    }
-    updatePrintDate();
-    window.addEventListener('beforeprint', updatePrintDate);
-
-    function printFleet() {
-        try {
-            updatePrintDate();
-            var confirmed = confirm(
-                '🖨️ قبل الطباعة تأكد من:\n\n' +
-                '1. الاتجاه: أفقي (Landscape)\n' +
-                '2. خيار "خلفيات ورسوم" مفعّل ✅\n' +
-                '3. الوجهة: PDF (اختياري)\n\n' +
-                'هل تريد المتابعة؟'
-            );
-            if (!confirmed) return;
-            window.print();
-        } catch (e) { window.print(); }
+    function getCategory(len) {
+        var n = parseFloat(len);
+        if (isNaN(n)) return 'زوارق مزدوجة';
+        if (n === 11) return 'البروق';
+        if (n >= 8 && n <= 12) return 'صقور';
+        if (n > 12 && n <= 25) return 'خوافر';
+        if (n >= 30) return 'طوافات';
+        return 'زوارق مزدوجة';
     }
 
     function fleetToast(msg, type, duration) {
@@ -1880,20 +1667,6 @@
         toast.appendChild(text);
         document.body.appendChild(toast);
         setTimeout(function() { if (toast.parentNode) toast.remove(); }, duration);
-    }
-
-    var LEGACY_ROLE_MAP = {
-        'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
-        'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit',
-        'user': 'viewer', 'مشاهد': 'viewer'
-    };
-    var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-
-    function normalizeRole(role) {
-        if (!role) return 'viewer';
-        var r = String(role).trim();
-        if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
-        return LEGACY_ROLE_MAP[r] || 'viewer';
     }
 
     function getToken() {
@@ -1928,6 +1701,20 @@
 
     function getUser() { return window.currentUser || null; }
 
+    var LEGACY_ROLE_MAP = {
+        'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager',
+        'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit',
+        'user': 'viewer', 'مشاهد': 'viewer'
+    };
+    var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
+
+    function normalizeRole(role) {
+        if (!role) return 'viewer';
+        var r = String(role).trim();
+        if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
+        return LEGACY_ROLE_MAP[r] || 'viewer';
+    }
+
     function canEdit() {
         if (window.capabilities && typeof window.capabilities.canCreateVessels === 'boolean') {
             return window.capabilities.canCreateVessels || window.capabilities.canUpdateVessels;
@@ -1954,58 +1741,134 @@
         return role === 'admin' || role === 'manager';
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/[&<>"']/g, function(m) {
-            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m];
+    /* ═══════ COMBOBOX HELPERS ═══════ */
+    function filterSelectOptions(selectEl, query) {
+        if (!selectEl) return;
+        var q = (query || '').trim().toLowerCase();
+        if (!q) {
+            $$('option', selectEl).forEach(function(opt) { opt.style.display = ''; });
+            $$('optgroup', selectEl).forEach(function(grp) { grp.style.display = ''; });
+            return;
+        }
+        $$('option', selectEl).forEach(function(opt) {
+            if (!opt.value) return;
+            var match = opt.textContent.toLowerCase().indexOf(q) !== -1 ||
+                        opt.value.toLowerCase().indexOf(q) !== -1;
+            opt.style.display = match ? '' : 'none';
+        });
+        $$('optgroup', selectEl).forEach(function(grp) {
+            var hasVisible = $$('option', grp).some(function(opt) { return opt.style.display !== 'none'; });
+            grp.style.display = hasVisible ? '' : 'none';
         });
     }
 
-    function formatDate(val) {
-        if (!val) return '-';
-        try {
-            var d = new Date(val);
-            if (isNaN(d.getTime())) return escapeHtml(val);
-            return String(d.getDate()).padStart(2,'0') + '/' +
-                   String(d.getMonth()+1).padStart(2,'0') + '/' +
-                   d.getFullYear();
-        } catch (_) { return escapeHtml(val); }
+    function bindComboboxSearch(searchId, selectId) {
+        var s = $('#' + searchId);
+        var sel = $('#' + selectId);
+        if (!s || !sel) return;
+        s.addEventListener('input', function() {
+            filterSelectOptions(sel, this.value);
+        });
     }
 
-    function getCategory(len) {
-        var n = parseFloat(len);
-        if (isNaN(n)) return 'زوارق مزدوجة';
-        if (n === 11) return 'البروق';
-        if (n >= 8 && n <= 12) return 'صقور';
-        if (n > 12 && n <= 25) return 'خوافر';
-        if (n >= 30) return 'طوافات';
-        return 'زوارق مزدوجة';
+    function toggleFreeInput(selectId, freeId, showOn) {
+        var sel = $('#' + selectId);
+        var free = $('#' + freeId);
+        if (!sel || !free) return;
+        sel.addEventListener('change', function() {
+            if (showOn.indexOf(sel.value) !== -1) {
+                free.style.display = 'block';
+                free.focus();
+            } else {
+                free.style.display = 'none';
+                free.value = '';
+            }
+        });
     }
 
-    // ============================================================
-    // 📸 إدارة الصور
-    // ============================================================
+    function getComboboxValue(selectId, freeId) {
+        var sel = $('#' + selectId);
+        var free = $('#' + freeId);
+        if (!sel) return '';
+        if ((sel.value === '__other__' || sel.value === 'أخرى') && free && free.value.trim()) {
+            return free.value.trim();
+        }
+        if (sel.value === '__other__' || sel.value === 'أخرى') return '';
+        return sel.value;
+    }
+
+    function setComboboxValue(selectId, freeId, value) {
+        var sel = $('#' + selectId);
+        var free = $('#' + freeId);
+        if (!sel) return;
+        if (!value) {
+            sel.value = '';
+            if (free) { free.style.display = 'none'; free.value = ''; }
+            return;
+        }
+        var exists = Array.from(sel.options).some(function(opt) { return opt.value === value; });
+        if (exists) {
+            sel.value = value;
+            if (free) { free.style.display = 'none'; free.value = ''; }
+        } else if (free) {
+            sel.value = (sel.querySelector('option[value="__other__"]') ? '__other__' : 'أخرى');
+            free.style.display = 'block';
+            free.value = value;
+        }
+    }
+
+    /* ═══════ DYNAMIC FIELDS ═══════ */
+    function updateZones() {
+        var regionVal = getComboboxValue('iReg', 'iRegFree');
+        var zoneSel = $('#iZone');
+        var zoneSearch = $('#iZoneSearch');
+        var zoneFree = $('#iZoneFree');
+        if (!zoneSel) return;
+        var current = zoneSel.value;
+
+        if (!regionVal) {
+            zoneSel.innerHTML = '<option value="">المنطقة</option>';
+            if (zoneSearch) { zoneSearch.style.display = 'none'; zoneSearch.value = ''; }
+            if (zoneFree) { zoneFree.style.display = 'none'; zoneFree.value = ''; }
+            return;
+        }
+
+        var zones = ZONES_DATA[regionVal] || [];
+        var html = '<option value="">المنطقة</option>';
+        zones.forEach(function(z) {
+            html += '<option value="' + escapeHtml(z) + '">' + escapeHtml(z) + '</option>';
+        });
+        html += '<option value="__other__">➕ إضافة منطقة أخرى...</option>';
+        zoneSel.innerHTML = html;
+
+        if (current && zones.indexOf(current) !== -1) {
+            zoneSel.value = current;
+        }
+        if (zoneSearch) {
+            zoneSearch.style.display = zones.length > 5 ? 'block' : 'none';
+            zoneSearch.value = '';
+        }
+        if (zoneFree) { zoneFree.style.display = 'none'; zoneFree.value = ''; }
+        filterSelectOptions(zoneSel, '');
+    }
+
+    /* ═══════ IMAGE UPLOADER ═══════ */
     function updateSourceButtonsState() {
-        var captureBtn = document.getElementById('captureBtn');
-        var browseBtn = document.getElementById('browseBtn');
         var isFull = fleetImages.length >= MAX_IMAGES;
-        if (captureBtn) captureBtn.disabled = isFull;
-        if (browseBtn) browseBtn.disabled = isFull;
+        var c = $('#captureBtn'); if (c) c.disabled = isFull;
+        var b = $('#browseBtn'); if (b) b.disabled = isFull;
     }
 
     function initImagesUI() {
-        var dropzone = document.getElementById('imagesDropzone');
-        var input = document.getElementById('imagesInput');
-        var cameraInput = document.getElementById('cameraInput');
-        var captureBtn = document.getElementById('captureBtn');
-        var browseBtn = document.getElementById('browseBtn');
+        var dropzone = $('#imagesDropzone');
+        var input = $('#imagesInput');
+        var cameraInput = $('#cameraInput');
+        var captureBtn = $('#captureBtn');
+        var browseBtn = $('#browseBtn');
 
         if (captureBtn && cameraInput) {
             captureBtn.addEventListener('click', function() {
-                if (fleetImages.length >= MAX_IMAGES) {
-                    fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
-                    return;
-                }
+                if (fleetImages.length >= MAX_IMAGES) { fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
                 cameraInput.click();
             });
             cameraInput.addEventListener('change', function(e) {
@@ -2013,40 +1876,20 @@
                 cameraInput.value = '';
             });
         }
-
         if (browseBtn && input) {
             browseBtn.addEventListener('click', function() {
-                if (fleetImages.length >= MAX_IMAGES) {
-                    fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
-                    return;
-                }
+                if (fleetImages.length >= MAX_IMAGES) { fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
                 input.click();
             });
         }
-
-        if (input) {
-            input.addEventListener('change', function(e) {
-                handleFiles(e.target.files);
-                input.value = '';
-            });
-        }
-
+        if (input) input.addEventListener('change', function(e) { handleFiles(e.target.files); input.value = ''; });
         if (dropzone && input) {
             dropzone.addEventListener('click', function() {
-                if (fleetImages.length >= MAX_IMAGES) {
-                    fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
-                    return;
-                }
+                if (fleetImages.length >= MAX_IMAGES) { fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
                 input.click();
             });
-            dropzone.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                dropzone.classList.add('dragover');
-            });
-            dropzone.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                dropzone.classList.remove('dragover');
-            });
+            dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+            dropzone.addEventListener('dragleave', function(e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
             dropzone.addEventListener('drop', function(e) {
                 e.preventDefault();
                 dropzone.classList.remove('dragover');
@@ -2057,60 +1900,35 @@
 
     function handleFiles(files) {
         if (!files || files.length === 0) return;
-
         var valid = [];
         for (var i = 0; i < files.length; i++) {
             var f = files[i];
-            if (!ALLOWED_TYPES.test(f.type)) {
-                fleetToast('❌ نوع غير مدعوم: ' + f.name, 'error');
-                continue;
-            }
-            if (f.size > MAX_FILE_SIZE) {
-                fleetToast('❌ حجم كبير (الحد 5MB): ' + f.name, 'error');
-                continue;
-            }
+            if (!ALLOWED_TYPES.test(f.type)) { fleetToast('❌ نوع غير مدعوم: ' + f.name, 'error'); continue; }
+            if (f.size > MAX_FILE_SIZE) { fleetToast('❌ حجم كبير: ' + f.name, 'error'); continue; }
             valid.push(f);
         }
         if (valid.length === 0) return;
-
         var remaining = MAX_IMAGES - fleetImages.length;
-        if (remaining <= 0) {
-            fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
-            updateSourceButtonsState();
-            return;
-        }
-        if (valid.length > remaining) {
-            fleetToast('⚠️ تم قبول ' + remaining + ' صور فقط', 'info');
-            valid = valid.slice(0, remaining);
-        }
-
+        if (remaining <= 0) { fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); updateSourceButtonsState(); return; }
+        if (valid.length > remaining) { fleetToast('⚠️ تم قبول ' + remaining + ' صور فقط', 'info'); valid = valid.slice(0, remaining); }
         fleetImages = fleetImages.concat(valid);
         renderImagesPreview();
     }
 
     function renderImagesPreview() {
-        var gallery = document.getElementById('imagesGallery');
-        var count = document.getElementById('imagesCount');
-
+        var gallery = $('#imagesGallery');
+        var count = $('#imagesCount');
         if (count) count.textContent = '(' + fleetImages.length + '/' + MAX_IMAGES + ')';
         if (!gallery) return;
 
-        if (fleetImages.length === 0) {
-            gallery.innerHTML = '';
-            updateSourceButtonsState();
-            return;
-        }
+        if (fleetImages.length === 0) { gallery.innerHTML = ''; updateSourceButtonsState(); return; }
 
         var html = '';
         fleetImages.forEach(function(img, idx) {
             var preview = '';
             var isFile = (img instanceof File);
-            if (isFile) {
-                preview = URL.createObjectURL(img);
-                _objectUrls.push(preview);
-            } else {
-                preview = img.url || '';
-            }
+            if (isFile) { preview = URL.createObjectURL(img); _objectUrls.push(preview); }
+            else preview = img.url || '';
             var isPrimary = isFile
                 ? (idx === 0 && !fleetImages.some(function(x){ return x.isPrimary; }))
                 : !!img.isPrimary;
@@ -2118,14 +1936,10 @@
             html +=
                 '<div class="image-item' + (isPrimary ? ' is-primary' : '') + '" data-index="' + idx + '">' +
                     '<img src="' + escapeHtml(preview) + '" alt="صورة" loading="lazy">' +
-                    '<span class="image-primary-badge">⭐ رئيسية</span>' +
+                    '<span class="image-primary-badge">⭐</span>' +
                     '<div class="image-actions">' +
-                        '<button type="button" class="img-set-primary" data-action="primary" data-idx="' + idx + '" title="تعيين كرئيسية">' +
-                            '<i class="fas fa-star"></i>' +
-                        '</button>' +
-                        '<button type="button" class="img-delete" data-action="delete" data-idx="' + idx + '" title="حذف">' +
-                            '<i class="fas fa-trash"></i>' +
-                        '</button>' +
+                        '<button type="button" class="img-set-primary" data-action="primary" data-idx="' + idx + '" title="رئيسية"><i class="fas fa-star"></i></button>' +
+                        '<button type="button" class="img-delete" data-action="delete" data-idx="' + idx + '" title="حذف"><i class="fas fa-trash"></i></button>' +
                     '</div>' +
                 '</div>';
         });
@@ -2140,32 +1954,18 @@
                 else if (action === 'primary') setPrimaryImageLocal(idx);
             });
         });
-
-        gallery.querySelectorAll('.image-item img').forEach(function(imgEl) {
-            imgEl.addEventListener('click', function(e) {
-                e.stopPropagation();
-                openLightbox(this.src);
-            });
-        });
-
         updateSourceButtonsState();
     }
 
     function removeImage(idx) {
         if (idx < 0 || idx >= fleetImages.length) return;
         var img = fleetImages[idx];
-
         if (img && img._id && currentVesselId) {
-            fetcher('/api/vessels/' + encodeURIComponent(currentVesselId) + '/images/' + encodeURIComponent(img._id), {
-                method: 'DELETE'
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(d) {
-                if (d.success) fleetToast('🗑️ تم حذف الصورة', 'success');
-            })
-            .catch(function() {});
+            fetcher('/api/vessels/' + encodeURIComponent(currentVesselId) + '/images/' + encodeURIComponent(img._id), { method: 'DELETE' })
+                .then(function(r) { return r.json(); })
+                .then(function(d) { if (d.success) fleetToast('🗑️ تم حذف الصورة', 'success'); })
+                .catch(function() {});
         }
-
         fleetImages.splice(idx, 1);
         renderImagesPreview();
     }
@@ -2174,13 +1974,10 @@
         if (idx < 0 || idx >= fleetImages.length) return;
         var img = fleetImages.splice(idx, 1)[0];
         fleetImages.unshift(img);
-
         if (img && img._id && currentVesselId) {
-            fetcher('/api/vessels/' + encodeURIComponent(currentVesselId) + '/images/' + encodeURIComponent(img._id) + '/primary', {
-                method: 'PATCH'
-            })
-            .then(function(res) { return res.json(); })
-            .catch(function() {});
+            fetcher('/api/vessels/' + encodeURIComponent(currentVesselId) + '/images/' + encodeURIComponent(img._id) + '/primary', { method: 'PATCH' })
+                .then(function(r) { return r.json(); })
+                .catch(function() {});
         }
         renderImagesPreview();
         fleetToast('⭐ تم تعيين الصورة الرئيسية', 'success');
@@ -2190,27 +1987,21 @@
         var newFiles = fleetImages.filter(function(img) { return img instanceof File; });
         if (newFiles.length === 0) return true;
         if (!vesselId) return false;
-
-        var uploading = document.getElementById('imagesUploading');
+        var uploading = $('#imagesUploading');
         if (uploading) uploading.style.display = 'flex';
-
         try {
-            var formData = new FormData();
-            newFiles.forEach(function(img) { formData.append('images', img); });
-
-            var token = getToken();
-            var csrf = getCsrf();
+            var fd = new FormData();
+            newFiles.forEach(function(img) { fd.append('images', img); });
             var res = await fetch('/api/vessels/' + encodeURIComponent(vesselId) + '/images', {
                 method: 'POST',
                 headers: Object.assign(
                     { 'Accept': 'application/json' },
-                    token ? { 'Authorization': 'Bearer ' + token } : {},
-                    csrf ? { 'X-CSRF-Token': csrf } : {}
+                    getToken() ? { 'Authorization': 'Bearer ' + getToken() } : {},
+                    getCsrf() ? { 'X-CSRF-Token': getCsrf() } : {}
                 ),
                 credentials: 'include',
-                body: formData
+                body: fd
             });
-
             if (!res.ok) {
                 var err = await res.json().catch(function() { return {}; });
                 throw new Error(err.error || 'فشل رفع الصور');
@@ -2224,223 +2015,516 @@
         }
     }
 
-    function openLightbox(src) {
-        var lb = document.getElementById('fleetLightbox');
-        var img = document.getElementById('fleetLightboxImg');
-        if (!lb || !img) return;
-        img.src = src;
-        lb.classList.add('active');
+    /* ═══════ MINI UPLOAD ═══════ */
+    function openMiniUpload(vesselId) {
+        var v = null;
+        fetcher('/api/vessels').then(function(r) { return r.json(); }).then(function(list) {
+            v = list.find(function(x) { return String(x._id || x.id) === String(vesselId); });
+            if (!v) { fleetToast('❌ المركب غير موجود', 'error'); return; }
+            miniUploadVesselId = vesselId;
+            miniUploadImages = (v.images || []).slice();
+            renderMiniPreview();
+            $('#fleetMiniUploadModal').classList.add('active');
+        }).catch(function(err) { fleetToast('❌ ' + err.message, 'error'); });
     }
 
-    function closeLightbox() {
-        var lb = document.getElementById('fleetLightbox');
-        if (lb) lb.classList.remove('active');
+    function closeMiniUpload() {
+        var m = $('#fleetMiniUploadModal');
+        if (m) m.classList.remove('active');
+        miniUploadImages = [];
+        miniUploadVesselId = null;
     }
 
-    // ============================================================
-    // 🖼️ معرض صور المركبات (Lightbox Gallery)
-    // ============================================================
+    function renderMiniPreview() {
+        var gallery = $('#fleetMiniGalleryPreview');
+        var count = $('#fleetMiniImagesCount');
+        if (count) count.textContent = '(' + miniUploadImages.length + '/' + MAX_IMAGES + ')';
+        if (!gallery) return;
+        if (miniUploadImages.length === 0) { gallery.innerHTML = ''; return; }
+
+        var html = '';
+        miniUploadImages.forEach(function(img, idx) {
+            var preview = '';
+            var isFile = (img instanceof File);
+            if (isFile) { preview = URL.createObjectURL(img); _objectUrls.push(preview); }
+            else preview = img.url || '';
+            var isPrimary = isFile
+                ? (idx === 0 && !miniUploadImages.some(function(x){ return x.isPrimary; }))
+                : !!img.isPrimary;
+
+            html +=
+                '<div class="image-item' + (isPrimary ? ' is-primary' : '') + '">' +
+                    '<img src="' + escapeHtml(preview) + '" alt="صورة" loading="lazy">' +
+                    '<span class="image-primary-badge">⭐</span>' +
+                    '<div class="image-actions">' +
+                        '<button type="button" class="img-set-primary" data-mini-action="primary" data-idx="' + idx + '" title="رئيسية"><i class="fas fa-star"></i></button>' +
+                        '<button type="button" class="img-delete" data-mini-action="delete" data-idx="' + idx + '" title="حذف"><i class="fas fa-trash"></i></button>' +
+                    '</div>' +
+                '</div>';
+        });
+        gallery.innerHTML = html;
+
+        gallery.querySelectorAll('[data-mini-action]').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var action = this.getAttribute('data-mini-action');
+                var idx = parseInt(this.getAttribute('data-idx'), 10);
+                if (action === 'delete') { miniUploadImages.splice(idx, 1); renderMiniPreview(); }
+                else if (action === 'primary') {
+                    var img = miniUploadImages.splice(idx, 1)[0];
+                    miniUploadImages.unshift(img);
+                    renderMiniPreview();
+                }
+            });
+        });
+    }
+
+    function handleMiniFiles(files) {
+        if (!files || files.length === 0) return;
+        var valid = [];
+        for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            if (!ALLOWED_TYPES.test(f.type)) { fleetToast('❌ نوع غير مدعوم: ' + f.name, 'error'); continue; }
+            if (f.size > MAX_FILE_SIZE) { fleetToast('❌ حجم كبير: ' + f.name, 'error'); continue; }
+            valid.push(f);
+        }
+        if (valid.length === 0) return;
+        var remaining = MAX_IMAGES - miniUploadImages.length;
+        if (remaining <= 0) { fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
+        if (valid.length > remaining) valid = valid.slice(0, remaining);
+        miniUploadImages = miniUploadImages.concat(valid);
+        renderMiniPreview();
+    }
+
+    function initMiniUploadEvents() {
+        var closeBtn = $('#fleetMiniUploadClose');
+        if (closeBtn) closeBtn.addEventListener('click', closeMiniUpload);
+        var cancelBtn = $('#fleetMiniUploadCancel');
+        if (cancelBtn) cancelBtn.addEventListener('click', closeMiniUpload);
+        var modal = $('#fleetMiniUploadModal');
+        if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) closeMiniUpload(); });
+
+        var dropzone = $('#fleetMiniDropzone');
+        var input = $('#fleetMiniImagesInput');
+        var cameraInput = $('#fleetMiniCameraInput');
+
+        if (input) input.addEventListener('change', function(e) { handleMiniFiles(e.target.files); input.value = ''; });
+        if (cameraInput) cameraInput.addEventListener('change', function(e) { handleMiniFiles(e.target.files); cameraInput.value = ''; });
+
+        var captureBtn = $('#fleetMiniCaptureBtn');
+        if (captureBtn) captureBtn.addEventListener('click', function() { cameraInput.click(); });
+        var browseBtn = $('#fleetMiniBrowseBtn');
+        if (browseBtn) browseBtn.addEventListener('click', function() { input.click(); });
+
+        if (dropzone && input) {
+            dropzone.addEventListener('click', function() { input.click(); });
+            dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+            dropzone.addEventListener('dragleave', function(e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+            dropzone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                handleMiniFiles(e.dataTransfer.files);
+            });
+        }
+
+        var saveBtn = $('#fleetMiniUploadSave');
+        if (saveBtn) saveBtn.addEventListener('click', saveMiniUpload);
+    }
+
+    async function saveMiniUpload() {
+        if (!miniUploadVesselId) { fleetToast('❌ لم يتم تحديد المركب', 'error'); return; }
+        var btn = $('#fleetMiniUploadSave');
+        var uploading = $('#fleetMiniUploading');
+        if (btn) btn.disabled = true;
+        if (uploading) uploading.style.display = 'flex';
+
+        try {
+            // حذف المحذوفات
+            var original = null;
+            var list = await fetcher('/api/vessels').then(function(r) { return r.json(); });
+            original = list.find(function(x) { return String(x._id || x.id) === String(miniUploadVesselId); });
+            var originalImages = (original && original.images) || [];
+            var keptIds = miniUploadImages.filter(function(img) { return img && img._id; }).map(function(img) { return img._id; });
+            var toDelete = originalImages.filter(function(img) { return img._id && keptIds.indexOf(img._id) === -1; });
+
+            for (var i = 0; i < toDelete.length; i++) {
+                await fetcher('/api/vessels/' + encodeURIComponent(miniUploadVesselId) + '/images/' + encodeURIComponent(toDelete[i]._id), { method: 'DELETE' }).catch(function() {});
+            }
+
+            // رفع الجديد
+            var newFiles = miniUploadImages.filter(function(img) { return img instanceof File; });
+            if (newFiles.length > 0) {
+                var fd = new FormData();
+                newFiles.forEach(function(img) { fd.append('images', img); });
+                var res = await fetch('/api/vessels/' + encodeURIComponent(miniUploadVesselId) + '/images', {
+                    method: 'POST',
+                    headers: Object.assign(
+                        { 'Accept': 'application/json' },
+                        getToken() ? { 'Authorization': 'Bearer ' + getToken() } : {},
+                        getCsrf() ? { 'X-CSRF-Token': getCsrf() } : {}
+                    ),
+                    credentials: 'include',
+                    body: fd
+                });
+                if (!res.ok) throw new Error('فشل رفع الصور');
+            }
+
+            fleetToast('✅ تم تحديث الصور بنجاح', 'success');
+            closeMiniUpload();
+            await renderMain();
+
+            // إعادة فتح المعرض
+            var updated = null;
+            var list2 = await fetcher('/api/vessels').then(function(r) { return r.json(); });
+            updated = list2.find(function(x) { return String(x._id || x.id) === String(miniUploadVesselId); });
+            if (updated && $('#fleetProGallery').classList.contains('active')) {
+                openVesselGallery(updated);
+            }
+        } catch (err) {
+            fleetToast('❌ ' + err.message, 'error');
+        } finally {
+            if (btn) btn.disabled = false;
+            if (uploading) uploading.style.display = 'none';
+        }
+    }
+
+    /* ═══════ PROFESSIONAL GALLERY ═══════ */
     function openVesselGallery(vessel) {
         if (!vessel) return;
-
-        _galleryVessel = vessel;
-        _galleryImages = (vessel.images || []).slice();
-        _galleryIndex = 0;
-
-        // ترتيب: الصورة الرئيسية أولاً
-        var primaryIdx = _galleryImages.findIndex(function(img) { return img.isPrimary; });
+        _galleryCurrentVessel = vessel;
+        _galleryImages = (vessel.images || []).slice().filter(function(i) { return i && i.url; });
+        if (_galleryImages.length === 0 && vessel.primaryImage && vessel.primaryImage.url) {
+            _galleryImages = [vessel.primaryImage];
+        }
+        var primaryIdx = _galleryImages.findIndex(function(i) { return i.isPrimary; });
         if (primaryIdx > 0) {
             var p = _galleryImages.splice(primaryIdx, 1)[0];
             _galleryImages.unshift(p);
         }
+        _galleryIndex = 0;
+        _galleryZoom = 1;
+        _galleryPanX = 0;
+        _galleryPanY = 0;
 
-        var modal = document.getElementById('vesselGalleryModal');
-        var title = document.getElementById('vesselGalleryTitle');
-        var number = document.getElementById('vesselGalleryNumber');
-        var count = document.getElementById('vesselGalleryCount');
-        var body = document.getElementById('vesselGalleryBody');
+        var modal = $('#fleetProGallery');
+        var title = $('#fleetProTitle');
+        var subtitle = $('#fleetProSubtitle');
+        var changeBtn = $('#fleetProChangeBtn');
 
-        if (!modal || !body) return;
+        if (title) title.textContent = vessel.name || vessel.num || 'مركب';
+        if (subtitle) {
+            var parts = [];
+            if (vessel.num) parts.push('رقم: ' + vessel.num);
+            if (vessel.cat) parts.push(vessel.cat);
+            if (vessel.region || vessel.reg) parts.push(vessel.region || vessel.reg);
+            if (vessel.zone) parts.push(vessel.zone);
+            subtitle.textContent = parts.join(' • ') || '—';
+        }
 
-        if (title) title.textContent = vessel.name || 'مركب بدون اسم';
-        if (number) number.textContent = vessel.num || '—';
-        if (count) count.textContent = _galleryImages.length;
-
-        if (_galleryImages.length === 0) {
-            body.innerHTML =
-                '<div class="vessel-gallery-empty">' +
-                    '<i class="fas fa-image"></i>' +
-                    '<h4>لا توجد صور لهذا المركب</h4>' +
-                    '<p>لم يتم رفع أي صور عند تسجيل المركب</p>' +
-                '</div>';
-        } else {
-            var html = '<div class="vessel-gallery-grid">';
-            _galleryImages.forEach(function(img, idx) {
-                var url = img.url || '';
-                if (!url) return;
-                html +=
-                    '<div class="vessel-gallery-thumb" data-idx="' + idx + '">' +
-                        '<img src="' + escapeHtml(url) + '" alt="صورة ' + (idx + 1) + '" loading="lazy">' +
-                        (img.isPrimary ? '<span class="vessel-gallery-thumb-badge">⭐ رئيسية</span>' : '') +
-                    '</div>';
-            });
-            html += '</div>';
-            body.innerHTML = html;
-
-            body.querySelectorAll('.vessel-gallery-thumb').forEach(function(el) {
-                el.addEventListener('click', function() {
-                    var idx = parseInt(this.getAttribute('data-idx'), 10);
-                    if (!isNaN(idx)) openVesselViewer(idx);
-                });
-            });
+        var canModify = canEdit() || canDispose();
+        if (changeBtn) {
+            changeBtn.style.display = canModify ? 'flex' : 'none';
+            changeBtn.classList.toggle('hidden', !canModify);
         }
 
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
+
+        if (_galleryImages.length === 0) renderGalleryEmpty();
+        else { renderGalleryThumbs(); updateGalleryImage(); }
     }
 
     function closeVesselGallery() {
-        var modal = document.getElementById('vesselGalleryModal');
+        var modal = $('#fleetProGallery');
         if (modal) modal.classList.remove('active');
-        _galleryVessel = null;
+        document.body.style.overflow = '';
+        stopSlideshow();
         _galleryImages = [];
         _galleryIndex = 0;
-        var viewer = document.getElementById('vesselViewer');
-        if (!viewer || !viewer.classList.contains('active')) {
-            document.body.style.overflow = '';
+        _galleryCurrentVessel = null;
+        resetZoomPan();
+    }
+
+    function renderGalleryEmpty() {
+        var stage = $('#fleetProStage');
+        if (stage) {
+            stage.innerHTML = '<div class="fleet-pro-empty">' +
+                '<i class="fas fa-image"></i>' +
+                '<h3>لا توجد صور</h3>' +
+                '<p>انقر على "تغيير الصور" لإضافة صور</p>' +
+                '</div>';
         }
+        var thumbs = $('#fleetProThumbs');
+        if (thumbs) thumbs.innerHTML = '';
+        var counter = $('#fleetProCounter');
+        if (counter) counter.style.display = 'none';
     }
 
-    function openVesselViewer(idx) {
-        if (idx < 0 || idx >= _galleryImages.length) return;
-        _galleryIndex = idx;
+    function renderGalleryThumbs() {
+        var thumbs = $('#fleetProThumbs');
+        if (!thumbs) return;
+        var html = '';
+        _galleryImages.forEach(function(img, idx) {
+            html += '<div class="fleet-pro-thumb' + (idx === _galleryIndex ? ' active' : '') + '" data-idx="' + idx + '">' +
+                '<img src="' + escapeHtml(img.url) + '" alt="مصغرة" loading="lazy">' +
+                '</div>';
+        });
+        thumbs.innerHTML = html;
 
-        var viewer = document.getElementById('vesselViewer');
-        var img = document.getElementById('vesselViewerImg');
-        var counter = document.getElementById('vesselViewerCounter');
-        var prevBtn = document.getElementById('vesselViewerPrev');
-        var nextBtn = document.getElementById('vesselViewerNext');
-
-        if (!viewer || !img) return;
-
-        var current = _galleryImages[idx];
-        img.src = current.url || '';
-
-        if (counter) counter.textContent = (idx + 1) + ' / ' + _galleryImages.length;
-        if (prevBtn) prevBtn.disabled = (idx === 0);
-        if (nextBtn) nextBtn.disabled = (idx >= _galleryImages.length - 1);
-
-        viewer.classList.add('active');
-    }
-
-    function closeVesselViewer() {
-        var viewer = document.getElementById('vesselViewer');
-        if (viewer) viewer.classList.remove('active');
-        var img = document.getElementById('vesselViewerImg');
-        if (img) img.src = '';
-
-        var modal = document.getElementById('vesselGalleryModal');
-        if (!modal || !modal.classList.contains('active')) {
-            document.body.style.overflow = '';
-        }
-    }
-
-    function navigateVesselViewer(direction) {
-        var newIdx = _galleryIndex + direction;
-        if (newIdx < 0 || newIdx >= _galleryImages.length) return;
-        openVesselViewer(newIdx);
-    }
-
-    function setupVesselGalleryListeners() {
-        var closeBtn = document.getElementById('vesselGalleryClose');
-        if (closeBtn) closeBtn.addEventListener('click', closeVesselGallery);
-
-        var modal = document.getElementById('vesselGalleryModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) closeVesselGallery();
+        thumbs.querySelectorAll('.fleet-pro-thumb').forEach(function(el) {
+            el.addEventListener('click', function() {
+                var idx = parseInt(this.getAttribute('data-idx'), 10);
+                if (!isNaN(idx)) {
+                    _galleryIndex = idx;
+                    resetZoomPan();
+                    updateGalleryImage();
+                    renderGalleryThumbs();
+                }
             });
+        });
+    }
+
+    function updateGalleryImage() {
+        var img = $('#fleetProImg');
+        var counter = $('#fleetProCounter');
+        var prev = $('#fleetProPrev');
+        var next = $('#fleetProNext');
+
+        if (!img || _galleryImages.length === 0) return;
+        var current = _galleryImages[_galleryIndex];
+        img.src = current.url;
+        img.alt = 'صورة ' + (_galleryIndex + 1);
+
+        var nextIdx = (_galleryIndex + 1) % _galleryImages.length;
+        if (_galleryImages[nextIdx]) { var pre = new Image(); pre.src = _galleryImages[nextIdx].url; }
+
+        if (counter) {
+            counter.textContent = (_galleryIndex + 1) + ' / ' + _galleryImages.length;
+            counter.style.display = 'block';
         }
+        if (prev) prev.disabled = _galleryIndex === 0;
+        if (next) next.disabled = _galleryIndex >= _galleryImages.length - 1;
+        applyTransform();
+    }
 
-        var viewerClose = document.getElementById('vesselViewerClose');
-        if (viewerClose) viewerClose.addEventListener('click', closeVesselViewer);
+    function applyTransform() {
+        var img = $('#fleetProImg');
+        var stage = $('#fleetProStage');
+        if (!img || !stage) return;
+        if (_galleryZoom <= 1) {
+            stage.classList.remove('zoomed');
+            img.style.transform = '';
+            _galleryZoom = 1; _galleryPanX = 0; _galleryPanY = 0;
+        } else {
+            stage.classList.add('zoomed');
+            img.style.transform = 'translate(' + _galleryPanX + 'px, ' + _galleryPanY + 'px) scale(' + _galleryZoom + ')';
+        }
+    }
 
-        var viewerPrev = document.getElementById('vesselViewerPrev');
-        if (viewerPrev) viewerPrev.addEventListener('click', function() { navigateVesselViewer(-1); });
+    function resetZoomPan() { _galleryZoom = 1; _galleryPanX = 0; _galleryPanY = 0; applyTransform(); }
+    function zoomIn() { _galleryZoom = Math.min(_galleryZoom + 0.25, 3); applyTransform(); }
+    function zoomOut() {
+        _galleryZoom = Math.max(_galleryZoom - 0.25, 1);
+        if (_galleryZoom <= 1) { _galleryZoom = 1; _galleryPanX = 0; _galleryPanY = 0; }
+        applyTransform();
+    }
+    function galleryPrev() {
+        if (_galleryIndex > 0) {
+            _galleryIndex--; resetZoomPan();
+            updateGalleryImage(); renderGalleryThumbs();
+        }
+    }
+    function galleryNext() {
+        if (_galleryIndex < _galleryImages.length - 1) {
+            _galleryIndex++; resetZoomPan();
+            updateGalleryImage(); renderGalleryThumbs();
+        }
+    }
+    function toggleSlideshow() { if (_gallerySlideshowActive) stopSlideshow(); else startSlideshow(); }
+    function startSlideshow() {
+        if (_galleryImages.length < 2) return;
+        _gallerySlideshowActive = true;
+        var btn = $('#fleetProSlideshow');
+        if (btn) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-pause"></i>'; }
+        _gallerySlideshowTimer = setInterval(function() {
+            if (_galleryIndex < _galleryImages.length - 1) galleryNext();
+            else { _galleryIndex = 0; resetZoomPan(); updateGalleryImage(); renderGalleryThumbs(); }
+        }, 3000);
+    }
+    function stopSlideshow() {
+        _gallerySlideshowActive = false;
+        if (_gallerySlideshowTimer) { clearInterval(_gallerySlideshowTimer); _gallerySlideshowTimer = null; }
+        var btn = $('#fleetProSlideshow');
+        if (btn) { btn.classList.remove('active'); btn.innerHTML = '<i class="fas fa-play"></i>'; }
+    }
+    async function downloadImage() {
+        if (_galleryImages.length === 0) return;
+        var current = _galleryImages[_galleryIndex];
+        try {
+            fleetToast('⬇️ جاري التحميل...', 'info', 1500);
+            var res = await fetch(current.url, { mode: 'cors' });
+            var blob = await res.blob();
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = 'vessel-' + (_galleryIndex + 1) + '.jpg';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+        } catch (e) { window.open(current.url, '_blank'); }
+    }
+    function toggleFullscreen() {
+        var modal = $('#fleetProGallery');
+        if (!document.fullscreenElement) {
+            if (modal.requestFullscreen) modal.requestFullscreen();
+            else if (modal.webkitRequestFullscreen) modal.webkitRequestFullscreen();
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        }
+    }
 
-        var viewerNext = document.getElementById('vesselViewerNext');
-        if (viewerNext) viewerNext.addEventListener('click', function() { navigateVesselViewer(1); });
+    function initGalleryEvents() {
+        var closeBtn = $('#fleetProClose');
+        if (closeBtn) closeBtn.addEventListener('click', closeVesselGallery);
+        var prev = $('#fleetProPrev');
+        if (prev) prev.addEventListener('click', galleryPrev);
+        var next = $('#fleetProNext');
+        if (next) next.addEventListener('click', galleryNext);
+        var zin = $('#fleetProZoomIn');
+        if (zin) zin.addEventListener('click', zoomIn);
+        var zout = $('#fleetProZoomOut');
+        if (zout) zout.addEventListener('click', zoomOut);
+        var reset = $('#fleetProReset');
+        if (reset) reset.addEventListener('click', resetZoomPan);
+        var slideshowBtn = $('#fleetProSlideshow');
+        if (slideshowBtn) slideshowBtn.addEventListener('click', toggleSlideshow);
+        var dl = $('#fleetProDownload');
+        if (dl) dl.addEventListener('click', downloadImage);
+        var fs = $('#fleetProFullscreen');
+        if (fs) fs.addEventListener('click', toggleFullscreen);
 
-        var viewer = document.getElementById('vesselViewer');
-        if (viewer) {
-            viewer.addEventListener('click', function(e) {
-                if (e.target === viewer) closeVesselViewer();
+        // 🎯 زر تغيير الصور
+        var changeBtn = $('#fleetProChangeBtn');
+        if (changeBtn) {
+            changeBtn.addEventListener('click', function() {
+                if (!_galleryCurrentVessel) return;
+                var id = _galleryCurrentVessel._id || _galleryCurrentVessel.id;
+                openMiniUpload(id);
             });
         }
 
         document.addEventListener('keydown', function(e) {
-            var viewerActive = document.getElementById('vesselViewer').classList.contains('active');
-            var modalActive = document.getElementById('vesselGalleryModal').classList.contains('active');
-
-            if (!viewerActive && !modalActive) return;
-
+            var modal = $('#fleetProGallery');
+            if (!modal || !modal.classList.contains('active')) return;
             if (e.key === 'Escape') {
-                if (viewerActive) closeVesselViewer();
-                else if (modalActive) closeVesselGallery();
-            } else if (viewerActive) {
-                if (e.key === 'ArrowRight') navigateVesselViewer(-1);
-                else if (e.key === 'ArrowLeft') navigateVesselViewer(1);
-            }
+                var mini = $('#fleetMiniUploadModal');
+                if (mini && mini.classList.contains('active')) { closeMiniUpload(); return; }
+                closeVesselGallery();
+            } else if (e.key === 'ArrowRight') galleryPrev();
+            else if (e.key === 'ArrowLeft') galleryNext();
+            else if (e.key === '+' || e.key === '=') zoomIn();
+            else if (e.key === '-') zoomOut();
+            else if (e.key === '0') resetZoomPan();
+            else if (e.key === ' ') { e.preventDefault(); toggleSlideshow(); }
         });
-    }
 
-    // 🆕 دالة عامة لفتح المعرض من خارج الصفحة (لصفحة المطروحة)
-    window.openVesselGalleryById = function(vesselId) {
-        fetcher('/api/vessels', { method: 'GET' })
-            .then(function(r) { return r.ok ? r.json() : null; })
-            .then(function(list) {
-                if (!list) throw new Error('فشل التحميل');
-                var v = list.find(function(x) {
-                    return String(x._id || x.id) === String(vesselId);
-                });
-                if (!v) throw new Error('المركب غير موجود');
-                openVesselGallery(v);
-            })
-            .catch(function(err) { fleetToast('❌ ' + err.message, 'error'); });
-    };
+        var g = $('#fleetProGallery');
+        if (g) g.addEventListener('click', function(e) { if (e.target === this) closeVesselGallery(); });
 
-    // 🆕 دالة عامة للاستخدام من صفحات أخرى
-    window.viewVesselImages = function(vesselId) {
-        window.openVesselGalleryById(vesselId);
-    };
+        var stage = $('#fleetProStage');
+        if (stage) {
+            stage.addEventListener('wheel', function(e) {
+                if (_galleryImages.length === 0) return;
+                e.preventDefault();
+                if (e.deltaY < 0) zoomIn();
+                else zoomOut();
+            }, { passive: false });
 
-    window.openVesselGallery = openVesselGallery;
-    window.closeVesselGallery = closeVesselGallery;
-    window.closeVesselViewer = closeVesselViewer;
-
-    // ============================================================
-    // 📋 الوظائف الأساسية
-    // ============================================================
-    function updateZones() {
-        var regEl = document.getElementById('iReg');
-        var zoneSel = document.getElementById('iZone');
-        if (!regEl || !zoneSel) return;
-        var reg = regEl.value;
-        zoneSel.innerHTML = '<option value="">المنطقة</option>';
-        if (ZONES_DATA[reg]) {
-            ZONES_DATA[reg].forEach(function(z) {
-                zoneSel.innerHTML += '<option value="' + z + '">' + z + '</option>';
+            stage.addEventListener('mousedown', function(e) {
+                if (_galleryZoom <= 1) return;
+                _galleryDragging = true;
+                _galleryDragStartX = e.clientX - _galleryPanX;
+                _galleryDragStartY = e.clientY - _galleryPanY;
+                stage.classList.add('grabbing');
             });
+            document.addEventListener('mousemove', function(e) {
+                if (!_galleryDragging) return;
+                _galleryPanX = e.clientX - _galleryDragStartX;
+                _galleryPanY = e.clientY - _galleryDragStartY;
+                applyTransform();
+            });
+            document.addEventListener('mouseup', function() {
+                if (_galleryDragging) { _galleryDragging = false; stage.classList.remove('grabbing'); }
+            });
+
+            // Touch
+            var tStartX = 0, tStartY = 0, tStartTime = 0, initialPinch = 0;
+            stage.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 1) {
+                    tStartX = e.touches[0].clientX;
+                    tStartY = e.touches[0].clientY;
+                    tStartTime = Date.now();
+                    if (_galleryZoom > 1) {
+                        _galleryDragging = true;
+                        _galleryDragStartX = tStartX - _galleryPanX;
+                        _galleryDragStartY = tStartY - _galleryPanY;
+                    }
+                } else if (e.touches.length === 2) {
+                    initialPinch = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                }
+            }, { passive: true });
+            stage.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2 && initialPinch > 0) {
+                    var currentPinch = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    var scale = currentPinch / initialPinch;
+                    _galleryZoom = Math.max(1, Math.min(3, _galleryZoom * scale));
+                    initialPinch = currentPinch;
+                    applyTransform();
+                } else if (_galleryDragging && e.touches.length === 1 && _galleryZoom > 1) {
+                    _galleryPanX = e.touches[0].clientX - _galleryDragStartX;
+                    _galleryPanY = e.touches[0].clientY - _galleryDragStartY;
+                    applyTransform();
+                }
+            }, { passive: true });
+            stage.addEventListener('touchend', function(e) {
+                var dt = Date.now() - tStartTime;
+                var dx = e.changedTouches[0].clientX - tStartX;
+                var dy = e.changedTouches[0].clientY - tStartY;
+                if (dt < 300 && Math.abs(dx) > 60 && Math.abs(dy) < 60 && _galleryZoom <= 1) {
+                    if (dx > 0) galleryNext();
+                    else galleryPrev();
+                }
+                _galleryDragging = false;
+                initialPinch = 0;
+            }, { passive: true });
         }
     }
+
+    // Public API
+    window.openVesselGallery = openVesselGallery;
+    window.closeVesselGallery = closeVesselGallery;
+    window.openVesselGalleryById = function(vesselId) {
+        fetcher('/api/vessels').then(function(r) { return r.json(); }).then(function(list) {
+            var v = list.find(function(x) { return String(x._id || x.id) === String(vesselId); });
+            if (!v) throw new Error('المركب غير موجود');
+            openVesselGallery(v);
+        }).catch(function(err) { fleetToast('❌ ' + err.message, 'error'); });
+    };
+    window.viewVesselImages = function(vesselId) { window.openVesselGalleryById(vesselId); };
+
+    /* ═══════ LOAD / RENDER ═══════ */
+    var _allVessels = [];
 
     function populatePrintSummary(vessels) {
         var body = document.getElementById('printSummaryBody');
         if (!body) return;
         var stats = {};
-        FIXED_CATEGORIES.forEach(function(c) {
-            stats[c] = { active: 0, maintenance: 0, damaged: 0, total: 0 };
-        });
+        FIXED_CATEGORIES.forEach(function(c) { stats[c] = { active: 0, maintenance: 0, damaged: 0, total: 0 }; });
         (vessels || []).forEach(function(v) {
             var cat = v.cat || getCategory(v.len);
             if (!stats[cat]) stats[cat] = { active: 0, maintenance: 0, damaged: 0, total: 0 };
@@ -2474,13 +2558,11 @@
     }
 
     function initFilters() {
-        var fCatMain = document.getElementById('fCatMain');
-        var fRegMain = document.getElementById('fRegMain');
+        var fCatMain = $('#fCatMain');
+        var fRegMain = $('#fRegMain');
         if (fCatMain) {
             var catHtml = '<option value="الكل">📦 جميع الفئات</option>';
-            FIXED_CATEGORIES.forEach(function(c) {
-                catHtml += '<option value="' + c + '">' + c + '</option>';
-            });
+            FIXED_CATEGORIES.forEach(function(c) { catHtml += '<option value="' + c + '">' + c + '</option>'; });
             fCatMain.innerHTML = catHtml;
         }
         if (fRegMain) {
@@ -2495,7 +2577,7 @@
 
     async function renderMain() {
         if (_isDestroyed) return;
-        var mainBody = document.getElementById('mainBody');
+        var mainBody = $('#mainBody');
         if (!mainBody) return;
 
         mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
@@ -2517,6 +2599,7 @@
 
             var allVessels = await response.json();
             if (_isDestroyed) return;
+            _allVessels = allVessels;
 
             var vessels = allVessels.filter(function(v) { return v.status !== 'طرح'; });
             var disposedList = allVessels.filter(function(v) { return v.status === 'طرح'; });
@@ -2529,29 +2612,23 @@
             var damaged = vessels.filter(function(v) { return v.status === 'معطب'; }).length;
             var eff = total > 0 ? ((active / total) * 100).toFixed(1) : '0.0';
 
-            var tv = document.getElementById('totalVessels'); if (tv) tv.textContent = total;
-            var av = document.getElementById('activeVessels'); if (av) av.textContent = active;
-            var mv = document.getElementById('maintenanceVessels'); if (mv) mv.textContent = maintenance;
-            var dv = document.getElementById('damagedVessels'); if (dv) dv.textContent = damaged;
-            var ef = document.getElementById('efficiencyPercent'); if (ef) ef.textContent = eff + '%';
+            $('#totalVessels').textContent = total;
+            $('#activeVessels').textContent = active;
+            $('#maintenanceVessels').textContent = maintenance;
+            $('#damagedVessels').textContent = damaged;
+            $('#efficiencyPercent').textContent = eff + '%';
 
-            var fCatMain = document.getElementById('fCatMain');
-            var fRegMain = document.getElementById('fRegMain');
-            var fStatusMain = document.getElementById('fStatusMain');
-            var searchMain = document.getElementById('searchMain');
-
-            var catFilter = (fCatMain && fCatMain.value) || 'الكل';
-            var regFilter = (fRegMain && fRegMain.value) || 'الكل';
-            var statusFilter = (fStatusMain && fStatusMain.value) || 'all';
-            var search = ((searchMain && searchMain.value) || '').trim().toLowerCase();
+            var catFilter = $('#fCatMain').value || 'الكل';
+            var regFilter = $('#fRegMain').value || 'الكل';
+            var statusFilter = $('#fStatusMain').value || 'all';
+            var search = ($('#searchMain').value || '').trim().toLowerCase();
 
             var filtered = vessels.filter(function(v) {
                 var vCat = v.cat || getCategory(v.len);
                 var vReg = v.region || v.reg || '';
-                var catMatch = (catFilter === 'الكل' || vCat === catFilter);
-                var regMatch = (regFilter === 'الكل' || vReg === regFilter);
-                var statusMatch = (statusFilter === 'all' || v.status === statusFilter);
-                return catMatch && regMatch && statusMatch;
+                return (catFilter === 'الكل' || vCat === catFilter) &&
+                       (regFilter === 'الكل' || vReg === regFilter) &&
+                       (statusFilter === 'all' || v.status === statusFilter);
             });
 
             if (search) {
@@ -2589,7 +2666,6 @@
                 var supp = v.supp || '-';
                 var status = v.status || '-';
                 var breakType = v.break || '-';
-                var fDate = v.fDate;
                 var repairUnit = v.repairUnit || '-';
 
                 var statusClass = status === 'صالح' ? 'active'
@@ -2598,30 +2674,26 @@
 
                 var isDamaged = status === 'معطب';
 
-                // 📸 الصورة المصغّرة
+                // 📸 thumbnail
                 var primaryImg = v.primaryImage || (v.images && v.images[0]);
-                var thumbHtml = '';
+                var imagesCount = v.imagesCount || (v.images ? v.images.length : 0);
+                var thumbHtml;
                 if (primaryImg && primaryImg.url) {
-                    thumbHtml = '<div class="vessel-thumb-wrapper">' +
-                        '<img src="' + escapeHtml(primaryImg.url) + '" ' +
-                             'class="vessel-thumb" ' +
-                             'alt="' + escapeHtml(name) + '" ' +
-                             'loading="lazy" ' +
-                             'data-lightbox="' + escapeHtml(primaryImg.url) + '">' +
-                        (v.imagesCount > 1 ? '<span class="vessel-thumb-badge">' + v.imagesCount + '</span>' : '') +
+                    thumbHtml = '<div class="vessel-thumb-wrapper" data-action="gallery" data-id="' + escapeHtml(id) + '" title="انقر لعرض ' + imagesCount + ' صورة">' +
+                        '<img src="' + escapeHtml(primaryImg.url) + '" class="vessel-thumb" alt="' + escapeHtml(name) + '" loading="lazy">' +
+                        (imagesCount > 1 ? '<span class="vessel-thumb-badge">' + imagesCount + '</span>' : '') +
                         '</div>';
                 } else {
-                    thumbHtml = '<div class="vessel-thumb-empty"><i class="fas fa-image"></i></div>';
+                    thumbHtml = '<div class="vessel-thumb-empty" data-action="gallery" data-id="' + escapeHtml(id) + '" title="لا توجد صور">' +
+                        '<i class="fas fa-camera"></i>' +
+                        '</div>';
                 }
 
-                var editBtn = editable ?
-                    '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>' : '';
-
-                var disposeBtn = disposable ?
-                    '<button class="btn-sm dispose" onclick="openDisposeModal(\'' + id + '\')" title="طرح نهائي"><i class="fas fa-archive"></i></button>' : '';
-
-                var delBtn = deletable ?
-                    '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')" title="حذف"><i class="fas fa-trash-alt"></i></button>' : '';
+                var actions = '';
+                actions += '<button class="btn-sm gallery" data-action="gallery" data-id="' + escapeHtml(id) + '" title="عرض الصور"><i class="fas fa-images"></i></button>';
+                if (editable) actions += '<button class="btn-sm edit" onclick="editItem(\'' + id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>';
+                if (disposable) actions += '<button class="btn-sm dispose" onclick="openDisposeModal(\'' + id + '\')" title="طرح نهائي"><i class="fas fa-archive"></i></button>';
+                if (deletable) actions += '<button class="btn-sm delete" onclick="deleteItem(\'' + id + '\',\'' + escapeHtml(name) + '\')" title="حذف"><i class="fas fa-trash-alt"></i></button>';
 
                 html += '<tr class="' + (isDamaged ? 'damaged' : '') + '">' +
                     '<td>' + thumbHtml + '</td>' +
@@ -2635,19 +2707,19 @@
                     '<td>' + escapeHtml(supp) + '</td>' +
                     '<td><span class="status-badge ' + statusClass + '">' + escapeHtml(status) + '</span></td>' +
                     '<td>' + escapeHtml(breakType) + '</td>' +
-                    '<td>' + formatDate(fDate) + '</td>' +
+                    '<td>' + formatDate(v.fDate) + '</td>' +
                     '<td>' + escapeHtml(repairUnit) + '</td>' +
-                    '<td><div class="action-btns">' + editBtn + ' ' + disposeBtn + ' ' + delBtn + '</div></td>' +
+                    '<td><div class="action-btns">' + actions + '</div></td>' +
                 '</tr>';
             });
             mainBody.innerHTML = html;
 
-            // 📸 فتح Lightbox البسيط من الجدول
-            mainBody.querySelectorAll('[data-lightbox]').forEach(function(img) {
-                img.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    openLightbox(this.getAttribute('data-lightbox'));
-                });
+            mainBody.addEventListener('click', function(e) {
+                var target = e.target.closest('[data-action="gallery"]');
+                if (!target) return;
+                var id = target.getAttribute('data-id');
+                if (!id) return;
+                window.openVesselGalleryById(id);
             });
 
         } catch (err) {
@@ -2656,14 +2728,12 @@
             mainBody.innerHTML = '<tr><td colspan="14" class="empty-state">' +
                 '<span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>' +
                 '<h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>' +
-                '<p style="color:rgba(255,255,255,0.3);">' + escapeHtml(err.message) + '</p>' +
-                '<button class="retry-btn" onclick="renderMain()">' +
-                '<i class="fas fa-sync-alt"></i> إعادة المحاولة</button></td></tr>';
+                '<p>' + escapeHtml(err.message) + '</p></td></tr>';
         }
     }
 
     function updateDisposalsBadge() {
-        var c = document.getElementById('fleetDisposalsCount');
+        var c = $('#fleetDisposalsCount');
         if (!c) return;
         if (_disposalsCount > 0) {
             c.textContent = _disposalsCount;
@@ -2675,17 +2745,13 @@
 
     async function addItem() {
         if (_isDestroyed) return;
-        if (!canEdit()) { alert('⚠️ ليس لديك صلاحية لإضافة مركب'); return; }
+        if (!canEdit()) { alert('⚠️ ليس لديك صلاحية'); return; }
 
-        var nameEl = document.getElementById('iName');
-        if (!nameEl) return;
-        var name = nameEl.value.trim();
+        var name = ($('#iName').value || '').trim();
         if (!name) { alert('⚠️ يرجى إدخال اسم المركب'); return; }
 
-        var statEl = document.getElementById('iStat');
-        var dateEl = document.getElementById('iDate');
-        var status = statEl ? statEl.value : 'صالح';
-        var faultDate = dateEl ? dateEl.value : '';
+        var status = $('#iStat').value;
+        var faultDate = $('#iDate').value;
         if ((status === 'معطب' || status === 'صيانة') && !faultDate) {
             alert('⚠️ تاريخ العطب مطلوب');
             return;
@@ -2693,21 +2759,21 @@
 
         var vessel = {
             name: name,
-            num: (document.getElementById('iNum') || {}).value || '',
-            len: (document.getElementById('iLen') || {}).value || '',
-            region: (document.getElementById('iReg') || {}).value || '',
-            zone: (document.getElementById('iZone') || {}).value || '',
-            port: (document.getElementById('iPort') || {}).value || '',
-            supp: (document.getElementById('iSupp') || {}).value || '',
+            num: $('#iNum').value || '',
+            len: $('#iLen').value || '',
+            region: getComboboxValue('iReg', 'iRegFree'),
+            zone: getComboboxValue('iZone', 'iZoneFree'),
+            port: $('#iPort').value || '',
+            supp: $('#iSupp').value || '',
             status: status,
-            break: (document.getElementById('iBreak') || {}).value || '',
+            break: getComboboxValue('iBreak', 'iBreakFree'),
             fDate: faultDate,
-            eDate: (document.getElementById('iEnd') || {}).value || '',
-            ref: (document.getElementById('iRef') || {}).value || '',
-            repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
+            eDate: $('#iEnd').value || '',
+            ref: $('#iRef').value || '',
+            repairUnit: getComboboxValue('iRepairUnit', 'iRepairUnitFree')
         };
 
-        var btn = document.getElementById('saveVesselBtn');
+        var btn = $('#saveVesselBtn');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; }
 
         try {
@@ -2725,10 +2791,7 @@
             var savedId = (result.vessel && (result.vessel._id || result.vessel.id))
                        || result._id || result.id || null;
 
-            // 📸 رفع الصور الجديدة
-            if (fleetImages.length > 0 && savedId) {
-                await uploadImages(savedId);
-            }
+            if (fleetImages.length > 0 && savedId) await uploadImages(savedId);
 
             resetForm();
             await renderMain();
@@ -2745,15 +2808,14 @@
     }
 
     function resetForm() {
-        ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.value = '';
+        ['iName','iNum','iLen','iPort','iSupp','iDate','iEnd','iRef'].forEach(function(id) {
+            var el = $('#' + id); if (el) el.value = '';
         });
-        var iReg = document.getElementById('iReg'); if (iReg) iReg.value = '';
-        var iZone = document.getElementById('iZone');
-        if (iZone) iZone.innerHTML = '<option value="">المنطقة</option>';
-        var iStat = document.getElementById('iStat'); if (iStat) iStat.value = 'صالح';
-        var iRepairUnit = document.getElementById('iRepairUnit'); if (iRepairUnit) iRepairUnit.value = '';
+        setComboboxValue('iReg', 'iRegFree', '');
+        setComboboxValue('iZone', 'iZoneFree', '');
+        setComboboxValue('iBreak', 'iBreakFree', '');
+        setComboboxValue('iRepairUnit', 'iRepairUnitFree', '');
+        var iStat = $('#iStat'); if (iStat) iStat.value = 'صالح';
 
         fleetImages = [];
         currentVesselId = null;
@@ -2764,8 +2826,8 @@
 
     async function deleteItem(id, name) {
         if (_isDestroyed) return;
-        if (!canDelete()) { alert('⚠️ ليس لديك صلاحية للحذف'); return; }
-        if (!confirm('⚠️ هل أنت متأكد من حذف المركب "' + name + '"؟')) return;
+        if (!canDelete()) { alert('⚠️ ليس لديك صلاحية'); return; }
+        if (!confirm('⚠️ حذف المركب "' + name + '"؟')) return;
 
         try {
             var response = await fetcher('/api/vessels/' + id, { method: 'DELETE' });
@@ -2774,13 +2836,13 @@
                 throw new Error(error.error || 'فشل حذف المركب');
             }
             await renderMain();
-            fleetToast('✅ تم حذف المركب بنجاح', 'success');
+            fleetToast('✅ تم حذف المركب', 'success');
         } catch (err) { fleetToast('❌ ' + err.message, 'error'); }
     }
 
     async function editItem(id) {
         if (_isDestroyed) return;
-        if (!canEdit()) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
+        if (!canEdit()) { alert('⚠️ ليس لديك صلاحية'); return; }
 
         try {
             var response = await fetcher('/api/vessels', { method: 'GET' });
@@ -2791,31 +2853,28 @@
             });
             if (!v) { alert('❌ المركب غير موجود'); return; }
 
-            var el;
-            el = document.getElementById('iName'); if (el) el.value = v.name || '';
-            el = document.getElementById('iNum'); if (el) el.value = v.num || '';
-            el = document.getElementById('iLen'); if (el) el.value = v.len || '';
-            el = document.getElementById('iReg'); if (el) el.value = v.region || v.reg || '';
+            $('#iName').value = v.name || '';
+            $('#iNum').value = v.num || '';
+            $('#iLen').value = v.len || '';
+            setComboboxValue('iReg', 'iRegFree', v.region || v.reg || '');
             updateZones();
             setTimeout(function() {
-                var z = document.getElementById('iZone');
-                if (z) z.value = v.zone || '';
-            }, 50);
-            el = document.getElementById('iPort'); if (el) el.value = v.port || '';
-            el = document.getElementById('iSupp'); if (el) el.value = v.supp || '';
-            el = document.getElementById('iStat'); if (el) el.value = v.status || 'صالح';
-            el = document.getElementById('iBreak'); if (el) el.value = v.break || '';
-            el = document.getElementById('iDate'); if (el) el.value = v.fDate || '';
-            el = document.getElementById('iEnd'); if (el) el.value = v.eDate || '';
-            el = document.getElementById('iRef'); if (el) el.value = v.ref || '';
-            el = document.getElementById('iRepairUnit'); if (el) el.value = v.repairUnit || '';
+                setComboboxValue('iZone', 'iZoneFree', v.zone || '');
+            }, 60);
+            $('#iPort').value = v.port || '';
+            $('#iSupp').value = v.supp || '';
+            $('#iStat').value = v.status || 'صالح';
+            setComboboxValue('iBreak', 'iBreakFree', v.break || '');
+            $('#iDate').value = v.fDate || '';
+            $('#iEnd').value = v.eDate || '';
+            $('#iRef').value = v.ref || '';
+            setComboboxValue('iRepairUnit', 'iRepairUnitFree', v.repairUnit || '');
 
-            // 📸 تحميل صور المركب
             currentVesselId = v._id || v.id;
             fleetImages = (v.images || []).slice();
             renderImagesPreview();
 
-            var saveBtn = document.getElementById('saveVesselBtn');
+            var saveBtn = $('#saveVesselBtn');
             if (saveBtn) {
                 saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
                 saveBtn.onclick = async function() { await updateItem(id); };
@@ -2826,28 +2885,26 @@
 
     async function updateItem(id) {
         if (_isDestroyed) return;
-        var nameEl = document.getElementById('iName');
-        if (!nameEl) return;
-        var name = nameEl.value.trim();
+        var name = ($('#iName').value || '').trim();
         if (!name) { alert('⚠️ اسم المركب مطلوب'); return; }
 
         var vessel = {
             name: name,
-            num: (document.getElementById('iNum') || {}).value || '',
-            len: (document.getElementById('iLen') || {}).value || '',
-            region: (document.getElementById('iReg') || {}).value || '',
-            zone: (document.getElementById('iZone') || {}).value || '',
-            port: (document.getElementById('iPort') || {}).value || '',
-            supp: (document.getElementById('iSupp') || {}).value || '',
-            status: (document.getElementById('iStat') || {}).value || 'صالح',
-            break: (document.getElementById('iBreak') || {}).value || '',
-            fDate: (document.getElementById('iDate') || {}).value || '',
-            eDate: (document.getElementById('iEnd') || {}).value || '',
-            ref: (document.getElementById('iRef') || {}).value || '',
-            repairUnit: (document.getElementById('iRepairUnit') || {}).value || ''
+            num: $('#iNum').value || '',
+            len: $('#iLen').value || '',
+            region: getComboboxValue('iReg', 'iRegFree'),
+            zone: getComboboxValue('iZone', 'iZoneFree'),
+            port: $('#iPort').value || '',
+            supp: $('#iSupp').value || '',
+            status: $('#iStat').value || 'صالح',
+            break: getComboboxValue('iBreak', 'iBreakFree'),
+            fDate: $('#iDate').value || '',
+            eDate: $('#iEnd').value || '',
+            ref: $('#iRef').value || '',
+            repairUnit: getComboboxValue('iRepairUnit', 'iRepairUnitFree')
         };
 
-        var btn = document.getElementById('saveVesselBtn');
+        var btn = $('#saveVesselBtn');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...'; }
 
         try {
@@ -2861,12 +2918,10 @@
                 throw new Error(error.error || 'فشل تحديث المركب');
             }
 
-            if (fleetImages.length > 0) {
-                await uploadImages(id);
-            }
+            if (fleetImages.length > 0) await uploadImages(id);
 
             resetForm();
-            var saveBtn = document.getElementById('saveVesselBtn');
+            var saveBtn = $('#saveVesselBtn');
             if (saveBtn) {
                 saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
                 saveBtn.onclick = addItem;
@@ -2881,101 +2936,119 @@
     }
 
     function clearMainSearch() {
-        var s = document.getElementById('searchMain'); if (s) s.value = '';
-        var c = document.getElementById('fCatMain'); if (c) c.value = 'الكل';
-        var r = document.getElementById('fRegMain'); if (r) r.value = 'الكل';
-        var st = document.getElementById('fStatusMain'); if (st) st.value = 'all';
+        $('#searchMain').value = '';
+        $('#fCatMain').value = 'الكل';
+        $('#fRegMain').value = 'الكل';
+        $('#fStatusMain').value = 'all';
         renderMain();
     }
 
     function refreshFleet() { renderMain(); }
 
+    function printFleet() {
+        try {
+            window.print();
+        } catch (e) { window.print(); }
+    }
+
+    function exportFleetExcel() {
+        if (_isDestroyed) return;
+        try {
+            var table = document.querySelector('.table-wrapper table');
+            if (!table) { fleetToast('⚠️ لا يوجد جدول', 'error'); return; }
+            var rows = table.querySelectorAll('tbody tr');
+            if (!rows.length || rows[0].querySelector('.empty-state')) {
+                fleetToast('⚠️ لا توجد بيانات', 'error');
+                return;
+            }
+
+            var BOM = '\uFEFF';
+            function esc(val) {
+                if (val === null || val === undefined) return '';
+                var s = String(val).replace(/\s+/g, ' ').trim();
+                if (/[,"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+                return s;
+            }
+
+            var headers = ['#','الاسم','الرقم','الطول','الفئة','الإقليم','المنطقة','الميناء','التعزيز','الحالة','نوع العطب','تاريخ العطب','الوحدة المسؤولة'];
+            var csvRows = [headers.map(esc).join(',')];
+            var counter = 0;
+            rows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                if (cells.length < 13) return;
+                counter++;
+                var values = [counter];
+                for (var i = 1; i <= 13 && i < cells.length; i++) {
+                    values.push(cells[i] ? cells[i].textContent.trim() : '');
+                }
+                csvRows.push(values.map(esc).join(','));
+            });
+
+            var csv = BOM + csvRows.join('\r\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var now = new Date();
+            var ds = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' +
+                     String(now.getDate()).padStart(2,'0');
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'fleet_' + ds + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(url); }, 100);
+            fleetToast('✅ تم تصدير ' + counter + ' مركب', 'success');
+        } catch (err) { fleetToast('❌ فشل التصدير: ' + err.message, 'error'); }
+    }
+
     var _disposeVesselData = null;
 
     function openDisposeModal(vesselId) {
-        if (!canDispose()) {
-            fleetToast('⚠️ ليس لديك صلاحية الطرح', 'error');
-            return;
-        }
-        fetcher('/api/vessels', { method: 'GET' })
-            .then(function(r) { return r.ok ? r.json() : null; })
-            .then(function(list) {
-                if (!list) throw new Error('فشل التحميل');
-                var v = list.find(function(x) {
-                    return String(x._id || x.id) === String(vesselId);
-                });
-                if (!v) throw new Error('المركب غير موجود');
+        if (!canDispose()) { fleetToast('⚠️ ليس لديك صلاحية', 'error'); return; }
+        fetcher('/api/vessels').then(function(r) { return r.json(); }).then(function(list) {
+            var v = list.find(function(x) { return String(x._id || x.id) === String(vesselId); });
+            if (!v) throw new Error('المركب غير موجود');
+            if (v.status === 'طرح') { fleetToast('⚠️ مطروح مسبقاً', 'warning'); return; }
 
-                if (v.status === 'طرح') {
-                    fleetToast('⚠️ المركب مطروح مسبقاً', 'warning');
-                    return;
-                }
+            _disposeVesselData = v;
+            $('#disposeVesselId').value = v._id || v.id;
+            $('#disposeVesselName').textContent = v.name || '—';
+            $('#disposeVesselSub').textContent = (v.cat || getCategory(v.len)) + ' • ' + (v.region || v.reg || '—');
+            $('#disposeVesselNum').textContent = v.num || '—';
+            $('#disposeReason').value = '';
+            $('#disposeDecision').value = '';
+            $('#disposeBy').value = getUser() ? (getUser().name || getUser().username || '') : '';
+            $('#disposeDate').value = new Date().toISOString().split('T')[0];
+            $('#disposeNotes').value = '';
+            $('#disposeConfirmCheck').checked = false;
+            $('#fleetDisposeConfirm').disabled = true;
 
-                _disposeVesselData = v;
-
-                setVal('disposeVesselId', v._id || v.id);
-                setText('disposeVesselName', v.name || '—');
-                setText('disposeVesselSub', (v.cat || getCategory(v.len)) + ' • ' + (v.region || v.reg || '—'));
-                setText('disposeVesselNum', v.num || '—');
-
-                setVal('disposeReason', '');
-                setVal('disposeDecision', '');
-                setVal('disposeBy', getUser() ? (getUser().name || getUser().username || '') : '');
-                setVal('disposeDate', new Date().toISOString().split('T')[0]);
-                setVal('disposeNotes', '');
-                var chk = document.getElementById('disposeConfirmCheck');
-                if (chk) chk.checked = false;
-                var cbtn = document.getElementById('fleetDisposeConfirm');
-                if (cbtn) cbtn.disabled = true;
-
-                var modal = document.getElementById('fleetDisposeModal');
-                if (modal) modal.classList.add('active');
-            })
-            .catch(function(err) { fleetToast('❌ ' + err.message, 'error'); });
+            $('#fleetDisposeModal').classList.add('active');
+        }).catch(function(err) { fleetToast('❌ ' + err.message, 'error'); });
     }
 
     function closeDisposeModal() {
-        var modal = document.getElementById('fleetDisposeModal');
+        var modal = $('#fleetDisposeModal');
         if (modal) modal.classList.remove('active');
         _disposeVesselData = null;
     }
 
-    function setVal(id, val) {
-        var el = document.getElementById(id);
-        if (el) el.value = val || '';
-    }
-    function setText(id, val) {
-        var el = document.getElementById(id);
-        if (el) el.textContent = val || '—';
-    }
-
     async function confirmDispose() {
         if (!_disposeVesselData) return;
-
-        var reason = (document.getElementById('disposeReason') || {}).value || '';
-        reason = reason.trim();
-        if (!reason) {
-            fleetToast('⚠️ سبب الطرح مطلوب', 'error');
-            return;
-        }
-
-        var chk = document.getElementById('disposeConfirmCheck');
-        if (!chk || !chk.checked) {
-            fleetToast('⚠️ يجب تأكيد الإقرار أولاً', 'error');
-            return;
-        }
+        var reason = ($('#disposeReason').value || '').trim();
+        if (!reason) { fleetToast('⚠️ سبب الطرح مطلوب', 'error'); return; }
+        if (!$('#disposeConfirmCheck').checked) { fleetToast('⚠️ يجب تأكيد الإقرار', 'error'); return; }
 
         var id = _disposeVesselData._id || _disposeVesselData.id;
-
         var payload = {
             reason: reason,
-            decision: (document.getElementById('disposeDecision') || {}).value || '',
-            disposedBy: (document.getElementById('disposeBy') || {}).value || '',
-            notes: (document.getElementById('disposeNotes') || {}).value || '',
-            date: (document.getElementById('disposeDate') || {}).value || null
+            decision: $('#disposeDecision').value || '',
+            disposedBy: $('#disposeBy').value || '',
+            notes: $('#disposeNotes').value || '',
+            date: $('#disposeDate').value || null
         };
 
-        var btn = document.getElementById('fleetDisposeConfirm');
+        var btn = $('#fleetDisposeConfirm');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الطرح...'; }
 
         try {
@@ -2987,175 +3060,95 @@
             var data = await response.json();
             if (!response.ok) throw new Error(data.error || 'فشل الطرح');
 
-            fleetToast('✅ تم طرح المركب بنجاح', 'success', 4000);
+            fleetToast('✅ تم طرح المركب بنجاح', 'success');
             closeDisposeModal();
             await renderMain();
-
         } catch (err) {
             fleetToast('❌ ' + err.message, 'error');
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-archive"></i> تأكيد الطرح نهائياً'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-archive"></i> تأكيد الطرح'; }
         }
     }
 
     function navigateToDisposals() {
-        console.log('🚢 navigateToDisposals called');
-
         if (typeof window.loadPage === 'function') {
-            try {
-                window.loadPage('disposals-vessels');
-                return;
-            } catch (e) {
-                console.error('❌ loadPage error:', e.message);
-            }
+            try { window.loadPage('disposals-vessels'); return; } catch (e) {}
         }
-
         if (typeof window.navigateTo === 'function') {
-            try {
-                window.navigateTo('disposals-vessels');
-                return;
-            } catch (e) {
-                console.error('❌ navigateTo error:', e.message);
-            }
+            try { window.navigateTo('disposals-vessels'); return; } catch (e) {}
         }
-
         window.location.href = '/pages/disposals-vessels.html';
     }
 
-    function exportFleetExcel() {
-        if (_isDestroyed) return;
+    function setupDisposeListeners() {
+        var closeBtn = $('#fleetDisposeClose');
+        if (closeBtn) closeBtn.addEventListener('click', closeDisposeModal);
+        var cancelBtn = $('#fleetDisposeCancel');
+        if (cancelBtn) cancelBtn.addEventListener('click', closeDisposeModal);
+        var confirmBtn = $('#fleetDisposeConfirm');
+        if (confirmBtn) confirmBtn.addEventListener('click', confirmDispose);
+        var checkEl = $('#disposeConfirmCheck');
+        if (checkEl) {
+            checkEl.addEventListener('change', function() {
+                $('#fleetDisposeConfirm').disabled = !this.checked;
+            });
+        }
+        var modal = $('#fleetDisposeModal');
+        if (modal) modal.addEventListener('click', function(e) { if (e.target === this) closeDisposeModal(); });
+    }
+
+    function applyLogo() {
         try {
-            var table = document.querySelector('.table-wrapper table');
-            if (!table) { fleetToast('⚠️ لا يوجد جدول للتصدير', 'error'); return; }
-            var rows = table.querySelectorAll('tbody tr');
-            if (!rows.length) { fleetToast('⚠️ لا توجد بيانات للتصدير', 'error'); return; }
-            if (rows[0].querySelector('.empty-state')) {
-                fleetToast('⚠️ لا توجد بيانات للتصدير', 'error');
-                return;
-            }
-
-            var BOM = '\uFEFF';
-            function csvEscape(val) {
-                if (val === null || val === undefined) return '';
-                var s = String(val).replace(/\s+/g, ' ').trim();
-                if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
-                    return '"' + s.replace(/"/g, '""') + '"';
-                }
-                return s;
-            }
-
-            var headers = ['#','الاسم','الرقم','الطول','الفئة','الإقليم','المنطقة','الميناء','التعزيز','الحالة','نوع العطب','تاريخ العطب','الوحدة المسؤولة'];
-            var csvRows = [headers.map(csvEscape).join(',')];
-            var counter = 0;
-            rows.forEach(function(row) {
-                var cells = row.querySelectorAll('td');
-                if (cells.length < 13) return;
-                counter++;
-                var values = [counter];
-                // تجاهل العمود الأول (الصورة) — نبدأ من الفهرس 1
-                for (var i = 1; i <= 13 && i < cells.length; i++) {
-                    values.push(cells[i] ? cells[i].textContent.trim() : '');
-                }
-                csvRows.push(values.map(csvEscape).join(','));
-            });
-
-            var csv = BOM + csvRows.join('\r\n');
-            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            var now = new Date();
-            var ds = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' +
-                     String(now.getDate()).padStart(2,'0') + '_' +
-                     String(now.getHours()).padStart(2,'0') + '-' +
-                     String(now.getMinutes()).padStart(2,'0');
-            var filename = 'fleet_' + ds + '.csv';
-
-            if (window.navigator && window.navigator.msSaveBlob) {
-                window.navigator.msSaveBlob(blob, filename);
-            } else {
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url; a.download = filename; a.style.display = 'none';
-                document.body.appendChild(a); a.click();
-                setTimeout(function() {
-                    if (a.parentNode) a.parentNode.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
-            }
-            fleetToast('✅ تم تصدير ' + counter + ' مركب', 'success');
-        } catch (err) { fleetToast('❌ فشل التصدير: ' + err.message, 'error'); }
+            var cachedLogo = localStorage.getItem('marine_logo');
+            if (!cachedLogo) return;
+            var iconDiv = $('#fleetHeaderIcon');
+            var img = $('#globalLogo');
+            if (img) { img.src = cachedLogo; img.style.display = 'block'; }
+            if (iconDiv) iconDiv.classList.add('has-logo');
+        } catch (e) {}
     }
-
-    function initScrollButtons() {
-        var nav = document.getElementById('fleetScrollNav');
-        var btnTop = document.getElementById('fleetScrollTop');
-        var btnBottom = document.getElementById('fleetScrollBottom');
-        if (!nav || !btnTop || !btnBottom) return;
-
-        function updateVisibility() {
-            var y = window.scrollY || window.pageYOffset || 0;
-            var docHeight = document.documentElement.scrollHeight;
-            var winHeight = window.innerHeight;
-            var hasScroll = docHeight > (winHeight + 100);
-            if (!hasScroll) { nav.classList.remove('visible'); return; }
-            if (y > 200) nav.classList.add('visible');
-            else nav.classList.remove('visible');
-            btnTop.style.opacity = y > 50 ? '1' : '0.35';
-            btnTop.style.pointerEvents = y > 50 ? 'auto' : 'none';
-            var atBottom = (y + winHeight) >= (docHeight - 50);
-            btnBottom.style.opacity = atBottom ? '0.35' : '1';
-            btnBottom.style.pointerEvents = atBottom ? 'none' : 'auto';
-        }
-
-        btnTop.addEventListener('click', function() {
-            try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0,0); }
-        });
-        btnBottom.addEventListener('click', function() {
-            var target = document.documentElement.scrollHeight;
-            try { window.scrollTo({ top: target, behavior: 'smooth' }); } catch(e) { window.scrollTo(0,target); }
-        });
-
-        window.addEventListener('scroll', updateVisibility, { passive: true });
-        window.addEventListener('resize', updateVisibility, { passive: true });
-        updateVisibility();
-        setTimeout(updateVisibility, 500);
-        setTimeout(updateVisibility, 1500);
-    }
-
-    function setupLightboxListeners() {
-        var closeBtn = document.getElementById('fleetLightboxClose');
-        if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
-
-        var lb = document.getElementById('fleetLightbox');
-        if (lb) {
-            lb.addEventListener('click', function(e) {
-                if (e.target === lb) closeLightbox();
-            });
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                var m = document.getElementById('fleetDisposeModal');
-                if (m && m.classList.contains('active')) closeDisposeModal();
-                var l = document.getElementById('fleetLightbox');
-                if (l && l.classList.contains('active')) closeLightbox();
-            }
-        });
-    }
+    applyLogo();
 
     var _initialized = false;
 
     async function initPage() {
         if (_isDestroyed || _initialized) return false;
-        var header = document.getElementById('fleetHeader');
+        var header = $('#fleetHeader');
         if (!header) return false;
 
         _initialized = true;
-        console.log('🚀 Fleet v5.0 — Initializing...');
+        console.log('🚀 Fleet v6.0 — Initializing...');
 
         initFilters();
-        initScrollButtons();
         initImagesUI();
+        initGalleryEvents();
+        initMiniUploadEvents();
         setupDisposeListeners();
-        setupLightboxListeners();
-        setupVesselGalleryListeners();
+
+        // Combobox searches
+        bindComboboxSearch('iZoneSearch', 'iZone');
+        bindComboboxSearch('iBreakSearch', 'iBreak');
+
+        // Free inputs
+        toggleFreeInput('iReg', 'iRegFree', ['__other__']);
+        toggleFreeInput('iZone', 'iZoneFree', ['__other__']);
+        toggleFreeInput('iBreak', 'iBreakFree', ['أخرى']);
+        toggleFreeInput('iRepairUnit', 'iRepairUnitFree', ['__other__']);
+
+        // Region → Zone dynamic
+        var regSel = $('#iReg');
+        if (regSel) regSel.addEventListener('change', updateZones);
+        var regFree = $('#iRegFree');
+        if (regFree) regFree.addEventListener('input', updateZones);
+
+        // Header buttons
+        var refreshBtn = $('#fleetRefreshBtn');
+        if (refreshBtn) refreshBtn.addEventListener('click', function() { renderMain(); });
+        var printBtn = $('#fleetPrintBtn');
+        if (printBtn) printBtn.addEventListener('click', printFleet);
+        var excelBtn = $('#fleetExcelBtn');
+        if (excelBtn) excelBtn.addEventListener('click', exportFleetExcel);
+        var disposalsBtn = $('#fleetDisposalsBtn');
+        if (disposalsBtn) disposalsBtn.addEventListener('click', navigateToDisposals);
 
         var token = getToken();
         if (!token) { window.location.href = '/index.html'; return true; }
@@ -3171,54 +3164,21 @@
             if (data.success && data.user) window.currentUser = data.user;
         } catch (error) {
             console.error('❌ Auth error:', error);
-            window.location.href = '/index.html';
-            return true;
         }
 
         if (_isDestroyed) return true;
 
-        var addBtn = document.getElementById('saveVesselBtn');
+        var addBtn = $('#saveVesselBtn');
         if (addBtn) addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
 
-        var imagesSection = document.getElementById('imagesSection');
+        var imagesSection = $('#imagesSection');
         if (imagesSection && !canEdit()) imagesSection.style.display = 'none';
-
-        var dispBtn = document.getElementById('fleetDisposalsBtn');
-        if (dispBtn) {
-            dispBtn.addEventListener('click', navigateToDisposals);
-        }
 
         updateZones();
         await renderMain();
 
-        console.log('✅ Fleet v5.0 ready');
+        console.log('✅ Fleet v6.0 ready');
         return true;
-    }
-
-    function setupDisposeListeners() {
-        var closeBtn = document.getElementById('fleetDisposeClose');
-        if (closeBtn) closeBtn.addEventListener('click', closeDisposeModal);
-
-        var cancelBtn = document.getElementById('fleetDisposeCancel');
-        if (cancelBtn) cancelBtn.addEventListener('click', closeDisposeModal);
-
-        var confirmBtn = document.getElementById('fleetDisposeConfirm');
-        if (confirmBtn) confirmBtn.addEventListener('click', confirmDispose);
-
-        var checkEl = document.getElementById('disposeConfirmCheck');
-        if (checkEl) {
-            checkEl.addEventListener('change', function() {
-                var b = document.getElementById('fleetDisposeConfirm');
-                if (b) b.disabled = !this.checked;
-            });
-        }
-
-        var modal = document.getElementById('fleetDisposeModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) closeDisposeModal();
-            });
-        }
     }
 
     if (document.readyState === 'loading') {
@@ -3226,12 +3186,6 @@
     } else {
         initPage();
     }
-
-    var retry = setInterval(function() {
-        if (_initialized || _isDestroyed) { clearInterval(retry); return; }
-        initPage();
-    }, 300);
-    setTimeout(function() { clearInterval(retry); }, 10000);
 
     window.renderMain = renderMain;
     window.addItem = addItem;
