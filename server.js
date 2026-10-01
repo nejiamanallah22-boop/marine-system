@@ -262,10 +262,10 @@ const JWT_SECRET = process.env.JWT_SECRET || generateSecret(64);
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || generateSecret(64);
 const SESSION_SECRET = process.env.SESSION_SECRET || generateSecret(64);
 
-const ACCESS_TOKEN_EXPIRES = '15m';
-const REFRESH_TOKEN_EXPIRES = '7d';
-const ACCESS_TOKEN_MAX_AGE = 15*60*1000;
-const REFRESH_TOKEN_MAX_AGE = 7*24*60*60*1000;
+const ACCESS_TOKEN_EXPIRES = '2h';
+const REFRESH_TOKEN_EXPIRES = '30d';
+const ACCESS_TOKEN_MAX_AGE = 2*60*60*1000;
+const REFRESH_TOKEN_MAX_AGE = 30*24*60*60*1000;
 const CSRF_MAX_AGE = 8*60*60*1000;
 const RESET_TOKEN_TTL = 60*60*1000;
 
