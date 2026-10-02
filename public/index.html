@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/print.css" media="print">
 
-    <!-- 🎯 PRINT STYLES INLINE -->
+    <!-- 🎯 PRINT STYLES INLINE (لا يعتمد على ملف خارجي) -->
     <style media="print">
         #page-efficiency .eff-header,
         #page-efficiency .eff-header *,
@@ -132,7 +132,7 @@
 
         /* ═══════════════════════════════════════════════════════
            🎨 PROFESSIONAL LOGIN — Marine National Guard
-           (نسخة واحدة فقط — بدون تكرار)
+           (نسخة واحدة فقط — كان مكرراً مرتين في الأصل)
            ═══════════════════════════════════════════════════════ */
         #loginOverlay {
             position: fixed;
@@ -894,6 +894,7 @@
             display: none;
         }
 
+        /* ✅ ===== NOTIFICATIONS DROPDOWN (NEW v9.16) ===== */
         .notif-dropdown {
             display: none;
             position: absolute;
@@ -1062,9 +1063,25 @@
             color: rgba(230,179,30,0.15);
         }
 
-        @media (max-width: 480px) {
-            .notif-dropdown { width: calc(100vw - 20px); left: -10px; }
+        .notif-loading {
+            text-align: center;
+            padding: 30px 20px;
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
         }
+
+        .notif-loading i {
+            animation: spin 1s linear infinite;
+            margin-left: 6px;
+        }
+
+        @media (max-width: 480px) {
+            .notif-dropdown {
+                width: calc(100vw - 20px);
+                left: -10px;
+            }
+        }
+        /* ===== END NOTIFICATIONS DROPDOWN ===== */
 
         .user-wrapper { position: relative; }
 
@@ -1663,6 +1680,16 @@
 <body>
     <!-- ===== LOGIN ===== -->
     <div id="loginOverlay">
+        <div class="login-bg"></div>
+        <div class="login-overlay"></div>
+        <div class="particles">
+            <div class="particle" style="left:10%;animation-duration:10s;animation-delay:0s;"></div>
+            <div class="particle" style="left:25%;animation-duration:12s;animation-delay:2s;"></div>
+            <div class="particle" style="left:40%;animation-duration:9s;animation-delay:4s;"></div>
+            <div class="particle" style="left:55%;animation-duration:11s;animation-delay:1s;"></div>
+            <div class="particle" style="left:70%;animation-duration:13s;animation-delay:3s;"></div>
+            <div class="particle" style="left:85%;animation-duration:10s;animation-delay:5s;"></div>
+        </div>
         <div class="login-container">
             <div class="login-box">
                 <div class="login-logo">
@@ -1830,7 +1857,7 @@
                         <i class="fas fa-truck"></i> الوسائل البرية
                     </button>
                     <button class="nav-btn" data-page="maintenance">
-                        <i class="fas fa-wrench"></i> الصيانة
+                        <i class="fas fa-wrench"></i>  الصيانة
                         <span class="nav-badge warning" id="maintenanceBadge">0</span>
                     </button>
                     <button class="nav-btn" data-page="efficiency">
@@ -1977,11 +2004,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============================================================
-    JAVASCRIPT - v9.16 (Notifications Fix) + إصلاحات بدون تغيير السلوك
+    JAVASCRIPT - v9.16 (Notifications Fix)
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v9.16 (Fixed, no behavioral change)
+        // 🚢 MARINE SYSTEM - v9.16
         // ============================================================
 
         console.log('🚢 Marine System v9.16 - Loading...');
@@ -2182,22 +2209,21 @@
             if (ROLE_PERMISSIONS[trimmed]) return trimmed;
             return LEGACY_ROLE_MAP[trimmed] || 'viewer';
         }
-
-        const PAGE_PERMISSIONS = {
-            dashboard: 'dashboard:view',
-            fleet: 'vessels:read',
-            vehicles: 'vessels:read',
-            maintenance: 'maintenance:read',
-            efficiency: 'dashboard:view',
-            support: 'dashboard:view',
-            notes: 'dashboard:view',
-            monitoring: 'monitoring:view',
-            users: 'users:manage',
-            logs: 'logs:read',
-            activity: 'logs:read',
-            'ai-assistant': 'dashboard:view',
-            settings: 'settings:manage'
-        };
+const PAGE_PERMISSIONS = {
+    dashboard: 'dashboard:view',
+    fleet: 'vessels:read',
+    vehicles: 'vessels:read',
+    maintenance: 'maintenance:read',
+    efficiency: 'dashboard:view',
+    support: 'dashboard:view',
+    notes: 'dashboard:view',
+    monitoring: 'monitoring:view',
+    users: 'users:manage',
+    logs: 'logs:read',
+    activity: 'logs:read',
+    'ai-assistant': 'dashboard:view',
+    settings: 'settings:manage'
+};
 
         const ADMIN_ONLY_PAGES = ['users', 'settings', 'monitoring'];
 
@@ -2483,12 +2509,10 @@
                 const headers = Object.assign({}, options.headers || {});
                 const token = getToken();
 
-                // لا نكتب فوق Authorization المخصص
                 if (token && !headers['Authorization']) {
                     headers['Authorization'] = 'Bearer ' + token;
                 }
 
-                // لا نكتب فوق X-CSRF-Token المخصص
                 if (!isSafeMethod && !headers['X-CSRF-Token']) {
                     const csrfToken = await csrfManager.getToken();
                     if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
@@ -2736,7 +2760,6 @@
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
                     });
 
-                    // ✅ Rollback عند فشل الخادم
                     if (!response.ok && wasUnread) {
                         n.isRead = false;
                         this.unreadCount += 1;
@@ -2772,7 +2795,6 @@
                     if (response.ok) {
                         showToast('✅ تم تعليم جميع الإشعارات كمقروءة', 'success');
                     } else {
-                        // ✅ Rollback
                         this.unreadCount = prevUnread;
                         prevState.forEach(st => {
                             const n = this.notifications.find(x => x.id === st.id);
@@ -2815,7 +2837,6 @@
                     });
 
                     if (!response.ok && removed) {
-                        // ✅ Rollback
                         this.notifications.splice(idx, 0, removed);
                         if (wasUnread) this.unreadCount += 1;
                         this.updateBadge();
@@ -3129,7 +3150,7 @@
         }
 
         // ============================================================
-        // 📊 LOAD DATA
+        // 📊 LOAD DATA - SAFE
         // ============================================================
 
         async function loadAllData() {
@@ -3305,7 +3326,6 @@
 
                     container.innerHTML = tempDiv.innerHTML;
 
-                    // ✅ إصلاح: نبقي السكريبتات وننظّفها عند تبديل الصفحة بدل الحذف بعد 10ms
                     scriptContents.forEach(content => {
                         if (content && content.trim()) {
                             try {
@@ -3674,7 +3694,6 @@
 
             /* ============================================================
                🖨️ PRINT SETTINGS SYSTEM
-               (بدون إعادة تعريف window.print — اعتراض Ctrl+P فقط)
                ============================================================ */
             (function initPrintSettings() {
                 var printState = { size: 'A4', orientation: 'portrait', color: 'color' };
@@ -3758,17 +3777,10 @@
                     }, 300);
                 }
 
-                // ✅ اعتراض Ctrl+P بدل إعادة تعريف window.print
-                document.addEventListener('keydown', function (e) {
-                    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
-                        if (bypass) return;
-                        e.preventDefault();
-                        openPrintModal();
-                    }
-                }, true);
-
-                // API عام لفتح نافذة الإعدادات
-                window.openPrintSettings = openPrintModal;
+                window.print = function () {
+                    if (bypass) return nativePrint();
+                    openPrintModal();
+                };
 
                 if (closeBtn)  closeBtn.addEventListener('click', closePrintModal);
                 if (cancelBtn) cancelBtn.addEventListener('click', closePrintModal);
