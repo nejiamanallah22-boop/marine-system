@@ -43,8 +43,6 @@
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    /* ✅ مهم جداً: هذا الملف يُحمّل كصفحة فرعية داخل النظام الرئيسي */
-    /* لذلك يجب ألا يأخذ 100vh من الشاشة كاملة */
     html, body {
         font-family: 'Cairo', 'Segoe UI', sans-serif;
         background: #050811;
@@ -54,11 +52,10 @@
         overflow: hidden;
     }
 
-    /* ✅ حاوية نسبية لاحتواء الخريطة */
     .monitoring-wrapper {
         position: relative;
         width: 100%;
-        height: calc(100vh - 64px); /* اطرح ارتفاع الهيدر */
+        height: calc(100vh - 64px);
         overflow: hidden;
     }
 
@@ -205,6 +202,105 @@
         padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: 800;
     }
 
+    /* ============================================================
+       🔗 EXTERNAL TOOLS SECTION (NEW v13.6)
+       ============================================================ */
+    .external-tools-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    @media (max-width: 480px) {
+        .external-tools-grid { grid-template-columns: 1fr; }
+    }
+
+    .tool-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 14px 10px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.25s;
+        position: relative;
+        overflow: hidden;
+        min-height: 95px;
+    }
+    .tool-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .tool-card:hover {
+        transform: translateY(-3px);
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(247,215,116,0.3);
+    }
+    .tool-card:hover::before { opacity: 1; }
+
+    .tool-card.clarity::before { background: linear-gradient(90deg, #a78bfa, #c4b5fd); }
+    .tool-card.uptime::before { background: linear-gradient(90deg, #4ade80, #86efac); }
+    .tool-card.render::before { background: linear-gradient(90deg, #60a5fa, #93c5fd); }
+
+    .tool-card.clarity:hover {
+        border-color: rgba(167,139,250,0.4);
+        box-shadow: 0 8px 24px rgba(167,139,250,0.15);
+    }
+    .tool-card.uptime:hover {
+        border-color: rgba(74,222,128,0.4);
+        box-shadow: 0 8px 24px rgba(74,222,128,0.15);
+    }
+    .tool-card.render:hover {
+        border-color: rgba(96,165,250,0.4);
+        box-shadow: 0 8px 24px rgba(96,165,250,0.15);
+    }
+
+    .tool-card i {
+        font-size: 22px;
+        transition: transform 0.3s;
+    }
+    .tool-card:hover i { transform: scale(1.15); }
+    .tool-card.clarity i { color: #a78bfa; }
+    .tool-card.uptime i { color: #4ade80; }
+    .tool-card.render i { color: #60a5fa; }
+
+    .tool-card .tool-name {
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+    .tool-card .tool-desc {
+        font-size: 9px;
+        color: rgba(255,255,255,0.4);
+        line-height: 1.2;
+    }
+
+    .tool-card::after {
+        content: '\f35d';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 6px; right: 8px;
+        font-size: 9px;
+        color: rgba(255,255,255,0.25);
+        transition: all 0.3s;
+    }
+    .tool-card:hover::after {
+        color: rgba(247,215,116,0.7);
+        transform: translate(2px, -2px);
+    }
+
+    /* ===== USER CARD ===== */
     .user-card {
         background: rgba(255,255,255,0.025);
         border: 1px solid rgba(255,255,255,0.06);
@@ -268,7 +364,7 @@
     }
     .empty-state p { font-size: 12px; font-weight: 600; }
 
-    /* ===== DEVICE CARD (NEW) ===== */
+    /* ===== DEVICE CARD ===== */
     .device-card {
         background: rgba(96, 165, 250, 0.04);
         border: 1px solid rgba(96, 165, 250, 0.15);
@@ -420,7 +516,6 @@
 </head>
 <body>
 
-<!-- ✅ الحاوية الرئيسية للمراقبة -->
 <div class="monitoring-wrapper" id="monitoringWrapper">
     <div id="map"></div>
 
@@ -429,7 +524,7 @@
             <i class="fas fa-satellite-dish"></i>
             <div class="text">
                 <span class="title">المراقبة الحية</span>
-                <span class="subtitle">Live Tracking v13.5</span>
+                <span class="subtitle">Live Tracking v13.6</span>
             </div>
         </div>
         <div class="stats">
@@ -460,7 +555,48 @@
         </div>
         <div class="panel-body">
 
-            <!-- ===== سجل الأجهزة (NEW) ===== -->
+            <!-- ============================================================
+                 🔗 أدوات المراقبة الخارجية (NEW v13.6)
+                 ============================================================ -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <h3><i class="fas fa-toolbox"></i> أدوات المراقبة</h3>
+                    <span class="count">3</span>
+                </div>
+                <div class="external-tools-grid">
+                    <a class="tool-card clarity"
+                       href="https://clarity.microsoft.com/projects"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       title="Microsoft Clarity - تسجيلات المستخدمين">
+                        <i class="fas fa-video"></i>
+                        <span class="tool-name">Clarity</span>
+                        <span class="tool-desc">تسجيلات الجلسات</span>
+                    </a>
+
+                    <a class="tool-card uptime"
+                       href="https://uptimerobot.com/dashboard"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       title="UptimeRobot - حالة التوفر">
+                        <i class="fas fa-heart-pulse"></i>
+                        <span class="tool-name">UptimeRobot</span>
+                        <span class="tool-desc">حالة التوفر</span>
+                    </a>
+
+                    <a class="tool-card render"
+                       href="https://dashboard.render.com/"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       title="Render - سجلات الخادم">
+                        <i class="fas fa-server"></i>
+                        <span class="tool-name">Render</span>
+                        <span class="tool-desc">سجلات الخادم</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ===== سجل الأجهزة ===== -->
             <div class="panel-section">
                 <div class="section-title">
                     <h3><i class="fas fa-microchip"></i> سجل الأجهزة</h3>
@@ -515,19 +651,13 @@
     function log() { if (DEBUG) try { console.log.apply(console, arguments); } catch(e){} }
     function warn() { try { console.warn.apply(console, arguments); } catch(e){} }
 
-    console.log('🛰️ monitoring.html v13.5 - Loading...');
+    console.log('🛰️ monitoring.html v13.6 - Loading...');
 
-    // ============================================================
-    // CONSTANTS
-    // ============================================================
     var REFRESH_INTERVAL_MS = 15000;
     var IDLE_REFRESH_PAUSE = true;
     var FETCH_TIMEOUT_MS = 20000;
     var MAX_FETCH_TIMEOUT_MS = 30000;
 
-    // ============================================================
-    // STATE
-    // ============================================================
     var map = null;
     var myMarker = null;
     var myAccuracyCircle = null;
@@ -550,12 +680,8 @@
     var _abortControllers = [];
     var _resizeObserver = null;
 
-    // ============================================================
-    // ✅ BRIDGE: قراءة البيانات من النظام الرئيسي
-    // ============================================================
     function getToken() {
         try {
-            // جرّب كل المصادر الممكنة
             return localStorage.getItem('marine_auth_token')
                 || localStorage.getItem('marine_token')
                 || localStorage.getItem('token')
@@ -580,22 +706,16 @@
         return h;
     }
 
-    // ✅ يقرأ المستخدم من كل المصادر الممكنة
     function readMyUser() {
-        // 1) من window.parent (النظام الرئيسي)
         try {
             if (window.parent && window.parent !== window) {
                 var parentUser = window.parent.currentUser;
                 if (parentUser && (parentUser.id || parentUser._id)) {
-                    log('👤 Got user from parent window');
                     return parentUser;
                 }
             }
-        } catch(e) {
-            // Cross-origin — تجاهل
-        }
+        } catch(e) {}
 
-        // 2) من JWT (sub = المعرّف الحقيقي)
         try {
             var token = getToken();
             if (token) {
@@ -604,10 +724,8 @@
                     var payload = JSON.parse(atob(parts[1]));
                     if (payload && (payload.sub || payload.id)) {
                         var realId = payload.sub || payload.id;
-                        log('👤 Got user from JWT payload');
                         return {
-                            id: realId,
-                            _id: realId,
+                            id: realId, _id: realId,
                             username: payload.username || '',
                             name: payload.name || payload.username || '',
                             role: payload.role || 'viewer',
@@ -616,11 +734,8 @@
                     }
                 }
             }
-        } catch(e) {
-            warn('⚠️ JWT parse error:', e.message);
-        }
+        } catch(e) {}
 
-        // 3) من localStorage
         try {
             var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
             var stores = [localStorage, sessionStorage];
@@ -631,7 +746,6 @@
                         var p = JSON.parse(raw);
                         if (p && (p.id || p._id || p.username)) {
                             p._source = 'storage';
-                            log('👤 Got user from storage');
                             return p;
                         }
                     }
@@ -639,7 +753,6 @@
             }
         } catch(e) {}
 
-        warn('⚠️ Could not read user info from any source');
         return null;
     }
 
@@ -650,18 +763,11 @@
         return s;
     }
 
-    // ============================================================
-    // CLEANUP
-    // ============================================================
     function _cleanup() {
         if (_isDestroyed) return;
         _isDestroyed = true;
 
-        try {
-            _abortControllers.forEach(function(c) {
-                try { c.abort(); } catch(e){}
-            });
-        } catch(e) {}
+        try { _abortControllers.forEach(function(c) { try { c.abort(); } catch(e){} }); } catch(e) {}
         _abortControllers = [];
 
         _intervals.forEach(function(id) { try { clearInterval(id); } catch(e){} });
@@ -681,15 +787,11 @@
             }
         } catch(e){}
 
-        try {
-            if (_resizeObserver) { _resizeObserver.disconnect(); _resizeObserver = null; }
-        } catch(e){}
+        try { if (_resizeObserver) { _resizeObserver.disconnect(); _resizeObserver = null; } } catch(e){}
 
         try {
             userMarkers.forEach(function(m) {
-                try {
-                    if (map && m && typeof map.removeLayer === 'function') map.removeLayer(m);
-                } catch(e){}
+                try { if (map && m && typeof map.removeLayer === 'function') map.removeLayer(m); } catch(e){}
             });
             userMarkers.clear();
         } catch(e){}
@@ -701,7 +803,7 @@
             }
         } catch(e){}
 
-        log('🧹 Monitoring v13.5 cleanup done');
+        log('🧹 Monitoring v13.6 cleanup done');
     }
 
     window._pageCleanup = window._pageCleanup || [];
@@ -709,9 +811,6 @@
     window.addEventListener('beforeunload', _cleanup);
     window.addEventListener('pagehide', _cleanup);
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
     function fetchJSON(url, opts) {
         opts = opts || {};
         opts.headers = Object.assign({}, authHeaders(), opts.headers || {});
@@ -777,9 +876,6 @@
         } catch(e) { return '—'; }
     }
 
-    // ============================================================
-    // DEVICE FINGERPRINT
-    // ============================================================
     function getDeviceFingerprint() {
         try {
             var nav = navigator;
@@ -859,9 +955,6 @@
         }
     }
 
-    // ============================================================
-    // MAP ERROR / LOADING
-    // ============================================================
     var TILE_ERROR = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
 
     function showMapError(title, details, diag) {
@@ -882,9 +975,6 @@
         if (ld) ld.classList.add('hidden');
     }
 
-    // ============================================================
-    // MAP INIT
-    // ============================================================
     function initMap() {
         if (mapInitialized || _isDestroyed) return;
 
@@ -943,9 +1033,6 @@
         }
     }
 
-    // ============================================================
-    // SEND LOCATION
-    // ============================================================
     function sendLocationToServer(coords, retryCount) {
         if (_isDestroyed) return;
         retryCount = retryCount || 0;
@@ -957,8 +1044,6 @@
             accuracy: coords.accuracy || null,
             device: deviceInfo
         };
-
-        log('📤 Sending location + device:', payload);
 
         fetchJSON('/api/locations', {
             method: 'POST',
@@ -995,15 +1080,11 @@
                 },
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
             );
-            log('📍 Geolocation started');
         } catch(e) {
             warn('[GEO] watch exception:', e.message);
         }
     }
 
-    // ============================================================
-    // MY MARKER
-    // ============================================================
     function updateMyMarker(coords) {
         if (!map || !mapInitialized || _isDestroyed) return;
 
@@ -1048,14 +1129,9 @@
         }
     }
 
-    // ============================================================
-    // OTHER USERS
-    // ============================================================
     function addMarkers(locs) {
         if (!map || !mapInitialized || _isDestroyed) return;
         if (typeof L === 'undefined') return;
-
-        log('🗺️ addMarkers called with', locs.length, 'locs, myId =', myId);
 
         userMarkers.forEach(function(m) {
             try { if (map && m) map.removeLayer(m); } catch(e){}
@@ -1063,7 +1139,6 @@
         userMarkers.clear();
 
         var rendered = 0;
-        var skipped = 0;
         var points = [];
 
         locs.forEach(function(loc) {
@@ -1071,16 +1146,11 @@
             var locIdStr = String(loc.userId || loc.id || '').trim();
             var isMe = myIdStr && locIdStr && (myIdStr === locIdStr);
 
-            log('   → loc userId:', locIdStr, '| isMe:', isMe, '| lat:', loc.latitude, '| lng:', loc.longitude);
-
-            if (isMe) { skipped++; return; }
+            if (isMe) return;
 
             var lat = Number(loc.latitude);
             var lng = Number(loc.longitude);
-            if (!isFinite(lat) || !isFinite(lng)) {
-                warn('   ⚠️ invalid coords');
-                return;
-            }
+            if (!isFinite(lat) || !isFinite(lng)) return;
 
             try {
                 var marker = L.circleMarker([lat, lng], {
@@ -1126,8 +1196,6 @@
             }
         });
 
-        log('✅ Rendered', rendered, 'markers | skipped', skipped, '(me)');
-
         if (!firstFitDone && (rendered > 0 || myLocation)) {
             try {
                 var allPoints = [];
@@ -1154,19 +1222,16 @@
         }
     }
 
-    // ============================================================
-    // LOAD DATA
-    // ============================================================
     function loadUsers() {
         if (_isDestroyed) return;
 
         Promise.all([
             fetchJSON('/api/monitoring/users').catch(function(err) {
-                warn('❌ /api/monitoring/users failed:', err.message);
+                warn('❌ /api/monitoring/users:', err.message);
                 return { users: [] };
             }),
             fetchJSON('/api/locations').catch(function(err) {
-                warn('❌ /api/locations failed:', err.message);
+                warn('❌ /api/locations:', err.message);
                 return { locations: [] };
             })
         ])
@@ -1177,21 +1242,6 @@
 
             users = Array.isArray(usersData) ? usersData : (usersData.users || []);
             locations = locsData.locations || [];
-
-            // ✅ LOG مفصّل للتشخيص
-            console.log('═══════════════════════════════════════════');
-            console.log('📡 MONITORING DATA RECEIVED');
-            console.log('   myId:', myId);
-            console.log('   users:', users.length);
-            console.log('   locations:', locations.length);
-            console.log('   locations detail:');
-            locations.forEach(function(l, i) {
-                console.log('     [' + i + '] userId=' + l.userId +
-                    ' isMe=' + (String(l.userId) === String(myId)) +
-                    ' lat=' + l.latitude + ' lng=' + l.longitude +
-                    ' device=' + (l.device ? l.device.deviceId : 'none'));
-            });
-            console.log('═══════════════════════════════════════════');
 
             var el1 = document.getElementById('statUsers');
             if (el1) el1.textContent = users.length;
@@ -1209,9 +1259,6 @@
         });
     }
 
-    // ============================================================
-    // VERIFY MY ID
-    // ============================================================
     function verifyMyIdFromServer() {
         if (_isDestroyed) return;
         fetchJSON('/api/auth/me')
@@ -1220,7 +1267,6 @@
                 if (data && data.user && data.user.id) {
                     var serverId = String(data.user.id);
                     if (serverId !== myId) {
-                        log('🔄 myId corrected:', myId, '→', serverId);
                         myId = serverId;
                         renderUsersList();
                         renderDevicesList();
@@ -1231,9 +1277,6 @@
             .catch(function() {});
     }
 
-    // ============================================================
-    // RENDER USERS
-    // ============================================================
     function handleUserCardClick(uid) {
         if (String(uid) === String(myId) && myLocation && map) {
             map.flyTo([myLocation.latitude, myLocation.longitude], 15, { duration: 1.2 });
@@ -1341,9 +1384,6 @@
         }
     }
 
-    // ============================================================
-    // RENDER DEVICES
-    // ============================================================
     function renderDevicesList() {
         var el = document.getElementById('devicesList');
         if (!el) return;
@@ -1442,9 +1482,6 @@
         el.innerHTML = html;
     }
 
-    // ============================================================
-    // ONLINE STATUS
-    // ============================================================
     function updateOnlineStatus() {
         var badge = document.getElementById('liveBadge');
         var el = document.getElementById('lastUpdate');
@@ -1456,9 +1493,6 @@
         }
     }
 
-    // ============================================================
-    // VISIBILITY
-    // ============================================================
     function setupVisibilityHandling() {
         if (!IDLE_REFRESH_PAUSE) return;
 
@@ -1486,9 +1520,6 @@
         _isIdle = document.hidden;
     }
 
-    // ============================================================
-    // REFRESH
-    // ============================================================
     function refreshAll() {
         if (_isDestroyed) return;
         if (_isIdle) return;
@@ -1500,9 +1531,6 @@
         if (el) el.textContent = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
     }
 
-    // ============================================================
-    // LOCATE ME
-    // ============================================================
     function locateMe() {
         if (!navigator.geolocation) {
             alert('المتصفح لا يدعم تحديد الموقع');
@@ -1534,9 +1562,6 @@
         );
     }
 
-    // ============================================================
-    // RESIZE
-    // ============================================================
     function setupResizeHandlers() {
         var resizeHandler = function() {
             if (!map || _isDestroyed) return;
@@ -1567,15 +1592,10 @@
         }
     }
 
-    // ============================================================
-    // INIT
-    // ============================================================
     function init() {
         if (_isDestroyed) return;
         if (initDone) return;
         initDone = true;
-
-        log('🚀 Initializing v13.5...');
 
         if (typeof L === 'undefined') {
             if (!window._leafletFailed) {
@@ -1594,11 +1614,9 @@
         var me = readMyUser();
         myId = sanitizeId(me ? (me.id || me._id) : null);
         console.log('👤 MY ID =', myId, '| Source:', me ? me._source : 'NONE');
-        console.log('👤 MY USER =', me);
 
         initMap();
 
-        // UI Events
         var toggleBtn = document.getElementById('togglePanelBtn');
         if (toggleBtn) {
             var tHandler = function() {
@@ -1661,22 +1679,17 @@
         var hideId = setTimeout(hideLoading, 600);
         _timeouts.push(hideId);
 
-        // ✅ ابدأ التتبع أولاً
         startGeolocation();
 
-        // ✅ ثم حمّل البيانات
         refreshAll();
         _refreshIntervalId = setInterval(refreshAll, REFRESH_INTERVAL_MS);
         _intervals.push(_refreshIntervalId);
 
         verifyMyIdFromServer();
 
-        log('✅ Monitoring v13.5 ready');
+        console.log('✅ Monitoring v13.6 ready');
     }
 
-    // ============================================================
-    // BOOT
-    // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             var tid = setTimeout(init, 300);
@@ -1693,16 +1706,13 @@
         getLocations: function() { return locations; },
         getDevices: function() { return devices; },
         getMyId: function() { return myId; },
-        getMyUser: readMyUser,
-        getToken: getToken,
-        getDeviceFingerprint: getDeviceFingerprint,
         locateMe: locateMe,
         isDestroyed: function() { return _isDestroyed; },
         getMap: function() { return map; },
         cleanup: _cleanup
     };
 
-    console.log('✅ monitoring.html v13.5 ready — استخدم monitoringDebug في console');
+    console.log('✅ monitoring.html v13.6 ready — استخدم monitoringDebug في console');
 
 })();
 </script>
