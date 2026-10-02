@@ -1,12 +1,14 @@
 /**
  * 🚢 مسارات الوسائل البحرية
  * @module routes/vesselRoutes
- * @version 10.0.0
+ * @version 11.0.0
  *
- * ✨ v10.0 Features:
+ * ✨ v11.0 Features:
+ * - إصلاح Circular Dependency مع server.js
+ * - CSRF middleware مستقل
+ * - رفع حتى 10 صور (بدل 5)
  * - كامل مع الطرح والصور
  * - disposed قبل /:id لتجنّب التعارض
- * - multer للصور
  * - express-validator
  * - RBAC + CSRF
  */
@@ -30,21 +32,42 @@ const {
     requirePermission
 } = require('../middleware/auth');
 
-// CSRF protection
+// ═══════════════════════════════════════════════════════════
+// 🔐 CSRF Protection — استيراد مباشر (بدون Circular Dependency)
+// ═══════════════════════════════════════════════════════════
 let csrfProtection = (req, res, next) => next();
 try {
-    const serverModule = require('../server');
-    if (serverModule && typeof serverModule.csrfProtection === 'function') {
-        csrfProtection = serverModule.csrfProtection;
+    // محاولة 1: middleware مستقل
+    const csrfMiddleware = require('../middleware/csrfProtection');
+    if (csrfMiddleware && typeof csrfMiddleware.csrfProtection === 'function') {
+        csrfProtection = csrfMiddleware.csrfProtection;
+    } else if (typeof csrfMiddleware === 'function') {
+        csrfProtection = csrfMiddleware;
     }
-} catch (e) {}
+} catch (e1) {
+    try {
+        // محاولة 2: middleware/csrf
+        const csrfMiddleware = require('../middleware/csrf');
+        if (csrfMiddleware && typeof csrfMiddleware.csrfProtection === 'function') {
+            csrfProtection = csrfMiddleware.csrfProtection;
+        } else if (typeof csrfMiddleware === 'function') {
+            csrfProtection = csrfMiddleware;
+        }
+    } catch (e2) {
+        // لا CSRF → نستمر بدونه (سيُطبَّق على مستوى server.js إن وجد)
+    }
+}
 
-// Multer للصور
+// ═══════════════════════════════════════════════════════════
+// 📸 Multer للصور
+// ═══════════════════════════════════════════════════════════
 let upload;
 try {
     upload = require('../middleware/uploadVesselImages');
+    console.log('✅ [VESSELS] Multer loaded');
 } catch (e) {
     console.warn('⚠️ [VESSELS] uploadVesselImages middleware not found — images disabled');
+    console.warn('   ', e.message);
 }
 
 const Vessel = require('../models/Vessel');
@@ -96,7 +119,6 @@ function formatVessel(v) {
 
 function buildIdQuery(id) {
     if (!id || typeof id !== 'string') return null;
-    // يدعم id (UUID/hex) أو _id (ObjectId)
     const mongoose = require('mongoose');
     if (mongoose.Types.ObjectId.isValid(id)) {
         return { $or: [{ id }, { _id: id }] };
@@ -380,6 +402,8 @@ router.post(
    📸 ROUTES الصور
    ============================================================ */
 if (upload) {
+    console.log('📸 [VESSELS] Image routes enabled');
+
     /* POST /api/vessels/:id/images */
     router.post(
         '/:id/images',
@@ -387,18 +411,26 @@ if (upload) {
         csrfProtection,
         validateVesselId,
         checkValidation,
-        upload.array('images', 5),
+        upload.array('images', MAX_IMAGES),   // ← رُفع من 5 إلى 10
         async (req, res) => {
             try {
                 const q = buildIdQuery(req.params.id);
                 if (!q) {
-                    req.files?.forEach(f => fs.unlink(f.path, () => {}));
+                    if (req.files) {
+                        req.files.forEach(f => {
+                            if (f.path) fs.unlink(f.path, () => {});
+                        });
+                    }
                     return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
                 }
 
                 const v = await Vessel.findOne(q);
                 if (!v) {
-                    req.files?.forEach(f => fs.unlink(f.path, () => {}));
+                    if (req.files) {
+                        req.files.forEach(f => {
+                            if (f.path) fs.unlink(f.path, () => {});
+                        });
+                    }
                     return res.status(404).json({ success: false, error: 'المركب غير موجود' });
                 }
 
@@ -408,29 +440,71 @@ if (upload) {
 
                 const remaining = MAX_IMAGES - (v.images ? v.images.length : 0);
                 if (remaining <= 0) {
-                    req.files.forEach(f => fs.unlink(f.path, () => {}));
+                    req.files.forEach(f => {
+                        if (f.path) fs.unlink(f.path, () => {});
+                    });
                     return res.status(400).json({ success: false, error: `الحد الأقصى ${MAX_IMAGES} صور` });
                 }
 
                 const filesToAdd = req.files.slice(0, remaining);
                 const filesToDrop = req.files.slice(remaining);
-                filesToDrop.forEach(f => fs.unlink(f.path, () => {}));
+                filesToDrop.forEach(f => {
+                    if (f.path) fs.unlink(f.path, () => {});
+                });
 
                 const source = req.body.source === 'camera' ? 'camera' : 'upload';
                 const caption = typeof req.body.caption === 'string' ? req.body.caption.trim() : '';
 
-                const newImages = filesToAdd.map((file, idx) => ({
-                    filename: file.filename,
-                    originalName: file.originalname,
-                    url: `/uploads/vessels/${file.filename}`,
-                    size: file.size,
-                    mimetype: file.mimetype,
-                    caption,
-                    isPrimary: (!v.images || v.images.length === 0) && idx === 0,
-                    source,
-                    uploadedAt: new Date(),
-                    uploadedBy: req.user.name || req.user.username || 'system'
-                }));
+                // ⚠️ مهم: نحن نستخدم memoryStorage في multer
+                // إذا كان الخادم يخزّن في Cloudinary أو local، عدّل هنا
+                const newImages = filesToAdd.map((file, idx) => {
+                    // إذا كان multer memoryStorage → file.buffer
+                    // إذا كان diskStorage → file.path, file.filename
+                    const isMemoryStorage = !!file.buffer;
+                    
+                    if (isMemoryStorage) {
+                        // ⚠️ هنا يجب رفع إلى Cloudinary أو حفظ محلياً
+                        // هذا مثال افتراضي — عدّله حسب إعداداتك
+                        const uniqueName = 'vessel-' + Date.now() + '-' + Math.round(Math.random() * 1e9) + 
+                                         path.extname(file.originalname || '.jpg');
+                        const uploadDir = path.join(__dirname, '..', 'uploads', 'vessels');
+                        
+                        // إنشاء المجلد إن لم يكن موجوداً
+                        if (!fs.existsSync(uploadDir)) {
+                            fs.mkdirSync(uploadDir, { recursive: true });
+                        }
+                        
+                        const savePath = path.join(uploadDir, uniqueName);
+                        fs.writeFileSync(savePath, file.buffer);
+                        
+                        return {
+                            filename: uniqueName,
+                            originalName: file.originalname,
+                            url: `/uploads/vessels/${uniqueName}`,
+                            size: file.size,
+                            mimetype: file.mimetype,
+                            caption,
+                            isPrimary: (!v.images || v.images.length === 0) && idx === 0,
+                            source,
+                            uploadedAt: new Date(),
+                            uploadedBy: req.user.name || req.user.username || 'system'
+                        };
+                    }
+                    
+                    // diskStorage
+                    return {
+                        filename: file.filename,
+                        originalName: file.originalname,
+                        url: `/uploads/vessels/${file.filename}`,
+                        size: file.size,
+                        mimetype: file.mimetype,
+                        caption,
+                        isPrimary: (!v.images || v.images.length === 0) && idx === 0,
+                        source,
+                        uploadedAt: new Date(),
+                        uploadedBy: req.user.name || req.user.username || 'system'
+                    };
+                });
 
                 v.images.push(...newImages);
                 await v.save();
@@ -443,8 +517,12 @@ if (upload) {
                 });
             } catch (e) {
                 console.error('❌ [VESSELS] upload:', e.message);
-                req.files?.forEach(f => fs.unlink(f.path, () => {}));
-                res.status(500).json({ success: false, error: 'خطأ في رفع الصور' });
+                if (req.files) {
+                    req.files.forEach(f => {
+                        if (f.path) fs.unlink(f.path, () => {});
+                    });
+                }
+                res.status(500).json({ success: false, error: 'خطأ في رفع الصور: ' + e.message });
             }
         }
     );
@@ -519,6 +597,9 @@ if (upload) {
             }
         }
     );
+} else {
+    console.warn('⚠️ [VESSELS] Image routes DISABLED (upload middleware missing)');
+    console.warn('   تأكد من وجود: server/middleware/uploadVesselImages.js');
 }
 
 // ============================================================
