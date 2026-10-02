@@ -1450,19 +1450,593 @@ function formatMaintenance(log) {
             res.json({ success: true, message: 'تم إعادة التعيين بنجاح' });
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     });
+        // ============================================================
+    // 📝 NOTES (الملاحظات النصية) + 📄 NOTE VERBALE (الوثائق)
+    // ============================================================
 
-    // ============ NOTES ============
+    // ═══════════════════════════════════════════════════════════
+    // 📝 الملاحظات النصية — TEXT NOTES (الموجودة + فلترة)
+    // ═══════════════════════════════════════════════════════════
+
     app.get('/api/notes', authenticateAccessToken, async (req, res) => {
         try {
             if (!Note) return res.json([]);
-            const notes = await Note.find().sort({ createdAt: -1 }).limit(500).lean();
-            res.json(notes.map(n => ({ id: n._id.toString(), title: n.title, content: n.content,
-                type: n.type, number: n.number, status: n.status,
-                weekNumber: n.weekNumber, year: n.year,
+            // ✅ فلترة: الملاحظات النصية فقط (استثناء الوثائق)
+            const notes = await Note.find({ noteType: 'text' })
+                .sort({ createdAt: -1 })
+                .limit(500)
+                .lean();
+            res.json(notes.map(n => ({
+                id: n._id.toString(),
+                title: n.title,
+                content: n.content,
+                type: n.type,
+                number: n.number,
+                status: n.status,
+                weekNumber: n.weekNumber,
+                year: n.year,
                 createdByName: n.createdByName || 'مستخدم',
-                createdAt: n.createdAt, updatedAt: n.updatedAt })));
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل التحميل' }); }
+                createdAt: n.createdAt,
+                updatedAt: n.updatedAt
+            })));
+        } catch (e) {
+            res.status(500).json({ success: false, error: 'فشل التحميل' });
+        }
     });
+
+    // ═══════════════════════════════════════════════════════════
+    // 📄 NOTE VERBALE — الوثائق (جديد) — يجب أن يكون قبل /api/notes/:id
+    // ═══════════════════════════════════════════════════════════
+
+    // 🟢 GET /api/notes/current — الوثيقة الحالية
+    app.get('/api/notes/current', authenticateAccessToken, async (req, res) => {
+        try {
+            if (!Note) return res.json({ success: true, hasCurrent: false, note: null });
+
+            const current = await Note.getCurrent();
+
+            if (!current) {
+                return res.json({ success: true, hasCurrent: false, note: null });
+            }
+
+            res.json({
+                success: true,
+                hasCurrent: true,
+                note: {
+                    id: current._id.toString(),
+                    _id: current._id.toString(),
+                    title: current.title,
+                    description: current.description || '',
+                    weekNumber: current.weekNumber || null,
+                    year: current.year || null,
+                    weekOf: current.weekOf || null,
+                    file: {
+                        url: current.uploadedFile?.url || '',
+                        originalName: current.uploadedFile?.originalName || '',
+                        filename: current.uploadedFile?.filename || '',
+                        size: current.uploadedFile?.size || 0,
+                        sizeFormatted: current.fileSizeFormatted || '0 B',
+                        mimetype: current.uploadedFile?.mimetype || '',
+                        uploadedAt: current.uploadedFile?.uploadedAt || null
+                    },
+                    uploadedBy: current.uploadedBy || null,
+                    createdByName: current.createdByName || 'مستخدم',
+                    createdAt: current.createdAt,
+                    publishedAt: current.publishedAt,
+                    views: current.views || 0
+                }
+            });
+        } catch (e) {
+            console.error('❌ GET /api/notes/current:', e.message);
+            res.status(500).json({ success: false, error: 'فشل التحميل' });
+        }
+    });
+
+    // 📚 GET /api/notes/archive — الأرشيف
+    app.get('/api/notes/archive', authenticateAccessToken, async (req, res) => {
+        try {
+            if (!Note) return res.json({ success: true, count: 0, notes: [], stats: {}, uploaders: [], years: [] });
+
+            const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+            const skip = Math.max(parseInt(req.query.skip) || 0, 0);
+            const year = req.query.year ? parseInt(req.query.year) : null;
+            const uploadedBy = req.query.uploadedBy || null;
+
+            const [items, stats, uploaders, years] = await Promise.all([
+                Note.getArchive({ limit, skip, year, uploadedBy }),
+                Note.getArchiveStats(),
+                Note.getUploaders(),
+                Note.getAvailableYears()
+            ]);
+
+            res.json({
+                success: true,
+                count: items.length,
+                notes: items.map(n => ({
+                    id: n._id.toString(),
+                    _id: n._id.toString(),
+                    title: n.title,
+                    description: n.description || '',
+                    weekNumber: n.weekNumber || null,
+                    year: n.year || null,
+                    weekOf: n.weekOf || null,
+                    file: {
+                        url: n.uploadedFile?.url || '',
+                        originalName: n.uploadedFile?.originalName || '',
+                        filename: n.uploadedFile?.filename || '',
+                        size: n.uploadedFile?.size || 0,
+                        sizeFormatted: n.fileSizeFormatter || '0 B',
+                        mimetype: n.uploadedFile?.mimetype || '',
+                        uploadedAt: n.uploadedFile?.uploadedAt || null
+                    },
+                    uploadedBy: n.uploadedBy || null,
+                    createdByName: n.createdByName || 'مستخدم',
+                    createdAt: n.createdAt,
+                    archivedAt: n.archivedAt,
+                    views: n.views || 0
+                })),
+                stats: stats,
+                uploaders: uploaders,
+                years: years
+            });
+        } catch (e) {
+            console.error('❌ GET /api/notes/archive:', e.message);
+            res.status(500).json({ success: false, error: 'فشل التحميل' });
+        }
+    });
+
+    // 📤 POST /api/notes/upload — رفع وثيقة جديدة
+    app.post('/api/notes/upload',
+        authenticateAccessToken,
+        csrfProtection,
+        async (req, res) => {
+            try {
+                // ✅ التحقق من الصلاحية
+                const role = normalizeRole(req.user.role);
+                if (role === 'viewer') {
+                    return res.status(403).json({ success: false, error: 'ليس لديك صلاحية الرفع' });
+                }
+
+                if (!Note) return res.status(500).json({ success: false, error: 'النموذج غير متاح' });
+
+                // ✅ تحميل Multer
+                let uploadNoteFiles;
+                try {
+                    uploadNoteFiles = require('./middleware/uploadNoteFiles');
+                } catch (err) {
+                    console.error('❌ uploadNoteFiles missing:', err.message);
+                    return res.status(500).json({
+                        success: false,
+                        error: 'نظام رفع الملفات غير مُفعّل على الخادم'
+                    });
+                }
+
+                // ✅ Cloudinary
+                let cloudinaryNote;
+                try {
+                    cloudinaryNote = require('cloudinary').v2;
+                } catch (err) {
+                    return res.status(500).json({ success: false, error: 'Cloudinary غير متاح' });
+                }
+
+                // ✅ تنفيذ Multer يدوياً لالتقاط الأخطاء
+                uploadNoteFiles.array('files', 5)(req, res, async (err) => {
+                    if (err) {
+                        console.error('❌ Multer error:', err.message);
+                        return res.status(400).json({
+                            success: false,
+                            error: err.message || 'فشل رفع الملف'
+                        });
+                    }
+
+                    try {
+                        // ✅ التحقق من الملفات
+                        if (!req.files || req.files.length === 0) {
+                            return res.status(400).json({
+                                success: false,
+                                error: 'لم يتم رفع أي ملف'
+                            });
+                        }
+
+                        // ✅ التحقق من العنوان
+                        const title = validateString(req.body.title, { required: true, max: 200 });
+                        if (!title) {
+                            return res.status(400).json({
+                                success: false,
+                                error: 'عنوان الوثيقة مطلوب'
+                            });
+                        }
+
+                        const description = validateString(req.body.description, { max: 1000 }) || '';
+
+                        // ✅ الملف الرئيسي = أول ملف
+                        const mainFile = req.files[0];
+
+                        // ✅ رفع الملف الرئيسي
+                        function uploadToCloudinary(file) {
+                            return new Promise((resolve, reject) => {
+                                let resourceType = 'raw';
+                                if (file.mimetype && file.mimetype.startsWith('image/')) {
+                                    resourceType = 'image';
+                                }
+
+                                const options = {
+                                    folder: 'marine/note-verbale',
+                                    resource_type: resourceType,
+                                    use_filename: true,
+                                    unique_filename: true
+                                };
+
+                                if (resourceType === 'image') {
+                                    options.transformation = [
+                                        { width: 2000, height: 2000, crop: 'limit' },
+                                        { quality: 'auto:good' }
+                                    ];
+                                }
+
+                                const stream = cloudinaryNote.uploader.upload_stream(
+                                    options,
+                                    (error, result) => {
+                                        if (error) return reject(error);
+                                        resolve(result);
+                                    }
+                                );
+                                stream.end(file.buffer);
+                            });
+                        }
+
+                        let cloudResult;
+                        try {
+                            cloudResult = await uploadToCloudinary(mainFile);
+                        } catch (uploadErr) {
+                            console.error('❌ Cloudinary:', uploadErr.message);
+                            return res.status(500).json({
+                                success: false,
+                                error: 'فشل رفع الملف: ' + uploadErr.message
+                            });
+                        }
+
+                        // ✅ رفع الملفات الإضافية
+                        const extraAttachments = [];
+                        for (let i = 1; i < req.files.length; i++) {
+                            try {
+                                const result = await uploadToCloudinary(req.files[i]);
+                                extraAttachments.push({
+                                    name: req.files[i].originalname,
+                                    url: result.secure_url,
+                                    type: req.files[i].mimetype,
+                                    size: result.bytes || req.files[i].size
+                                });
+                            } catch (e) {
+                                console.warn('⚠️ Extra file failed:', e.message);
+                            }
+                        }
+
+                        // ✅ createdBy
+                        let createdById;
+                        try {
+                            createdById = mongoose.Types.ObjectId.isValid(req.user._id)
+                                ? req.user._id
+                                : new mongoose.Types.ObjectId();
+                        } catch (e) {
+                            createdById = new mongoose.Types.ObjectId();
+                        }
+
+                        // ✅ إنشاء الوثيقة
+                        const newNote = await Note.create({
+                            noteType: 'document',
+                            title: title,
+                            description: description,
+                            content: description || title,
+                            type: 'دورية',
+                            status: 'منشورة',
+                            isCurrent: true,
+                            publishedAt: new Date(),
+                            weekOf: new Date(),
+                            uploadedFile: {
+                                filename: cloudResult.public_id,
+                                originalName: mainFile.originalname,
+                                url: cloudResult.secure_url,
+                                cloudinaryId: cloudResult.public_id,
+                                size: cloudResult.bytes || mainFile.size,
+                                mimetype: mainFile.mimetype,
+                                uploadedAt: new Date()
+                            },
+                            uploadedBy: {
+                                id: req.user.id,
+                                name: req.user.name || req.user.username,
+                                username: req.user.username,
+                                role: role,
+                                uploadedAt: new Date()
+                            },
+                            attachments: extraAttachments,
+                            createdBy: createdById,
+                            createdByName: req.user.name || req.user.username
+                        });
+
+                        // ✅ أرشفة الوثيقة السابقة
+                        try {
+                            await Note.updateMany(
+                                {
+                                    _id: { $ne: newNote._id },
+                                    noteType: 'document',
+                                    isCurrent: true
+                                },
+                                {
+                                    $set: {
+                                        isCurrent: false,
+                                        status: 'مؤرشفة',
+                                        archivedAt: new Date(),
+                                        archiveReason: 'استُبدلت بوثيقة أحدث'
+                                    }
+                                }
+                            );
+                        } catch (archiveErr) {
+                            console.warn('⚠️ Archive previous failed:', archiveErr.message);
+                        }
+
+                        // ✅ تسجيل
+                        await addSystemLog({
+                            userId: req.user.id,
+                            userName: req.user.name,
+                            action: 'upload',
+                            resource: 'note-verbale',
+                            resourceId: newNote._id.toString(),
+                            resourceName: title,
+                            status: 'success',
+                            ip: req.ip,
+                            requestId: req.requestId,
+                            details: {
+                                fileName: mainFile.originalname,
+                                fileSize: mainFile.size,
+                                fileType: mainFile.mimetype
+                            }
+                        });
+
+                        // ✅ إشعار
+                        try {
+                            await notify({
+                                type: 'success',
+                                category: 'system',
+                                title: '📄 Note Verbale جديدة',
+                                message: 'تم رفع "' + title + '" بواسطة ' + (req.user.name || req.user.username),
+                                link: '/pages/notes.html',
+                                icon: 'file-upload',
+                                actorName: req.user.name || req.user.username,
+                                metadata: {
+                                    noteId: newNote._id.toString(),
+                                    fileName: mainFile.originalname
+                                }
+                            });
+                        } catch (notifErr) {
+                            console.warn('⚠️ Notify failed:', notifErr.message);
+                        }
+
+                        console.log('✅ [NOTE VERBALE] Uploaded: "' + title + '" by ' + req.user.username);
+
+                        res.status(201).json({
+                            success: true,
+                            message: 'تم رفع الوثيقة بنجاح',
+                            note: {
+                                id: newNote._id.toString(),
+                                title: newNote.title,
+                                description: newNote.description,
+                                weekNumber: newNote.weekNumber,
+                                year: newNote.year,
+                                file: {
+                                    url: cloudResult.secure_url,
+                                    originalName: mainFile.originalname,
+                                    size: cloudResult.bytes || mainFile.size,
+                                    sizeFormatted: newNote.fileSizeFormatted,
+                                    mimetype: mainFile.mimetype
+                                },
+                                uploadedBy: newNote.uploadedBy,
+                                createdAt: newNote.createdAt
+                            }
+                        });
+
+                    } catch (e) {
+                        console.error('❌ [NOTE VERBALE] upload:', e.message);
+                        res.status(500).json({
+                            success: false,
+                            error: 'فشل رفع الوثيقة: ' + e.message
+                        });
+                    }
+                });
+
+            } catch (e) {
+                console.error('❌ [NOTE VERBALE] upload route:', e.message);
+                res.status(500).json({ success: false, error: 'فشل رفع الوثيقة' });
+            }
+        }
+    );
+
+    // 📥 GET /api/notes/verbale/:id/download — تحميل مباشر
+    app.get('/api/notes/verbale/:id/download', authenticateAccessToken, async (req, res) => {
+        try {
+            if (!Note) return res.status(404).json({ success: false, error: 'غير متاح' });
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const note = await Note.findOne(q);
+            if (!note || note.noteType !== 'document' || !note.uploadedFile?.url) {
+                return res.status(404).json({ success: false, error: 'الملف غير موجود' });
+            }
+
+            try { await note.incrementViews(); } catch (e) {}
+
+            const url = note.uploadedFile.url;
+            const separator = url.includes('?') ? '&' : '?';
+            const downloadUrl = url + separator + 'fl_attachment=' +
+                encodeURIComponent(note.uploadedFile.originalName || 'document');
+
+            res.redirect(downloadUrl);
+        } catch (e) {
+            console.error('❌ [NOTE VERBALE] download:', e.message);
+            res.status(500).json({ success: false, error: 'فشل التحميل' });
+        }
+    });
+
+    // ⭐ PUT /api/notes/verbale/:id/set-current — تعيين كوثيقة حالية
+    app.put('/api/notes/verbale/:id/set-current',
+        authenticateAccessToken,
+        csrfProtection,
+        async (req, res) => {
+            try {
+                const role = normalizeRole(req.user.role);
+                if (role !== 'admin' && role !== 'manager') {
+                    return res.status(403).json({ success: false, error: 'للمسؤول فقط' });
+                }
+
+                if (!Note) return res.status(500).json({ success: false, error: 'غير متاح' });
+
+                const q = buildIdQuery(req.params.id);
+                if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+                const note = await Note.findOne(q);
+                if (!note || note.noteType !== 'document') {
+                    return res.status(404).json({ success: false, error: 'الوثيقة غير موجودة' });
+                }
+
+                await note.promoteToCurrent();
+
+                await addSystemLog({
+                    userId: req.user.id,
+                    userName: req.user.name,
+                    action: 'update',
+                    resource: 'note-verbale',
+                    resourceId: note._id.toString(),
+                    resourceName: note.title,
+                    status: 'success',
+                    ip: req.ip,
+                    requestId: req.requestId,
+                    details: { action: 'set-current' }
+                });
+
+                res.json({
+                    success: true,
+                    message: 'تم تعيين الوثيقة كحالية',
+                    note: { id: note._id.toString(), isCurrent: true }
+                });
+            } catch (e) {
+                console.error('❌ [NOTE VERBALE] set-current:', e.message);
+                res.status(500).json({ success: false, error: 'فشل التعيين' });
+            }
+        }
+    );
+
+    // 🗑️ DELETE /api/notes/verbale/:id — حذف وثيقة (admin/manager)
+    app.delete('/api/notes/verbale/:id',
+        authenticateAccessToken,
+        csrfProtection,
+        async (req, res) => {
+            try {
+                const role = normalizeRole(req.user.role);
+                if (role !== 'admin' && role !== 'manager') {
+                    return res.status(403).json({ success: false, error: 'للمسؤول فقط' });
+                }
+
+                if (!Note) return res.status(500).json({ success: false, error: 'غير متاح' });
+
+                const q = buildIdQuery(req.params.id);
+                if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+                const note = await Note.findOne(q);
+                if (!note || note.noteType !== 'document') {
+                    return res.status(404).json({ success: false, error: 'الوثيقة غير موجودة' });
+                }
+
+                // ✅ حذف الملف من Cloudinary
+                if (note.uploadedFile && note.uploadedFile.cloudinaryId) {
+                    try {
+                        const cloudinaryNote = require('cloudinary').v2;
+                        await cloudinaryNote.uploader.destroy(
+                            note.uploadedFile.cloudinaryId,
+                            { resource_type: 'auto', invalidate: true }
+                        );
+                    } catch (cErr) {
+                        console.warn('⚠️ Cloudinary delete failed:', cErr.message);
+                    }
+                }
+
+                const title = note.title;
+                const noteId = note._id.toString();
+                const wasCurrent = note.isCurrent;
+
+                await Note.deleteOne({ _id: note._id });
+
+                // ✅ إذا كانت الحالية، رقّي أحدث أرشيف
+                if (wasCurrent) {
+                    try {
+                        const nextCurrent = await Note.findOne({
+                            noteType: 'document',
+                            status: { $ne: 'مسودة' }
+                        }).sort({ createdAt: -1 });
+
+                        if (nextCurrent) {
+                            nextCurrent.isCurrent = true;
+                            nextCurrent.status = 'منشورة';
+                            await nextCurrent.save();
+                            console.log('✅ Promoted next archive as current');
+                        }
+                    } catch (promErr) {
+                        console.warn('⚠️ Promote next failed:', promErr.message);
+                    }
+                }
+
+                await addSystemLog({
+                    userId: req.user.id,
+                    userName: req.user.name,
+                    action: 'delete',
+                    resource: 'note-verbale',
+                    resourceId: noteId,
+                    resourceName: title,
+                    status: 'success',
+                    ip: req.ip,
+                    requestId: req.requestId
+                });
+
+                res.json({ success: true, message: 'تم حذف الوثيقة بنجاح' });
+            } catch (e) {
+                console.error('❌ [NOTE VERBALE] delete:', e.message);
+                res.status(500).json({ success: false, error: 'فشل الحذف' });
+            }
+        }
+    );
+
+    // 📊 GET /api/notes/verbale/stats — إحصائيات
+    app.get('/api/notes/verbale/stats', authenticateAccessToken, async (req, res) => {
+        try {
+            if (!Note) return res.json({ success: true, stats: {} });
+
+            const stats = await Note.getArchiveStats();
+            const uploaders = await Note.getUploaders();
+            const current = await Note.getCurrent();
+
+            res.json({
+                success: true,
+                stats: {
+                    total: stats.total || 0,
+                    current: stats.current || 0,
+                    thisYear: stats.thisYear || 0,
+                    thisMonth: stats.thisMonth || 0,
+                    hasCurrent: !!current,
+                    topUploaders: uploaders.slice(0, 5).map(u => ({
+                        name: u.name || u.username,
+                        count: u.count
+                    }))
+                }
+            });
+        } catch (e) {
+            console.error('❌ [NOTE VERBALE] stats:', e.message);
+            res.status(500).json({ success: false, error: 'فشل' });
+        }
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // 📝 NOTES/:id و CRUD (Text Notes فقط)
+    // ═══════════════════════════════════════════════════════════
+
     app.get('/api/notes/:id', authenticateAccessToken, async (req, res) => {
         try {
             if (!Note) return res.status(404).json({ success: false, error: 'غير متاح' });
@@ -1470,22 +2044,42 @@ function formatMaintenance(log) {
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
             const note = await Note.findOne(q);
             if (!note) return res.status(404).json({ success: false, error: 'غير موجودة' });
-            note.views = (note.views || 0) + 1; await note.save();
-            res.json({ success: true, note: { id: note._id.toString(), title: note.title,
-                content: note.content, type: note.type, number: note.number, status: note.status,
-                createdByName: note.createdByName, createdAt: note.createdAt, views: note.views } });
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+            note.views = (note.views || 0) + 1;
+            await note.save();
+            res.json({
+                success: true,
+                note: {
+                    id: note._id.toString(),
+                    title: note.title,
+                    content: note.content,
+                    type: note.type,
+                    number: note.number,
+                    status: note.status,
+                    noteType: note.noteType || 'text',
+                    createdByName: note.createdByName,
+                    createdAt: note.createdAt,
+                    views: note.views
+                }
+            });
+        } catch (e) {
+            res.status(500).json({ success: false, error: 'فشل' });
+        }
     });
+
     app.post('/api/notes', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Note) return res.status(500).json({ success: false, error: 'غير متاح' });
+
             const title = validateString(req.body.title, { required: true, max: 200 });
             const content = validateString(req.body.content, { required: true, max: 5000 });
             if (!title) return res.status(400).json({ success: false, error: 'العنوان مطلوب' });
             if (!content) return res.status(400).json({ success: false, error: 'المحتوى مطلوب' });
+
             const { date, priority, type, weekNumber } = req.body;
             let nt = type || 'عام';
-            if (priority === 'عاجل') nt = 'عاجلة'; else if (priority === 'مهم') nt = 'مهمة';
+            if (priority === 'عاجل') nt = 'عاجلة';
+            else if (priority === 'مهم') nt = 'مهمة';
+
             let wn = weekNumber;
             if (!wn) {
                 try {
@@ -1494,28 +2088,72 @@ function formatMaintenance(log) {
                     const diff = Math.floor((d - s) / 86400000);
                     wn = Math.ceil((diff + s.getDay() + 1) / 7);
                     wn = Math.max(1, Math.min(53, wn));
-                } catch(e) { wn = 1; }
+                } catch (e) {
+                    wn = 1;
+                }
             }
+
             let cid;
-            try { cid = mongoose.Types.ObjectId.isValid(req.user._id) ? req.user._id : new mongoose.Types.ObjectId(); }
-            catch(e) { cid = new mongoose.Types.ObjectId(); }
+            try {
+                cid = mongoose.Types.ObjectId.isValid(req.user._id)
+                    ? req.user._id
+                    : new mongoose.Types.ObjectId();
+            } catch (e) {
+                cid = new mongoose.Types.ObjectId();
+            }
+
             const note = await Note.create({
-                title, content, type: nt,
-                weekNumber: wn, year: new Date().getFullYear(), status: 'مسودة',
-                createdBy: cid, createdByName: req.user.name || req.user.username
+                noteType: 'text',
+                title,
+                content,
+                type: nt,
+                weekNumber: wn,
+                year: new Date().getFullYear(),
+                status: 'مسودة',
+                createdBy: cid,
+                createdByName: req.user.name || req.user.username
             });
-            await addSystemLog({ userId: req.user.id, userName: req.user.name,
-                action: 'create', resource: 'note', resourceId: note._id.toString(),
-                resourceName: note.title, status: 'success', ip: req.ip, requestId: req.requestId });
-            await notify({ type: 'success', category: 'system', title: 'ملاحظة جديدة',
-                message: 'تم إضافة "' + note.title + '"', link: '/pages/notes.html',
-                icon: 'sticky-note', actorName: req.user.name || req.user.username });
-            res.status(201).json({ success: true, message: 'تمت الإضافة',
-                note: { id: note._id.toString(), title: note.title, content: note.content,
-                    type: note.type, status: note.status,
-                    createdByName: note.createdByName, createdAt: note.createdAt } });
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل', details: e.message }); }
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'create',
+                resource: 'note',
+                resourceId: note._id.toString(),
+                resourceName: note.title,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            await notify({
+                type: 'success',
+                category: 'system',
+                title: 'ملاحظة جديدة',
+                message: 'تم إضافة "' + note.title + '"',
+                link: '/pages/notes.html',
+                icon: 'sticky-note',
+                actorName: req.user.name || req.user.username
+            });
+
+            res.status(201).json({
+                success: true,
+                message: 'تمت الإضافة',
+                note: {
+                    id: note._id.toString(),
+                    title: note.title,
+                    content: note.content,
+                    type: note.type,
+                    status: note.status,
+                    createdByName: note.createdByName,
+                    createdAt: note.createdAt
+                }
+            });
+        } catch (e) {
+            res.status(500).json({ success: false, error: 'فشل', details: e.message });
+        }
     });
+
     app.put('/api/notes/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Note) return res.status(500).json({ success: false, error: 'غير متاح' });
@@ -1523,6 +2161,7 @@ function formatMaintenance(log) {
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
             const note = await Note.findOne(q);
             if (!note) return res.status(404).json({ success: false, error: 'غير موجودة' });
+
             const { title, content, priority, type } = req.body;
             if (title !== undefined) {
                 const t = validateString(title, { required: true, max: 200 });
@@ -1539,17 +2178,46 @@ function formatMaintenance(log) {
                 note.type = priority === 'عاجل' ? 'عاجلة' : (priority === 'مهم' ? 'مهمة' : 'عام');
             }
             await note.save();
-            await addSystemLog({ userId: req.user.id, userName: req.user.name,
-                action: 'update', resource: 'note', resourceId: note._id.toString(),
-                resourceName: note.title, status: 'success', ip: req.ip, requestId: req.requestId });
-            await notify({ type: 'info', category: 'system', title: 'تعديل ملاحظة',
-                message: 'تم تعديل "' + note.title + '"', link: '/pages/notes.html',
-                icon: 'edit', actorName: req.user.name || req.user.username });
-            res.json({ success: true, message: 'تم التحديث',
-                note: { id: note._id.toString(), title: note.title, content: note.content,
-                    type: note.type, status: note.status, createdAt: note.createdAt } });
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل', details: e.message }); }
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'update',
+                resource: 'note',
+                resourceId: note._id.toString(),
+                resourceName: note.title,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            await notify({
+                type: 'info',
+                category: 'system',
+                title: 'تعديل ملاحظة',
+                message: 'تم تعديل "' + note.title + '"',
+                link: '/pages/notes.html',
+                icon: 'edit',
+                actorName: req.user.name || req.user.username
+            });
+
+            res.json({
+                success: true,
+                message: 'تم التحديث',
+                note: {
+                    id: note._id.toString(),
+                    title: note.title,
+                    content: note.content,
+                    type: note.type,
+                    status: note.status,
+                    createdAt: note.createdAt
+                }
+            });
+        } catch (e) {
+            res.status(500).json({ success: false, error: 'فشل', details: e.message });
+        }
     });
+
     app.delete('/api/notes/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Note) return res.status(500).json({ success: false, error: 'غير متاح' });
@@ -1557,18 +2225,46 @@ function formatMaintenance(log) {
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
             const note = await Note.findOne(q);
             if (!note) return res.status(404).json({ success: false, error: 'غير موجودة' });
-            const title = note.title, nid = note._id.toString();
-            await Note.deleteOne({ _id: note._id });
-            await addSystemLog({ userId: req.user.id, userName: req.user.name,
-                action: 'delete', resource: 'note', resourceId: nid, resourceName: title,
-                status: 'success', ip: req.ip, requestId: req.requestId });
-            await notify({ type: 'warning', category: 'system', title: 'حذف ملاحظة',
-                message: 'تم حذف "' + title + '"', link: '/pages/notes.html',
-                icon: 'trash', actorName: req.user.name || req.user.username });
-            res.json({ success: true, message: 'تم الحذف' });
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل', details: e.message }); }
-    });
 
+            // ⚠️ حماية: لا تحذف الوثائق من هذا المسار
+            if (note.noteType === 'document') {
+                return res.status(400).json({
+                    success: false,
+                    error: 'استخدم /api/notes/verbale/:id لحذف الوثائق'
+                });
+            }
+
+            const title = note.title;
+            const nid = note._id.toString();
+            await Note.deleteOne({ _id: note._id });
+
+            await addSystemLog({
+                userId: req.user.id,
+                userName: req.user.name,
+                action: 'delete',
+                resource: 'note',
+                resourceId: nid,
+                resourceName: title,
+                status: 'success',
+                ip: req.ip,
+                requestId: req.requestId
+            });
+
+            await notify({
+                type: 'warning',
+                category: 'system',
+                title: 'حذف ملاحظة',
+                message: 'تم حذف "' + title + '"',
+                link: '/pages/notes.html',
+                icon: 'trash',
+                actorName: req.user.name || req.user.username
+            });
+
+            res.json({ success: true, message: 'تم الحذف' });
+        } catch (e) {
+            res.status(500).json({ success: false, error: 'فشل', details: e.message });
+        }
+    });
     // ============ NOTIFICATIONS ============
     app.get('/api/notifications', authenticateAccessToken, async (req, res) => {
         try {
