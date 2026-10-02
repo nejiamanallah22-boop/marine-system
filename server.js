@@ -11,6 +11,7 @@
 // 🚨 + HIDE BLUE BOXES (JS auto-detect)
 // ✂️ + PRINT ORIENTATION BUTTONS REMOVED
 // 🎫 + TICKET ROUTES MODULE + SOCKET.IO SCREEN SHARE (v11.1.0)
+// 🚢 + VESSEL IMAGE UPLOAD (v11.2.0)
 // ============================================================
 'use strict';
 require('dotenv').config();
@@ -18,7 +19,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('=========================================');
-console.log('🚢 MARINE SYSTEM v11.1.0 - STARTING');
+console.log('🚢 MARINE SYSTEM v11.2.0 - STARTING');
 console.log('=========================================');
 console.log('🔍 __dirname:', __dirname);
 console.log('🔍 Node version:', process.version);
@@ -42,14 +43,8 @@ function isSensitivePath(urlPath) {
     return false;
 }
 
-// ═══════════════════════════════════════════════════════════
-// 🛡️ SECURITY: Dummy hash لمنع Timing Attacks
-// ═══════════════════════════════════════════════════════════
 const DUMMY_BCRYPT_HASH = '$2a$12$C6UzMDM.H6dfI/f/IKcEeO7Z4x1yFzFqW1Xt2VvK4W8Q9pZkqH1L2';
 
-// ═══════════════════════════════════════════════════════════
-// 🛡️ SECURITY: Validators
-// ═══════════════════════════════════════════════════════════
 function validateString(v, { min = 0, max = 255, required = false, trim = true } = {}) {
     if (v === undefined || v === null) return required ? null : '';
     if (typeof v !== 'string') return null;
@@ -82,9 +77,6 @@ function validateNumber(v, { min = 0, max = 1e9 } = {}) {
     return n;
 }
 
-// ═══════════════════════════════════════════════════════════
-// 📂 LOAD MODELS
-// ═══════════════════════════════════════════════════════════
 function findModelsPath() {
     const candidates = [
         path.join(__dirname, 'models'), path.join(__dirname, '..', 'models'),
@@ -147,7 +139,6 @@ const aiAndImportRoutes = require('./routes/ai-and-import');
 const settingsRoutes = require('./routes/settings');
 const vehiclesRoutes = require('./routes/vehicles');
 
-// 🎯 NEW: Ticket routes module (optional, safe fallback)
 let ticketRoutesModule = null;
 try {
     ticketRoutesModule = require('./routes/ticket');
@@ -232,7 +223,6 @@ const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
 app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
 
-// 🛡️ منع الوصول لملفات حساسة
 app.use((req, res, next) => {
     if (isSensitivePath(req.path)) {
         return res.status(404).json({ success: false, error: 'Not Found' });
@@ -240,10 +230,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// 🏷️ headers مخصصة
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '11.1.0');
+    res.setHeader('X-System-Version', '11.2.0');
     res.setHeader('X-Developer', 'Aman Allah Naji');
     res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
     res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
@@ -274,7 +263,6 @@ const MAX_MEMORY_RESET_TOKENS = 5000;
 const MAX_MEMORY_REVOKED = 50000;
 const MAX_MEMORY_LOCATIONS = 5000;
 
-// 🛡️ قوة كلمة المرور
 function isStrongPassword(p) {
     if (typeof p !== 'string' || p.length < 12) return false;
     const c = [/[A-Z]/.test(p), /[a-z]/.test(p), /\d/.test(p),
@@ -291,9 +279,6 @@ function generateStrongPassword(len=20) {
     return c.join('');
 }
 
-// ═══════════════════════════════════════════════════════════
-// 👤 ADMIN SETUP
-// ═══════════════════════════════════════════════════════════
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'أمان الله ناجي';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.local';
@@ -316,9 +301,6 @@ if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.l
 }
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
 
-// ═══════════════════════════════════════════════════════════
-// 🧰 HELPERS
-// ═══════════════════════════════════════════════════════════
 function randomId(b=32) { return crypto.randomBytes(b).toString('hex'); }
 function hashToken(t) { return crypto.createHash('sha256').update(t).digest('hex'); }
 function safeEqual(a,b) {
@@ -364,9 +346,6 @@ function xssSanitizer(req, res, next) {
     next();
 }
 
-// ═══════════════════════════════════════════════════════════
-// 📧 EMAIL
-// ═══════════════════════════════════════════════════════════
 let emailTransporter = null, emailInitPromise = null;
 function isValidEmail(e) {
     return typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
@@ -437,17 +416,13 @@ async function sendEmail(to, subj, html) {
 }
 setTimeout(() => { initEmailService().then(t => { emailTransporter = t; }).catch(()=>{}); }, 100);
 
-// ═══════════════════════════════════════════════════════════
-// 🛡️ SECURITY MIDDLEWARE
-// ═══════════════════════════════════════════════════════════
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'","'unsafe-inline'",'https://unpkg.com','https://cdnjs.cloudflare.com','https://cdn.jsdelivr.net','https://fonts.googleapis.com'],
             styleSrc: ["'self'","'unsafe-inline'",'https://unpkg.com','https://cdnjs.cloudflare.com','https://cdn.jsdelivr.net','https://fonts.googleapis.com'],
-            imgSrc: ["'self'",'data:','blob:','https:','https://unpkg.com'],
-            // 🎯 MODIFIED: Added wss:/ws: for Socket.IO
+            imgSrc: ["'self'",'data:','blob:','https:','https://unpkg.com','https://res.cloudinary.com'],
             connectSrc: ["'self'",'wss:','ws:','https://*.onrender.com','https://unpkg.com','https://*.googleapis.com','https://*.leafletjs.com','https://cdn.jsdelivr.net'],
             fontSrc: ["'self'",'https:','data:','https://fonts.gstatic.com'],
             scriptSrcAttr: ["'unsafe-inline'"],
@@ -480,7 +455,6 @@ app.use(cors({
     exposedHeaders: ['X-CSRF-Token','X-Session-Expiry','X-Request-ID']
 }));
 
-// 🚦 Rate Limiters
 const apiLimiter = rateLimit({
     windowMs: 15*60*1000, max: 2000, standardHeaders: true, legacyHeaders: false,
     keyGenerator: (req) => (req.user && req.user.id) ? req.user.id : (req.ip || 'unknown'),
@@ -518,7 +492,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// ============ OWNERSHIP DB SIGNATURE ============
 async function registerOwnershipSignature() {
     try {
         if (!SystemLogo) return;
@@ -530,7 +503,7 @@ async function registerOwnershipSignature() {
             organization: 'إدارة إسناد الوحدات البحرية',
             organizationFull: 'الحرس الوطني التونسي - الإدارة العامة لحرس الحدود',
             systemName: 'منظومة الوسائل البحرية',
-            version: '11.1.0',
+            version: '11.2.0',
             firstDeployment: new Date(),
             signature: 'AMAN-ALLAH-NAJI-MARINE-SYSTEM-' + new Date().getFullYear()
         });
@@ -538,7 +511,6 @@ async function registerOwnershipSignature() {
     } catch (e) { console.warn('⚠️ Signature:', e.message); }
 }
 
-// ============ MONGODB ============
 let mongoConnected = false;
 async function connectMongoDB() {
     const uri = process.env.MONGODB_URI;
@@ -632,7 +604,6 @@ async function ensureAdminExists() {
     } catch (e) { console.error('❌ Admin:', e.message); }
 }
 
-// ============ LEGACY CLEANUP ============
 const LEGACY_DEMO = ['الوحدة 101','الوحدة 205','الوحدة 312'];
 const CLEANUP_MARKER = 'legacy-demo-vessels-removed-v2';
 async function cleanupLegacyDemoVessels() {
@@ -667,7 +638,6 @@ async function cleanupLegacyDemoVessels() {
     } catch (e) { console.warn('⚠️ Cleanup:', e.message); }
 }
 
-// ============ SESSION STORE ============
 let sessionStore = undefined;
 async function buildSessionStore() {
     await initRedis();
@@ -684,7 +654,6 @@ async function buildSessionStore() {
     }
 }
 
-// ============ CSRF ============
 function ensureCsrfToken(req, res) {
     if (!req.session) return null;
     const now = Date.now();
@@ -737,7 +706,6 @@ async function csrfProtection(req, res, next) {
     return res.status(403).json({ success: false, error: 'CSRF token غير صالح أو مفقود', code: 'CSRF_INVALID' });
 }
 
-// ============ JWT ============
 function generateAccessToken(user, sid) {
     return jwt.sign({
         sub: user.id, id: user.id, username: user.username, role: user.role,
@@ -751,7 +719,6 @@ function generateRefreshToken(user, sid) {
             audience: 'marine-system-client', jwtid: randomId(32) });
 }
 
-// ============ REFRESH SESSIONS ============
 const refreshSessionsMemory = new Map();
 async function saveRefreshSession({ sessionId, userId, refreshToken }) {
     const rec = {
@@ -849,7 +816,6 @@ setInterval(() => {
     }
 }, 60*1000).unref();
 
-// ============ PASSWORD RESET ============
 const resetTokensMemory = [];
 function pruneResetMem() {
     const now = Date.now();
@@ -904,7 +870,6 @@ async function verifyResetToken(email, token) {
     return !!(r && r.email === email);
 }
 
-// ============ LOG + NOTIFY ============
 async function addSystemLog({ userId=null, action='view', resource='system',
     resourceId=null, resourceName='', userName='', userEmail='', ip=null,
     requestId=null, status='success', details={}, error=null }) {
@@ -925,7 +890,6 @@ async function notify({ userId=null, type='info', category='system', title,
     } catch (e) { return null; }
 }
 
-// ============ AUTH MIDDLEWARE ============
 function extractBearerToken(req) {
     const h = req.headers.authorization;
     if (!h || !h.startsWith('Bearer ')) return null;
@@ -959,7 +923,6 @@ function authenticateAccessToken(req, res, next) {
     }
 }
 
-// ============ RBAC ============
 const ROLE_PERMISSIONS = {
     admin: ['*'],
     manager: ['dashboard:view','vessels:read','vessels:create','vessels:update',
@@ -1028,7 +991,6 @@ function requireAdmin(req, res, next) {
     next();
 }
 
-// ============ FORMATTERS ============
 function formatUser(u) {
     if (!u) return null;
     const role = normalizeRole(u.role);
@@ -1042,24 +1004,41 @@ function formatUser(u) {
 }
 function formatVessel(v) {
     if (!v) return null;
+    const obj = v.toObject ? v.toObject() : v;
+    const images = Array.isArray(obj.images) ? obj.images.map(img => ({
+        _id: img._id ? img._id.toString() : null,
+        filename: img.filename || '',
+        originalName: img.originalName || '',
+        url: img.url || '',
+        size: img.size || 0,
+        mimetype: img.mimetype || '',
+        caption: img.caption || '',
+        isPrimary: !!img.isPrimary,
+        source: img.source || 'upload',
+        uploadedAt: img.uploadedAt || null,
+        uploadedBy: img.uploadedBy || 'system'
+    })) : [];
+    const primary = images.find(i => i.isPrimary) || images[0] || null;
     return {
-        id: v.id, _id: v._id ? v._id.toString() : null,
-        name: v.name, num: v.num || '', len: v.len || 0,
-        region: v.region || '', zone: v.zone || '', port: v.port || '',
-        supp: v.supp || '', status: v.status || v.stat || 'صالح',
-        stat: v.stat || v.status || 'صالح', break: v.break || '',
-        fDate: v.fDate || null, eDate: v.eDate || null,
-        ref: v.ref || '', repairUnit: v.repairUnit || '',
-        cat: v.cat || '', category: v.cat || v.category || '',
-        type: v.type || '', location: v.location || '',
-        // ✅ حقول الطرح
-        disposalDate: v.disposalDate || null,
-        disposalReason: v.disposalReason || '',
-        disposalDecision: v.disposalDecision || '',
-        disposedBy: v.disposedBy || '',
-        disposalNotes: v.disposalNotes || '',
-        disposedAt: v.disposedAt || null,
-        createdAt: v.createdAt, updatedAt: v.updatedAt
+        id: obj.id, _id: obj._id ? obj._id.toString() : null,
+        name: obj.name, num: obj.num || '', len: obj.len || 0,
+        region: obj.region || '', zone: obj.zone || '', port: obj.port || '',
+        supp: obj.supp || '', status: obj.status || obj.stat || 'صالح',
+        stat: obj.stat || obj.status || 'صالح', break: obj.break || '',
+        fDate: obj.fDate || null, eDate: obj.eDate || null,
+        ref: obj.ref || '', repairUnit: obj.repairUnit || '',
+        cat: obj.cat || '', category: obj.cat || obj.category || '',
+        type: obj.type || '', location: obj.location || '',
+        images: images,
+        primaryImage: primary,
+        imagesCount: images.length,
+        disposalDate: obj.disposalDate || null,
+        disposalReason: obj.disposalReason || '',
+        disposalDecision: obj.disposalDecision || '',
+        disposedBy: obj.disposedBy || '',
+        disposalNotes: obj.disposalNotes || '',
+        disposedAt: obj.disposedAt || null,
+        createdAt: obj.createdAt, updatedAt: obj.updatedAt
     };
 }
 function formatMaintenance(log) {
@@ -1110,9 +1089,7 @@ function formatMaintenance(log) {
 
     app.use((req, res, next) => { ensureCsrfToken(req, res); next(); });
 
-    // ============================================================
     // 📁 STATIC FILES
-    // ============================================================
     const publicDir = path.join(__dirname, 'public');
     const pagesDir = path.join(__dirname, 'pages');
     const publicPagesDir = path.join(__dirname, 'public', 'pages');
@@ -1187,13 +1164,10 @@ function formatMaintenance(log) {
         return res.sendFile(fp);
     });
 
-       if (fs.existsSync(publicDir)) {
+    if (fs.existsSync(publicDir)) {
         app.use('/public', express.static(publicDir));
     }
 
-    // ============================================================
-    // 📸 خدمة ملفات رفع الوسائل البرية (صور)
-    // ============================================================
     const uploadsDir = path.join(__dirname, 'uploads');
     if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
@@ -1203,19 +1177,18 @@ function formatMaintenance(log) {
         etag: true,
         fallthrough: true,
         setHeaders: (res, filePath) => {
-            // للصور فقط: نوع المحتوى وسماح بالعرض
             if (/\.(jpe?g|png|webp|gif)$/i.test(filePath)) {
                 res.setHeader('X-Content-Type-Options', 'nosniff');
                 res.setHeader('Cache-Control',
                     isProduction ? 'public, max-age=2592000, immutable' : 'no-cache');
             } else {
-                // أي ملف آخر: منع العرض المباشر
                 res.setHeader('Content-Disposition', 'attachment');
                 res.setHeader('X-Content-Type-Options', 'nosniff');
             }
         }
     }));
     console.log('✅ Uploads served from:', uploadsDir);
+
     // ============ PUBLIC API ============
     app.get('/api/csrf-token', (req, res) => {
         const t = ensureCsrfToken(req, res);
@@ -1225,13 +1198,8 @@ function formatMaintenance(log) {
     app.get('/api/injection-check', (req, res) => {
         res.json({
             success: true,
-            version: '11.1.0',
+            version: '11.2.0',
             hasInjectionMiddleware: true,
-            hasPrintHeader: typeof PRINT_HEADER_SCRIPT === 'string',
-            hasHideBlueBoxes: typeof HIDE_BLUE_BOXES_SCRIPT === 'string',
-            hasAutoGPS: typeof AUTO_GPS_SCRIPT === 'string',
-            printOrientationBar: 'REMOVED',
-            gpsMode: 'silent-auto',
             ticketRoutes: !!ticketRoutesModule,
             socketIO: !!io,
             timestamp: new Date().toISOString()
@@ -1240,38 +1208,19 @@ function formatMaintenance(log) {
 
     app.get('/api/health', (req, res) => {
         res.json({
-            success: true, status: 'online', service: 'Marine System', version: '11.1.0',
+            success: true, status: 'online', service: 'Marine System', version: '11.2.0',
             developer: 'أمان الله ناجي', organization: 'إدارة إسناد الوحدات البحرية',
             timestamp: new Date().toISOString(),
             mongodb: mongoConnected ? 'connected' : 'disconnected',
             redis: redisAvailable ? 'connected' : 'memory',
             socketIO: !!io ? 'enabled' : 'disabled',
             ticketModule: !!ticketRoutesModule ? 'loaded' : 'fallback',
-            email: (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) ? 'mailjet'
-                : (process.env.EMAIL_HOST ? 'smtp' : 'not-configured'),
-            static: {
-                css: cssMounted ? cssPaths.filter(p => fs.existsSync(p)).length : 0,
-                js: jsMounted ? jsPaths.filter(p => fs.existsSync(p)).length : 0
-            },
-            features: {
-                printHeader: true,
-                hideBlueBoxes: true,
-                printOrientationBar: false,
-                autoGPS: true,
-                gpsMode: 'silent-auto',
-                userBadge: true,
-                ownership: true,
-                vehicles: true,
-                screenShare: !!io,
-                injectionCheck: '/api/injection-check'
-            },
             models: { User: !!User, Vessel: !!Vessel, Vehicle: !!Vehicle,
                 Maintenance: !!Maintenance, Log: !!Log, Ticket: !!Ticket, Note: !!Note,
                 Notification: !!Notification, UserSettings: !!UserSettings, SystemLogo: !!SystemLogo }
         });
     });
-
-    // ============ LOGIN ============
+        // ============ LOGIN ============
     app.post('/api/auth/login', async (req, res) => {
         try {
             const { username, password } = req.body;
@@ -1729,7 +1678,7 @@ function formatMaintenance(log) {
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
 
-    // ============ TICKETS (LEGACY — Fallback if routes/ticket.js missing) ============
+    // ============ TICKETS ============
     if (!ticketRoutesModule) {
         console.log('ℹ️ Using legacy inline ticket routes (routes/ticket.js not found)');
         app.get('/api/support/tickets', authenticateAccessToken, async (req, res) => {
@@ -1775,69 +1724,61 @@ function formatMaintenance(log) {
             } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
         });
     } else {
-        // 🎯 NEW: Use modular ticket routes
         try {
             ticketRoutesModule(app, {
-                Ticket,
-                User,
-                authenticateAccessToken,
-                csrfProtection,
-                randomId,
-                addSystemLog,
-                notify,
-                isAdminUser,
-                validateString,
-                normalizeRole,
-                buildIdQuery
+                Ticket, User, authenticateAccessToken, csrfProtection,
+                randomId, addSystemLog, notify, isAdminUser,
+                validateString, normalizeRole, buildIdQuery
             });
             console.log('✅ Ticket routes module registered');
         } catch (e) {
             console.error('❌ Ticket routes module error:', e.message);
         }
     }
-    // ============ VESSELS — IMAGE UPLOAD ============
-    let vesselUpload = null;
-    try {
-        vesselUpload = require('./middleware/uploadVesselImages');
-        console.log('✅ [VESSELS] Multer loaded');
-    } catch (e) {
-        console.error('❌ [VESSELS] Multer FAILED:', e.message);
-    }
 
-    let vesselCloudinary = null;
-    try {
-        vesselCloudinary = require('cloudinary').v2;
-        console.log('✅ [VESSELS] Cloudinary SDK loaded');
-    } catch (e) {
-        console.error('❌ [VESSELS] Cloudinary FAILED:', e.message);
-    }
+    // ============ 🚢 VESSEL IMAGE UPLOAD (v11.2.0 — جديد) ============
+    (function registerVesselImageRoutes() {
+        console.log('🚢 [VESSELS] Registering image routes...');
 
-    function uploadToVesselCloudinary(file) {
-        return new Promise((resolve, reject) => {
-            if (!vesselCloudinary) return reject(new Error('Cloudinary غير مُفعَّل'));
-            const stream = vesselCloudinary.uploader.upload_stream(
-                {
-                    folder: 'marine/vessels',
-                    resource_type: 'image',
-                    transformation: [
-                        { width: 1600, height: 1600, crop: 'limit' },
-                        { quality: 'auto:good' }
-                    ]
-                },
-                (error, result) => {
-                    if (error) return reject(error);
-                    resolve(result);
-                }
-            );
-            stream.end(file.buffer);
-        });
-    }
+        let vesselUpload;
+        try {
+            vesselUpload = require('./middleware/uploadVesselImages');
+            console.log('✅ [VESSELS] Multer loaded');
+        } catch (e) {
+            console.error('❌ [VESSELS] Multer FAILED:', e.message);
+            return;
+        }
 
-    const VESSEL_MAX_IMAGES = 10;
+        let vesselCloudinary;
+        try {
+            vesselCloudinary = require('cloudinary').v2;
+            console.log('✅ [VESSELS] Cloudinary SDK loaded');
+        } catch (e) {
+            console.error('❌ [VESSELS] Cloudinary FAILED:', e.message);
+            return;
+        }
 
-    // ─── POST /api/vessels/:id/images ───
-    if (vesselUpload && vesselCloudinary) {
-        console.log('📸 [VESSELS] Image routes ENABLED');
+        const VESSEL_MAX_IMAGES = 10;
+
+        function uploadToCloudinary(file) {
+            return new Promise((resolve, reject) => {
+                const stream = vesselCloudinary.uploader.upload_stream(
+                    {
+                        folder: 'marine/vessels',
+                        resource_type: 'image',
+                        transformation: [
+                            { width: 1600, height: 1600, crop: 'limit' },
+                            { quality: 'auto:good' }
+                        ]
+                    },
+                    (error, result) => {
+                        if (error) return reject(error);
+                        resolve(result);
+                    }
+                );
+                stream.end(file.buffer);
+            });
+        }
 
         app.post('/api/vessels/:id/images',
             authenticateAccessToken,
@@ -1846,14 +1787,10 @@ function formatMaintenance(log) {
             async (req, res) => {
                 try {
                     const q = buildIdQuery(req.params.id);
-                    if (!q) {
-                        return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-                    }
+                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
                     const v = await Vessel.findOne(q);
-                    if (!v) {
-                        return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-                    }
+                    if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
 
                     if (!req.files || req.files.length === 0) {
                         return res.status(400).json({ success: false, error: 'لم يتم رفع أي صورة' });
@@ -1870,7 +1807,7 @@ function formatMaintenance(log) {
                     const uploadedImages = [];
                     for (let i = 0; i < filesToAdd.length; i++) {
                         const file = filesToAdd[i];
-                        const result = await uploadToVesselCloudinary(file);
+                        const result = await uploadToCloudinary(file);
                         uploadedImages.push({
                             filename: result.public_id,
                             originalName: file.originalname,
@@ -1888,7 +1825,7 @@ function formatMaintenance(log) {
                     v.images.push(...uploadedImages);
                     await v.save();
 
-                    console.log('✅ [VESSELS] Uploaded ' + uploadedImages.length + ' images for "' + v.name + '"');
+                    console.log('✅ [VESSELS] Uploaded ' + uploadedImages.length + ' image(s) to "' + v.name + '"');
 
                     res.json({
                         success: true,
@@ -1903,7 +1840,6 @@ function formatMaintenance(log) {
             }
         );
 
-        // ─── DELETE /api/vessels/:id/images/:imageId ───
         app.delete('/api/vessels/:id/images/:imageId',
             authenticateAccessToken,
             csrfProtection,
@@ -1918,12 +1854,8 @@ function formatMaintenance(log) {
                     const img = v.images.id(req.params.imageId);
                     if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
 
-                    if (img.filename && vesselCloudinary) {
-                        try {
-                            await vesselCloudinary.uploader.destroy(img.filename);
-                        } catch (cdErr) {
-                            console.warn('⚠️ Cloudinary delete failed:', cdErr.message);
-                        }
+                    if (img.filename) {
+                        try { await vesselCloudinary.uploader.destroy(img.filename); } catch (e) {}
                     }
 
                     v.removeImage(req.params.imageId);
@@ -1931,13 +1863,12 @@ function formatMaintenance(log) {
 
                     res.json({ success: true, message: 'تم حذف الصورة', images: v.images });
                 } catch (e) {
-                    console.error('❌ [VESSELS] delete image:', e.message);
+                    console.error('❌ [VESSELS] delete error:', e.message);
                     res.status(500).json({ success: false, error: 'خطأ' });
                 }
             }
         );
 
-        // ─── PATCH /api/vessels/:id/images/:imageId/primary ───
         app.patch('/api/vessels/:id/images/:imageId/primary',
             authenticateAccessToken,
             csrfProtection,
@@ -1957,54 +1888,44 @@ function formatMaintenance(log) {
 
                     res.json({ success: true, message: 'تم تعيين الصورة الرئيسية', images: v.images });
                 } catch (e) {
-                    console.error('❌ [VESSELS] primary:', e.message);
+                    console.error('❌ [VESSELS] primary error:', e.message);
                     res.status(500).json({ success: false, error: 'خطأ' });
                 }
             }
         );
-    } else {
-        console.error('❌ [VESSELS] Image routes DISABLED — upload:', !!vesselUpload, 'cloudinary:', !!vesselCloudinary);
-    }
-    // ============ VESSELS ============
-    app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
+
+        console.log('✅ [VESSELS] Image routes registered successfully');
+        console.log('   📌 POST   /api/vessels/:id/images (Cloudinary)');
+        console.log('   📌 DELETE /api/vessels/:id/images/:imageId');
+        console.log('   📌 PATCH  /api/vessels/:id/images/:imageId/primary');
+    })();
+
     // ============ VESSELS ============
     app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
         try {
-            // ✅ استثناء المراكب المطروحة
             const includeDisposed = req.query.includeDisposed === 'true';
             const filter = includeDisposed ? {} : { status: { $ne: 'طرح' } };
-            
             const vessels = await Vessel.find(filter).sort({ createdAt: -1 }).limit(500);
             res.json(vessels.map(formatVessel));
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
 
-    // ============ VESSELS - DISPOSAL (الطرح) ============
-    
-    // 📥 GET /api/vessels/disposed — جلب المراكب المطروحة
-    app.get('/api/vessels/disposed', 
-        authenticateAccessToken, 
-        requirePermission('vessels:read'), 
+    app.get('/api/vessels/disposed',
+        authenticateAccessToken,
+        requirePermission('vessels:read'),
         async (req, res) => {
         try {
             const limit = Math.min(parseInt(req.query.limit) || 500, 1000);
-            
             const disposed = await Vessel.find({ status: 'طرح' })
                 .sort({ disposalDate: -1, updatedAt: -1 })
                 .limit(limit);
-            
-            res.json({ 
-                success: true, 
-                count: disposed.length,
-                vessels: disposed.map(formatVessel) 
-            });
-        } catch (e) { 
+            res.json({ success: true, count: disposed.length, vessels: disposed.map(formatVessel) });
+        } catch (e) {
             console.error('❌ GET /api/vessels/disposed:', e.message);
-            res.status(500).json({ success: false, error: 'فشل التحميل' }); 
+            res.status(500).json({ success: false, error: 'فشل التحميل' });
         }
     });
 
-    // 📊 GET /api/vessels/disposal-stats — إحصائيات الطرح
     app.get('/api/vessels/disposal-stats',
         authenticateAccessToken,
         requirePermission('vessels:read'),
@@ -2014,21 +1935,10 @@ function formatMaintenance(log) {
                 Vessel.countDocuments({ status: 'طرح' }),
                 Vessel.countDocuments({ status: { $ne: 'طرح' } })
             ]);
-            
-            res.json({ 
-                success: true, 
-                stats: { 
-                    disposed, 
-                    active,
-                    total: disposed + active
-                } 
-            });
-        } catch (e) { 
-            res.status(500).json({ success: false, error: 'فشل' }); 
-        }
+            res.json({ success: true, stats: { disposed, active, total: disposed + active } });
+        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
 
-    // 📤 POST /api/vessels/:id/dispose — تسجيل طرح
     app.post('/api/vessels/:id/dispose',
         authenticateAccessToken,
         csrfProtection,
@@ -2040,13 +1950,13 @@ function formatMaintenance(log) {
 
             const vessel = await Vessel.findOne(q);
             if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-            
+
             if (vessel.status === 'طرح') {
                 return res.status(400).json({ success: false, error: 'المركب مطروح بالفعل' });
             }
 
-            const { reason, decisionNumber, decidedBy, notes } = req.body;
-            
+            const { reason, decisionNumber, decidedBy, notes, decision, disposedBy } = req.body;
+
             if (!reason || !String(reason).trim()) {
                 return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
             }
@@ -2056,47 +1966,34 @@ function formatMaintenance(log) {
             vessel.disposalDate = new Date();
             vessel.disposedAt = new Date();
             vessel.disposalReason = String(reason).substring(0, 1000);
-            vessel.disposalDecision = String(decisionNumber || '').substring(0, 200);
-            vessel.disposedBy = String(decidedBy || req.user.name || req.user.username).substring(0, 200);
+            vessel.disposalDecision = String(decisionNumber || decision || '').substring(0, 200);
+            vessel.disposedBy = String(decidedBy || disposedBy || req.user.name || req.user.username).substring(0, 200);
             vessel.disposalNotes = String(notes || '').substring(0, 2000);
             vessel.break = String(notes || reason).substring(0, 500);
             vessel.updatedAt = new Date();
             await vessel.save();
 
             await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'dispose',
-                resource: 'vessel',
-                resourceId: vessel.id,
-                resourceName: vessel.name,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
+                userId: req.user.id, userName: req.user.name,
+                action: 'dispose', resource: 'vessel',
+                resourceId: vessel.id, resourceName: vessel.name,
+                status: 'success', ip: req.ip, requestId: req.requestId
             });
 
             await notify({
-                type: 'warning',
-                category: 'vessel',
-                title: 'طرح مركب',
+                type: 'warning', category: 'vessel', title: 'طرح مركب',
                 message: 'تم طرح "' + vessel.name + '"',
-                link: '/pages/disposals.html',
-                icon: 'archive',
+                link: '/pages/disposals.html', icon: 'archive',
                 actorName: req.user.name || req.user.username
             });
 
-            res.json({ 
-                success: true, 
-                message: 'تم طرح المركب بنجاح',
-                vessel: formatVessel(vessel)
-            });
+            res.json({ success: true, message: 'تم طرح المركب بنجاح', vessel: formatVessel(vessel) });
         } catch (e) {
             console.error('❌ POST /api/vessels/:id/dispose:', e.message);
             res.status(500).json({ success: false, error: 'فشل الطرح' });
         }
     });
 
-    // 🔄 POST /api/vessels/:id/restore — إلغاء الطرح (للمسؤول)
     app.post('/api/vessels/:id/restore',
         authenticateAccessToken,
         csrfProtection,
@@ -2111,16 +2008,20 @@ function formatMaintenance(log) {
 
             const vessel = await Vessel.findOne(q);
             if (!vessel) return res.status(404).json({ success: false, error: 'غير موجود' });
-            
+
             if (vessel.status !== 'طرح') {
                 return res.status(400).json({ success: false, error: 'المركب ليس مطروحاً' });
             }
 
+            const { newStatus } = req.body;
+            const allowed = ['صالح', 'صيانة', 'معطب', 'احتياط'];
+            const target = allowed.includes(newStatus) ? newStatus : 'صالح';
+
             if (typeof vessel.restore === 'function') {
-                await vessel.restore();
+                await vessel.restore({ newStatus: target });
             } else {
-                vessel.status = 'صالح';
-                vessel.stat = 'صالح';
+                vessel.status = target;
+                vessel.stat = target;
                 vessel.disposalDate = null;
                 vessel.disposedAt = null;
                 vessel.disposalReason = '';
@@ -2133,27 +2034,19 @@ function formatMaintenance(log) {
             }
 
             await addSystemLog({
-                userId: req.user.id,
-                userName: req.user.name,
-                action: 'restore',
-                resource: 'vessel',
-                resourceId: vessel.id,
-                resourceName: vessel.name,
-                status: 'success',
-                ip: req.ip,
-                requestId: req.requestId
+                userId: req.user.id, userName: req.user.name,
+                action: 'restore', resource: 'vessel',
+                resourceId: vessel.id, resourceName: vessel.name,
+                status: 'success', ip: req.ip, requestId: req.requestId
             });
 
-            res.json({ 
-                success: true, 
-                message: 'تم إلغاء الطرح',
-                vessel: formatVessel(vessel)
-            });
+            res.json({ success: true, message: 'تم إلغاء الطرح', vessel: formatVessel(vessel) });
         } catch (e) {
             console.error('❌ POST /api/vessels/:id/restore:', e.message);
             res.status(500).json({ success: false, error: 'فشل إلغاء الطرح' });
         }
     });
+
     app.post('/api/vessels', authenticateAccessToken, requirePermission('vessels:create'), csrfProtection, async (req, res) => {
         try {
             const b = req.body;
@@ -2196,6 +2089,7 @@ function formatMaintenance(log) {
             res.status(201).json({ success: true, message: 'تمت الإضافة', vessel: formatVessel(nv) });
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     });
+
     app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:update'), csrfProtection, async (req, res) => {
         try {
             const q = buildIdQuery(req.params.id);
@@ -2246,6 +2140,7 @@ function formatMaintenance(log) {
             res.json({ success: true, message: 'تم التحديث', vessel: formatVessel(v) });
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     });
+
     app.delete('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:delete'), csrfProtection, async (req, res) => {
         try {
             const q = buildIdQuery(req.params.id);
@@ -2657,9 +2552,7 @@ function formatMaintenance(log) {
         addSystemLog,
         notify,
         buildIdQuery
-    });
-
-    // ============ AI + IMPORT ============
+    });    // ============ AI + IMPORT ============
     aiAndImportRoutes(app, {
         User, Vessel, Maintenance, Notification,
         authenticateAccessToken, csrfProtection,
@@ -2681,7 +2574,7 @@ function formatMaintenance(log) {
     }
 
     // ============================================================
-    // 🎥 SOCKET.IO — SCREEN SHARE SIGNALING (SAFE FALLBACK)
+    // 🎥 SOCKET.IO
     // ============================================================
     let httpServer = null;
     let io = null;
@@ -3006,7 +2899,6 @@ function formatMaintenance(log) {
             });
         });
 
-        // نقطة نهاية عدد المتصلين
         app.get('/api/online-users',
             authenticateAccessToken,
             requirePermission('monitoring:view'),
@@ -3040,7 +2932,7 @@ function formatMaintenance(log) {
 <meta name="owner" content="إدارة إسناد الوحدات البحرية - الحرس الوطني التونسي">
 <meta name="copyright" content="© ${new Date().getFullYear()} أمان الله ناجي - جميع الحقوق محفوظة">
 <meta name="application-name" content="منظومة الوسائل البحرية">
-<meta name="generator" content="Marine System v11.1.0 - Aman Allah Naji">
+<meta name="generator" content="Marine System v11.2.0 - Aman Allah Naji">
 `;
     const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
@@ -3405,7 +3297,6 @@ setInterval(updateBadge,1500);
         try {
             var all = document.querySelectorAll('body *');
             var hiddenCount = 0;
-            var hiddenElements = [];
             
             for (var i = 0; i < all.length; i++) {
                 var el = all[i];
@@ -3597,7 +3488,7 @@ setInterval(updateBadge,1500);
             path.join(publicPagesDir, 'index.html')
         ];
         for (const p of possible) if (fs.existsSync(p)) return res.sendFile(p);
-        res.send('<h1>🚢 Marine System v11.1.0</h1><p>Running</p>');
+        res.send('<h1>🚢 Marine System v11.2.0</h1><p>Running</p>');
     });
 
     app.get('/:page', (req, res, next) => {
@@ -3623,10 +3514,9 @@ setInterval(updateBadge,1500);
     });
 
     // ============ LISTEN ============
-    // 🎯 MODIFIED: Use httpServer if Socket.IO initialized, else app
     const server = (httpServer || app).listen(PORT, '0.0.0.0', () => {
         console.log('=========================================');
-        console.log('🚢 MARINE SYSTEM v11.1.0');
+        console.log('🚢 MARINE SYSTEM v11.2.0');
         console.log('🔐 JWT + REFRESH + CSRF + SESSION + RBAC');
         console.log('🛡️  Security hardening: ENABLED');
         console.log('🍃 MongoDB Atlas');
@@ -3634,6 +3524,7 @@ setInterval(updateBadge,1500);
         console.log('💾 Redis-first Maps');
         console.log('📍 Auto GPS (silent mode): ENABLED');
         console.log('🚛 Vehicles (Land) routes: ENABLED');
+        console.log('🚢 Vessels Image routes: ENABLED');
         console.log('🎨 Static CSS/JS: FIXED');
         console.log('🏛️  Print Header Injection: ENABLED');
         console.log('🚨 Hide Blue Boxes: ENABLED');
@@ -3647,6 +3538,7 @@ setInterval(updateBadge,1500);
         console.log(`🍃 MongoDB: ${mongoConnected ? 'CONNECTED' : 'DISCONNECTED'}`);
         console.log(`💾 Redis: ${redisAvailable ? 'CONNECTED' : 'MEMORY'}`);
         console.log(`🚛 Vehicle Model: ${Vehicle ? 'LOADED' : 'NOT LOADED'}`);
+        console.log(`🚢 Vessel Model: ${Vessel ? 'LOADED' : 'NOT LOADED'}`);
         console.log(`🎨 CSS: ${cssMounted ? 'ENABLED' : 'DISABLED'}`);
         console.log(`📜 JS:  ${jsMounted ? 'ENABLED' : 'DISABLED'}`);
         console.log('=========================================');
@@ -3690,3 +3582,4 @@ module.exports.normalizeRole = normalizeRole;
 module.exports.addSystemLog = addSystemLog;
 module.exports.getRedisClient = getRedisClient;
 module.exports.isRedisAvailable = isRedisAvailable;
+    
