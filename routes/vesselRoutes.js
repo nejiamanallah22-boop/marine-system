@@ -1,13 +1,13 @@
 /**
  * 🚢 مسارات الوسائل البحرية
  * @module routes/vesselRoutes
- * @version 11.0.0
+ * @version 12.0.0
  *
- * ✨ v11.0 Features:
- * - إصلاح Circular Dependency مع server.js
- * - CSRF middleware مستقل
- * - رفع حتى 10 صور (بدل 5)
- * - كامل مع الطرح والصور
+ * ✨ v12.0 Features:
+ * - دعم Cloudinary لرفع الصور
+ * - memoryStorage → Cloudinary مباشر
+ * - حدود 10 صور
+ * - كامل مع الطرح
  * - disposed قبل /:id لتجنّب التعارض
  * - express-validator
  * - RBAC + CSRF
@@ -37,7 +37,6 @@ const {
 // ═══════════════════════════════════════════════════════════
 let csrfProtection = (req, res, next) => next();
 try {
-    // محاولة 1: middleware مستقل
     const csrfMiddleware = require('../middleware/csrfProtection');
     if (csrfMiddleware && typeof csrfMiddleware.csrfProtection === 'function') {
         csrfProtection = csrfMiddleware.csrfProtection;
@@ -46,7 +45,6 @@ try {
     }
 } catch (e1) {
     try {
-        // محاولة 2: middleware/csrf
         const csrfMiddleware = require('../middleware/csrf');
         if (csrfMiddleware && typeof csrfMiddleware.csrfProtection === 'function') {
             csrfProtection = csrfMiddleware.csrfProtection;
@@ -54,20 +52,37 @@ try {
             csrfProtection = csrfMiddleware;
         }
     } catch (e2) {
-        // لا CSRF → نستمر بدونه (سيُطبَّق على مستوى server.js إن وجد)
+        // CSRF غير متوفر — يُطبَّق على مستوى server.js إن وجد
     }
 }
 
 // ═══════════════════════════════════════════════════════════
-// 📸 Multer للصور
+// 📸 Multer — رفع الصور (memoryStorage)
 // ═══════════════════════════════════════════════════════════
-let upload;
+let upload = null;
 try {
     upload = require('../middleware/uploadVesselImages');
-    console.log('✅ [VESSELS] Multer loaded');
+    console.log('✅ [VESSELS] Multer middleware loaded');
 } catch (e) {
-    console.warn('⚠️ [VESSELS] uploadVesselImages middleware not found — images disabled');
-    console.warn('   ', e.message);
+    console.error('❌ [VESSELS] Multer middleware FAILED:', e.message);
+    upload = null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ☁️ Cloudinary
+// ═══════════════════════════════════════════════════════════
+let cloudinary = null;
+try {
+    cloudinary = require('cloudinary').v2;
+    // تأكد من التهيئة (عادة عبر CLOUDINARY_URL env أو cloudinary.config())
+    if (process.env.CLOUDINARY_URL) {
+        console.log('✅ [VESSELS] Cloudinary configured (from env)');
+    } else {
+        console.log('ℹ️ [VESSELS] Cloudinary SDK loaded (using default config)');
+    }
+} catch (e) {
+    console.error('❌ [VESSELS] Cloudinary FAILED:', e.message);
+    cloudinary = null;
 }
 
 const Vessel = require('../models/Vessel');
@@ -126,6 +141,46 @@ function buildIdQuery(id) {
     return { id };
 }
 
+// ═══════════════════════════════════════════════════════════
+// ☁️ رفع صورة واحدة إلى Cloudinary
+// ═══════════════════════════════════════════════════════════
+async function uploadToCloudinary(file) {
+    if (!cloudinary) {
+        throw new Error('Cloudinary غير مُفعَّل على الخادم');
+    }
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'marine/vessels',
+                resource_type: 'image',
+                transformation: [
+                    { width: 1600, height: 1600, crop: 'limit' },
+                    { quality: 'auto:good' },
+                    { fetch_format: 'auto' }
+                ]
+            },
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            }
+        );
+        uploadStream.end(file.buffer);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+// ☁️ حذف صورة من Cloudinary
+// ═══════════════════════════════════════════════════════════
+async function deleteFromCloudinary(publicId) {
+    if (!cloudinary || !publicId) return;
+    try {
+        await cloudinary.uploader.destroy(publicId);
+        console.log('🗑️ [VESSELS] Deleted from Cloudinary:', publicId);
+    } catch (e) {
+        console.warn('⚠️ [VESSELS] Cloudinary delete failed:', e.message);
+    }
+}
+
 // ============================================================
 // ✅ VALIDATORS
 // ============================================================
@@ -173,7 +228,7 @@ router.use(authenticate);
    📌 ROUTES متقدمة أولاً (قبل /:id)
    ============================================================ */
 
-/* ✅ GET /api/vessels/disposed — قائمة المطروحة */
+/* ✅ GET /api/vessels/disposed */
 router.get(
     '/disposed',
     requirePermission('vessels:read'),
@@ -399,38 +454,29 @@ router.post(
 );
 
 /* ============================================================
-   📸 ROUTES الصور
+   📸 ROUTES الصور — Cloudinary
    ============================================================ */
-if (upload) {
-    console.log('📸 [VESSELS] Image routes enabled');
+if (upload && cloudinary) {
 
-    /* POST /api/vessels/:id/images */
+    console.log('📸 [VESSELS] Image routes ENABLED (Cloudinary)');
+
+    // ─── POST /api/vessels/:id/images ───
     router.post(
         '/:id/images',
-        authorize('admin', 'manager'),
+        authorize('admin', 'manager', 'editor', 'maintenance_unit'),
         csrfProtection,
         validateVesselId,
         checkValidation,
-        upload.array('images', MAX_IMAGES),   // ← رُفع من 5 إلى 10
+        upload.array('images', MAX_IMAGES),
         async (req, res) => {
             try {
                 const q = buildIdQuery(req.params.id);
                 if (!q) {
-                    if (req.files) {
-                        req.files.forEach(f => {
-                            if (f.path) fs.unlink(f.path, () => {});
-                        });
-                    }
                     return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
                 }
 
                 const v = await Vessel.findOne(q);
                 if (!v) {
-                    if (req.files) {
-                        req.files.forEach(f => {
-                            if (f.path) fs.unlink(f.path, () => {});
-                        });
-                    }
                     return res.status(404).json({ success: false, error: 'المركب غير موجود' });
                 }
 
@@ -440,97 +486,68 @@ if (upload) {
 
                 const remaining = MAX_IMAGES - (v.images ? v.images.length : 0);
                 if (remaining <= 0) {
-                    req.files.forEach(f => {
-                        if (f.path) fs.unlink(f.path, () => {});
+                    return res.status(400).json({
+                        success: false,
+                        error: `الحد الأقصى ${MAX_IMAGES} صور`
                     });
-                    return res.status(400).json({ success: false, error: `الحد الأقصى ${MAX_IMAGES} صور` });
                 }
 
                 const filesToAdd = req.files.slice(0, remaining);
-                const filesToDrop = req.files.slice(remaining);
-                filesToDrop.forEach(f => {
-                    if (f.path) fs.unlink(f.path, () => {});
-                });
-
                 const source = req.body.source === 'camera' ? 'camera' : 'upload';
                 const caption = typeof req.body.caption === 'string' ? req.body.caption.trim() : '';
 
-                // ⚠️ مهم: نحن نستخدم memoryStorage في multer
-                // إذا كان الخادم يخزّن في Cloudinary أو local، عدّل هنا
-                const newImages = filesToAdd.map((file, idx) => {
-                    // إذا كان multer memoryStorage → file.buffer
-                    // إذا كان diskStorage → file.path, file.filename
-                    const isMemoryStorage = !!file.buffer;
-                    
-                    if (isMemoryStorage) {
-                        // ⚠️ هنا يجب رفع إلى Cloudinary أو حفظ محلياً
-                        // هذا مثال افتراضي — عدّله حسب إعداداتك
-                        const uniqueName = 'vessel-' + Date.now() + '-' + Math.round(Math.random() * 1e9) + 
-                                         path.extname(file.originalname || '.jpg');
-                        const uploadDir = path.join(__dirname, '..', 'uploads', 'vessels');
-                        
-                        // إنشاء المجلد إن لم يكن موجوداً
-                        if (!fs.existsSync(uploadDir)) {
-                            fs.mkdirSync(uploadDir, { recursive: true });
-                        }
-                        
-                        const savePath = path.join(uploadDir, uniqueName);
-                        fs.writeFileSync(savePath, file.buffer);
-                        
-                        return {
-                            filename: uniqueName,
+                // رفع الصور إلى Cloudinary
+                const uploadedImages = [];
+                for (let i = 0; i < filesToAdd.length; i++) {
+                    const file = filesToAdd[i];
+                    try {
+                        const result = await uploadToCloudinary(file);
+                        uploadedImages.push({
+                            filename: result.public_id,
                             originalName: file.originalname,
-                            url: `/uploads/vessels/${uniqueName}`,
-                            size: file.size,
+                            url: result.secure_url,
+                            size: result.bytes || file.size,
                             mimetype: file.mimetype,
-                            caption,
-                            isPrimary: (!v.images || v.images.length === 0) && idx === 0,
-                            source,
+                            caption: caption,
+                            isPrimary: (!v.images || v.images.length === 0) && i === 0,
+                            source: source,
                             uploadedAt: new Date(),
                             uploadedBy: req.user.name || req.user.username || 'system'
-                        };
+                        });
+                    } catch (uploadErr) {
+                        console.error('❌ [VESSELS] Cloudinary upload failed:', uploadErr.message);
+                        return res.status(500).json({
+                            success: false,
+                            error: 'فشل رفع الصورة إلى Cloudinary: ' + uploadErr.message
+                        });
                     }
-                    
-                    // diskStorage
-                    return {
-                        filename: file.filename,
-                        originalName: file.originalname,
-                        url: `/uploads/vessels/${file.filename}`,
-                        size: file.size,
-                        mimetype: file.mimetype,
-                        caption,
-                        isPrimary: (!v.images || v.images.length === 0) && idx === 0,
-                        source,
-                        uploadedAt: new Date(),
-                        uploadedBy: req.user.name || req.user.username || 'system'
-                    };
-                });
+                }
 
-                v.images.push(...newImages);
+                v.images.push(...uploadedImages);
                 await v.save();
+
+                console.log(`✅ [VESSELS] Uploaded ${uploadedImages.length} images for vessel "${v.name}"`);
 
                 res.json({
                     success: true,
-                    message: `تم رفع ${newImages.length} صورة`,
+                    message: `تم رفع ${uploadedImages.length} صورة`,
                     images: v.images,
                     vessel: formatVessel(v)
                 });
             } catch (e) {
-                console.error('❌ [VESSELS] upload:', e.message);
-                if (req.files) {
-                    req.files.forEach(f => {
-                        if (f.path) fs.unlink(f.path, () => {});
-                    });
-                }
-                res.status(500).json({ success: false, error: 'خطأ في رفع الصور: ' + e.message });
+                console.error('❌ [VESSELS] upload error:', e.message);
+                res.status(500).json({
+                    success: false,
+                    error: 'خطأ في رفع الصور: ' + e.message
+                });
             }
         }
     );
 
-    /* DELETE /api/vessels/:id/images/:imageId */
+    // ─── DELETE /api/vessels/:id/images/:imageId ───
     router.delete(
         '/:id/images/:imageId',
-        authorize('admin', 'manager'),
+        authorize('admin', 'manager', 'editor'),
         csrfProtection,
         validateVesselId,
         checkValidation,
@@ -545,9 +562,9 @@ if (upload) {
                 const img = v.images.id(req.params.imageId);
                 if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
 
-                if (img.url) {
-                    const fp = path.join(__dirname, '..', img.url);
-                    fs.unlink(fp, () => {});
+                // حذف من Cloudinary
+                if (img.filename) {
+                    await deleteFromCloudinary(img.filename);
                 }
 
                 v.removeImage(req.params.imageId);
@@ -565,10 +582,10 @@ if (upload) {
         }
     );
 
-    /* PATCH /api/vessels/:id/images/:imageId/primary */
+    // ─── PATCH /api/vessels/:id/images/:imageId/primary ───
     router.patch(
         '/:id/images/:imageId/primary',
-        authorize('admin', 'manager'),
+        authorize('admin', 'manager', 'editor'),
         csrfProtection,
         validateVesselId,
         checkValidation,
@@ -597,9 +614,11 @@ if (upload) {
             }
         }
     );
+
 } else {
-    console.warn('⚠️ [VESSELS] Image routes DISABLED (upload middleware missing)');
-    console.warn('   تأكد من وجود: server/middleware/uploadVesselImages.js');
+    console.error('❌ [VESSELS] Image routes DISABLED');
+    console.error('   upload:', upload ? '✅' : '❌');
+    console.error('   cloudinary:', cloudinary ? '✅' : '❌');
 }
 
 // ============================================================
