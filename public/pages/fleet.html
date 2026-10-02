@@ -450,12 +450,11 @@
             background: rgba(148, 163, 184, 0.06); color: var(--c-text-1);
         }
 
-        /* ✅ RTL على حاوية الجدول فقط (لإصلاح الانقلاب) */
+        /* ✅ إزالة direction: rtl */
         .table-wrapper {
             overflow-x: auto;
             padding: 0 24px 24px;
             width: 100%;
-            direction: rtl;
         }
         .table-wrapper table {
             width: 100%; border-collapse: separate; border-spacing: 0;
@@ -508,30 +507,15 @@
             background: linear-gradient(135deg, #0369a1, #0ea5e9); color: #fff;
         }
 
-        /* ✅ عمود الإجراءات — إصلاح إظهار الأزرار */
-        .action-btns {
-            display: flex;
-            gap: 4px;
-            flex-wrap: nowrap;
-            justify-content: center;
-            align-items: center;
-            direction: ltr;
-            min-width: 150px;
-        }
-        tbody td:last-child,
-        thead th:last-child {
-            min-width: 160px;
-            width: 160px;
-            text-align: center;
-            padding: 8px 6px;
-        }
+        /* ✅ إزالة تعديلاتي — الأزرار ترجع كما كانت */
+        .action-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; align-items: center; }
 
         .btn-sm {
             width: 34px; height: 34px; border: none; border-radius: 10px;
             font-size: 13px; font-weight: 700; cursor: pointer;
             transition: all var(--transition);
             display: inline-flex; align-items: center; justify-content: center;
-            padding: 0; flex-shrink: 0;
+            padding: 0;
         }
         .btn-sm.edit {
             background: rgba(59, 130, 246, 0.15); color: #93c5fd;
@@ -3302,7 +3286,39 @@
         }
     }
 
+    // ✅ إصلاح: تنظيف كامل للـ CSS والـ DOM قبل الانتقال لصفحة المطروحة
     function navigateToDisposals() {
+        try {
+            // 1. تشغيل دالة التنظيف المُسجّلة
+            if (typeof _fleetCleanup === 'function') {
+                _fleetCleanup();
+            }
+
+            // 2. إزالة <style> الخاص بـ fleet من الـ DOM
+            document.querySelectorAll('style').forEach(function(styleEl) {
+                if (styleEl.textContent && (
+                    styleEl.textContent.indexOf('#page-fleet') !== -1 ||
+                    styleEl.textContent.indexOf('.fleet-header') !== -1
+                )) {
+                    styleEl.remove();
+                }
+            });
+
+            // 3. إزالة عنصر #page-fleet إن كان موجوداً
+            var oldPage = document.getElementById('page-fleet');
+            if (oldPage && oldPage.parentNode) {
+                oldPage.parentNode.removeChild(oldPage);
+            }
+
+            // 4. استعادة حالة body الطبيعية
+            document.body.style.overflow = '';
+            document.body.removeAttribute('dir');
+            document.documentElement.setAttribute('dir', 'rtl');
+        } catch (e) {
+            console.debug('Cleanup error:', e.message);
+        }
+
+        // ثم الانتقال
         if (typeof window.loadPage === 'function') {
             try { window.loadPage('disposals-vessels'); return; } catch (e) {}
         }
