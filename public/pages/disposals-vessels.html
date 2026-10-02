@@ -634,15 +634,46 @@
         'المجمع الأمني بقبيبة': '🏛️ المجمع الأمني بقبيبة'
     };
 
+    // ✅ Cleanup: إزالة CSS + عنصر الصفحة + المستمعين + المؤقتات
     function _dvCleanup() {
         if (_isDestroyed) return;
         _isDestroyed = true;
+
         _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e) {} });
         _timeouts = [];
+
         _listeners.forEach(function(l) {
             try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e) {}
         });
         _listeners = [];
+
+        try {
+            // 1. إزالة <style> الخاص بـ disposals
+            document.querySelectorAll('style').forEach(function(styleEl) {
+                if (styleEl.textContent && (
+                    styleEl.textContent.indexOf('#page-disposals-vessels') !== -1 ||
+                    styleEl.textContent.indexOf('.dv-table-wrap') !== -1 ||
+                    styleEl.textContent.indexOf('.dv-container') !== -1
+                )) {
+                    styleEl.remove();
+                }
+            });
+
+            // 2. إزالة عنصر #page-disposals-vessels
+            var oldPage = document.getElementById('page-disposals-vessels');
+            if (oldPage && oldPage.parentNode) {
+                oldPage.parentNode.removeChild(oldPage);
+            }
+
+            // 3. إزالة أي مودالات متبقية
+            var modal = document.getElementById('dvModal');
+            if (modal && modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        } catch (e) {
+            console.debug('Disposals cleanup error:', e.message);
+        }
+
         console.log('🧹 Disposals Vessels cleanup done');
     }
     window._pageCleanup = window._pageCleanup || [];
@@ -746,7 +777,6 @@
         apiFetch('/api/vessels/disposed')
             .then(function(res) {
                 if (!res.ok) {
-                    // fallback
                     return apiFetch('/api/vessels').then(function(r) { return r.json(); })
                         .then(function(all) {
                             if (!Array.isArray(all)) return [];
@@ -1081,18 +1111,21 @@
         });
         addSafeListener(document.getElementById('dvPrintBtn'), 'click', dvPrint);
         addSafeListener(document.getElementById('dvExcelBtn'), 'click', dvExportExcel);
+
+        // ✅ زر "السجل العام": تنظيف كامل قبل العودة
         addSafeListener(document.getElementById('dvBackBtn'), 'click', function() {
-            if (typeof window.navigateTo === 'function') {
-                window.navigateTo('fleet');
-            } else {
-                window.location.hash = '#fleet';
-                setTimeout(function() {
-                    if (!window.location.hash || window.location.hash === '#fleet') {
-                        window.location.href = '/pages/fleet.html';
-                    }
-                }, 300);
+            if (typeof _dvCleanup === 'function') {
+                try { _dvCleanup(); } catch (e) { console.debug('Cleanup error:', e.message); }
             }
+            if (typeof window.loadPage === 'function') {
+                try { window.loadPage('fleet'); return; } catch (e) {}
+            }
+            if (typeof window.navigateTo === 'function') {
+                try { window.navigateTo('fleet'); return; } catch (e) {}
+            }
+            window.location.href = '/pages/fleet.html';
         });
+
         addSafeListener(document.getElementById('dvSearch'), 'input', renderTable);
         addSafeListener(document.getElementById('dvFilterRegion'), 'change', renderTable);
         addSafeListener(document.getElementById('dvFilterType'), 'change', renderTable);
