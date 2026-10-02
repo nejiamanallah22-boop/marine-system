@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية v9.6</title>
+    <title>⚓ منظومة الوسائل البحرية v9.7</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-      <link rel="stylesheet" href="/css/print.css" media="print">
-    
-    <!-- 🎯 PRINT STYLES INLINE (لا يعتمد على ملف خارجي) -->
+    <link rel="stylesheet" href="/css/print.css" media="print">
+
+    <!-- 🎯 PRINT STYLES INLINE -->
     <style media="print">
-        /* ═══════════════════════════════════════════════════════
-           🚫 إخفاء كل الرؤوس الأصلية (المربعات الزرقاء)
-           ═══════════════════════════════════════════════════════ */
-        
         #page-efficiency .eff-header,
         #page-efficiency .eff-header *,
         #page-vehicles .veh-header,
@@ -36,8 +32,7 @@
             background-image: none !important;
             border: none !important;
         }
-        
-        /* إخفاء الفلاتر والأزرار وكل عناصر التفاعل */
+
         .filter-bar,
         .veh-actions,
         .scroll-nav,
@@ -61,8 +56,7 @@
         .btn-filter {
             display: none !important;
         }
-        
-        /* خلفية بيضاء للصفحة كلها */
+
         html, body,
         #mainApp, #pageContainer,
         #page-efficiency, #page-vehicles, #page-fleet,
@@ -71,7 +65,7 @@
             background-image: none !important;
             color: #000000 !important;
         }
-        
+
         #page-efficiency::before,
         #page-efficiency::after,
         #page-vehicles::before,
@@ -81,8 +75,7 @@
             display: none !important;
             content: none !important;
         }
-        
-        /* إخفاء المربعات الزرقاء (hero/gradient) */
+
         *[style*="gradient"],
         *[style*="linear-gradient"],
         *[style*="radial-gradient"],
@@ -93,30 +86,29 @@
             height: 0 !important;
             background: none !important;
         }
-        
-        /* ضمان طباعة الألوان */
+
         *, *::before, *::after {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
         }
-        
-        /* إلغاء main-content margin (لأن sidebar مخفي) */
+
         .main-content {
             margin-right: 0 !important;
             padding: 0 !important;
         }
-        
+
         .page-container {
             max-width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
         }
     </style>
-    
+
     <style>
         /* ===== RESET & BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Cairo', sans-serif;
             background: #0a0e1a;
@@ -125,6 +117,7 @@
             direction: rtl;
             overflow-x: hidden;
         }
+
         :root {
             --gold: #e6b31e;
             --gold-light: #f5d76e;
@@ -134,13 +127,15 @@
             --warning: #eab308;
             --info: #3b82f6;
         }
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a1628; }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
-                /* ═══════════════════════════════════════════════════════════
-           🎨 PROFESSIONAL LOGIN v2.0 — Marine National Guard
-           ═══════════════════════════════════════════════════════════ */
+
+        /* ═══════════════════════════════════════════════════════
+           🎨 PROFESSIONAL LOGIN — Marine National Guard
+           ═══════════════════════════════════════════════════════ */
         #loginOverlay {
             position: fixed;
             inset: 0;
@@ -152,7 +147,6 @@
             background: #0a0e1a;
         }
 
-        /* ─── الصورة الخلفية ─── */
         #loginOverlay .login-bg {
             position: absolute;
             inset: 0;
@@ -169,32 +163,17 @@
             100% { transform: scale(1.06); }
         }
 
-        /* ─── طبقة التعتيم الذهبي ─── */
         #loginOverlay .login-overlay {
             position: absolute;
             inset: 0;
             z-index: 2;
             background:
-                radial-gradient(
-                    ellipse at 30% 20%,
-                    rgba(230, 179, 30, 0.18) 0%,
-                    transparent 55%
-                ),
-                radial-gradient(
-                    ellipse at 70% 80%,
-                    rgba(10, 14, 26, 0.55) 0%,
-                    transparent 55%
-                ),
-                linear-gradient(
-                    135deg,
-                    rgba(10, 14, 26, 0.55) 0%,
-                    rgba(10, 14, 26, 0.72) 50%,
-                    rgba(10, 14, 26, 0.85) 100%
-                );
+                radial-gradient(ellipse at 30% 20%, rgba(230, 179, 30, 0.18) 0%, transparent 55%),
+                radial-gradient(ellipse at 70% 80%, rgba(10, 14, 26, 0.55) 0%, transparent 55%),
+                linear-gradient(135deg, rgba(10, 14, 26, 0.55) 0%, rgba(10, 14, 26, 0.72) 50%, rgba(10, 14, 26, 0.85) 100%);
             pointer-events: none;
         }
 
-        /* ─── الجزيئات الذهبية ─── */
         #loginOverlay .particles {
             position: absolute;
             inset: 0;
@@ -216,19 +195,12 @@
         }
 
         @keyframes particleFloat {
-            0% {
-                transform: translateY(0) translateX(0) scale(0.8);
-                opacity: 0;
-            }
-            10% { opacity: 0.9; }
-            90% { opacity: 0.4; }
-            100% {
-                transform: translateY(-110vh) translateX(30px) scale(1.2);
-                opacity: 0;
-            }
+            0%   { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; }
+            10%  { opacity: 0.9; }
+            90%  { opacity: 0.4; }
+            100% { transform: translateY(-110vh) translateX(30px) scale(1.2); opacity: 0; }
         }
 
-        /* ─── صندوق الدخول ─── */
         #loginOverlay .login-container {
             position: relative;
             z-index: 10;
@@ -255,31 +227,16 @@
         }
 
         @keyframes loginBoxIn {
-            from {
-                opacity: 0;
-                transform: translateY(40px) scale(0.94);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(40px) scale(0.94); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         #loginOverlay .login-box::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 3px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                #f7d774,
-                #e6b31e,
-                #f7d774,
-                transparent
-            );
+            background: linear-gradient(90deg, transparent, #f7d774, #e6b31e, #f7d774, transparent);
             background-size: 300% 100%;
             animation: loginGoldBar 4s ease-in-out infinite;
         }
@@ -289,9 +246,7 @@
             50%      { background-position: 100% 50%; }
         }
 
-        #loginOverlay .login-logo {
-            margin-bottom: 6px;
-        }
+        #loginOverlay .login-logo { margin-bottom: 6px; }
 
         #loginOverlay .login-logo .logo-icon {
             display: inline-block;
@@ -347,12 +302,7 @@
             content: '';
             flex: 1;
             height: 1px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(230, 179, 30, 0.35),
-                transparent
-            );
+            background: linear-gradient(90deg, transparent, rgba(230, 179, 30, 0.35), transparent);
         }
 
         #loginOverlay .dev-badge {
@@ -362,10 +312,7 @@
             letter-spacing: 0.5px;
         }
 
-        #loginOverlay .dev-badge i {
-            color: #f7d774;
-            margin-left: 4px;
-        }
+        #loginOverlay .dev-badge i { color: #f7d774; margin-left: 4px; }
 
         #loginOverlay .dev-name {
             font-size: 15px;
@@ -386,9 +333,7 @@
             font-weight: 700;
         }
 
-        #loginOverlay .form-group {
-            margin-bottom: 14px;
-        }
+        #loginOverlay .form-group { margin-bottom: 14px; }
 
         #loginOverlay .input-wrapper {
             position: relative;
@@ -403,9 +348,7 @@
         #loginOverlay .input-wrapper:focus-within {
             border-color: #e6b31e;
             background: rgba(230, 179, 30, 0.06);
-            box-shadow:
-                0 0 0 4px rgba(230, 179, 30, 0.1),
-                0 8px 24px rgba(230, 179, 30, 0.12);
+            box-shadow: 0 0 0 4px rgba(230, 179, 30, 0.1), 0 8px 24px rgba(230, 179, 30, 0.12);
             transform: translateY(-1px);
         }
 
@@ -418,9 +361,7 @@
             transition: color 0.3s;
         }
 
-        #loginOverlay .input-wrapper:focus-within .input-icon {
-            color: #f7d774;
-        }
+        #loginOverlay .input-wrapper:focus-within .input-icon { color: #f7d774; }
 
         #loginOverlay .input-wrapper input {
             width: 100%;
@@ -474,9 +415,7 @@
             font-weight: 500;
         }
 
-        #loginOverlay .checkbox-label input[type="checkbox"] {
-            display: none;
-        }
+        #loginOverlay .checkbox-label input[type="checkbox"] { display: none; }
 
         #loginOverlay .checkbox-label .checkmark {
             width: 20px;
@@ -528,9 +467,7 @@
             font-family: inherit;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow:
-                0 6px 30px rgba(230, 179, 30, 0.35),
-                0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+            box-shadow: 0 6px 30px rgba(230, 179, 30, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
             position: relative;
             overflow: hidden;
             letter-spacing: 0.3px;
@@ -539,14 +476,10 @@
 
         #loginOverlay .login-btn:hover:not(:disabled) {
             transform: translateY(-3px) scale(1.01);
-            box-shadow:
-                0 12px 45px rgba(230, 179, 30, 0.55),
-                0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+            box-shadow: 0 12px 45px rgba(230, 179, 30, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
         }
 
-        #loginOverlay .login-btn:active:not(:disabled) {
-            transform: translateY(-1px) scale(0.99);
-        }
+        #loginOverlay .login-btn:active:not(:disabled) { transform: translateY(-1px) scale(0.99); }
 
         #loginOverlay .login-btn:disabled {
             opacity: 0.65;
@@ -571,15 +504,9 @@
             animation: spin 0.8s linear infinite;
         }
 
-        #loginOverlay .login-btn.loading .spinner {
-            display: inline-block;
-        }
+        #loginOverlay .login-btn.loading .spinner { display: inline-block; }
+        #loginOverlay .login-btn.loading .btn-text { display: none; }
 
-        #loginOverlay .login-btn.loading .btn-text {
-            display: none;
-        }
-
-        /* ─── رسالة الخطأ ─── */
         #loginOverlay .error-msg {
             color: #fca5a5;
             font-size: 13px;
@@ -607,7 +534,6 @@
             80%      { transform: translateX(4px); }
         }
 
-        /* ─── شارة الأمان ─── */
         #loginOverlay .security-badge {
             display: flex;
             align-items: center;
@@ -625,7 +551,6 @@
             filter: drop-shadow(0 0 8px rgba(230, 179, 30, 0.5));
         }
 
-        /* ─── تذييل ─── */
         #loginOverlay .login-footer {
             display: flex;
             justify-content: space-between;
@@ -647,39 +572,20 @@
             font-weight: 700;
         }
 
-        /* ─── Responsive ─── */
         @media (max-width: 480px) {
-            #loginOverlay .login-box {
-                padding: 32px 22px 28px;
-                border-radius: 20px;
-            }
-            #loginOverlay .login-logo .logo-icon {
-                font-size: 52px;
-            }
-            #loginOverlay .login-logo .logo-text {
-                font-size: 22px;
-            }
-            #loginOverlay .login-container {
-                padding: 14px;
-            }
-            #loginOverlay .dev-name {
-                font-size: 14px;
-            }
+            #loginOverlay .login-box { padding: 32px 22px 28px; border-radius: 20px; }
+            #loginOverlay .login-logo .logo-icon { font-size: 52px; }
+            #loginOverlay .login-logo .logo-text { font-size: 22px; }
+            #loginOverlay .login-container { padding: 14px; }
+            #loginOverlay .dev-name { font-size: 14px; }
         }
 
-        /* ─── Reduced Motion ─── */
         @media (prefers-reduced-motion: reduce) {
-            #loginOverlay .login-bg {
-                animation: none;
-            }
-            #loginOverlay .particle {
-                display: none;
-            }
-            #loginOverlay .login-logo .logo-icon {
-                animation: none;
-            }
+            #loginOverlay .login-bg { animation: none; }
+            #loginOverlay .particle { display: none; }
+            #loginOverlay .login-logo .logo-icon { animation: none; }
         }
-        
+
         /* ===== AUTH LOADING ===== */
         #authLoadingOverlay {
             display: none;
@@ -693,6 +599,7 @@
             flex-direction: column;
             gap: 16px;
         }
+
         #authLoadingOverlay .spinner {
             width: 64px;
             height: 64px;
@@ -701,15 +608,19 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
+
         #authLoadingOverlay .title {
             color: #f5d76e;
             font-size: 22px;
             font-weight: 700;
         }
+
         #authLoadingOverlay .subtitle {
             color: rgba(255,255,255,0.3);
             font-size: 14px;
         }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ===== FORGOT PASSWORD MODAL ===== */
         #forgotPasswordModal {
@@ -723,6 +634,7 @@
             justify-content: center;
             padding: 20px;
         }
+
         #forgotPasswordModal .modal-box {
             background: linear-gradient(145deg, #111e3a, #0a1628);
             border-radius: 16px;
@@ -734,21 +646,25 @@
             animation: modalFade 0.3s ease;
             position: relative;
         }
+
         @keyframes modalFade {
             from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
         }
+
         #forgotPasswordModal .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
+
         #forgotPasswordModal .modal-header h3 {
             color: #f5d76e;
             margin: 0;
             font-size: 20px;
         }
+
         #forgotPasswordModal .modal-close {
             background: none;
             border: none;
@@ -759,18 +675,20 @@
             border-radius: 8px;
             transition: all 0.3s;
         }
+
         #forgotPasswordModal .modal-close:hover {
             color: #fff;
             background: rgba(230,179,30,0.04);
         }
+
         #forgotPasswordModal .modal-desc {
             color: rgba(255,255,255,0.4);
             font-size: 14px;
             margin-bottom: 20px;
         }
-        #forgotPasswordModal .form-group {
-            margin-bottom: 16px;
-        }
+
+        #forgotPasswordModal .form-group { margin-bottom: 16px; }
+
         #forgotPasswordModal .form-group input {
             width: 100%;
             padding: 12px 16px;
@@ -781,10 +699,12 @@
             font-size: 15px;
             font-family: inherit;
         }
+
         #forgotPasswordModal .form-group input:focus {
             outline: none;
             border-color: var(--gold);
         }
+
         #forgotPasswordModal .modal-message {
             padding: 12px 16px;
             border-radius: 8px;
@@ -792,15 +712,11 @@
             margin-bottom: 12px;
             display: none;
         }
+
         #forgotPasswordModal .modal-message.show { display: block; }
-        #forgotPasswordModal .modal-message.success {
-            background: rgba(34,197,94,0.08);
-            color: #4ade80;
-        }
-        #forgotPasswordModal .modal-message.error {
-            background: rgba(239,68,68,0.08);
-            color: #f87171;
-        }
+        #forgotPasswordModal .modal-message.success { background: rgba(34,197,94,0.08); color: #4ade80; }
+        #forgotPasswordModal .modal-message.error { background: rgba(239,68,68,0.08); color: #f87171; }
+
         #forgotPasswordModal .btn-send {
             width: 100%;
             padding: 14px;
@@ -813,571 +729,24 @@
             cursor: pointer;
             font-family: inherit;
         }
+
         #forgotPasswordModal .btn-send:disabled { opacity: 0.6; cursor: not-allowed; }
+
         #forgotPasswordModal .modal-footer {
             text-align: center;
             margin-top: 12px;
         }
+
         #forgotPasswordModal .modal-footer a {
             color: rgba(255,255,255,0.3);
             text-decoration: none;
             font-size: 13px;
             cursor: pointer;
         }
-                /* ═══════════════════════════════════════════════════════════
-           🎨 PROFESSIONAL LOGIN — Marine National Guard Background
-           ═══════════════════════════════════════════════════════════ */
-        #loginOverlay {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background: #0a0e1a;
-        }
-
-        /* ─── الصورة الخلفية ─── */
-        #loginOverlay .login-bg {
-            position: absolute;
-            inset: 0;
-            background-image: url('https://res.cloudinary.com/av4jxtsj/image/upload/v1790949870/IMMIGRATION-scaled-1_1.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 1;
-            animation: loginBgZoom 30s ease-in-out infinite alternate;
-        }
-
-        @keyframes loginBgZoom {
-            0%   { transform: scale(1); }
-            100% { transform: scale(1.06); }
-        }
-
-        /* ─── طبقة التعتيم الذهبي ─── */
-        #loginOverlay .login-overlay {
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            background:
-                radial-gradient(
-                    ellipse at 30% 20%,
-                    rgba(230, 179, 30, 0.18) 0%,
-                    transparent 55%
-                ),
-                radial-gradient(
-                    ellipse at 70% 80%,
-                    rgba(10, 14, 26, 0.55) 0%,
-                    transparent 55%
-                ),
-                linear-gradient(
-                    135deg,
-                    rgba(10, 14, 26, 0.55) 0%,
-                    rgba(10, 14, 26, 0.72) 50%,
-                    rgba(10, 14, 26, 0.85) 100%
-                );
-            pointer-events: none;
-        }
-
-        /* ─── الجزيئات الذهبية ─── */
-        #loginOverlay .particles {
-            position: absolute;
-            inset: 0;
-            z-index: 3;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        #loginOverlay .particle {
-            position: absolute;
-            bottom: -10px;
-            width: 4px;
-            height: 4px;
-            background: radial-gradient(circle, #f7d774, #e6b31e);
-            border-radius: 50%;
-            box-shadow: 0 0 8px rgba(247, 215, 116, 0.8);
-            opacity: 0;
-            animation: particleFloat linear infinite;
-        }
-
-        @keyframes particleFloat {
-            0% {
-                transform: translateY(0) translateX(0) scale(0.8);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.9;
-            }
-            90% {
-                opacity: 0.4;
-            }
-            100% {
-                transform: translateY(-110vh) translateX(30px) scale(1.2);
-                opacity: 0;
-            }
-        }
-
-        /* ─── صندوق الدخول ─── */
-        #loginOverlay .login-container {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            max-width: 460px;
-            padding: 20px;
-        }
-
-        #loginOverlay .login-box {
-            background: rgba(10, 14, 26, 0.72);
-            backdrop-filter: blur(28px) saturate(180%);
-            -webkit-backdrop-filter: blur(28px) saturate(180%);
-            border: 1px solid rgba(230, 179, 30, 0.25);
-            border-radius: 24px;
-            padding: 48px 40px 36px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            box-shadow:
-                0 30px 80px rgba(0, 0, 0, 0.7),
-                0 0 60px rgba(230, 179, 30, 0.15),
-                0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-            animation: loginBoxIn 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes loginBoxIn {
-            from {
-                opacity: 0;
-                transform: translateY(40px) scale(0.94);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* ─── شريط ذهبي علوي ─── */
-        #loginOverlay .login-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                #f7d774,
-                #e6b31e,
-                #f7d774,
-                transparent
-            );
-            background-size: 300% 100%;
-            animation: loginGoldBar 4s ease-in-out infinite;
-        }
-
-        @keyframes loginGoldBar {
-            0%, 100% { background-position: 0% 50%; }
-            50%      { background-position: 100% 50%; }
-        }
-
-        /* ─── الشعار ─── */
-        #loginOverlay .login-logo {
-            margin-bottom: 6px;
-        }
-
-        #loginOverlay .login-logo .logo-icon {
-            display: inline-block;
-            font-size: 64px;
-            line-height: 1;
-            animation: loginLogoFloat 4s ease-in-out infinite;
-            filter: drop-shadow(0 0 30px rgba(230, 179, 30, 0.5));
-        }
-
-        @keyframes loginLogoFloat {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50%      { transform: translateY(-8px) scale(1.06); }
-        }
-
-        #loginOverlay .login-logo .logo-text {
-            display: block;
-            font-size: 26px;
-            font-weight: 900;
-            margin-top: 8px;
-            background: linear-gradient(135deg, #e6b31e, #f7d774, #e6b31e);
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: loginShimmerGold 3s ease-in-out infinite;
-            letter-spacing: -0.5px;
-        }
-
-        @keyframes loginShimmerGold {
-            0%, 100% { background-position: 0% 50%; }
-            50%      { background-position: 100% 50%; }
-        }
-
-        #loginOverlay .login-subtitle {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.55);
-            margin-top: 6px;
-            font-weight: 500;
-        }
-
-        /* ─── معلومات المطور ─── */
-        #loginOverlay .developer-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 22px 0 28px;
-            padding: 10px 0;
-            position: relative;
-        }
-
-        #loginOverlay .developer-info::before,
-        #loginOverlay .developer-info::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(230, 179, 30, 0.35),
-                transparent
-            );
-        }
-
-        #loginOverlay .dev-badge {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        #loginOverlay .dev-badge i {
-            color: #f7d774;
-            margin-left: 4px;
-        }
-
-        #loginOverlay .dev-name {
-            font-size: 15px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #f7d774, #e6b31e);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        #loginOverlay .dev-version {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.35);
-            background: rgba(230, 179, 30, 0.08);
-            padding: 3px 10px;
-            border-radius: 20px;
-            border: 1px solid rgba(230, 179, 30, 0.15);
-            font-weight: 700;
-        }
-
-        /* ─── حقول الإدخال ─── */
-        #loginOverlay .form-group {
-            margin-bottom: 14px;
-        }
-
-        #loginOverlay .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1.5px solid rgba(230, 179, 30, 0.12);
-            border-radius: 12px;
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        #loginOverlay .input-wrapper:focus-within {
-            border-color: #e6b31e;
-            background: rgba(230, 179, 30, 0.06);
-            box-shadow:
-                0 0 0 4px rgba(230, 179, 30, 0.1),
-                0 8px 24px rgba(230, 179, 30, 0.12);
-            transform: translateY(-1px);
-        }
-
-        #loginOverlay .input-wrapper .input-icon {
-            position: absolute;
-            right: 16px;
-            color: rgba(230, 179, 30, 0.5);
-            font-size: 14px;
-            pointer-events: none;
-            transition: color 0.3s;
-        }
-
-        #loginOverlay .input-wrapper:focus-within .input-icon {
-            color: #f7d774;
-        }
-
-        #loginOverlay .input-wrapper input {
-            width: 100%;
-            padding: 15px 46px 15px 16px;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: #ffffff;
-            font-size: 15px;
-            font-family: inherit;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-        }
-
-        #loginOverlay .input-wrapper input::placeholder {
-            color: rgba(255, 255, 255, 0.3);
-            font-weight: 400;
-        }
-
-        #loginOverlay .toggle-password {
-            position: absolute;
-            left: 12px;
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        #loginOverlay .toggle-password:hover {
-            color: #f7d774;
-            background: rgba(230, 179, 30, 0.08);
-        }
-
-        /* ─── خيارات (تذكرني + نسيت) ─── */
-        #loginOverlay .login-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 18px 0 22px;
-        }
-
-        #loginOverlay .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 13px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        #loginOverlay .checkbox-label input[type="checkbox"] {
-            display: none;
-        }
-
-        #loginOverlay .checkbox-label .checkmark {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(230, 179, 30, 0.3);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        #loginOverlay .checkbox-label input:checked + .checkmark {
-            background: linear-gradient(135deg, #e6b31e, #f7d774);
-            border-color: #e6b31e;
-        }
-
-        #loginOverlay .checkbox-label input:checked + .checkmark::after {
-            content: '✓';
-            color: #0a1628;
-            font-size: 12px;
-            font-weight: 900;
-        }
-
-        #loginOverlay .forgot-link {
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 13px;
-            text-decoration: none;
-            transition: all 0.3s;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        #loginOverlay .forgot-link:hover {
-            color: #f7d774;
-            text-shadow: 0 0 12px rgba(247, 215, 116, 0.5);
-        }
-
-        /* ─── زر الدخول ─── */
-        #loginOverlay .login-btn {
-            width: 100%;
-            padding: 17px;
-            border: none;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #e6b31e, #f7d774, #e6b31e);
-            background-size: 200% 200%;
-            color: #0a1628;
-            font-size: 16px;
-            font-weight: 800;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow:
-                0 6px 30px rgba(230, 179, 30, 0.35),
-                0 0 0 1px rgba(255, 255, 255, 0.15) inset;
-            position: relative;
-            overflow: hidden;
-            letter-spacing: 0.3px;
-            animation: loginShimmerGold 3s ease-in-out infinite;
-        }
-
-        #loginOverlay .login-btn:hover:not(:disabled) {
-            transform: translateY(-3px) scale(1.01);
-            box-shadow:
-                0 12px 45px rgba(230, 179, 30, 0.55),
-                0 0 0 1px rgba(255, 255, 255, 0.25) inset;
-        }
-
-        #loginOverlay .login-btn:active:not(:disabled) {
-            transform: translateY(-1px) scale(0.99);
-        }
-
-        #loginOverlay .login-btn:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-            animation: none;
-        }
-
-        #loginOverlay .login-btn .btn-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        #loginOverlay .login-btn .spinner {
-            display: none;
-            width: 22px;
-            height: 22px;
-            border: 3px solid rgba(10, 22, 40, 0.2);
-            border-top-color: #0a1628;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        #loginOverlay .login-btn.loading .spinner {
-            display: inline-block;
-        }
-
-        #loginOverlay .login-btn.loading .btn-text {
-            display: none;
-        }
-
-        /* ─── رسالة الخطأ ─── */
-        #loginOverlay .error-msg {
-            color: #fca5a5;
-            font-size: 13px;
-            margin-top: 14px;
-            padding: 12px 16px;
-            background: rgba(239, 68, 68, 0.12);
-            border-radius: 10px;
-            border-right: 4px solid #ef4444;
-            display: none;
-            text-align: right;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-        }
-
-        #loginOverlay .error-msg.show {
-            display: block;
-            animation: loginShake 0.45s ease;
-        }
-
-        @keyframes loginShake {
-            0%, 100% { transform: translateX(0); }
-            20%      { transform: translateX(-8px); }
-            40%      { transform: translateX(8px); }
-            60%      { transform: translateX(-4px); }
-            80%      { transform: translateX(4px); }
-        }
-
-        /* ─── شارة الأمان ─── */
-        #loginOverlay .security-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 18px;
-            color: rgba(255, 255, 255, 0.28);
-            font-size: 11.5px;
-            font-weight: 500;
-        }
-
-        #loginOverlay .security-badge i {
-            color: #e6b31e;
-            font-size: 13px;
-            filter: drop-shadow(0 0 8px rgba(230, 179, 30, 0.5));
-        }
-
-        /* ─── تذييل ─── */
-        #loginOverlay .login-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 24px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            color: rgba(255, 255, 255, 0.18);
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        #loginOverlay .login-footer .footer-version {
-            background: rgba(230, 179, 30, 0.08);
-            padding: 3px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(230, 179, 30, 0.15);
-            color: #f7d774;
-            font-weight: 700;
-        }
-
-        /* ─── Responsive ─── */
-        @media (max-width: 480px) {
-            #loginOverlay .login-box {
-                padding: 32px 22px 28px;
-                border-radius: 20px;
-            }
-            #loginOverlay .login-logo .logo-icon {
-                font-size: 52px;
-            }
-            #loginOverlay .login-logo .logo-text {
-                font-size: 22px;
-            }
-            #loginOverlay .login-container {
-                padding: 14px;
-            }
-            #loginOverlay .dev-name {
-                font-size: 14px;
-            }
-        }
-
-        /* ─── Reduced Motion (للأجهزة البطيئة) ─── */
-        @media (prefers-reduced-motion: reduce) {
-            #loginOverlay .login-bg {
-                animation: none;
-            }
-            #loginOverlay .particle {
-                display: none;
-            }
-            #loginOverlay .login-logo .logo-icon {
-                animation: none;
-            }
-        }
 
         /* ===== MAIN APP ===== */
         #mainApp { display: none; min-height: 100vh; }
+
         .main-header {
             position: sticky;
             top: 0;
@@ -1389,6 +758,7 @@
             display: flex;
             align-items: center;
         }
+
         .header-container {
             display: flex;
             justify-content: space-between;
@@ -1398,11 +768,13 @@
             max-width: 1440px;
             margin: 0 auto;
         }
+
         .header-left {
             display: flex;
             align-items: center;
             gap: 16px;
         }
+
         .menu-toggle {
             display: none;
             flex-direction: column;
@@ -1413,6 +785,7 @@
             padding: 8px;
             border-radius: 8px;
         }
+
         .menu-toggle span {
             display: block;
             width: 24px;
@@ -1421,6 +794,7 @@
             border-radius: 2px;
             transition: all 0.3s;
         }
+
         .menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(4px,4px); }
         .menu-toggle.active span:nth-child(2) { opacity: 0; }
         .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(4px,-4px); }
@@ -1430,14 +804,17 @@
             align-items: center;
             gap: 10px;
         }
+
         .brand .brand-icon { font-size: 24px; }
-        .brand h1 { 
-            font-size: 17px; 
-            font-weight: 700; 
+
+        .brand h1 {
+            font-size: 17px;
+            font-weight: 700;
             background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .brand .brand-tag {
             font-size: 11px;
             color: var(--gold-light);
@@ -1451,6 +828,7 @@
             align-items: center;
             gap: 12px;
         }
+
         .search-wrapper {
             display: flex;
             align-items: center;
@@ -1459,6 +837,7 @@
             border-radius: 20px;
             padding: 0 16px;
         }
+
         .search-wrapper input {
             background: transparent;
             border: none;
@@ -1469,11 +848,13 @@
             font-family: inherit;
             width: 160px;
         }
+
         .search-wrapper .search-icon {
             color: rgba(230,179,30,0.2);
             font-size: 13px;
             margin-left: 10px;
         }
+
         .search-wrapper .search-shortcut {
             font-size: 10px;
             color: rgba(255,255,255,0.15);
@@ -1483,6 +864,7 @@
         }
 
         .notification-wrapper { position: relative; }
+
         .notif-btn {
             background: none;
             border: none;
@@ -1493,7 +875,9 @@
             border-radius: 50%;
             transition: all 0.3s;
         }
+
         .notif-btn:hover { color: var(--gold-light); background: rgba(230,179,30,0.04); }
+
         .notif-badge {
             position: absolute;
             top: 4px;
@@ -1510,7 +894,6 @@
             display: none;
         }
 
-        /* ✅ ===== NOTIFICATIONS DROPDOWN (NEW v9.16) ===== */
         .notif-dropdown {
             display: none;
             position: absolute;
@@ -1526,6 +909,7 @@
             overflow: hidden;
             animation: notifSlide 0.25s cubic-bezier(0.16,1,0.3,1);
         }
+
         .notif-dropdown.open { display: block; }
 
         @keyframes notifSlide {
@@ -1541,6 +925,7 @@
             border-bottom: 1px solid rgba(230,179,30,0.08);
             background: rgba(230,179,30,0.02);
         }
+
         .notif-dropdown-header h4 {
             color: var(--gold-light);
             font-size: 15px;
@@ -1549,6 +934,7 @@
             align-items: center;
             gap: 8px;
         }
+
         .notif-mark-all {
             background: none;
             border: none;
@@ -1560,16 +946,19 @@
             border-radius: 6px;
             transition: all 0.3s;
         }
+
         .notif-mark-all:hover {
             color: var(--gold-light);
             background: rgba(230,179,30,0.06);
         }
+
         .notif-mark-all:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .notif-dropdown-list {
             max-height: 440px;
             overflow-y: auto;
         }
+
         .notif-dropdown-list::-webkit-scrollbar { width: 4px; }
         .notif-dropdown-list::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 10px; }
 
@@ -1582,8 +971,10 @@
             transition: background 0.2s;
             position: relative;
         }
+
         .notif-item:hover { background: rgba(230,179,30,0.04); }
         .notif-item.unread { background: rgba(230,179,30,0.03); }
+
         .notif-item.unread::before {
             content: '';
             position: absolute;
@@ -1606,12 +997,14 @@
             flex-shrink: 0;
             font-size: 14px;
         }
+
         .notif-item-icon.info    { background: rgba(59,130,246,0.15);  color: #60a5fa; }
         .notif-item-icon.success { background: rgba(34,197,94,0.15);   color: #4ade80; }
         .notif-item-icon.warning { background: rgba(234,179,8,0.15);   color: #facc15; }
         .notif-item-icon.danger  { background: rgba(239,68,68,0.15);   color: #f87171; }
 
         .notif-item-body { flex: 1; min-width: 0; }
+
         .notif-item-title {
             color: #e8edf5;
             font-size: 13px;
@@ -1619,6 +1012,7 @@
             margin-bottom: 4px;
             line-height: 1.4;
         }
+
         .notif-item-msg {
             color: rgba(255,255,255,0.5);
             font-size: 12px;
@@ -1626,6 +1020,7 @@
             margin-bottom: 4px;
             word-wrap: break-word;
         }
+
         .notif-item-time {
             color: rgba(255,255,255,0.25);
             font-size: 10px;
@@ -1645,7 +1040,9 @@
             opacity: 0;
             transition: all 0.2s;
         }
+
         .notif-item:hover .notif-item-delete { opacity: 1; }
+
         .notif-item-delete:hover {
             color: var(--danger);
             background: rgba(239,68,68,0.08);
@@ -1657,6 +1054,7 @@
             color: rgba(255,255,255,0.25);
             font-size: 13px;
         }
+
         .notif-empty i {
             display: block;
             font-size: 32px;
@@ -1664,26 +1062,12 @@
             color: rgba(230,179,30,0.15);
         }
 
-        .notif-loading {
-            text-align: center;
-            padding: 30px 20px;
-            color: rgba(255,255,255,0.3);
-            font-size: 12px;
-        }
-        .notif-loading i {
-            animation: spin 1s linear infinite;
-            margin-left: 6px;
-        }
-
         @media (max-width: 480px) {
-            .notif-dropdown {
-                width: calc(100vw - 20px);
-                left: -10px;
-            }
+            .notif-dropdown { width: calc(100vw - 20px); left: -10px; }
         }
-        /* ===== END NOTIFICATIONS DROPDOWN ===== */
 
         .user-wrapper { position: relative; }
+
         .user-btn {
             display: flex;
             align-items: center;
@@ -1695,7 +1079,9 @@
             border-radius: 20px;
             transition: all 0.3s;
         }
+
         .user-btn:hover { background: rgba(230,179,30,0.04); }
+
         .user-avatar {
             width: 32px;
             height: 32px;
@@ -1709,11 +1095,9 @@
             color: #0a1628;
             flex-shrink: 0;
         }
+
         .user-name { font-size: 13px; color: #e2e8f0; font-weight: 500; }
-        .user-arrow {
-            font-size: 11px;
-            color: rgba(255,255,255,0.2);
-        }
+        .user-arrow { font-size: 11px; color: rgba(255,255,255,0.2); }
 
         /* ===== SIDEBAR ===== */
         .sidebar {
@@ -1732,6 +1116,7 @@
             flex-direction: column;
             transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
         }
+
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 10px; }
 
@@ -1743,18 +1128,17 @@
             border-bottom: 1px solid rgba(230,179,30,0.04);
             margin-bottom: 16px;
         }
+
         .sidebar-brand {
             display: flex;
             align-items: center;
             gap: 10px;
         }
+
         .sidebar-brand .brand-icon { font-size: 24px; color: var(--gold); }
-        .sidebar-brand .brand-title { 
-            font-size: 16px; 
-            font-weight: 700; 
-            color: var(--gold-light);
-        }
+        .sidebar-brand .brand-title { font-size: 16px; font-weight: 700; color: var(--gold-light); }
         .sidebar-brand .brand-subtitle { font-size: 10px; color: rgba(255,255,255,0.2); }
+
         .sidebar-close {
             display: none;
             background: none;
@@ -1774,17 +1158,20 @@
             border-radius: 12px;
             margin-bottom: 16px;
         }
+
         .sidebar-user .user-avatar {
             width: 40px;
             height: 40px;
             font-size: 18px;
         }
+
         .sidebar-user .user-info {
             display: flex;
             flex-direction: column;
             flex: 1;
             min-width: 0;
         }
+
         .sidebar-user .user-name {
             font-size: 14px;
             font-weight: 600;
@@ -1793,6 +1180,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         .sidebar-user .user-role { font-size: 11px; color: rgba(230,179,30,0.4); }
 
         .sidebar-nav {
@@ -1801,12 +1189,14 @@
             flex-direction: column;
             gap: 4px;
         }
+
         .nav-group {
             display: flex;
             flex-direction: column;
             gap: 2px;
             margin-bottom: 6px;
         }
+
         .nav-group-title {
             font-size: 10px;
             font-weight: 700;
@@ -1815,6 +1205,7 @@
             letter-spacing: 0.5px;
             padding: 8px 12px 4px;
         }
+
         .nav-btn {
             display: flex;
             align-items: center;
@@ -1833,6 +1224,7 @@
             width: 100%;
             position: relative;
         }
+
         .nav-btn i {
             width: 20px;
             text-align: center;
@@ -1840,13 +1232,17 @@
             flex-shrink: 0;
             color: rgba(230,179,30,0.3);
         }
+
         .nav-btn:hover { background: rgba(230,179,30,0.02); color: #fff; }
         .nav-btn:hover i { color: var(--gold-light); }
+
         .nav-btn.active {
             background: rgba(230,179,30,0.04);
             color: var(--gold-light);
         }
+
         .nav-btn.active i { color: var(--gold-light); }
+
         .nav-btn.active::before {
             content: '';
             position: absolute;
@@ -1857,6 +1253,7 @@
             background: var(--gold);
             border-radius: 0 3px 3px 0;
         }
+
         .nav-btn .nav-badge {
             margin-right: auto;
             font-size: 9px;
@@ -1868,18 +1265,10 @@
             text-align: center;
             display: none;
         }
-        .nav-btn .nav-badge.warning {
-            background: rgba(239,68,68,0.08);
-            color: var(--danger);
-        }
-        .nav-btn .nav-badge.success {
-            background: rgba(34,197,94,0.08);
-            color: var(--success);
-        }
-        .nav-btn .nav-badge.info {
-            background: rgba(59,130,246,0.08);
-            color: var(--info);
-        }
+
+        .nav-btn .nav-badge.warning { background: rgba(239,68,68,0.08); color: var(--danger); }
+        .nav-btn .nav-badge.success { background: rgba(34,197,94,0.08); color: var(--success); }
+        .nav-btn .nav-badge.info    { background: rgba(59,130,246,0.08); color: var(--info); }
 
         .sidebar-footer {
             border-top: 1px solid rgba(230,179,30,0.04);
@@ -1889,6 +1278,7 @@
             flex-direction: column;
             gap: 8px;
         }
+
         .footer-status {
             display: flex;
             align-items: center;
@@ -1896,19 +1286,22 @@
             font-size: 12px;
             color: rgba(255,255,255,0.2);
         }
+
         .footer-status .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             display: inline-block;
         }
+
         .footer-status .status-dot.online {
             background: var(--success);
             animation: pulseDot 2s ease-in-out infinite;
         }
+
         @keyframes pulseDot {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
+            50%      { opacity: 0.5; transform: scale(1.2); }
         }
 
         .footer-version {
@@ -1918,7 +1311,9 @@
             font-size: 11px;
             color: rgba(255,255,255,0.15);
         }
+
         .footer-version i { color: var(--gold); }
+
         .footer-logout {
             display: flex;
             align-items: center;
@@ -1935,6 +1330,7 @@
             transition: all 0.3s;
             width: 100%;
         }
+
         .footer-logout:hover { background: rgba(239,68,68,0.08); }
 
         .main-content {
@@ -1942,7 +1338,9 @@
             min-height: calc(100vh - 64px);
             padding: 20px 24px;
         }
+
         .page-container { max-width: 1440px; margin: 0 auto; }
+
         .page-loader {
             display: none;
             flex-direction: column;
@@ -1951,6 +1349,7 @@
             padding: 60px 20px;
             min-height: 200px;
         }
+
         .loader-spinner {
             width: 40px;
             height: 40px;
@@ -1959,6 +1358,7 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
+
         .page-loader p { margin-top: 16px; color: rgba(255,255,255,0.2); font-size: 14px; }
         #pageContainer { min-height: 300px; }
 
@@ -1981,6 +1381,7 @@
             align-items: center;
             justify-content: center;
         }
+
         .back-to-top:hover { transform: translateY(-3px); }
 
         .toast-container {
@@ -1996,6 +1397,7 @@
             width: 90%;
             pointer-events: none;
         }
+
         .toast {
             padding: 12px 18px;
             border-radius: 12px;
@@ -2009,6 +1411,7 @@
             pointer-events: auto;
             border: 1px solid rgba(255,255,255,0.08);
         }
+
         .toast-success { background: rgba(16,185,129,0.92); }
         .toast-error { background: rgba(239,68,68,0.92); }
         .toast-warning { background: rgba(245,158,11,0.92); }
@@ -2028,13 +1431,15 @@
             .sidebar-header { display: flex; }
             .sidebar-close { display: block; }
         }
-               @media (max-width: 768px) {
+
+        @media (max-width: 768px) {
             .login-box { padding: 32px 24px 28px; }
             .brand h1 { font-size: 14px; }
             .brand .brand-tag { display: none; }
             .search-wrapper { display: none; }
             .user-name { display: none; }
         }
+
         @media (max-width: 480px) {
             .login-box { padding: 24px 16px 20px; }
             .brand h1 { font-size: 12px; }
@@ -2058,6 +1463,7 @@
             justify-content: center;
             padding: 20px;
         }
+
         #printSettingsModal.active { display: flex; }
 
         #printSettingsModal .ps-box {
@@ -2070,6 +1476,7 @@
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 60px rgba(230, 179, 30, 0.05);
             animation: psModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
+
         @keyframes psModalIn {
             from { opacity: 0; transform: scale(0.95) translateY(15px); }
             to   { opacity: 1; transform: scale(1) translateY(0); }
@@ -2079,24 +1486,42 @@
             padding: 20px 24px;
             background: rgba(230, 179, 30, 0.04);
             border-bottom: 1px solid rgba(230, 179, 30, 0.1);
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+
         #printSettingsModal .ps-header h3 {
-            color: var(--gold-light); font-size: 18px; font-weight: 800;
-            display: flex; align-items: center; gap: 10px; margin: 0;
+            color: var(--gold-light);
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
         }
+
         #printSettingsModal .ps-header h3 i { color: var(--gold); }
 
         #printSettingsModal .ps-close {
-            background: rgba(255, 255, 255, 0.04); border: none;
-            color: rgba(255, 255, 255, 0.5); width: 36px; height: 36px;
-            border-radius: 10px; cursor: pointer; font-size: 18px;
-            display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s;
         }
+
         #printSettingsModal .ps-close:hover {
             background: rgba(239, 68, 68, 0.15);
-            color: #f87171; transform: rotate(90deg);
+            color: #f87171;
+            transform: rotate(90deg);
         }
 
         #printSettingsModal .ps-body { padding: 24px; }
@@ -2104,83 +1529,126 @@
         #printSettingsModal .ps-group:last-child { margin-bottom: 0; }
 
         #printSettingsModal .ps-label {
-            display: block; font-size: 12px; font-weight: 700;
-            color: rgba(255, 255, 255, 0.5); margin-bottom: 12px;
-            letter-spacing: 0.5px; text-transform: uppercase;
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
+
         #printSettingsModal .ps-label i { color: var(--gold); margin-left: 6px; }
 
         #printSettingsModal .ps-options {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-        }
-        #printSettingsModal .ps-options.four {
-            grid-template-columns: repeat(4, 1fr);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
+        #printSettingsModal .ps-options.four { grid-template-columns: repeat(4, 1fr); }
+
         #printSettingsModal .ps-option {
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; gap: 8px; padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 12px;
             background: rgba(255, 255, 255, 0.03);
             border: 1.5px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px; cursor: pointer;
+            border-radius: 12px;
+            cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             color: rgba(255, 255, 255, 0.6);
-            font-family: inherit; font-size: 12px; font-weight: 700;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
             position: relative;
         }
+
         #printSettingsModal .ps-option:hover {
             background: rgba(230, 179, 30, 0.05);
             border-color: rgba(230, 179, 30, 0.3);
-            color: #f5d76e; transform: translateY(-2px);
+            color: #f5d76e;
+            transform: translateY(-2px);
         }
+
         #printSettingsModal .ps-option.active {
             background: linear-gradient(135deg, rgba(230, 179, 30, 0.15), rgba(245, 215, 110, 0.08));
             border-color: var(--gold);
             color: var(--gold-light);
             box-shadow: 0 4px 20px rgba(230, 179, 30, 0.15);
         }
+
         #printSettingsModal .ps-option.active::before {
-            content: '✓'; position: absolute; top: 6px; left: 8px;
-            width: 18px; height: 18px; background: var(--gold);
-            color: #0a1628; border-radius: 50%; font-size: 10px;
-            font-weight: 900; display: flex; align-items: center;
+            content: '✓';
+            position: absolute;
+            top: 6px;
+            left: 8px;
+            width: 18px;
+            height: 18px;
+            background: var(--gold);
+            color: #0a1628;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
             justify-content: center;
         }
+
         #printSettingsModal .ps-option i { font-size: 22px; color: inherit; }
         #printSettingsModal .ps-option .ps-opt-label { font-size: 12px; font-weight: 700; }
         #printSettingsModal .ps-option .ps-opt-sub { font-size: 9px; opacity: 0.5; font-weight: 500; }
 
         #printSettingsModal .ps-footer {
-            padding: 18px 24px 24px; display: flex; gap: 12px;
+            padding: 18px 24px 24px;
+            display: flex;
+            gap: 12px;
             border-top: 1px solid rgba(255, 255, 255, 0.04);
         }
+
         #printSettingsModal .ps-btn {
-            flex: 1; padding: 14px; border: none; border-radius: 12px;
-            font-family: inherit; font-size: 14px; font-weight: 800;
-            cursor: pointer; transition: all 0.25s;
-            display: inline-flex; align-items: center;
-            justify-content: center; gap: 8px;
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
+
         #printSettingsModal .ps-btn-print {
             background: linear-gradient(135deg, var(--gold), var(--gold-light));
             color: #0a1628;
             box-shadow: 0 4px 20px rgba(230, 179, 30, 0.2);
         }
+
         #printSettingsModal .ps-btn-print:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(230, 179, 30, 0.35);
         }
+
         #printSettingsModal .ps-btn-cancel {
             background: rgba(255, 255, 255, 0.05);
             color: rgba(255, 255, 255, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            flex: 0 0 auto; padding: 14px 24px;
-        }
-        #printSettingsModal .ps-btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.08); color: #fff;
+            flex: 0 0 auto;
+            padding: 14px 24px;
         }
 
-        /* إخفاء اللوحة عند الطباعة نفسها */
+        #printSettingsModal .ps-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
         @media print {
             #printSettingsModal { display: none !important; }
         }
@@ -2190,11 +1658,16 @@
             #printSettingsModal .ps-body { padding: 18px; }
         }
     </style>
-     <script src="/socket.io/socket.io.js"></script>
+
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
+
     <!-- ===== LOGIN ===== -->
     <div id="loginOverlay">
+        <div class="login-bg"></div>
+        <div class="login-overlay"></div>
+        <div class="particles" id="loginParticles"></div>
         <div class="login-container">
             <div class="login-box">
                 <div class="login-logo">
@@ -2205,7 +1678,7 @@
                 <div class="developer-info">
                     <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
                     <span class="dev-name">أمان الله ناجي</span>
-                    <span class="dev-version">v9.6</span>
+                    <span class="dev-version">v9.7</span>
                 </div>
                 <form id="loginForm" class="login-form" autocomplete="off" novalidate>
                     <div class="form-group">
@@ -2245,7 +1718,7 @@
                 </form>
                 <div class="login-footer">
                     <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                    <span class="footer-version">v9.6</span>
+                    <span class="footer-version">v9.7</span>
                 </div>
             </div>
         </div>
@@ -2282,7 +1755,7 @@
         <header class="main-header">
             <div class="header-container">
                 <div class="header-left">
-                    <button class="menu-toggle" id="menuToggle">
+                    <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
                         <span></span><span></span><span></span>
                     </button>
                     <div class="brand">
@@ -2298,11 +1771,10 @@
                         <kbd class="search-shortcut">⌘K</kbd>
                     </div>
                     <div class="notification-wrapper">
-                        <button class="notif-btn" id="notifBtn">
+                        <button class="notif-btn" id="notifBtn" aria-label="الإشعارات">
                             <i class="fas fa-bell"></i>
                             <span class="notif-badge" id="notifBadge">0</span>
                         </button>
-                        <!-- ✅ NEW: Notifications Dropdown -->
                         <div class="notif-dropdown" id="notifDropdown">
                             <div class="notif-dropdown-header">
                                 <h4><i class="fas fa-bell"></i> الإشعارات</h4>
@@ -2315,7 +1787,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- ✅ END Notifications Dropdown -->
                     </div>
                     <div class="user-wrapper">
                         <button class="user-btn" id="userBtn">
@@ -2337,7 +1808,7 @@
                         <div class="brand-subtitle">نظام إدارة الوسائل البحرية</div>
                     </div>
                 </div>
-                <button class="sidebar-close" id="sidebarClose">✕</button>
+                <button class="sidebar-close" id="sidebarClose" aria-label="إغلاق">✕</button>
             </div>
             <div class="sidebar-user">
                 <div class="user-avatar" id="sidebarUserAvatar">م</div>
@@ -2364,7 +1835,7 @@
                         <i class="fas fa-truck"></i> الوسائل البرية
                     </button>
                     <button class="nav-btn" data-page="maintenance">
-                        <i class="fas fa-wrench"></i>  الصيانة 
+                        <i class="fas fa-wrench"></i> الصيانة
                         <span class="nav-badge warning" id="maintenanceBadge">0</span>
                     </button>
                     <button class="nav-btn" data-page="efficiency">
@@ -2413,9 +1884,17 @@
                 </div>
             </div>
             <div class="sidebar-footer">
-                <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>
-                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v9.6 · RBAC</span></div>
-                <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+                <div class="footer-status">
+                    <span class="status-dot online"></span>
+                    <span>متصل</span>
+                </div>
+                <div class="footer-version">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>v9.7 · RBAC</span>
+                </div>
+                <button class="footer-logout" onclick="doLogout()">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
             </div>
         </nav>
 
@@ -2429,7 +1908,7 @@
             </div>
         </main>
 
-        <button class="back-to-top" id="backToTop" style="display:none;">
+        <button class="back-to-top" id="backToTop" style="display:none;" aria-label="أعلى">
             <i class="fas fa-chevron-up"></i>
         </button>
     </div>
@@ -2511,24 +1990,25 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============================================================
-    JAVASCRIPT - v9.16 (Notifications Fix)
-    ============================================================ -->
+         JAVASCRIPT - v9.7 (FIXED)
+         ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v9.16
-        // - CSRF من الخادم فقط (بدون توليد محلي)
-        // - Refresh Token عبر HttpOnly Cookie فقط
-        // - تجديد تلقائي للـ Access Token عند 401
-        // - RBAC مطابق لصلاحيات السيرفر
-        // - ✅ NEW: نظام إشعارات كامل (Dropdown + Polling + Server Sync)
+        // 🚢 MARINE SYSTEM - v9.7
+        // FIXES:
+        //  - Object.defineProperty للحالة العامة (currentUser, allVessels, ...)
+        //  - refreshAccessToken باستخدام try/finally لمنع تسريب Promise
+        //  - apiFetch لا يكتب فوق Authorization / X-CSRF-Token المخصص
+        //  - loadPage يحتفظ بالسكريبتات بدل حذفها بعد 10ms (تنظيف عند التبديل)
+        //  - markAsRead/markAllAsRead/deleteNotification مع Rollback عند الفشل
+        //  - window.print محمي عبر اعتراض Ctrl+P بدل إعادة التعريف
         // ============================================================
 
-        console.log('🚢 Marine System v9.16 - Loading...');
+        console.log('🚢 Marine System v9.7 - Loading...');
 
         // ============================================================
         // ✅ GLOBAL CLEANUP STATE
         // ============================================================
-
         window._pageCleanup = window._pageCleanup || [];
         window._pageIntervals = window._pageIntervals || [];
         window._pageTimeouts = window._pageTimeouts || [];
@@ -2539,31 +2019,25 @@
                     clearInterval(window._dateTimeInterval);
                     window._dateTimeInterval = null;
                 }
-
                 if (window._notifPollingInterval) {
                     clearInterval(window._notifPollingInterval);
                     window._notifPollingInterval = null;
                 }
-
                 if (Array.isArray(window._pageIntervals)) {
                     window._pageIntervals.forEach(id => {
                         try { clearInterval(id); } catch (e) {}
                     });
                     window._pageIntervals = [];
                 }
-
                 if (Array.isArray(window._pageTimeouts)) {
                     window._pageTimeouts.forEach(id => {
                         try { clearTimeout(id); } catch (e) {}
                     });
                     window._pageTimeouts = [];
                 }
-
                 if (Array.isArray(window._pageCleanup)) {
                     window._pageCleanup.forEach(fn => {
-                        try {
-                            if (typeof fn === 'function') fn();
-                        } catch (e) {}
+                        try { if (typeof fn === 'function') fn(); } catch (e) {}
                     });
                     window._pageCleanup = [];
                 }
@@ -2578,7 +2052,6 @@
         // ============================================================
         // ⏰ DATE TIME
         // ============================================================
-
         function updateDateTime() {
             try {
                 const now = new Date();
@@ -2587,18 +2060,12 @@
 
                 if (dateEl) {
                     dateEl.textContent = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                     });
                 }
-
                 if (timeEl) {
                     timeEl.textContent = now.toLocaleTimeString('ar-TN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
+                        hour: '2-digit', minute: '2-digit', second: '2-digit'
                     });
                 }
             } catch (e) {
@@ -2612,7 +2079,6 @@
                     clearInterval(window._dateTimeInterval);
                     window._dateTimeInterval = null;
                 }
-
                 const hasDate = !!document.getElementById('currentDate');
                 const hasTime = !!document.getElementById('currentTime');
 
@@ -2639,13 +2105,13 @@
         // ============================================================
         // 📦 CONFIGURATION
         // ============================================================
-
-                const CONFIG = {
+        const CONFIG = {
             API: '/api',
             KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },
             PAGES: {
                 dashboard: 'لوحة التحكم',
                 fleet: 'السجل العام',
+                vehicles: 'الوسائل البرية',
                 maintenance: 'الصيانة',
                 efficiency: 'الجاهزية',
                 support: 'الدعم',
@@ -2660,36 +2126,27 @@
         };
 
         // ============================================================
-        // 🔐 RBAC - Role-Based Access Control
+        // 🔐 RBAC
         // ============================================================
-
         const ROLE_PERMISSIONS = {
             admin: ['*'],
-
             manager: [
                 'dashboard:view',
                 'vessels:read', 'vessels:create', 'vessels:update',
                 'maintenance:read', 'maintenance:create', 'maintenance:update', 'maintenance:delete',
                 'logs:read'
             ],
-
             editor: [
                 'dashboard:view',
                 'vessels:read', 'vessels:create', 'vessels:update',
                 'maintenance:read', 'maintenance:create', 'maintenance:update'
             ],
-
             maintenance_unit: [
                 'dashboard:view',
                 'vessels:read', 'vessels:create', 'vessels:update',
                 'maintenance:read', 'maintenance:create', 'maintenance:update'
             ],
-
-            viewer: [
-                'dashboard:view',
-                'vessels:read',
-                'maintenance:read'
-            ]
+            viewer: ['dashboard:view', 'vessels:read', 'maintenance:read']
         };
 
         const SENSITIVE_PERMISSIONS = {
@@ -2721,22 +2178,23 @@
             if (ROLE_PERMISSIONS[trimmed]) return trimmed;
             return LEGACY_ROLE_MAP[trimmed] || 'viewer';
         }
-const PAGE_PERMISSIONS = {
-    dashboard: 'dashboard:view',
-    fleet: 'vessels:read',
-    vehicles: 'vessels:read',
-    maintenance: 'maintenance:read',
-    efficiency: 'dashboard:view',
-    support: 'dashboard:view',
-    notes: 'dashboard:view',
-    monitoring: 'monitoring:view',
-    users: 'users:manage',
-    logs: 'logs:read',
-    activity: 'logs:read',
-    'ai-assistant': 'dashboard:view',
-    settings: 'settings:manage'
-};
-                
+
+        const PAGE_PERMISSIONS = {
+            dashboard: 'dashboard:view',
+            fleet: 'vessels:read',
+            vehicles: 'vessels:read',
+            maintenance: 'maintenance:read',
+            efficiency: 'dashboard:view',
+            support: 'dashboard:view',
+            notes: 'dashboard:view',
+            monitoring: 'monitoring:view',
+            users: 'users:manage',
+            logs: 'logs:read',
+            activity: 'logs:read',
+            'ai-assistant': 'dashboard:view',
+            settings: 'settings:manage'
+        };
+
         const ADMIN_ONLY_PAGES = ['users', 'settings', 'monitoring'];
 
         function isAdmin() {
@@ -2746,7 +2204,6 @@ const PAGE_PERMISSIONS = {
 
         function hasPermission(permission) {
             if (!currentUser || !currentUser.role) return false;
-
             const role = normalizeRole(currentUser.role);
 
             if (SENSITIVE_PERMISSIONS[permission]) {
@@ -2759,18 +2216,13 @@ const PAGE_PERMISSIONS = {
 
             const resource = permission.split(':')[0];
             if (permissions.includes(resource + ':*')) return true;
-
             return false;
         }
 
         function canAccessPage(page) {
-            if (ADMIN_ONLY_PAGES.includes(page)) {
-                return isAdmin();
-            }
-
+            if (ADMIN_ONLY_PAGES.includes(page)) return isAdmin();
             const required = PAGE_PERMISSIONS[page];
             if (!required) return true;
-
             return hasPermission(required);
         }
 
@@ -2780,12 +2232,10 @@ const PAGE_PERMISSIONS = {
             const role = normalizeRole(currentUser.role);
             console.log('🔐 Applying RBAC for role:', role, '(raw:', currentUser.role, ')');
 
-            let visible = 0;
-            let hidden = 0;
+            let visible = 0, hidden = 0;
 
             document.querySelectorAll('.nav-btn[data-page]').forEach(function(btn) {
                 const page = btn.dataset.page;
-
                 if (canAccessPage(page)) {
                     btn.style.display = 'flex';
                     btn.disabled = false;
@@ -2800,10 +2250,8 @@ const PAGE_PERMISSIONS = {
             });
 
             document.querySelectorAll('.nav-group').forEach(function(group) {
-                const visibleBtns = Array.from(group.querySelectorAll('.nav-btn')).filter(
-                    btn => btn.style.display !== 'none'
-                );
-
+                const visibleBtns = Array.from(group.querySelectorAll('.nav-btn'))
+                    .filter(btn => btn.style.display !== 'none');
                 group.style.display = visibleBtns.length === 0 ? 'none' : 'flex';
             });
 
@@ -2811,24 +2259,39 @@ const PAGE_PERMISSIONS = {
         }
 
         // ============================================================
-        // 📦 STATE
+        // 📦 STATE (with automatic window synchronization)
         // ============================================================
-
         var currentUser = null;
         var currentPage = 'dashboard';
         var allVessels = [];
         var allUsers = [];
         var allLogs = [];
 
-        window.currentUser = currentUser;
-        window.allVessels = allVessels;
-        window.allUsers = allUsers;
-        window.allLogs = allLogs;
+        // ✅ مزامنة تلقائية بدل النسخ الثابت
+        Object.defineProperty(window, 'currentUser', {
+            get: function() { return currentUser; },
+            set: function(v) { currentUser = v; },
+            configurable: true
+        });
+        Object.defineProperty(window, 'allVessels', {
+            get: function() { return allVessels; },
+            set: function(v) { allVessels = v; },
+            configurable: true
+        });
+        Object.defineProperty(window, 'allUsers', {
+            get: function() { return allUsers; },
+            set: function(v) { allUsers = v; },
+            configurable: true
+        });
+        Object.defineProperty(window, 'allLogs', {
+            get: function() { return allLogs; },
+            set: function(v) { allLogs = v; },
+            configurable: true
+        });
 
         // ============================================================
         // 🔒 CSRF TOKEN MANAGER
         // ============================================================
-
         class CSRFTokenManager {
             constructor() {
                 this.token = null;
@@ -2899,11 +2362,8 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 🔧 HELPERS
         // ============================================================
-
         function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
-
         function setToken(token) { localStorage.setItem(CONFIG.KEYS.TOKEN, token); }
-
         function clearToken() { localStorage.removeItem(CONFIG.KEYS.TOKEN); }
 
         function getRoleName(r) {
@@ -2912,7 +2372,7 @@ const PAGE_PERMISSIONS = {
         }
 
         function escapeHTML(s) {
-            if (!s) return '';
+            if (s === null || s === undefined) return '';
             return String(s).replace(/[&<>"']/g, m => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
             }[m]));
@@ -2921,7 +2381,6 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 🍞 TOAST
         // ============================================================
-
         function showToast(msg, type = 'info') {
             try {
                 const c = document.getElementById('toastContainer');
@@ -2953,7 +2412,6 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 🔔 UPDATE BADGE - SAFE
         // ============================================================
-
         function updateBadge(id, count) {
             try {
                 const el = document.getElementById(id);
@@ -2966,24 +2424,27 @@ const PAGE_PERMISSIONS = {
         }
 
         // ============================================================
-        // 🌐 FETCH WRAPPER
+        // 🌐 FETCH WRAPPER (fixed refresh + headers)
         // ============================================================
-
         let _refreshInFlight = null;
 
         async function refreshAccessToken() {
             if (_refreshInFlight) return _refreshInFlight;
 
-            _refreshInFlight = fetch('/api/auth/refresh', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Accept': 'application/json' }
-            })
-                .then(async res => {
+            _refreshInFlight = (async () => {
+                try {
+                    const res = await fetch('/api/auth/refresh', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Accept': 'application/json' }
+                    });
+
                     if (!res.ok) return null;
+
                     const data = await res.json();
                     if (data && data.success && data.token) {
                         setToken(data.token);
+
                         if (data.csrfToken) {
                             csrfManager.setToken(
                                 data.csrfToken,
@@ -2992,14 +2453,17 @@ const PAGE_PERMISSIONS = {
                         }
                         if (data.user) {
                             currentUser = data.user;
-                            window.currentUser = data.user;
                         }
                         return data.token;
                     }
                     return null;
-                })
-                .catch(() => null)
-                .finally(() => { _refreshInFlight = null; });
+                } catch (e) {
+                    console.debug('⚠️ refreshAccessToken error:', e.message);
+                    return null;
+                } finally {
+                    _refreshInFlight = null;
+                }
+            })();
 
             return _refreshInFlight;
         }
@@ -3011,9 +2475,12 @@ const PAGE_PERMISSIONS = {
             async function buildHeaders() {
                 const headers = Object.assign({}, options.headers || {});
                 const token = getToken();
-                if (token) headers['Authorization'] = 'Bearer ' + token;
 
-                if (!isSafeMethod) {
+                if (token && !headers['Authorization']) {
+                    headers['Authorization'] = 'Bearer ' + token;
+                }
+
+                if (!isSafeMethod && !headers['X-CSRF-Token']) {
                     const csrfToken = await csrfManager.getToken();
                     if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
                 }
@@ -3052,40 +2519,37 @@ const PAGE_PERMISSIONS = {
             clearToken();
             csrfManager.clearToken();
             currentUser = null;
-            window.currentUser = null;
 
             const loginOverlay = document.getElementById('loginOverlay');
             const mainApp = document.getElementById('mainApp');
             if (mainApp && mainApp.style.display !== 'none') {
                 if (loginOverlay) loginOverlay.style.display = 'flex';
                 if (mainApp) mainApp.style.display = 'none';
+
+                // ✅ رسالة الخطأ داخل نافذة الدخول (أوضح من Toast خلف الطبقة)
+                const errorEl = document.getElementById('loginError');
+                if (errorEl) {
+                    errorEl.textContent = '⏳ انتهت الجلسة، يرجى تسجيل الدخول من جديد';
+                    errorEl.classList.add('show');
+                }
                 showToast('⏳ انتهت الجلسة، يرجى تسجيل الدخول من جديد', 'warning');
             }
         }
 
         // ============================================================
-        // 🔔 NOTIFICATIONS MANAGER (NEW v9.16)
-        // ✅ يجلب من الخادم: GET /api/notifications
-        // ✅ يعلّم كمقروء: PUT /api/notifications/:id/read
-        // ✅ يعلّم الكل: PUT /api/notifications/read-all
-        // ✅ يحذف: DELETE /api/notifications/:id
-        // ✅ Polling كل 60 ثانية
+        // 🔔 NOTIFICATION MANAGER
         // ============================================================
-
         class NotificationManager {
             constructor() {
                 this.notifications = [];
                 this.unreadCount = 0;
                 this.isLoading = false;
                 this.isOpen = false;
-                this.pollingInterval = 60000; // 60 ثانية
+                this.pollingInterval = 60000;
             }
 
-            // ✅ يجلب الإشعارات من الخادم
             async fetch() {
-                if (!getToken()) return;
-                if (this.isLoading) return;
-
+                if (!getToken() || this.isLoading) return;
                 this.isLoading = true;
 
                 try {
@@ -3101,7 +2565,6 @@ const PAGE_PERMISSIONS = {
                     }
 
                     const data = await response.json();
-
                     if (data && data.success) {
                         this.notifications = Array.isArray(data.notifications) ? data.notifications : [];
                         this.unreadCount = Number(data.unreadCount) || 0;
@@ -3115,7 +2578,6 @@ const PAGE_PERMISSIONS = {
                 }
             }
 
-            // ✅ يعرض العدّاد على الجرس
             updateBadge() {
                 const badge = document.getElementById('notifBadge');
                 if (!badge) return;
@@ -3127,17 +2589,14 @@ const PAGE_PERMISSIONS = {
                 }
             }
 
-            // ✅ فتح/إغلاق Dropdown
             toggle() {
                 const dropdown = document.getElementById('notifDropdown');
                 if (!dropdown) return;
-
                 this.isOpen = !this.isOpen;
 
                 if (this.isOpen) {
                     dropdown.classList.add('open');
                     this.render();
-                    // جلب محدّث عند الفتح
                     this.fetch();
                 } else {
                     dropdown.classList.remove('open');
@@ -3151,7 +2610,6 @@ const PAGE_PERMISSIONS = {
                 this.isOpen = false;
             }
 
-            // ✅ تنسيق الوقت
             formatTime(isoString) {
                 try {
                     const date = new Date(isoString);
@@ -3170,7 +2628,6 @@ const PAGE_PERMISSIONS = {
                 }
             }
 
-            // ✅ أيقونة حسب النوع
             getIconClass(type) {
                 const map = {
                     success: 'fa-check-circle',
@@ -3181,7 +2638,6 @@ const PAGE_PERMISSIONS = {
                 return map[type] || 'fa-bell';
             }
 
-            // ✅ رسم القائمة
             render() {
                 const list = document.getElementById('notifList');
                 const markAllBtn = document.getElementById('notifMarkAll');
@@ -3220,7 +2676,6 @@ const PAGE_PERMISSIONS = {
                     '</div>';
                 }).join('');
 
-                // ربط الأحداث
                 list.querySelectorAll('.notif-item').forEach(item => {
                     item.addEventListener('click', (e) => {
                         if (e.target.closest('.notif-item-delete')) return;
@@ -3231,8 +2686,7 @@ const PAGE_PERMISSIONS = {
                 list.querySelectorAll('.notif-item-delete').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const id = btn.dataset.delete;
-                        this.deleteNotification(id);
+                        this.deleteNotification(btn.dataset.delete);
                     });
                 });
             }
@@ -3240,13 +2694,10 @@ const PAGE_PERMISSIONS = {
             async handleItemClick(item) {
                 const id = item.dataset.id;
                 const link = item.dataset.link;
-
                 if (!id) return;
 
-                // علّم كمقروء
                 await this.markAsRead(id);
 
-                // افتح الرابط إن وُجد
                 if (link) {
                     const page = link.replace(/^\/?pages\//, '').replace(/\.html$/, '');
                     if (page && typeof loadPage === 'function') {
@@ -3259,9 +2710,10 @@ const PAGE_PERMISSIONS = {
             async markAsRead(id) {
                 if (!id) return;
 
-                // تحديث محلي فوري
                 const n = this.notifications.find(x => x.id === id);
-                if (n && !n.isRead) {
+                const wasUnread = n && !n.isRead;
+
+                if (wasUnread) {
                     n.isRead = true;
                     this.unreadCount = Math.max(0, this.unreadCount - 1);
                     this.updateBadge();
@@ -3269,19 +2721,34 @@ const PAGE_PERMISSIONS = {
                 }
 
                 try {
-                    await apiFetch(CONFIG.API + '/notifications/' + encodeURIComponent(id) + '/read', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-                    });
+                    const response = await apiFetch(
+                        CONFIG.API + '/notifications/' + encodeURIComponent(id) + '/read',
+                        { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' } }
+                    );
+
+                    // ✅ Rollback عند فشل الخادم
+                    if (!response.ok && wasUnread) {
+                        n.isRead = false;
+                        this.unreadCount += 1;
+                        this.updateBadge();
+                        this.render();
+                        console.warn('⚠️ markAsRead failed, rolled back');
+                    }
                 } catch (e) {
+                    if (wasUnread) {
+                        n.isRead = false;
+                        this.unreadCount += 1;
+                        this.updateBadge();
+                        this.render();
+                    }
                     console.debug('🔔 markAsRead error:', e.message);
                 }
             }
 
             async markAllAsRead() {
                 const prevUnread = this.unreadCount;
+                const prevState = this.notifications.map(n => ({ id: n.id, isRead: n.isRead }));
 
-                // تحديث محلي فوري
                 this.notifications.forEach(n => { n.isRead = true; });
                 this.unreadCount = 0;
                 this.updateBadge();
@@ -3296,16 +2763,24 @@ const PAGE_PERMISSIONS = {
                     if (response.ok) {
                         showToast('✅ تم تعليم جميع الإشعارات كمقروءة', 'success');
                     } else {
-                        // استرجاع في حال الفشل
+                        // ✅ Rollback
                         this.unreadCount = prevUnread;
+                        prevState.forEach(st => {
+                            const n = this.notifications.find(x => x.id === st.id);
+                            if (n) n.isRead = st.isRead;
+                        });
                         this.updateBadge();
-                        this.fetch();
+                        this.render();
                         showToast('❌ فشل التحديث', 'error');
                     }
                 } catch (e) {
                     this.unreadCount = prevUnread;
+                    prevState.forEach(st => {
+                        const n = this.notifications.find(x => x.id === st.id);
+                        if (n) n.isRead = st.isRead;
+                    });
                     this.updateBadge();
-                    this.fetch();
+                    this.render();
                     showToast('❌ خطأ في الاتصال', 'error');
                 }
             }
@@ -3313,26 +2788,40 @@ const PAGE_PERMISSIONS = {
             async deleteNotification(id) {
                 if (!id) return;
 
-                // إزالة محلية فورية
                 const removed = this.notifications.find(x => x.id === id);
+                const idx = this.notifications.findIndex(x => x.id === id);
+                const wasUnread = removed && !removed.isRead;
+
                 this.notifications = this.notifications.filter(x => x.id !== id);
-                if (removed && !removed.isRead) {
-                    this.unreadCount = Math.max(0, this.unreadCount - 1);
-                }
+                if (wasUnread) this.unreadCount = Math.max(0, this.unreadCount - 1);
                 this.updateBadge();
                 this.render();
 
                 try {
-                    await apiFetch(CONFIG.API + '/notifications/' + encodeURIComponent(id), {
+                    const response = await apiFetch(CONFIG.API + '/notifications/' + encodeURIComponent(id), {
                         method: 'DELETE',
                         headers: { 'Accept': 'application/json' }
                     });
+
+                    // ✅ Rollback عند الفشل
+                    if (!response.ok && removed) {
+                        this.notifications.splice(idx, 0, removed);
+                        if (wasUnread) this.unreadCount += 1;
+                        this.updateBadge();
+                        this.render();
+                        console.warn('⚠️ deleteNotification failed, rolled back');
+                    }
                 } catch (e) {
+                    if (removed) {
+                        this.notifications.splice(idx, 0, removed);
+                        if (wasUnread) this.unreadCount += 1;
+                        this.updateBadge();
+                        this.render();
+                    }
                     console.debug('🔔 delete error:', e.message);
                 }
             }
 
-            // ✅ تشغيل polling
             startPolling() {
                 this.stopPolling();
                 this.fetch();
@@ -3352,7 +2841,6 @@ const PAGE_PERMISSIONS = {
                 }
             }
 
-            // ✅ تصفير عند logout
             reset() {
                 this.notifications = [];
                 this.unreadCount = 0;
@@ -3369,7 +2857,6 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 🔐 FORGOT PASSWORD
         // ============================================================
-
         var forgotModal = document.getElementById('forgotPasswordModal');
         var forgotEmail = document.getElementById('forgotEmail');
         var forgotMessage = document.getElementById('forgotMessage');
@@ -3381,10 +2868,7 @@ const PAGE_PERMISSIONS = {
             if (e) e.preventDefault();
             if (forgotModal) {
                 forgotModal.style.display = 'flex';
-                if (forgotEmail) {
-                    forgotEmail.value = '';
-                    forgotEmail.focus();
-                }
+                if (forgotEmail) { forgotEmail.value = ''; forgotEmail.focus(); }
                 if (forgotMessage) {
                     forgotMessage.className = 'modal-message';
                     forgotMessage.textContent = '';
@@ -3394,15 +2878,12 @@ const PAGE_PERMISSIONS = {
         }
 
         function closeForgotModal() {
-            if (forgotModal) {
-                forgotModal.style.display = 'none';
-            }
+            if (forgotModal) forgotModal.style.display = 'none';
         }
 
         // ============================================================
         // 🔐 LOGIN
         // ============================================================
-
         function doLogin() {
             console.log('🔐 محاولة تسجيل الدخول');
 
@@ -3428,10 +2909,7 @@ const PAGE_PERMISSIONS = {
 
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
-
-            if (authOverlay) {
-                authOverlay.style.display = 'flex';
-            }
+            if (authOverlay) authOverlay.style.display = 'flex';
 
             (async () => {
                 try {
@@ -3449,15 +2927,12 @@ const PAGE_PERMISSIONS = {
                     });
 
                     console.log('📥 Login response status: ' + response.status);
-
                     if (authOverlay) authOverlay.style.display = 'none';
 
                     const data = await response.json();
                     console.log('📦 Login response data:', data);
 
-                    if (!response.ok) {
-                        throw new Error(data.error || 'فشل تسجيل الدخول');
-                    }
+                    if (!response.ok) throw new Error(data.error || 'فشل تسجيل الدخول');
 
                     loginBtn.disabled = false;
                     loginBtn.classList.remove('loading');
@@ -3467,7 +2942,6 @@ const PAGE_PERMISSIONS = {
                         if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
 
                         currentUser = data.user;
-                        window.currentUser = data.user;
                         setToken(token);
 
                         if (data.csrfToken) {
@@ -3477,7 +2951,7 @@ const PAGE_PERMISSIONS = {
                             );
                         }
 
-                        console.log('✅ Login successful for user: ' + currentUser.username);
+                        console.log('✅ Login successful for user:', currentUser.username);
                         console.log('👤 Role:', normalizeRole(currentUser.role));
 
                         document.getElementById('loginOverlay').style.display = 'none';
@@ -3487,18 +2961,13 @@ const PAGE_PERMISSIONS = {
                         applyRBACToUI();
 
                         const defaultPage = 'dashboard';
-                        if (canAccessPage(defaultPage)) {
-                            loadPage(defaultPage);
-                        } else {
-                            loadPage('fleet');
-                        }
+                        loadPage(canAccessPage(defaultPage) ? defaultPage : 'fleet');
 
                         showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
 
                         setTimeout(loadAllData, 300);
                         setTimeout(fetchServerStatus, 500);
 
-                        // ✅ تشغيل الإشعارات
                         notificationManager.startPolling();
                     } else {
                         errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
@@ -3519,15 +2988,10 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 🛡️ VERIFY TOKEN
         // ============================================================
-
         async function verifyToken(token) {
             try {
                 console.log('🛡️ التحقق من التوكن...');
-
-                if (!token) {
-                    console.warn('⚠️ لا يوجد توكن');
-                    return false;
-                }
+                if (!token) { console.warn('⚠️ لا يوجد توكن'); return false; }
 
                 const response = await fetch('/api/auth/me', {
                     headers: {
@@ -3540,9 +3004,7 @@ const PAGE_PERMISSIONS = {
                 if (response.status === 401) {
                     console.warn('⚠️ التوكن غير صالح (401) — محاولة تجديد...');
                     const newToken = await refreshAccessToken();
-                    if (newToken) {
-                        return verifyTokenOnce(newToken);
-                    }
+                    if (newToken) return verifyTokenOnce(newToken);
                     clearToken();
                     csrfManager.clearToken();
                     return false;
@@ -3552,7 +3014,6 @@ const PAGE_PERMISSIONS = {
                     const data = await response.json();
                     if (data.success && data.user) {
                         currentUser = data.user;
-                        window.currentUser = data.user;
                         console.log('✅ التوكن صالح:', currentUser.username, '| Role:', normalizeRole(currentUser.role));
                         return true;
                     }
@@ -3588,7 +3049,6 @@ const PAGE_PERMISSIONS = {
                 const data = await response.json();
                 if (data.success && data.user) {
                     currentUser = data.user;
-                    window.currentUser = data.user;
                     return true;
                 }
 
@@ -3605,7 +3065,6 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 🖥️ SERVER STATUS
         // ============================================================
-
         async function fetchServerStatus() {
             const token = getToken();
             if (!token) {
@@ -3632,9 +3091,8 @@ const PAGE_PERMISSIONS = {
         }
 
         // ============================================================
-        // 📊 LOAD DATA - SAFE
+        // 📊 LOAD DATA
         // ============================================================
-
         async function loadAllData() {
             const token = getToken();
             if (!token) return;
@@ -3650,14 +3108,12 @@ const PAGE_PERMISSIONS = {
                 if (vesselsRes && vesselsRes.ok) {
                     const data = await vesselsRes.json();
                     allVessels = Array.isArray(data) ? data : [];
-                    window.allVessels = allVessels;
                     updateBadge('fleetBadge', allVessels.length);
                 }
 
                 if (usersRes && usersRes.ok) {
                     const data = await usersRes.json();
                     allUsers = Array.isArray(data) ? data : [];
-                    window.allUsers = allUsers;
                     updateBadge('usersBadge', allUsers.length);
                 }
 
@@ -3666,16 +3122,12 @@ const PAGE_PERMISSIONS = {
                     if (logsRes.ok) {
                         const data = await logsRes.json();
                         allLogs = Array.isArray(data) ? data : [];
-                        window.allLogs = allLogs;
                         updateBadge('logsBadge', allLogs.length);
                         updateBadge('maintenanceBadge', allLogs.filter(l => l.status === 'قيد التنفيذ').length);
                     }
                 } catch (e) {}
 
-                // ✅ جلب الإشعارات أيضاً
-                try {
-                    await notificationManager.fetch();
-                } catch (e) {}
+                try { await notificationManager.fetch(); } catch (e) {}
 
             } catch (error) {
                 console.error('❌ خطأ أثناء تحميل البيانات:', error);
@@ -3685,7 +3137,6 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 👤 USER DISPLAY
         // ============================================================
-
         function updateUserDisplay() {
             if (!currentUser) return;
             const n = currentUser.name || currentUser.username;
@@ -3706,7 +3157,6 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 📄 LOAD PAGE
         // ============================================================
-
         function loadPage(page) {
             (async () => {
                 try {
@@ -3723,12 +3173,11 @@ const PAGE_PERMISSIONS = {
                     currentPage = page;
                     localStorage.setItem(CONFIG.KEYS.PAGE, page);
 
+                    // 🧹 Cleanup previous page
                     if (Array.isArray(window._pageCleanup) && window._pageCleanup.length > 0) {
                         console.log('🧹 Running cleanup for previous page...');
                         window._pageCleanup.forEach(fn => {
-                            try {
-                                if (typeof fn === 'function') fn();
-                            } catch (e) {}
+                            try { if (typeof fn === 'function') fn(); } catch (e) {}
                         });
                         window._pageCleanup = [];
                     }
@@ -3747,9 +3196,7 @@ const PAGE_PERMISSIONS = {
                         window._pageTimeouts = [];
                     }
 
-                    if (typeof stopDateTimeUpdate === 'function') {
-                        stopDateTimeUpdate();
-                    }
+                    stopDateTimeUpdate();
 
                     document.querySelectorAll('.nav-btn').forEach(btn => {
                         btn.classList.toggle('active', btn.dataset.page === page);
@@ -3757,7 +3204,6 @@ const PAGE_PERMISSIONS = {
 
                     const container = document.getElementById('pageContainer');
                     const loader = document.getElementById('pageLoader');
-
                     if (!container) return;
 
                     if (loader) loader.style.display = 'flex';
@@ -3790,9 +3236,9 @@ const PAGE_PERMISSIONS = {
                         if (loader) loader.style.display = 'none';
                         container.innerHTML =
                             '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
-                            '<div style="font-size:48px;">❌</div>' +
-                            '<h2 style="color:#f87171;">فشل تحميل الصفحة</h2>' +
-                            '<p>' + escapeHTML(lastError ? lastError.message : 'الصفحة غير موجودة') + '</p>' +
+                                '<div style="font-size:48px;">❌</div>' +
+                                '<h2 style="color:#f87171;">فشل تحميل الصفحة</h2>' +
+                                '<p>' + escapeHTML(lastError ? lastError.message : 'الصفحة غير موجودة') + '</p>' +
                             '</div>';
                         return;
                     }
@@ -3809,6 +3255,7 @@ const PAGE_PERMISSIONS = {
 
                     container.innerHTML = tempDiv.innerHTML;
 
+                    // ✅ نضيف السكريبتات ونحتفظ بها — التنظيف لاحقاً عند تغيير الصفحة
                     scriptContents.forEach(content => {
                         if (content && content.trim()) {
                             try {
@@ -3817,13 +3264,14 @@ const PAGE_PERMISSIONS = {
                                 newScript.setAttribute('data-page-script', page);
                                 document.body.appendChild(newScript);
 
-                                const tid = setTimeout(() => {
-                                    if (newScript.parentNode) {
-                                        newScript.remove();
-                                    }
-                                }, 10);
-                                window._pageTimeouts = window._pageTimeouts || [];
-                                window._pageTimeouts.push(tid);
+                                window._pageCleanup = window._pageCleanup || [];
+                                window._pageCleanup.push(() => {
+                                    try {
+                                        if (newScript.parentNode) {
+                                            newScript.parentNode.removeChild(newScript);
+                                        }
+                                    } catch (e) {}
+                                });
                             } catch (e) {
                                 console.warn('⚠️ script error:', e.message);
                             }
@@ -3838,7 +3286,6 @@ const PAGE_PERMISSIONS = {
                     document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
 
                     syncDateTimeInterval();
-
                     console.log('✅ تم تحميل الصفحة:', page);
                 } catch (e) {
                     console.error('❌ loadPage error:', e);
@@ -3849,31 +3296,23 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 🔄 REFRESH
         // ============================================================
-
         async function refreshCurrentPage() {
             const page = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
-
-            if (!canAccessPage(page)) {
-                loadPage('dashboard');
-                return;
-            }
+            if (!canAccessPage(page)) { loadPage('dashboard'); return; }
 
             console.log('🔄 جاري تحديث الصفحة:', page);
-
             try {
                 loadPage(page);
                 await loadAllData();
             } catch (e) {
                 console.warn('⚠️ Refresh error:', e.message);
             }
-
             showToast('🔄 تم تحديث الصفحة', 'info');
         }
 
         // ============================================================
         // 🚪 LOGOUT
         // ============================================================
-
         async function doLogout() {
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
 
@@ -3901,7 +3340,6 @@ const PAGE_PERMISSIONS = {
                 }
             } catch (e) {}
 
-            // ✅ إيقاف الإشعارات
             notificationManager.reset();
 
             if (typeof _globalCleanup === 'function') {
@@ -3909,7 +3347,6 @@ const PAGE_PERMISSIONS = {
             }
 
             currentUser = null;
-            window.currentUser = null;
             clearToken();
             csrfManager.clearToken();
 
@@ -3933,7 +3370,6 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 🧭 SIDEBAR
         // ============================================================
-
         function toggleSidebar() {
             const s = document.getElementById('sidebar');
             const m = document.getElementById('menuToggle');
@@ -3949,9 +3385,27 @@ const PAGE_PERMISSIONS = {
         }
 
         // ============================================================
+        // 🎨 LOGIN PARTICLES (small enhancement kept local)
+        // ============================================================
+        function initLoginParticles() {
+            const container = document.getElementById('loginParticles');
+            if (!container) return;
+
+            const count = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 20;
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = (8 + Math.random() * 12) + 's';
+                p.style.animationDelay = (Math.random() * 8) + 's';
+                p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
+                container.appendChild(p);
+            }
+        }
+
+        // ============================================================
         // 🚀 INIT
         // ============================================================
-
         const csrfManager = new CSRFTokenManager();
         window.csrfManager = csrfManager;
 
@@ -3959,6 +3413,7 @@ const PAGE_PERMISSIONS = {
             console.log('📄 DOM جاهز');
 
             csrfManager.fetchFromServer().catch(() => {});
+            initLoginParticles();
 
             // FORGOT PASSWORD
             const forgotLink = document.getElementById('forgotPasswordLink');
@@ -4081,9 +3536,7 @@ const PAGE_PERMISSIONS = {
                 });
             });
 
-            // ============================================================
-            // 🔔 NOTIFICATIONS WIRING (NEW v9.16)
-            // ============================================================
+            // NOTIFICATIONS WIRING
             const notifBtn = document.getElementById('notifBtn');
             const notifDropdown = document.getElementById('notifDropdown');
             const notifMarkAll = document.getElementById('notifMarkAll');
@@ -4102,26 +3555,18 @@ const PAGE_PERMISSIONS = {
                 });
             }
 
-            // إغلاق عند النقر خارجها
             document.addEventListener('click', function(e) {
                 if (!notificationManager.isOpen) return;
                 const wrapper = document.querySelector('.notification-wrapper');
-                if (wrapper && !wrapper.contains(e.target)) {
-                    notificationManager.close();
-                }
+                if (wrapper && !wrapper.contains(e.target)) notificationManager.close();
             });
 
-            // منع إغلاق عند النقر داخل اللوحة
             if (notifDropdown) {
                 notifDropdown.addEventListener('click', function(e) {
                     e.stopPropagation();
                 });
             }
-            // ============================================================
-            // END NOTIFICATIONS WIRING
-            // ============================================================
 
-            // NOTIF: عرض القائمة الفارغة عند البدء
             notificationManager.render();
 
             // USER BTN
@@ -4175,7 +3620,6 @@ const PAGE_PERMISSIONS = {
                         showToast('👋 مرحباً بعودتك', 'success');
                         setTimeout(loadAllData, 500);
 
-                        // ✅ تشغيل الإشعارات
                         notificationManager.startPolling();
                     } else {
                         clearToken();
@@ -4185,7 +3629,7 @@ const PAGE_PERMISSIONS = {
             }
 
             /* ============================================================
-               🖨️ PRINT SETTINGS SYSTEM
+               🖨️ PRINT SETTINGS SYSTEM (safer: intercept Ctrl+P instead of overriding window.print)
                ============================================================ */
             (function initPrintSettings() {
                 var printState = { size: 'A4', orientation: 'portrait', color: 'color' };
@@ -4204,9 +3648,9 @@ const PAGE_PERMISSIONS = {
                 var modal = document.getElementById('printSettingsModal');
                 if (!modal) { console.warn('⚠️ printSettingsModal not found'); return; }
 
-                var closeBtn  = document.getElementById('printSettingsClose');
+                var closeBtn = document.getElementById('printSettingsClose');
                 var cancelBtn = document.getElementById('printSettingsCancel');
-                var goBtn     = document.getElementById('printSettingsGo');
+                var goBtn = document.getElementById('printSettingsGo');
 
                 var styleEl = document.getElementById('dynamic-print-style');
                 if (!styleEl) {
@@ -4221,22 +3665,21 @@ const PAGE_PERMISSIONS = {
                     var pageSize = sizeMap[printState.size] || 'A4';
                     var orient = printState.orientation === 'landscape' ? 'landscape' : 'portrait';
                     var isBW = printState.color === 'bw';
+
                     styleEl.textContent =
-                        '@page { size: ' + pageSize + ' ' + orient + ' !important; ' +
-                        'margin: 12mm 8mm 12mm 8mm !important; }\n' +
+                        '@page { size: ' + pageSize + ' ' + orient + ' !important; margin: 12mm 8mm 12mm 8mm !important; }\n' +
                         '@media print {\n' +
-                        '  html { -webkit-filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; ' +
-                        'filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; }\n' +
-                        '  body { -webkit-print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; ' +
-                        'print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; }\n' +
+                        '  html { -webkit-filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; }\n' +
+                        '  body { -webkit-print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; }\n' +
                         '}';
+
                     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(printState)); } catch (e) {}
                 }
 
                 function updateActiveButtons() {
-                    modal.querySelectorAll('.ps-options').forEach(function (grp) {
+                    modal.querySelectorAll('.ps-options').forEach(function(grp) {
                         var groupName = grp.getAttribute('data-group');
-                        grp.querySelectorAll('.ps-option').forEach(function (b) {
+                        grp.querySelectorAll('.ps-option').forEach(function(b) {
                             b.classList.toggle('active', printState[groupName] === b.getAttribute('data-value'));
                         });
                     });
@@ -4245,8 +3688,8 @@ const PAGE_PERMISSIONS = {
                 function openPrintModal() { updateActiveButtons(); modal.classList.add('active'); }
                 function closePrintModal() { modal.classList.remove('active'); }
 
-                modal.querySelectorAll('.ps-option').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
+                modal.querySelectorAll('.ps-option').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
                         var parent = btn.closest('.ps-options');
                         var groupName = parent.getAttribute('data-group');
                         printState[groupName] = btn.getAttribute('data-value');
@@ -4262,27 +3705,34 @@ const PAGE_PERMISSIONS = {
                 function doPrint() {
                     applyPrintRules();
                     closePrintModal();
-                    setTimeout(function () {
+                    setTimeout(function() {
                         bypass = true;
                         try { nativePrint(); } catch (e) { window.print(); }
-                        setTimeout(function () { bypass = false; }, 500);
+                        setTimeout(function() { bypass = false; }, 500);
                     }, 300);
                 }
 
-                window.print = function () {
-                    if (bypass) return nativePrint();
-                    openPrintModal();
-                };
+                // ✅ اعتراض Ctrl+P بدل إعادة تعريف window.print
+                document.addEventListener('keydown', function(e) {
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+                        if (bypass) return; // ندع الطباعة الأصلية تكمل إن كنا في سياق الطباعة
+                        e.preventDefault();
+                        openPrintModal();
+                    }
+                }, true);
 
-                if (closeBtn)  closeBtn.addEventListener('click', closePrintModal);
+                // Expose a public helper
+                window.openPrintSettings = openPrintModal;
+
+                if (closeBtn) closeBtn.addEventListener('click', closePrintModal);
                 if (cancelBtn) cancelBtn.addEventListener('click', closePrintModal);
-                if (goBtn)     goBtn.addEventListener('click', doPrint);
+                if (goBtn) goBtn.addEventListener('click', doPrint);
 
-                modal.addEventListener('click', function (e) {
+                modal.addEventListener('click', function(e) {
                     if (e.target === modal) closePrintModal();
                 });
 
-                document.addEventListener('keydown', function (e) {
+                document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape' && modal.classList.contains('active')) closePrintModal();
                 });
 
@@ -4290,7 +3740,7 @@ const PAGE_PERMISSIONS = {
                 console.log('✅ Print Settings System ready');
             })();
 
-            console.log('✅ Marine System v9.16 ready');
+            console.log('✅ Marine System v9.7 ready');
         }
 
         if (document.readyState === 'loading') {
@@ -4302,7 +3752,6 @@ const PAGE_PERMISSIONS = {
         // ============================================================
         // 🌐 GLOBAL EXPORTS
         // ============================================================
-
         window.doLogin = doLogin;
         window.doLogout = doLogout;
         window.loadPage = loadPage;
@@ -4328,7 +3777,7 @@ const PAGE_PERMISSIONS = {
         window.normalizeRole = normalizeRole;
         window.notificationManager = notificationManager;
 
-        console.log('✅ Marine System v9.16 loaded successfully');
+        console.log('✅ Marine System v9.7 loaded successfully');
     </script>
 
 </body>
