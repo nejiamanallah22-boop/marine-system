@@ -56,7 +56,6 @@
             border-radius: 4px; border: 2px solid transparent; background-clip: padding-box;
         }
 
-        /* ═══════ HEADER ═══════ */
         .fleet-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 18px 24px; flex-wrap: wrap; gap: 16px;
@@ -136,7 +135,6 @@
             min-width: 18px; text-align: center; display: inline-block;
         }
 
-        /* ═══════ STATS ═══════ */
         .stats-grid {
             display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 16px; padding: 0 24px 20px;
@@ -166,16 +164,13 @@
         .stat-card .number.yellow { color: var(--c-amber-1); }
         .stat-card .number.red { color: var(--c-red-1); }
         .stat-card .number.cyan { color: var(--c-cyan-1); }
-        .stat-card .label {
-            font-size: 11px; color: rgba(203, 213, 225, 0.75); font-weight: 700;
-        }
+        .stat-card .label { font-size: 11px; color: rgba(203, 213, 225, 0.75); font-weight: 700; }
         .stat-card .icon-bg {
             position: absolute; right: -10px; bottom: -10px;
             font-size: 50px; opacity: 0.04;
             pointer-events: none; color: currentColor;
         }
 
-        /* ═══════ INPUT GRID ═══════ */
         .input-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 10px;
@@ -207,11 +202,8 @@
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
             color: #060911; box-shadow: 0 8px 24px var(--c-gold-glow);
         }
-        .input-grid .btn-save:hover {
-            transform: translateY(-2px) scale(1.02);
-        }
+        .input-grid .btn-save:hover { transform: translateY(-2px) scale(1.02); }
 
-        /* ═══════ COMBOBOX ═══════ */
         .fleet-combobox { position: relative; width: 100%; }
         .fleet-combobox-search {
             margin-bottom: 4px;
@@ -231,7 +223,6 @@
             box-shadow: 0 0 0 3px rgba(16,185,129,0.2) !important;
         }
 
-        /* ═══════ IMAGES SECTION ═══════ */
         .images-section {
             grid-column: 1 / -1;
             margin-top: 6px;
@@ -353,27 +344,27 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ═══════ THUMBNAIL ═══════ */
+        /* ═══════ 📸 THUMBNAIL — حجم كبير ═══════ */
         .vessel-thumb {
-            width: 78px; height: 78px;
-            border-radius: 12px; object-fit: cover;
-            border: 2.5px solid var(--c-border-mid);
+            width: 100px; height: 100px;
+            border-radius: 14px; object-fit: cover;
+            border: 3px solid var(--c-border-mid);
             cursor: pointer; transition: all var(--transition);
             display: block; margin: 0 auto;
             background: rgba(10,16,32,0.6);
-            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.5);
         }
         .vessel-thumb:hover {
-            transform: scale(1.1); border-color: var(--c-gold-2);
-            box-shadow: 0 8px 24px var(--c-gold-glow), 0 0 0 3px rgba(230,179,30,0.2);
+            transform: scale(1.08); border-color: var(--c-gold-2);
+            box-shadow: 0 10px 28px var(--c-gold-glow), 0 0 0 4px rgba(230,179,30,0.25);
         }
         .vessel-thumb-empty {
-            width: 78px; height: 78px; border-radius: 12px;
+            width: 100px; height: 100px; border-radius: 14px;
             display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 4px;
+            align-items: center; justify-content: center; gap: 6px;
             background: linear-gradient(135deg, rgba(10,16,32,0.8), rgba(18,26,44,0.6));
-            border: 2.5px dashed var(--c-border-mid);
-            color: var(--c-text-4); font-size: 20px;
+            border: 3px dashed var(--c-border-mid);
+            color: var(--c-text-4); font-size: 24px;
             margin: 0 auto; cursor: pointer; transition: all var(--transition);
         }
         .vessel-thumb-empty:hover {
@@ -381,24 +372,23 @@
             transform: scale(1.05);
         }
         .vessel-thumb-empty::after {
-            content: 'لا صور'; font-size: 9px; font-weight: 800;
+            content: 'لا صور'; font-size: 10px; font-weight: 800;
             color: var(--c-text-4); letter-spacing: 0.5px;
         }
         .vessel-thumb-wrapper {
-            position: relative; width: 78px; height: 78px; margin: 0 auto;
+            position: relative; width: 100px; height: 100px; margin: 0 auto;
         }
         .vessel-thumb-badge {
-            position: absolute; bottom: -6px; right: -6px;
+            position: absolute; bottom: -8px; right: -8px;
             background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
-            color: #060911; font-size: 11px; font-weight: 900;
-            padding: 3px 8px; border-radius: 10px;
-            border: 2.5px solid #060911;
-            min-width: 24px; text-align: center;
+            color: #060911; font-size: 12px; font-weight: 900;
+            padding: 4px 10px; border-radius: 11px;
+            border: 3px solid #060911;
+            min-width: 28px; text-align: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
-        .vessel-thumb-badge::before { content: '📷 '; font-size: 9px; }
+        .vessel-thumb-badge::before { content: '📷 '; font-size: 10px; }
 
-        /* ═══════ FILTER BAR ═══════ */
         .filter-bar {
             display: flex; flex-wrap: wrap; align-items: center;
             gap: 12px 16px; padding: 16px 24px;
@@ -461,7 +451,6 @@
             background: rgba(148, 163, 184, 0.06); color: var(--c-text-1);
         }
 
-        /* ═══════ TABLE ═══════ */
         .table-wrapper { overflow-x: auto; padding: 0 24px 24px; width: 100%; }
         .table-wrapper table {
             width: 100%; border-collapse: separate; border-spacing: 0;
@@ -554,7 +543,6 @@
             color: #fff; transform: translateY(-2px) scale(1.05);
         }
 
-        /* ═══════ EMPTY ═══════ */
         .empty-state { text-align: center; padding: 60px 20px; }
         .empty-state .empty-icon {
             font-size: 3rem; color: var(--c-gold-2); opacity: 0.5;
@@ -570,7 +558,6 @@
         .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--c-text-3); margin-bottom: 4px; }
         .empty-state p { font-size: 13px; color: var(--c-text-4); }
 
-        /* ═══════ TOAST ═══════ */
         .fleet-toast {
             position: fixed; bottom: 28px; left: 28px;
             z-index: 999999; max-width: 400px;
@@ -604,7 +591,6 @@
             border: 1px solid rgba(252, 211, 77, 0.5);
         }
 
-        /* ═══════ MODALS ═══════ */
         .fleet-modal {
             position: fixed; inset: 0;
             background: rgba(2, 4, 12, 0.9);
@@ -682,7 +668,6 @@
         }
         .dispose-vessel-info .info-sub { font-size: 11px; color: var(--c-text-3); margin-top: 2px; }
 
-        /* 🖼️ معرض مصغر داخل تفاصيل الطرح */
         .dispose-images-preview {
             background: rgba(10, 16, 32, 0.5);
             border: 1px solid var(--c-border-soft);
@@ -818,7 +803,6 @@
             opacity: 0.4; cursor: not-allowed;
         }
 
-        /* ═══════ MINI UPLOAD ═══════ */
         .fleet-mini-upload {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.85);
@@ -848,7 +832,6 @@
             display: flex; align-items: center; gap: 10px; margin: 0;
         }
 
-        /* ═══════ PROFESSIONAL GALLERY ═══════ */
         .fleet-pro-gallery {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.98);
@@ -935,7 +918,6 @@
             cursor: grabbing; transition: none;
         }
 
-        /* 🎯 زر تغيير الصور في وسط الصورة */
         .fleet-pro-change-btn {
             position: absolute;
             top: 50%; left: 50%;
@@ -1029,7 +1011,117 @@
         }
         .fleet-pro-empty p { font-size: 13px; color: var(--c-text-4); margin: 0; }
 
-        /* ═══════ RESPONSIVE ═══════ */
+        /* ═══════ 📷 الكاميرا المباشرة ═══════ */
+        .fleet-camera-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 100010;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .fleet-camera-modal.active { display: flex; }
+        .fleet-camera-box {
+            background: #0a1020;
+            border: 2px solid rgba(230,179,30,0.4);
+            border-radius: 20px;
+            width: 100%; max-width: 720px;
+            overflow: hidden;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.9);
+        }
+        .fleet-camera-head {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 22px;
+            background: linear-gradient(135deg, rgba(24,34,56,0.98), rgba(15,20,32,0.99));
+            border-bottom: 1px solid rgba(230,179,30,0.2);
+        }
+        .fleet-camera-head h4 {
+            font-size: 16px; font-weight: 800;
+            color: var(--c-gold-1);
+            margin: 0;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .fleet-camera-stage {
+            position: relative;
+            background: #000;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fleet-camera-stage video {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .fleet-camera-error {
+            position: absolute; inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 16px;
+            color: var(--c-text-3);
+            text-align: center;
+            padding: 40px;
+        }
+        .fleet-camera-error i {
+            font-size: 64px;
+            color: var(--c-red-1);
+            opacity: 0.6;
+        }
+        .fleet-camera-error p {
+            font-size: 14px; font-weight: 700; margin: 0;
+        }
+        .fleet-camera-error button {
+            background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
+            color: #060911;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: var(--font);
+        }
+        .fleet-camera-controls {
+            display: flex; justify-content: center; align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(24,34,56,0.98), rgba(15,20,32,0.99));
+        }
+        .fleet-cam-btn {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition);
+            font-size: 20px;
+        }
+        .fleet-cam-btn.switch,
+        .fleet-cam-btn.cancel {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .fleet-cam-btn.switch:hover,
+        .fleet-cam-btn.cancel:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+        .fleet-cam-btn.capture {
+            width: 76px; height: 76px;
+            background: linear-gradient(135deg, #f7d774, #e6b31e);
+            color: #060911;
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.2), 0 8px 24px rgba(230,179,30,0.5);
+            font-size: 32px;
+        }
+        .fleet-cam-btn.capture:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 0 6px rgba(255,255,255,0.3), 0 12px 32px rgba(230,179,30,0.7);
+        }
+        .fleet-cam-btn.capture:active { transform: scale(0.95); }
+
         @media (max-width: 1100px) {
             .stats-grid { gap: 12px; padding: 0 20px 18px; }
             .fleet-header, .filter-bar { margin-left: 20px; margin-right: 20px; }
@@ -1069,7 +1161,7 @@
             #page-fleet { background: #fff !important; color: #12121a !important; }
             .fleet-header, .filter-bar, .input-grid, .action-btns,
             .fleet-toast, .fleet-modal, .images-section,
-            .fleet-mini-upload, .fleet-pro-gallery {
+            .fleet-mini-upload, .fleet-pro-gallery, .fleet-camera-modal {
                 display: none !important;
             }
         }
@@ -1228,7 +1320,6 @@
             <input type="text" class="fleet-combobox-free" id="iRepairUnitFree" placeholder="✍️ اكتب الوحدة..." style="display:none;">
         </div>
 
-        <!-- IMAGES -->
         <div class="images-section" id="imagesSection">
             <div class="images-section-header">
                 <div class="images-section-title">
@@ -1301,7 +1392,7 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width:100px;"><i class="fas fa-image"></i> صورة</th>
+                    <th style="width:120px;"><i class="fas fa-image"></i> صورة</th>
                     <th><i class="fas fa-ship"></i> الاسم</th>
                     <th><i class="fas fa-hashtag"></i> الرقم</th>
                     <th><i class="fas fa-ruler"></i> الطول</th>
@@ -1355,7 +1446,6 @@
                 </div>
             </div>
 
-            <!-- 🖼️ معرض صور المركب داخل تفاصيل الطرح -->
             <div class="dispose-images-preview" id="disposeImagesPreview">
                 <div class="dispose-images-header">
                     <div class="dispose-images-title">
@@ -1443,6 +1533,36 @@
         <div class="fleet-pro-thumbs" id="fleetProThumbs"></div>
     </div>
 
+    <!-- 📷 CAMERA MODAL -->
+    <div class="fleet-camera-modal" id="fleetCameraModal">
+        <div class="fleet-camera-box">
+            <div class="fleet-camera-head">
+                <h4><i class="fas fa-camera"></i> التقاط صورة</h4>
+                <button class="fleet-modal-close" id="fleetCameraClose" type="button">×</button>
+            </div>
+            <div class="fleet-camera-stage">
+                <video id="fleetCameraVideo" autoplay playsinline muted></video>
+                <canvas id="fleetCameraCanvas" style="display:none;"></canvas>
+                <div class="fleet-camera-error" id="fleetCameraError">
+                    <i class="fas fa-video-slash"></i>
+                    <p>لا يمكن الوصول للكاميرا</p>
+                    <button type="button" id="fleetCameraFallback">استخدام استيراد الصور</button>
+                </div>
+            </div>
+            <div class="fleet-camera-controls">
+                <button type="button" class="fleet-cam-btn switch" id="fleetCamSwitch" title="تبديل الكاميرا">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button type="button" class="fleet-cam-btn capture" id="fleetCamCapture" title="التقاط">
+                    <i class="fas fa-circle"></i>
+                </button>
+                <button type="button" class="fleet-cam-btn cancel" id="fleetCamCancel" title="إغلاق">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MINI UPLOAD -->
     <div class="fleet-mini-upload" id="fleetMiniUploadModal">
         <div class="fleet-mini-upload-box">
@@ -1481,7 +1601,6 @@
         </div>
     </div>
 </div>
-
 <script>
 (function() {
     'use strict';
@@ -1511,6 +1630,11 @@
     var miniUploadImages = [];
     var miniUploadVesselId = null;
 
+    // ═══════ 📷 الكاميرا المباشرة ═══════
+    var _cameraStream = null;
+    var _cameraFacingMode = 'environment';
+    var _cameraTargetImages = null;
+
     function _fleetCleanup() {
         if (_isDestroyed) return;
         _isDestroyed = true;
@@ -1528,6 +1652,10 @@
         });
         _objectUrls = [];
         stopSlideshow();
+        if (_cameraStream) {
+            try { _cameraStream.getTracks().forEach(function(t) { t.stop(); }); } catch(e) {}
+            _cameraStream = null;
+        }
     }
     window._pageCleanup = window._pageCleanup || [];
     window._pageCleanup.push(_fleetCleanup);
@@ -1800,7 +1928,7 @@
         filterSelectOptions(zoneSel, '');
     }
 
-    /* ═══════ IMAGES ═══════ */
+    // ═══════ IMAGES ═══════
     function updateSourceButtonsState() {
         var isFull = fleetImages.length >= MAX_IMAGES;
         var c = $('#captureBtn'); if (c) c.disabled = isFull;
@@ -1814,11 +1942,13 @@
         var captureBtn = $('#captureBtn');
         var browseBtn = $('#browseBtn');
 
-        if (captureBtn && cameraInput) {
+        if (captureBtn) {
             captureBtn.addEventListener('click', function() {
                 if (fleetImages.length >= MAX_IMAGES) { fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error'); return; }
-                cameraInput.click();
+                openCamera(fleetImages);
             });
+        }
+        if (cameraInput) {
             cameraInput.addEventListener('change', function(e) {
                 handleFiles(e.target.files);
                 cameraInput.value = '';
@@ -1962,7 +2092,132 @@
         }
     }
 
-    /* ═══════ MINI UPLOAD ═══════ */
+    // ═══════ 📷 CAMERA ═══════
+    async function openCamera(targetImagesArray) {
+        _cameraTargetImages = targetImagesArray;
+        var modal = document.getElementById('fleetCameraModal');
+        var video = document.getElementById('fleetCameraVideo');
+        var error = document.getElementById('fleetCameraError');
+        if (!modal || !video) return;
+        error.style.display = 'none';
+        video.style.display = 'block';
+        modal.classList.add('active');
+        await startCameraStream(video, error);
+    }
+
+    async function startCameraStream(video, error) {
+        try {
+            if (_cameraStream) {
+                _cameraStream.getTracks().forEach(function(t) { t.stop(); });
+                _cameraStream = null;
+            }
+            var constraints = {
+                video: {
+                    facingMode: _cameraFacingMode,
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            };
+            _cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = _cameraStream;
+            await video.play();
+        } catch (err) {
+            console.error('❌ Camera error:', err);
+            video.style.display = 'none';
+            error.style.display = 'flex';
+        }
+    }
+
+    function closeCamera() {
+        var modal = document.getElementById('fleetCameraModal');
+        if (modal) modal.classList.remove('active');
+        if (_cameraStream) {
+            _cameraStream.getTracks().forEach(function(t) { t.stop(); });
+            _cameraStream = null;
+        }
+        var video = document.getElementById('fleetCameraVideo');
+        if (video) video.srcObject = null;
+        _cameraTargetImages = null;
+    }
+
+    function capturePhoto() {
+        var video = document.getElementById('fleetCameraVideo');
+        var canvas = document.getElementById('fleetCameraCanvas');
+        if (!video || !canvas || !_cameraStream) return;
+        var vw = video.videoWidth || 1280;
+        var vh = video.videoHeight || 720;
+        canvas.width = vw;
+        canvas.height = vh;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, vw, vh);
+        canvas.toBlob(function(blob) {
+            if (!blob) { fleetToast('❌ فشل التقاط الصورة', 'error'); return; }
+            var fileName = 'camera-' + Date.now() + '.jpg';
+            var file = new File([blob], fileName, { type: 'image/jpeg' });
+            if (_cameraTargetImages) {
+                var remaining = MAX_IMAGES - _cameraTargetImages.length;
+                if (remaining <= 0) {
+                    fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+                    return;
+                }
+                _cameraTargetImages.push(file);
+                if (_cameraTargetImages === fleetImages) {
+                    renderImagesPreview();
+                } else if (_cameraTargetImages === miniUploadImages) {
+                    renderMiniPreview();
+                }
+                fleetToast('📷 تم التقاط الصورة', 'success', 1500);
+            }
+            flashEffect();
+        }, 'image/jpeg', 0.92);
+    }
+
+    function flashEffect() {
+        var stage = document.querySelector('.fleet-camera-stage');
+        if (!stage) return;
+        var flash = document.createElement('div');
+        flash.style.cssText = 'position:absolute;inset:0;background:#fff;opacity:0.8;pointer-events:none;transition:opacity 0.3s;z-index:5;';
+        stage.appendChild(flash);
+        setTimeout(function() {
+            flash.style.opacity = '0';
+            setTimeout(function() { flash.remove(); }, 300);
+        }, 50);
+    }
+
+    async function switchCamera() {
+        _cameraFacingMode = _cameraFacingMode === 'environment' ? 'user' : 'environment';
+        var video = document.getElementById('fleetCameraVideo');
+        var error = document.getElementById('fleetCameraError');
+        await startCameraStream(video, error);
+    }
+
+    function initCameraEvents() {
+        var closeBtn = document.getElementById('fleetCameraClose');
+        if (closeBtn) closeBtn.addEventListener('click', closeCamera);
+        var cancelBtn = document.getElementById('fleetCamCancel');
+        if (cancelBtn) cancelBtn.addEventListener('click', closeCamera);
+        var captureBtnEl = document.getElementById('fleetCamCapture');
+        if (captureBtnEl) captureBtnEl.addEventListener('click', capturePhoto);
+        var switchBtn = document.getElementById('fleetCamSwitch');
+        if (switchBtn) switchBtn.addEventListener('click', switchCamera);
+        var fallbackBtn = document.getElementById('fleetCameraFallback');
+        if (fallbackBtn) {
+            fallbackBtn.addEventListener('click', function() {
+                closeCamera();
+                var input = document.getElementById('imagesInput');
+                if (input) input.click();
+            });
+        }
+        document.addEventListener('keydown', function(e) {
+            var modal = document.getElementById('fleetCameraModal');
+            if (modal && modal.classList.contains('active') && e.key === 'Escape') {
+                closeCamera();
+            }
+        });
+    }
+    
+    // ═══════ MINI UPLOAD ═══════
     function openMiniUpload(vesselId) {
         fetcher('/api/vessels').then(function(r) { return r.json(); }).then(function(list) {
             var v = list.find(function(x) { return String(x._id || x.id) === String(vesselId); });
@@ -2057,8 +2312,14 @@
         if (input) input.addEventListener('change', function(e) { handleMiniFiles(e.target.files); input.value = ''; });
         if (cameraInput) cameraInput.addEventListener('change', function(e) { handleMiniFiles(e.target.files); cameraInput.value = ''; });
 
-        var captureBtn = $('#fleetMiniCaptureBtn');
-        if (captureBtn) captureBtn.addEventListener('click', function() { cameraInput.click(); });
+        var captureBtnEl = $('#fleetMiniCaptureBtn');
+        if (captureBtnEl) captureBtnEl.addEventListener('click', function() {
+            if (miniUploadImages.length >= MAX_IMAGES) {
+                fleetToast('⚠️ الحد الأقصى ' + MAX_IMAGES + ' صور', 'error');
+                return;
+            }
+            openCamera(miniUploadImages);
+        });
         var browseBtn = $('#fleetMiniBrowseBtn');
         if (browseBtn) browseBtn.addEventListener('click', function() { input.click(); });
 
@@ -2129,7 +2390,7 @@
         }
     }
 
-    /* ═══════ GALLERY ═══════ */
+    // ═══════ GALLERY ═══════
     function openVesselGallery(vessel) {
         if (!vessel) return;
         _galleryCurrentVessel = vessel;
@@ -2455,7 +2716,7 @@
     };
     window.viewVesselImages = function(vesselId) { window.openVesselGalleryById(vesselId); };
 
-    /* ═══════ RENDER ═══════ */
+    // ═══════ RENDER ═══════
     var _allVessels = [];
 
     function initFilters() {
@@ -2897,7 +3158,7 @@
         } catch (err) { fleetToast('❌ فشل التصدير: ' + err.message, 'error'); }
     }
 
-    /* ═══════ DISPOSE ═══════ */
+    // ═══════ DISPOSE ═══════
     var _disposeVesselData = null;
 
     function openDisposeModal(vesselId) {
@@ -2913,7 +3174,6 @@
             $('#disposeVesselSub').textContent = (v.cat || getCategory(v.len)) + ' • ' + (v.region || v.reg || '—');
             $('#disposeVesselNum').textContent = v.num || '—';
 
-            // 🖼️ عرض صور المركب
             renderDisposeImages(v);
 
             $('#disposeReason').value = '';
@@ -2928,7 +3188,6 @@
         }).catch(function(err) { fleetToast('❌ ' + err.message, 'error'); });
     }
 
-    // 🖼️ عرض صور المركب في تفاصيل الطرح
     function renderDisposeImages(vessel) {
         var grid = $('#disposeImagesGrid');
         var count = $('#disposeImagesCount');
@@ -2954,7 +3213,6 @@
 
         if (viewBtn) {
             viewBtn.style.display = 'inline-flex';
-            // إعادة ربط listener
             var newBtn = viewBtn.cloneNode(true);
             viewBtn.parentNode.replaceChild(newBtn, viewBtn);
             newBtn.addEventListener('click', function() {
@@ -3070,12 +3328,13 @@
         if (!header) return false;
 
         _initialized = true;
-        console.log('🚀 Fleet v7.0 — Initializing...');
+        console.log('🚀 Fleet v9.0 — Initializing...');
 
         initFilters();
         initImagesUI();
         initGalleryEvents();
         initMiniUploadEvents();
+        initCameraEvents();
         setupDisposeListeners();
 
         bindComboboxSearch('iZoneSearch', 'iZone');
@@ -3127,7 +3386,7 @@
         updateZones();
         await renderMain();
 
-        console.log('✅ Fleet v7.0 ready');
+        console.log('✅ Fleet v9.0 ready');
         return true;
     }
 
