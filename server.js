@@ -1795,7 +1795,178 @@ function formatMaintenance(log) {
             console.error('❌ Ticket routes module error:', e.message);
         }
     }
+    // ============ VESSELS — IMAGE UPLOAD ============
+    let vesselUpload = null;
+    try {
+        vesselUpload = require('./middleware/uploadVesselImages');
+        console.log('✅ [VESSELS] Multer loaded');
+    } catch (e) {
+        console.error('❌ [VESSELS] Multer FAILED:', e.message);
+    }
 
+    let vesselCloudinary = null;
+    try {
+        vesselCloudinary = require('cloudinary').v2;
+        console.log('✅ [VESSELS] Cloudinary SDK loaded');
+    } catch (e) {
+        console.error('❌ [VESSELS] Cloudinary FAILED:', e.message);
+    }
+
+    function uploadToVesselCloudinary(file) {
+        return new Promise((resolve, reject) => {
+            if (!vesselCloudinary) return reject(new Error('Cloudinary غير مُفعَّل'));
+            const stream = vesselCloudinary.uploader.upload_stream(
+                {
+                    folder: 'marine/vessels',
+                    resource_type: 'image',
+                    transformation: [
+                        { width: 1600, height: 1600, crop: 'limit' },
+                        { quality: 'auto:good' }
+                    ]
+                },
+                (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                }
+            );
+            stream.end(file.buffer);
+        });
+    }
+
+    const VESSEL_MAX_IMAGES = 10;
+
+    // ─── POST /api/vessels/:id/images ───
+    if (vesselUpload && vesselCloudinary) {
+        console.log('📸 [VESSELS] Image routes ENABLED');
+
+        app.post('/api/vessels/:id/images',
+            authenticateAccessToken,
+            csrfProtection,
+            vesselUpload.array('images', VESSEL_MAX_IMAGES),
+            async (req, res) => {
+                try {
+                    const q = buildIdQuery(req.params.id);
+                    if (!q) {
+                        return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+                    }
+
+                    const v = await Vessel.findOne(q);
+                    if (!v) {
+                        return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+                    }
+
+                    if (!req.files || req.files.length === 0) {
+                        return res.status(400).json({ success: false, error: 'لم يتم رفع أي صورة' });
+                    }
+
+                    const remaining = VESSEL_MAX_IMAGES - (v.images ? v.images.length : 0);
+                    if (remaining <= 0) {
+                        return res.status(400).json({ success: false, error: 'الحد الأقصى ' + VESSEL_MAX_IMAGES + ' صور' });
+                    }
+
+                    const filesToAdd = req.files.slice(0, remaining);
+                    const source = req.body.source === 'camera' ? 'camera' : 'upload';
+
+                    const uploadedImages = [];
+                    for (let i = 0; i < filesToAdd.length; i++) {
+                        const file = filesToAdd[i];
+                        const result = await uploadToVesselCloudinary(file);
+                        uploadedImages.push({
+                            filename: result.public_id,
+                            originalName: file.originalname,
+                            url: result.secure_url,
+                            size: result.bytes || file.size,
+                            mimetype: file.mimetype,
+                            caption: '',
+                            isPrimary: (!v.images || v.images.length === 0) && i === 0,
+                            source: source,
+                            uploadedAt: new Date(),
+                            uploadedBy: req.user.name || req.user.username || 'system'
+                        });
+                    }
+
+                    v.images.push(...uploadedImages);
+                    await v.save();
+
+                    console.log('✅ [VESSELS] Uploaded ' + uploadedImages.length + ' images for "' + v.name + '"');
+
+                    res.json({
+                        success: true,
+                        message: 'تم رفع ' + uploadedImages.length + ' صورة',
+                        images: v.images,
+                        vessel: formatVessel(v)
+                    });
+                } catch (e) {
+                    console.error('❌ [VESSELS] upload error:', e.message);
+                    res.status(500).json({ success: false, error: 'خطأ: ' + e.message });
+                }
+            }
+        );
+
+        // ─── DELETE /api/vessels/:id/images/:imageId ───
+        app.delete('/api/vessels/:id/images/:imageId',
+            authenticateAccessToken,
+            csrfProtection,
+            async (req, res) => {
+                try {
+                    const q = buildIdQuery(req.params.id);
+                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+                    const v = await Vessel.findOne(q);
+                    if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+
+                    const img = v.images.id(req.params.imageId);
+                    if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
+
+                    if (img.filename && vesselCloudinary) {
+                        try {
+                            await vesselCloudinary.uploader.destroy(img.filename);
+                        } catch (cdErr) {
+                            console.warn('⚠️ Cloudinary delete failed:', cdErr.message);
+                        }
+                    }
+
+                    v.removeImage(req.params.imageId);
+                    await v.save();
+
+                    res.json({ success: true, message: 'تم حذف الصورة', images: v.images });
+                } catch (e) {
+                    console.error('❌ [VESSELS] delete image:', e.message);
+                    res.status(500).json({ success: false, error: 'خطأ' });
+                }
+            }
+        );
+
+        // ─── PATCH /api/vessels/:id/images/:imageId/primary ───
+        app.patch('/api/vessels/:id/images/:imageId/primary',
+            authenticateAccessToken,
+            csrfProtection,
+            async (req, res) => {
+                try {
+                    const q = buildIdQuery(req.params.id);
+                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+                    const v = await Vessel.findOne(q);
+                    if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+
+                    const img = v.images.id(req.params.imageId);
+                    if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
+
+                    v.setPrimaryImage(req.params.imageId);
+                    await v.save();
+
+                    res.json({ success: true, message: 'تم تعيين الصورة الرئيسية', images: v.images });
+                } catch (e) {
+                    console.error('❌ [VESSELS] primary:', e.message);
+                    res.status(500).json({ success: false, error: 'خطأ' });
+                }
+            }
+        );
+    } else {
+        console.error('❌ [VESSELS] Image routes DISABLED — upload:', !!vesselUpload, 'cloudinary:', !!vesselCloudinary);
+    }
+    // ============ VESSELS ============
+    app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
     // ============ VESSELS ============
     app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
         try {
