@@ -606,6 +606,557 @@
             font-size: 13px;
             cursor: pointer;
         }
+                /* ═══════════════════════════════════════════════════════════
+           🎨 PROFESSIONAL LOGIN — Marine National Guard Background
+           ═══════════════════════════════════════════════════════════ */
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #0a0e1a;
+        }
+
+        /* ─── الصورة الخلفية ─── */
+        #loginOverlay .login-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('https://res.cloudinary.com/av4jxtsj/image/upload/v1790949870/IMMIGRATION-scaled-1_1.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+            animation: loginBgZoom 30s ease-in-out infinite alternate;
+        }
+
+        @keyframes loginBgZoom {
+            0%   { transform: scale(1); }
+            100% { transform: scale(1.06); }
+        }
+
+        /* ─── طبقة التعتيم الذهبي ─── */
+        #loginOverlay .login-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            background:
+                radial-gradient(
+                    ellipse at 30% 20%,
+                    rgba(230, 179, 30, 0.18) 0%,
+                    transparent 55%
+                ),
+                radial-gradient(
+                    ellipse at 70% 80%,
+                    rgba(10, 14, 26, 0.55) 0%,
+                    transparent 55%
+                ),
+                linear-gradient(
+                    135deg,
+                    rgba(10, 14, 26, 0.55) 0%,
+                    rgba(10, 14, 26, 0.72) 50%,
+                    rgba(10, 14, 26, 0.85) 100%
+                );
+            pointer-events: none;
+        }
+
+        /* ─── الجزيئات الذهبية ─── */
+        #loginOverlay .particles {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        #loginOverlay .particle {
+            position: absolute;
+            bottom: -10px;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #f7d774, #e6b31e);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(247, 215, 116, 0.8);
+            opacity: 0;
+            animation: particleFloat linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(0) translateX(0) scale(0.8);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.9;
+            }
+            90% {
+                opacity: 0.4;
+            }
+            100% {
+                transform: translateY(-110vh) translateX(30px) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* ─── صندوق الدخول ─── */
+        #loginOverlay .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 460px;
+            padding: 20px;
+        }
+
+        #loginOverlay .login-box {
+            background: rgba(10, 14, 26, 0.72);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1px solid rgba(230, 179, 30, 0.25);
+            border-radius: 24px;
+            padding: 48px 40px 36px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.7),
+                0 0 60px rgba(230, 179, 30, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+            animation: loginBoxIn 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes loginBoxIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ─── شريط ذهبي علوي ─── */
+        #loginOverlay .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                #f7d774,
+                #e6b31e,
+                #f7d774,
+                transparent
+            );
+            background-size: 300% 100%;
+            animation: loginGoldBar 4s ease-in-out infinite;
+        }
+
+        @keyframes loginGoldBar {
+            0%, 100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+
+        /* ─── الشعار ─── */
+        #loginOverlay .login-logo {
+            margin-bottom: 6px;
+        }
+
+        #loginOverlay .login-logo .logo-icon {
+            display: inline-block;
+            font-size: 64px;
+            line-height: 1;
+            animation: loginLogoFloat 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(230, 179, 30, 0.5));
+        }
+
+        @keyframes loginLogoFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50%      { transform: translateY(-8px) scale(1.06); }
+        }
+
+        #loginOverlay .login-logo .logo-text {
+            display: block;
+            font-size: 26px;
+            font-weight: 900;
+            margin-top: 8px;
+            background: linear-gradient(135deg, #e6b31e, #f7d774, #e6b31e);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: loginShimmerGold 3s ease-in-out infinite;
+            letter-spacing: -0.5px;
+        }
+
+        @keyframes loginShimmerGold {
+            0%, 100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+
+        #loginOverlay .login-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        /* ─── معلومات المطور ─── */
+        #loginOverlay .developer-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 22px 0 28px;
+            padding: 10px 0;
+            position: relative;
+        }
+
+        #loginOverlay .developer-info::before,
+        #loginOverlay .developer-info::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(230, 179, 30, 0.35),
+                transparent
+            );
+        }
+
+        #loginOverlay .dev-badge {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        #loginOverlay .dev-badge i {
+            color: #f7d774;
+            margin-left: 4px;
+        }
+
+        #loginOverlay .dev-name {
+            font-size: 15px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f7d774, #e6b31e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #loginOverlay .dev-version {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.35);
+            background: rgba(230, 179, 30, 0.08);
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(230, 179, 30, 0.15);
+            font-weight: 700;
+        }
+
+        /* ─── حقول الإدخال ─── */
+        #loginOverlay .form-group {
+            margin-bottom: 14px;
+        }
+
+        #loginOverlay .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(230, 179, 30, 0.12);
+            border-radius: 12px;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #loginOverlay .input-wrapper:focus-within {
+            border-color: #e6b31e;
+            background: rgba(230, 179, 30, 0.06);
+            box-shadow:
+                0 0 0 4px rgba(230, 179, 30, 0.1),
+                0 8px 24px rgba(230, 179, 30, 0.12);
+            transform: translateY(-1px);
+        }
+
+        #loginOverlay .input-wrapper .input-icon {
+            position: absolute;
+            right: 16px;
+            color: rgba(230, 179, 30, 0.5);
+            font-size: 14px;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+
+        #loginOverlay .input-wrapper:focus-within .input-icon {
+            color: #f7d774;
+        }
+
+        #loginOverlay .input-wrapper input {
+            width: 100%;
+            padding: 15px 46px 15px 16px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 15px;
+            font-family: inherit;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        #loginOverlay .input-wrapper input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 400;
+        }
+
+        #loginOverlay .toggle-password {
+            position: absolute;
+            left: 12px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        #loginOverlay .toggle-password:hover {
+            color: #f7d774;
+            background: rgba(230, 179, 30, 0.08);
+        }
+
+        /* ─── خيارات (تذكرني + نسيت) ─── */
+        #loginOverlay .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 18px 0 22px;
+        }
+
+        #loginOverlay .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        #loginOverlay .checkbox-label input[type="checkbox"] {
+            display: none;
+        }
+
+        #loginOverlay .checkbox-label .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(230, 179, 30, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        #loginOverlay .checkbox-label input:checked + .checkmark {
+            background: linear-gradient(135deg, #e6b31e, #f7d774);
+            border-color: #e6b31e;
+        }
+
+        #loginOverlay .checkbox-label input:checked + .checkmark::after {
+            content: '✓';
+            color: #0a1628;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        #loginOverlay .forgot-link {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        #loginOverlay .forgot-link:hover {
+            color: #f7d774;
+            text-shadow: 0 0 12px rgba(247, 215, 116, 0.5);
+        }
+
+        /* ─── زر الدخول ─── */
+        #loginOverlay .login-btn {
+            width: 100%;
+            padding: 17px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #e6b31e, #f7d774, #e6b31e);
+            background-size: 200% 200%;
+            color: #0a1628;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow:
+                0 6px 30px rgba(230, 179, 30, 0.35),
+                0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+            animation: loginShimmerGold 3s ease-in-out infinite;
+        }
+
+        #loginOverlay .login-btn:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow:
+                0 12px 45px rgba(230, 179, 30, 0.55),
+                0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+        }
+
+        #loginOverlay .login-btn:active:not(:disabled) {
+            transform: translateY(-1px) scale(0.99);
+        }
+
+        #loginOverlay .login-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            animation: none;
+        }
+
+        #loginOverlay .login-btn .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #loginOverlay .login-btn .spinner {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(10, 22, 40, 0.2);
+            border-top-color: #0a1628;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        #loginOverlay .login-btn.loading .spinner {
+            display: inline-block;
+        }
+
+        #loginOverlay .login-btn.loading .btn-text {
+            display: none;
+        }
+
+        /* ─── رسالة الخطأ ─── */
+        #loginOverlay .error-msg {
+            color: #fca5a5;
+            font-size: 13px;
+            margin-top: 14px;
+            padding: 12px 16px;
+            background: rgba(239, 68, 68, 0.12);
+            border-radius: 10px;
+            border-right: 4px solid #ef4444;
+            display: none;
+            text-align: right;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        #loginOverlay .error-msg.show {
+            display: block;
+            animation: loginShake 0.45s ease;
+        }
+
+        @keyframes loginShake {
+            0%, 100% { transform: translateX(0); }
+            20%      { transform: translateX(-8px); }
+            40%      { transform: translateX(8px); }
+            60%      { transform: translateX(-4px); }
+            80%      { transform: translateX(4px); }
+        }
+
+        /* ─── شارة الأمان ─── */
+        #loginOverlay .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 18px;
+            color: rgba(255, 255, 255, 0.28);
+            font-size: 11.5px;
+            font-weight: 500;
+        }
+
+        #loginOverlay .security-badge i {
+            color: #e6b31e;
+            font-size: 13px;
+            filter: drop-shadow(0 0 8px rgba(230, 179, 30, 0.5));
+        }
+
+        /* ─── تذييل ─── */
+        #loginOverlay .login-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.18);
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        #loginOverlay .login-footer .footer-version {
+            background: rgba(230, 179, 30, 0.08);
+            padding: 3px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(230, 179, 30, 0.15);
+            color: #f7d774;
+            font-weight: 700;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 480px) {
+            #loginOverlay .login-box {
+                padding: 32px 22px 28px;
+                border-radius: 20px;
+            }
+            #loginOverlay .login-logo .logo-icon {
+                font-size: 52px;
+            }
+            #loginOverlay .login-logo .logo-text {
+                font-size: 22px;
+            }
+            #loginOverlay .login-container {
+                padding: 14px;
+            }
+            #loginOverlay .dev-name {
+                font-size: 14px;
+            }
+        }
+
+        /* ─── Reduced Motion (للأجهزة البطيئة) ─── */
+        @media (prefers-reduced-motion: reduce) {
+            #loginOverlay .login-bg {
+                animation: none;
+            }
+            #loginOverlay .particle {
+                display: none;
+            }
+            #loginOverlay .login-logo .logo-icon {
+                animation: none;
+            }
+        }
 
         /* ===== MAIN APP ===== */
         #mainApp { display: none; min-height: 100vh; }
