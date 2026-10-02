@@ -37,7 +37,6 @@
             position: relative;
             z-index: 2;
             overflow-x: hidden;
-            direction: rtl;
         }
         #page-fleet::before {
             content: ''; position: fixed;
@@ -451,12 +450,12 @@
             background: rgba(148, 163, 184, 0.06); color: var(--c-text-1);
         }
 
-        /* ✅ الجدول: اتجاه RTL إجباري */
+        /* ✅ RTL على حاوية الجدول فقط (لإصلاح الانقلاب) */
         .table-wrapper {
             overflow-x: auto;
             padding: 0 24px 24px;
             width: 100%;
-            direction: rtl !important;
+            direction: rtl;
         }
         .table-wrapper table {
             width: 100%; border-collapse: separate; border-spacing: 0;
@@ -464,29 +463,22 @@
             border-radius: var(--radius); overflow: hidden;
             background: rgba(24, 34, 56, 0.55);
             border: 1px solid var(--c-border-soft);
-            direction: rtl !important;
         }
         thead {
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.9));
-            direction: rtl !important;
         }
         thead th {
             padding: 14px 12px; text-align: center;
             font-weight: 800; font-size: 10.5px;
             text-transform: uppercase; color: #cbd5e1;
             letter-spacing: 1px; white-space: nowrap;
-            direction: rtl !important;
         }
         thead th i { color: #f7d774; font-size: 11px; margin-left: 4px; }
-        tbody {
-            direction: rtl !important;
-        }
         tbody td {
             padding: 12px 10px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.06);
             vertical-align: middle; color: var(--c-text-2);
             font-size: 13px; text-align: center; font-weight: 600;
-            direction: rtl !important;
         }
         tbody tr:nth-child(even) { background: rgba(148, 163, 184, 0.02); }
         tbody tr:hover { background: rgba(247, 215, 116, 0.05); }
@@ -515,13 +507,31 @@
         .status-badge.completed {
             background: linear-gradient(135deg, #0369a1, #0ea5e9); color: #fff;
         }
-        .action-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; align-items: center; }
+
+        /* ✅ عمود الإجراءات — إصلاح إظهار الأزرار */
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: center;
+            direction: ltr;
+            min-width: 150px;
+        }
+        tbody td:last-child,
+        thead th:last-child {
+            min-width: 160px;
+            width: 160px;
+            text-align: center;
+            padding: 8px 6px;
+        }
+
         .btn-sm {
             width: 34px; height: 34px; border: none; border-radius: 10px;
             font-size: 13px; font-weight: 700; cursor: pointer;
             transition: all var(--transition);
             display: inline-flex; align-items: center; justify-content: center;
-            padding: 0;
+            padding: 0; flex-shrink: 0;
         }
         .btn-sm.edit {
             background: rgba(59, 130, 246, 0.15); color: #93c5fd;
@@ -1406,7 +1416,7 @@
     </div>
 
     <!-- TABLE -->
-    <div class="table-wrapper" dir="rtl">
+    <div class="table-wrapper">
         <table dir="rtl">
             <thead>
                 <tr>
@@ -3330,65 +3340,6 @@
         } catch (e) {}
     }
     applyLogo();
-
-    // ═══════════════════════════════════════════════════════════════
-    // ✅ RTL GUARD — يمنع انقلاب الجدول عند العودة من أي صفحة
-    // ═══════════════════════════════════════════════════════════════
-    function enforceRTL() {
-        try {
-            // 1. html + body
-            if (document.documentElement.getAttribute('dir') !== 'rtl') {
-                document.documentElement.setAttribute('dir', 'rtl');
-            }
-            if (document.body.getAttribute('dir') !== 'rtl') {
-                document.body.setAttribute('dir', 'rtl');
-            }
-
-            // 2. table-wrapper + table
-            var wrapper = document.querySelector('.table-wrapper');
-            if (wrapper) {
-                if (wrapper.getAttribute('dir') !== 'rtl') wrapper.setAttribute('dir', 'rtl');
-                if (wrapper.style.direction !== 'rtl') wrapper.style.direction = 'rtl';
-                if (wrapper.style.overflowX === 'hidden') wrapper.style.overflowX = 'auto';
-                if (wrapper.style.overflow === 'hidden') wrapper.style.overflow = 'auto';
-            }
-
-            var table = document.querySelector('.table-wrapper table');
-            if (table) {
-                if (table.getAttribute('dir') !== 'rtl') table.setAttribute('dir', 'rtl');
-                if (table.style.direction !== 'rtl') table.style.direction = 'rtl';
-            }
-
-            // 3. main-content
-            var mc = document.querySelector('.main-content');
-            if (mc) {
-                if (mc.style.direction !== 'rtl') mc.style.direction = 'rtl';
-                if (mc.style.overflow === 'hidden') mc.style.overflow = 'auto';
-            }
-        } catch (e) {
-            console.debug('RTL Guard:', e.message);
-        }
-    }
-
-    enforceRTL();
-    var _rtlInterval = setInterval(enforceRTL, 1500);
-    window._pageIntervals = window._pageIntervals || [];
-    window._pageIntervals.push(_rtlInterval);
-
-    if (typeof MutationObserver !== 'undefined') {
-        var _rtlObserver = new MutationObserver(function() {
-            enforceRTL();
-        });
-        var _w = document.querySelector('.table-wrapper');
-        if (_w) {
-            _rtlObserver.observe(_w, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ['dir', 'style', 'class']
-            });
-        }
-    }
 
     var _initialized = false;
 
