@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية v9.7</title>
+    <title>⚓ منظومة الوسائل البحرية v9.6</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/print.css" media="print">
@@ -108,7 +108,6 @@
     <style>
         /* ===== RESET & BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Cairo', sans-serif;
             background: #0a0e1a;
@@ -117,7 +116,6 @@
             direction: rtl;
             overflow-x: hidden;
         }
-
         :root {
             --gold: #e6b31e;
             --gold-light: #f5d76e;
@@ -127,7 +125,6 @@
             --warning: #eab308;
             --info: #3b82f6;
         }
-
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a1628; }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
@@ -135,6 +132,7 @@
 
         /* ═══════════════════════════════════════════════════════
            🎨 PROFESSIONAL LOGIN — Marine National Guard
+           (نسخة واحدة فقط — بدون تكرار)
            ═══════════════════════════════════════════════════════ */
         #loginOverlay {
             position: fixed;
@@ -234,7 +232,9 @@
         #loginOverlay .login-box::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 3px;
             background: linear-gradient(90deg, transparent, #f7d774, #e6b31e, #f7d774, transparent);
             background-size: 300% 100%;
@@ -1658,16 +1658,11 @@
             #printSettingsModal .ps-body { padding: 18px; }
         }
     </style>
-
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-
     <!-- ===== LOGIN ===== -->
     <div id="loginOverlay">
-        <div class="login-bg"></div>
-        <div class="login-overlay"></div>
-        <div class="particles" id="loginParticles"></div>
         <div class="login-container">
             <div class="login-box">
                 <div class="login-logo">
@@ -1678,7 +1673,7 @@
                 <div class="developer-info">
                     <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
                     <span class="dev-name">أمان الله ناجي</span>
-                    <span class="dev-version">v9.7</span>
+                    <span class="dev-version">v9.6</span>
                 </div>
                 <form id="loginForm" class="login-form" autocomplete="off" novalidate>
                     <div class="form-group">
@@ -1718,7 +1713,7 @@
                 </form>
                 <div class="login-footer">
                     <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                    <span class="footer-version">v9.7</span>
+                    <span class="footer-version">v9.6</span>
                 </div>
             </div>
         </div>
@@ -1755,7 +1750,7 @@
         <header class="main-header">
             <div class="header-container">
                 <div class="header-left">
-                    <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
+                    <button class="menu-toggle" id="menuToggle">
                         <span></span><span></span><span></span>
                     </button>
                     <div class="brand">
@@ -1771,7 +1766,7 @@
                         <kbd class="search-shortcut">⌘K</kbd>
                     </div>
                     <div class="notification-wrapper">
-                        <button class="notif-btn" id="notifBtn" aria-label="الإشعارات">
+                        <button class="notif-btn" id="notifBtn">
                             <i class="fas fa-bell"></i>
                             <span class="notif-badge" id="notifBadge">0</span>
                         </button>
@@ -1808,7 +1803,7 @@
                         <div class="brand-subtitle">نظام إدارة الوسائل البحرية</div>
                     </div>
                 </div>
-                <button class="sidebar-close" id="sidebarClose" aria-label="إغلاق">✕</button>
+                <button class="sidebar-close" id="sidebarClose">✕</button>
             </div>
             <div class="sidebar-user">
                 <div class="user-avatar" id="sidebarUserAvatar">م</div>
@@ -1884,17 +1879,9 @@
                 </div>
             </div>
             <div class="sidebar-footer">
-                <div class="footer-status">
-                    <span class="status-dot online"></span>
-                    <span>متصل</span>
-                </div>
-                <div class="footer-version">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>v9.7 · RBAC</span>
-                </div>
-                <button class="footer-logout" onclick="doLogout()">
-                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                </button>
+                <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v9.6 · RBAC</span></div>
+                <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
             </div>
         </nav>
 
@@ -1908,7 +1895,7 @@
             </div>
         </main>
 
-        <button class="back-to-top" id="backToTop" style="display:none;" aria-label="أعلى">
+        <button class="back-to-top" id="backToTop" style="display:none;">
             <i class="fas fa-chevron-up"></i>
         </button>
     </div>
@@ -1990,25 +1977,19 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============================================================
-         JAVASCRIPT - v9.7 (FIXED)
-         ============================================================ -->
+    JAVASCRIPT - v9.16 (Notifications Fix) + إصلاحات بدون تغيير السلوك
+    ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v9.7
-        // FIXES:
-        //  - Object.defineProperty للحالة العامة (currentUser, allVessels, ...)
-        //  - refreshAccessToken باستخدام try/finally لمنع تسريب Promise
-        //  - apiFetch لا يكتب فوق Authorization / X-CSRF-Token المخصص
-        //  - loadPage يحتفظ بالسكريبتات بدل حذفها بعد 10ms (تنظيف عند التبديل)
-        //  - markAsRead/markAllAsRead/deleteNotification مع Rollback عند الفشل
-        //  - window.print محمي عبر اعتراض Ctrl+P بدل إعادة التعريف
+        // 🚢 MARINE SYSTEM - v9.16 (Fixed, no behavioral change)
         // ============================================================
 
-        console.log('🚢 Marine System v9.7 - Loading...');
+        console.log('🚢 Marine System v9.16 - Loading...');
 
         // ============================================================
         // ✅ GLOBAL CLEANUP STATE
         // ============================================================
+
         window._pageCleanup = window._pageCleanup || [];
         window._pageIntervals = window._pageIntervals || [];
         window._pageTimeouts = window._pageTimeouts || [];
@@ -2019,25 +2000,31 @@
                     clearInterval(window._dateTimeInterval);
                     window._dateTimeInterval = null;
                 }
+
                 if (window._notifPollingInterval) {
                     clearInterval(window._notifPollingInterval);
                     window._notifPollingInterval = null;
                 }
+
                 if (Array.isArray(window._pageIntervals)) {
                     window._pageIntervals.forEach(id => {
                         try { clearInterval(id); } catch (e) {}
                     });
                     window._pageIntervals = [];
                 }
+
                 if (Array.isArray(window._pageTimeouts)) {
                     window._pageTimeouts.forEach(id => {
                         try { clearTimeout(id); } catch (e) {}
                     });
                     window._pageTimeouts = [];
                 }
+
                 if (Array.isArray(window._pageCleanup)) {
                     window._pageCleanup.forEach(fn => {
-                        try { if (typeof fn === 'function') fn(); } catch (e) {}
+                        try {
+                            if (typeof fn === 'function') fn();
+                        } catch (e) {}
                     });
                     window._pageCleanup = [];
                 }
@@ -2052,6 +2039,7 @@
         // ============================================================
         // ⏰ DATE TIME
         // ============================================================
+
         function updateDateTime() {
             try {
                 const now = new Date();
@@ -2060,12 +2048,18 @@
 
                 if (dateEl) {
                     dateEl.textContent = now.toLocaleDateString('ar-TN', {
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
                     });
                 }
+
                 if (timeEl) {
                     timeEl.textContent = now.toLocaleTimeString('ar-TN', {
-                        hour: '2-digit', minute: '2-digit', second: '2-digit'
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
                     });
                 }
             } catch (e) {
@@ -2079,6 +2073,7 @@
                     clearInterval(window._dateTimeInterval);
                     window._dateTimeInterval = null;
                 }
+
                 const hasDate = !!document.getElementById('currentDate');
                 const hasTime = !!document.getElementById('currentTime');
 
@@ -2105,13 +2100,13 @@
         // ============================================================
         // 📦 CONFIGURATION
         // ============================================================
+
         const CONFIG = {
             API: '/api',
             KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },
             PAGES: {
                 dashboard: 'لوحة التحكم',
                 fleet: 'السجل العام',
-                vehicles: 'الوسائل البرية',
                 maintenance: 'الصيانة',
                 efficiency: 'الجاهزية',
                 support: 'الدعم',
@@ -2126,27 +2121,36 @@
         };
 
         // ============================================================
-        // 🔐 RBAC
+        // 🔐 RBAC - Role-Based Access Control
         // ============================================================
+
         const ROLE_PERMISSIONS = {
             admin: ['*'],
+
             manager: [
                 'dashboard:view',
                 'vessels:read', 'vessels:create', 'vessels:update',
                 'maintenance:read', 'maintenance:create', 'maintenance:update', 'maintenance:delete',
                 'logs:read'
             ],
+
             editor: [
                 'dashboard:view',
                 'vessels:read', 'vessels:create', 'vessels:update',
                 'maintenance:read', 'maintenance:create', 'maintenance:update'
             ],
+
             maintenance_unit: [
                 'dashboard:view',
                 'vessels:read', 'vessels:create', 'vessels:update',
                 'maintenance:read', 'maintenance:create', 'maintenance:update'
             ],
-            viewer: ['dashboard:view', 'vessels:read', 'maintenance:read']
+
+            viewer: [
+                'dashboard:view',
+                'vessels:read',
+                'maintenance:read'
+            ]
         };
 
         const SENSITIVE_PERMISSIONS = {
@@ -2204,6 +2208,7 @@
 
         function hasPermission(permission) {
             if (!currentUser || !currentUser.role) return false;
+
             const role = normalizeRole(currentUser.role);
 
             if (SENSITIVE_PERMISSIONS[permission]) {
@@ -2216,13 +2221,18 @@
 
             const resource = permission.split(':')[0];
             if (permissions.includes(resource + ':*')) return true;
+
             return false;
         }
 
         function canAccessPage(page) {
-            if (ADMIN_ONLY_PAGES.includes(page)) return isAdmin();
+            if (ADMIN_ONLY_PAGES.includes(page)) {
+                return isAdmin();
+            }
+
             const required = PAGE_PERMISSIONS[page];
             if (!required) return true;
+
             return hasPermission(required);
         }
 
@@ -2232,10 +2242,12 @@
             const role = normalizeRole(currentUser.role);
             console.log('🔐 Applying RBAC for role:', role, '(raw:', currentUser.role, ')');
 
-            let visible = 0, hidden = 0;
+            let visible = 0;
+            let hidden = 0;
 
             document.querySelectorAll('.nav-btn[data-page]').forEach(function(btn) {
                 const page = btn.dataset.page;
+
                 if (canAccessPage(page)) {
                     btn.style.display = 'flex';
                     btn.disabled = false;
@@ -2250,8 +2262,10 @@
             });
 
             document.querySelectorAll('.nav-group').forEach(function(group) {
-                const visibleBtns = Array.from(group.querySelectorAll('.nav-btn'))
-                    .filter(btn => btn.style.display !== 'none');
+                const visibleBtns = Array.from(group.querySelectorAll('.nav-btn')).filter(
+                    btn => btn.style.display !== 'none'
+                );
+
                 group.style.display = visibleBtns.length === 0 ? 'none' : 'flex';
             });
 
@@ -2259,39 +2273,24 @@
         }
 
         // ============================================================
-        // 📦 STATE (with automatic window synchronization)
+        // 📦 STATE
         // ============================================================
+
         var currentUser = null;
         var currentPage = 'dashboard';
         var allVessels = [];
         var allUsers = [];
         var allLogs = [];
 
-        // ✅ مزامنة تلقائية بدل النسخ الثابت
-        Object.defineProperty(window, 'currentUser', {
-            get: function() { return currentUser; },
-            set: function(v) { currentUser = v; },
-            configurable: true
-        });
-        Object.defineProperty(window, 'allVessels', {
-            get: function() { return allVessels; },
-            set: function(v) { allVessels = v; },
-            configurable: true
-        });
-        Object.defineProperty(window, 'allUsers', {
-            get: function() { return allUsers; },
-            set: function(v) { allUsers = v; },
-            configurable: true
-        });
-        Object.defineProperty(window, 'allLogs', {
-            get: function() { return allLogs; },
-            set: function(v) { allLogs = v; },
-            configurable: true
-        });
+        window.currentUser = currentUser;
+        window.allVessels = allVessels;
+        window.allUsers = allUsers;
+        window.allLogs = allLogs;
 
         // ============================================================
         // 🔒 CSRF TOKEN MANAGER
         // ============================================================
+
         class CSRFTokenManager {
             constructor() {
                 this.token = null;
@@ -2362,8 +2361,11 @@
         // ============================================================
         // 🔧 HELPERS
         // ============================================================
+
         function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
+
         function setToken(token) { localStorage.setItem(CONFIG.KEYS.TOKEN, token); }
+
         function clearToken() { localStorage.removeItem(CONFIG.KEYS.TOKEN); }
 
         function getRoleName(r) {
@@ -2372,7 +2374,7 @@
         }
 
         function escapeHTML(s) {
-            if (s === null || s === undefined) return '';
+            if (!s) return '';
             return String(s).replace(/[&<>"']/g, m => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
             }[m]));
@@ -2381,6 +2383,7 @@
         // ============================================================
         // 🍞 TOAST
         // ============================================================
+
         function showToast(msg, type = 'info') {
             try {
                 const c = document.getElementById('toastContainer');
@@ -2412,6 +2415,7 @@
         // ============================================================
         // 🔔 UPDATE BADGE - SAFE
         // ============================================================
+
         function updateBadge(id, count) {
             try {
                 const el = document.getElementById(id);
@@ -2424,8 +2428,9 @@
         }
 
         // ============================================================
-        // 🌐 FETCH WRAPPER (fixed refresh + headers)
+        // 🌐 FETCH WRAPPER
         // ============================================================
+
         let _refreshInFlight = null;
 
         async function refreshAccessToken() {
@@ -2442,6 +2447,7 @@
                     if (!res.ok) return null;
 
                     const data = await res.json();
+
                     if (data && data.success && data.token) {
                         setToken(data.token);
 
@@ -2453,6 +2459,7 @@
                         }
                         if (data.user) {
                             currentUser = data.user;
+                            window.currentUser = data.user;
                         }
                         return data.token;
                     }
@@ -2476,10 +2483,12 @@
                 const headers = Object.assign({}, options.headers || {});
                 const token = getToken();
 
+                // لا نكتب فوق Authorization المخصص
                 if (token && !headers['Authorization']) {
                     headers['Authorization'] = 'Bearer ' + token;
                 }
 
+                // لا نكتب فوق X-CSRF-Token المخصص
                 if (!isSafeMethod && !headers['X-CSRF-Token']) {
                     const csrfToken = await csrfManager.getToken();
                     if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
@@ -2519,26 +2528,21 @@
             clearToken();
             csrfManager.clearToken();
             currentUser = null;
+            window.currentUser = null;
 
             const loginOverlay = document.getElementById('loginOverlay');
             const mainApp = document.getElementById('mainApp');
             if (mainApp && mainApp.style.display !== 'none') {
                 if (loginOverlay) loginOverlay.style.display = 'flex';
                 if (mainApp) mainApp.style.display = 'none';
-
-                // ✅ رسالة الخطأ داخل نافذة الدخول (أوضح من Toast خلف الطبقة)
-                const errorEl = document.getElementById('loginError');
-                if (errorEl) {
-                    errorEl.textContent = '⏳ انتهت الجلسة، يرجى تسجيل الدخول من جديد';
-                    errorEl.classList.add('show');
-                }
                 showToast('⏳ انتهت الجلسة، يرجى تسجيل الدخول من جديد', 'warning');
             }
         }
 
         // ============================================================
-        // 🔔 NOTIFICATION MANAGER
+        // 🔔 NOTIFICATIONS MANAGER
         // ============================================================
+
         class NotificationManager {
             constructor() {
                 this.notifications = [];
@@ -2549,7 +2553,9 @@
             }
 
             async fetch() {
-                if (!getToken() || this.isLoading) return;
+                if (!getToken()) return;
+                if (this.isLoading) return;
+
                 this.isLoading = true;
 
                 try {
@@ -2565,6 +2571,7 @@
                     }
 
                     const data = await response.json();
+
                     if (data && data.success) {
                         this.notifications = Array.isArray(data.notifications) ? data.notifications : [];
                         this.unreadCount = Number(data.unreadCount) || 0;
@@ -2592,6 +2599,7 @@
             toggle() {
                 const dropdown = document.getElementById('notifDropdown');
                 if (!dropdown) return;
+
                 this.isOpen = !this.isOpen;
 
                 if (this.isOpen) {
@@ -2686,7 +2694,8 @@
                 list.querySelectorAll('.notif-item-delete').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        this.deleteNotification(btn.dataset.delete);
+                        const id = btn.dataset.delete;
+                        this.deleteNotification(id);
                     });
                 });
             }
@@ -2694,6 +2703,7 @@
             async handleItemClick(item) {
                 const id = item.dataset.id;
                 const link = item.dataset.link;
+
                 if (!id) return;
 
                 await this.markAsRead(id);
@@ -2711,7 +2721,7 @@
                 if (!id) return;
 
                 const n = this.notifications.find(x => x.id === id);
-                const wasUnread = n && !n.isRead;
+                const wasUnread = !!(n && !n.isRead);
 
                 if (wasUnread) {
                     n.isRead = true;
@@ -2721,10 +2731,10 @@
                 }
 
                 try {
-                    const response = await apiFetch(
-                        CONFIG.API + '/notifications/' + encodeURIComponent(id) + '/read',
-                        { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' } }
-                    );
+                    const response = await apiFetch(CONFIG.API + '/notifications/' + encodeURIComponent(id) + '/read', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+                    });
 
                     // ✅ Rollback عند فشل الخادم
                     if (!response.ok && wasUnread) {
@@ -2732,7 +2742,6 @@
                         this.unreadCount += 1;
                         this.updateBadge();
                         this.render();
-                        console.warn('⚠️ markAsRead failed, rolled back');
                     }
                 } catch (e) {
                     if (wasUnread) {
@@ -2747,7 +2756,7 @@
 
             async markAllAsRead() {
                 const prevUnread = this.unreadCount;
-                const prevState = this.notifications.map(n => ({ id: n.id, isRead: n.isRead }));
+                const prevState = this.notifications.map(x => ({ id: x.id, isRead: x.isRead }));
 
                 this.notifications.forEach(n => { n.isRead = true; });
                 this.unreadCount = 0;
@@ -2790,10 +2799,12 @@
 
                 const removed = this.notifications.find(x => x.id === id);
                 const idx = this.notifications.findIndex(x => x.id === id);
-                const wasUnread = removed && !removed.isRead;
+                const wasUnread = !!(removed && !removed.isRead);
 
                 this.notifications = this.notifications.filter(x => x.id !== id);
-                if (wasUnread) this.unreadCount = Math.max(0, this.unreadCount - 1);
+                if (wasUnread) {
+                    this.unreadCount = Math.max(0, this.unreadCount - 1);
+                }
                 this.updateBadge();
                 this.render();
 
@@ -2803,13 +2814,12 @@
                         headers: { 'Accept': 'application/json' }
                     });
 
-                    // ✅ Rollback عند الفشل
                     if (!response.ok && removed) {
+                        // ✅ Rollback
                         this.notifications.splice(idx, 0, removed);
                         if (wasUnread) this.unreadCount += 1;
                         this.updateBadge();
                         this.render();
-                        console.warn('⚠️ deleteNotification failed, rolled back');
                     }
                 } catch (e) {
                     if (removed) {
@@ -2857,6 +2867,7 @@
         // ============================================================
         // 🔐 FORGOT PASSWORD
         // ============================================================
+
         var forgotModal = document.getElementById('forgotPasswordModal');
         var forgotEmail = document.getElementById('forgotEmail');
         var forgotMessage = document.getElementById('forgotMessage');
@@ -2868,7 +2879,10 @@
             if (e) e.preventDefault();
             if (forgotModal) {
                 forgotModal.style.display = 'flex';
-                if (forgotEmail) { forgotEmail.value = ''; forgotEmail.focus(); }
+                if (forgotEmail) {
+                    forgotEmail.value = '';
+                    forgotEmail.focus();
+                }
                 if (forgotMessage) {
                     forgotMessage.className = 'modal-message';
                     forgotMessage.textContent = '';
@@ -2878,12 +2892,15 @@
         }
 
         function closeForgotModal() {
-            if (forgotModal) forgotModal.style.display = 'none';
+            if (forgotModal) {
+                forgotModal.style.display = 'none';
+            }
         }
 
         // ============================================================
         // 🔐 LOGIN
         // ============================================================
+
         function doLogin() {
             console.log('🔐 محاولة تسجيل الدخول');
 
@@ -2909,7 +2926,10 @@
 
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
-            if (authOverlay) authOverlay.style.display = 'flex';
+
+            if (authOverlay) {
+                authOverlay.style.display = 'flex';
+            }
 
             (async () => {
                 try {
@@ -2927,12 +2947,15 @@
                     });
 
                     console.log('📥 Login response status: ' + response.status);
+
                     if (authOverlay) authOverlay.style.display = 'none';
 
                     const data = await response.json();
                     console.log('📦 Login response data:', data);
 
-                    if (!response.ok) throw new Error(data.error || 'فشل تسجيل الدخول');
+                    if (!response.ok) {
+                        throw new Error(data.error || 'فشل تسجيل الدخول');
+                    }
 
                     loginBtn.disabled = false;
                     loginBtn.classList.remove('loading');
@@ -2942,6 +2965,7 @@
                         if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
 
                         currentUser = data.user;
+                        window.currentUser = data.user;
                         setToken(token);
 
                         if (data.csrfToken) {
@@ -2951,7 +2975,7 @@
                             );
                         }
 
-                        console.log('✅ Login successful for user:', currentUser.username);
+                        console.log('✅ Login successful for user: ' + currentUser.username);
                         console.log('👤 Role:', normalizeRole(currentUser.role));
 
                         document.getElementById('loginOverlay').style.display = 'none';
@@ -2961,7 +2985,11 @@
                         applyRBACToUI();
 
                         const defaultPage = 'dashboard';
-                        loadPage(canAccessPage(defaultPage) ? defaultPage : 'fleet');
+                        if (canAccessPage(defaultPage)) {
+                            loadPage(defaultPage);
+                        } else {
+                            loadPage('fleet');
+                        }
 
                         showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
 
@@ -2988,10 +3016,15 @@
         // ============================================================
         // 🛡️ VERIFY TOKEN
         // ============================================================
+
         async function verifyToken(token) {
             try {
                 console.log('🛡️ التحقق من التوكن...');
-                if (!token) { console.warn('⚠️ لا يوجد توكن'); return false; }
+
+                if (!token) {
+                    console.warn('⚠️ لا يوجد توكن');
+                    return false;
+                }
 
                 const response = await fetch('/api/auth/me', {
                     headers: {
@@ -3004,7 +3037,9 @@
                 if (response.status === 401) {
                     console.warn('⚠️ التوكن غير صالح (401) — محاولة تجديد...');
                     const newToken = await refreshAccessToken();
-                    if (newToken) return verifyTokenOnce(newToken);
+                    if (newToken) {
+                        return verifyTokenOnce(newToken);
+                    }
                     clearToken();
                     csrfManager.clearToken();
                     return false;
@@ -3014,6 +3049,7 @@
                     const data = await response.json();
                     if (data.success && data.user) {
                         currentUser = data.user;
+                        window.currentUser = data.user;
                         console.log('✅ التوكن صالح:', currentUser.username, '| Role:', normalizeRole(currentUser.role));
                         return true;
                     }
@@ -3049,6 +3085,7 @@
                 const data = await response.json();
                 if (data.success && data.user) {
                     currentUser = data.user;
+                    window.currentUser = data.user;
                     return true;
                 }
 
@@ -3065,6 +3102,7 @@
         // ============================================================
         // 🖥️ SERVER STATUS
         // ============================================================
+
         async function fetchServerStatus() {
             const token = getToken();
             if (!token) {
@@ -3093,6 +3131,7 @@
         // ============================================================
         // 📊 LOAD DATA
         // ============================================================
+
         async function loadAllData() {
             const token = getToken();
             if (!token) return;
@@ -3108,12 +3147,14 @@
                 if (vesselsRes && vesselsRes.ok) {
                     const data = await vesselsRes.json();
                     allVessels = Array.isArray(data) ? data : [];
+                    window.allVessels = allVessels;
                     updateBadge('fleetBadge', allVessels.length);
                 }
 
                 if (usersRes && usersRes.ok) {
                     const data = await usersRes.json();
                     allUsers = Array.isArray(data) ? data : [];
+                    window.allUsers = allUsers;
                     updateBadge('usersBadge', allUsers.length);
                 }
 
@@ -3122,12 +3163,15 @@
                     if (logsRes.ok) {
                         const data = await logsRes.json();
                         allLogs = Array.isArray(data) ? data : [];
+                        window.allLogs = allLogs;
                         updateBadge('logsBadge', allLogs.length);
                         updateBadge('maintenanceBadge', allLogs.filter(l => l.status === 'قيد التنفيذ').length);
                     }
                 } catch (e) {}
 
-                try { await notificationManager.fetch(); } catch (e) {}
+                try {
+                    await notificationManager.fetch();
+                } catch (e) {}
 
             } catch (error) {
                 console.error('❌ خطأ أثناء تحميل البيانات:', error);
@@ -3137,6 +3181,7 @@
         // ============================================================
         // 👤 USER DISPLAY
         // ============================================================
+
         function updateUserDisplay() {
             if (!currentUser) return;
             const n = currentUser.name || currentUser.username;
@@ -3157,6 +3202,7 @@
         // ============================================================
         // 📄 LOAD PAGE
         // ============================================================
+
         function loadPage(page) {
             (async () => {
                 try {
@@ -3173,11 +3219,12 @@
                     currentPage = page;
                     localStorage.setItem(CONFIG.KEYS.PAGE, page);
 
-                    // 🧹 Cleanup previous page
                     if (Array.isArray(window._pageCleanup) && window._pageCleanup.length > 0) {
                         console.log('🧹 Running cleanup for previous page...');
                         window._pageCleanup.forEach(fn => {
-                            try { if (typeof fn === 'function') fn(); } catch (e) {}
+                            try {
+                                if (typeof fn === 'function') fn();
+                            } catch (e) {}
                         });
                         window._pageCleanup = [];
                     }
@@ -3196,7 +3243,9 @@
                         window._pageTimeouts = [];
                     }
 
-                    stopDateTimeUpdate();
+                    if (typeof stopDateTimeUpdate === 'function') {
+                        stopDateTimeUpdate();
+                    }
 
                     document.querySelectorAll('.nav-btn').forEach(btn => {
                         btn.classList.toggle('active', btn.dataset.page === page);
@@ -3204,6 +3253,7 @@
 
                     const container = document.getElementById('pageContainer');
                     const loader = document.getElementById('pageLoader');
+
                     if (!container) return;
 
                     if (loader) loader.style.display = 'flex';
@@ -3236,9 +3286,9 @@
                         if (loader) loader.style.display = 'none';
                         container.innerHTML =
                             '<div style="text-align:center;padding:60px 20px;color:#f87171;">' +
-                                '<div style="font-size:48px;">❌</div>' +
-                                '<h2 style="color:#f87171;">فشل تحميل الصفحة</h2>' +
-                                '<p>' + escapeHTML(lastError ? lastError.message : 'الصفحة غير موجودة') + '</p>' +
+                            '<div style="font-size:48px;">❌</div>' +
+                            '<h2 style="color:#f87171;">فشل تحميل الصفحة</h2>' +
+                            '<p>' + escapeHTML(lastError ? lastError.message : 'الصفحة غير موجودة') + '</p>' +
                             '</div>';
                         return;
                     }
@@ -3255,7 +3305,7 @@
 
                     container.innerHTML = tempDiv.innerHTML;
 
-                    // ✅ نضيف السكريبتات ونحتفظ بها — التنظيف لاحقاً عند تغيير الصفحة
+                    // ✅ إصلاح: نبقي السكريبتات وننظّفها عند تبديل الصفحة بدل الحذف بعد 10ms
                     scriptContents.forEach(content => {
                         if (content && content.trim()) {
                             try {
@@ -3286,6 +3336,7 @@
                     document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
 
                     syncDateTimeInterval();
+
                     console.log('✅ تم تحميل الصفحة:', page);
                 } catch (e) {
                     console.error('❌ loadPage error:', e);
@@ -3296,23 +3347,31 @@
         // ============================================================
         // 🔄 REFRESH
         // ============================================================
+
         async function refreshCurrentPage() {
             const page = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
-            if (!canAccessPage(page)) { loadPage('dashboard'); return; }
+
+            if (!canAccessPage(page)) {
+                loadPage('dashboard');
+                return;
+            }
 
             console.log('🔄 جاري تحديث الصفحة:', page);
+
             try {
                 loadPage(page);
                 await loadAllData();
             } catch (e) {
                 console.warn('⚠️ Refresh error:', e.message);
             }
+
             showToast('🔄 تم تحديث الصفحة', 'info');
         }
 
         // ============================================================
         // 🚪 LOGOUT
         // ============================================================
+
         async function doLogout() {
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
 
@@ -3347,6 +3406,7 @@
             }
 
             currentUser = null;
+            window.currentUser = null;
             clearToken();
             csrfManager.clearToken();
 
@@ -3370,6 +3430,7 @@
         // ============================================================
         // 🧭 SIDEBAR
         // ============================================================
+
         function toggleSidebar() {
             const s = document.getElementById('sidebar');
             const m = document.getElementById('menuToggle');
@@ -3385,27 +3446,9 @@
         }
 
         // ============================================================
-        // 🎨 LOGIN PARTICLES (small enhancement kept local)
-        // ============================================================
-        function initLoginParticles() {
-            const container = document.getElementById('loginParticles');
-            if (!container) return;
-
-            const count = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 20;
-            for (let i = 0; i < count; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.animationDuration = (8 + Math.random() * 12) + 's';
-                p.style.animationDelay = (Math.random() * 8) + 's';
-                p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
-                container.appendChild(p);
-            }
-        }
-
-        // ============================================================
         // 🚀 INIT
         // ============================================================
+
         const csrfManager = new CSRFTokenManager();
         window.csrfManager = csrfManager;
 
@@ -3413,7 +3456,6 @@
             console.log('📄 DOM جاهز');
 
             csrfManager.fetchFromServer().catch(() => {});
-            initLoginParticles();
 
             // FORGOT PASSWORD
             const forgotLink = document.getElementById('forgotPasswordLink');
@@ -3558,7 +3600,9 @@
             document.addEventListener('click', function(e) {
                 if (!notificationManager.isOpen) return;
                 const wrapper = document.querySelector('.notification-wrapper');
-                if (wrapper && !wrapper.contains(e.target)) notificationManager.close();
+                if (wrapper && !wrapper.contains(e.target)) {
+                    notificationManager.close();
+                }
             });
 
             if (notifDropdown) {
@@ -3629,7 +3673,8 @@
             }
 
             /* ============================================================
-               🖨️ PRINT SETTINGS SYSTEM (safer: intercept Ctrl+P instead of overriding window.print)
+               🖨️ PRINT SETTINGS SYSTEM
+               (بدون إعادة تعريف window.print — اعتراض Ctrl+P فقط)
                ============================================================ */
             (function initPrintSettings() {
                 var printState = { size: 'A4', orientation: 'portrait', color: 'color' };
@@ -3648,9 +3693,9 @@
                 var modal = document.getElementById('printSettingsModal');
                 if (!modal) { console.warn('⚠️ printSettingsModal not found'); return; }
 
-                var closeBtn = document.getElementById('printSettingsClose');
+                var closeBtn  = document.getElementById('printSettingsClose');
                 var cancelBtn = document.getElementById('printSettingsCancel');
-                var goBtn = document.getElementById('printSettingsGo');
+                var goBtn     = document.getElementById('printSettingsGo');
 
                 var styleEl = document.getElementById('dynamic-print-style');
                 if (!styleEl) {
@@ -3665,21 +3710,22 @@
                     var pageSize = sizeMap[printState.size] || 'A4';
                     var orient = printState.orientation === 'landscape' ? 'landscape' : 'portrait';
                     var isBW = printState.color === 'bw';
-
                     styleEl.textContent =
-                        '@page { size: ' + pageSize + ' ' + orient + ' !important; margin: 12mm 8mm 12mm 8mm !important; }\n' +
+                        '@page { size: ' + pageSize + ' ' + orient + ' !important; ' +
+                        'margin: 12mm 8mm 12mm 8mm !important; }\n' +
                         '@media print {\n' +
-                        '  html { -webkit-filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; }\n' +
-                        '  body { -webkit-print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; }\n' +
+                        '  html { -webkit-filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; ' +
+                        'filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; }\n' +
+                        '  body { -webkit-print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; ' +
+                        'print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; }\n' +
                         '}';
-
                     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(printState)); } catch (e) {}
                 }
 
                 function updateActiveButtons() {
-                    modal.querySelectorAll('.ps-options').forEach(function(grp) {
+                    modal.querySelectorAll('.ps-options').forEach(function (grp) {
                         var groupName = grp.getAttribute('data-group');
-                        grp.querySelectorAll('.ps-option').forEach(function(b) {
+                        grp.querySelectorAll('.ps-option').forEach(function (b) {
                             b.classList.toggle('active', printState[groupName] === b.getAttribute('data-value'));
                         });
                     });
@@ -3688,8 +3734,8 @@
                 function openPrintModal() { updateActiveButtons(); modal.classList.add('active'); }
                 function closePrintModal() { modal.classList.remove('active'); }
 
-                modal.querySelectorAll('.ps-option').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
+                modal.querySelectorAll('.ps-option').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
                         var parent = btn.closest('.ps-options');
                         var groupName = parent.getAttribute('data-group');
                         printState[groupName] = btn.getAttribute('data-value');
@@ -3705,34 +3751,34 @@
                 function doPrint() {
                     applyPrintRules();
                     closePrintModal();
-                    setTimeout(function() {
+                    setTimeout(function () {
                         bypass = true;
                         try { nativePrint(); } catch (e) { window.print(); }
-                        setTimeout(function() { bypass = false; }, 500);
+                        setTimeout(function () { bypass = false; }, 500);
                     }, 300);
                 }
 
                 // ✅ اعتراض Ctrl+P بدل إعادة تعريف window.print
-                document.addEventListener('keydown', function(e) {
+                document.addEventListener('keydown', function (e) {
                     if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
-                        if (bypass) return; // ندع الطباعة الأصلية تكمل إن كنا في سياق الطباعة
+                        if (bypass) return;
                         e.preventDefault();
                         openPrintModal();
                     }
                 }, true);
 
-                // Expose a public helper
+                // API عام لفتح نافذة الإعدادات
                 window.openPrintSettings = openPrintModal;
 
-                if (closeBtn) closeBtn.addEventListener('click', closePrintModal);
+                if (closeBtn)  closeBtn.addEventListener('click', closePrintModal);
                 if (cancelBtn) cancelBtn.addEventListener('click', closePrintModal);
-                if (goBtn) goBtn.addEventListener('click', doPrint);
+                if (goBtn)     goBtn.addEventListener('click', doPrint);
 
-                modal.addEventListener('click', function(e) {
+                modal.addEventListener('click', function (e) {
                     if (e.target === modal) closePrintModal();
                 });
 
-                document.addEventListener('keydown', function(e) {
+                document.addEventListener('keydown', function (e) {
                     if (e.key === 'Escape' && modal.classList.contains('active')) closePrintModal();
                 });
 
@@ -3740,7 +3786,7 @@
                 console.log('✅ Print Settings System ready');
             })();
 
-            console.log('✅ Marine System v9.7 ready');
+            console.log('✅ Marine System v9.16 ready');
         }
 
         if (document.readyState === 'loading') {
@@ -3752,6 +3798,7 @@
         // ============================================================
         // 🌐 GLOBAL EXPORTS
         // ============================================================
+
         window.doLogin = doLogin;
         window.doLogout = doLogout;
         window.loadPage = loadPage;
@@ -3777,7 +3824,7 @@
         window.normalizeRole = normalizeRole;
         window.notificationManager = notificationManager;
 
-        console.log('✅ Marine System v9.7 loaded successfully');
+        console.log('✅ Marine System v9.16 loaded successfully');
     </script>
 
 </body>
