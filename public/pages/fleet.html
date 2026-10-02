@@ -37,6 +37,7 @@
             position: relative;
             z-index: 2;
             overflow-x: hidden;
+            direction: rtl;
         }
         #page-fleet::before {
             content: ''; position: fixed;
@@ -344,7 +345,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ═══════ 📸 THUMBNAIL — حجم كبير ═══════ */
         .vessel-thumb {
             width: 100px; height: 100px;
             border-radius: 14px; object-fit: cover;
@@ -451,29 +451,42 @@
             background: rgba(148, 163, 184, 0.06); color: var(--c-text-1);
         }
 
-        .table-wrapper { overflow-x: auto; padding: 0 24px 24px; width: 100%; }
+        /* ✅ الجدول: اتجاه RTL إجباري */
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 24px 24px;
+            width: 100%;
+            direction: rtl !important;
+        }
         .table-wrapper table {
             width: 100%; border-collapse: separate; border-spacing: 0;
             font-size: 13px; min-width: 1400px;
             border-radius: var(--radius); overflow: hidden;
             background: rgba(24, 34, 56, 0.55);
             border: 1px solid var(--c-border-soft);
+            direction: rtl !important;
         }
         thead {
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.9));
+            direction: rtl !important;
         }
         thead th {
             padding: 14px 12px; text-align: center;
             font-weight: 800; font-size: 10.5px;
             text-transform: uppercase; color: #cbd5e1;
             letter-spacing: 1px; white-space: nowrap;
+            direction: rtl !important;
         }
         thead th i { color: #f7d774; font-size: 11px; margin-left: 4px; }
+        tbody {
+            direction: rtl !important;
+        }
         tbody td {
             padding: 12px 10px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.06);
             vertical-align: middle; color: var(--c-text-2);
             font-size: 13px; text-align: center; font-weight: 600;
+            direction: rtl !important;
         }
         tbody tr:nth-child(even) { background: rgba(148, 163, 184, 0.02); }
         tbody tr:hover { background: rgba(247, 215, 116, 0.05); }
@@ -598,6 +611,7 @@
             z-index: 99999;
             display: none; align-items: center; justify-content: center;
             padding: 20px;
+            direction: rtl;
         }
         .fleet-modal.active { display: flex; }
         .fleet-modal-box {
@@ -609,6 +623,7 @@
             max-height: 90vh; overflow-y: auto;
             box-shadow: 0 32px 80px rgba(0,0,0,0.85);
             animation: fleetModalBoxIn 0.35s var(--t-bounce);
+            direction: rtl;
         }
         @keyframes fleetModalBoxIn {
             from { transform: scale(0.9) translateY(20px); opacity: 0; }
@@ -810,6 +825,7 @@
             z-index: 100003;
             display: none; align-items: center; justify-content: center;
             padding: 20px;
+            direction: rtl;
         }
         .fleet-mini-upload.active { display: flex; }
         .fleet-mini-upload-box {
@@ -820,6 +836,7 @@
             width: 100%; max-width: 560px;
             max-height: 90vh; overflow-y: auto;
             box-shadow: 0 32px 80px rgba(0,0,0,0.9);
+            direction: rtl;
         }
         .fleet-mini-upload-head {
             display: flex; justify-content: space-between; align-items: center;
@@ -837,6 +854,7 @@
             background: rgba(0,0,0,0.98);
             z-index: 100002;
             display: none; flex-direction: column;
+            direction: rtl;
         }
         .fleet-pro-gallery.active { display: flex; }
 
@@ -1011,7 +1029,6 @@
         }
         .fleet-pro-empty p { font-size: 13px; color: var(--c-text-4); margin: 0; }
 
-        /* ═══════ 📷 الكاميرا المباشرة ═══════ */
         .fleet-camera-modal {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.95);
@@ -1020,6 +1037,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            direction: rtl;
         }
         .fleet-camera-modal.active { display: flex; }
         .fleet-camera-box {
@@ -1388,8 +1406,8 @@
     </div>
 
     <!-- TABLE -->
-    <div class="table-wrapper">
-        <table>
+    <div class="table-wrapper" dir="rtl">
+        <table dir="rtl">
             <thead>
                 <tr>
                     <th style="width:120px;"><i class="fas fa-image"></i> صورة</th>
@@ -1630,7 +1648,6 @@
     var miniUploadImages = [];
     var miniUploadVesselId = null;
 
-    // ═══════ 📷 الكاميرا المباشرة ═══════
     var _cameraStream = null;
     var _cameraFacingMode = 'environment';
     var _cameraTargetImages = null;
@@ -1928,7 +1945,6 @@
         filterSelectOptions(zoneSel, '');
     }
 
-    // ═══════ IMAGES ═══════
     function updateSourceButtonsState() {
         var isFull = fleetImages.length >= MAX_IMAGES;
         var c = $('#captureBtn'); if (c) c.disabled = isFull;
@@ -2092,7 +2108,6 @@
         }
     }
 
-    // ═══════ 📷 CAMERA ═══════
     async function openCamera(targetImagesArray) {
         _cameraTargetImages = targetImagesArray;
         var modal = document.getElementById('fleetCameraModal');
@@ -2216,8 +2231,7 @@
             }
         });
     }
-    
-    // ═══════ MINI UPLOAD ═══════
+
     function openMiniUpload(vesselId) {
         fetcher('/api/vessels').then(function(r) { return r.json(); }).then(function(list) {
             var v = list.find(function(x) { return String(x._id || x.id) === String(vesselId); });
@@ -2390,7 +2404,6 @@
         }
     }
 
-    // ═══════ GALLERY ═══════
     function openVesselGallery(vessel) {
         if (!vessel) return;
         _galleryCurrentVessel = vessel;
@@ -2716,7 +2729,6 @@
     };
     window.viewVesselImages = function(vesselId) { window.openVesselGalleryById(vesselId); };
 
-    // ═══════ RENDER ═══════
     var _allVessels = [];
 
     function initFilters() {
@@ -3158,7 +3170,6 @@
         } catch (err) { fleetToast('❌ فشل التصدير: ' + err.message, 'error'); }
     }
 
-    // ═══════ DISPOSE ═══════
     var _disposeVesselData = null;
 
     function openDisposeModal(vesselId) {
@@ -3319,6 +3330,65 @@
         } catch (e) {}
     }
     applyLogo();
+
+    // ═══════════════════════════════════════════════════════════════
+    // ✅ RTL GUARD — يمنع انقلاب الجدول عند العودة من أي صفحة
+    // ═══════════════════════════════════════════════════════════════
+    function enforceRTL() {
+        try {
+            // 1. html + body
+            if (document.documentElement.getAttribute('dir') !== 'rtl') {
+                document.documentElement.setAttribute('dir', 'rtl');
+            }
+            if (document.body.getAttribute('dir') !== 'rtl') {
+                document.body.setAttribute('dir', 'rtl');
+            }
+
+            // 2. table-wrapper + table
+            var wrapper = document.querySelector('.table-wrapper');
+            if (wrapper) {
+                if (wrapper.getAttribute('dir') !== 'rtl') wrapper.setAttribute('dir', 'rtl');
+                if (wrapper.style.direction !== 'rtl') wrapper.style.direction = 'rtl';
+                if (wrapper.style.overflowX === 'hidden') wrapper.style.overflowX = 'auto';
+                if (wrapper.style.overflow === 'hidden') wrapper.style.overflow = 'auto';
+            }
+
+            var table = document.querySelector('.table-wrapper table');
+            if (table) {
+                if (table.getAttribute('dir') !== 'rtl') table.setAttribute('dir', 'rtl');
+                if (table.style.direction !== 'rtl') table.style.direction = 'rtl';
+            }
+
+            // 3. main-content
+            var mc = document.querySelector('.main-content');
+            if (mc) {
+                if (mc.style.direction !== 'rtl') mc.style.direction = 'rtl';
+                if (mc.style.overflow === 'hidden') mc.style.overflow = 'auto';
+            }
+        } catch (e) {
+            console.debug('RTL Guard:', e.message);
+        }
+    }
+
+    enforceRTL();
+    var _rtlInterval = setInterval(enforceRTL, 1500);
+    window._pageIntervals = window._pageIntervals || [];
+    window._pageIntervals.push(_rtlInterval);
+
+    if (typeof MutationObserver !== 'undefined') {
+        var _rtlObserver = new MutationObserver(function() {
+            enforceRTL();
+        });
+        var _w = document.querySelector('.table-wrapper');
+        if (_w) {
+            _rtlObserver.observe(_w, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['dir', 'style', 'class']
+            });
+        }
+    }
 
     var _initialized = false;
 
