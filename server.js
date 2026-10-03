@@ -4029,12 +4029,14 @@ setInterval(updateBadge,1500);
                 
                 var hasDarkBg = false;
                 if (bgc && bgc !== 'rgba(0, 0, 0, 0)' && bgc !== 'transparent') {
-                    var m = bgc.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-                    if (m) {
-                        var rv = parseInt(m[1]), gv = parseInt(m[2]), bv = parseInt(m[3]);
-                        if (rv < 60 && gv < 60 && bv < 100) hasDarkBg = true;
-                    }
-                }
+    var nums = bgc.match(/[0-9]+/g) || [];
+    if (nums.length >= 3) {
+        var rv = parseInt(nums[0], 10);
+        var gv = parseInt(nums[1], 10);
+        var bv = parseInt(nums[2], 10);
+        if (rv < 60 && gv < 60 && bv < 100) hasDarkBg = true;
+    }
+}
                 
                 var hasGoldBorder = bc.indexOf('230, 179') !== -1 || 
                                     bc.indexOf('247, 215') !== -1;
@@ -4278,4 +4280,3 @@ module.exports.normalizeRole = normalizeRole;
 module.exports.addSystemLog = addSystemLog;
 module.exports.getRedisClient = getRedisClient;
 module.exports.isRedisAvailable = isRedisAvailable;
-    
