@@ -420,10 +420,10 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'","'unsafe-inline'",'https://unpkg.com','https://cdnjs.cloudflare.com','https://cdn.jsdelivr.net','https://fonts.googleapis.com'],
+            scriptSrc: ["'self'","'unsafe-inline'",'https://unpkg.com','https://cdnjs.cloudflare.com','https://cdn.jsdelivr.net','https://fonts.googleapis.com','https://www.clarity.ms','https://scripts.clarity.ms'],
             styleSrc: ["'self'","'unsafe-inline'",'https://unpkg.com','https://cdnjs.cloudflare.com','https://cdn.jsdelivr.net','https://fonts.googleapis.com'],
-            imgSrc: ["'self'",'data:','blob:','https:','https://unpkg.com','https://res.cloudinary.com'],
-            connectSrc: ["'self'",'wss:','ws:','https://*.onrender.com','https://unpkg.com','https://*.googleapis.com','https://*.leafletjs.com','https://cdn.jsdelivr.net'],
+            imgSrc: ["'self'",'data:','blob:','https:','https://unpkg.com','https://res.cloudinary.com','https://*.clarity.ms','https://c.bing.com'],
+            connectSrc: ["'self'",'wss:','ws:','https://*.onrender.com','https://unpkg.com','https://*.googleapis.com','https://*.leafletjs.com','https://cdn.jsdelivr.net','https://*.clarity.ms','https://c.bing.com'],
             fontSrc: ["'self'",'https:','data:','https://fonts.gstatic.com'],
             scriptSrcAttr: ["'unsafe-inline'"],
             objectSrc: ["'none'"], frameSrc: ["'none'"],
@@ -438,7 +438,6 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: 'same-origin' },
     crossOriginOpenerPolicy: { policy: 'same-origin' }
 }));
-
 const allowedOrigins = (process.env.FRONTEND_URL ||
     'http://localhost:5000,http://localhost:3000,https://marine-system-71eo.onrender.com')
     .split(',').map(v => v.trim()).filter(Boolean);
@@ -4280,3 +4279,4 @@ module.exports.normalizeRole = normalizeRole;
 module.exports.addSystemLog = addSystemLog;
 module.exports.getRedisClient = getRedisClient;
 module.exports.isRedisAvailable = isRedisAvailable;
+    
