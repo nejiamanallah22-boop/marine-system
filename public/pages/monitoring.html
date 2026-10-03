@@ -205,9 +205,49 @@
         padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: 800;
     }
 
-    /* ============================================================
-       🔗 EXTERNAL TOOLS SECTION (NEW v13.6)
-       ============================================================ */
+    /* ===== LOCATION REQUEST BUTTON ===== */
+    .location-btn-wrapper {
+        padding: 12px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        flex-shrink: 0;
+    }
+    .location-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+        transition: all 0.25s;
+    }
+    .location-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16,185,129,0.45);
+    }
+    .location-btn:active { transform: translateY(0); }
+    .location-btn.loading {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        box-shadow: 0 4px 16px rgba(245,158,11,0.4);
+    }
+    .location-btn.success {
+        background: linear-gradient(135deg, #059669, #047857);
+        box-shadow: 0 4px 16px rgba(5,150,105,0.5);
+    }
+    .location-btn.error {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        box-shadow: 0 4px 16px rgba(239,68,68,0.5);
+    }
+
+    /* ===== EXTERNAL TOOLS ===== */
     .external-tools-grid {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
@@ -509,6 +549,40 @@
     }
     .idle-indicator.show { display: block; }
 
+    /* ===== GPS ALERT BANNER ===== */
+    .gps-alert {
+        position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 14px 22px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        z-index: 99999;
+        box-shadow: 0 8px 24px rgba(239,68,68,0.5);
+        max-width: 90vw;
+        text-align: center;
+        direction: rtl;
+        line-height: 1.5;
+        animation: slideDown 0.4s ease-out;
+    }
+    @keyframes slideDown {
+        from { transform: translate(-50%, -20px); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
+    .gps-alert button {
+        margin-top: 10px;
+        background: white;
+        color: #ef4444;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-weight: 800;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 12px;
+    }
+
     @media (max-width: 768px) {
         .monitoring-wrapper { height: calc(100vh - 56px); }
         .top-bar { top: 12px; padding: 10px 16px; gap: 10px; }
@@ -527,7 +601,7 @@
             <i class="fas fa-satellite-dish"></i>
             <div class="text">
                 <span class="title">المراقبة الحية</span>
-                <span class="subtitle">Live Tracking v13.6</span>
+                <span class="subtitle">Live Tracking v13.7</span>
             </div>
         </div>
         <div class="stats">
@@ -556,11 +630,18 @@
             <h2><i class="fas fa-users-line"></i> المستخدمون النشطون</h2>
             <button class="close-btn" id="closePanelBtn"><i class="fas fa-xmark"></i></button>
         </div>
+
+        <!-- ✅ زر طلب الموقع (مهم للهاتف) -->
+        <div class="location-btn-wrapper">
+            <button id="requestLocationBtn" class="location-btn" type="button">
+                <i class="fas fa-location-crosshairs"></i>
+                <span>📍 إرسال موقعي الآن</span>
+            </button>
+        </div>
+
         <div class="panel-body">
 
-            <!-- ============================================================
-                 🔗 أدوات المراقبة الخارجية (NEW v13.6)
-                 ============================================================ -->
+            <!-- أدوات المراقبة -->
             <div class="panel-section">
                 <div class="section-title">
                     <h3><i class="fas fa-toolbox"></i> أدوات المراقبة</h3>
@@ -599,7 +680,7 @@
                 </div>
             </div>
 
-            <!-- ===== سجل الأجهزة ===== -->
+            <!-- سجل الأجهزة -->
             <div class="panel-section">
                 <div class="section-title">
                     <h3><i class="fas fa-microchip"></i> سجل الأجهزة</h3>
@@ -613,6 +694,7 @@
                 </div>
             </div>
 
+            <!-- المستخدمون -->
             <div class="panel-section">
                 <div class="section-title">
                     <h3><i class="fas fa-users"></i> المستخدمون</h3>
@@ -654,12 +736,13 @@
     function log() { if (DEBUG) try { console.log.apply(console, arguments); } catch(e){} }
     function warn() { try { console.warn.apply(console, arguments); } catch(e){} }
 
-    console.log('🛰️ monitoring.html v13.6 - Loading...');
+    console.log('🛰️ monitoring.html v13.7 - Loading...');
 
     var REFRESH_INTERVAL_MS = 15000;
     var IDLE_REFRESH_PAUSE = true;
     var FETCH_TIMEOUT_MS = 20000;
     var MAX_FETCH_TIMEOUT_MS = 30000;
+    var GPS_PERIODIC_INTERVAL = 30000; // 30 seconds
 
     var map = null;
     var myMarker = null;
@@ -676,6 +759,8 @@
     var _isIdle = false;
     var _refreshIntervalId = null;
     var _isDestroyed = false;
+    var _gpsPermissionWarned = false;
+    var _gpsPeriodicId = null;
 
     var _intervals = [];
     var _timeouts = [];
@@ -777,6 +862,7 @@
         _timeouts.forEach(function(id) { try { clearTimeout(id); } catch(e){} });
         _intervals = []; _timeouts = [];
         _refreshIntervalId = null;
+        _gpsPeriodicId = null;
 
         _listeners.forEach(function(l) {
             try { if (l.el && l.fn) l.el.removeEventListener(l.type, l.fn); } catch(e){}
@@ -806,7 +892,7 @@
             }
         } catch(e){}
 
-        log('🧹 Monitoring v13.6 cleanup done');
+        log('🧹 Monitoring v13.7 cleanup done');
     }
 
     window._pageCleanup = window._pageCleanup || [];
@@ -978,6 +1064,31 @@
         if (ld) ld.classList.add('hidden');
     }
 
+    function showGPSAlert(message) {
+        try {
+            var existing = document.querySelector('.gps-alert');
+            if (existing) existing.remove();
+            
+            var banner = document.createElement('div');
+            banner.className = 'gps-alert';
+            banner.innerHTML = 
+                '⚠️ <b>GPS محظور!</b><br>' +
+                '<span style="font-size:11.5px;font-weight:500;">' +
+                (message || 'لن يظهر موقعك على الخريطة. يرجى السماح بالوصول للموقع.') +
+                '</span><br>' +
+                '<button type="button">حسناً، فهمت</button>';
+            banner.querySelector('button').addEventListener('click', function() {
+                banner.remove();
+            });
+            document.body.appendChild(banner);
+            
+            var tid = setTimeout(function() {
+                if (banner.parentElement) banner.remove();
+            }, 20000);
+            _timeouts.push(tid);
+        } catch(e) {}
+    }
+
     function initMap() {
         if (mapInitialized || _isDestroyed) return;
 
@@ -1053,7 +1164,7 @@
             body: JSON.stringify(payload)
         })
         .then(function() {
-            log('📍 Location sent OK');
+            log('📍 Location sent OK:', coords.latitude.toFixed(4), coords.longitude.toFixed(4));
         })
         .catch(function(err) {
             warn('[GEO] send error:', err.message);
@@ -1065,32 +1176,68 @@
             }
         });
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // ✅ IMPROVED startGeolocation - v13.7
+    // - فوري عند التحميل
+    // - watchPosition مستمر
+    // - إرسال دوري كل 30 ثانية
+    // - تنبيه عند الرفض
+    // - إرسال عند العودة للصفحة
+    // ═══════════════════════════════════════════════════════════
     function startGeolocation() {
         if (!navigator.geolocation || _isDestroyed) return;
         if (window._geoWatchId != null) return;
 
+        console.log('📍 [GPS] طلب الموقع الأولي...');
+
+        // ✅ 1. طلب الموقع فوراً (يعمل حتى لو المستخدم ثابت)
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                if (_isDestroyed) return;
+                console.log('✅ [GPS] تم الحصول على الموقع:',
+                    pos.coords.latitude.toFixed(4), pos.coords.longitude.toFixed(4));
+                myLocation = pos.coords;
+                sendLocationToServer(pos.coords);
+                updateMyMarker(pos.coords);
+            },
+            function(err) {
+                warn('⚠️ [GPS] فشل الطلب الأولي:', err.message);
+                if (err.code === 1 && !_gpsPermissionWarned) {
+                    _gpsPermissionWarned = true;
+                    console.error('❌ [GPS] المستخدم رفض الإذن');
+                    showGPSAlert('يرجى السماح بالوصول للموقع من إعدادات المتصفح.');
+                } else if (err.code === 2) {
+                    warn('⚠️ [GPS] الموقع غير متاح');
+                } else if (err.code === 3) {
+                    warn('⏱️ [GPS] انتهت المهلة');
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+
+        // ✅ 2. watchPosition للتحديث المستمر
         var _consecutiveTimeouts = 0;
-        var _lastSuccessTime = 0;
 
         try {
             window._geoWatchId = navigator.geolocation.watchPosition(
                 function(pos) {
                     if (_isDestroyed) return;
                     _consecutiveTimeouts = 0;
-                    _lastSuccessTime = Date.now();
                     myLocation = pos.coords;
                     sendLocationToServer(pos.coords);
                     updateMyMarker(pos.coords);
                 },
                 function(err) {
-                    // ⚠️ تجاهل أخطاء Timeout (طبيعية في watchPosition)
                     if (err.code === 3) {
                         _consecutiveTimeouts++;
-                        // اطبع فقط بعد 3 مرات متتالية
                         if (_consecutiveTimeouts === 3) {
-                            warn('[GEO] watch timeout (المحاولة ' + _consecutiveTimeouts + ') — قد تكون الشبكة ضعيفة');
+                            warn('[GEO] watch timeout ×' + _consecutiveTimeouts);
                         }
-                        // إذا استمر الفشل 5 مرات، أعد تشغيل watch بإعدادات أقل دقة
                         if (_consecutiveTimeouts >= 5) {
                             try {
                                 navigator.geolocation.clearWatch(window._geoWatchId);
@@ -1105,25 +1252,60 @@
                         }
                         return;
                     }
-                    // أخطاء أخرى (1=مرفوض، 2=غير متاح)
-                    if (err.code === 1) {
-                        warn('[GEO] ⚠️ صلاحية الموقع مرفوضة من المستخدم');
-                    } else if (err.code === 2) {
-                        warn('[GEO] ⚠️ الموقع غير متاح');
+                    if (err.code === 1 && !_gpsPermissionWarned) {
+                        _gpsPermissionWarned = true;
+                        showGPSAlert('يرجى السماح بالوصول للموقع من إعدادات المتصفح.');
                     }
                 },
                 {
-                    enableHighAccuracy: false,   // ✅ أسرع وأكثر استقراراً
-                    timeout: 30000,              // ✅ 30 ثانية (أكثر واقعية)
-                    maximumAge: 60000            // ✅ قبول موقع محفوظ خلال دقيقة
+                    enableHighAccuracy: false,
+                    timeout: 30000,
+                    maximumAge: 60000
                 }
             );
+            console.log('✅ [GPS] watchPosition نشط');
         } catch(e) {
             warn('[GEO] watch exception:', e.message);
         }
+
+        // ✅ 3. إرسال دوري كل 30 ثانية (احتياطي)
+        if (_gpsPeriodicId) clearInterval(_gpsPeriodicId);
+        _gpsPeriodicId = setInterval(function() {
+            if (_isDestroyed || _isIdle) return;
+            if (!navigator.geolocation) return;
+
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    if (_isDestroyed) return;
+                    sendLocationToServer(pos.coords);
+                    updateMyMarker(pos.coords);
+                },
+                function() {},
+                { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
+            );
+        }, GPS_PERIODIC_INTERVAL);
+        _intervals.push(_gpsPeriodicId);
+
+        // ✅ 4. إرسال فوري عند العودة للصفحة
+        var visHandler = function() {
+            if (!document.hidden && !_isDestroyed && navigator.geolocation) {
+                console.log('👁️ [GPS] العودة للصفحة — إرسال فوري');
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        if (_isDestroyed) return;
+                        sendLocationToServer(pos.coords);
+                        updateMyMarker(pos.coords);
+                    },
+                    function() {},
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+        };
+        document.addEventListener('visibilitychange', visHandler);
+        _listeners.push({ el: document, type: 'visibilitychange', fn: visHandler });
     }
 
-    // 🆘 دالة احتياطية بإعدادات منخفضة الدقة (للشبكات الضعيفة جداً)
+    // 🆘 دالة احتياطية بإعدادات منخفضة الدقة
     function startGeolocationLowAccuracy() {
         if (!navigator.geolocation || _isDestroyed) return;
         if (window._geoWatchId != null) return;
@@ -1137,20 +1319,20 @@
                     updateMyMarker(pos.coords);
                 },
                 function(err) {
-                    // صامت تماماً — لا طباعة
                     if (err.code === 1) {
-                        warn('[GEO] صلاحية الموقع مرفوضة نهائياً — لن يُعاد المحاولة');
+                        warn('[GEO] صلاحية الموقع مرفوضة نهائياً');
                     }
                 },
                 {
                     enableHighAccuracy: false,
                     timeout: 60000,
-                    maximumAge: 300000   // 5 دقائق
+                    maximumAge: 300000
                 }
             );
             log('🔄 [GEO] Restarted with low-accuracy mode');
         } catch(e) {}
     }
+
     function updateMyMarker(coords) {
         if (!map || !mapInitialized || _isDestroyed) return;
 
@@ -1288,6 +1470,10 @@
         }
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // ✅ IMPROVED loadUsers - v13.7
+    // يدمج المستخدمين من كلا المصدرين (users + locations)
+    // ═══════════════════════════════════════════════════════════
     function loadUsers() {
         if (_isDestroyed) return;
 
@@ -1306,8 +1492,39 @@
             var usersData = results[0] || {};
             var locsData = results[1] || {};
 
-            users = Array.isArray(usersData) ? usersData : (usersData.users || []);
+            var serverUsers = Array.isArray(usersData) ? usersData : (usersData.users || []);
             locations = locsData.locations || [];
+
+            // ✅ دمج المستخدمين من المصدرين
+            var usersMap = new Map();
+            
+            // 1. من /api/monitoring/users
+            serverUsers.forEach(function(u) {
+                var uid = String(u.id || u._id || '');
+                if (uid) usersMap.set(uid, u);
+            });
+            
+            // 2. من /api/locations (للمستخدمين الذين لم يظهروا في الأولى)
+            locations.forEach(function(loc) {
+                var uid = String(loc.userId || loc.id || '');
+                if (!uid) return;
+                
+                if (!usersMap.has(uid)) {
+                    usersMap.set(uid, {
+                        id: uid,
+                        _id: uid,
+                        name: loc.name || loc.username || 'مستخدم',
+                        username: loc.username || '',
+                        role: loc.role || 'viewer',
+                        roleLabel: loc.roleLabel || loc.role || '',
+                        region: loc.region || '',
+                        active: true,
+                        hasLocation: true
+                    });
+                }
+            });
+            
+            users = Array.from(usersMap.values());
 
             var el1 = document.getElementById('statUsers');
             if (el1) el1.textContent = users.length;
@@ -1319,6 +1536,8 @@
             renderUsersList();
             renderDevicesList();
             addMarkers(locations);
+            
+            log('📊 تم جلب:', users.length, 'مستخدم |', locations.length, 'موقع');
         })
         .catch(function(err) {
             warn('[MONITORING] error:', err.message);
@@ -1628,6 +1847,75 @@
         );
     }
 
+    // ✅ زر إرسال الموقع يدوياً
+    function setupLocationButton() {
+        var reqBtn = document.getElementById('requestLocationBtn');
+        if (!reqBtn) return;
+
+        var handler = function() {
+            if (!navigator.geolocation) {
+                alert('المتصفح لا يدعم GPS');
+                return;
+            }
+
+            reqBtn.classList.add('loading');
+            reqBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري الطلب...</span>';
+
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    if (_isDestroyed) return;
+                    myLocation = pos.coords;
+                    sendLocationToServer(pos.coords);
+                    updateMyMarker(pos.coords);
+
+                    if (map) {
+                        map.flyTo([pos.coords.latitude, pos.coords.longitude], 16, { duration: 1.5 });
+                    }
+
+                    reqBtn.classList.remove('loading');
+                    reqBtn.classList.add('success');
+                    reqBtn.innerHTML = '<i class="fas fa-check"></i><span>✓ تم إرسال موقعك</span>';
+
+                    var tid = setTimeout(function() {
+                        reqBtn.classList.remove('success');
+                        reqBtn.innerHTML = '<i class="fas fa-location-crosshairs"></i><span>📍 إرسال موقعي الآن</span>';
+                    }, 3000);
+                    _timeouts.push(tid);
+
+                    // أعد تشغيل GPS إن لم يكن نشطاً
+                    if (window._geoWatchId == null) {
+                        startGeolocation();
+                    }
+                },
+                function(err) {
+                    var msg = 'فشل الطلب';
+                    if (err.code === 1) msg = '⚠️ يجب السماح بالموقع';
+                    else if (err.code === 2) msg = '⚠️ GPS غير متاح';
+                    else if (err.code === 3) msg = '⚠️ انتهت المهلة';
+
+                    reqBtn.classList.remove('loading');
+                    reqBtn.classList.add('error');
+                    reqBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>' + msg + '</span>';
+
+                    if (err.code === 1) {
+                        _gpsPermissionWarned = true;
+                        showGPSAlert();
+                    }
+
+                    var tid = setTimeout(function() {
+                        reqBtn.classList.remove('error');
+                        reqBtn.innerHTML = '<i class="fas fa-location-crosshairs"></i><span>📍 إرسال موقعي الآن</span>';
+                    }, 5000);
+                    _timeouts.push(tid);
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        };
+
+        reqBtn.addEventListener('click', handler);
+        _listeners.push({ el: reqBtn, type: 'click', fn: handler });
+    }
+
     function setupResizeHandlers() {
         var resizeHandler = function() {
             if (!map || _isDestroyed) return;
@@ -1739,6 +2027,9 @@
         _listeners.push({ el: window, type: 'offline', fn: offlineH });
         updateOnlineStatus();
 
+        // ✅ زر إرسال الموقع
+        setupLocationButton();
+
         setupVisibilityHandling();
         setupResizeHandlers();
 
@@ -1753,7 +2044,7 @@
 
         verifyMyIdFromServer();
 
-        console.log('✅ Monitoring v13.6 ready');
+        console.log('✅ Monitoring v13.7 ready');
     }
 
     if (document.readyState === 'loading') {
@@ -1773,12 +2064,16 @@
         getDevices: function() { return devices; },
         getMyId: function() { return myId; },
         locateMe: locateMe,
+        sendNow: function() {
+            var btn = document.getElementById('requestLocationBtn');
+            if (btn) btn.click();
+        },
         isDestroyed: function() { return _isDestroyed; },
         getMap: function() { return map; },
         cleanup: _cleanup
     };
 
-    console.log('✅ monitoring.html v13.6 ready — استخدم monitoringDebug في console');
+    console.log('✅ monitoring.html v13.7 ready — استخدم monitoringDebug في console');
 
 })();
 </script>
