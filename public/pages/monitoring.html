@@ -1065,8 +1065,66 @@
             }
         });
     }
-
     function startGeolocation() {
+        if (!navigator.geolocation || _isDestroyed) return;
+        if (window._geoWatchId != null) return;
+
+        var _consecutiveTimeouts = 0;
+        var _lastSuccessTime = 0;
+
+        try {
+            window._geoWatchId = navigator.geolocation.watchPosition(
+                function(pos) {
+                    if (_isDestroyed) return;
+                    _consecutiveTimeouts = 0;
+                    _lastSuccessTime = Date.now();
+                    myLocation = pos.coords;
+                    sendLocationToServer(pos.coords);
+                    updateMyMarker(pos.coords);
+                },
+                function(err) {
+                    // ⚠️ تجاهل أخطاء Timeout (طبيعية في watchPosition)
+                    if (err.code === 3) {
+                        _consecutiveTimeouts++;
+                        // اطبع فقط بعد 3 مرات متتالية
+                        if (_consecutiveTimeouts === 3) {
+                            warn('[GEO] watch timeout (المحاولة ' + _consecutiveTimeouts + ') — قد تكون الشبكة ضعيفة');
+                        }
+                        // إذا استمر الفشل 5 مرات، أعد تشغيل watch بإعدادات أقل دقة
+                        if (_consecutiveTimeouts >= 5) {
+                            try {
+                                navigator.geolocation.clearWatch(window._geoWatchId);
+                                window._geoWatchId = null;
+                            } catch(e) {}
+                            var restartId = setTimeout(function() {
+                                if (!_isDestroyed && window._geoWatchId == null) {
+                                    startGeolocationLowAccuracy();
+                                }
+                            }, 2000);
+                            _timeouts.push(restartId);
+                        }
+                        return;
+                    }
+                    // أخطاء أخرى (1=مرفوض، 2=غير متاح)
+                    if (err.code === 1) {
+                        warn('[GEO] ⚠️ صلاحية الموقع مرفوضة من المستخدم');
+                    } else if (err.code === 2) {
+                        warn('[GEO] ⚠️ الموقع غير متاح');
+                    }
+                },
+                {
+                    enableHighAccuracy: false,   // ✅ أسرع وأكثر استقراراً
+                    timeout: 30000,              // ✅ 30 ثانية (أكثر واقعية)
+                    maximumAge: 60000            // ✅ قبول موقع محفوظ خلال دقيقة
+                }
+            );
+        } catch(e) {
+            warn('[GEO] watch exception:', e.message);
+        }
+    }
+
+    // 🆘 دالة احتياطية بإعدادات منخفضة الدقة (للشبكات الضعيفة جداً)
+    function startGeolocationLowAccuracy() {
         if (!navigator.geolocation || _isDestroyed) return;
         if (window._geoWatchId != null) return;
 
@@ -1079,15 +1137,20 @@
                     updateMyMarker(pos.coords);
                 },
                 function(err) {
-                    warn('[GEO] watch error:', err.code, err.message);
+                    // صامت تماماً — لا طباعة
+                    if (err.code === 1) {
+                        warn('[GEO] صلاحية الموقع مرفوضة نهائياً — لن يُعاد المحاولة');
+                    }
                 },
-                { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
+                {
+                    enableHighAccuracy: false,
+                    timeout: 60000,
+                    maximumAge: 300000   // 5 دقائق
+                }
             );
-        } catch(e) {
-            warn('[GEO] watch exception:', e.message);
-        }
+            log('🔄 [GEO] Restarted with low-accuracy mode');
+        } catch(e) {}
     }
-
     function updateMyMarker(coords) {
         if (!map || !mapInitialized || _isDestroyed) return;
 
