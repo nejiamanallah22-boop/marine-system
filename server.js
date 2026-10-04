@@ -3650,7 +3650,18 @@ function formatMaintenance(log) {
 console.log('%c⚓ منظومة الوسائل البحرية','background:linear-gradient(135deg,#060911,#0a1020);color:#f7d774;font-size:20px;font-weight:900;padding:12px 24px;border-radius:8px;');
 console.log('%c👨‍💻 أمان الله ناجي — إدارة إسناد الوحدات البحرية','background:#0a1020;color:#e6b31e;font-size:13px;font-weight:700;padding:8px 24px;');
 }catch(e){}})();<\/script>`;
-
+// ═══════════════════════════════════════════════════════════
+// 📊 CLARITY ANALYTICS
+// ═══════════════════════════════════════════════════════════
+const CLARITY_SCRIPT = `
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;
+        t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "yrndm4iz3l");
+<\/script>`;
     const USER_BADGE_CSS = `
 <style id="user-info-badge-style">
 #user-info-badge{position:fixed!important;top:42px!important;left:20px!important;display:none;align-items:center!important;gap:10px!important;padding:8px 14px!important;background:rgba(6,9,17,0.88)!important;backdrop-filter:blur(14px)!important;border:1px solid rgba(230,179,30,0.3)!important;border-radius:12px!important;font-family:'Cairo','Segoe UI',Tahoma,sans-serif!important;z-index:9998!important;pointer-events:none!important;user-select:none!important;box-shadow:0 6px 24px rgba(0,0,0,0.45)!important;direction:rtl!important;max-width:360px!important;}
@@ -4089,36 +4100,47 @@ setInterval(updateBadge,1500);
 
     const INJECTION_SKIP_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i;
 
-    function injectAll(html) {
-        if (typeof html !== 'string' || !html.includes('</body>')) return html;
-        
-        if (!html.includes('ownership-signature-style')) {
-            if (html.includes('</head>')) html = html.replace('</head>', OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + '\n</head>');
-            else html = OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + html;
-            html = html.replace('</body>', OWNERSHIP_HTML + '\n</body>');
-        }
-        
-        if (!html.includes('user-info-badge-style')) {
-            if (html.includes('</head>')) html = html.replace('</head>', USER_BADGE_CSS + '\n</head>');
-            if (/<body[^>]*>/i.test(html)) html = html.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
-            html = html.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
-        }
-        
-        if (!html.includes('AUTO_GPS_INJECTED')) {
-            html = html.replace('</body>', '<!-- AUTO_GPS_INJECTED -->\n' + AUTO_GPS_SCRIPT + '\n</body>');
-        }
-        
-        if (!html.includes('official-print-header-style')) {
-            if (html.includes('</head>')) html = html.replace('</head>', PRINT_HEADER_CSS + '\n</head>');
-            html = html.replace('</body>', PRINT_HEADER_SCRIPT + '\n</body>');
-        }
-        
-        if (!html.includes('HIDE_BLUE_BOXES_INJECTED')) {
-            html = html.replace('</body>', '<!-- HIDE_BLUE_BOXES_INJECTED -->\n' + HIDE_BLUE_BOXES_SCRIPT + '\n</body>');
-        }
-        
-        return html;
+   function injectAll(html) {
+    if (typeof html !== 'string' || !html.includes('</body>')) return html;
+    
+    if (!html.includes('ownership-signature-style')) {
+        if (html.includes('</head>')) html = html.replace('</head>', OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + '\n</head>');
+        else html = OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + html;
+        html = html.replace('</body>', OWNERSHIP_HTML + '\n</body>');
     }
+    
+    if (!html.includes('user-info-badge-style')) {
+        if (html.includes('</head>')) html = html.replace('</head>', USER_BADGE_CSS + '\n</head>');
+        if (/<body[^>]*>/i.test(html)) html = html.replace(/(<body[^>]*>)/i, '$1' + USER_BADGE_HTML);
+        html = html.replace('</body>', USER_BADGE_SCRIPT + '\n</body>');
+    }
+    
+    if (!html.includes('AUTO_GPS_INJECTED')) {
+        html = html.replace('</body>', '<!-- AUTO_GPS_INJECTED -->\n' + AUTO_GPS_SCRIPT + '\n</body>');
+    }
+    
+    if (!html.includes('official-print-header-style')) {
+        if (html.includes('</head>')) html = html.replace('</head>', PRINT_HEADER_CSS + '\n</head>');
+        html = html.replace('</body>', PRINT_HEADER_SCRIPT + '\n</body>');
+    }
+    
+    if (!html.includes('HIDE_BLUE_BOXES_INJECTED')) {
+        html = html.replace('</body>', '<!-- HIDE_BLUE_BOXES_INJECTED -->\n' + HIDE_BLUE_BOXES_SCRIPT + '\n</body>');
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // 📊 CLARITY — حقن السكربت لكل الصفحات
+    // ═══════════════════════════════════════════════════════════
+    if (!html.includes('clarity.ms/tag') && !html.includes('CLARITY_INJECTED')) {
+        if (html.includes('</head>')) {
+            html = html.replace('</head>', '<!-- CLARITY_INJECTED -->\n' + CLARITY_SCRIPT + '\n</head>');
+        } else {
+            html = '<!-- CLARITY_INJECTED -->\n' + CLARITY_SCRIPT + '\n' + html;
+        }
+    }
+    
+    return html;
+}
 
     app.use((req, res, next) => {
         if (req.path.startsWith('/api/') || INJECTION_SKIP_REGEX.test(req.path)) return next();
