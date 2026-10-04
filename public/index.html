@@ -3212,14 +3212,7 @@ const PAGE_PERMISSIONS = {
         return false;
     }
 }
-            } catch (error) {
-                console.warn('⚠️ خطأ في التحقق:', error.message);
-                clearToken();
-                csrfManager.clearToken();
-                return false;
-            }
-        }
-
+         
         async function verifyTokenOnce(token) {
             try {
                 const response = await fetch('/api/auth/me', {
