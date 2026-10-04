@@ -3104,7 +3104,10 @@ const PAGE_PERMISSIONS = {
                         currentUser = data.user;
                         window.currentUser = data.user;
                         setToken(token);
-
+    // ✅ احفظ المستخدم في localStorage لـ Clarity
+    try {
+        localStorage.setItem('marine_user', JSON.stringify(data.user));
+    } catch (e) {}
                         if (data.csrfToken) {
                             csrfManager.setToken(
                                 data.csrfToken,
@@ -3184,13 +3187,18 @@ const PAGE_PERMISSIONS = {
 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.success && data.user) {
-                        currentUser = data.user;
-                        window.currentUser = data.user;
-                        console.log('✅ التوكن صالح:', currentUser.username, '| Role:', normalizeRole(currentUser.role));
-                        return true;
-                    }
-                }
+                   if (data.success && data.user) {
+    currentUser = data.user;
+    window.currentUser = data.user;
+    
+    // ✅ احفظ المستخدم في localStorage لـ Clarity
+    try {
+        localStorage.setItem('marine_user', JSON.stringify(data.user));
+    } catch (e) {}
+    
+    console.log('✅ التوكن صالح:', currentUser.username, '| Role:', normalizeRole(currentUser.role));
+    return true;
+}
 
                 clearToken();
                 csrfManager.clearToken();
@@ -3219,12 +3227,18 @@ const PAGE_PERMISSIONS = {
                     return false;
                 }
 
-                const data = await response.json();
-                if (data.success && data.user) {
-                    currentUser = data.user;
-                    window.currentUser = data.user;
-                    return true;
-                }
+               const data = await response.json();
+if (data.success && data.user) {
+    currentUser = data.user;
+    window.currentUser = data.user;
+    
+    // ✅ احفظ المستخدم في localStorage لـ Clarity
+    try {
+        localStorage.setItem('marine_user', JSON.stringify(data.user));
+    } catch (e) {}
+    
+    return true;
+}
 
                 clearToken();
                 csrfManager.clearToken();
@@ -3545,7 +3559,11 @@ const PAGE_PERMISSIONS = {
             window.currentUser = null;
             clearToken();
             csrfManager.clearToken();
-
+            // ✅ احذف بيانات المستخدم من localStorage
+try {
+    localStorage.removeItem('marine_user');
+    localStorage.removeItem('currentUser');
+} catch (e) {}
             window._tokenVerified = false;
 
             const loginOverlay = document.getElementById('loginOverlay');
