@@ -3157,52 +3157,61 @@ const PAGE_PERMISSIONS = {
         // 🛡️ VERIFY TOKEN
         // ============================================================
 
-        async function verifyToken(token) {
-            try {
-                console.log('🛡️ التحقق من التوكن...');
-
-                if (!token) {
-                    console.warn('⚠️ لا يوجد توكن');
-                    return false;
-                }
-
-                const response = await fetch('/api/auth/me', {
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include'
-                });
-
-                if (response.status === 401) {
-                    console.warn('⚠️ التوكن غير صالح (401) — محاولة تجديد...');
-                    const newToken = await refreshAccessToken();
-                    if (newToken) {
-                        return verifyTokenOnce(newToken);
-                    }
-                    clearToken();
-                    csrfManager.clearToken();
-                    return false;
-                }
-
-                if (response.ok) {
-                    const data = await response.json();
-                   if (data.success && data.user) {
-    currentUser = data.user;
-    window.currentUser = data.user;
-    
-    // ✅ احفظ المستخدم في localStorage لـ Clarity
+       async function verifyToken(token) {
     try {
-        localStorage.setItem('marine_user', JSON.stringify(data.user));
-    } catch (e) {}
-    
-    console.log('✅ التوكن صالح:', currentUser.username, '| Role:', normalizeRole(currentUser.role));
-    return true;
-}
+        console.log('🛡️ التحقق من التوكن...');
 
-                clearToken();
-                csrfManager.clearToken();
-                return false;
+        if (!token) {
+            console.warn('⚠️ لا يوجد توكن');
+            return false;
+        }
+
+        const response = await fetch('/api/auth/me', {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (response.status === 401) {
+            console.warn('⚠️ التوكن غير صالح (401) — محاولة تجديد...');
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+                return verifyTokenOnce(newToken);
+            }
+            clearToken();
+            csrfManager.clearToken();
+            return false;
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+                currentUser = data.user;
+                window.currentUser = data.user;
+
+                // ✅ احفظ المستخدم في localStorage لـ Clarity
+                try {
+                    localStorage.setItem('marine_user', JSON.stringify(data.user));
+                } catch (e) {}
+
+                console.log('✅ التوكن صالح:', currentUser.username, '| Role:', normalizeRole(currentUser.role));
+                return true;
+            }
+        }   // ✅ إغلاق if (response.ok)
+
+        clearToken();
+        csrfManager.clearToken();
+        return false;
+
+    } catch (error) {   // ✅ الآن catch مرتبطة بـ try الخارجي
+        console.warn('⚠️ خطأ في التحقق:', error.message);
+        clearToken();
+        csrfManager.clearToken();
+        return false;
+    }
+}
             } catch (error) {
                 console.warn('⚠️ خطأ في التحقق:', error.message);
                 clearToken();
