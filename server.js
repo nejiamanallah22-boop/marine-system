@@ -3712,6 +3712,140 @@ else updateBadge();
 setInterval(updateBadge,1500);
 })();<\/script>`;
 
+const CLARITY_IDENTIFY_SCRIPT = `
+<script>(function(){
+    'use strict';
+    
+    // ═══════════════════════════════════════════════════════════
+    // 🎬 Clarity Identify — تسمية المستخدمين في الفيديوهات
+    // ═══════════════════════════════════════════════════════════
+    
+    var IDENTIFY_INTERVAL = null;
+    var lastIdentifiedId = null;
+    
+    function getCurrentUser() {
+        try {
+            var keys = ['marine_user', 'currentUser', 'user', 'marine_current_user'];
+            var stores = [localStorage, sessionStorage];
+            
+            for (var s = 0; s < stores.length; s++) {
+                for (var i = 0; i < keys.length; i++) {
+                    var raw = stores[s].getItem(keys[i]);
+                    if (raw) {
+                        var u = JSON.parse(raw);
+                        if (u && (u.id || u.username)) return u;
+                    }
+                }
+            }
+            
+            var token = localStorage.getItem('marine_auth_token')
+                     || localStorage.getItem('marine_token')
+                     || localStorage.getItem('token');
+            
+            if (token) {
+                var parts = token.split('.');
+                if (parts.length === 3) {
+                    var payload = JSON.parse(atob(parts[1]));
+                    if (payload && (payload.sub || payload.id)) {
+                        return {
+                            id: payload.sub || payload.id,
+                            username: payload.username || '',
+                            name: payload.name || payload.username || '',
+                            role: payload.role || 'viewer',
+                            roleLabel: payload.roleLabel || payload.role || ''
+                        };
+                    }
+                }
+            }
+        } catch(e) {}
+        return null;
+    }
+    
+    function identifyUser() {
+        if (typeof window.clarity !== 'function') return false;
+        
+        var user = getCurrentUser();
+        if (!user || !user.id) return false;
+        if (lastIdentifiedId === user.id) return true;
+        
+        try {
+            var identifyData = {
+                name: user.name || user.username || 'مستخدم',
+                username: user.username || '',
+                role: user.roleLabel || user.role || 'مستخدم',
+                region: user.region || 'غير محددة',
+                device: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) 
+                    ? 'هاتف' 
+                    : 'حاسوب'
+            };
+            
+            clarity("identify", String(user.id), identifyData);
+            clarity("set", "username", user.username || '');
+            clarity("set", "user_role", user.roleLabel || user.role || '');
+            clarity("set", "user_region", user.region || 'غير محددة');
+            clarity("set", "user_name", user.name || user.username || '');
+            clarity("event", "user_identified_" + (user.role || 'unknown'));
+            
+            lastIdentifiedId = user.id;
+            
+            console.log('%c🎬 Clarity: تم تسمية المستخدم', 
+                'background: #a78bfa; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
+            console.log('   👤 الاسم:', identifyData.name);
+            console.log('   🎭 الدور:', identifyData.role);
+            console.log('   📍 المنطقة:', identifyData.region);
+            
+            return true;
+        } catch(e) {
+            console.warn('⚠️ Clarity identify error:', e.message);
+            return false;
+        }
+    }
+    
+    var originalFetch = window.fetch;
+    window.fetch = function(url, options) {
+        var promise = originalFetch.apply(this, arguments);
+        if (typeof url === 'string' && url.includes('/api/auth/login')) {
+            promise.then(function(r) {
+                if (r.ok) {
+                    setTimeout(function() {
+                        identifyUser();
+                        if (typeof clarity === 'function') {
+                            try { clarity("event", "user_login"); } catch(e) {}
+                        }
+                    }, 1500);
+                }
+            }).catch(function() {});
+        }
+        return promise;
+    };
+    
+    function startWatching() {
+        IDENTIFY_INTERVAL = setInterval(function() {
+            if (typeof window.clarity === 'function') identifyUser();
+        }, 3000);
+    }
+    
+    function init() {
+        console.log('%c🎬 Clarity Identify — بدء التشغيل', 
+            'background: #a78bfa; color: white; padding: 4px 8px; font-weight: bold;');
+        
+        var checkClarity = setInterval(function() {
+            if (typeof window.clarity === 'function') {
+                clearInterval(checkClarity);
+                identifyUser();
+                startWatching();
+            }
+        }, 500);
+        
+        setTimeout(function() { clearInterval(checkClarity); }, 30000);
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();<\/script>`;
     const AUTO_GPS_SCRIPT = `
 <script>(function(){
     'use strict';
@@ -4124,22 +4258,16 @@ setInterval(updateBadge,1500);
         html = html.replace('</body>', PRINT_HEADER_SCRIPT + '\n</body>');
     }
     
-    if (!html.includes('HIDE_BLUE_BOXES_INJECTED')) {
-        html = html.replace('</body>', '<!-- HIDE_BLUE_BOXES_INJECTED -->\n' + HIDE_BLUE_BOXES_SCRIPT + '\n</body>');
-    }
-    
-    // ═══════════════════════════════════════════════════════════
-    // 📊 CLARITY — حقن السكربت لكل الصفحات
-    // ═══════════════════════════════════════════════════════════
-    if (!html.includes('clarity.ms/tag') && !html.includes('CLARITY_INJECTED')) {
-        if (html.includes('</head>')) {
-            html = html.replace('</head>', '<!-- CLARITY_INJECTED -->\n' + CLARITY_SCRIPT + '\n</head>');
-        } else {
-            html = '<!-- CLARITY_INJECTED -->\n' + CLARITY_SCRIPT + '\n' + html;
-        }
-    }
-    
-    return html;
+   if (!html.includes('HIDE_BLUE_BOXES_INJECTED')) {
+    html = html.replace('</body>', '<!-- HIDE_BLUE_BOXES_INJECTED -->\n' + HIDE_BLUE_BOXES_SCRIPT + '\n</body>');
+}
+
+// ✅ Clarity Identify — تسمية المستخدمين
+if (!html.includes('CLARITY_IDENTIFY_INJECTED')) {
+    html = html.replace('</body>', '<!-- CLARITY_IDENTIFY_INJECTED -->\n' + CLARITY_IDENTIFY_SCRIPT + '\n</body>');
+}
+
+return html;
 }
 
     app.use((req, res, next) => {
