@@ -1,8 +1,9 @@
 // ============================================================
-// 🚛 routes/vehicles.js — v8.0
+// 🚛 routes/vehicles.js — v9.0
 // + 🆕 الصور (Cloudinary) + 🆕 الطرح
 // ✅ إصلاح: التحقق من المنطقة (zones validation)
 // ✅ إصلاح: تحميل VEHICLE_ZONES_ALL
+// ✨ جودة صور عالية (thumbUrl, mediumUrl, largeUrl)
 // ============================================================
 
 'use strict';
@@ -120,24 +121,57 @@ module.exports = function registerVehicleRoutes(app, deps) {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 🎨 formatVehicle
+    // 🎨 formatVehicle — مع روابط صور بجودات متعددة
     // ═══════════════════════════════════════════════════════════
     function formatVehicle(v) {
         if (!v) return null;
-        const images = Array.isArray(v.images) ? v.images.map(img => ({
-            _id: img._id ? img._id.toString() : null,
-            filename: img.filename || '',
-            originalName: img.originalName || '',
-            url: img.url || '',
-            cloudinaryId: img.cloudinaryId || '',
-            size: img.size || 0,
-            mimetype: img.mimetype || '',
-            caption: img.caption || '',
-            isPrimary: !!img.isPrimary,
-            source: img.source || 'upload',
-            uploadedAt: img.uploadedAt || null,
-            uploadedBy: img.uploadedBy || 'system'
-        })) : [];
+        
+        const images = Array.isArray(v.images) ? v.images.map(img => {
+            const baseUrl = img.url || '';
+            
+            // ✅ إنشاء روابط بأحجام مختلفة
+            let thumbUrl = baseUrl;
+            let mediumUrl = baseUrl;
+            let largeUrl = baseUrl;
+            
+            if (baseUrl.includes('cloudinary.com') && baseUrl.includes('/upload/')) {
+                // ✅ Thumbnail عالي الجودة (240×240 = 2x من 120)
+                thumbUrl = baseUrl.replace(
+                    '/upload/',
+                    '/upload/w_240,h_240,c_fill,g_auto,q_90,f_auto,dpr_auto,fl_progressive/'
+                );
+                
+                // ✅ Medium للعرض المتوسط (800×800)
+                mediumUrl = baseUrl.replace(
+                    '/upload/',
+                    '/upload/w_800,h_800,c_limit,q_85,f_auto,dpr_auto,fl_progressive/'
+                );
+                
+                // ✅ Large للعرض الكامل (1920×1920)
+                largeUrl = baseUrl.replace(
+                    '/upload/',
+                    '/upload/w_1920,h_1920,c_limit,q_auto:best,f_auto,fl_progressive/'
+                );
+            }
+            
+            return {
+                _id: img._id ? img._id.toString() : null,
+                filename: img.filename || '',
+                originalName: img.originalName || '',
+                url: baseUrl,
+                thumbUrl: thumbUrl,        // ✅ جديد
+                mediumUrl: mediumUrl,      // ✅ جديد
+                largeUrl: largeUrl,        // ✅ جديد
+                cloudinaryId: img.cloudinaryId || '',
+                size: img.size || 0,
+                mimetype: img.mimetype || '',
+                caption: img.caption || '',
+                isPrimary: !!img.isPrimary,
+                source: img.source || 'upload',
+                uploadedAt: img.uploadedAt || null,
+                uploadedBy: img.uploadedBy || 'system'
+            };
+        }) : [];
 
         const primary = images.find(i => i.isPrimary) || images[0] || null;
 
@@ -707,6 +741,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
 
     // ============================================================
     // 📸 POST /api/vehicles/:id/images — رفع صور إلى Cloudinary
+    // ✅ جودة عالية + eager transformations
     // ============================================================
     if (upload && cloudinary) {
         app.post('/api/vehicles/:id/images',
@@ -745,19 +780,54 @@ module.exports = function registerVehicleRoutes(app, deps) {
                                 const stream = cloudinary.uploader.upload_stream({
                                     folder: `marine-system/vehicles/${v.plateNumber || v.id}`,
                                     resource_type: 'image',
+                                    // ✅ جودة عالية للصورة الأصلية
                                     transformation: [
                                         { width: 1920, height: 1920, crop: 'limit' },
-                                        { quality: 'auto:good' },
-                                        { fetch_format: 'auto' }
-                                    ]
+                                        { quality: 92 },
+                                        { fetch_format: 'auto' },
+                                        { flags: 'progressive' }
+                                    ],
+                                    // ✅ إنشاء نسخ إضافية تلقائياً
+                                    eager: [
+                                        // Thumbnail عالي الجودة (240×240 = 2x من 120)
+                                        { 
+                                            width: 240, height: 240, 
+                                            crop: 'fill', gravity: 'auto',
+                                            quality: 90, 
+                                            fetch_format: 'auto',
+                                            flags: 'progressive',
+                                            dpr: 'auto'
+                                        },
+                                        // Medium للعرض المتوسط
+                                        { 
+                                            width: 800, height: 800, 
+                                            crop: 'limit',
+                                            quality: 85,
+                                            fetch_format: 'auto',
+                                            flags: 'progressive'
+                                        }
+                                    ],
+                                    eager_async: false
                                 }, (err, r) => err ? reject(err) : resolve(r));
                                 stream.end(file.buffer);
                             });
 
+                            // ✅ استخراج روابط النسخ الإضافية
+                            const baseUrl = result.secure_url;
+                            const thumbUrl = (result.eager && result.eager[0]) 
+                                ? result.eager[0].secure_url 
+                                : baseUrl;
+                            const mediumUrl = (result.eager && result.eager[1]) 
+                                ? result.eager[1].secure_url 
+                                : baseUrl;
+
                             uploaded.push({
                                 filename:     result.public_id.split('/').pop(),
                                 originalName: file.originalname,
-                                url:          result.secure_url,
+                                url:          baseUrl,
+                                thumbUrl:     thumbUrl,        // ✅ جديد
+                                mediumUrl:    mediumUrl,       // ✅ جديد
+                                largeUrl:     baseUrl,         // ✅ الأصلي
                                 cloudinaryId: result.public_id,
                                 size:         result.bytes,
                                 mimetype:     file.mimetype,
