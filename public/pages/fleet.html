@@ -344,6 +344,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* 📸 Thumbnail عالي الجودة */
         .vessel-thumb {
             width: 100px; height: 100px;
             border-radius: 14px; object-fit: cover;
@@ -376,6 +377,7 @@
         }
         .vessel-thumb-wrapper {
             position: relative; width: 100px; height: 100px; margin: 0 auto;
+            contain: layout style paint;
         }
         .vessel-thumb-badge {
             position: absolute; bottom: -8px; right: -8px;
@@ -450,7 +452,6 @@
             background: rgba(148, 163, 184, 0.06); color: var(--c-text-1);
         }
 
-        /* ✅ إزالة direction: rtl */
         .table-wrapper {
             overflow-x: auto;
             padding: 0 24px 24px;
@@ -507,7 +508,6 @@
             background: linear-gradient(135deg, #0369a1, #0ea5e9); color: #fff;
         }
 
-        /* ✅ إزالة تعديلاتي — الأزرار ترجع كما كانت */
         .action-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; align-items: center; }
 
         .btn-sm {
@@ -1178,7 +1178,7 @@
             }
         }
     </style>
-
+    
     <!-- HEADER -->
     <div class="fleet-header" id="fleetHeader">
         <div class="fleet-header-left">
@@ -1613,6 +1613,7 @@
         </div>
     </div>
 </div>
+
 <script>
 (function() {
     'use strict';
@@ -2015,7 +2016,7 @@
             var preview = '';
             var isFile = (img instanceof File);
             if (isFile) { preview = URL.createObjectURL(img); _objectUrls.push(preview); }
-            else preview = img.url || '';
+            else preview = img.thumbUrl || img.url || '';  /* ✅ thumbUrl */
             var isPrimary = isFile
                 ? (idx === 0 && !fleetImages.some(function(x){ return x.isPrimary; }))
                 : !!img.isPrimary;
@@ -2256,7 +2257,7 @@
             var preview = '';
             var isFile = (img instanceof File);
             if (isFile) { preview = URL.createObjectURL(img); _objectUrls.push(preview); }
-            else preview = img.url || '';
+            else preview = img.thumbUrl || img.url || '';  /* ✅ thumbUrl */
             var isPrimary = isFile
                 ? (idx === 0 && !miniUploadImages.some(function(x){ return x.isPrimary; }))
                 : !!img.isPrimary;
@@ -2474,8 +2475,9 @@
         if (!thumbs) return;
         var html = '';
         _galleryImages.forEach(function(img, idx) {
+            var thumbSrc = img.thumbUrl || img.url;  /* ✅ thumbUrl */
             html += '<div class="fleet-pro-thumb' + (idx === _galleryIndex ? ' active' : '') + '" data-idx="' + idx + '">' +
-                '<img src="' + escapeHtml(img.url) + '" alt="مصغرة" loading="lazy">' +
+                '<img src="' + escapeHtml(thumbSrc) + '" alt="مصغرة" loading="lazy" width="70" height="70">' +
                 '</div>';
         });
         thumbs.innerHTML = html;
@@ -2501,11 +2503,24 @@
 
         if (!img || _galleryImages.length === 0) return;
         var current = _galleryImages[_galleryIndex];
-        img.src = current.url;
+        
+        /* ✅ استخدم mediumUrl (800×800) للعرض */
+        var displaySrc = current.mediumUrl || current.url;
+        img.src = displaySrc;
         img.alt = 'صورة ' + (_galleryIndex + 1);
+        
+        /* ✅ عند النقر → حمّل النسخة الكبيرة */
+        img.onclick = function() {
+            if (current.largeUrl && img.src !== current.largeUrl) {
+                img.src = current.largeUrl;
+            }
+        };
 
         var nextIdx = (_galleryIndex + 1) % _galleryImages.length;
-        if (_galleryImages[nextIdx]) { var pre = new Image(); pre.src = _galleryImages[nextIdx].url; }
+        if (_galleryImages[nextIdx]) { 
+            var pre = new Image(); 
+            pre.src = _galleryImages[nextIdx].mediumUrl || _galleryImages[nextIdx].url; 
+        }
 
         if (counter) {
             counter.textContent = (_galleryIndex + 1) + ' / ' + _galleryImages.length;
@@ -2571,7 +2586,7 @@
         var current = _galleryImages[_galleryIndex];
         try {
             fleetToast('⬇️ جاري التحميل...', 'info', 1500);
-            var res = await fetch(current.url, { mode: 'cors' });
+            var res = await fetch(current.largeUrl || current.url, { mode: 'cors' });
             var blob = await res.blob();
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
@@ -2711,7 +2726,7 @@
             }, { passive: true });
         }
     }
-
+    
     window.openVesselGallery = openVesselGallery;
     window.closeVesselGallery = closeVesselGallery;
     window.openVesselGalleryById = function(vesselId) {
@@ -2844,8 +2859,10 @@
                 var imagesCount = v.imagesCount || (v.images ? v.images.length : 0);
                 var thumbHtml;
                 if (primaryImg && primaryImg.url) {
+                    /* ✅ استخدام thumbUrl للجدول */
+                    var thumbSrc = primaryImg.thumbUrl || primaryImg.url;
                     thumbHtml = '<div class="vessel-thumb-wrapper" data-action="gallery" data-id="' + escapeHtml(id) + '">' +
-                        '<img src="' + escapeHtml(primaryImg.url) + '" class="vessel-thumb" alt="' + escapeHtml(name) + '" loading="lazy">' +
+                        '<img src="' + escapeHtml(thumbSrc) + '" class="vessel-thumb" alt="' + escapeHtml(name) + '" loading="lazy" width="100" height="100" decoding="async">' +
                         (imagesCount > 1 ? '<span class="vessel-thumb-badge">' + imagesCount + '</span>' : '') +
                         '</div>';
                 } else {
@@ -3228,7 +3245,9 @@
 
         var html = '';
         images.forEach(function(img, idx) {
-            html += '<img src="' + escapeHtml(img.url) + '" ' +
+            /* ✅ استخدام thumbUrl في معاينة الطرح */
+            var thumbSrc = img.thumbUrl || img.url;
+            html += '<img src="' + escapeHtml(thumbSrc) + '" ' +
                     'class="dispose-thumb" ' +
                     'alt="صورة ' + (idx + 1) + '" ' +
                     'loading="lazy" ' +
@@ -3286,15 +3305,12 @@
         }
     }
 
-    // ✅ إصلاح: تنظيف كامل للـ CSS والـ DOM قبل الانتقال لصفحة المطروحة
     function navigateToDisposals() {
         try {
-            // 1. تشغيل دالة التنظيف المُسجّلة
             if (typeof _fleetCleanup === 'function') {
                 _fleetCleanup();
             }
 
-            // 2. إزالة <style> الخاص بـ fleet من الـ DOM
             document.querySelectorAll('style').forEach(function(styleEl) {
                 if (styleEl.textContent && (
                     styleEl.textContent.indexOf('#page-fleet') !== -1 ||
@@ -3304,13 +3320,11 @@
                 }
             });
 
-            // 3. إزالة عنصر #page-fleet إن كان موجوداً
             var oldPage = document.getElementById('page-fleet');
             if (oldPage && oldPage.parentNode) {
                 oldPage.parentNode.removeChild(oldPage);
             }
 
-            // 4. استعادة حالة body الطبيعية
             document.body.style.overflow = '';
             document.body.removeAttribute('dir');
             document.documentElement.setAttribute('dir', 'rtl');
@@ -3318,7 +3332,6 @@
             console.debug('Cleanup error:', e.message);
         }
 
-        // ثم الانتقال
         if (typeof window.loadPage === 'function') {
             try { window.loadPage('disposals-vessels'); return; } catch (e) {}
         }
@@ -3365,7 +3378,7 @@
         if (!header) return false;
 
         _initialized = true;
-        console.log('🚀 Fleet v9.0 — Initializing...');
+        console.log('🚀 Fleet v9.1 — Initializing...');
 
         initFilters();
         initImagesUI();
@@ -3423,7 +3436,7 @@
         updateZones();
         await renderMain();
 
-        console.log('✅ Fleet v9.0 ready');
+        console.log('✅ Fleet v9.1 ready');
         return true;
     }
 
