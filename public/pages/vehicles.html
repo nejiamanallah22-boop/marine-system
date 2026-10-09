@@ -253,10 +253,10 @@
     .veh-table-head, .veh-table-row {
         display: grid;
         grid-template-columns:
-            55px 110px 140px 190px 170px 150px 120px 130px
+            55px 150px 140px 190px 170px 150px 120px 130px
             110px 120px 120px 120px 180px 150px;
         gap: 10px; padding: 14px 20px; align-items: center;
-        font-size: 13px; min-width: 1950px;
+        font-size: 13px; min-width: 2000px;
     }
     .veh-table-head {
         background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.9));
@@ -312,7 +312,7 @@
         color: var(--c-text-4); letter-spacing: 0.5px;
     }
     .veh-thumb-empty:hover::after { color: var(--c-gold-2); }
-    .veh-thumb-wrapper { position: relative; width: 78px; height: 78px; margin: 0 auto; }
+    .veh-thumb-wrapper { position: relative; width: 120px; height: 120px; margin: 0 auto; contain: layout style paint; }
     .veh-thumb-badge {
         position: absolute; bottom: -6px; right: -6px;
         background: linear-gradient(135deg, var(--c-gold-1), var(--c-gold-2));
@@ -897,6 +897,7 @@
         .veh-mini-upload { display: none !important; }
     }
 </style>
+    
 
 <div class="veh-container">
     <!-- HEADER -->
@@ -1465,7 +1466,9 @@
             </button>
         </div>
     </div>
-</div><script>
+</div>
+
+<script>
 (function() {
     'use strict';
 
@@ -1907,7 +1910,7 @@
         }
         filterSelectOptions(zoneSel, '');
     }
-
+    
     /* ═══════════════════════════════════════════════════════════
        📸 IMAGE UPLOADER (main modal)
        ═══════════════════════════════════════════════════════════ */
@@ -1981,7 +1984,7 @@
             var preview = '';
             var isFile = (img instanceof File);
             if (isFile) { preview = URL.createObjectURL(img); _objectUrls.push(preview); }
-            else preview = img.url || '';
+            else preview = img.thumbUrl || img.url || '';
             var isPrimary = isFile
                 ? (idx === 0 && !vehicleImages.some(function(x){ return x.isPrimary; }))
                 : !!img.isPrimary;
@@ -2099,7 +2102,7 @@
             var preview = '';
             var isFile = (img instanceof File);
             if (isFile) { preview = URL.createObjectURL(img); _objectUrls.push(preview); }
-            else preview = img.url || '';
+            else preview = img.thumbUrl || img.url || '';
             var isPrimary = isFile
                 ? (idx === 0 && !miniUploadImages.some(function(x){ return x.isPrimary; }))
                 : !!img.isPrimary;
@@ -2321,8 +2324,9 @@
         if (!thumbs) return;
         var html = '';
         _galleryImages.forEach(function(img, idx) {
+            var thumbSrc = img.thumbUrl || img.url;
             html += '<div class="veh-gallery-thumb' + (idx === _galleryIndex ? ' active' : '') + '" data-idx="' + idx + '">' +
-                '<img src="' + escapeHtml(img.url) + '" alt="مصغرة" loading="lazy">' +
+                '<img src="' + escapeHtml(thumbSrc) + '" alt="مصغرة" loading="lazy" width="70" height="70">' +
                 '</div>';
         });
         thumbs.innerHTML = html;
@@ -2347,11 +2351,24 @@
 
         if (!img || _galleryImages.length === 0) return;
         var current = _galleryImages[_galleryIndex];
-        img.src = current.url;
+        
+        // ✅ استخدم mediumUrl (800×800) للعرض
+        var displaySrc = current.mediumUrl || current.url;
+        img.src = displaySrc;
         img.alt = 'صورة ' + (_galleryIndex + 1);
+        
+        // ✅ عند النقر → حمّل النسخة الكبيرة
+        img.onclick = function() {
+            if (current.largeUrl && img.src !== current.largeUrl) {
+                img.src = current.largeUrl;
+            }
+        };
 
         var nextIdx = (_galleryIndex + 1) % _galleryImages.length;
-        if (_galleryImages[nextIdx]) { var pre = new Image(); pre.src = _galleryImages[nextIdx].url; }
+        if (_galleryImages[nextIdx]) { 
+            var pre = new Image(); 
+            pre.src = _galleryImages[nextIdx].mediumUrl || _galleryImages[nextIdx].url; 
+        }
 
         if (counter) {
             counter.textContent = (_galleryIndex + 1) + ' / ' + _galleryImages.length;
@@ -2418,7 +2435,7 @@
         var current = _galleryImages[_galleryIndex];
         try {
             toast('⬇️ جاري التحميل...', 'info', 1500);
-            var res = await fetch(current.url, { mode: 'cors' });
+            var res = await fetch(current.largeUrl || current.url, { mode: 'cors' });
             var blob = await res.blob();
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
@@ -2655,8 +2672,9 @@
             var imagesCount = v.imagesCount || (v.images ? v.images.length : 0);
             var thumbHtml;
             if (primaryImg && primaryImg.url) {
+                var thumbSrc = primaryImg.thumbUrl || primaryImg.url;
                 thumbHtml = '<div class="veh-thumb-wrapper" data-action="gallery" data-id="' + escapeHtml(id) + '" title="انقر لعرض ' + imagesCount + ' صورة">' +
-                    '<img src="' + escapeHtml(primaryImg.url) + '" class="veh-thumb" alt="' + escapeHtml(v.plateNumber || '') + '" loading="lazy">' +
+                    '<img src="' + escapeHtml(thumbSrc) + '" class="veh-thumb" alt="' + escapeHtml(v.plateNumber || '') + '" loading="lazy" width="120" height="120" decoding="async">' +
                     (imagesCount > 1 ? '<span class="veh-thumb-badge">' + imagesCount + '</span>' : '') +
                     '</div>';
             } else {
