@@ -1,6 +1,12 @@
 /**
- * 🚢 نموذج الوسيلة البحرية — v2.3
- * @description متوافق 100% مع server.js — يدعم الطرح + الصور
+ * 🚢 نموذج الوسيلة البحرية — v2.4
+ * @description متوافق 100% مع server.js — يدعم الطرح + الصور بجودات متعددة
+ *
+ * ✨ v2.4 Features:
+ * - thumbUrl (240×240) — للجدول
+ * - mediumUrl (800×800) — للمعرض
+ * - largeUrl (1920×1920) — للعرض الكامل
+ * - دعم كامل للطرح والاستعادة
  */
 
 const mongoose = require('mongoose');
@@ -13,6 +19,12 @@ const VesselImageSchema = new mongoose.Schema({
     filename:     { type: String, default: '' },
     originalName: { type: String, default: '' },
     url:          { type: String, required: true },
+    
+    // ✅ روابط جودات متعددة (thumb, medium, large)
+    thumbUrl:     { type: String, default: '' },   // 240×240 — للجدول
+    mediumUrl:    { type: String, default: '' },   // 800×800 — للمعرض
+    largeUrl:     { type: String, default: '' },   // 1920×1920 — للعرض الكامل
+    
     size:         { type: Number, default: 0 },
     mimetype:     { type: String, default: '' },
     caption:      { type: String, default: '', maxlength: 200 },
