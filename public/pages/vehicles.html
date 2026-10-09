@@ -1581,10 +1581,10 @@
         'هارلي ديفيدسون': ['Sportster', 'Softail', 'Touring', 'CVO', 'Street']
     };
 
-    // المناطق حسب الإقليم
+    // ✅ المناطق حسب الإقليم — مع "الإدارة المركزية بتونس"
     var ZONES_BY_REGION = {
-        'إدارة إسناد الوحدات البحرية': ['الإدارة المركزية تونس'],
-        'إدارة حرس السواحل': ['الإدارة المركزية تونس'],
+        'إدارة إسناد الوحدات البحرية': ['الإدارة المركزية بتونس'],
+        'إدارة حرس السواحل': ['الإدارة المركزية بتونس'],
         'إقليم الحرس البحري بالشمال': ['تونس', 'بنزرت', 'طبرقة', 'منزل بورقيبة', 'غار الملح', 'رأس الجبل', 'منزل تميم', 'قليبية', 'الحمامات', 'سجنان'],
         'إقليم الحرس البحري بالساحل': ['سوسة', 'المنستير', 'نابل', 'حمامات', 'المهدية', 'قصر هلال', 'هرقلة', 'شربان', 'المكنين', 'جمال'],
         'إقليم الحرس البحري بالوسط': ['صفاقس', 'قرقنة', 'المهدية', 'الشابة', 'سيدي بوزيد', 'الوردانين', 'المزونة', 'جبنيانة', 'العامرة', 'ماطر'],
@@ -1735,7 +1735,6 @@
        🔍 COMBOBOX HELPERS
        ═══════════════════════════════════════════════════════════ */
 
-    // بحث داخل قائمة
     function filterSelectOptions(selectEl, query) {
         if (!selectEl) return;
         var q = (query || '').trim().toLowerCase();
@@ -1756,7 +1755,6 @@
         });
     }
 
-    // ربط بحث Combobox بقائمة
     function bindComboboxSearch(searchId, selectId) {
         var search = $('#' + searchId);
         var select = $('#' + selectId);
@@ -1766,7 +1764,6 @@
         });
     }
 
-    // إظهار/إخفاء حقل الكتابة الحرة
     function toggleFreeInput(selectId, freeInputId, hintId) {
         var sel = $('#' + selectId);
         var free = $('#' + freeInputId);
@@ -1787,7 +1784,6 @@
         on(sel, 'change', handler);
     }
 
-    // الحصول على القيمة النهائية (من select أو free input)
     function getComboboxValue(selectId, freeInputId) {
         var sel = $('#' + selectId);
         var free = $('#' + freeInputId);
@@ -1796,12 +1792,11 @@
             return free.value.trim();
         }
         if (sel.value === 'أخرى' || sel.value === '__other__') {
-            return ''; // لم يكتب شيئاً
+            return '';
         }
         return sel.value;
     }
 
-    // ضبط قيمة Combobox (للتعديل)
     function setComboboxValue(selectId, freeInputId, hintId, value) {
         var sel = $('#' + selectId);
         var free = $('#' + freeInputId);
@@ -1821,7 +1816,6 @@
             if (free) { free.style.display = 'none'; free.value = ''; }
             if (hint) hint.style.display = 'none';
         } else {
-            // قيمة غير موجودة → ضعها في الحقل الحر
             if (free) {
                 sel.value = (sel.querySelector('option[value="__other__"]') ? '__other__' : 'أخرى');
                 free.style.display = 'block';
@@ -1835,7 +1829,6 @@
        🎛️ DYNAMIC FIELDS
        ═══════════════════════════════════════════════════════════ */
 
-    // تحديث الطرازات حسب الماركة
     function updateModelsByBrand() {
         var brandSel = $('#vehBrand');
         var modelSel = $('#vehModel');
@@ -1843,7 +1836,6 @@
         var modelFree = $('#vehModelFree');
         if (!brandSel || !modelSel) return;
 
-        // الماركة الفعلية (قد تكون في الحقل الحر)
         var brand = getComboboxValue('vehBrand', 'vehBrandFree');
         var current = modelSel.value;
 
@@ -1862,12 +1854,10 @@
         html += '<optgroup label="⚙️ أخرى"><option value="أخرى">أخرى (اكتب يدوياً)</option></optgroup>';
         modelSel.innerHTML = html;
 
-        // استعادة القيمة إن وُجدت
         if (current && (models.indexOf(current) !== -1 || current === 'أخرى')) {
             modelSel.value = current;
         }
 
-        // إظهار البحث إن كان أكثر من 5 طرازات
         if (modelSearch) {
             modelSearch.style.display = models.length > 5 ? 'block' : 'none';
             modelSearch.value = '';
@@ -1876,11 +1866,9 @@
             modelFree.style.display = 'none';
             modelFree.value = '';
         }
-        // أعد ضبط فلتر البحث
         filterSelectOptions(modelSel, '');
     }
 
-    // تحديث المناطق حسب الإقليم
     function updateZonesByRegion() {
         var regionVal = getComboboxValue('vehRegion', 'vehRegionFree');
         var zoneSel = $('#vehZone');
@@ -2198,7 +2186,6 @@
         if (uploading) uploading.style.display = 'flex';
 
         try {
-            // 1. حذف الصور المحذوفة
             var original = vehicles.find(function(x) { return String(x.id || x._id) === String(miniUploadVehicleId); });
             var originalImages = (original && original.images) || [];
             var keptIds = miniUploadImages.filter(function(img) { return img && img._id; }).map(function(img) { return img._id; });
@@ -2208,7 +2195,6 @@
                 await apiFetch('/api/vehicles/' + encodeURIComponent(miniUploadVehicleId) + '/images/' + encodeURIComponent(toDelete[i]._id), { method: 'DELETE' }).catch(function() {});
             }
 
-            // 2. رفع الصور الجديدة
             var newFiles = miniUploadImages.filter(function(img) { return img instanceof File; });
             if (newFiles.length > 0) {
                 var fd = new FormData();
@@ -2229,7 +2215,6 @@
             toast('✅ تم تحديث الصور بنجاح', 'success');
             closeMiniUpload();
 
-            // 3. إعادة تحميل البيانات + تحديث المعرض
             await loadVehicles();
             var updated = vehicles.find(function(x) { return String(x.id || x._id) === String(miniUploadVehicleId); });
             if (updated && $('#vehGalleryModal').classList.contains('active')) {
@@ -2280,7 +2265,6 @@
             subtitle.textContent = parts.join(' • ') || '—';
         }
 
-        // إظهار زر تغيير الصور للمحررين فقط
         if (changeBtn) {
             var canEdit = hasPermission('canUpdateVehicles');
             changeBtn.style.display = canEdit ? 'flex' : 'none';
@@ -2465,7 +2449,6 @@
         on($('#vehGalleryDownload'), 'click', downloadImage);
         on($('#vehGalleryFullscreen'), 'click', toggleFullscreen);
 
-        // 🎯 زر تغيير الصور
         on($('#vehGalleryChangeBtn'), 'click', function() {
             if (!_galleryCurrentVehicle) return;
             var id = _galleryCurrentVehicle.id || _galleryCurrentVehicle._id;
@@ -2745,7 +2728,6 @@
 
         $('#vehId').value = '';
 
-        // Reset all combobox fields
         resetComboboxField('vehType', 'vehTypeSearch', null, null);
         resetComboboxField('vehBrand', 'vehBrandSearch', 'vehBrandFree', 'vehBrandHint');
         $('#vehModel').innerHTML = '<option value="">— اختر الماركة أولاً —</option>';
@@ -2798,17 +2780,14 @@
 
         $('#vehId').value = v.id || v._id || '';
 
-        // النوع
         setComboboxValue('vehType', null, null, v.type || '');
         var typeSearch = $('#vehTypeSearch'); if (typeSearch) typeSearch.value = '';
         filterSelectOptions($('#vehType'), '');
 
-        // الماركة
         setComboboxValue('vehBrand', 'vehBrandFree', 'vehBrandHint', v.brand || '');
         var brandSearch = $('#vehBrandSearch'); if (brandSearch) brandSearch.value = '';
         filterSelectOptions($('#vehBrand'), '');
 
-        // الطراز (بعد الماركة)
         updateModelsByBrand();
         setTimeout(function() {
             setComboboxValue('vehModel', 'vehModelFree', null, v.model || '');
@@ -2816,15 +2795,12 @@
             filterSelectOptions($('#vehModel'), '');
         }, 60);
 
-        // اللون
         setComboboxValue('vehColor', 'vehColorFree', null, v.color || '');
         var colorSearch = $('#vehColorSearch'); if (colorSearch) colorSearch.value = '';
         filterSelectOptions($('#vehColor'), '');
 
-        // الإقليم
         setComboboxValue('vehRegion', 'vehRegionFree', 'vehRegionHint', v.region || '');
 
-        // المنطقة (بعد الإقليم)
         updateZonesByRegion();
         setTimeout(function() {
             setComboboxValue('vehZone', 'vehZoneFree', null, v.zone || '');
@@ -2885,7 +2861,6 @@
             notes: $('#vehNotes').value.trim()
         };
 
-        // التحقق
         if (!payload.type) { toast('⚠️ النوع مطلوب', 'error'); return; }
         if (!payload.plateNumber) { toast('⚠️ رقم الوسيلة مطلوب', 'error'); return; }
         if (!payload.region) { toast('⚠️ الإقليم / الإدارة مطلوب', 'error'); return; }
@@ -2956,9 +2931,6 @@
             .catch(function(err) { toast('❌ ' + err.message, 'error'); });
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       📦 DISPOSE
-       ═══════════════════════════════════════════════════════════ */
     function openDisposeModal(id) {
         var v = vehicles.find(function(x) { return String(x.id || x._id) === String(id); });
         if (!v) return;
@@ -3004,9 +2976,6 @@
         }
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       🎛️ FILTERS / MISC
-       ═══════════════════════════════════════════════════════════ */
     function toggleFaultDate() {
         var status = $('#vehStatus').value;
         var group = $('#vehFaultDateGroup');
@@ -3063,9 +3032,6 @@
         if (current && brands[current]) sel.value = current;
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       📊 EXPORT / PRINT
-       ═══════════════════════════════════════════════════════════ */
     function exportExcel() {
         try {
             var filtered = getFiltered();
@@ -3123,9 +3089,6 @@
         }
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       🚀 INIT
-       ═══════════════════════════════════════════════════════════ */
     async function init() {
         if (_isDestroyed) return;
         console.log('🚛 Vehicles Pro v3.0 — Initializing...');
@@ -3135,29 +3098,24 @@
         initGalleryEvents();
         initMiniUploadEvents();
 
-        // Combobox searches
         bindComboboxSearch('vehTypeSearch', 'vehType');
         bindComboboxSearch('vehBrandSearch', 'vehBrand');
         bindComboboxSearch('vehModelSearch', 'vehModel');
         bindComboboxSearch('vehColorSearch', 'vehColor');
         bindComboboxSearch('vehZoneSearch', 'vehZone');
 
-        // Free inputs
         toggleFreeInput('vehBrand', 'vehBrandFree', 'vehBrandHint');
         toggleFreeInput('vehModel', 'vehModelFree', null);
         toggleFreeInput('vehColor', 'vehColorFree', null);
         toggleFreeInput('vehRegion', 'vehRegionFree', 'vehRegionHint');
         toggleFreeInput('vehZone', 'vehZoneFree', null);
 
-        // ربط الماركة بالطراز
         on($('#vehBrand'), 'change', updateModelsByBrand);
         on($('#vehBrandFree'), 'input', updateModelsByBrand);
 
-        // ربط الإقليم بالمنطقة
         on($('#vehRegion'), 'change', updateZonesByRegion);
         on($('#vehRegionFree'), 'input', updateZonesByRegion);
 
-        // Header actions
         on($('#vehRefreshBtn'), 'click', function() {
             toast('🔄 جاري التحديث...', 'info', 1200);
             loadVehicles();
@@ -3171,7 +3129,6 @@
             toast('⚫ تم تصفية المطروحة', 'info', 1500);
         });
 
-        // Modal events
         on($('#vehModalClose'), 'click', closeModal);
         on($('#vehCancelBtn'), 'click', closeModal);
         on($('#vehModal'), 'click', function(e) { if (e.target === this) closeModal(); });
@@ -3183,7 +3140,6 @@
         on($('#vehDisposeModal'), 'click', function(e) { if (e.target === this) closeDisposeModal(); });
         on($('#vehDisposeForm'), 'submit', submitDispose);
 
-        // Filters
         on($('#vehSearch'), 'input', renderTable);
         on($('#vehFilterStatus'), 'change', renderTable);
         on($('#vehFilterType'), 'change', renderTable);
@@ -3208,4 +3164,3 @@
 })();
 </script>
 </div>
-    
