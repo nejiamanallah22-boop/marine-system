@@ -1,6 +1,6 @@
 // ============================================================
-// 🚛 Vehicle Model — الوسائل البرية v6.1
-// + 🆕 الصور + 🆕 الطرح
+// 🚛 Vehicle Model — الوسائل البرية v6.2
+// + 🆕 الصور + 🆕 الطرح + إصلاح الإملاء
 // ============================================================
 
 'use strict';
@@ -30,7 +30,7 @@ const VEHICLE_TYPES = [
 const VEHICLE_TYPES_VALUES = VEHICLE_TYPES.map(t => t.value);
 
 // ============================================================
-// 📋 VEHICLE BRANDS
+// 📋 VEHICLE BRANDS — ✅ تصحيح الإملاء
 // ============================================================
 const VEHICLE_BRANDS = [
     { value: 'تويوتا',       label: '🚗 تويوتا (Toyota)' },
@@ -39,8 +39,8 @@ const VEHICLE_BRANDS = [
     { value: 'مرسيدس',       label: '🚗 مرسيدس (Mercedes)' },
     { value: 'رينو',         label: '🚗 رينو (Renault)' },
     { value: 'بيجو',         label: '🚗 بيجو (Peugeot)' },
-    { value: 'ستروين',       label: '🚗 ستروين (Citroën)' },
-    { value: 'فولكس فاغن',   label: '🚗 فولكس فاغن (Volkswagen)' },
+    { value: 'سيتروين',      label: '🚗 سيتروين (Citroën)' },      // ✅ إصلاح
+    { value: 'فولكس فاجن',   label: '🚗 فولكس فاجن (Volkswagen)' }, // ✅ إصلاح
     { value: 'نيسان',        label: '🚗 نيسان (Nissan)' },
     { value: 'ميتسوبيشي',    label: '🚗 ميتسوبيشي (Mitsubishi)' },
     { value: 'هيونداي',      label: '🚗 هيونداي (Hyundai)' },
@@ -54,7 +54,7 @@ const VEHICLE_BRANDS = [
     { value: 'فولفو',        label: '🚚 فولفو (Volvo)' },
     { value: 'داف',          label: '🚚 داف (DAF)' },
     { value: 'هينو',         label: '🚚 هينو (Hino)' },
-    { value: 'ايسوزو',       label: '🚚 ايسوزو (Isuzu)' },
+    { value: 'إيسوزو',       label: '🚚 إيسوزو (Isuzu)' },         // ✅ إصلاح
     { value: 'أخرى',         label: '⚙️ أخرى' }
 ];
 const VEHICLE_BRANDS_VALUES = VEHICLE_BRANDS.map(b => b.value);
@@ -96,38 +96,80 @@ const VEHICLE_REGIONS = [
 const VEHICLE_REGIONS_VALUES = VEHICLE_REGIONS.map(r => r.value);
 
 // ============================================================
-// 📋 ZONES
+// 📋 ZONES — ✅ محدَّث ومتطابق مع الواجهة
 // ============================================================
 const VEHICLE_ZONES = {
+    // الإدارات المركزية — وحدة إدارية واحدة
     'إدارة إسناد الوحدات البحرية': ['الإدارة المركزية بتونس'],
     'إدارة حرس السواحل':          ['الإدارة المركزية بتونس'],
-    'إقليم الحرس البحري بالشمال': ['تونس', 'بنزرت', 'طبرقة'],
-    'إقليم الحرس البحري بالساحل': ['سوسة', 'المنستير', 'نابل'],
-    'إقليم الحرس البحري بالوسط':  ['صفاقس', 'المهدية', 'قرقنة'],
-    'إقليم الحرس البحري بالجنوب': ['جرجيس', 'جربة', 'قابس'],
-    'وحدة الصيانة والإسناد البحري تونس':     ['تونس'],
-    'وحدة الصيانة والإسناد البحري صفاقس':    ['صفاقس'],
-    'وحدة الصيانة والإسناد البحري المنستير': ['المنستير'],
-    'وحدة الصيانة والإسناد البحري جرجيس':    ['جرجيس'],
-    'المجمع الأمني بقبيبة': ['قبيبة "صفاقس"']
+
+    // الأقاليم البحرية — مناطق كاملة
+    'إقليم الحرس البحري بالشمال': [
+        'تونس', 'بنزرت', 'طبرقة', 'منزل بورقيبة',
+        'غار الملح', 'رأس الجبل', 'منزل تميم', 'قليبية',
+        'الحمامات', 'سجنان'
+    ],
+    'إقليم الحرس البحري بالساحل': [
+        'سوسة', 'المنستير', 'نابل', 'حمامات',
+        'المهدية', 'قصر هلال', 'هرقلة', 'شربان',
+        'المكنين', 'جمال'
+    ],
+    'إقليم الحرس البحري بالوسط': [
+        'صفاقس', 'قرقنة', 'المهدية', 'الشابة',
+        'سيدي بوزيد', 'الوردانين', 'المزونة', 'جبنيانة',
+        'العامرة', 'ماطر'
+    ],
+    'إقليم الحرس البحري بالجنوب': [
+        'جرجيس', 'جربة', 'قابس', 'بن قردان',
+        'مدنين', 'زازيس', 'حومة السوق', 'أجيم',
+        'ميدون', 'مارث'
+    ],
+
+    // وحدات الصيانة
+    'وحدة الصيانة والإسناد البحري تونس': [
+        'تونس', 'أريانة', 'بن عروس', 'منوبة'
+    ],
+    'وحدة الصيانة والإسناد البحري صفاقس': [
+        'صفاقس', 'قرقنة', 'سيدي بوزيد'
+    ],
+    'وحدة الصيانة والإسناد البحري المنستير': [
+        'المنستير', 'سوسة', 'المهدية'
+    ],
+    'وحدة الصيانة والإسناد البحري جرجيس': [
+        'جرجيس', 'جربة', 'بن قردان', 'زازيس'
+    ],
+
+    // المجمعات الأمنية
+    'المجمع الأمني بقبيبة': ['قبيبة "صفاقس"', 'قبيبة', 'تونس', 'بنزرت']
 };
+
+// ✅ قائمة شاملة لكل المناطق (للفلترة والتحقق)
 const VEHICLE_ZONES_ALL = [
     'الإدارة المركزية بتونس',
-    'تونس', 'بنزرت', 'طبرقة',
-    'سوسة', 'المنستير', 'نابل',
-    'صفاقس', 'المهدية', 'قرقنة',
-    'جرجيس', 'جربة', 'قابس',
-    'قبيبة "صفاقس"'
+    'تونس', 'بنزرت', 'طبرقة', 'منزل بورقيبة',
+    'غار الملح', 'رأس الجبل', 'منزل تميم', 'قليبية',
+    'الحمامات', 'سجنان',
+    'سوسة', 'المنستير', 'نابل', 'حمامات',
+    'المهدية', 'قصر هلال', 'هرقلة', 'شربان',
+    'المكنين', 'جمال',
+    'صفاقس', 'قرقنة', 'الشابة',
+    'سيدي بوزيد', 'الوردانين', 'المزونة', 'جبنيانة',
+    'العامرة', 'ماطر',
+    'جرجيس', 'جربة', 'قابس', 'بن قردان',
+    'مدنين', 'زازيس', 'حومة السوق', 'أجيم',
+    'ميدون', 'مارث',
+    'أريانة', 'بن عروس', 'منوبة',
+    'قبيبة "صفاقس"', 'قبيبة'
 ];
 
 // ============================================================
-// 📋 STATUS — 🆕 أضفنا "طرح"
+// 📋 STATUS
 // ============================================================
 const VEHICLE_STATUS = [
     { value: 'صالحة', label: '✅ صالحة' },
     { value: 'معطبة', label: '🔴 معطبة' },
     { value: 'صيانة', label: '🔧 صيانة' },
-    { value: 'طرح',   label: '⚫ طرح (سحب نهائي)' }  // 🆕
+    { value: 'طرح',   label: '⚫ طرح (سحب نهائي)' }
 ];
 const VEHICLE_STATUS_VALUES = VEHICLE_STATUS.map(s => s.value);
 
@@ -186,7 +228,7 @@ const vehicleSchema = new mongoose.Schema({
     },
     zone: {
         type: String, trim: true, default: '',
-        required: [true, 'المنطقة مطلوبة'],
+        // ✅ لم يعد required — الإدارات المركزية لا تحتاج منطقة
         index: true, maxlength: 100
     },
     status: {
@@ -223,7 +265,7 @@ vehicleSchema.index({ status: 1, type: 1 });
 vehicleSchema.index({ region: 1, zone: 1 });
 vehicleSchema.index({ brand: 1, model: 1 });
 vehicleSchema.index({ createdAt: -1 });
-vehicleSchema.index({ disposedAt: -1 });      // 🆕 للأداء في صفحة الطرح
+vehicleSchema.index({ disposedAt: -1 });
 vehicleSchema.index({ status: 1, disposedAt: -1 });
 
 // ============================================================
@@ -259,12 +301,35 @@ vehicleSchema.virtual('imagesCount').get(function() {
 });
 
 // ============================================================
-// ⚙️ METHODS — 🆕 الطرح
+// ✅ PRE-VALIDATE HOOK — التحقق من المنطقة حسب الإقليم
 // ============================================================
+vehicleSchema.pre('validate', function(next) {
+    // إذا كانت منطقة فارغة، لا مشكلة (مثلاً: إدارة مركزية)
+    if (!this.zone || !String(this.zone).trim()) {
+        // امسح القيمة لتكون string فارغة
+        this.zone = '';
+        return next();
+    }
 
-/**
- * طرح وسيلة (سحب نهائي)
- */
+    // إذا كانت المنطقة موجودة، تحقق من أنها تابعة للإقليم
+    const allowedZones = VEHICLE_ZONES[this.region] || [];
+    const zoneTrimmed = String(this.zone).trim();
+
+    if (allowedZones.length > 0 && allowedZones.indexOf(zoneTrimmed) === -1) {
+        // اسمح بأي منطقة إذا كانت في القائمة العامة (مرونة)
+        if (VEHICLE_ZONES_ALL.indexOf(zoneTrimmed) === -1) {
+            return next(new Error(
+                `المنطقة "${zoneTrimmed}" لا تتبع "${this.region}"`
+            ));
+        }
+    }
+
+    next();
+});
+
+// ============================================================
+// ⚙️ METHODS — الطرح
+// ============================================================
 vehicleSchema.methods.dispose = function({ reason, decision, disposedBy, notes, date } = {}) {
     if (!reason || !String(reason).trim()) {
         throw new Error('سبب الطرح مطلوب');
@@ -279,9 +344,6 @@ vehicleSchema.methods.dispose = function({ reason, decision, disposedBy, notes, 
     return this;
 };
 
-/**
- * إلغاء الطرح — إعادة الوسيلة للخدمة
- */
 vehicleSchema.methods.restore = function({ newStatus } = {}) {
     const allowed = ['صالحة', 'صيانة', 'معطبة'];
     const target = allowed.includes(newStatus) ? newStatus : 'صيانة';
@@ -299,10 +361,6 @@ vehicleSchema.methods.restore = function({ newStatus } = {}) {
 // ============================================================
 // 🖼️ METHODS — الصور
 // ============================================================
-
-/**
- * حذف صورة + إعادة تعيين الرئيسية إذا لزم
- */
 vehicleSchema.methods.removeImage = function(imageId) {
     const img = this.images.id(imageId);
     if (!img) return false;
@@ -314,9 +372,6 @@ vehicleSchema.methods.removeImage = function(imageId) {
     return true;
 };
 
-/**
- * تعيين صورة كرئيسية
- */
 vehicleSchema.methods.setPrimaryImage = function(imageId) {
     this.images.forEach(img => {
         img.isPrimary = img._id.toString() === imageId.toString();
@@ -324,9 +379,6 @@ vehicleSchema.methods.setPrimaryImage = function(imageId) {
     return this;
 };
 
-/**
- * الحصول على الصورة الرئيسية
- */
 vehicleSchema.methods.getPrimaryImage = function() {
     if (!this.images || this.images.length === 0) return null;
     return this.images.find(i => i.isPrimary) || this.images[0];
