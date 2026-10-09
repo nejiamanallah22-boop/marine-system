@@ -1,6 +1,8 @@
 // ============================================================
-// 🚛 routes/vehicles.js — v7.0
+// 🚛 routes/vehicles.js — v8.0
 // + 🆕 الصور (Cloudinary) + 🆕 الطرح
+// ✅ إصلاح: التحقق من المنطقة (zones validation)
+// ✅ إصلاح: تحميل VEHICLE_ZONES_ALL
 // ============================================================
 
 'use strict';
@@ -53,17 +55,73 @@ module.exports = function registerVehicleRoutes(app, deps) {
 
     console.log('✅ [VEHICLES] Registering vehicles routes...');
 
+    // ═══════════════════════════════════════════════════════════
+    // 📋 تحميل قوائم المناطق من Model
+    // ═══════════════════════════════════════════════════════════
     let VEHICLE_ZONES = {};
+    let VEHICLE_ZONES_ALL = [];
     try {
         const vmod = require('../models/Vehicle');
         VEHICLE_ZONES = vmod.VEHICLE_ZONES || {};
-    } catch (e) {}
+        VEHICLE_ZONES_ALL = Array.isArray(vmod.VEHICLE_ZONES_ALL)
+            ? vmod.VEHICLE_ZONES_ALL
+            : [];
+        console.log(
+            '✅ [VEHICLES] Loaded zones for',
+            Object.keys(VEHICLE_ZONES).length,
+            'regions |',
+            VEHICLE_ZONES_ALL.length,
+            'total zones'
+        );
+    } catch (e) {
+        console.error('⚠️ [VEHICLES] Could not load VEHICLE_ZONES:', e.message);
+    }
 
     const MAX_IMAGES = 10;
 
-    // ============================================================
+    // ═══════════════════════════════════════════════════════════
+    // ✅ دالة التحقق من المنطقة (مرنة وآمنة)
+    // ═══════════════════════════════════════════════════════════
+    /**
+     * تتحقق من صحة المنطقة حسب الإقليم
+     * @param {string} region - الإقليم / الإدارة
+     * @param {string} zone - المنطقة
+     * @returns {{ valid: boolean, reason?: string }}
+     */
+    function validateZone(region, zone) {
+        // 1️⃣ إذا كانت المنطقة فارغة → مقبول (للإدارات المركزية)
+        if (!zone || !String(zone).trim()) {
+            return { valid: true };
+        }
+
+        const zoneTrimmed = String(zone).trim();
+        const allowedZones = VEHICLE_ZONES[region] || [];
+
+        // 2️⃣ إذا كان الإقليم غير معروف → اسمح (مرونة)
+        if (allowedZones.length === 0) {
+            return { valid: true };
+        }
+
+        // 3️⃣ المنطقة موجودة في قائمة الإقليم → ✅
+        if (allowedZones.indexOf(zoneTrimmed) !== -1) {
+            return { valid: true };
+        }
+
+        // 4️⃣ المنطقة موجودة في القائمة العامة → ✅ (مرونة)
+        if (VEHICLE_ZONES_ALL.indexOf(zoneTrimmed) !== -1) {
+            return { valid: true };
+        }
+
+        // ❌ مرفوض
+        return {
+            valid: false,
+            reason: `المنطقة "${zoneTrimmed}" لا تتبع "${region}"`
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // 🎨 formatVehicle
-    // ============================================================
+    // ═══════════════════════════════════════════════════════════
     function formatVehicle(v) {
         if (!v) return null;
         const images = Array.isArray(v.images) ? v.images.map(img => ({
@@ -266,7 +324,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
 
                 res.json({ success: true, vehicle: formatVehicle(v) });
             } catch (e) {
-                console.error('❌ [VEHICLES] GET/:id error:', e.message);
+                console.error('❌ [VEHICLES] GET /:id error:', e.message);
                 res.status(500).json({ success: false, error: 'فشل التحميل' });
             }
         }
@@ -289,21 +347,28 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     appointmentDate, faultDate, notes
                 } = req.body;
 
+                // ✅ التحقق الأساسي
                 if (typeof plateNumber !== 'string' || !plateNumber.trim())
                     return res.status(400).json({ success: false, error: 'رقم الوسيلة مطلوب' });
+
                 if (typeof region !== 'string' || !region.trim())
                     return res.status(400).json({ success: false, error: 'الإدارة / الإقليم مطلوب' });
-                if (typeof zone !== 'string' || !zone.trim())
-                    return res.status(400).json({ success: false, error: 'المنطقة مطلوبة' });
 
-                const allowedZones = VEHICLE_ZONES[region] || [];
-                if (allowedZones.length > 0 && allowedZones.indexOf(zone) === -1) {
+                // ⚠️ المنطقة: قد تكون فارغة (للإدارات المركزية)
+                const zoneStr = (typeof zone === 'string') ? zone.trim() : '';
+
+                // ✅ التحقق المرن من المنطقة
+                const zoneCheck = validateZone(region.trim(), zoneStr);
+                if (!zoneCheck.valid) {
+                    console.warn('⚠️ [VEHICLES] Zone rejected on POST:',
+                        { region, zone, reason: zoneCheck.reason });
                     return res.status(400).json({
                         success: false,
-                        error: 'المنطقة "' + zone + '" لا تتبع "' + region + '"'
+                        error: zoneCheck.reason
                     });
                 }
 
+                // ✅ تاريخ العطب
                 if (status === 'معطبة' && (!faultDate || !String(faultDate).trim())) {
                     return res.status(400).json({
                         success: false,
@@ -311,11 +376,13 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     });
                 }
 
+                // ✅ رقم الوسيلة فريد
                 const existing = await Vehicle.findOne({ plateNumber: plateNumber.trim() });
                 if (existing) {
                     return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
                 }
 
+                // ✅ الإنشاء
                 const newVehicle = await Vehicle.create({
                     id: randomId(8),
                     name: typeof name === 'string' ? name.trim() : '',
@@ -326,7 +393,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     year: Number(year) || null,
                     color: typeof color === 'string' ? color.trim() : '',
                     region: region.trim(),
-                    zone: zone.trim(),
+                    zone: zoneStr,               // ← قد تكون فارغة
                     status: status || 'صالحة',
                     workCondition: workCondition || 'جديدة',
                     appointmentDate: appointmentDate || null,
@@ -398,29 +465,38 @@ module.exports = function registerVehicleRoutes(app, deps) {
                     });
                 }
 
+                // ✅ تحديث الاسم
                 if (typeof name === 'string') v.name = name.trim();
 
+                // ✅ تحديث رقم الوسيلة (مع فحص التكرار)
                 if (typeof plateNumber === 'string' && plateNumber.trim() && plateNumber.trim() !== v.plateNumber) {
-                    const dup = await Vehicle.findOne({ plateNumber: plateNumber.trim(), _id: { $ne: v._id } });
+                    const dup = await Vehicle.findOne({
+                        plateNumber: plateNumber.trim(),
+                        _id: { $ne: v._id }
+                    });
                     if (dup) return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
                     v.plateNumber = plateNumber.trim();
                 }
 
+                // ✅ حقول بسيطة
                 if (type !== undefined) v.type = type;
                 if (typeof brand === 'string') v.brand = brand.trim();
                 if (typeof model === 'string') v.model = model.trim();
                 if (year !== undefined) v.year = Number(year) || null;
                 if (typeof color === 'string') v.color = color.trim();
 
+                // ✅ الإقليم والمنطقة (مع التحقق المرن)
                 const newRegion = (typeof region === 'string' && region.trim()) ? region.trim() : v.region;
-                const newZone = (typeof zone === 'string' && zone.trim()) ? zone.trim() : v.zone;
+                const newZone = (typeof zone === 'string') ? zone.trim() : v.zone;
 
                 if (region !== undefined || zone !== undefined) {
-                    const allowedZones = VEHICLE_ZONES[newRegion] || [];
-                    if (allowedZones.length > 0 && allowedZones.indexOf(newZone) === -1) {
+                    const zoneCheck = validateZone(newRegion, newZone);
+                    if (!zoneCheck.valid) {
+                        console.warn('⚠️ [VEHICLES] Zone rejected on PUT:',
+                            { region: newRegion, zone: newZone, reason: zoneCheck.reason });
                         return res.status(400).json({
                             success: false,
-                            error: 'المنطقة "' + newZone + '" لا تتبع "' + newRegion + '"'
+                            error: zoneCheck.reason
                         });
                     }
                 }
@@ -432,6 +508,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
                 if (appointmentDate !== undefined) v.appointmentDate = appointmentDate || null;
                 if (faultDate !== undefined) v.faultDate = faultDate || null;
 
+                // ✅ تاريخ العطب
                 if (v.status === 'معطبة' && (!v.faultDate || !String(v.faultDate).trim())) {
                     return res.status(400).json({
                         success: false,
