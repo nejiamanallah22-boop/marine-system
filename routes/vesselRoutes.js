@@ -1,16 +1,5 @@
 /**
- * 🚢 مسارات الوسائل البحرية
- * @module routes/vesselRoutes
- * @version 12.0.0
- *
- * ✨ v12.0 Features:
- * - دعم Cloudinary لرفع الصور
- * - memoryStorage → Cloudinary مباشر
- * - حدود 10 صور
- * - كامل مع الطرح
- * - disposed قبل /:id لتجنّب التعارض
- * - express-validator
- * - RBAC + CSRF
+ * 🚢 مسارات الوسائل البحرية — v12.1.0
  */
 
 const express = require('express');
@@ -19,22 +8,12 @@ const fs = require('fs');
 const { body, param, validationResult } = require('express-validator');
 
 const {
-    getVessels,
-    getVessel,
-    createVessel,
-    updateVessel,
-    deleteVessel
-} = require('../controllers/vesselController');
-
-const {
     authenticate,
     authorize,
     requirePermission
 } = require('../middleware/auth');
 
-// ═══════════════════════════════════════════════════════════
-// 🔐 CSRF Protection — استيراد مباشر (بدون Circular Dependency)
-// ═══════════════════════════════════════════════════════════
+// 🔐 CSRF Protection
 let csrfProtection = (req, res, next) => next();
 try {
     const csrfMiddleware = require('../middleware/csrfProtection');
@@ -51,14 +30,10 @@ try {
         } else if (typeof csrfMiddleware === 'function') {
             csrfProtection = csrfMiddleware;
         }
-    } catch (e2) {
-        // CSRF غير متوفر — يُطبَّق على مستوى server.js إن وجد
-    }
+    } catch (e2) {}
 }
 
-// ═══════════════════════════════════════════════════════════
-// 📸 Multer — رفع الصور (memoryStorage)
-// ═══════════════════════════════════════════════════════════
+// 📸 Multer
 let upload = null;
 try {
     upload = require('../middleware/uploadVesselImages');
@@ -68,17 +43,14 @@ try {
     upload = null;
 }
 
-// ═══════════════════════════════════════════════════════════
 // ☁️ Cloudinary
-// ═══════════════════════════════════════════════════════════
 let cloudinary = null;
 try {
     cloudinary = require('cloudinary').v2;
-    // تأكد من التهيئة (عادة عبر CLOUDINARY_URL env أو cloudinary.config())
     if (process.env.CLOUDINARY_URL) {
-        console.log('✅ [VESSELS] Cloudinary configured (from env)');
+        console.log('✅ [VESSELS] Cloudinary configured');
     } else {
-        console.log('ℹ️ [VESSELS] Cloudinary SDK loaded (using default config)');
+        console.log('ℹ️ [VESSELS] Cloudinary SDK loaded');
     }
 } catch (e) {
     console.error('❌ [VESSELS] Cloudinary FAILED:', e.message);
@@ -86,14 +58,51 @@ try {
 }
 
 const Vessel = require('../models/Vessel');
-
 const router = express.Router();
-
 const MAX_IMAGES = 10;
 
-// ============================================================
+// ═══════════════════════════════════════════════════════════
+// 📐 ثوابت تحويلات Cloudinary
+// ═══════════════════════════════════════════════════════════
+const IMAGE_TRANSFORMS = {
+    ORIGINAL: [
+        { width: 1920, height: 1920, crop: 'limit' },
+        { quality: 92 },
+        { fetch_format: 'auto' },
+        { flags: 'progressive' }
+    ],
+    THUMBNAIL: {
+        width: 240, height: 240,
+        crop: 'fill', gravity: 'auto',
+        quality: 90, fetch_format: 'auto',
+        flags: 'progressive', dpr: 'auto'
+    },
+    MEDIUM: {
+        width: 800, height: 800, crop: 'limit',
+        quality: 85, fetch_format: 'auto', flags: 'progressive'
+    }
+};
+
+// 🎨 buildImageUrls
+function buildImageUrls(baseUrl) {
+    if (!baseUrl || typeof baseUrl !== 'string') {
+        return { url: baseUrl || '', thumbUrl: '', mediumUrl: '', largeUrl: '' };
+    }
+    if (!baseUrl.includes('cloudinary.com') || !baseUrl.includes('/upload/')) {
+        return { url: baseUrl, thumbUrl: baseUrl, mediumUrl: baseUrl, largeUrl: baseUrl };
+    }
+    return {
+        url: baseUrl,
+        thumbUrl: baseUrl.replace('/upload/',
+            '/upload/w_240,h_240,c_fill,g_auto,q_90,f_auto,dpr_auto,fl_progressive/'),
+        mediumUrl: baseUrl.replace('/upload/',
+            '/upload/w_800,h_800,c_limit,q_85,f_auto,dpr_auto,fl_progressive/'),
+        largeUrl: baseUrl.replace('/upload/',
+            '/upload/w_1920,h_1920,c_limit,q_auto:best,f_auto,fl_progressive/')
+    };
+}
+
 // 🔧 HELPERS
-// ============================================================
 const checkValidation = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -108,22 +117,31 @@ const checkValidation = (req, res, next) => {
     next();
 };
 
+// 🎨 formatVessel
 function formatVessel(v) {
     if (!v) return null;
     const obj = v.toObject ? v.toObject() : v;
-    const images = Array.isArray(obj.images) ? obj.images.map(img => ({
-        _id: img._id ? img._id.toString() : null,
-        filename: img.filename || '',
-        originalName: img.originalName || '',
-        url: img.url || '',
-        size: img.size || 0,
-        mimetype: img.mimetype || '',
-        caption: img.caption || '',
-        isPrimary: !!img.isPrimary,
-        source: img.source || 'upload',
-        uploadedAt: img.uploadedAt || null,
-        uploadedBy: img.uploadedBy || 'system'
-    })) : [];
+    
+    const images = Array.isArray(obj.images) ? obj.images.map(img => {
+        const urls = buildImageUrls(img.url || '');
+        return {
+            _id: img._id ? img._id.toString() : null,
+            filename: img.filename || '',
+            originalName: img.originalName || '',
+            url: urls.url,
+            thumbUrl: urls.thumbUrl,
+            mediumUrl: urls.mediumUrl,
+            largeUrl: urls.largeUrl,
+            size: img.size || 0,
+            mimetype: img.mimetype || '',
+            caption: img.caption || '',
+            isPrimary: !!img.isPrimary,
+            source: img.source || 'upload',
+            uploadedAt: img.uploadedAt || null,
+            uploadedBy: img.uploadedBy || 'system'
+        };
+    }) : [];
+    
     const primary = images.find(i => i.isPrimary) || images[0] || null;
     obj.id = obj.id || (obj._id ? obj._id.toString() : null);
     obj.images = images;
@@ -132,6 +150,7 @@ function formatVessel(v) {
     return obj;
 }
 
+// 🔍 buildIdQuery
 function buildIdQuery(id) {
     if (!id || typeof id !== 'string') return null;
     const mongoose = require('mongoose');
@@ -141,23 +160,22 @@ function buildIdQuery(id) {
     return { id };
 }
 
-// ═══════════════════════════════════════════════════════════
-// ☁️ رفع صورة واحدة إلى Cloudinary
-// ═══════════════════════════════════════════════════════════
+// ☁️ رفع صورة
 async function uploadToCloudinary(file) {
     if (!cloudinary) {
-        throw new Error('Cloudinary غير مُفعَّل على الخادم');
+        throw new Error('Cloudinary غير مُفعَّل');
     }
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 folder: 'marine/vessels',
                 resource_type: 'image',
-                transformation: [
-                    { width: 1600, height: 1600, crop: 'limit' },
-                    { quality: 'auto:good' },
-                    { fetch_format: 'auto' }
-                ]
+                transformation: IMAGE_TRANSFORMS.ORIGINAL,
+                eager: [
+                    IMAGE_TRANSFORMS.THUMBNAIL,
+                    IMAGE_TRANSFORMS.MEDIUM
+                ],
+                eager_async: false
             },
             (error, result) => {
                 if (error) return reject(error);
@@ -168,35 +186,31 @@ async function uploadToCloudinary(file) {
     });
 }
 
-// ═══════════════════════════════════════════════════════════
-// ☁️ حذف صورة من Cloudinary
-// ═══════════════════════════════════════════════════════════
+// ☁️ حذف صورة
 async function deleteFromCloudinary(publicId) {
     if (!cloudinary || !publicId) return;
     try {
         await cloudinary.uploader.destroy(publicId);
-        console.log('🗑️ [VESSELS] Deleted from Cloudinary:', publicId);
+        console.log('🗑️ [VESSELS] Deleted:', publicId);
     } catch (e) {
-        console.warn('⚠️ [VESSELS] Cloudinary delete failed:', e.message);
+        console.warn('⚠️ [VESSELS] Delete failed:', e.message);
     }
 }
 
-// ============================================================
 // ✅ VALIDATORS
-// ============================================================
 const validateVesselId = [
     param('id')
         .isString().trim()
         .isLength({ min: 1, max: 64 })
-        .withMessage('معرف الوسيلة غير صالح')
+        .withMessage('معرف غير صالح')
         .matches(/^[a-zA-Z0-9_-]+$/)
-        .withMessage('معرف الوسيلة يحتوي على رموز غير مسموحة')
+        .withMessage('معرف يحتوي على رموز غير مسموحة')
 ];
 
 const validateVessel = [
     body('name').trim()
         .notEmpty().withMessage('اسم الوسيلة مطلوب')
-        .isLength({ min: 2, max: 100 }).withMessage('اسم الوسيلة بين 2 و 100 حرف'),
+        .isLength({ min: 2, max: 100 }).withMessage('الاسم بين 2 و 100 حرف'),
     body('num').optional({ checkFalsy: true }).trim().isLength({ max: 20 }),
     body('len').optional({ checkFalsy: true }).isFloat({ min: 0, max: 1000 }).toFloat(),
     body('region').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
@@ -204,8 +218,7 @@ const validateVessel = [
     body('port').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
     body('supp').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
     body('status').optional({ checkFalsy: true }).trim()
-        .isIn(['صالح', 'صيانة', 'معطب', 'احتياط', 'طرح',
-               'active', 'inactive', 'maintenance', 'reserve'])
+        .isIn(['صالح', 'صيانة', 'معطب', 'احتياط', 'طرح'])
         .withMessage('حالة غير صالحة'),
     body('break').optional({ checkFalsy: true }).trim().isLength({ max: 200 }),
     body('fDate').optional({ checkFalsy: true }).isISO8601(),
@@ -215,9 +228,7 @@ const validateVessel = [
     body('cat').optional({ checkFalsy: true }).trim().isLength({ max: 50 })
 ];
 
-// ============================================================
 // 🛡️ MIDDLEWARE
-// ============================================================
 router.use(authenticate);
 
 // ============================================================
@@ -225,10 +236,8 @@ router.use(authenticate);
 // ============================================================
 
 /* ============================================================
-   📌 ROUTES متقدمة أولاً (قبل /:id)
+   📌 GET /api/vessels/disposed — المطروحة
    ============================================================ */
-
-/* ✅ GET /api/vessels/disposed */
 router.get(
     '/disposed',
     requirePermission('vessels:read'),
@@ -266,7 +275,9 @@ router.get(
     }
 );
 
-/* ✅ GET /api/vessels/disposal-stats */
+/* ============================================================
+   📌 GET /api/vessels/disposal-stats — إحصائيات الطرح
+   ============================================================ */
 router.get(
     '/disposal-stats',
     requirePermission('vessels:read'),
@@ -303,40 +314,93 @@ router.get(
 );
 
 /* ============================================================
-   📌 CRUD الأساسي
+   📌 GET /api/vessels — inline مع thumbUrl
    ============================================================ */
-
-/* GET /api/vessels */
 router.get(
     '/',
     requirePermission('vessels:read'),
-    getVessels
+    async (req, res) => {
+        try {
+            const includeDisposed = req.query.includeDisposed === 'true';
+            const query = includeDisposed ? {} : { status: { $ne: 'طرح' } };
+            
+            const vessels = await Vessel.find(query)
+                .sort({ createdAt: -1 })
+                .limit(2000)
+                .lean();
+            
+            res.json(vessels.map(formatVessel));
+        } catch (e) {
+            console.error('❌ [VESSELS] GET /:', e.message);
+            res.status(500).json({ success: false, error: 'فشل تحميل الوسائل' });
+        }
+    }
 );
 
-/* POST /api/vessels */
+/* ============================================================
+   📌 POST /api/vessels — إضافة وسيلة
+   ============================================================ */
 router.post(
     '/',
     authorize('admin', 'manager'),
     csrfProtection,
     validateVessel,
     checkValidation,
-    createVessel
+    async (req, res) => {
+        try {
+            const { v4: uuidv4 } = require('uuid');
+            const data = { ...req.body };
+            
+            data.id = data.id || uuidv4();
+            data.createdBy = req.user.name || req.user.username || 'system';
+            
+            const vessel = new Vessel(data);
+            await vessel.save();
+            
+            console.log(`✅ [VESSELS] Created "${vessel.name}"`);
+            
+            res.status(201).json({
+                success: true,
+                message: 'تم إضافة الوسيلة بنجاح',
+                vessel: formatVessel(vessel)
+            });
+        } catch (e) {
+            console.error('❌ [VESSELS] POST:', e.message);
+            if (e.name === 'ValidationError') {
+                return res.status(400).json({ success: false, error: e.message });
+            }
+            res.status(500).json({ success: false, error: 'خطأ في الإضافة' });
+        }
+    }
 );
 
 /* ============================================================
-   📌 ROUTES خاصة بـ :id — بعد /disposed
+   📌 GET /api/vessels/:id — inline
    ============================================================ */
-
-/* GET /api/vessels/:id */
 router.get(
     '/:id',
     validateVesselId,
     checkValidation,
     requirePermission('vessels:read'),
-    getVessel
+    async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+            
+            const vessel = await Vessel.findOne(q).lean();
+            if (!vessel) return res.status(404).json({ success: false, error: 'غير موجود' });
+            
+            res.json(formatVessel(vessel));
+        } catch (e) {
+            console.error('❌ [VESSELS] GET /:id:', e.message);
+            res.status(500).json({ success: false, error: 'فشل التحميل' });
+        }
+    }
 );
 
-/* PUT /api/vessels/:id */
+/* ============================================================
+   📌 PUT /api/vessels/:id
+   ============================================================ */
 router.put(
     '/:id',
     authorize('admin', 'manager'),
@@ -344,10 +408,43 @@ router.put(
     validateVesselId,
     validateVessel,
     checkValidation,
-    updateVessel
+    async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const vessel = await Vessel.findOne(q);
+            if (!vessel) return res.status(404).json({ success: false, error: 'غير موجود' });
+
+            const allowed = [
+                'name', 'num', 'len', 'region', 'zone', 'port', 'cat', 'supp',
+                'ref', 'type', 'location', 'status', 'stat', 'break', 'fDate',
+                'eDate', 'repairUnit'
+            ];
+            allowed.forEach(field => {
+                if (req.body[field] !== undefined) {
+                    vessel[field] = req.body[field];
+                }
+            });
+            
+            vessel.updatedAt = new Date();
+            await vessel.save();
+
+            res.json({
+                success: true,
+                message: 'تم تحديث الوسيلة',
+                vessel: formatVessel(vessel)
+            });
+        } catch (e) {
+            console.error('❌ [VESSELS] PUT:', e.message);
+            res.status(500).json({ success: false, error: 'خطأ في التحديث' });
+        }
+    }
 );
 
-/* PATCH /api/vessels/:id */
+/* ============================================================
+   📌 PATCH /api/vessels/:id
+   ============================================================ */
 router.patch(
     '/:id',
     authorize('admin', 'manager'),
@@ -355,24 +452,79 @@ router.patch(
     validateVesselId,
     validateVessel,
     checkValidation,
-    updateVessel
+    async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const vessel = await Vessel.findOne(q);
+            if (!vessel) return res.status(404).json({ success: false, error: 'غير موجود' });
+
+            const allowed = [
+                'name', 'num', 'len', 'region', 'zone', 'port', 'cat', 'supp',
+                'ref', 'type', 'location', 'status', 'stat', 'break', 'fDate',
+                'eDate', 'repairUnit'
+            ];
+            allowed.forEach(field => {
+                if (req.body[field] !== undefined) {
+                    vessel[field] = req.body[field];
+                }
+            });
+            
+            vessel.updatedAt = new Date();
+            await vessel.save();
+
+            res.json({
+                success: true,
+                message: 'تم تحديث الوسيلة',
+                vessel: formatVessel(vessel)
+            });
+        } catch (e) {
+            console.error('❌ [VESSELS] PATCH:', e.message);
+            res.status(500).json({ success: false, error: 'خطأ في التحديث' });
+        }
+    }
 );
 
-/* DELETE /api/vessels/:id */
+/* ============================================================
+   📌 DELETE /api/vessels/:id
+   ============================================================ */
 router.delete(
     '/:id',
     authorize('admin'),
     csrfProtection,
     validateVesselId,
     checkValidation,
-    deleteVessel
+    async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+            const vessel = await Vessel.findOne(q);
+            if (!vessel) return res.status(404).json({ success: false, error: 'غير موجود' });
+
+            // حذف الصور من Cloudinary
+            if (vessel.images && vessel.images.length > 0) {
+                for (const img of vessel.images) {
+                    if (img.filename) {
+                        await deleteFromCloudinary(img.filename);
+                    }
+                }
+            }
+
+            await Vessel.deleteOne({ _id: vessel._id });
+
+            res.json({ success: true, message: 'تم حذف الوسيلة' });
+        } catch (e) {
+            console.error('❌ [VESSELS] DELETE:', e.message);
+            res.status(500).json({ success: false, error: 'خطأ في الحذف' });
+        }
+    }
 );
 
 /* ============================================================
-   ⚫ ROUTES الطرح
+   ⚫ POST /api/vessels/:id/dispose
    ============================================================ */
-
-/* POST /api/vessels/:id/dispose */
 router.post(
     '/:id/dispose',
     authorize('admin', 'manager'),
@@ -385,10 +537,10 @@ router.post(
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
             const v = await Vessel.findOne(q);
-            if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+            if (!v) return res.status(404).json({ success: false, error: 'غير موجود' });
 
             if (v.status === 'طرح') {
-                return res.status(400).json({ success: false, error: 'المركب مطروح مسبقاً' });
+                return res.status(400).json({ success: false, error: 'مطروح مسبقاً' });
             }
 
             const { reason, decision, disposedBy, notes, date } = req.body || {};
@@ -416,7 +568,9 @@ router.post(
     }
 );
 
-/* POST /api/vessels/:id/restore */
+/* ============================================================
+   ♻️ POST /api/vessels/:id/restore
+   ============================================================ */
 router.post(
     '/:id/restore',
     authorize('admin', 'manager'),
@@ -429,10 +583,10 @@ router.post(
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
             const v = await Vessel.findOne(q);
-            if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+            if (!v) return res.status(404).json({ success: false, error: 'غير موجود' });
 
             if (v.status !== 'طرح') {
-                return res.status(400).json({ success: false, error: 'المركب غير مطروح' });
+                return res.status(400).json({ success: false, error: 'غير مطروح' });
             }
 
             const { newStatus } = req.body || {};
@@ -502,10 +656,17 @@ if (upload && cloudinary) {
                     const file = filesToAdd[i];
                     try {
                         const result = await uploadToCloudinary(file);
+                        
+                        // ✅ بناء الروابط الثلاثة
+                        const urls = buildImageUrls(result.secure_url);
+                        
                         uploadedImages.push({
                             filename: result.public_id,
                             originalName: file.originalname,
                             url: result.secure_url,
+                            thumbUrl: urls.thumbUrl,
+                            mediumUrl: urls.mediumUrl,
+                            largeUrl: urls.largeUrl,
                             size: result.bytes || file.size,
                             mimetype: file.mimetype,
                             caption: caption,
@@ -518,7 +679,7 @@ if (upload && cloudinary) {
                         console.error('❌ [VESSELS] Cloudinary upload failed:', uploadErr.message);
                         return res.status(500).json({
                             success: false,
-                            error: 'فشل رفع الصورة إلى Cloudinary: ' + uploadErr.message
+                            error: 'فشل رفع الصورة: ' + uploadErr.message
                         });
                     }
                 }
@@ -526,7 +687,7 @@ if (upload && cloudinary) {
                 v.images.push(...uploadedImages);
                 await v.save();
 
-                console.log(`✅ [VESSELS] Uploaded ${uploadedImages.length} images for vessel "${v.name}"`);
+                console.log(`✅ [VESSELS] Uploaded ${uploadedImages.length} images for "${v.name}"`);
 
                 res.json({
                     success: true,
