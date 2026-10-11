@@ -12,20 +12,17 @@
 
 <style>
 /* ═══════════════════════════════════════════════════════════════ */
-/* 🎨 MARINE SYSTEM — PROFESSIONAL PRINT STYLESHEET v1.0         */
-/* 🌍 International Standards — Government Report Style          */
+/* 🎨 MARINE SYSTEM — PROFESSIONAL PRINT STYLESHEET v2.0         */
+/* 🌍 International Standards + Zoom Controls                    */
 /* ═══════════════════════════════════════════════════════════════ */
 
-/* ── Root Variables ── */
 :root {
-    /* Primary Palette */
     --navy: #0a1628;
     --navy-light: #1a2942;
     --gold: #c9a961;
     --gold-light: #e0c88a;
     --gold-dark: #9d7f3f;
     
-    /* Semantic Colors */
     --success: #10b981;
     --success-bg: #ecfdf5;
     --danger: #dc2626;
@@ -35,7 +32,6 @@
     --info: #3b82f6;
     --info-bg: #eff6ff;
     
-    /* Neutrals */
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
@@ -47,9 +43,14 @@
     --gray-800: #1f2937;
     --gray-900: #111827;
     
-    /* Typography */
     --font-primary: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
     --font-mono: 'Courier New', monospace;
+    
+    /* Zoom Variables */
+    --zoom-font: 100%;
+    --zoom-table: 100%;
+    --zoom-row: 100%;
+    --zoom-image: 100%;
 }
 
 /* ── Reset & Base ── */
@@ -74,7 +75,7 @@ html, body {
 
 /* ── Print Page Container (A4 Landscape) ── */
 .page {
-    width: 297mm;          /* A4 Landscape */
+    width: 297mm;
     min-height: 210mm;
     margin: 10mm auto;
     padding: 12mm 15mm 15mm 15mm;
@@ -84,7 +85,7 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* 🏛️ OFFICIAL HEADER — الجمهورية التونسية                        */
+/* 🏛️ OFFICIAL HEADER                                            */
 /* ═══════════════════════════════════════════════════════════════ */
 .official-header {
     display: grid;
@@ -182,7 +183,7 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* 📊 KPI SECTION — الإحصائيات الرئيسية                          */
+/* 📊 KPI SECTION                                                 */
 /* ═══════════════════════════════════════════════════════════════ */
 .kpi-section {
     display: grid;
@@ -217,7 +218,7 @@ html, body {
 .kpi-card.gold::before { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
 
 .kpi-value {
-    font-size: 22pt;
+    font-size: calc(22pt * var(--zoom-font) / 100);
     font-weight: 900;
     color: var(--navy);
     line-height: 1;
@@ -231,14 +232,14 @@ html, body {
 .kpi-card.gold .kpi-value { color: var(--gold-dark); }
 
 .kpi-label {
-    font-size: 8.5pt;
+    font-size: calc(8.5pt * var(--zoom-font) / 100);
     color: var(--gray-600);
     font-weight: 600;
     letter-spacing: 0.2px;
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* 📋 SECTION TITLE                                              */
+/* 📋 SECTION TITLE                                               */
 /* ═══════════════════════════════════════════════════════════════ */
 .section-title {
     display: flex;
@@ -249,7 +250,7 @@ html, body {
     color: #ffffff;
     border-radius: 2mm 2mm 0 0;
     margin-bottom: 0;
-    font-size: 10pt;
+    font-size: calc(10pt * var(--zoom-font) / 100);
     font-weight: 700;
 }
 
@@ -259,7 +260,7 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* 📊 DATA TABLE — الجدول الرئيسي                                */
+/* 📊 DATA TABLE                                                  */
 /* ═══════════════════════════════════════════════════════════════ */
 .table-wrapper {
     border: 1px solid var(--gray-300);
@@ -272,7 +273,7 @@ html, body {
 table.data-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 7.5pt;
+    font-size: calc(7.5pt * var(--zoom-table) / 100);
     table-layout: fixed;
 }
 
@@ -285,7 +286,7 @@ table.data-table thead th {
     padding: 2.5mm 1.5mm;
     font-weight: 700;
     color: var(--navy);
-    font-size: 8pt;
+    font-size: calc(8pt * var(--zoom-table) / 100);
     text-align: center;
     border-bottom: 1.5px solid var(--navy);
     border-left: 1px solid var(--gray-200);
@@ -301,7 +302,7 @@ table.data-table thead th:last-child {
 table.data-table tbody tr {
     page-break-inside: avoid;
     break-inside: avoid;
-    height: 9mm;
+    height: calc(9mm * var(--zoom-row) / 100);
 }
 
 table.data-table tbody tr:nth-child(even) {
@@ -313,18 +314,18 @@ table.data-table tbody tr:hover {
 }
 
 table.data-table tbody td {
-    padding: 1.5mm 1mm;
+    padding: calc(1.5mm * var(--zoom-row) / 100) 1mm;
     text-align: center;
     vertical-align: middle;
     border-bottom: 1px solid var(--gray-200);
     border-left: 1px solid var(--gray-200);
-    font-size: 7pt;
+    font-size: calc(7pt * var(--zoom-table) / 100);
     color: var(--gray-800);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     line-height: 1.3;
-    height: 9mm;
+    height: calc(9mm * var(--zoom-row) / 100);
 }
 
 table.data-table tbody td:last-child {
@@ -335,15 +336,14 @@ table.data-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-/* Cell types */
 td.cell-image {
-    width: 12mm;
+    width: calc(12mm * var(--zoom-image) / 100);
     padding: 1mm;
 }
 
 td.cell-image img {
-    width: 8mm;
-    height: 8mm;
+    width: calc(8mm * var(--zoom-image) / 100);
+    height: calc(8mm * var(--zoom-image) / 100);
     object-fit: cover;
     border-radius: 1mm;
     border: 1px solid var(--gray-300);
@@ -352,8 +352,8 @@ td.cell-image img {
 }
 
 td.cell-image .no-image {
-    width: 8mm;
-    height: 8mm;
+    width: calc(8mm * var(--zoom-image) / 100);
+    height: calc(8mm * var(--zoom-image) / 100);
     margin: 0 auto;
     background: var(--gray-100);
     border: 1px dashed var(--gray-300);
@@ -362,24 +362,24 @@ td.cell-image .no-image {
     align-items: center;
     justify-content: center;
     color: var(--gray-400);
-    font-size: 10pt;
+    font-size: calc(10pt * var(--zoom-image) / 100);
 }
 
 td.cell-number {
     font-family: var(--font-mono);
     font-weight: 700;
     color: var(--navy);
-    font-size: 7.5pt;
+    font-size: calc(7.5pt * var(--zoom-table) / 100);
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* 🏷️ STATUS BADGES — شارات الحالة                                */
+/* 🏷️ STATUS BADGES                                               */
 /* ═══════════════════════════════════════════════════════════════ */
 .badge {
     display: inline-block;
     padding: 0.5mm 2mm;
     border-radius: 3mm;
-    font-size: 6.5pt;
+    font-size: calc(6.5pt * var(--zoom-table) / 100);
     font-weight: 700;
     letter-spacing: 0.2px;
     white-space: nowrap;
@@ -418,7 +418,7 @@ td.cell-number {
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* 📄 FOOTER — التذييل الرسمي                                     */
+/* 📄 FOOTER                                                      */
 /* ═══════════════════════════════════════════════════════════════ */
 .official-footer {
     margin-top: 6mm;
@@ -428,7 +428,7 @@ td.cell-number {
     grid-template-columns: 1fr auto 1fr;
     gap: 5mm;
     align-items: center;
-    font-size: 8pt;
+    font-size: calc(8pt * var(--zoom-font) / 100);
     color: var(--gray-600);
 }
 
@@ -453,18 +453,18 @@ td.cell-number {
     background: var(--navy);
     color: #ffffff;
     border-radius: 2mm;
-    font-size: 8pt;
+    font-size: calc(8pt * var(--zoom-font) / 100);
     font-weight: 700;
     letter-spacing: 0.5px;
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* 🎛️ CONTROLS (لا تُطبع)                                         */
+/* 🎛️ CONTROLS                                                    */
 /* ═══════════════════════════════════════════════════════════════ */
 .controls {
     position: fixed;
     top: 20px;
-    left: 20px;
+    right: 20px;
     display: flex;
     gap: 10px;
     z-index: 9999;
@@ -510,97 +510,186 @@ td.cell-number {
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* 🖨️ PRINT MEDIA QUERIES                                        */
+/* 🔍 ZOOM CONTROLS                                               */
 /* ═══════════════════════════════════════════════════════════════ */
-@page {
-    size: A4 landscape;
-    margin: 8mm 10mm;
+.zoom-controls {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 300px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--gray-200);
+    z-index: 9999;
+    direction: rtl;
+    overflow: hidden;
+    transition: all 0.3s ease;
 }
 
-@media print {
-    html, body {
-        background: #ffffff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    .controls {
-        display: none !important;
-    }
-    
-    .page {
-        width: 100% !important;
-        min-height: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        background: #ffffff !important;
-    }
-    
-    /* تكرار الترويسة على كل صفحة */
-    .official-header {
-        page-break-after: avoid;
-        break-after: avoid;
-    }
-    
-    .official-footer {
-        page-break-before: avoid;
-        break-before: avoid;
-    }
-    
-    table.data-table {
-        page-break-inside: auto;
-    }
-    
-    table.data-table thead {
-        display: table-header-group;
-    }
-    
-    table.data-table tbody tr {
-        page-break-inside: avoid;
-    }
-    
-    /* منع قطع العناصر */
-    .kpi-section,
-    .section-title {
-        page-break-inside: avoid;
-        break-inside: avoid;
-    }
-    
-    /* ضمان الألوان */
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
+.zoom-controls .zoom-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #0a1628 0%, #1a2942 100%);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+}
+
+.zoom-controls .zoom-title span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zoom-controls .zoom-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.zoom-controls .zoom-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.zoom-controls .zoom-body {
+    padding: 14px 16px;
+    max-height: 600px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.zoom-controls.collapsed .zoom-body {
+    max-height: 0;
+    padding: 0 16px;
+}
+
+.zoom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.zoom-row label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--gray-700);
+    flex: 0 0 auto;
+    min-width: 65px;
+}
+
+.zoom-row button {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--gray-300);
+    background: #fff;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.15s;
+}
+
+.zoom-row button:hover {
+    background: var(--navy);
+    color: #fff;
+    border-color: var(--navy);
+    transform: scale(1.05);
+}
+
+.zoom-row button:active {
+    transform: scale(0.92);
+}
+
+.zoom-row .zoom-value {
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--navy);
+    min-width: 55px;
+    text-align: center;
+    padding: 6px 8px;
+    background: var(--gray-100);
+    border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.zoom-presets {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.zoom-presets button {
+    flex: 1;
+    padding: 10px 0;
+    border: 1px solid var(--gray-300);
+    background: #fff;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.zoom-presets button:hover {
+    background: var(--gray-100);
+    transform: translateY(-2px);
+}
+
+.zoom-presets button.active {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    color: var(--navy);
+    border-color: var(--gold);
+    box-shadow: 0 4px 12px rgba(201, 169, 97, 0.4);
+}
+
+.zoom-reset {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.zoom-reset:hover {
+    background: #fee2e2;
+    transform: translateY(-1px);
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* 📱 RESPONSIVE (للشاشة)                                        */
-/* ═══════════════════════════════════════════════════════════════ */
-@media screen and (max-width: 1024px) {
-    .page {
-        width: 100%;
-        margin: 5mm;
-        padding: 8mm;
-    }
-    
-    .kpi-section {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .official-header {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 5mm;
-    }
-    
-    .header-left, .header-right {
-        text-align: center;
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════════ */
-/* ✨ LOADING STATE                                              */
+/* ✨ LOADING                                                      */
 /* ═══════════════════════════════════════════════════════════════ */
 .loading-overlay {
     position: fixed;
@@ -635,6 +724,116 @@ td.cell-number {
     color: var(--gray-600);
     font-weight: 600;
 }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* 📱 RESPONSIVE                                                   */
+/* ═══════════════════════════════════════════════════════════════ */
+@media screen and (max-width: 1024px) {
+    .page {
+        width: 100%;
+        margin: 5mm;
+        padding: 8mm;
+    }
+    
+    .kpi-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .official-header {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 5mm;
+    }
+    
+    .header-left, .header-right {
+        text-align: center;
+    }
+    
+    .zoom-controls {
+        width: 280px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .zoom-controls {
+        top: auto;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+    }
+    
+    .controls {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        justify-content: center;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* 🖨️ PRINT MEDIA                                                  */
+/* ═══════════════════════════════════════════════════════════════ */
+@page {
+    size: A4 landscape;
+    margin: 8mm 10mm;
+}
+
+@media print {
+    html, body {
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .controls,
+    .zoom-controls,
+    .loading-overlay {
+        display: none !important;
+    }
+    
+    .page {
+        width: 100% !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+    }
+    
+    .official-header {
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+    
+    .official-footer {
+        page-break-before: avoid;
+        break-before: avoid;
+    }
+    
+    table.data-table {
+        page-break-inside: auto;
+    }
+    
+    table.data-table thead {
+        display: table-header-group;
+    }
+    
+    table.data-table tbody tr {
+        page-break-inside: avoid;
+    }
+    
+    .kpi-section,
+    .section-title {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
 </style>
 </head>
 <body>
@@ -649,8 +848,55 @@ td.cell-number {
     </button>
 </div>
 
+<!-- 🔍 ZOOM CONTROLS -->
+<div class="zoom-controls" id="zoomControls">
+    <div class="zoom-title" onclick="toggleZoomPanel()">
+        <span>🔍 حجم الطباعة</span>
+        <button class="zoom-toggle" id="zoomToggle">−</button>
+    </div>
+    <div class="zoom-body" id="zoomBody">
+        <div class="zoom-row">
+            <label>📝 الخط:</label>
+            <button onclick="adjustZoom('font', -1)">−</button>
+            <span class="zoom-value" id="fontZoomValue">100%</span>
+            <button onclick="adjustZoom('font', 1)">+</button>
+        </div>
+        <div class="zoom-row">
+            <label>📊 الجدول:</label>
+            <button onclick="adjustZoom('table', -1)">−</button>
+            <span class="zoom-value" id="tableZoomValue">100%</span>
+            <button onclick="adjustZoom('table', 1)">+</button>
+        </div>
+        <div class="zoom-row">
+            <label>📐 الصفوف:</label>
+            <button onclick="adjustZoom('row', -1)">−</button>
+            <span class="zoom-value" id="rowZoomValue">100%</span>
+            <button onclick="adjustZoom('row', 1)">+</button>
+        </div>
+        <div class="zoom-row">
+            <label>🖼️ الصور:</label>
+            <button onclick="adjustZoom('image', -1)">−</button>
+            <span class="zoom-value" id="imageZoomValue">100%</span>
+            <button onclick="adjustZoom('image', 1)">+</button>
+        </div>
+        <div class="zoom-presets">
+            <button onclick="applyPreset('small')" title="صغير جداً (75%)">ص</button>
+            <button onclick="applyPreset('normal')" class="active" title="عادي (100%)">ع</button>
+            <button onclick="applyPreset('large')" title="كبير (125%)">ك</button>
+            <button onclick="applyPreset('huge')" title="ضخم (150%)">ض</button>
+        </div>
+        <button class="zoom-reset" onclick="resetZoom()">🔄 إعادة ضبط</button>
+    </div>
+</div>
+
+<!-- ⏳ Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">جاري تحضير التقرير...</div>
+</div>
+
 <!-- 📄 Page Content -->
-<div class="page" id="pageContent">
+<div class="page" id="pageContent" style="display: none;">
 
     <!-- 🏛️ الترويسة الرسمية -->
     <header class="official-header">
@@ -706,52 +952,69 @@ td.cell-number {
     </footer>
 </div>
 
-<!-- Scripts -->
 <script>
 // ═══════════════════════════════════════════════════════════════
-// 🖨️ PRINT CONTROLLER — يجلب البيانات ويعرضها
+// 🖨️ PRINT CONTROLLER
 // ═══════════════════════════════════════════════════════════════
 (function() {
     'use strict';
     
     const params = new URLSearchParams(location.search);
     const pageType = params.get('type') || 'fleet';
+    const storageKey = params.get('key') || 'print_data';
     
-    // ═══ إعدادات كل نوع صفحة ═══
     const PAGE_CONFIGS = {
         fleet: {
             title: 'السجل العام للأسطول',
             subtitle: 'Fleet General Registry',
-            section: 'السجل التفصيلي للمراكب',
-            storageKey: 'print_fleet_data'
+            section: 'السجل التفصيلي للمراكب'
         },
         vehicles: {
             title: 'الوسائل البرية - الحرس البحري',
             subtitle: 'Land Vehicles — Coast Guard',
-            section: 'السجل التفصيلي للوسائل البرية',
-            storageKey: 'print_vehicles_data'
+            section: 'السجل التفصيلي للوسائل البرية'
         },
         maintenance: {
             title: 'سجل الصيانة والتدخلات',
             subtitle: 'Maintenance & Interventions Log',
-            section: 'سجل عمليات الصيانة',
-            storageKey: 'print_maintenance_data'
+            section: 'سجل عمليات الصيانة'
         },
         users: {
             title: 'إدارة المستخدمين',
             subtitle: 'Users Management',
-            section: 'قائمة المستخدمين',
-            storageKey: 'print_users_data'
+            section: 'قائمة المستخدمين'
+        },
+        efficiency: {
+            title: 'جاهزية الأسطول',
+            subtitle: 'Fleet Efficiency',
+            section: 'تحليل الجاهزية حسب الفئة'
         }
     };
     
-    const config = PAGE_CONFIGS[pageType] || PAGE_CONFIGS.fleet;
+    const config = { ...(PAGE_CONFIGS[pageType] || PAGE_CONFIGS.fleet) };
     
-    // ═══ تحديث العناوين ═══
-    document.getElementById('pageTitle').textContent = config.title;
-    document.getElementById('pageSubtitle').textContent = config.subtitle;
-    document.getElementById('sectionTitle').textContent = config.section;
-    document.title = config.title + ' — طباعة';
+    // ═══ جلب البيانات ═══
+    function loadData() {
+        try {
+            const raw = localStorage.getItem(storageKey);
+            if (raw) return JSON.parse(raw);
+        } catch (e) {
+            console.warn('⚠️ No cached data:', e.message);
+        }
+        return { stats: [], columns: [], rows: [] };
+    }
+    
+    const data = loadData();
+    
+    // ═══ تحديث العناوين (من البيانات إن وُجدت) ═══
+    const title = data.title || config.title;
+    const subtitle = data.subtitle || config.subtitle;
+    const section = data.sectionTitle || data.section || config.section;
+    
+    document.getElementById('pageTitle').textContent = title;
+    document.getElementById('pageSubtitle').textContent = subtitle;
+    document.getElementById('sectionTitle').textContent = section;
+    document.title = title + ' — طباعة';
     
     // ═══ التاريخ ═══
     const now = new Date();
@@ -761,18 +1024,7 @@ td.cell-number {
     });
     document.getElementById('printDate').textContent = dateStr;
     
-    // ═══ جلب البيانات ═══
-    function loadData() {
-        try {
-            const raw = localStorage.getItem(config.storageKey);
-            if (raw) return JSON.parse(raw);
-        } catch (e) {
-            console.warn('⚠️ No cached data:', e.message);
-        }
-        return { stats: [], columns: [], rows: [] };
-    }
-    
-    // ═══ بناء الإحصائيات ═══
+    // ═══ بناء KPIs ═══
     function buildKPI(stats) {
         const container = document.getElementById('kpiSection');
         if (!stats || !stats.length) {
@@ -796,14 +1048,12 @@ td.cell-number {
         const thead = document.getElementById('tableHead');
         const tbody = document.getElementById('tableBody');
         
-        // رأس الجدول
         if (columns && columns.length) {
             thead.innerHTML = '<tr>' + columns.map(c => 
-                `<th>${typeof c === 'string' ? c : c.label}</th>`
+                `<th>${typeof c === 'string' ? c : (c.label || '')}</th>`
             ).join('') + '</tr>';
         }
         
-        // جسم الجدول
         if (!rows || !rows.length) {
             tbody.innerHTML = `
                 <tr>
@@ -818,25 +1068,21 @@ td.cell-number {
         
         tbody.innerHTML = rows.map(row => {
             const cells = Array.isArray(row) ? row : Object.values(row);
-            return '<tr>' + cells.map((cell, i) => {
-                // كشف نوع الخلية
+            return '<tr>' + cells.map(cell => {
+                // كائن
                 if (typeof cell === 'object' && cell !== null) {
-                    // صورة
                     if (cell.type === 'image') {
                         if (cell.url) {
                             return `<td class="cell-image"><img src="${cell.url}" alt="" loading="eager" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>📷</div>'"></td>`;
                         }
                         return `<td class="cell-image"><div class="no-image">📷</div></td>`;
                     }
-                    // شارة
                     if (cell.type === 'badge') {
                         return `<td><span class="badge badge-${cell.variant || 'neutral'}">${cell.text || ''}</span></td>`;
                     }
-                    // رقم
                     if (cell.type === 'number') {
                         return `<td class="cell-number">${cell.value || ''}</td>`;
                     }
-                    // افتراضي
                     return `<td>${cell.value || cell.text || '—'}</td>`;
                 }
                 
@@ -845,7 +1091,7 @@ td.cell-number {
                     return '<td>—</td>';
                 }
                 
-                // كشف الصور من URL
+                // كشف صور من URL
                 if (typeof cell === 'string' && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(cell)) {
                     return `<td class="cell-image"><img src="${cell}" alt="" loading="eager"></td>`;
                 }
@@ -856,27 +1102,126 @@ td.cell-number {
     }
     
     // ═══ تشغيل ═══
-    try {
-        const data = loadData();
-        buildKPI(data.stats);
-        buildTable(data.columns, data.rows);
+    function init() {
+        const overlay = document.getElementById('loadingOverlay');
+        const pageContent = document.getElementById('pageContent');
         
-        console.log('%c✅ Print page ready', 
-            'background:#10b981;color:white;padding:4px 8px;border-radius:4px;');
-        console.log('   Type:', pageType);
-        console.log('   Rows:', data.rows?.length || 0);
-        console.log('   Stats:', data.stats?.length || 0);
-        
-        // تحميل الصور قبل الطباعة
-        window.addEventListener('beforeprint', () => {
-            document.querySelectorAll('img').forEach(img => {
-                img.loading = 'eager';
+        setTimeout(() => {
+            buildKPI(data.stats);
+            buildTable(data.columns, data.rows);
+            
+            if (overlay) overlay.style.display = 'none';
+            if (pageContent) pageContent.style.display = 'block';
+            
+            console.log('%c✅ Print page ready', 
+                'background:#10b981;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;');
+            console.log('   Type:', pageType);
+            console.log('   Rows:', data.rows?.length || 0);
+            console.log('   Stats:', data.stats?.length || 0);
+            
+            window.addEventListener('beforeprint', () => {
+                document.querySelectorAll('img').forEach(img => {
+                    img.loading = 'eager';
+                });
             });
-        });
-        
-    } catch (e) {
-        console.error('❌ Print error:', e);
+        }, 300);
     }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// 🔍 ZOOM SYSTEM
+// ═══════════════════════════════════════════════════════════════
+(function() {
+    'use strict';
+    
+    const DEFAULTS = { font: 100, table: 100, row: 100, image: 100 };
+    const LIMITS = { min: 50, max: 200, step: 5 };
+    
+    let zoomState = { ...DEFAULTS };
+    try {
+        const saved = localStorage.getItem('print_zoom');
+        if (saved) zoomState = { ...DEFAULTS, ...JSON.parse(saved) };
+    } catch (e) {}
+    
+    function applyZoom() {
+        const root = document.documentElement;
+        
+        root.style.setProperty('--zoom-font', zoomState.font + '%');
+        root.style.setProperty('--zoom-table', zoomState.table + '%');
+        root.style.setProperty('--zoom-row', zoomState.row + '%');
+        root.style.setProperty('--zoom-image', zoomState.image + '%');
+        
+        const fontEl = document.getElementById('fontZoomValue');
+        const tableEl = document.getElementById('tableZoomValue');
+        const rowEl = document.getElementById('rowZoomValue');
+        const imageEl = document.getElementById('imageZoomValue');
+        
+        if (fontEl) fontEl.textContent = zoomState.font + '%';
+        if (tableEl) tableEl.textContent = zoomState.table + '%';
+        if (rowEl) rowEl.textContent = zoomState.row + '%';
+        if (imageEl) imageEl.textContent = zoomState.image + '%';
+        
+        try {
+            localStorage.setItem('print_zoom', JSON.stringify(zoomState));
+        } catch (e) {}
+    }
+    
+    window.adjustZoom = function(type, direction) {
+        if (!zoomState.hasOwnProperty(type)) return;
+        const newValue = zoomState[type] + (direction * LIMITS.step);
+        zoomState[type] = Math.max(LIMITS.min, Math.min(LIMITS.max, newValue));
+        document.querySelectorAll('.zoom-presets button').forEach(b => b.classList.remove('active'));
+        applyZoom();
+    };
+    
+    window.applyPreset = function(preset) {
+        const PRESETS = {
+            small:  { font: 75,  table: 80,  row: 80,  image: 80 },
+            normal: { font: 100, table: 100, row: 100, image: 100 },
+            large:  { font: 125, table: 120, row: 120, image: 120 },
+            huge:   { font: 150, table: 140, row: 140, image: 140 }
+        };
+        
+        zoomState = { ...(PRESETS[preset] || DEFAULTS) };
+        applyZoom();
+        
+        document.querySelectorAll('.zoom-presets button').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`.zoom-presets button[onclick="applyPreset('${preset}')"]`);
+        if (btn) btn.classList.add('active');
+    };
+    
+    window.resetZoom = function() {
+        zoomState = { ...DEFAULTS };
+        applyZoom();
+        document.querySelectorAll('.zoom-presets button').forEach(b => b.classList.remove('active'));
+        const normalBtn = document.querySelector(`.zoom-presets button[onclick="applyPreset('normal')"]`);
+        if (normalBtn) normalBtn.classList.add('active');
+    };
+    
+    window.toggleZoomPanel = function() {
+        const panel = document.getElementById('zoomControls');
+        if (!panel) return;
+        panel.classList.toggle('collapsed');
+        const toggle = panel.querySelector('.zoom-toggle');
+        if (toggle) {
+            toggle.textContent = panel.classList.contains('collapsed') ? '+' : '−';
+        }
+    };
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyZoom);
+    } else {
+        applyZoom();
+    }
+    
+    console.log('%c🔍 Zoom System Ready', 
+        'background:#c9a961;color:#0a1628;padding:4px 8px;border-radius:4px;font-weight:bold;');
 })();
 </script>
 
