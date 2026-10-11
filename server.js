@@ -1,4 +1,4 @@
-// ============================================================
+/ ============================================================
 // 🚢 MARINE SYSTEM - PROFESSIONAL SERVER v11.1.0
 // 🔐 JWT + REFRESH + CSRF + SESSION + RBAC + MongoDB
 // 🤖 AI + IMPORT + SETTINGS + LOGO
@@ -43,8 +43,8 @@ function isSensitivePath(urlPath) {
     return false;
 }
 
-const DUMMY_BCRYPT_HASH = '$2a$12$C6UzMDM.H6dfI/f/IKcEeO7Z4x1yFzFqW1Xt2VvK4W8Q9pZkqH1L2';
-
+// ✅ hash صالح لـ bcrypt rounds=12 لكلمة "dummy"
+const DUMMY_BCRYPT_HASH = '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyZOKZ8qP5TlHy';
 function validateString(v, { min = 0, max = 255, required = false, trim = true } = {}) {
     if (v === undefined || v === null) return required ? null : '';
     if (typeof v !== 'string') return null;
@@ -723,15 +723,57 @@ async function ensureAdminExists() {
             if (ex.loginAttempts > 0) upd.loginAttempts = 0;
             if (ex.isActive === false) upd.isActive = true;
             if (String(ex.role||'').trim() !== 'admin') upd.role = 'admin';
-            if (ALLOW_ADMIN_RESET) {
-                let ok = false;
-                try { ok = await bcrypt.compare(ADMIN_PASSWORD, ex.password); } catch(e) {}
-                if (!ok) {
-                    upd.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
-                    upd.tokenVersion = (ex.tokenVersion || 0) + 1;
-                    console.log('🔄 Admin password reset (ALLOW_ADMIN_RESET=true)');
+            // ═══════════════════════════════════════════════════════════
+// 🔐 SECURITY: Admin Reset — يتطلب تأكيد صريح
+// ═══════════════════════════════════════════════════════════
+const CONFIRM_ADMIN_RESET = process.env.CONFIRM_ADMIN_RESET === 'yes-i-am-sure';
+
+if (ALLOW_ADMIN_RESET && CONFIRM_ADMIN_RESET) {
+    let ok = false;
+    try { ok = await bcrypt.compare(ADMIN_PASSWORD, ex.password); } catch(e) {}
+    
+    if (!ok) {
+        upd.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
+        upd.tokenVersion = (ex.tokenVersion || 0) + 1;
+        
+        console.warn('╔══════════════════════════════════════════╗');
+        console.warn('║  ⚠️  ADMIN PASSWORD RESET TRIGGERED       ║');
+        console.warn('╚══════════════════════════════════════════╝');
+        console.warn('   Username:', ADMIN_USERNAME);
+        console.warn('   Time:', new Date().toISOString());
+        console.warn('   Reason: ALLOW_ADMIN_RESET + CONFIRM_ADMIN_RESET');
+        
+        // ✅ تسجيل الحدث
+        try {
+            await Log.create({
+                action: 'security',
+                resource: 'admin',
+                resourceName: ADMIN_USERNAME,
+                status: 'warning',
+                details: {
+                    reason: 'admin_password_reset',
+                    timestamp: new Date().toISOString(),
+                    environment: process.env.NODE_ENV
                 }
-            }
+            });
+        } catch(e) {}
+        
+        // ✅ إشعار الأدمن عبر البريد
+        if (ex.email) {
+            try {
+                await sendEmail(ex.email, '⚠️ تنبيه أمني: تغيير كلمة مرور الأدمن',
+                    `<div dir="rtl" style="font-family:Arial">
+                        <h2>⚠️ تنبيه أمني</h2>
+                        <p>تم <strong>تغيير كلمة مرور حساب الأدمن</strong> تلقائياً.</p>
+                        <p><strong>السبب:</strong> ALLOW_ADMIN_RESET + CONFIRM_ADMIN_RESET</p>
+                        <p><strong>الوقت:</strong> ${new Date().toLocaleString('ar-EG')}</p>
+                    </div>`);
+            } catch(e) {}
+        }
+    }
+} else if (ALLOW_ADMIN_RESET && !CONFIRM_ADMIN_RESET) {
+    console.warn('⚠️  ALLOW_ADMIN_RESET=true but CONFIRM_ADMIN_RESET≠"yes-i-am-sure" — reset skipped');
+}
             if (Object.keys(upd).length) {
                 upd.updatedAt = new Date();
                 await User.updateOne({ _id: ex._id }, { $set: upd });
@@ -817,8 +859,14 @@ function ensureCsrfToken(req, res) {
 }
 
 const csrfExcluded = new Set([
-    '/api/auth/login','/api/auth/forgot-password','/api/auth/reset-password',
-    '/api/auth/verify-reset-token','/api/auth/refresh','/api/csrf-token','/api/health'
+    '/api/auth/login',
+    '/api/auth/forgot-password',
+    '/api/auth/reset-password',
+    '/api/auth/verify-reset-token',
+    '/api/csrf-token',
+    '/api/health',
+    '/api/injection-check'
+    // ❌ /api/auth/refresh — محمي بـ CSRF الآن
 ]);
 function looksLikeClientCsrfToken(t) {
     return typeof t === 'string' && t.length >= 20 && t.length <= 200 &&
@@ -4122,89 +4170,202 @@ const CLARITY_IDENTIFY_SCRIPT = `
     }
 })();<\/script>`;
 
-    const PRINT_HEADER_CSS = `
+   const PRINT_HEADER_CSS = `
 <style id="official-print-header-style">
+/* ═══════════════════════════════════════════════════════ */
+/* 🖨️ إخفاء الترويسة افتراضياً */
+/* ═══════════════════════════════════════════════════════ */
 #official-print-header { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════ */
+/* 🖨️ إعدادات الطباعة */
+/* ═══════════════════════════════════════════════════════ */
 @media print {
+    
+    /* ═══ إعداد الصفحة ═══ */
     @page {
         size: A4 portrait;
-        margin: 8mm 10mm 10mm 10mm;
+        margin: 5mm 8mm 8mm 8mm;
     }
     
+    /* ═══ إخفاء العناصر المزعجة ═══ */
+    #user-info-badge,
+    #dev-signature,
+    .uib-avatar,
+    .uib-info,
+    .no-print,
+    nav, aside,
+    .sidebar, .navbar, .topbar,
+    button, .btn, .fab,
+    .toast, .modal,
+    .search-box, .toolbar {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    /* ═══ الترويسة الرسمية — ارتفاع ثابت وواضح ═══ */
     #official-print-header {
         display: block !important;
         visibility: visible !important;
         position: relative !important;
         width: 100% !important;
-        height: auto !important;
-        min-height: 0 !important;
-        margin: 0 0 4mm 0 !important;
-        padding: 0 0 3mm 0 !important;
+        /* ✅ الارتفاع ثابت ومدروس */
+        height: 40mm !important;
+        min-height: 40mm !important;
+        max-height: 40mm !important;
+        margin: 0 0 3mm 0 !important;
+        padding: 0 !important;
         background: #ffffff !important;
-        border-bottom: 1pt solid #12121a !important;
+        border-bottom: 0.7pt solid #12121a !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
         page-break-inside: avoid !important;
+        break-inside: avoid !important;
         direction: rtl !important;
         z-index: 99999 !important;
+        box-sizing: border-box !important;
     }
     
     #official-print-header .official-header-print {
         position: relative !important;
         width: 100% !important;
-        height: auto !important;
-        min-height: 0 !important;
+        height: 100% !important;
         padding: 0 !important;
         margin: 0 !important;
         background: #ffffff !important;
+        box-sizing: border-box !important;
     }
     
+    /* ✅ النص الأيسر */
     #official-print-header .official-header-left-text {
-        display: block !important;
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
         right: auto !important;
+        bottom: auto !important;
+        display: block !important;
         direction: rtl !important;
         text-align: left !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-        font-size: 10.5pt !important;
+        font-size: 10pt !important;
         font-weight: 700 !important;
         color: #0a0a12 !important;
-        line-height: 1.4 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        line-height: 1.3 !important;
         white-space: nowrap !important;
+        z-index: 10 !important;
     }
     
+    /* ✅ النص الأيمن */
     #official-print-header .official-header-right-text {
-        display: block !important;
         position: absolute !important;
         top: 0 !important;
         right: 0 !important;
         left: auto !important;
+        bottom: auto !important;
+        display: block !important;
         direction: rtl !important;
         text-align: right !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-        font-size: 9.5pt !important;
+        font-size: 9pt !important;
         font-weight: 700 !important;
         color: #0a0a12 !important;
-        line-height: 1.4 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
+        line-height: 1.35 !important;
+        z-index: 10 !important;
     }
     
+    /* ✅ العنوان — من الأسفل بدون margin عشوائي */
     #official-print-header .official-header-title-print {
-        display: block !important;
-        position: relative !important;
+        position: absolute !important;
+        bottom: 2mm !important;              /* ← من الأسفل */
+        left: 0 !important;
+        right: 0 !important;
         top: auto !important;
-        left: auto !important;
-        right: auto !important;
         width: 100% !important;
         text-align: center !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-        font-size: 15pt !important;
+        font-size: 14pt !important;
         font-weight: 900 !important;
         color: #0a0a12 !important;
+        -webkit-text-fill-color: #0a0a12 !important;
         direction: rtl !important;
-        margin: 32mm 0 0 0 !important;
-        padding: 1mm 0 0 0 !important;
+        margin: 0 !important;                /* ← لا margin */
+        padding: 0 !important;
+        z-index: 10 !important;
+    }
+    
+    /* ═══ تصغير الجداول ═══ */
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 7pt !important;
+        margin: 2mm 0 !important;
+        page-break-inside: auto !important;
+    }
+    
+    thead {
+        display: table-header-group !important;
+    }
+    
+    thead th {
+        padding: 1mm 1mm !important;
+        font-size: 7.5pt !important;
+        font-weight: 700 !important;
+        border: 0.3pt solid #666 !important;
+        background: #e8e8e8 !important;
+        text-align: center !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    tbody tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    
+    tbody td {
+        padding: 0.8mm 1mm !important;
+        font-size: 6.5pt !important;
+        border: 0.3pt solid #ccc !important;
+        vertical-align: middle !important;
+        line-height: 1.2 !important;
+    }
+    
+    tbody tr:nth-child(even) td {
+        background: #f5f5f5 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* ═══ صور صغيرة ═══ */
+    table img {
+        max-width: 8mm !important;
+        max-height: 8mm !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: cover !important;
+    }
+    
+    /* ═══ إخفاء placeholder "لا توجد صورة" ═══ */
+    img[alt*="لا توجد"],
+    img[alt*="no image"],
+    .no-image-placeholder,
+    .image-placeholder {
+        display: none !important;
+    }
+    
+    /* ═══ ضمان طباعة الألوان ═══ */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
     }
 }
 </style>`;
