@@ -4441,81 +4441,125 @@ const CLARITY_IDENTIFY_SCRIPT = `
 <script>(function(){
     'use strict';
     
-    // ✅ قائمة محددة بدلاً من الكشف التلقائي — لن تخفي شيئاً غير مقصود
-    var SELECTORS_TO_HIDE = [
-        '.page-header-box',
-        '.main-header-gradient',
-        '.decorative-card',
-        '.dashboard-hero',
-        '.stats-hero',
-        '.sidebar-gradient',
-        '.header-gradient',
-        '.top-nav-gradient'
-    ];
+    // ═══════════════════════════════════════════════════════
+    // 🖨️ PRINT OVERRIDE — الإصلاح الشامل
+    // ═══════════════════════════════════════════════════════
     
-    function hideBigBlueBoxes() {
-        try {
-            var hiddenCount = 0;
-            
-            SELECTORS_TO_HIDE.forEach(function(selector) {
-                var elements = document.querySelectorAll(selector);
-                for (var i = 0; i < elements.length; i++) {
-                    var el = elements[i];
-                    
-                    // حماية مزدوجة
-                    if (el.id === 'official-print-header') continue;
-                    if (el.closest && el.closest('#official-print-header')) continue;
-                    if (el.closest && el.closest('table')) continue;
-                    
-                    el.setAttribute('data-print-hidden', '1');
-                    el.style.setProperty('display', 'none', 'important');
-                    el.style.setProperty('visibility', 'hidden', 'important');
-                    el.style.setProperty('height', '0', 'important');
-                    el.style.setProperty('width', '0', 'important');
-                    el.style.setProperty('opacity', '0', 'important');
-                    el.style.setProperty('overflow', 'hidden', 'important');
-                    hiddenCount++;
-                }
+    // 1️⃣ إجبار الوضع الفاتح + إخفاء العناصر غير الضرورية
+    function preparePrint() {
+        console.log('%c🖨️ تجهيز الطباعة...', 'background:#2563eb;color:white;padding:4px 8px;border-radius:4px;');
+        
+        // ✅ إخفاء العناصر غير الضرورية
+        const HIDE_SELECTORS = [
+            '#user-info-badge', '#dev-signature',
+            'nav', 'aside', '.sidebar', '.navbar', '.topbar',
+            'button', '.btn', '.fab', '.toast',
+            '.pagination', '.search-box', '.filter-bar'
+        ];
+        
+        HIDE_SELECTORS.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                if (el.id === 'official-print-header') return;
+                if (el.closest('#official-print-header')) return;
+                el.setAttribute('data-print-hidden', '1');
+                el.style.setProperty('display', 'none', 'important');
             });
+        });
+        
+        // ✅ فرض الوضع الفاتح
+        const style = document.getElementById('force-light-mode-style') || document.createElement('style');
+        style.id = 'force-light-mode-style';
+        style.textContent = \`
+            @media print {
+                * { 
+                    background-color: #ffffff !important; 
+                    background-image: none !important;
+                    color: #000000 !important;
+                    box-shadow: none !important;
+                    text-shadow: none !important;
+                }
+                html, body, table, tr, td, th { 
+                    background: #ffffff !important; 
+                    color: #000000 !important;
+                }
+                thead, th {
+                    background-color: #f0f0f0 !important;
+                    color: #000000 !important;
+                }
+                tbody tr:nth-child(even) td {
+                    background-color: #fafafa !important;
+                }
+                .badge, [class*="status"] {
+                    border: 0.5pt solid currentColor !important;
+                }
+            }
+        \`;
+        if (!style.parentNode) document.head.appendChild(style);
+        
+        // ✅ إظهار كل الصور
+        document.querySelectorAll('img').forEach(img => {
+            img.loading = 'eager';
+            img.style.setProperty('display', 'inline-block', 'important');
+            img.style.setProperty('visibility', 'visible', 'important');
+            img.style.setProperty('opacity', '1', 'important');
+            img.style.setProperty('width', '10mm', 'important');
+            img.style.setProperty('height', '10mm', 'important');
+            img.style.setProperty('object-fit', 'cover', 'important');
+        });
+        
+        // ✅ إصلاح الجداول
+        document.querySelectorAll('table').forEach(table => {
+            table.style.setProperty('table-layout', 'fixed', 'important');
+            table.style.setProperty('width', '100%', 'important');
+            table.style.setProperty('border-collapse', 'collapse', 'important');
             
-            if (hiddenCount > 0) {
-                console.log('%c🚫 تم إخفاء ' + hiddenCount + ' عنصر زخرفي قبل الطباعة',
-                    'background: #16a34a; color: white; padding: 4px 8px; font-weight: bold; border-radius: 4px;');
-            } else {
-                console.log('%c✅ لا عناصر زخرفية — كل المحتوى سيُطبع',
-                    'background: #16a34a; color: white; padding: 4px 8px; border-radius: 4px;');
-            }
-        } catch(e) {}
+            // ضبط خلايا الجدول
+            table.querySelectorAll('td, th').forEach(cell => {
+                cell.style.setProperty('border', '0.3pt solid #999', 'important');
+                cell.style.setProperty('padding', '0.8mm 1mm', 'important');
+                cell.style.setProperty('word-break', 'keep-all', 'important');
+                cell.style.setProperty('overflow-wrap', 'break-word', 'important');
+                cell.style.setProperty('white-space', 'normal', 'important');
+                cell.style.setProperty('line-height', '1.15', 'important');
+                cell.style.setProperty('font-size', '6.5pt', 'important');
+                cell.style.setProperty('text-align', 'center', 'important');
+            });
+        });
+        
+        console.log('%c✅ تم تجهيز الطباعة', 'background:#16a34a;color:white;padding:4px 8px;border-radius:4px;');
     }
     
-    function restoreHidden() {
-        try {
-            var hidden = document.querySelectorAll('[data-print-hidden]');
-            for (var i = 0; i < hidden.length; i++) {
-                var el = hidden[i];
-                el.style.removeProperty('display');
-                el.style.removeProperty('visibility');
-                el.style.removeProperty('height');
-                el.style.removeProperty('width');
-                el.style.removeProperty('opacity');
-                el.style.removeProperty('overflow');
-                el.removeAttribute('data-print-hidden');
-            }
-        } catch(e) {}
+    // 2️⃣ الاسترجاع بعد الطباعة
+    function restoreAfterPrint() {
+        document.querySelectorAll('[data-print-hidden]').forEach(el => {
+            el.style.removeProperty('display');
+            el.style.removeProperty('visibility');
+            el.style.removeProperty('opacity');
+            el.removeAttribute('data-print-hidden');
+        });
     }
     
-    window.addEventListener('beforeprint', hideBigBlueBoxes);
-    window.addEventListener('afterprint', restoreHidden);
+    // 3️⃣ ربط الأحداث
+    window.addEventListener('beforeprint', preparePrint);
+    window.addEventListener('afterprint', restoreAfterPrint);
     
+    // 4️⃣ دعم matchMedia
     if (window.matchMedia) {
-        var mql = window.matchMedia('print');
+        const mql = window.matchMedia('print');
         if (mql.addEventListener) {
-            mql.addEventListener('change', function(m) {
-                if (m.matches) hideBigBlueBoxes();
-                else restoreHidden();
+            mql.addEventListener('change', m => {
+                if (m.matches) preparePrint();
+                else restoreAfterPrint();
             });
         }
     }
+    
+    // 5️⃣ دعم Ctrl+P / Cmd+P
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            preparePrint();
+        }
+    });
 })();<\/script>`;
     const INJECTION_SKIP_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i;
 
