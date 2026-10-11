@@ -220,6 +220,14 @@ const PORT = Number(process.env.PORT) || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
 
+// ═══════════════════════════════════════════════════════════
+// 🎥 Socket.IO — إعلان مسبق (لتجنب TDZ)
+// ═══════════════════════════════════════════════════════════
+let httpServer = null;
+let io = null;
+const onlineUsers = new Map();
+const screenSessions = new Map();
+
 app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
 
@@ -229,7 +237,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-
 app.use((req, res, next) => {
     res.setHeader('X-System-Name', 'Marine System');
     res.setHeader('X-System-Version', '11.2.0');
@@ -239,18 +246,157 @@ app.use((req, res, next) => {
     next();
 });
 
-function generateSecret(b=64) { return crypto.randomBytes(b).toString('hex'); }
-
-if (isProduction) {
-    const req = ['JWT_SECRET','JWT_REFRESH_SECRET','SESSION_SECRET'];
-    const miss = req.filter(k => !process.env[k] || process.env[k].length < 32);
-    if (miss.length) { console.error('❌ Missing secrets:', miss.join(',')); process.exit(1); }
+// ═══════════════════════════════════════════════════════════
+// 🔐 SECURITY: Secret Generator
+// ═══════════════════════════════════════════════════════════
+function generateSecret(b = 64) {
+    return crypto.randomBytes(b).toString('hex');
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || generateSecret(64);
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || generateSecret(64);
-const SESSION_SECRET = process.env.SESSION_SECRET || generateSecret(64);
+// ═══════════════════════════════════════════════════════════
+// 🔐 SECURITY: JWT Secrets — إلزامية في الإنتاج
+// ═══════════════════════════════════════════════════════════
+const REQUIRED_SECRETS = [
+    'JWT_SECRET',
+    'JWT_REFRESH_SECRET',
+    'SESSION_SECRET',
+    'ENCRYPTION_KEY'
+];
 
+const WEAK_SECRET_PATTERNS = [
+    'dev-secret', 'dev_secret',
+    'secret', 'mysecret', 'my-secret',
+    'your-secret', 'your_secret',
+    'changeme', 'change-me',
+    'default', 'test', 'password',
+    '123456', 'abcdef', 'qwerty',
+    'admin', 'marine', 'test123'
+];
+
+if (isProduction) {
+    // ─────────────────────────────────────────────────────
+    // 1. التحقق من وجود جميع الأسرار
+    // ─────────────────────────────────────────────────────
+    const missing = REQUIRED_SECRETS.filter(k => {
+        const v = process.env[k];
+        return !v || v.length < 32;
+    });
+
+    if (missing.length) {
+        console.error('');
+        console.error('╔══════════════════════════════════════════════════╗');
+        console.error('║  ❌ FATAL: Missing or weak production secrets     ║');
+        console.error('╚══════════════════════════════════════════════════╝');
+        console.error('');
+        console.error('   Missing/weak:', missing.join(', '));
+        console.error('');
+        console.error('   Generate strong secrets with:');
+        console.error('   ┌────────────────────────────────────────────────────');
+        console.error('   │ node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+        console.error('   └────────────────────────────────────────────────────');
+        console.error('');
+        console.error('   Then add them to .env.production or your hosting dashboard.');
+        console.error('');
+        process.exit(1);
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 2. التحقق من عدم وجود أسرار ضعيفة
+    // ─────────────────────────────────────────────────────
+    const weakFound = REQUIRED_SECRETS.filter(k => {
+        const v = String(process.env[k] || '').toLowerCase();
+        return WEAK_SECRET_PATTERNS.some(pattern => v.includes(pattern));
+    });
+
+    if (weakFound.length) {
+        console.error('');
+        console.error('╔══════════════════════════════════════════════════╗');
+        console.error('║  ❌ FATAL: Weak secrets detected                  ║');
+        console.error('╚══════════════════════════════════════════════════╝');
+        console.error('');
+        console.error('   Weak secrets:', weakFound.join(', '));
+        console.error('');
+        console.error('   These secrets contain common patterns that are insecure.');
+        console.error('   Generate strong random secrets instead.');
+        console.error('');
+        process.exit(1);
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 3. التحقق من عدم تكرار الأسرار
+    // ─────────────────────────────────────────────────────
+    const values = REQUIRED_SECRETS.map(k => process.env[k]);
+    const uniqueValues = new Set(values);
+    
+    if (uniqueValues.size !== values.length) {
+        console.error('');
+        console.error('╔══════════════════════════════════════════════════╗');
+        console.error('║  ❌ FATAL: Duplicate secrets detected             ║');
+        console.error('╚══════════════════════════════════════════════════╝');
+        console.error('');
+        console.error('   Each secret must be unique.');
+        console.error('   JWT_SECRET ≠ JWT_REFRESH_SECRET ≠ SESSION_SECRET ≠ ENCRYPTION_KEY');
+        console.error('');
+        process.exit(1);
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 4. التحقق من ENCRYPTION_KEY (يجب أن يكون 64 hex = 32 bytes)
+    // ─────────────────────────────────────────────────────
+    if (!/^[a-f0-9]{64}$/i.test(process.env.ENCRYPTION_KEY)) {
+        console.error('');
+        console.error('╔══════════════════════════════════════════════════╗');
+        console.error('║  ❌ FATAL: ENCRYPTION_KEY format invalid          ║');
+        console.error('╚══════════════════════════════════════════════════╝');
+        console.error('');
+        console.error('   ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes).');
+        console.error('   Generate with:');
+        console.error('   node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+        console.error('');
+        process.exit(1);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🔐 SECURITY: Secret Assignment
+// ✅ في الإنتاج: إلزامي من ENV (لا توليد عشوائي)
+// ✅ في التطوير: توليد عشوائي مقبول (مع تحذير)
+// ═══════════════════════════════════════════════════════════
+
+const JWT_SECRET = isProduction
+    ? process.env.JWT_SECRET
+    : (process.env.JWT_SECRET || generateSecret(64));
+
+const JWT_REFRESH_SECRET = isProduction
+    ? process.env.JWT_REFRESH_SECRET
+    : (process.env.JWT_REFRESH_SECRET || generateSecret(64));
+
+const SESSION_SECRET = isProduction
+    ? process.env.SESSION_SECRET
+    : (process.env.SESSION_SECRET || generateSecret(64));
+
+if (!isProduction) {
+    const generated = [];
+    if (!process.env.JWT_SECRET) generated.push('JWT_SECRET');
+    if (!process.env.JWT_REFRESH_SECRET) generated.push('JWT_REFRESH_SECRET');
+    if (!process.env.SESSION_SECRET) generated.push('SESSION_SECRET');
+
+    if (generated.length) {
+        console.warn('');
+        console.warn('╔══════════════════════════════════════════════════╗');
+        console.warn('║  ⚠️  DEV MODE: Ephemeral secrets generated        ║');
+        console.warn('╚══════════════════════════════════════════════════╝');
+        console.warn('   Generated:', generated.join(', '));
+        console.warn('   ⚠️  Sessions will NOT persist across restarts.');
+        console.warn('   💡 Add these to .env for stable dev sessions:');
+        console.warn('   ─────────────────────────────────────────────────');
+        console.warn('   JWT_SECRET=' + JWT_SECRET.substring(0, 16) + '... (truncated)');
+        console.warn('   JWT_REFRESH_SECRET=' + JWT_REFRESH_SECRET.substring(0, 16) + '... (truncated)');
+        console.warn('   SESSION_SECRET=' + SESSION_SECRET.substring(0, 16) + '... (truncated)');
+        console.warn('   ─────────────────────────────────────────────────');
+        console.warn('');
+    }
+}
 const ACCESS_TOKEN_EXPIRES = '2h';
 const REFRESH_TOKEN_EXPIRES = '30d';
 const ACCESS_TOKEN_MAX_AGE = 2*60*60*1000;
@@ -3271,12 +3417,7 @@ function formatMaintenance(log) {
     // ============================================================
     // 🎥 SOCKET.IO
     // ============================================================
-    let httpServer = null;
-    let io = null;
-    const onlineUsers = new Map();
-    const screenSessions = new Map();
-
-    try {
+      try {
         const http = require('http');
         const socketIO = require('socket.io');
 
@@ -4398,18 +4539,54 @@ return html;
     process.on('SIGINT',  () => shutdown('SIGINT'));
     process.on('unhandledRejection', (r) => console.error('❌ Unhandled rejection:', r));
     process.on('uncaughtException', (e) => { console.error('❌ Uncaught:', e); shutdown('uncaughtException'); });
+        // ═══════════════════════════════════════════════════════════
+    // 📤 EXPOSE MIDDLEWARE (قبل نهاية IIFE)
+    // ═══════════════════════════════════════════════════════════
+    app.locals.csrfProtection = csrfProtection;
+    app.locals.authenticateAccessToken = authenticateAccessToken;
+    app.locals.requirePermission = requirePermission;
+    app.locals.requireOneOf = requireOneOf;
+    app.locals.requireAdmin = requireAdmin;
+    app.locals.hasPermission = hasPermission;
+    app.locals.normalizeRole = normalizeRole;
+    app.locals.addSystemLog = addSystemLog;
+    app.locals.getRedisClient = getRedisClient;
+    app.locals.isRedisAvailable = isRedisAvailable;
 })();
 
-// ============ EXPORTS ============
+
+// ═══════════════════════════════════════════════════════════
+// 📤 MODULE EXPORTS (آمن — يعتمد على app.locals)
+// ═══════════════════════════════════════════════════════════
 module.exports = app;
-module.exports.csrfProtection = csrfProtection;
-module.exports.authenticateAccessToken = authenticateAccessToken;
-module.exports.requirePermission = requirePermission;
-module.exports.requireOneOf = requireOneOf;
-module.exports.requireAdmin = requireAdmin;
-module.exports.hasPermission = hasPermission;
-module.exports.normalizeRole = normalizeRole;
-module.exports.addSystemLog = addSystemLog;
-module.exports.getRedisClient = getRedisClient;
-module.exports.isRedisAvailable = isRedisAvailable;
-    
+
+module.exports.csrfProtection = (req, res, next) =>
+    app.locals.csrfProtection(req, res, next);
+
+module.exports.authenticateAccessToken = (req, res, next) =>
+    app.locals.authenticateAccessToken(req, res, next);
+
+module.exports.requirePermission = (perm) => (req, res, next) =>
+    app.locals.requirePermission(perm)(req, res, next);
+
+module.exports.requireOneOf = (...perms) => (req, res, next) =>
+    app.locals.requireOneOf(...perms)(req, res, next);
+
+module.exports.requireAdmin = (req, res, next) =>
+    app.locals.requireAdmin(req, res, next);
+
+module.exports.hasPermission = (...args) =>
+    app.locals.hasPermission(...args);
+
+module.exports.normalizeRole = (...args) =>
+    app.locals.normalizeRole(...args);
+
+module.exports.addSystemLog = (...args) =>
+    app.locals.addSystemLog(...args);
+
+module.exports.getRedisClient = (...args) =>
+    app.locals.getRedisClient(...args);
+
+module.exports.isRedisAvailable = (...args) =>
+    app.locals.isRedisAvailable(...args);
+   
