@@ -3985,30 +3985,39 @@ const CLARITY_IDENTIFY_SCRIPT = `
 <style id="official-print-header-style">
 #official-print-header { display: none !important; }
 @media print {
+    @page {
+        size: A4 portrait;
+        margin: 8mm 10mm 10mm 10mm;
+    }
+    
     #official-print-header {
         display: block !important;
         visibility: visible !important;
         position: relative !important;
         width: 100% !important;
-        height: 68mm !important;
-        min-height: 68mm !important;
-        margin: 0 0 5mm 0 !important;
-        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 0 4mm 0 !important;
+        padding: 0 0 3mm 0 !important;
         background: #ffffff !important;
         border-bottom: 1pt solid #12121a !important;
         page-break-after: avoid !important;
         break-after: avoid !important;
+        page-break-inside: avoid !important;
         direction: rtl !important;
         z-index: 99999 !important;
     }
+    
     #official-print-header .official-header-print {
         position: relative !important;
         width: 100% !important;
-        height: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
         padding: 0 !important;
         margin: 0 !important;
         background: #ffffff !important;
     }
+    
     #official-print-header .official-header-left-text {
         display: block !important;
         position: absolute !important;
@@ -4018,14 +4027,13 @@ const CLARITY_IDENTIFY_SCRIPT = `
         direction: rtl !important;
         text-align: left !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-        font-size: 13pt !important;
+        font-size: 10.5pt !important;
         font-weight: 700 !important;
         color: #0a0a12 !important;
-        -webkit-text-fill-color: #0a0a12 !important;
-        line-height: 1.5 !important;
+        line-height: 1.4 !important;
         white-space: nowrap !important;
-        z-index: 99999 !important;
     }
+    
     #official-print-header .official-header-right-text {
         display: block !important;
         position: absolute !important;
@@ -4035,32 +4043,30 @@ const CLARITY_IDENTIFY_SCRIPT = `
         direction: rtl !important;
         text-align: right !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-        font-size: 12pt !important;
+        font-size: 9.5pt !important;
         font-weight: 700 !important;
         color: #0a0a12 !important;
-        -webkit-text-fill-color: #0a0a12 !important;
-        line-height: 1.6 !important;
-        z-index: 99999 !important;
+        line-height: 1.4 !important;
     }
+    
     #official-print-header .official-header-title-print {
         display: block !important;
-        position: absolute !important;
-        top: 50mm !important;
-        left: 0 !important;
-        right: 0 !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
         width: 100% !important;
         text-align: center !important;
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
-        font-size: 20pt !important;
+        font-size: 15pt !important;
         font-weight: 900 !important;
         color: #0a0a12 !important;
-        -webkit-text-fill-color: #0a0a12 !important;
         direction: rtl !important;
-        z-index: 99999 !important;
+        margin: 32mm 0 0 0 !important;
+        padding: 1mm 0 0 0 !important;
     }
 }
 </style>`;
-
     const PRINT_HEADER_SCRIPT = `
 <script>(function(){
     'use strict';
@@ -4129,63 +4135,36 @@ const CLARITY_IDENTIFY_SCRIPT = `
     }, 2000);
 })();<\/script>`;
 
-    const HIDE_BLUE_BOXES_SCRIPT = `
+  const HIDE_BLUE_BOXES_SCRIPT = `
 <script>(function(){
     'use strict';
     
+    // ✅ قائمة محددة بدلاً من الكشف التلقائي — لن تخفي شيئاً غير مقصود
+    var SELECTORS_TO_HIDE = [
+        '.page-header-box',
+        '.main-header-gradient',
+        '.decorative-card',
+        '.dashboard-hero',
+        '.stats-hero',
+        '.sidebar-gradient',
+        '.header-gradient',
+        '.top-nav-gradient'
+    ];
+    
     function hideBigBlueBoxes() {
         try {
-            var all = document.querySelectorAll('body *');
             var hiddenCount = 0;
             
-            for (var i = 0; i < all.length; i++) {
-                var el = all[i];
-                
-                if (el.id === 'official-print-header') continue;
-                if (el.closest && el.closest('#official-print-header')) continue;
-                
-                if (el.tagName === 'TABLE' || el.tagName === 'THEAD' || 
-                    el.tagName === 'TBODY' || el.tagName === 'TR' || 
-                    el.tagName === 'TH' || el.tagName === 'TD') continue;
-                
-                if (el.classList && (
-                    el.classList.contains('stats-grid') ||
-                    el.classList.contains('veh-stats') ||
-                    el.classList.contains('stat-card') ||
-                    el.classList.contains('veh-stat') ||
-                    el.classList.contains('veh-table-wrap') ||
-                    el.classList.contains('veh-table-head') ||
-                    el.classList.contains('veh-table-row') ||
-                    el.classList.contains('print-summary-section') ||
-                    el.classList.contains('eff-section')
-                )) continue;
-                
-                var r = el.getBoundingClientRect();
-                if (r.width < 500 || r.height < 100) continue;
-                if (r.top < -200 || r.top > 1500) continue;
-                
-                var cs = window.getComputedStyle(el);
-                var bg = cs.backgroundImage || '';
-                var bgc = cs.backgroundColor || '';
-                var bc = cs.borderColor || '';
-                
-                var hasGradient = bg.indexOf('gradient') !== -1;
-                
-                var hasDarkBg = false;
-                if (bgc && bgc !== 'rgba(0, 0, 0, 0)' && bgc !== 'transparent') {
-    var nums = bgc.match(/[0-9]+/g) || [];
-    if (nums.length >= 3) {
-        var rv = parseInt(nums[0], 10);
-        var gv = parseInt(nums[1], 10);
-        var bv = parseInt(nums[2], 10);
-        if (rv < 60 && gv < 60 && bv < 100) hasDarkBg = true;
-    }
-}
-                
-                var hasGoldBorder = bc.indexOf('230, 179') !== -1 || 
-                                    bc.indexOf('247, 215') !== -1;
-                
-                if (hasGradient || hasDarkBg || hasGoldBorder) {
+            SELECTORS_TO_HIDE.forEach(function(selector) {
+                var elements = document.querySelectorAll(selector);
+                for (var i = 0; i < elements.length; i++) {
+                    var el = elements[i];
+                    
+                    // حماية مزدوجة
+                    if (el.id === 'official-print-header') continue;
+                    if (el.closest && el.closest('#official-print-header')) continue;
+                    if (el.closest && el.closest('table')) continue;
+                    
                     el.setAttribute('data-print-hidden', '1');
                     el.style.setProperty('display', 'none', 'important');
                     el.style.setProperty('visibility', 'hidden', 'important');
@@ -4195,18 +4174,23 @@ const CLARITY_IDENTIFY_SCRIPT = `
                     el.style.setProperty('overflow', 'hidden', 'important');
                     hiddenCount++;
                 }
-            }
+            });
             
             if (hiddenCount > 0) {
-                console.log('%c🚫 تم إخفاء ' + hiddenCount + ' عنصر قبل الطباعة',
-                    'background: red; color: white; padding: 4px 8px; font-weight: bold;');
+                console.log('%c🚫 تم إخفاء ' + hiddenCount + ' عنصر زخرفي قبل الطباعة',
+                    'background: #16a34a; color: white; padding: 4px 8px; font-weight: bold; border-radius: 4px;');
+            } else {
+                console.log('%c✅ لا عناصر زخرفية — كل المحتوى سيُطبع',
+                    'background: #16a34a; color: white; padding: 4px 8px; border-radius: 4px;');
             }
         } catch(e) {}
     }
     
     function restoreHidden() {
         try {
-            document.querySelectorAll('[data-print-hidden]').forEach(function(el) {
+            var hidden = document.querySelectorAll('[data-print-hidden]');
+            for (var i = 0; i < hidden.length; i++) {
+                var el = hidden[i];
                 el.style.removeProperty('display');
                 el.style.removeProperty('visibility');
                 el.style.removeProperty('height');
@@ -4214,12 +4198,12 @@ const CLARITY_IDENTIFY_SCRIPT = `
                 el.style.removeProperty('opacity');
                 el.style.removeProperty('overflow');
                 el.removeAttribute('data-print-hidden');
-            });
+            }
         } catch(e) {}
     }
     
-    window.addEventListener('beforeprint', function() { hideBigBlueBoxes(); });
-    window.addEventListener('afterprint', function() { restoreHidden(); });
+    window.addEventListener('beforeprint', hideBigBlueBoxes);
+    window.addEventListener('afterprint', restoreHidden);
     
     if (window.matchMedia) {
         var mql = window.matchMedia('print');
@@ -4231,7 +4215,6 @@ const CLARITY_IDENTIFY_SCRIPT = `
         }
     }
 })();<\/script>`;
-
     const INJECTION_SKIP_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i;
 
    function injectAll(html) {
