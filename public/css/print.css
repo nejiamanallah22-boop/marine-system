@@ -792,3 +792,214 @@
         display: none;
     }
 }
+/* ═══════════════════════════════════════════════════════════
+   🚀 إصلاحات حرجة — v25.4
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+
+    /* ✅ 1. إخفاء قوي للشارة وجميع أجزائها */
+    #user-info-badge,
+    #user-info-badge *,
+    #dev-signature,
+    #dev-signature *,
+    .uib-avatar,
+    .uib-info,
+    .uib-name,
+    .uib-meta,
+    .uib-role,
+    .uib-region {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+    }
+
+    /* ✅ 2. قيود صارمة على الصور */
+    img,
+    table img,
+    td img,
+    #page-fleet img,
+    #page-vehicles img,
+    .vessel-image,
+    .veh-image,
+    .vessel-photo,
+    [class*="vessel"] img,
+    [class*="vehicle"] img {
+        max-width: 12mm !important;
+        max-height: 12mm !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: cover !important;
+        display: inline-block !important;
+        border-radius: 2px !important;
+    }
+
+    /* ✅ 3. إخفاء placeholders "لا توجد صورة" */
+    .no-image,
+    .no-image-placeholder,
+    .image-placeholder,
+    [class*="no-image"],
+    [class*="placeholder"]:not(input):not(textarea),
+    img[alt*="لا توجد"],
+    img[alt*="no image"],
+    img[alt*=""],
+    img[src*="placeholder"],
+    img[src*="no-image"],
+    .camera-icon,
+    .placeholder-icon {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+    }
+
+    /* ✅ 4. استبدال placeholder بنص بسيط */
+    td:has(.no-image)::after,
+    td:has(.image-placeholder)::after {
+        content: "—";
+        color: #ccc !important;
+        font-size: 7pt !important;
+    }
+
+    /* ✅ 5. تصغير صفوف الجداول أكثر */
+    tbody td {
+        padding: 1mm 1.5mm !important;
+        font-size: 7pt !important;
+        line-height: 1.15 !important;
+        max-height: 14mm !important;
+        height: auto !important;
+    }
+
+    thead th {
+        padding: 1.2mm 1.5mm !important;
+        font-size: 6.5pt !important;
+    }
+
+    /* ✅ 6. صفوف المراكب — قيود صارمة */
+    #page-fleet tbody tr,
+    #page-vehicles tbody tr,
+    .veh-table-row {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        max-height: 16mm !important;
+        height: auto !important;
+    }
+
+    /* ✅ 7. خلايا الصور — عرض ثابت صغير */
+    #page-fleet tbody td:first-child,
+    #page-vehicles tbody td:first-child,
+    #page-vehicles .veh-table-row .veh-cell:first-child,
+    #page-fleet tbody td[class*="image"],
+    #page-vehicles .veh-cell[class*="image"] {
+        width: 14mm !important;
+        max-width: 14mm !important;
+        min-width: 14mm !important;
+        padding: 0.5mm !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    /* ✅ 8. الترويسة الرسمية — تصغير من 68mm إلى 48mm */
+    #official-print-header {
+        height: 48mm !important;
+        min-height: 48mm !important;
+        margin-bottom: 3mm !important;
+    }
+    
+    #official-print-header .official-header-title-print {
+        top: 36mm !important;
+        font-size: 16pt !important;
+    }
+    
+    #official-print-header .official-header-left-text,
+    #official-print-header .official-header-right-text {
+        font-size: 10pt !important;
+        line-height: 1.35 !important;
+    }
+
+    /* ✅ 9. إحصائيات مضغوطة */
+    .stats-grid, .veh-stats {
+        padding: 2mm 0 !important;
+        margin-bottom: 3mm !important;
+    }
+    
+    .stat-card .number, .veh-stat .number {
+        font-size: 14pt !important;
+    }
+    
+    .stat-card .label, .veh-stat .label {
+        font-size: 6.5pt !important;
+    }
+
+    /* ✅ 10. الأقسام — هوامش أقل */
+    .eff-section, .fleet-section, .logs-section {
+        margin-bottom: 3mm !important;
+    }
+    
+    .eff-section .section-header, .fleet-section .section-header {
+        padding-bottom: 1mm !important;
+        margin-bottom: 1.5mm !important;
+    }
+
+    /* ✅ 11. عناوين الأقسام — أصغر */
+    #page-fleet .table-wrapper::before,
+    #page-vehicles .veh-table-wrap::before {
+        font-size: 11pt !important;
+        padding-bottom: 1mm !important;
+        margin-bottom: 1.5mm !important;
+    }
+
+    /* ✅ 12. أيقونات الكاميرا في الجداول */
+    table i[class*="camera"],
+    table svg[class*="camera"],
+    table .fa-camera,
+    td i.fa-camera {
+        display: none !important;
+    }
+
+    /* ✅ 13. ضمان عدم ظهور الشارة داخل الجداول */
+    table #user-info-badge,
+    table #dev-signature {
+        display: none !important;
+    }
+    
+    /* ✅ 14. الفوتر — مضغوط */
+    #page-fleet::after,
+    #page-vehicles::after,
+    #page-logs::after,
+    #page-efficiency::after,
+    #page-maintenance::after {
+        font-size: 7pt !important;
+        padding-top: 1mm !important;
+        margin-top: 2mm !important;
+    }
+    
+    /* ✅ 15. منع تفكك الصفحات */
+    body, html {
+        page-break-inside: auto !important;
+    }
+    
+    /* ✅ 16. min-height على كل صفحة */
+    section, .section {
+        min-height: 0 !important;
+    }
+    
+    /* ✅ 17. إزالة المسافات الكبيرة */
+    * {
+        margin-collapse: collapse !important;
+    }
+    
+    /* ✅ 18. الشارات — أصغر */
+    .veh-badge, .status-badge, .badge {
+        font-size: 5pt !important;
+        padding: 0.3mm 1mm !important;
+        line-height: 1.2 !important;
+    }
+}
