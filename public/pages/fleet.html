@@ -3435,10 +3435,141 @@
 
     function refreshFleet() { renderMain(); }
 
-    function printFleet() {
-        try { window.print(); } catch (e) { window.print(); }
-    }
+        function printFleet() {
+        try {
+            // ═══════════════════════════════════════════════════════════
+            // 🖨️ PRINT FLEET — فتح صفحة الطباعة الموحدة
+            // ═══════════════════════════════════════════════════════════
+            
+            // 1️⃣ جمع الإحصائيات من الصفحة
+            const stats = [
+                {
+                    value: document.getElementById('totalVessels')?.textContent || '0',
+                    label: '🚢 إجمالي المراكب النشطة',
+                    type: ''
+                },
+                {
+                    value: document.getElementById('activeVessels')?.textContent || '0',
+                    label: '✅ الصالح',
+                    type: 'success'
+                },
+                {
+                    value: document.getElementById('maintenanceVessels')?.textContent || '0',
+                    label: '🔧 تحت الصيانة',
+                    type: 'warning'
+                },
+                {
+                    value: document.getElementById('damagedVessels')?.textContent || '0',
+                    label: '🟥 المعطوبة',
+                    type: 'danger'
+                },
+                {
+                    value: document.getElementById('efficiencyPercent')?.textContent || '0%',
+                    label: '📈 نسبة الجاهزية',
+                    type: 'gold'
+                }
+            ];
 
+            // 2️⃣ جمع بيانات الجدول
+            const table = document.querySelector('.table-wrapper table');
+            const columns = [];
+            const rows = [];
+
+            if (table) {
+                // استخراج الأعمدة (بدون عمود "إجراء" الأخير)
+                const headers = table.querySelectorAll('thead th');
+                headers.forEach((th, i) => {
+                    if (i === headers.length - 1) return; // تجاهل عمود إجراء
+                    // إزالة الأيقونات من العنوان
+                    const text = th.textContent
+                        .replace(/[\u{1F300}-\u{1FAFF}]/gu, '')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                    columns.push(text);
+                });
+
+                // استخراج الصفوف
+                const tbodyRows = table.querySelectorAll('tbody tr');
+                tbodyRows.forEach(tr => {
+                    // تجاهل صفوف الحالة الفارغة
+                    if (tr.querySelector('.empty-state')) return;
+
+                    const tds = tr.querySelectorAll('td');
+                    if (tds.length === 0) return;
+
+                    const rowCells = [];
+
+                    tds.forEach((td, i) => {
+                        if (i === tds.length - 1) return; // تجاهل عمود إجراء
+
+                        // 🖼️ كشف الصورة
+                        const img = td.querySelector('img.vessel-thumb');
+                        if (img && img.src) {
+                            rowCells.push({ 
+                                type: 'image', 
+                                url: img.src,
+                                // ✅ استخدام thumbUrl إذا كانت متوفرة
+                                thumbUrl: img.getAttribute('data-thumb-url') || null
+                            });
+                            return;
+                        }
+
+                        // 🚫 كشف "لا صور"
+                        if (td.querySelector('.vessel-thumb-empty')) {
+                            rowCells.push({ type: 'image', url: null });
+                            return;
+                        }
+
+                        // 🏷️ كشف شارة الحالة
+                        const badge = td.querySelector('.status-badge');
+                        if (badge) {
+                            const text = badge.textContent.trim();
+                            let variant = 'neutral';
+                            if (badge.classList.contains('active')) variant = 'success';
+                            else if (badge.classList.contains('damaged')) variant = 'danger';
+                            else if (badge.classList.contains('pending')) variant = 'warning';
+                            else if (badge.classList.contains('completed')) variant = 'info';
+                            rowCells.push({ type: 'badge', text: text, variant: variant });
+                            return;
+                        }
+
+                        // 📝 نص عادي
+                        const text = td.textContent.trim();
+                        rowCells.push(text || '—');
+                    });
+
+                    if (rowCells.length > 0) rows.push(rowCells);
+                });
+            }
+
+            // 3️⃣ حفظ في localStorage
+            const printData = {
+                type: 'fleet',
+                title: 'السجل العام للأسطول',
+                subtitle: 'Fleet General Registry',
+                sectionTitle: 'السجل التفصيلي للمراكب',
+                stats: stats,
+                columns: columns,
+                rows: rows
+            };
+
+            localStorage.setItem('print_data', JSON.stringify(printData));
+
+            // 4️⃣ فتح صفحة الطباعة
+            window.open('/print.html?type=fleet&key=print_data', '_blank');
+
+            console.log('%c🖨️ Print data saved', 
+                'background:#10b981;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;');
+            console.log('   Type: fleet');
+            console.log('   Rows:', rows.length);
+            console.log('   Columns:', columns.length);
+            console.log('   Stats:', stats.length);
+
+        } catch (e) {
+            console.error('❌ Print error:', e);
+            alert('حدث خطأ في تحضير الطباعة: ' + e.message);
+        }
+    }
     function exportFleetExcel() {
         if (_isDestroyed) return;
         try {
