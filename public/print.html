@@ -5,10 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>طباعة احترافية — منظومة الوسائل البحرية</title>
 
+<!-- ✅ علامة عدم الحقن (للسيرفر) -->
+<!-- PRINT_PAGE_NO_INJECT -->
+
 <!-- ✅ خطوط عربية احترافية -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🚫 إخفاء الترويسة القادمة من السيرفر (injectAll)              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<style id="hide-server-print-header">
+    @media print {
+        #official-print-header,
+        #official-print-header *,
+        .official-header-print,
+        .official-header-left-text,
+        .official-header-right-text,
+        .official-header-title-print,
+        #user-info-badge,
+        #dev-signature {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            width: 0 !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            left: -99999px !important;
+            top: -99999px !important;
+            overflow: hidden !important;
+        }
+    }
+</style>
 
 <style>
 /* ═══════════════════════════════════════════════════════════════ */
@@ -786,10 +815,23 @@ td.cell-number {
         padding: 0 !important;
     }
     
+    /* إخفاء عناصر التحكم */
     .controls,
     .zoom-controls,
     .loading-overlay {
         display: none !important;
+    }
+    
+    /* إخفاء الترويسة القادمة من السيرفر */
+    #official-print-header,
+    #official-print-header *,
+    #user-info-badge,
+    #dev-signature {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
     }
     
     .page {
