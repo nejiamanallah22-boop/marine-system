@@ -6,87 +6,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>طباعة احترافية — منظومة الوسائل البحرية</title>
 
-<!-- ✅ علامة عدم الحقن (للسيرفر) -->
-<!-- PRINT_PAGE_NO_INJECT -->
-
-<!-- ✅ خطوط عربية احترافية -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- 🚫 إخفاء الترويسة القادمة من السيرفر (injectAll)              -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<style id="hide-server-print-header">
-    @media print {
-        #official-print-header,
-        #official-print-header *,
-        .official-header-print,
-        .official-header-left-text,
-        .official-header-right-text,
-        .official-header-title-print,
-        #user-info-badge,
-        #dev-signature {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            width: 0 !important;
-            opacity: 0 !important;
-            position: absolute !important;
-            left: -99999px !important;
-            top: -99999px !important;
-            overflow: hidden !important;
-        }
-    }
-    /* ═══════════════════════════════════════════════════════════════ */
-/* 📋 رقم الضبط الإداري                                          */
-/* ═══════════════════════════════════════════════════════════════ */
-.doc-ref-block {
-    margin-top: 3mm;
-    padding-top: 2mm;
-    border-top: 1px solid #e0c88a;
-    display: flex;
-    align-items: center;
-    gap: 1.5mm;
-    font-family: 'Cairo', 'Segoe UI', sans-serif;
-    direction: rtl;
-    font-size: 11pt;
-    font-weight: 800;
-    color: #0a1628;
-    white-space: nowrap;
-}
-
-.doc-ref-label {
-    color: #c9a961;
-    font-weight: 900;
-    font-size: 12pt;
-}
-
-.doc-ref-number {
-    color: #0a1628;
-    font-weight: 900;
-    letter-spacing: 1px;
-    font-variant-numeric: tabular-nums;
-    padding: 0.5mm 3mm;
-    border-bottom: 1px dotted #0a1628;
-    min-width: 30mm;
-    display: inline-block;
-    text-align: center;
-}
-</style>
 <style>
-/* ═══════════════════════════════════════════════════════════════ */
-/* 🎨 MARINE SYSTEM — PROFESSIONAL PRINT STYLESHEET v2.0         */
-/* 🌍 International Standards + Zoom Controls                    */
-/* ═══════════════════════════════════════════════════════════════ */
-
 :root {
     --navy: #0a1628;
     --navy-light: #1a2942;
     --gold: #c9a961;
     --gold-light: #e0c88a;
     --gold-dark: #9d7f3f;
-    
     --success: #10b981;
     --success-bg: #ecfdf5;
     --danger: #dc2626;
@@ -95,7 +25,6 @@
     --warning-bg: #fffbeb;
     --info: #3b82f6;
     --info-bg: #eff6ff;
-    
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
@@ -106,18 +35,13 @@
     --gray-700: #374151;
     --gray-800: #1f2937;
     --gray-900: #111827;
-    
     --font-primary: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
-    --font-mono: 'Courier New', monospace;
-    
-    /* Zoom Variables */
     --zoom-font: 100%;
     --zoom-table: 100%;
     --zoom-row: 100%;
     --zoom-image: 100%;
 }
 
-/* ── Reset & Base ── */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -137,7 +61,6 @@ html, body {
     line-height: 1.5;
 }
 
-/* ── Print Page Container (A4 Landscape) ── */
 .page {
     width: 297mm;
     min-height: 210mm;
@@ -148,9 +71,7 @@ html, body {
     position: relative;
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/* 🏛️ OFFICIAL HEADER                                            */
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ HEADER ═══════════════ */
 .official-header {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -236,19 +157,34 @@ html, body {
     font-weight: 600;
 }
 
-.header-right .ref {
-    display: inline-block;
-    padding: 1mm 3mm;
-    background: var(--gold-light);
-    border-radius: 2mm;
+.doc-ref-block {
+    margin-top: 3mm;
+    padding-top: 2mm;
+    border-top: 1px solid var(--gold-light);
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    font-size: 11pt;
+    font-weight: 800;
     color: var(--navy);
-    font-weight: 700;
-    margin-top: 2mm;
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/* 📊 KPI SECTION                                                 */
-/* ═══════════════════════════════════════════════════════════════ */
+.doc-ref-label {
+    color: var(--gold-dark);
+    font-weight: 900;
+    font-size: 12pt;
+    white-space: nowrap;
+}
+
+.doc-ref-line {
+    display: inline-block;
+    width: 45mm;
+    height: 0.5mm;
+    border-bottom: 1.5px dotted var(--navy);
+    margin: 0 2mm;
+}
+
+/* ═══════════════ KPI ═══════════════ */
 .kpi-section {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -299,12 +235,9 @@ html, body {
     font-size: calc(8.5pt * var(--zoom-font) / 100);
     color: var(--gray-600);
     font-weight: 600;
-    letter-spacing: 0.2px;
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/* 📋 SECTION TITLE                                               */
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ SECTION TITLE ═══════════════ */
 .section-title {
     display: flex;
     align-items: center;
@@ -313,7 +246,6 @@ html, body {
     background: linear-gradient(90deg, var(--navy) 0%, var(--navy-light) 100%);
     color: #ffffff;
     border-radius: 2mm 2mm 0 0;
-    margin-bottom: 0;
     font-size: calc(10pt * var(--zoom-font) / 100);
     font-weight: 700;
 }
@@ -323,9 +255,7 @@ html, body {
     font-size: 11pt;
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/* 📊 DATA TABLE                                                  */
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ TABLE ═══════════════ */
 .table-wrapper {
     border: 1px solid var(--gray-300);
     border-top: none;
@@ -347,7 +277,7 @@ table.data-table thead {
 }
 
 table.data-table thead th {
-    padding: 2.5mm 1.5mm;
+    padding: 2mm 1mm;
     font-weight: 700;
     color: var(--navy);
     font-size: calc(8pt * var(--zoom-table) / 100);
@@ -355,30 +285,21 @@ table.data-table thead th {
     border-bottom: 1.5px solid var(--navy);
     border-left: 1px solid var(--gray-200);
     white-space: nowrap;
-    letter-spacing: 0.2px;
     vertical-align: middle;
 }
 
-table.data-table thead th:last-child {
-    border-left: none;
-}
+table.data-table thead th:last-child { border-left: none; }
 
 table.data-table tbody tr {
     page-break-inside: avoid;
     break-inside: avoid;
-    height: calc(9mm * var(--zoom-row) / 100);
+    height: calc(8mm * var(--zoom-row) / 100);
 }
 
-table.data-table tbody tr:nth-child(even) {
-    background: var(--gray-50);
-}
-
-table.data-table tbody tr:hover {
-    background: var(--gray-100);
-}
+table.data-table tbody tr:nth-child(even) { background: var(--gray-50); }
 
 table.data-table tbody td {
-    padding: calc(1.5mm * var(--zoom-row) / 100) 1mm;
+    padding: calc(1mm * var(--zoom-row) / 100) 0.8mm;
     text-align: center;
     vertical-align: middle;
     border-bottom: 1px solid var(--gray-200);
@@ -388,101 +309,73 @@ table.data-table tbody td {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    line-height: 1.3;
-    height: calc(9mm * var(--zoom-row) / 100);
+    line-height: 1.2;
+    height: calc(8mm * var(--zoom-row) / 100);
 }
 
-table.data-table tbody td:last-child {
-    border-left: none;
-}
+table.data-table tbody td:last-child { border-left: none; }
+table.data-table tbody tr:last-child td { border-bottom: none; }
 
-table.data-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
+/* ═══════════════ IMAGE CELL — الحجم الصحيح ═══════════════ */
 td.cell-image {
-    width: calc(12mm * var(--zoom-image) / 100);
-    padding: 1mm;
+    width: calc(9mm * var(--zoom-image) / 100);
+    padding: 0.8mm;
+    background: #f9fafb;
+    vertical-align: middle;
+    text-align: center;
 }
 
 td.cell-image img {
-    width: calc(8mm * var(--zoom-image) / 100);
-    height: calc(8mm * var(--zoom-image) / 100);
+    width: calc(6mm * var(--zoom-image) / 100);
+    height: calc(6mm * var(--zoom-image) / 100);
     object-fit: cover;
     border-radius: 1mm;
     border: 1px solid var(--gray-300);
     display: block;
     margin: 0 auto;
+    background: #ffffff;
 }
 
 td.cell-image .no-image {
-    width: calc(8mm * var(--zoom-image) / 100);
-    height: calc(8mm * var(--zoom-image) / 100);
+    width: calc(6mm * var(--zoom-image) / 100);
+    height: calc(6mm * var(--zoom-image) / 100);
     margin: 0 auto;
-    background: var(--gray-100);
-    border: 1px dashed var(--gray-300);
+    background: #f3f4f6;
+    border: 1px dashed var(--gray-400);
     border-radius: 1mm;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--gray-400);
-    font-size: calc(10pt * var(--zoom-image) / 100);
+    color: var(--gray-500);
+    font-size: calc(7pt * var(--zoom-image) / 100);
 }
+
 td.cell-number {
-    font-family: var(--font-mono);
+    font-family: 'Courier New', monospace;
     font-weight: 700;
     color: var(--navy);
     font-size: calc(7.5pt * var(--zoom-table) / 100);
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/* 🏷️ STATUS BADGES                                               */
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ BADGES ═══════════════ */
 .badge {
     display: inline-block;
     padding: 0.5mm 2mm;
     border-radius: 3mm;
     font-size: calc(6.5pt * var(--zoom-table) / 100);
     font-weight: 700;
-    letter-spacing: 0.2px;
     white-space: nowrap;
     border: 1px solid;
-    line-height: 1.4;
+    line-height: 1.3;
 }
 
-.badge-success {
-    background: var(--success-bg);
-    color: var(--success);
-    border-color: var(--success);
-}
+.badge-success { background: var(--success-bg); color: #059669; border-color: var(--success); }
+.badge-danger { background: var(--danger-bg); color: #b91c1c; border-color: var(--danger); }
+.badge-warning { background: var(--warning-bg); color: #b45309; border-color: var(--warning); }
+.badge-info { background: var(--info-bg); color: #1d4ed8; border-color: var(--info); }
+.badge-neutral { background: var(--gray-100); color: var(--gray-700); border-color: var(--gray-300); }
 
-.badge-danger {
-    background: var(--danger-bg);
-    color: var(--danger);
-    border-color: var(--danger);
-}
-
-.badge-warning {
-    background: var(--warning-bg);
-    color: var(--warning);
-    border-color: var(--warning);
-}
-
-.badge-info {
-    background: var(--info-bg);
-    color: var(--info);
-    border-color: var(--info);
-}
-
-.badge-neutral {
-    background: var(--gray-100);
-    color: var(--gray-700);
-    border-color: var(--gray-300);
-}
-
-/* ═══════════════════════════════════════════════════════════════ */
-/* 📄 FOOTER                                                      */
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ FOOTER ═══════════════ */
 .official-footer {
     margin-top: 6mm;
     padding-top: 4mm;
@@ -495,20 +388,9 @@ td.cell-number {
     color: var(--gray-600);
 }
 
-.footer-left {
-    text-align: right;
-}
-
-.footer-center {
-    text-align: center;
-    font-weight: 700;
-    color: var(--navy);
-}
-
-.footer-right {
-    text-align: left;
-    font-variant-numeric: tabular-nums;
-}
+.footer-left { text-align: right; }
+.footer-center { text-align: center; font-weight: 700; color: var(--navy); }
+.footer-right { text-align: left; }
 
 .page-number {
     display: inline-block;
@@ -518,12 +400,9 @@ td.cell-number {
     border-radius: 2mm;
     font-size: calc(8pt * var(--zoom-font) / 100);
     font-weight: 700;
-    letter-spacing: 0.5px;
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/* 🎛️ CONTROLS                                                    */
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ CONTROLS ═══════════════ */
 .controls {
     position: fixed;
     top: 20px;
@@ -568,13 +447,9 @@ td.cell-number {
     color: var(--gray-700);
 }
 
-.btn-secondary:hover {
-    background: var(--gray-200);
-}
+.btn-secondary:hover { background: var(--gray-200); }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/* 🔍 ZOOM CONTROLS                                               */
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ ZOOM ═══════════════ */
 .zoom-controls {
     position: fixed;
     top: 20px;
@@ -624,11 +499,6 @@ td.cell-number {
     align-items: center;
     justify-content: center;
     line-height: 1;
-    transition: all 0.2s;
-}
-
-.zoom-controls .zoom-toggle:hover {
-    background: rgba(255, 255, 255, 0.3);
 }
 
 .zoom-controls .zoom-body {
@@ -673,18 +543,12 @@ td.cell-number {
     align-items: center;
     justify-content: center;
     line-height: 1;
-    transition: all 0.15s;
 }
 
 .zoom-row button:hover {
     background: var(--navy);
     color: #fff;
     border-color: var(--navy);
-    transform: scale(1.05);
-}
-
-.zoom-row button:active {
-    transform: scale(0.92);
 }
 
 .zoom-row .zoom-value {
@@ -717,19 +581,14 @@ td.cell-number {
     font-weight: 800;
     color: var(--gray-700);
     cursor: pointer;
-    transition: all 0.15s;
 }
 
-.zoom-presets button:hover {
-    background: var(--gray-100);
-    transform: translateY(-2px);
-}
+.zoom-presets button:hover { background: var(--gray-100); }
 
 .zoom-presets button.active {
     background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
     color: var(--navy);
     border-color: var(--gold);
-    box-shadow: 0 4px 12px rgba(201, 169, 97, 0.4);
 }
 
 .zoom-reset {
@@ -743,23 +602,14 @@ td.cell-number {
     font-size: 12.5px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.15s;
 }
 
-.zoom-reset:hover {
-    background: #fee2e2;
-    transform: translateY(-1px);
-}
+.zoom-reset:hover { background: #fee2e2; }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/* ✨ LOADING                                                      */
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ LOADING ═══════════════ */
 .loading-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(255, 255, 255, 0.95);
     display: flex;
     flex-direction: column;
@@ -778,9 +628,7 @@ td.cell-number {
     animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .loading-text {
     font-size: 14px;
@@ -788,55 +636,7 @@ td.cell-number {
     font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
-/* 📱 RESPONSIVE                                                   */
-/* ═══════════════════════════════════════════════════════════════ */
-@media screen and (max-width: 1024px) {
-    .page {
-        width: 100%;
-        margin: 5mm;
-        padding: 8mm;
-    }
-    
-    .kpi-section {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .official-header {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 5mm;
-    }
-    
-    .header-left, .header-right {
-        text-align: center;
-    }
-    
-    .zoom-controls {
-        width: 280px;
-    }
-}
-
-@media screen and (max-width: 768px) {
-    .zoom-controls {
-        top: auto;
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
-        width: auto;
-    }
-    
-    .controls {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        justify-content: center;
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════════ */
-/* 🖨️ PRINT MEDIA                                                  */
-/* ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════ PRINT ═══════════════ */
 @page {
     size: A4 landscape;
     margin: 8mm 10mm;
@@ -849,14 +649,12 @@ td.cell-number {
         padding: 0 !important;
     }
     
-    /* إخفاء عناصر التحكم */
     .controls,
     .zoom-controls,
     .loading-overlay {
         display: none !important;
     }
     
-    /* إخفاء الترويسة القادمة من السيرفر */
     #official-print-header,
     #official-print-header *,
     #user-info-badge,
@@ -887,17 +685,9 @@ td.cell-number {
         break-before: avoid;
     }
     
-    table.data-table {
-        page-break-inside: auto;
-    }
-    
-    table.data-table thead {
-        display: table-header-group;
-    }
-    
-    table.data-table tbody tr {
-        page-break-inside: avoid;
-    }
+    table.data-table { page-break-inside: auto; }
+    table.data-table thead { display: table-header-group; }
+    table.data-table tbody tr { page-break-inside: avoid; }
     
     .kpi-section,
     .section-title {
@@ -910,21 +700,29 @@ td.cell-number {
         print-color-adjust: exact !important;
     }
 }
+
+@media screen and (max-width: 1024px) {
+    .page { width: 100%; margin: 5mm; padding: 8mm; }
+    .kpi-section { grid-template-columns: repeat(2, 1fr); }
+    .official-header { grid-template-columns: 1fr; text-align: center; gap: 5mm; }
+    .header-left, .header-right { text-align: center; }
+    .doc-ref-block { justify-content: center; }
+    .zoom-controls { width: 280px; }
+}
+
+@media screen and (max-width: 768px) {
+    .zoom-controls { top: auto; bottom: 10px; left: 10px; right: 10px; width: auto; }
+    .controls { top: 10px; right: 10px; left: 10px; justify-content: center; }
+}
 </style>
 </head>
 <body>
 
-<!-- 🎛️ Controls -->
 <div class="controls">
-    <button class="btn-primary" onclick="window.print()">
-        🖨️ طباعة / PDF
-    </button>
-    <button class="btn-secondary" onclick="window.close()">
-        ✖ إغلاق
-    </button>
+    <button class="btn-primary" onclick="window.print()">🖨️ طباعة / PDF</button>
+    <button class="btn-secondary" onclick="window.close()">✖ إغلاق</button>
 </div>
 
-<!-- 🔍 ZOOM CONTROLS -->
 <div class="zoom-controls" id="zoomControls">
     <div class="zoom-title" onclick="toggleZoomPanel()">
         <span>🔍 حجم الطباعة</span>
@@ -956,63 +754,53 @@ td.cell-number {
             <button onclick="adjustZoom('image', 1)">+</button>
         </div>
         <div class="zoom-presets">
-            <button onclick="applyPreset('small')" title="صغير جداً (75%)">ص</button>
-            <button onclick="applyPreset('normal')" class="active" title="عادي (100%)">ع</button>
-            <button onclick="applyPreset('large')" title="كبير (125%)">ك</button>
-            <button onclick="applyPreset('huge')" title="ضخم (150%)">ض</button>
+            <button onclick="applyPreset('small')">ص</button>
+            <button onclick="applyPreset('normal')" class="active">ع</button>
+            <button onclick="applyPreset('large')">ك</button>
+            <button onclick="applyPreset('huge')">ض</button>
         </div>
         <button class="zoom-reset" onclick="resetZoom()">🔄 إعادة ضبط</button>
     </div>
 </div>
 
-<!-- ⏳ Loading -->
 <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
     <div class="loading-text">جاري تحضير التقرير...</div>
 </div>
 
-<!-- 📄 Page Content -->
 <div class="page" id="pageContent" style="display: none;">
 
-    <!-- 🏛️ الترويسة الرسمية -->
     <header class="official-header">
-    <!-- 🏛️ اليمين: الإدارات + رقم الضبط -->
-    <div class="header-left">
-        <div class="republic">الجمهورية التونسية</div>
-        وزارة الداخلية<br>
-        كتابة الدولة للأمن<br>
-        الإدارة العامة للحرس الوطني<br>
-        الإدارة العامة لحرس الحدود<br>
-        إدارة إسناد الوحدات البحرية
-        <!-- 📋 رقم الضبط الإداري -->
-        <div class="doc-ref-block">
-            <span class="doc-ref-label">ع/</span>
-            <span class="doc-ref-number" id="docRefNo">__________</span>
-            <span class="doc-ref-label">/دد</span>
+        <div class="header-left">
+            <div class="republic">الجمهورية التونسية</div>
+            وزارة الداخلية<br>
+            كتابة الدولة للأمن<br>
+            الإدارة العامة للحرس الوطني<br>
+            الإدارة العامة لحرس الحدود<br>
+            إدارة إسناد الوحدات البحرية
+            
+            <div class="doc-ref-block">
+                <span class="doc-ref-label">ع/</span>
+                <span class="doc-ref-line"></span>
+                <span class="doc-ref-label">/دد</span>
+            </div>
         </div>
-    </div>
-    
-    <!-- ⚓ الوسط: الشعار والعنوان -->
-    <div class="header-center">
-        <div class="emblem">⚓</div>
-        <h1 id="pageTitle">منظومة الوسائل البحرية</h1>
-        <div class="subtitle" id="pageSubtitle">Marine System Report</div>
-    </div>
-    
-    <!-- 📅 اليسار: التاريخ والمكان -->
-    <div class="header-right">
-        <div style="margin-top: 2mm;">
-            العوينة في: <span id="docPlaceDate">__________</span>
+        
+        <div class="header-center">
+            <div class="emblem">⚓</div>
+            <h1 id="pageTitle">منظومة الوسائل البحرية</h1>
+            <div class="subtitle" id="pageSubtitle">Marine System Report</div>
         </div>
-    </div>
-</header>
-    <!-- 📊 الإحصائيات -->
+        
+        <div class="header-right">
+            <div style="margin-top: 2mm;">العوينة في: __________</div>
+        </div>
+    </header>
+
     <section class="kpi-section" id="kpiSection"></section>
 
-    <!-- 📋 عنوان القسم -->
     <div class="section-title" id="sectionTitle">السجل التفصيلي</div>
 
-    <!-- 📊 الجدول -->
     <div class="table-wrapper">
         <table class="data-table" id="dataTable">
             <thead id="tableHead"></thead>
@@ -1020,14 +808,9 @@ td.cell-number {
         </table>
     </div>
 
-    <!-- 📄 التذييل -->
     <footer class="official-footer">
-        <div class="footer-left">
-            منظومة الوسائل البحرية v11.2.0
-        </div>
-        <div class="footer-center">
-            إدارة إسناد الوحدات البحرية
-        </div>
+        <div class="footer-left">منظومة الوسائل البحرية v11.2.0</div>
+        <div class="footer-center">إدارة إسناد الوحدات البحرية</div>
         <div class="footer-right">
             <span id="printDate"></span>
             <span class="page-number" style="margin-right: 3mm;">صفحة 1</span>
@@ -1036,9 +819,6 @@ td.cell-number {
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-// 🖨️ PRINT CONTROLLER
-// ═══════════════════════════════════════════════════════════════
 (function() {
     'use strict';
     
@@ -1047,49 +827,26 @@ td.cell-number {
     const storageKey = params.get('key') || 'print_data';
     
     const PAGE_CONFIGS = {
-        fleet: {
-            title: 'السجل العام للأسطول',
-            subtitle: 'Fleet General Registry',
-            section: 'السجل التفصيلي للمراكب'
-        },
-        vehicles: {
-            title: 'الوسائل البرية - الحرس البحري',
-            subtitle: 'Land Vehicles — Coast Guard',
-            section: 'السجل التفصيلي للوسائل البرية'
-        },
-        maintenance: {
-            title: 'سجل الصيانة والتدخلات',
-            subtitle: 'Maintenance & Interventions Log',
-            section: 'سجل عمليات الصيانة'
-        },
-        users: {
-            title: 'إدارة المستخدمين',
-            subtitle: 'Users Management',
-            section: 'قائمة المستخدمين'
-        },
-        efficiency: {
-            title: 'جاهزية الأسطول',
-            subtitle: 'Fleet Efficiency',
-            section: 'تحليل الجاهزية حسب الفئة'
-        }
+        fleet: { title: 'السجل العام للأسطول', subtitle: 'Fleet General Registry', section: 'السجل التفصيلي للمراكب' },
+        vehicles: { title: 'الوسائل البرية - الحرس البحري', subtitle: 'Land Vehicles — Coast Guard', section: 'السجل التفصيلي للوسائل البرية' },
+        maintenance: { title: 'سجل الصيانة والتدخلات', subtitle: 'Maintenance & Interventions Log', section: 'سجل عمليات الصيانة' },
+        users: { title: 'إدارة المستخدمين', subtitle: 'Users Management', section: 'قائمة المستخدمين' },
+        efficiency: { title: 'جاهزية الأسطول', subtitle: 'Fleet Efficiency', section: 'تحليل الجاهزية حسب الفئة' },
+        notes: { title: 'المذكرات', subtitle: 'Notes', section: 'قائمة المذكرات' },
+        support: { title: 'مركز الدعم الفني', subtitle: 'Support Center', section: 'التذاكر' }
     };
     
     const config = { ...(PAGE_CONFIGS[pageType] || PAGE_CONFIGS.fleet) };
     
-    // ═══ جلب البيانات ═══
     function loadData() {
         try {
             const raw = localStorage.getItem(storageKey);
             if (raw) return JSON.parse(raw);
-        } catch (e) {
-            console.warn('⚠️ No cached data:', e.message);
-        }
+        } catch (e) {}
         return { stats: [], columns: [], rows: [] };
     }
     
     const data = loadData();
-    
-    // ═══ تحديث العناوين (من البيانات إن وُجدت) ═══
     const title = data.title || config.title;
     const subtitle = data.subtitle || config.subtitle;
     const section = data.sectionTitle || data.section || config.section;
@@ -1099,7 +856,6 @@ td.cell-number {
     document.getElementById('sectionTitle').textContent = section;
     document.title = title + ' — طباعة';
     
-    // ═══ التاريخ ═══
     const now = new Date();
     const dateStr = now.toLocaleDateString('ar-TN', {
         year: 'numeric', month: 'long', day: 'numeric',
@@ -1107,7 +863,6 @@ td.cell-number {
     });
     document.getElementById('printDate').textContent = dateStr;
     
-    // ═══ بناء KPIs ═══
     function buildKPI(stats) {
         const container = document.getElementById('kpiSection');
         if (!stats || !stats.length) {
@@ -1117,16 +872,13 @@ td.cell-number {
         
         container.innerHTML = stats.slice(0, 5).map((s, i) => {
             const type = s.type || ['', 'success', 'warning', 'danger', 'gold'][i] || '';
-            return `
-                <div class="kpi-card ${type}">
-                    <div class="kpi-value">${s.value || '0'}</div>
-                    <div class="kpi-label">${s.label || ''}</div>
-                </div>
-            `;
+            return `<div class="kpi-card ${type}">
+                <div class="kpi-value">${s.value || '0'}</div>
+                <div class="kpi-label">${s.label || ''}</div>
+            </div>`;
         }).join('');
     }
     
-    // ═══ بناء الجدول ═══
     function buildTable(columns, rows) {
         const thead = document.getElementById('tableHead');
         const tbody = document.getElementById('tableBody');
@@ -1138,25 +890,19 @@ td.cell-number {
         }
         
         if (!rows || !rows.length) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="${columns.length || 5}" 
-                        style="text-align:center;padding:30mm;color:#9ca3af;font-size:11pt;">
-                        لا توجد بيانات للعرض
-                    </td>
-                </tr>
-            `;
+            tbody.innerHTML = `<tr><td colspan="${columns.length || 5}" 
+                style="text-align:center;padding:30mm;color:#9ca3af;font-size:11pt;">
+                لا توجد بيانات للعرض</td></tr>`;
             return;
         }
         
         tbody.innerHTML = rows.map(row => {
             const cells = Array.isArray(row) ? row : Object.values(row);
             return '<tr>' + cells.map(cell => {
-                // كائن
                 if (typeof cell === 'object' && cell !== null) {
                     if (cell.type === 'image') {
                         if (cell.url) {
-                            return `<td class="cell-image"><img src="${cell.url}" alt="" loading="eager" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>📷</div>'"></td>`;
+                            return `<td class="cell-image"><img src="${cell.url}" alt="" loading="eager" crossorigin="anonymous" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>📷</div>'"></td>`;
                         }
                         return `<td class="cell-image"><div class="no-image">📷</div></td>`;
                     }
@@ -1168,23 +914,15 @@ td.cell-number {
                     }
                     return `<td>${cell.value || cell.text || '—'}</td>`;
                 }
-                
-                // نص عادي
-                if (cell === null || cell === undefined || cell === '') {
-                    return '<td>—</td>';
-                }
-                
-                // كشف صور من URL
+                if (cell === null || cell === undefined || cell === '') return '<td>—</td>';
                 if (typeof cell === 'string' && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(cell)) {
-                    return `<td class="cell-image"><img src="${cell}" alt="" loading="eager"></td>`;
+                    return `<td class="cell-image"><img src="${cell}" alt="" loading="eager" crossorigin="anonymous"></td>`;
                 }
-                
                 return `<td>${cell}</td>`;
             }).join('') + '</tr>';
         }).join('');
     }
     
-    // ═══ تشغيل ═══
     function init() {
         const overlay = document.getElementById('loadingOverlay');
         const pageContent = document.getElementById('pageContent');
@@ -1198,15 +936,6 @@ td.cell-number {
             
             console.log('%c✅ Print page ready', 
                 'background:#10b981;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;');
-            console.log('   Type:', pageType);
-            console.log('   Rows:', data.rows?.length || 0);
-            console.log('   Stats:', data.stats?.length || 0);
-            
-            window.addEventListener('beforeprint', () => {
-                document.querySelectorAll('img').forEach(img => {
-                    img.loading = 'eager';
-                });
-            });
         }, 300);
     }
     
@@ -1217,9 +946,6 @@ td.cell-number {
     }
 })();
 
-// ═══════════════════════════════════════════════════════════════
-// 🔍 ZOOM SYSTEM
-// ═══════════════════════════════════════════════════════════════
 (function() {
     'use strict';
     
@@ -1234,7 +960,6 @@ td.cell-number {
     
     function applyZoom() {
         const root = document.documentElement;
-        
         root.style.setProperty('--zoom-font', zoomState.font + '%');
         root.style.setProperty('--zoom-table', zoomState.table + '%');
         root.style.setProperty('--zoom-row', zoomState.row + '%');
@@ -1250,9 +975,7 @@ td.cell-number {
         if (rowEl) rowEl.textContent = zoomState.row + '%';
         if (imageEl) imageEl.textContent = zoomState.image + '%';
         
-        try {
-            localStorage.setItem('print_zoom', JSON.stringify(zoomState));
-        } catch (e) {}
+        try { localStorage.setItem('print_zoom', JSON.stringify(zoomState)); } catch (e) {}
     }
     
     window.adjustZoom = function(type, direction) {
@@ -1270,10 +993,8 @@ td.cell-number {
             large:  { font: 125, table: 120, row: 120, image: 120 },
             huge:   { font: 150, table: 140, row: 140, image: 140 }
         };
-        
         zoomState = { ...(PRESETS[preset] || DEFAULTS) };
         applyZoom();
-        
         document.querySelectorAll('.zoom-presets button').forEach(b => b.classList.remove('active'));
         const btn = document.querySelector(`.zoom-presets button[onclick="applyPreset('${preset}')"]`);
         if (btn) btn.classList.add('active');
@@ -1292,9 +1013,7 @@ td.cell-number {
         if (!panel) return;
         panel.classList.toggle('collapsed');
         const toggle = panel.querySelector('.zoom-toggle');
-        if (toggle) {
-            toggle.textContent = panel.classList.contains('collapsed') ? '+' : '−';
-        }
+        if (toggle) toggle.textContent = panel.classList.contains('collapsed') ? '+' : '−';
     };
     
     if (document.readyState === 'loading') {
@@ -1302,9 +1021,6 @@ td.cell-number {
     } else {
         applyZoom();
     }
-    
-    console.log('%c🔍 Zoom System Ready', 
-        'background:#c9a961;color:#0a1628;padding:4px 8px;border-radius:4px;font-weight:bold;');
 })();
 </script>
 
