@@ -998,11 +998,91 @@
             });
     }
 
-    function dvvPrint() {
-        dvvToast('🖨️ جاري تحضير الطباعة...', 'info', 1500);
-        _timeouts.push(setTimeout(function() { window.print(); }, 300));
-    }
+     function dvvPrint() {
+        try {
+            // 1️⃣ جمع الإحصائيات
+            var stats = [
+                { value: document.getElementById('dvvStatTotal')?.textContent || '0', label: '📊 إجمالي المطروحة', type: '' },
+                { value: document.getElementById('dvvStatMonth')?.textContent || '0', label: '📅 هذا الشهر', type: 'info' },
+                { value: document.getElementById('dvvStatYear')?.textContent || '0', label: '🗓️ هذه السنة', type: 'warning' },
+                { value: document.getElementById('dvvStatTopReason')?.textContent || '—', label: '⚠️ السبب الأكثر شيوعاً', type: 'danger' },
+                { value: 'الوسائل البرية', label: '🚛 الفئة', type: 'gold' }
+            ];
 
+            // 2️⃣ جمع الأعمدة
+            var columns = ['#', 'النوع', 'الماركة / الطراز', 'رقم الوسيلة', 'الإدارة / الإقليم', 'المنطقة', 'تاريخ الطرح', 'سبب الطرح', 'رقم القرار'];
+
+            // 3️⃣ جمع الصفوف من الفلترة الحالية
+            var filtered = getFiltered();
+
+            if (!filtered || filtered.length === 0) {
+                dvvToast('⚠️ لا توجد بيانات للطباعة', 'error');
+                return;
+            }
+
+            var rows = [];
+            filtered.forEach(function(v, idx) {
+                var brandModel = '—';
+                if (v.brand || v.model) {
+                    var parts = [];
+                    if (v.brand) parts.push(v.brand);
+                    if (v.model) parts.push(v.model);
+                    brandModel = parts.join(' • ');
+                }
+
+                var reason = v.disposalReason || '—';
+                var region = v.region || '—';
+                var zone = v.zone || '—';
+                var decision = v.disposalDecision || '—';
+                var disposalDate = v.disposalDate || v.disposedAt;
+
+                rows.push([
+                    String(idx + 1),
+                    v.type || '—',
+                    brandModel,
+                    v.plateNumber || '—',
+                    getRegionShort(region),
+                    zone,
+                    formatDate(disposalDate),
+                    reason,
+                    decision
+                ]);
+            });
+
+            // 4️⃣ حفظ في localStorage
+            var printData = {
+                type: 'disposals-vehicles',
+                title: 'الوسائل البرية المطروحة',
+                subtitle: 'Disposed Land Vehicles Registry',
+                sectionTitle: 'سجل الوسائل البرية المطروحة',
+                stats: stats,
+                columns: columns,
+                rows: rows
+            };
+
+            localStorage.setItem('print_data', JSON.stringify(printData));
+
+            // 5️⃣ فتح صفحة الطباعة
+            var printUrl = '/print.html?type=disposals-vehicles&key=print_data';
+            var newWindow = window.open(printUrl, '_blank');
+
+            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                if (confirm('⚠️ المتصفح منع فتح نافذة جديدة.\nهل تريد الانتقال لصفحة الطباعة؟')) {
+                    window.location.href = printUrl;
+                }
+                return;
+            }
+
+            dvvToast('🖨️ تم تحضير الطباعة (' + rows.length + ' وسيلة)', 'success');
+            console.log('✅ Print data saved for disposals-vehicles');
+            console.log('   Rows:', rows.length);
+            console.log('   Columns:', columns.length);
+
+        } catch (e) {
+            console.error('❌ Print error:', e);
+            dvvToast('❌ حدث خطأ: ' + e.message, 'error');
+        }
+    }
     function dvvExportExcel() {
         try {
             var filtered = getFiltered();
