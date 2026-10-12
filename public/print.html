@@ -396,8 +396,11 @@ html, body {
     const storageKey = params.get('key') || 'print_data';
     const pageType = params.get('type') || 'fleet';
 
+    // ═══════════════════════════════════════════════════════════
+    // 📋 العناوين الافتراضية لكل نوع صفحة
+    // ═══════════════════════════════════════════════════════════
     const TITLES = {
-        fleet: 'السجل العام للأسطول',
+        fleet: 'الأسطول البحري',                            // ← ✅ الاسم الجديد
         vehicles: 'الوسائل البرية - الحرس البحري',
         efficiency: 'جاهزية الأسطول',
         maintenance: 'سجل الصيانة والتدخلات',
@@ -569,6 +572,7 @@ html, body {
 
         console.log('%c✅ Print page ready', 'background:#10b981;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;');
         console.log('   Type:', pageType);
+        console.log('   Title:', data.title || TITLES[pageType]);
         console.log('   Mode:', data.htmlSnapshot ? 'HTML Clone' : 'Data Build');
     }
 
