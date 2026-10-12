@@ -267,7 +267,7 @@ html, body {
 table.data-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: calc(7.5pt * var(--zoom-table) / 100);
+    font-size: calc(7pt * var(--zoom-table) / 100);
     table-layout: fixed;
 }
 
@@ -277,10 +277,10 @@ table.data-table thead {
 }
 
 table.data-table thead th {
-    padding: 2mm 1mm;
+    padding: 1.5mm 0.8mm;
     font-weight: 700;
     color: var(--navy);
-    font-size: calc(8pt * var(--zoom-table) / 100);
+    font-size: calc(7pt * var(--zoom-table) / 100);
     text-align: center;
     border-bottom: 1.5px solid var(--navy);
     border-left: 1px solid var(--gray-200);
@@ -293,76 +293,82 @@ table.data-table thead th:last-child { border-left: none; }
 table.data-table tbody tr {
     page-break-inside: avoid;
     break-inside: avoid;
-    height: calc(8mm * var(--zoom-row) / 100);
+    height: calc(7mm * var(--zoom-row) / 100);
 }
 
 table.data-table tbody tr:nth-child(even) { background: var(--gray-50); }
 
 table.data-table tbody td {
-    padding: calc(1mm * var(--zoom-row) / 100) 0.8mm;
+    padding: calc(0.6mm * var(--zoom-row) / 100) 0.5mm;
     text-align: center;
     vertical-align: middle;
     border-bottom: 1px solid var(--gray-200);
     border-left: 1px solid var(--gray-200);
-    font-size: calc(7pt * var(--zoom-table) / 100);
+    font-size: calc(6.5pt * var(--zoom-table) / 100);
     color: var(--gray-800);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    line-height: 1.2;
-    height: calc(8mm * var(--zoom-row) / 100);
+    line-height: 1.15;
+    height: calc(7mm * var(--zoom-row) / 100);
 }
 
 table.data-table tbody td:last-child { border-left: none; }
 table.data-table tbody tr:last-child td { border-bottom: none; }
 
-/* ═══════════════ IMAGE CELL — الحجم الصحيح ═══════════════ */
+/* ═══════════════ IMAGE CELL — حجم ثابت صغير ═══════════════ */
 td.cell-image {
-    width: calc(9mm * var(--zoom-image) / 100);
-    padding: 0.8mm;
+    width: 9mm !important;
+    min-width: 9mm !important;
+    max-width: 9mm !important;
+    padding: 0.5mm !important;
     background: #f9fafb;
     vertical-align: middle;
     text-align: center;
 }
 
 td.cell-image img {
-    width: calc(6mm * var(--zoom-image) / 100);
-    height: calc(6mm * var(--zoom-image) / 100);
+    width: 6mm !important;
+    height: 6mm !important;
+    max-width: 6mm !important;
+    max-height: 6mm !important;
     object-fit: cover;
-    border-radius: 1mm;
-    border: 1px solid var(--gray-300);
+    border-radius: 0.8mm;
+    border: 0.8px solid var(--gray-300);
     display: block;
     margin: 0 auto;
     background: #ffffff;
 }
 
 td.cell-image .no-image {
-    width: calc(6mm * var(--zoom-image) / 100);
-    height: calc(6mm * var(--zoom-image) / 100);
+    width: 6mm !important;
+    height: 6mm !important;
+    max-width: 6mm !important;
+    max-height: 6mm !important;
     margin: 0 auto;
     background: #f3f4f6;
-    border: 1px dashed var(--gray-400);
-    border-radius: 1mm;
+    border: 0.8px dashed var(--gray-400);
+    border-radius: 0.8mm;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--gray-500);
-    font-size: calc(7pt * var(--zoom-image) / 100);
+    font-size: 7pt;
 }
 
 td.cell-number {
     font-family: 'Courier New', monospace;
     font-weight: 700;
     color: var(--navy);
-    font-size: calc(7.5pt * var(--zoom-table) / 100);
+    font-size: calc(7pt * var(--zoom-table) / 100);
 }
 
 /* ═══════════════ BADGES ═══════════════ */
 .badge {
     display: inline-block;
-    padding: 0.5mm 2mm;
+    padding: 0.4mm 1.5mm;
     border-radius: 3mm;
-    font-size: calc(6.5pt * var(--zoom-table) / 100);
+    font-size: calc(6pt * var(--zoom-table) / 100);
     font-weight: 700;
     white-space: nowrap;
     border: 1px solid;
@@ -884,9 +890,14 @@ td.cell-number {
         const tbody = document.getElementById('tableBody');
         
         if (columns && columns.length) {
-            thead.innerHTML = '<tr>' + columns.map(c => 
-                `<th>${typeof c === 'string' ? c : (c.label || '')}</th>`
-            ).join('') + '</tr>';
+            thead.innerHTML = '<tr>' + columns.map((c, i) => {
+                const label = typeof c === 'string' ? c : (c.label || '');
+                // ✅ العمود الأول (صورة) — عرض ثابت 10mm
+                if (i === 0) {
+                    return `<th style="width:10mm;min-width:10mm;max-width:10mm;">${label}</th>`;
+                }
+                return `<th>${label}</th>`;
+            }).join('') + '</tr>';
         }
         
         if (!rows || !rows.length) {
@@ -898,27 +909,30 @@ td.cell-number {
         
         tbody.innerHTML = rows.map(row => {
             const cells = Array.isArray(row) ? row : Object.values(row);
-            return '<tr>' + cells.map(cell => {
+            return '<tr>' + cells.map((cell, i) => {
+                // ✅ العمود الأول (صورة) — عرض ثابت
+                const tdStyle = i === 0 ? 'style="width:10mm;min-width:10mm;max-width:10mm;"' : '';
+                
                 if (typeof cell === 'object' && cell !== null) {
                     if (cell.type === 'image') {
                         if (cell.url) {
-                            return `<td class="cell-image"><img src="${cell.url}" alt="" loading="eager" crossorigin="anonymous" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>📷</div>'"></td>`;
+                            return `<td class="cell-image" ${tdStyle}><img src="${cell.url}" alt="" loading="eager" crossorigin="anonymous" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>📷</div>'"></td>`;
                         }
-                        return `<td class="cell-image"><div class="no-image">📷</div></td>`;
+                        return `<td class="cell-image" ${tdStyle}><div class="no-image">📷</div></td>`;
                     }
                     if (cell.type === 'badge') {
-                        return `<td><span class="badge badge-${cell.variant || 'neutral'}">${cell.text || ''}</span></td>`;
+                        return `<td ${tdStyle}><span class="badge badge-${cell.variant || 'neutral'}">${cell.text || ''}</span></td>`;
                     }
                     if (cell.type === 'number') {
-                        return `<td class="cell-number">${cell.value || ''}</td>`;
+                        return `<td class="cell-number" ${tdStyle}>${cell.value || ''}</td>`;
                     }
-                    return `<td>${cell.value || cell.text || '—'}</td>`;
+                    return `<td ${tdStyle}>${cell.value || cell.text || '—'}</td>`;
                 }
-                if (cell === null || cell === undefined || cell === '') return '<td>—</td>';
+                if (cell === null || cell === undefined || cell === '') return `<td ${tdStyle}>—</td>`;
                 if (typeof cell === 'string' && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(cell)) {
-                    return `<td class="cell-image"><img src="${cell}" alt="" loading="eager" crossorigin="anonymous"></td>`;
+                    return `<td class="cell-image" ${tdStyle}><img src="${cell}" alt="" loading="eager" crossorigin="anonymous"></td>`;
                 }
-                return `<td>${cell}</td>`;
+                return `<td ${tdStyle}>${cell}</td>`;
             }).join('') + '</tr>';
         }).join('');
     }
