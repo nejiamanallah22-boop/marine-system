@@ -1610,10 +1610,39 @@
                 try { document.querySelectorAll('img.print-chart-image').forEach(img => img.remove()); } catch (e) {}
             }
 
-          window.printEfficiencyReport = function () {
+  window.printEfficiencyReport = function () {
     try {
-        // 1️⃣ الإحصائيات (نفس أسماء العناصر في efficiency.html)
-        var stats = [
+        // ═══════════════════════════════════════════════════════════
+        // 🖨️ استنساخ الصفحة الأصلية — نفس التصميم 100%
+        // ═══════════════════════════════════════════════════════════
+
+        // 1. احفظ الرسم البياني كصورة قبل الطباعة
+        if (typeof prepareChartForPrint === 'function') {
+            prepareChartForPrint();
+        }
+
+        // 2. استنساخ الصفحة الأصلية
+        const originalPage = document.getElementById('page-efficiency');
+        if (!originalPage) {
+            alert('❌ خطأ: لم يتم العثور على الصفحة');
+            return;
+        }
+
+        const clone = originalPage.cloneNode(true);
+
+        // 3. حذف العناصر التفاعلية من النسخة
+        clone.querySelectorAll(
+            '.eff-header-actions, .filter-bar, .scroll-nav, button'
+        ).forEach(el => el.remove());
+
+        // 4. تنظيف إضافي
+        clone.querySelectorAll('[data-print-hidden]').forEach(el => el.remove());
+
+        // 5. استخراج HTML الكامل
+        const htmlSnapshot = clone.outerHTML;
+
+        // 6. الإحصائيات
+        const stats = [
             { value: document.getElementById('totalVessels')?.textContent || '0', label: '🚢 إجمالي المراكب', type: '' },
             { value: document.getElementById('activeVessels')?.textContent || '0', label: '✅ صالح للخدمة', type: 'success' },
             { value: document.getElementById('maintenanceVessels')?.textContent || '0', label: '🔧 تحت الصيانة', type: 'warning' },
@@ -1621,92 +1650,26 @@
             { value: document.getElementById('efficiencyPercent')?.textContent || '0%', label: '📈 نسبة النجاعة', type: 'gold' }
         ];
 
-        // 2️⃣ الأعمدة
-        var columns = ['الفئة', 'صالح', 'معطب', 'النجاعة', 'التقدم', 'الحالة'];
-
-        // 3️⃣ الصفوف — نجمع من الجداول المعروضة حالياً (بعد الفلترة)
-        var rows = [];
-        var sections = document.querySelectorAll('.eff-section');
-        
-        sections.forEach(function(section) {
-            // تجاهل الأقسام المخفية (بسبب الفلترة)
-            if (section.style.display === 'none') return;
-            
-            // أضف عنوان القسم كصف مميز
-            var sectionTitle = section.querySelector('.section-header h3');
-            var sectionBadge = section.querySelector('.section-header .badge');
-            var sectionText = sectionTitle ? sectionTitle.textContent.trim() : '';
-            var badgeText = sectionBadge ? sectionBadge.textContent.trim() : '';
-            
-            // صف عنوان القسم (يمتد على كل الأعمدة)
-            if (sectionText) {
-                rows.push([{
-                    type: 'badge',
-                    text: '📋 ' + sectionText + (badgeText ? ' — ' + badgeText : ''),
-                    variant: 'info'
-                }, '', '', '', '', '']);
-            }
-            
-            // الصفوف الفعلية
-            var tbody = section.querySelector('tbody');
-            if (!tbody) return;
-            
-            var trs = tbody.querySelectorAll('tr');
-            trs.forEach(function(tr) {
-                var tds = tr.querySelectorAll('td');
-                if (tds.length === 0) return;
-                
-                var rowCells = [];
-                tds.forEach(function(td, i) {
-                    // الحالة (آخر عمود) — استخرج الشارة
-                    var badge = td.querySelector('.status-badge');
-                    if (badge) {
-                        var badgeCls = badge.className || '';
-                        var variant = 'neutral';
-                        if (badgeCls.indexOf('excellent') !== -1 || badgeCls.indexOf('good') !== -1) variant = 'success';
-                        else if (badgeCls.indexOf('medium') !== -1) variant = 'warning';
-                        else if (badgeCls.indexOf('low') !== -1 || badgeCls.indexOf('critical') !== -1) variant = 'danger';
-                        rowCells.push({ type: 'badge', text: badge.textContent.trim(), variant: variant });
-                        return;
-                    }
-                    
-                    // التقدم — استخرج النسبة من progress-bar
-                    if (td.querySelector('.progress-bar')) {
-                        var fill = td.querySelector('.progress-fill');
-                        var widthMatch = fill && fill.style.width ? fill.style.width : '0%';
-                        rowCells.push(widthMatch);
-                        return;
-                    }
-                    
-                    // نص عادي
-                    rowCells.push(td.textContent.trim() || '—');
-                });
-                
-                rows.push(rowCells);
-            });
-        });
-
-        if (rows.length === 0) {
-            showNotification('⚠️ لا توجد بيانات للطباعة', 'error');
-            return;
-        }
-
-        // 4️⃣ حفظ في localStorage
-        var printData = {
+        // 7. حفظ في localStorage
+        const printData = {
             type: 'efficiency',
             title: 'جاهزية الأسطول',
             subtitle: 'Fleet Efficiency Report',
             sectionTitle: 'تحليل الجاهزية التفصيلي',
             stats: stats,
-            columns: columns,
-            rows: rows
+            htmlSnapshot: htmlSnapshot
         };
 
         localStorage.setItem('print_data', JSON.stringify(printData));
 
-        // 5️⃣ فتح صفحة الطباعة
-        var printUrl = '/print.html?type=efficiency&key=print_data';
-        var newWindow = window.open(printUrl, '_blank');
+        // 8. تنظيف الرسوم البيانية بعد الطباعة
+        if (typeof cleanupAfterPrint === 'function') {
+            setTimeout(cleanupAfterPrint, 1000);
+        }
+
+        // 9. فتح صفحة الطباعة
+        const printUrl = '/print.html?type=efficiency&key=print_data';
+        const newWindow = window.open(printUrl, '_blank');
 
         if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
             if (confirm('⚠️ المتصفح منع فتح نافذة جديدة.\nهل تريد الانتقال لصفحة الطباعة؟')) {
@@ -1716,9 +1679,8 @@
         }
 
         showNotification('🖨️ تم تحضير الطباعة', 'success');
-        console.log('✅ Print data saved for efficiency');
-        console.log('   Rows:', rows.length);
-        console.log('   Sections:', sections.length);
+        console.log('✅ HTML snapshot saved for efficiency');
+        console.log('   Size:', (htmlSnapshot.length / 1024).toFixed(2), 'KB');
 
     } catch (e) {
         console.error('❌ Print error:', e);
