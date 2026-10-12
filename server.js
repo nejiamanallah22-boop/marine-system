@@ -4562,11 +4562,16 @@ const CLARITY_IDENTIFY_SCRIPT = `
     });
 })();<\/script>`;
     const INJECTION_SKIP_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map|json|xml|txt)$/i;
-
-   function injectAll(html) {
+function injectAll(html) {
     if (typeof html !== 'string' || !html.includes('</body>')) return html;
     
+    // 🚫 EXCEPTION: print.html — لا حقن
+    if (html.includes('<!-- PRINT_PAGE_NO_INJECT -->')) {
+        return html;
+    }
+    
     if (!html.includes('ownership-signature-style')) {
+    
         if (html.includes('</head>')) html = html.replace('</head>', OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + '\n</head>');
         else html = OWNERSHIP_META + OWNERSHIP_CSS + OWNERSHIP_CONSOLE + html;
         html = html.replace('</body>', OWNERSHIP_HTML + '\n</body>');
@@ -4628,8 +4633,29 @@ return html;
         };
         next();
     });
+    // ═══════════════════════════════════════════════════════════
+    // 🖨️ PRINT PAGE — Unified Print Page (بدون حقن)
+    // ═══════════════════════════════════════════════════════════
+    app.get('/print.html', (req, res) => {
+        const printPath = path.join(publicDir, 'print.html');
+        if (!fs.existsSync(printPath)) {
+            console.error('❌ print.html not found at:', printPath);
+            return res.status(404).send('Print page not found');
+        }
+        try {
+            const content = fs.readFileSync(printPath, 'utf8');
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            res.send(content);
+        } catch (e) {
+            console.error('❌ print.html read error:', e.message);
+            res.status(500).send('Error loading print page');
+        }
+    });
 
-    // ============ PAGE ROUTES ============
+      // ============ PAGE ROUTES ============
     function findPageFile(name) {
         const paths = [
             path.join(publicPagesDir, name + '.html'),
