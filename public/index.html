@@ -3828,112 +3828,15 @@ try {
                 }
             }
 
-            /* ============================================================
-               🖨️ PRINT SETTINGS SYSTEM
+                          /* ============================================================
+               🖨️ PRINT SETTINGS SYSTEM — DISABLED (v9.16)
+               ═══════════════════════════════════════════════════════════
+               ✅ الطباعة تتم الآن عبر صفحة /print.html الموحدة
+               ✅ كل الصفحات تستخدمها:
+                  fleet, vehicles, maintenance, logs,
+                  disposals-vehicles, disposals-vessels, efficiency
                ============================================================ */
-            (function initPrintSettings() {
-                var printState = { size: 'A4', orientation: 'portrait', color: 'color' };
-                var STORAGE_KEY = 'marine_print_settings';
-
-                try {
-                    var saved = localStorage.getItem(STORAGE_KEY);
-                    if (saved) {
-                        var p = JSON.parse(saved);
-                        if (p.size) printState.size = p.size;
-                        if (p.orientation) printState.orientation = p.orientation;
-                        if (p.color) printState.color = p.color;
-                    }
-                } catch (e) {}
-
-                var modal = document.getElementById('printSettingsModal');
-                if (!modal) { console.warn('⚠️ printSettingsModal not found'); return; }
-
-                var closeBtn  = document.getElementById('printSettingsClose');
-                var cancelBtn = document.getElementById('printSettingsCancel');
-                var goBtn     = document.getElementById('printSettingsGo');
-
-                var styleEl = document.getElementById('dynamic-print-style');
-                if (!styleEl) {
-                    styleEl = document.createElement('style');
-                    styleEl.id = 'dynamic-print-style';
-                    document.head.appendChild(styleEl);
-                }
-
-                var sizeMap = { A3: 'A3', A4: 'A4', A5: 'A5', Letter: 'letter' };
-
-                function applyPrintRules() {
-                    var pageSize = sizeMap[printState.size] || 'A4';
-                    var orient = printState.orientation === 'landscape' ? 'landscape' : 'portrait';
-                    var isBW = printState.color === 'bw';
-                    styleEl.textContent =
-                        '@page { size: ' + pageSize + ' ' + orient + ' !important; ' +
-                        'margin: 12mm 8mm 12mm 8mm !important; }\n' +
-                        '@media print {\n' +
-                        '  html { -webkit-filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; ' +
-                        'filter: ' + (isBW ? 'grayscale(1)' : 'none') + ' !important; }\n' +
-                        '  body { -webkit-print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; ' +
-                        'print-color-adjust: ' + (isBW ? 'economy' : 'exact') + ' !important; }\n' +
-                        '}';
-                    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(printState)); } catch (e) {}
-                }
-
-                function updateActiveButtons() {
-                    modal.querySelectorAll('.ps-options').forEach(function (grp) {
-                        var groupName = grp.getAttribute('data-group');
-                        grp.querySelectorAll('.ps-option').forEach(function (b) {
-                            b.classList.toggle('active', printState[groupName] === b.getAttribute('data-value'));
-                        });
-                    });
-                }
-
-                function openPrintModal() { updateActiveButtons(); modal.classList.add('active'); }
-                function closePrintModal() { modal.classList.remove('active'); }
-
-                modal.querySelectorAll('.ps-option').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var parent = btn.closest('.ps-options');
-                        var groupName = parent.getAttribute('data-group');
-                        printState[groupName] = btn.getAttribute('data-value');
-                        parent.querySelectorAll('.ps-option').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        applyPrintRules();
-                    });
-                });
-
-                var nativePrint = window.print.bind(window);
-                var bypass = false;
-
-                function doPrint() {
-                    applyPrintRules();
-                    closePrintModal();
-                    setTimeout(function () {
-                        bypass = true;
-                        try { nativePrint(); } catch (e) { window.print(); }
-                        setTimeout(function () { bypass = false; }, 500);
-                    }, 300);
-                }
-
-                window.print = function () {
-                    if (bypass) return nativePrint();
-                    openPrintModal();
-                };
-
-                if (closeBtn)  closeBtn.addEventListener('click', closePrintModal);
-                if (cancelBtn) cancelBtn.addEventListener('click', closePrintModal);
-                if (goBtn)     goBtn.addEventListener('click', doPrint);
-
-                modal.addEventListener('click', function (e) {
-                    if (e.target === modal) closePrintModal();
-                });
-
-                document.addEventListener('keydown', function (e) {
-                    if (e.key === 'Escape' && modal.classList.contains('active')) closePrintModal();
-                });
-
-                applyPrintRules();
-                console.log('✅ Print Settings System ready');
-            })();
-
+            console.log('ℹ️ Print Settings Modal: DISABLED — using /print.html');
             console.log('✅ Marine System v9.16 ready');
         }
 
