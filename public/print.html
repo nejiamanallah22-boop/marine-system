@@ -8,35 +8,48 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700;900&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;900&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
+/* ═══════════════════════════════════════════════════════════ */
+/* 🎨 MARINE PRINT SYSTEM v4.0 — Pro Edition                  */
+/* ═══════════════════════════════════════════════════════════ */
+
 :root {
-    --navy: #0a1628;
-    --navy-2: #142b4a;
-    --navy-3: #1e3a5f;
-    --gold: #c9a961;
-    --gold-2: #e0c88a;
-    --gold-3: #9d7f3f;
+    --navy: #0f172a;
+    --navy-2: #1e293b;
+    --navy-3: #334155;
+    --gold: #d4a843;
+    --gold-2: #e8c77a;
+    --gold-3: #a88a2e;
     --success: #10b981;
     --danger: #ef4444;
     --warning: #f59e0b;
     --info: #3b82f6;
-    --bg: #eef2f6;
+    --bg-app: #f1f5f9;
     --card: #ffffff;
     --border: #e2e8f0;
-    --text: #1e293b;
-    --text-2: #64748b;
+    --border-2: #cbd5e1;
+    --text-1: #0f172a;
+    --text-2: #475569;
     --text-3: #94a3b8;
-    --font: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    --font-primary: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     --zoom-font: 100%;
     --zoom-table: 100%;
     --zoom-row: 100%;
     --zoom-image: 100%;
-    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --base-font-size: 13px;
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.06);
     --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
-    --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.15);
+    --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
+    --shadow-xl: 0 24px 48px rgba(15, 23, 42, 0.15);
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -48,428 +61,756 @@
     color-adjust: exact !important;
 }
 
+html {
+    font-size: var(--base-font-size);
+}
+
 html, body {
-    font-family: var(--font);
+    font-family: var(--font-primary);
     direction: rtl;
     text-align: right;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 13px;
+    background: var(--bg-app);
+    color: var(--text-1);
     line-height: 1.5;
     min-height: 100vh;
 }
 
-/* ═══════════════════════════════════════════ */
-/* 🎛️ CONTROL BAR — شريط التحكم الرئيسي       */
-/* ═══════════════════════════════════════════ */
-.control-bar {
-    position: fixed;
+/* ═══════════════ SCROLLBAR ═══════════════ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-3);
+}
+
+/* ═══════════════ CONTROL BAR (أعلى الصفحة) ═══════════════ */
+.top-bar {
+    position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    background: linear-gradient(90deg, var(--navy) 0%, var(--navy-2) 100%);
+    z-index: 1000;
+    height: 68px;
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
-    z-index: 1000;
+    padding: 0 28px;
     box-shadow: var(--shadow-lg);
+    border-bottom: 3px solid var(--gold);
 }
 
-.control-bar .brand {
+.brand {
     display: flex;
     align-items: center;
-    gap: 12px;
-    color: #fff;
-    font-weight: 800;
-    font-size: 15px;
+    gap: 14px;
+    color: #ffffff;
 }
 
-.control-bar .brand i {
-    color: var(--gold);
+.brand-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    color: var(--navy);
+    border-radius: var(--radius);
     font-size: 20px;
+    box-shadow: 0 4px 12px rgba(212, 168, 67, 0.4);
 }
 
-.control-bar .actions {
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.brand-text strong {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.brand-text small {
+    font-size: 11px;
+    color: var(--gold-2);
+    font-weight: 600;
+}
+
+.top-actions {
     display: flex;
     gap: 10px;
 }
 
-.control-bar button {
+.top-actions button {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 10px 22px;
     border: none;
-    border-radius: 10px;
-    font-family: var(--font);
+    border-radius: var(--radius);
+    font-family: var(--font-primary);
     font-size: 13px;
     font-weight: 800;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
     letter-spacing: 0.3px;
 }
 
 .btn-print {
     background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
     color: var(--navy);
-    box-shadow: 0 4px 12px rgba(201, 169, 97, 0.4);
+    box-shadow: 0 4px 12px rgba(212, 168, 67, 0.4);
 }
 
 .btn-print:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(201, 169, 97, 0.6);
+    box-shadow: 0 8px 20px rgba(212, 168, 67, 0.6);
 }
 
 .btn-close {
     background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .btn-close:hover {
     background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
 }
 
-/* ═══════════════════════════════════════════ */
-/* 📊 SIDE PANEL — اللوحة الجانبية الاحترافية  */
-/* ═══════════════════════════════════════════ */
+/* ═══════════════ SIDE PANEL ═══════════════ */
 .side-panel {
     position: fixed;
-    top: 80px;
-    left: 16px;
-    width: 320px;
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
+    top: 84px;
+    right: 20px;
+    width: 340px;
+    max-height: calc(100vh - 104px);
     background: var(--card);
-    border-radius: 16px;
-    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
     border: 1px solid var(--border);
     z-index: 999;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     direction: rtl;
-    transition: all 0.3s ease;
-}
-
-.side-panel::-webkit-scrollbar {
-    width: 6px;
-}
-
-.side-panel::-webkit-scrollbar-thumb {
-    background: var(--gold);
-    border-radius: 3px;
+    transition: var(--transition);
 }
 
 .side-panel.collapsed {
-    width: 60px;
-    max-height: 60px;
+    max-height: 68px;
     overflow: hidden;
-    border-radius: 16px;
 }
 
 .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 18px;
+    padding: 16px 20px;
     background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
-    color: #fff;
-    font-weight: 800;
-    font-size: 14px;
+    color: #ffffff;
     cursor: pointer;
     user-select: none;
-    border-radius: 16px 16px 0 0;
+    flex-shrink: 0;
+    border-bottom: 3px solid var(--gold);
 }
 
-.panel-header span {
+.panel-header-title {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
 }
 
-.panel-header i {
-    color: var(--gold);
-    font-size: 16px;
+.panel-header-title .icon-wrap {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    color: var(--navy);
+    border-radius: 10px;
+    font-size: 15px;
 }
 
 .panel-toggle {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: #fff;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
     border-radius: 8px;
     font-size: 16px;
     font-weight: 900;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+    transition: var(--transition);
+    line-height: 1;
 }
 
 .panel-toggle:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
 }
 
 .panel-body {
-    padding: 16px 18px;
-    transition: all 0.3s ease;
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
 }
 
-.side-panel.collapsed .panel-body {
-    display: none;
+.panel-body::-webkit-scrollbar {
+    width: 6px;
 }
 
-/* ═══════════════════════════════════════════ */
-/* 🎨 SECTION BLOCKS                            */
-/* ═══════════════════════════════════════════ */
-.panel-section {
-    margin-bottom: 18px;
-    padding-bottom: 16px;
+.panel-body::-webkit-scrollbar-thumb {
+    background: var(--border-2);
+    border-radius: 3px;
+}
+
+/* ═══════════════ PANEL SECTIONS ═══════════════ */
+.p-section {
+    margin-bottom: 22px;
+    padding-bottom: 20px;
     border-bottom: 1px solid var(--border);
 }
 
-.panel-section:last-child {
+.p-section:last-child {
     border-bottom: none;
     margin-bottom: 0;
     padding-bottom: 0;
 }
 
-.panel-section-title {
+.p-section-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--navy);
-    margin-bottom: 10px;
-    padding-bottom: 6px;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
     border-bottom: 2px solid var(--gold);
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--navy);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
 }
 
-.panel-section-title i {
+.p-section-title i {
     color: var(--gold-3);
     font-size: 14px;
+    width: 18px;
+    text-align: center;
 }
 
-/* ═══════════════════════════════════════════ */
-/* 🔘 BUTTON GROUPS                             */
-/* ═══════════════════════════════════════════ */
-.btn-group {
+.p-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-2);
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+}
+
+/* ═══════════════ OPTION BUTTONS ═══════════════ */
+.opt-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
+    margin-bottom: 14px;
 }
 
-.btn-group.three {
-    grid-template-columns: repeat(3, 1fr);
-}
+.opt-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.opt-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.opt-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
 
-.option-btn {
+.opt-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 5px;
     padding: 10px 6px;
-    border: 1.5px solid var(--border);
     background: var(--card);
-    border-radius: 10px;
-    font-family: var(--font);
-    font-size: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font-primary);
+    font-size: 11.5px;
     font-weight: 700;
     color: var(--text-2);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
     min-height: 52px;
+    position: relative;
+    overflow: hidden;
 }
 
-.option-btn i {
-    font-size: 14px;
+.opt-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 0;
+}
+
+.opt-btn > * {
+    position: relative;
+    z-index: 1;
+}
+
+.opt-btn i {
+    font-size: 15px;
     color: var(--text-3);
+    transition: var(--transition);
 }
 
-.option-btn:hover {
+.opt-btn:hover {
     border-color: var(--gold);
-    background: rgba(201, 169, 97, 0.05);
-    transform: translateY(-1px);
-}
-
-.option-btn:hover i {
-    color: var(--gold-3);
-}
-
-.option-btn.active {
-    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
-    color: #fff;
-    border-color: var(--navy);
-    box-shadow: 0 4px 12px rgba(10, 22, 40, 0.25);
-}
-
-.option-btn.active i {
-    color: var(--gold);
-}
-
-/* ═══════════════════════════════════════════ */
-/* 🎚️ ZOOM SLIDERS                              */
-/* ═══════════════════════════════════════════ */
-.zoom-item {
-    display: grid;
-    grid-template-columns: 70px 1fr 70px;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-.zoom-item label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.zoom-item label i {
-    color: var(--gold-3);
-    font-size: 13px;
-    width: 16px;
-}
-
-.zoom-btns {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #f8fafc;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 4px;
-    grid-column: 2 / 4;
-}
-
-.zoom-btns button {
-    width: 30px;
-    height: 30px;
-    border: none;
-    background: var(--card);
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 900;
-    color: var(--navy);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
+    transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
 }
 
-.zoom-btns button:hover {
-    background: var(--navy);
-    color: #fff;
-    transform: scale(1.05);
+.opt-btn:hover i {
+    color: var(--gold-3);
 }
 
-.zoom-btns button:active {
-    transform: scale(0.95);
+.opt-btn.active {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    border-color: var(--navy);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
 }
 
-.zoom-btns .zoom-value {
-    font-size: 13px;
-    font-weight: 900;
+.opt-btn.active i {
+    color: var(--gold);
+}
+
+/* ═══════════════ FONT PICKER ═══════════════ */
+.font-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.font-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 4px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: var(--transition);
+    min-height: 56px;
+}
+
+.font-btn .font-name {
+    font-size: 15px;
+    font-weight: 700;
     color: var(--navy);
-    min-width: 50px;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
+    line-height: 1;
 }
 
-/* ═══════════════════════════════════════════ */
-/* ⚡ PRESETS                                   */
-/* ═══════════════════════════════════════════ */
-.presets {
+.font-btn .font-label {
+    font-size: 9.5px;
+    color: var(--text-3);
+    font-weight: 600;
+}
+
+.font-btn:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.font-btn.active {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    border-color: var(--navy);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+}
+
+.font-btn.active .font-name {
+    color: var(--gold);
+}
+
+.font-btn.active .font-label {
+    color: var(--gold-2);
+}
+
+/* ═══════════════ FONT SIZE ═══════════════ */
+.size-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 6px;
-    margin-top: 10px;
+    margin-bottom: 12px;
+}
+
+.size-btn {
+    padding: 9px 4px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font-primary);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.size-btn:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.size-btn.active {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    color: var(--gold);
+    border-color: var(--navy);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+}
+
+.slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.slider-wrap label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-2);
+    white-space: nowrap;
+}
+
+.slider-wrap input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 6px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold) var(--range-percent, 50%), var(--border-2) var(--range-percent, 50%), var(--border-2) 100%);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    border: 3px solid var(--card);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(212, 168, 67, 0.6);
+    transition: transform 0.15s;
+}
+
+.slider-wrap input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.slider-wrap input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    border: 3px solid var(--card);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(212, 168, 67, 0.6);
+}
+
+.slider-value {
+    min-width: 50px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--navy);
+    background: var(--card);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════ TOGGLES ═══════════════ */
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: var(--transition);
+}
+
+.toggle-row:hover {
+    border-color: var(--gold);
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.toggle-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-1);
+}
+
+.toggle-info i {
+    color: var(--gold-3);
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+}
+
+/* Custom Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--border-2);
+    border-radius: 24px;
+    transition: 0.3s;
+}
+
+.switch .slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.switch input:checked + .slider {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(20px);
+}
+
+/* ═══════════════ ZOOM ROWS ═══════════════ */
+.zoom-row {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.zoom-row label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-1);
+}
+
+.zoom-row label i {
+    color: var(--gold-3);
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+}
+
+.zoom-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.zoom-control button {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--navy);
+    cursor: pointer;
+    transition: var(--transition);
+    line-height: 1;
+    padding: 0;
+    box-shadow: var(--shadow-xs);
+}
+
+.zoom-control button:hover {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    color: var(--gold);
+    border-color: var(--navy);
+    transform: scale(1.05);
+}
+
+.zoom-control button:active {
+    transform: scale(0.95);
+}
+
+.zoom-value {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--navy);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════ PRESETS ═══════════════ */
+.presets-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 12px;
 }
 
 .preset-btn {
-    padding: 8px 4px;
-    border: 1.5px solid var(--border);
+    padding: 10px 4px;
     background: var(--card);
-    border-radius: 8px;
-    font-size: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font-primary);
+    font-size: 11.5px;
     font-weight: 800;
     color: var(--text-2);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition);
 }
 
 .preset-btn:hover {
-    background: #f8fafc;
-    transform: translateY(-1px);
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
 }
 
 .preset-btn.active {
     background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
     color: var(--navy);
     border-color: var(--gold);
-    box-shadow: 0 4px 12px rgba(201, 169, 97, 0.4);
+    box-shadow: 0 4px 12px rgba(212, 168, 67, 0.4);
 }
 
-/* ═══════════════════════════════════════════ */
-/* 🔄 RESET BUTTON                              */
-/* ═══════════════════════════════════════════ */
-.reset-btn {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    background: rgba(239, 68, 68, 0.08);
-    color: var(--danger);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    border-radius: 10px;
-    font-family: var(--font);
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
+/* ═══════════════ ACTION BUTTONS ═══════════════ */
+.action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    transition: all 0.2s;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 16px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-primary);
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: var(--transition);
+    letter-spacing: 0.3px;
 }
 
-.reset-btn:hover {
-    background: rgba(239, 68, 68, 0.15);
-    transform: translateY(-1px);
+.action-primary {
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-/* ═══════════════════════════════════════════ */
-/* 📄 PAGE — محتوى الطباعة                     */
-/* ═══════════════════════════════════════════ */
+.action-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.5);
+}
+
+.action-danger {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.action-danger:hover {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    transform: translateY(-2px);
+}
+
+/* ═══════════════ PAGE CONTENT ═══════════════ */
 .page-container {
-    margin: 80px auto 30px;
+    margin: 30px auto 30px;
     max-width: 297mm;
     padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
 }
 
 .page {
     width: 297mm;
     min-height: 210mm;
-    margin: 0 auto 20px;
     padding: 12mm 15mm 15mm 15mm;
     background: var(--card);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-lg);
     position: relative;
-    border-radius: 4px;
+    border-radius: var(--radius);
 }
 
-/* ═══════════════════════════════════════════ */
-/* 🏛️ HEADER                                   */
-/* ═══════════════════════════════════════════ */
+/* ═══════════════ OFFICIAL HEADER ═══════════════ */
 .official-header {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -582,9 +923,7 @@ html, body {
     margin: 0 2mm;
 }
 
-/* ═══════════════════════════════════════════ */
-/* 📊 KPI                                       */
-/* ═══════════════════════════════════════════ */
+/* ═══════════════ KPI ═══════════════ */
 .kpi-section {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -637,9 +976,7 @@ html, body {
     font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════ */
-/* 📋 SECTION TITLE                             */
-/* ═══════════════════════════════════════════ */
+/* ═══════════════ SECTION TITLE ═══════════════ */
 .section-title {
     display: flex;
     align-items: center;
@@ -657,9 +994,7 @@ html, body {
     font-size: 11pt;
 }
 
-/* ═══════════════════════════════════════════ */
-/* 📊 TABLE                                     */
-/* ═══════════════════════════════════════════ */
+/* ═══════════════ TABLE ═══════════════ */
 .table-wrapper {
     border: 1px solid var(--border);
     border-top: none;
@@ -709,7 +1044,7 @@ table.data-table tbody td {
     border-bottom: 1px solid var(--border);
     border-left: 1px solid var(--border);
     font-size: calc(8pt * var(--zoom-table) / 100);
-    color: var(--text);
+    color: var(--text-1);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -720,7 +1055,6 @@ table.data-table tbody td {
 table.data-table tbody td:last-child { border-left: none; }
 table.data-table tbody tr:last-child td { border-bottom: none; }
 
-/* IMAGE CELL */
 td.cell-image {
     width: 34mm !important;
     min-width: 34mm !important;
@@ -765,7 +1099,6 @@ td.cell-number {
     color: var(--navy);
 }
 
-/* BADGES */
 .badge {
     display: inline-block;
     padding: 0.6mm 2mm;
@@ -783,7 +1116,7 @@ td.cell-number {
 .badge-info { background: #eff6ff; color: #1d4ed8; border-color: var(--info); }
 .badge-neutral { background: #f1f5f9; color: #475569; border-color: var(--text-3); }
 
-/* FOOTER */
+/* ═══════════════ FOOTER ═══════════════ */
 .official-footer {
     margin-top: 6mm;
     padding-top: 4mm;
@@ -810,11 +1143,11 @@ td.cell-number {
     font-weight: 700;
 }
 
-/* LOADING */
+/* ═══════════════ LOADING ═══════════════ */
 .loading-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(238, 242, 246, 0.98);
+    background: rgba(241, 245, 249, 0.98);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -824,9 +1157,9 @@ td.cell-number {
 }
 
 .spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid #e2e8f0;
+    width: 52px;
+    height: 52px;
+    border: 4px solid var(--border);
     border-top-color: var(--gold);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -840,9 +1173,7 @@ td.cell-number {
     font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════ */
-/* 🖨️ PRINT                                     */
-/* ═══════════════════════════════════════════ */
+/* ═══════════════ PRINT ═══════════════ */
 @page {
     size: A4 landscape;
     margin: 8mm 10mm;
@@ -854,28 +1185,27 @@ td.cell-number {
         margin: 0 !important;
         padding: 0 !important;
     }
-    
-    .control-bar,
-    .side-panel,
-    .loading-overlay,
-    .page-container { 
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    .control-bar,
+
+    .top-bar,
     .side-panel,
     .loading-overlay {
         display: none !important;
     }
-    
+
     #official-print-header,
     #official-print-header *,
     #user-info-badge,
     #dev-signature {
         display: none !important;
     }
-    
+
+    .page-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+        gap: 0 !important;
+    }
+
     .page {
         width: 100% !important;
         min-height: auto !important;
@@ -884,61 +1214,59 @@ td.cell-number {
         box-shadow: none !important;
         border-radius: 0 !important;
     }
-    
+
     .official-header {
         page-break-after: avoid;
         break-after: avoid;
     }
-    
+
     .official-footer {
         page-break-before: avoid;
         break-before: avoid;
     }
-    
+
     table.data-table { page-break-inside: auto; }
     table.data-table thead { display: table-header-group; }
     table.data-table tbody tr { page-break-inside: avoid; }
-    
+
     .kpi-section,
     .section-title {
         page-break-inside: avoid;
         break-inside: avoid;
     }
-    
+
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 }
 
-/* ═══════════════════════════════════════════ */
-/* 📱 RESPONSIVE                                */
-/* ═══════════════════════════════════════════ */
+/* ═══════════════ RESPONSIVE ═══════════════ */
 @media screen and (max-width: 1024px) {
     .page-container {
         padding: 0 10px;
     }
-    
+
     .page {
         width: 100%;
-        margin: 0 auto 10px;
         padding: 8mm;
     }
-    
+
     .kpi-section {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .official-header {
         grid-template-columns: 1fr;
         text-align: center;
         gap: 5mm;
     }
-    
-    .header-left, .header-right {
+
+    .header-left,
+    .header-right {
         text-align: center;
     }
-    
+
     .doc-ref-block {
         justify-content: center;
     }
@@ -946,22 +1274,23 @@ td.cell-number {
 
 @media screen and (max-width: 768px) {
     .side-panel {
-        top: 74px;
-        left: 10px;
+        top: auto;
+        bottom: 10px;
         right: 10px;
+        left: 10px;
         width: auto;
-        max-height: 60vh;
+        max-height: 70vh;
     }
-    
-    .control-bar {
+
+    .top-bar {
         padding: 0 12px;
     }
-    
-    .control-bar .brand {
+
+    .brand-text strong {
         font-size: 13px;
     }
-    
-    .control-bar button {
+
+    .top-actions button {
         padding: 8px 14px;
         font-size: 12px;
     }
@@ -971,14 +1300,19 @@ td.cell-number {
 <body>
 
 <!-- ═══════════════════════════════════════════ -->
-<!-- 🎛️ CONTROL BAR                                -->
+<!-- 🎛️ TOP BAR                                    -->
 <!-- ═══════════════════════════════════════════ -->
-<div class="control-bar">
+<div class="top-bar">
     <div class="brand">
-        <i class="fas fa-print"></i>
-        <span>إعداد الطباعة — منظومة الوسائل البحرية</span>
+        <div class="brand-icon">
+            <i class="fas fa-print"></i>
+        </div>
+        <div class="brand-text">
+            <strong>منظومة الوسائل البحرية</strong>
+            <small>إعداد الطباعة الاحترافية</small>
+        </div>
     </div>
-    <div class="actions">
+    <div class="top-actions">
         <button class="btn-print" onclick="window.print()">
             <i class="fas fa-print"></i> طباعة / PDF
         </button>
@@ -989,125 +1323,241 @@ td.cell-number {
 </div>
 
 <!-- ═══════════════════════════════════════════ -->
-<!-- 📊 SIDE PANEL                                 -->
+<!-- ⚙️ SIDE PANEL — الإعدادات المتقدمة            -->
 <!-- ═══════════════════════════════════════════ -->
 <div class="side-panel" id="sidePanel">
     <div class="panel-header" onclick="togglePanel()">
-        <span><i class="fas fa-sliders-h"></i> إعدادات متقدمة</span>
+        <div class="panel-header-title">
+            <div class="icon-wrap">
+                <i class="fas fa-sliders-h"></i>
+            </div>
+            <span>الإعدادات المتقدمة</span>
+        </div>
         <button class="panel-toggle" id="panelToggle">−</button>
     </div>
-    
+
     <div class="panel-body">
-        
-        <!-- 📄 Page Setup -->
-        <div class="panel-section">
-            <div class="panel-section-title">
-                <i class="fas fa-file-alt"></i> إعدادات الصفحة
+
+        <!-- 📄 إعدادات الصفحة -->
+        <div class="p-section">
+            <div class="p-section-title">
+                <i class="fas fa-file-alt"></i>
+                <span>إعدادات الصفحة</span>
             </div>
-            
-            <!-- Orientation -->
-            <div style="margin-bottom: 10px;">
-                <div style="font-size: 11px; color: var(--text-2); font-weight: 700; margin-bottom: 6px;">اتجاه الصفحة</div>
-                <div class="btn-group">
-                    <button class="option-btn" data-orientation="portrait" onclick="setOrientation('portrait')">
-                        <i class="fas fa-file"></i>
-                        <span>عمودي</span>
-                    </button>
-                    <button class="option-btn active" data-orientation="landscape" onclick="setOrientation('landscape')">
-                        <i class="fas fa-file-alt"></i>
-                        <span>أفقي</span>
-                    </button>
-                </div>
+
+            <span class="p-label">اتجاه الصفحة</span>
+            <div class="opt-grid cols-2">
+                <button class="opt-btn" data-orientation="portrait" onclick="setOrientation('portrait')">
+                    <i class="fas fa-file"></i>
+                    <span>عمودي</span>
+                </button>
+                <button class="opt-btn active" data-orientation="landscape" onclick="setOrientation('landscape')">
+                    <i class="fas fa-file-alt"></i>
+                    <span>أفقي</span>
+                </button>
             </div>
-            
-            <!-- Paper Size -->
-            <div style="margin-bottom: 10px;">
-                <div style="font-size: 11px; color: var(--text-2); font-weight: 700; margin-bottom: 6px;">حجم الورق</div>
-                <div class="btn-group three">
-                    <button class="option-btn active" data-size="A4" onclick="setPaperSize('A4')">
-                        <span>A4</span>
-                    </button>
-                    <button class="option-btn" data-size="A3" onclick="setPaperSize('A3')">
-                        <span>A3</span>
-                    </button>
-                    <button class="option-btn" data-size="Letter" onclick="setPaperSize('Letter')">
-                        <span>Letter</span>
-                    </button>
-                </div>
+
+            <span class="p-label">حجم الورق</span>
+            <div class="opt-grid cols-3">
+                <button class="opt-btn active" data-size="A4" onclick="setPaperSize('A4')">
+                    <i class="fas fa-file"></i>
+                    <span>A4</span>
+                </button>
+                <button class="opt-btn" data-size="A3" onclick="setPaperSize('A3')">
+                    <i class="fas fa-file"></i>
+                    <span>A3</span>
+                </button>
+                <button class="opt-btn" data-size="Letter" onclick="setPaperSize('Letter')">
+                    <i class="fas fa-file"></i>
+                    <span>Letter</span>
+                </button>
             </div>
-            
-            <!-- Margins -->
-            <div>
-                <div style="font-size: 11px; color: var(--text-2); font-weight: 700; margin-bottom: 6px;">الهوامش</div>
-                <div class="btn-group three">
-                    <button class="option-btn" data-margin="5mm" onclick="setMargins('5mm')">
-                        <span>ضيق</span>
-                    </button>
-                    <button class="option-btn active" data-margin="8mm 10mm" onclick="setMargins('8mm 10mm')">
-                        <span>عادي</span>
-                    </button>
-                    <button class="option-btn" data-margin="15mm 20mm" onclick="setMargins('15mm 20mm')">
-                        <span>واسع</span>
-                    </button>
-                </div>
+
+            <span class="p-label">الهوامش</span>
+            <div class="opt-grid cols-3">
+                <button class="opt-btn" data-margin="5mm" onclick="setMargins('5mm')">
+                    <i class="fas fa-compress"></i>
+                    <span>ضيق</span>
+                </button>
+                <button class="opt-btn active" data-margin="8mm 10mm" onclick="setMargins('8mm 10mm')">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                    <span>عادي</span>
+                </button>
+                <button class="opt-btn" data-margin="15mm 20mm" onclick="setMargins('15mm 20mm')">
+                    <i class="fas fa-arrows-alt"></i>
+                    <span>واسع</span>
+                </button>
             </div>
         </div>
-        
-        <!-- 🔍 Zoom Controls -->
-        <div class="panel-section">
-            <div class="panel-section-title">
-                <i class="fas fa-search-plus"></i> حجم الطباعة
+
+        <!-- ✍️ نوع الخط -->
+        <div class="p-section">
+            <div class="p-section-title">
+                <i class="fas fa-font"></i>
+                <span>نوع الخط</span>
             </div>
-            
-            <div class="zoom-item">
-                <label><i class="fas fa-font"></i> الخط:</label>
-                <div class="zoom-btns">
+
+            <div class="font-grid">
+                <button class="font-btn active" data-font="Cairo" onclick="setFontFamily('Cairo')">
+                    <span class="font-name" style="font-family: 'Cairo', sans-serif;">Cairo</span>
+                    <span class="font-label">القاهرة</span>
+                </button>
+                <button class="font-btn" data-font="Tajawal" onclick="setFontFamily('Tajawal')">
+                    <span class="font-name" style="font-family: 'Tajawal', sans-serif;">Tajawal</span>
+                    <span class="font-label">تجوّل</span>
+                </button>
+                <button class="font-btn" data-font="Amiri" onclick="setFontFamily('Amiri')">
+                    <span class="font-name" style="font-family: 'Amiri', serif;">Amiri</span>
+                    <span class="font-label">أميري</span>
+                </button>
+                <button class="font-btn" data-font="Almarai" onclick="setFontFamily('Almarai')">
+                    <span class="font-name" style="font-family: 'Almarai', sans-serif;">Almarai</span>
+                    <span class="font-label">المراعي</span>
+                </button>
+                <button class="font-btn" data-font="Noto Kufi Arabic" onclick="setFontFamily('Noto Kufi Arabic')">
+                    <span class="font-name" style="font-family: 'Noto Kufi Arabic', sans-serif;">نوتو</span>
+                    <span class="font-label">كوفي</span>
+                </button>
+                <button class="font-btn" data-font="IBM Plex Sans Arabic" onclick="setFontFamily('IBM Plex Sans Arabic')">
+                    <span class="font-name" style="font-family: 'IBM Plex Sans Arabic', sans-serif;">IBM</span>
+                    <span class="font-label">بلكس</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 🔤 حجم الخط -->
+        <div class="p-section">
+            <div class="p-section-title">
+                <i class="fas fa-text-height"></i>
+                <span>حجم الخط العام</span>
+            </div>
+
+            <div class="size-grid">
+                <button class="size-btn" onclick="setBaseFontSize('small')">صغير</button>
+                <button class="size-btn active" onclick="setBaseFontSize('normal')">عادي</button>
+                <button class="size-btn" onclick="setBaseFontSize('large')">كبير</button>
+                <button class="size-btn" onclick="setBaseFontSize('xlarge')">ضخم</button>
+            </div>
+
+            <div class="slider-wrap">
+                <label>دقيق</label>
+                <input type="range" id="fontSizeSlider" min="9" max="24" value="13" step="1"
+                       oninput="setExactFontSize(this.value)">
+                <span class="slider-value" id="fontSizeValue">13px</span>
+            </div>
+        </div>
+
+        <!-- 🔍 حجم الطباعة -->
+        <div class="p-section">
+            <div class="p-section-title">
+                <i class="fas fa-search-plus"></i>
+                <span>حجم الطباعة</span>
+            </div>
+
+            <div class="zoom-row">
+                <label><i class="fas fa-font"></i> الخط</label>
+                <div class="zoom-control">
                     <button onclick="adjustZoom('font', -1)">−</button>
                     <span class="zoom-value" id="fontZoomValue">100%</span>
                     <button onclick="adjustZoom('font', 1)">+</button>
                 </div>
             </div>
-            
-            <div class="zoom-item">
-                <label><i class="fas fa-table"></i> الجدول:</label>
-                <div class="zoom-btns">
+
+            <div class="zoom-row">
+                <label><i class="fas fa-table"></i> الجدول</label>
+                <div class="zoom-control">
                     <button onclick="adjustZoom('table', -1)">−</button>
                     <span class="zoom-value" id="tableZoomValue">100%</span>
                     <button onclick="adjustZoom('table', 1)">+</button>
                 </div>
             </div>
-            
-            <div class="zoom-item">
-                <label><i class="fas fa-list"></i> الصفوف:</label>
-                <div class="zoom-btns">
+
+            <div class="zoom-row">
+                <label><i class="fas fa-list"></i> الصفوف</label>
+                <div class="zoom-control">
                     <button onclick="adjustZoom('row', -1)">−</button>
                     <span class="zoom-value" id="rowZoomValue">100%</span>
                     <button onclick="adjustZoom('row', 1)">+</button>
                 </div>
             </div>
-            
-            <div class="zoom-item">
-                <label><i class="fas fa-image"></i> الصور:</label>
-                <div class="zoom-btns">
+
+            <div class="zoom-row">
+                <label><i class="fas fa-image"></i> الصور</label>
+                <div class="zoom-control">
                     <button onclick="adjustZoom('image', -1)">−</button>
                     <span class="zoom-value" id="imageZoomValue">100%</span>
                     <button onclick="adjustZoom('image', 1)">+</button>
                 </div>
             </div>
-            
-            <!-- Presets -->
-            <div class="presets">
+
+            <div class="presets-grid">
                 <button class="preset-btn" onclick="applyPreset('small')">صغير</button>
                 <button class="preset-btn active" onclick="applyPreset('normal')">عادي</button>
                 <button class="preset-btn" onclick="applyPreset('large')">كبير</button>
                 <button class="preset-btn" onclick="applyPreset('huge')">ضخم</button>
             </div>
-            
-            <button class="reset-btn" onclick="resetAll()">
-                <i class="fas fa-redo"></i> إعادة ضبط الكل
+        </div>
+
+        <!-- ⚙️ إعدادات إضافية -->
+        <div class="p-section">
+            <div class="p-section-title">
+                <i class="fas fa-cog"></i>
+                <span>إعدادات إضافية</span>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <i class="fas fa-border-all"></i>
+                    <span>حدود الجدول</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggleGrid" checked onchange="toggleGrid(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <i class="fas fa-stream"></i>
+                    <span>صفوف مخططة</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggleStripes" checked onchange="toggleStripes(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <i class="fas fa-compress-alt"></i>
+                    <span>الوضع المضغوط</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggleCompact" onchange="toggleCompact(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-info">
+                    <i class="fas fa-percentage"></i>
+                    <span>نسبة الجاهزية</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggleEfficiency" checked onchange="toggleEfficiency(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 🔄 إعادة الضبط -->
+        <div class="p-section">
+            <button class="action-btn action-danger" onclick="resetAll()">
+                <i class="fas fa-redo"></i>
+                إعادة ضبط جميع الإعدادات
             </button>
         </div>
-        
+
     </div>
 </div>
 
@@ -1133,20 +1583,20 @@ td.cell-number {
                 الإدارة العامة للحرس الوطني<br>
                 الإدارة العامة لحرس الحدود<br>
                 إدارة إسناد الوحدات البحرية
-                
+
                 <div class="doc-ref-block">
                     <span class="doc-ref-label">ع/</span>
                     <span class="doc-ref-line"></span>
                     <span class="doc-ref-label">/دد</span>
                 </div>
             </div>
-            
+
             <div class="header-center">
                 <div class="emblem">⚓</div>
                 <h1 id="pageTitle">منظومة الوسائل البحرية</h1>
                 <div class="subtitle" id="pageSubtitle">Marine System Report</div>
             </div>
-            
+
             <div class="header-right">
                 <div style="margin-top: 2mm;">العوينة في: __________</div>
             </div>
@@ -1180,11 +1630,11 @@ td.cell-number {
 // ═══════════════════════════════════════════════════════════════
 (function() {
     'use strict';
-    
+
     const params = new URLSearchParams(location.search);
     const pageType = params.get('type') || 'fleet';
     const storageKey = params.get('key') || 'print_data';
-    
+
     const PAGE_CONFIGS = {
         fleet: { title: 'السجل العام للأسطول', subtitle: 'Fleet General Registry', section: 'السجل التفصيلي للمراكب' },
         vehicles: { title: 'الوسائل البرية - الحرس البحري', subtitle: 'Land Vehicles — Coast Guard', section: 'السجل التفصيلي للوسائل البرية' },
@@ -1194,9 +1644,9 @@ td.cell-number {
         notes: { title: 'المذكرات', subtitle: 'Notes', section: 'قائمة المذكرات' },
         support: { title: 'مركز الدعم الفني', subtitle: 'Support Center', section: 'التذاكر' }
     };
-    
+
     const config = { ...(PAGE_CONFIGS[pageType] || PAGE_CONFIGS.fleet) };
-    
+
     function loadData() {
         try {
             const raw = localStorage.getItem(storageKey);
@@ -1204,31 +1654,31 @@ td.cell-number {
         } catch (e) {}
         return { stats: [], columns: [], rows: [] };
     }
-    
+
     const data = loadData();
     const title = data.title || config.title;
     const subtitle = data.subtitle || config.subtitle;
     const section = data.sectionTitle || data.section || config.section;
-    
+
     document.getElementById('pageTitle').textContent = title;
     document.getElementById('pageSubtitle').textContent = subtitle;
     document.getElementById('sectionTitle').textContent = section;
     document.title = title + ' — طباعة';
-    
+
     const now = new Date();
     const dateStr = now.toLocaleDateString('ar-TN', {
         year: 'numeric', month: 'long', day: 'numeric',
         hour: '2-digit', minute: '2-digit'
     });
     document.getElementById('printDate').textContent = dateStr;
-    
+
     function buildKPI(stats) {
         const container = document.getElementById('kpiSection');
         if (!stats || !stats.length) {
             container.style.display = 'none';
             return;
         }
-        
+
         container.innerHTML = stats.slice(0, 5).map((s, i) => {
             const type = s.type || ['', 'success', 'warning', 'danger', 'gold'][i] || '';
             return `<div class="kpi-card ${type}">
@@ -1237,11 +1687,11 @@ td.cell-number {
             </div>`;
         }).join('');
     }
-    
+
     function buildTable(columns, rows) {
         const thead = document.getElementById('tableHead');
         const tbody = document.getElementById('tableBody');
-        
+
         if (columns && columns.length) {
             thead.innerHTML = '<tr>' + columns.map((c, i) => {
                 const label = typeof c === 'string' ? c : (c.label || '');
@@ -1251,19 +1701,19 @@ td.cell-number {
                 return `<th>${label}</th>`;
             }).join('') + '</tr>';
         }
-        
+
         if (!rows || !rows.length) {
-            tbody.innerHTML = `<tr><td colspan="${columns.length || 5}" 
+            tbody.innerHTML = `<tr><td colspan="${columns.length || 5}"
                 style="text-align:center;padding:30mm;color:#94a3b8;font-size:11pt;">
                 لا توجد بيانات للعرض</td></tr>`;
             return;
         }
-        
+
         tbody.innerHTML = rows.map(row => {
             const cells = Array.isArray(row) ? row : Object.values(row);
             return '<tr>' + cells.map((cell, i) => {
                 const tdStyle = i === 0 ? 'style="width:36mm;min-width:36mm;max-width:36mm;"' : '';
-                
+
                 if (typeof cell === 'object' && cell !== null) {
                     if (cell.type === 'image') {
                         if (cell.url) {
@@ -1287,23 +1737,23 @@ td.cell-number {
             }).join('') + '</tr>';
         }).join('');
     }
-    
+
     function init() {
         const overlay = document.getElementById('loadingOverlay');
         const pageContainer = document.getElementById('pageContainer');
-        
+
         setTimeout(() => {
             buildKPI(data.stats);
             buildTable(data.columns, data.rows);
-            
+
             if (overlay) overlay.style.display = 'none';
-            if (pageContainer) pageContainer.style.display = 'block';
-            
-            console.log('%c✅ Print page ready', 
+            if (pageContainer) pageContainer.style.display = 'flex';
+
+            console.log('%c✅ Print page ready',
                 'background:#10b981;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;');
         }, 300);
     }
-    
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
@@ -1316,36 +1766,36 @@ td.cell-number {
 // ═══════════════════════════════════════════════════════════════
 (function() {
     'use strict';
-    
+
     const DEFAULTS = { font: 100, table: 100, row: 100, image: 100 };
     const LIMITS = { min: 50, max: 200, step: 5 };
-    
+
     let zoomState = { ...DEFAULTS };
     try {
         const saved = localStorage.getItem('print_zoom');
         if (saved) zoomState = { ...DEFAULTS, ...JSON.parse(saved) };
     } catch (e) {}
-    
+
     function applyZoom() {
         const root = document.documentElement;
         root.style.setProperty('--zoom-font', zoomState.font + '%');
         root.style.setProperty('--zoom-table', zoomState.table + '%');
         root.style.setProperty('--zoom-row', zoomState.row + '%');
         root.style.setProperty('--zoom-image', zoomState.image + '%');
-        
+
         const fontEl = document.getElementById('fontZoomValue');
         const tableEl = document.getElementById('tableZoomValue');
         const rowEl = document.getElementById('rowZoomValue');
         const imageEl = document.getElementById('imageZoomValue');
-        
+
         if (fontEl) fontEl.textContent = zoomState.font + '%';
         if (tableEl) tableEl.textContent = zoomState.table + '%';
         if (rowEl) rowEl.textContent = zoomState.row + '%';
         if (imageEl) imageEl.textContent = zoomState.image + '%';
-        
+
         try { localStorage.setItem('print_zoom', JSON.stringify(zoomState)); } catch (e) {}
     }
-    
+
     window.adjustZoom = function(type, direction) {
         if (!zoomState.hasOwnProperty(type)) return;
         const newValue = zoomState[type] + (direction * LIMITS.step);
@@ -1353,13 +1803,13 @@ td.cell-number {
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
         applyZoom();
     };
-    
+
     window.applyPreset = function(preset) {
         const PRESETS = {
-            small:  { font: 75,  table: 80,  row: 80,  image: 80 },
+            small: { font: 75, table: 80, row: 80, image: 80 },
             normal: { font: 100, table: 100, row: 100, image: 100 },
-            large:  { font: 125, table: 120, row: 120, image: 120 },
-            huge:   { font: 150, table: 140, row: 140, image: 140 }
+            large: { font: 125, table: 120, row: 120, image: 120 },
+            huge: { font: 150, table: 140, row: 140, image: 140 }
         };
         zoomState = { ...(PRESETS[preset] || DEFAULTS) };
         applyZoom();
@@ -1367,17 +1817,7 @@ td.cell-number {
         const btn = document.querySelector(`.preset-btn[onclick="applyPreset('${preset}')"]`);
         if (btn) btn.classList.add('active');
     };
-    
-    window.resetAll = function() {
-        zoomState = { ...DEFAULTS };
-        applyZoom();
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        const normalBtn = document.querySelector(`.preset-btn[onclick="applyPreset('normal')"]`);
-        if (normalBtn) normalBtn.classList.add('active');
-        
-        if (typeof window.resetSettings === 'function') window.resetSettings();
-    };
-    
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', applyZoom);
     } else {
@@ -1386,33 +1826,133 @@ td.cell-number {
 })();
 
 // ═══════════════════════════════════════════════════════════════
-// 🖨️ PRINT SETTINGS SYSTEM
+// 🖨️ PRINT SETTINGS (Page setup + Font + Toggles)
 // ═══════════════════════════════════════════════════════════════
 (function() {
     'use strict';
-    
+
     const DEFAULTS = {
         orientation: 'landscape',
         size: 'A4',
-        margin: '8mm 10mm'
+        margin: '8mm 10mm',
+        fontFamily: 'Cairo',
+        baseFontSize: 13,
+        showGrid: true,
+        showStripes: true,
+        compactMode: false,
+        showEfficiency: true
     };
-    
+
     let settings = { ...DEFAULTS };
     try {
-        const saved = localStorage.getItem('print_settings');
+        const saved = localStorage.getItem('print_settings_v2');
         if (saved) settings = { ...DEFAULTS, ...JSON.parse(saved) };
     } catch (e) {}
-    
-    function applySettings() {
+
+    // ─── Apply All Settings ───
+    function applyAll() {
+        applyPageSetup();
+        applyFontSettings();
+        applyTableSettings();
+        applyEfficiency();
+        syncUI();
+        save();
+    }
+
+    function applyPageSetup() {
         let styleEl = document.getElementById('dynamic-page-style');
         if (!styleEl) {
             styleEl = document.createElement('style');
             styleEl.id = 'dynamic-page-style';
             document.head.appendChild(styleEl);
         }
-        
         styleEl.textContent = `@page { size: ${settings.size} ${settings.orientation}; margin: ${settings.margin}; }`;
-        
+    }
+
+    function applyFontSettings() {
+        document.documentElement.style.setProperty('--font-primary', `'${settings.fontFamily}', 'Segoe UI', Tahoma, sans-serif`);
+        document.documentElement.style.setProperty('--base-font-size', settings.baseFontSize + 'px');
+        document.documentElement.style.fontSize = settings.baseFontSize + 'px';
+    }
+
+    function applyTableSettings() {
+        // Grid borders
+        let gridStyle = document.getElementById('dynamic-grid-style');
+        if (!gridStyle) {
+            gridStyle = document.createElement('style');
+            gridStyle.id = 'dynamic-grid-style';
+            document.head.appendChild(gridStyle);
+        }
+
+        if (settings.showGrid) {
+            gridStyle.textContent = '';
+        } else {
+            gridStyle.textContent = `
+                table.data-table thead th,
+                table.data-table tbody td {
+                    border-color: transparent !important;
+                }
+            `;
+        }
+
+        // Stripes
+        let stripesStyle = document.getElementById('dynamic-stripes-style');
+        if (!stripesStyle) {
+            stripesStyle = document.createElement('style');
+            stripesStyle.id = 'dynamic-stripes-style';
+            document.head.appendChild(stripesStyle);
+        }
+
+        if (settings.showStripes) {
+            stripesStyle.textContent = '';
+        } else {
+            stripesStyle.textContent = `
+                table.data-table tbody tr:nth-child(even) {
+                    background: #ffffff !important;
+                }
+            `;
+        }
+
+        // Compact mode
+        let compactStyle = document.getElementById('dynamic-compact-style');
+        if (!compactStyle) {
+            compactStyle = document.createElement('style');
+            compactStyle.id = 'dynamic-compact-style';
+            document.head.appendChild(compactStyle);
+        }
+
+        if (settings.compactMode) {
+            compactStyle.textContent = `
+                table.data-table tbody tr { height: 20mm !important; }
+                table.data-table tbody td { padding: 1mm 0.5mm !important; height: 20mm !important; }
+                td.cell-image { width: 24mm !important; min-width: 24mm !important; max-width: 24mm !important; padding: 1mm !important; }
+                td.cell-image img { width: 20mm !important; height: 20mm !important; max-width: 20mm !important; max-height: 20mm !important; }
+                td.cell-image .no-image { width: 20mm !important; height: 20mm !important; }
+            `;
+        } else {
+            compactStyle.textContent = '';
+        }
+    }
+
+    function applyEfficiency() {
+        let effStyle = document.getElementById('dynamic-eff-style');
+        if (!effStyle) {
+            effStyle = document.createElement('style');
+            effStyle.id = 'dynamic-eff-style';
+            document.head.appendChild(effStyle);
+        }
+
+        if (settings.showEfficiency) {
+            effStyle.textContent = '';
+        } else {
+            effStyle.textContent = `
+                .kpi-card.gold { display: none !important; }
+                .kpi-section { grid-template-columns: repeat(4, 1fr) !important; }
+            `;
+        }
+    }
+
+    function syncUI() {
         document.querySelectorAll('[data-orientation]').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.orientation === settings.orientation);
         });
@@ -1422,19 +1962,94 @@ td.cell-number {
         document.querySelectorAll('[data-margin]').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.margin === settings.margin);
         });
-        
-        try { localStorage.setItem('print_settings', JSON.stringify(settings)); } catch (e) {}
+        document.querySelectorAll('.font-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.font === settings.fontFamily);
+        });
+
+        // Font size
+        const slider = document.getElementById('fontSizeSlider');
+        const valueEl = document.getElementById('fontSizeValue');
+        if (slider) {
+            slider.value = settings.baseFontSize;
+            updateRangeFill(slider);
+        }
+        if (valueEl) valueEl.textContent = settings.baseFontSize + 'px';
+
+        // Size preset buttons
+        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+        const sizePresets = { 11: 'small', 13: 'normal', 15: 'large', 17: 'xlarge' };
+        const presetName = sizePresets[settings.baseFontSize];
+        if (presetName) {
+            const btn = document.querySelector(`.size-btn[onclick="setBaseFontSize('${presetName}')"]`);
+            if (btn) btn.classList.add('active');
+        }
+
+        // Toggles
+        const toggleGridEl = document.getElementById('toggleGrid');
+        const toggleStripesEl = document.getElementById('toggleStripes');
+        const toggleCompactEl = document.getElementById('toggleCompact');
+        const toggleEfficiencyEl = document.getElementById('toggleEfficiency');
+        if (toggleGridEl) toggleGridEl.checked = settings.showGrid;
+        if (toggleStripesEl) toggleStripesEl.checked = settings.showStripes;
+        if (toggleCompactEl) toggleCompactEl.checked = settings.compactMode;
+        if (toggleEfficiencyEl) toggleEfficiencyEl.checked = settings.showEfficiency;
     }
-    
-    window.setOrientation = function(o) { settings.orientation = o; applySettings(); };
-    window.setPaperSize = function(s) { settings.size = s; applySettings(); };
-    window.setMargins = function(m) { settings.margin = m; applySettings(); };
-    
-    window.resetSettings = function() {
-        settings = { ...DEFAULTS };
-        applySettings();
+
+    function updateRangeFill(el) {
+        const min = parseFloat(el.min);
+        const max = parseFloat(el.max);
+        const val = parseFloat(el.value);
+        const percent = ((val - min) / (max - min)) * 100;
+        el.style.setProperty('--range-percent', percent + '%');
+    }
+
+    function save() {
+        try { localStorage.setItem('print_settings_v2', JSON.stringify(settings)); } catch (e) {}
+    }
+
+    // ─── Public API ───
+    window.setOrientation = function(o) { settings.orientation = o; applyAll(); };
+    window.setPaperSize = function(s) { settings.size = s; applyAll(); };
+    window.setMargins = function(m) { settings.margin = m; applyAll(); };
+    window.setFontFamily = function(f) { settings.fontFamily = f; applyAll(); };
+
+    window.setBaseFontSize = function(size) {
+        const sizes = { small: 11, normal: 13, large: 15, xlarge: 17 };
+        settings.baseFontSize = sizes[size] || 13;
+        applyAll();
     };
-    
+
+    window.setExactFontSize = function(size) {
+        settings.baseFontSize = parseInt(size);
+        applyAll();
+    };
+
+    window.toggleGrid = function(v) { settings.showGrid = v; applyAll(); };
+    window.toggleStripes = function(v) { settings.showStripes = v; applyAll(); };
+    window.toggleCompact = function(v) { settings.compactMode = v; applyAll(); };
+    window.toggleEfficiency = function(v) { settings.showEfficiency = v; applyAll(); };
+
+    window.resetAll = function() {
+        settings = { ...DEFAULTS };
+        // Reset zoom also
+        try {
+            localStorage.removeItem('print_zoom');
+            const zoomDefaults = { font: 100, table: 100, row: 100, image: 100 };
+            document.documentElement.style.setProperty('--zoom-font', '100%');
+            document.documentElement.style.setProperty('--zoom-table', '100%');
+            document.documentElement.style.setProperty('--zoom-row', '100%');
+            document.documentElement.style.setProperty('--zoom-image', '100%');
+            ['font', 'table', 'row', 'image'].forEach(k => {
+                const el = document.getElementById(k + 'ZoomValue');
+                if (el) el.textContent = '100%';
+            });
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            const normalBtn = document.querySelector(`.preset-btn[onclick="applyPreset('normal')"]`);
+            if (normalBtn) normalBtn.classList.add('active');
+        } catch (e) {}
+        applyAll();
+    };
+
     window.togglePanel = function() {
         const panel = document.getElementById('sidePanel');
         if (!panel) return;
@@ -1444,14 +2059,15 @@ td.cell-number {
             toggle.textContent = panel.classList.contains('collapsed') ? '+' : '−';
         }
     };
-    
+
+    // ─── Init ───
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applySettings);
+        document.addEventListener('DOMContentLoaded', applyAll);
     } else {
-        applySettings();
+        applyAll();
     }
-    
-    console.log('%c🖨️ Print Settings Ready', 'background:#c9a961;color:#0a1628;padding:4px 8px;border-radius:4px;font-weight:bold;');
+
+    console.log('%c🎨 Print Settings v4.0 Ready', 'background:#d4a843;color:#0f172a;padding:4px 8px;border-radius:4px;font-weight:bold;');
 })();
 </script>
 
