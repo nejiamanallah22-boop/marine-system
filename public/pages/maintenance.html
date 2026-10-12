@@ -2429,12 +2429,87 @@
         // ============================================================
         // PRINT
         // ============================================================
-        function printMaintenance() {
-            if (confirm('🖨️ قبل الطباعة:\n\n• الاتجاه: أفقي (Landscape)\n• خلفيات ورسوم: مفعّل ✅\n\nمتابعة؟')) {
-                try { window.print(); } catch (e) { console.error(e); }
+              function printMaintenance() {
+            try {
+                // 1️⃣ جمع الإحصائيات
+                var stats = [
+                    { value: document.getElementById('maintDamagedCount')?.textContent || '0', label: '🚨 مراكب معطبة', type: 'danger' },
+                    { value: document.getElementById('maintActiveTasks')?.textContent || '0', label: '⚡ قيد التنفيذ', type: 'warning' },
+                    { value: document.getElementById('maintCompletedTasks')?.textContent || '0', label: '✅ مكتملة', type: 'success' },
+                    { value: document.getElementById('maintPendingTasks')?.textContent || '0', label: '⏳ قيد الانتظار', type: 'info' },
+                    { value: document.getElementById('maintTotalTasks')?.textContent || '0', label: '📋 إجمالي السجلات', type: 'gold' }
+                ];
+
+                // 2️⃣ جمع بيانات الجدول
+                var columns = ['#', 'المركب', 'نوع التدخل', 'الفني', 'الوحدة', 'التاريخ', 'التكلفة', 'الحالة'];
+                var rows = [];
+
+                var tableBody = document.getElementById('maintMaintenanceBody');
+                if (tableBody) {
+                    var trs = tableBody.querySelectorAll('tr');
+                    trs.forEach(function(tr) {
+                        if (tr.querySelector('.empty-state')) return;
+                        var tds = tr.querySelectorAll('td');
+                        if (tds.length < 8) return;
+
+                        var rowCells = [];
+                        // الأعمدة: 0=#, 1=المركب, 2=نوع, 3=الفني, 4=الوحدة, 5=التاريخ, 6=التكلفة, 7=الحالة, 8=إجراء(تجاهل)
+                        tds.forEach(function(td, i) {
+                            if (i === tds.length - 1) return; // تجاهل إجراء
+
+                            // الحالة — استخرج الشارة
+                            var badge = td.querySelector('.status-badge');
+                            if (badge) {
+                                var badgeCls = badge.className || '';
+                                var variant = 'neutral';
+                                if (badgeCls.indexOf('completed') !== -1) variant = 'success';
+                                else if (badgeCls.indexOf('active') !== -1) variant = 'warning';
+                                else if (badgeCls.indexOf('pending') !== -1) variant = 'info';
+                                else if (badgeCls.indexOf('cancelled') !== -1) variant = 'danger';
+                                rowCells.push({ type: 'badge', text: badge.textContent.trim(), variant: variant });
+                                return;
+                            }
+
+                            rowCells.push(td.textContent.trim() || '—');
+                        });
+
+                        if (rowCells.length > 0) rows.push(rowCells);
+                    });
+                }
+
+                // 3️⃣ حفظ في localStorage
+                var printData = {
+                    type: 'maintenance',
+                    title: 'سجل الصيانة والتدخلات',
+                    subtitle: 'Maintenance & Interventions Log',
+                    sectionTitle: 'سجلات الصيانة النشطة',
+                    stats: stats,
+                    columns: columns,
+                    rows: rows
+                };
+
+                localStorage.setItem('print_data', JSON.stringify(printData));
+
+                // 4️⃣ فتح صفحة الطباعة
+                var printUrl = '/print.html?type=maintenance&key=print_data';
+                var newWindow = window.open(printUrl, '_blank');
+
+                if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                    if (confirm('⚠️ المتصفح منع فتح نافذة جديدة.\nهل تريد الانتقال لصفحة الطباعة؟')) {
+                        window.location.href = printUrl;
+                    }
+                    return;
+                }
+
+                showToast('🖨️ تم تحضير الطباعة', 'success');
+                console.log('✅ Print data saved for maintenance');
+                console.log('   Rows:', rows.length);
+
+            } catch (e) {
+                console.error('❌ Print error:', e);
+                showToast('❌ حدث خطأ: ' + e.message, 'error');
             }
         }
-
         // ============================================================
         // DELEGATION
         // ============================================================
