@@ -1408,13 +1408,91 @@
             showToast('✅ تم التصدير (' + list.length + ' سجل)', 'success');
         }
 
-        // PRINT
+                // PRINT — عبر print.html الموحدة
         function printLogs() {
-            if (confirm('🖨️ قبل الطباعة:\n\n• الاتجاه: أفقي (Landscape)\n• خلفيات ورسوم: مفعّل ✅\n\nمتابعة؟')) {
-                try { window.print(); } catch (e) { console.error(e); }
+            try {
+                // 1️⃣ جمع الإحصائيات
+                var stats = [
+                    { value: document.getElementById('totalCount')?.textContent || '0', label: '📋 إجمالي السجلات', type: '' },
+                    { value: document.getElementById('completedCount')?.textContent || '0', label: '✅ مكتملة', type: 'success' },
+                    { value: document.getElementById('activeCount')?.textContent || '0', label: '⚡ قيد التنفيذ', type: 'warning' },
+                    { value: document.getElementById('pendingCount')?.textContent || '0', label: '⏳ قيد الانتظار', type: 'info' },
+                    { value: document.getElementById('totalCost')?.textContent || '0', label: '💰 إجمالي التكلفة', type: 'gold' }
+                ];
+
+                // 2️⃣ جمع الأعمدة
+                var columns = ['#', 'المركب', 'نوع التدخل', 'الفني', 'الوحدة', 'التاريخ', 'التكلفة', 'الحالة'];
+
+                // 3️⃣ جمع الصفوف من الجدول
+                var rows = [];
+                var list = state.filtered.length > 0 ? state.filtered : state.data;
+
+                list.sort(function(a, b) {
+                    return new Date(b.date) - new Date(a.date);
+                });
+
+                list.forEach(function(r, i) {
+                    var rowCells = [
+                        String(i + 1),
+                        r.vesselName || '—',
+                        r.interventionType || '—',
+                        r.technician || '—',
+                        r.interventionUnit || '—',
+                        formatDate(r.date),
+                        (r.cost ? r.cost.toFixed(2) : '0.00') + ' د.ت'
+                    ];
+
+                    // الحالة — كشارة ملونة
+                    var variant = 'neutral';
+                    if (r.status === 'مكتملة') variant = 'success';
+                    else if (r.status === 'قيد التنفيذ') variant = 'warning';
+                    else if (r.status === 'قيد الانتظار') variant = 'info';
+                    else if (r.status === 'ملغاة') variant = 'danger';
+
+                    rowCells.push({ type: 'badge', text: r.status || '—', variant: variant });
+
+                    rows.push(rowCells);
+                });
+
+                if (rows.length === 0) {
+                    showToast('⚠️ لا توجد بيانات للطباعة', 'error');
+                    return;
+                }
+
+                // 4️⃣ حفظ في localStorage
+                var printData = {
+                    type: 'logs',
+                    title: 'سجلات الصيانة',
+                    subtitle: 'Maintenance Logs History',
+                    sectionTitle: 'السجل التاريخي الكامل',
+                    stats: stats,
+                    columns: columns,
+                    rows: rows
+                };
+
+                localStorage.setItem('print_data', JSON.stringify(printData));
+
+                // 5️⃣ فتح صفحة الطباعة
+                var printUrl = '/print.html?type=logs&key=print_data';
+                var newWindow = window.open(printUrl, '_blank');
+
+                if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                    if (confirm('⚠️ المتصفح منع فتح نافذة جديدة.\nهل تريد الانتقال لصفحة الطباعة؟')) {
+                        window.location.href = printUrl;
+                    }
+                    return;
+                }
+
+                showToast('🖨️ تم تحضير الطباعة (' + rows.length + ' سجل)', 'success');
+                console.log('✅ Print data saved for logs');
+                console.log('   Rows:', rows.length);
+                console.log('   Columns:', columns.length);
+
+            } catch (e) {
+                console.error('❌ Print error:', e);
+                showToast('❌ حدث خطأ: ' + e.message, 'error');
             }
         }
-
         // DELEGATION
         function handleAction(e) {
             var btn = e.target.closest('[data-action]');
