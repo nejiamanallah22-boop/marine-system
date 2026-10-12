@@ -8,39 +8,35 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
 :root {
     --navy: #0a1628;
-    --navy-light: #1a2942;
+    --navy-2: #142b4a;
+    --navy-3: #1e3a5f;
     --gold: #c9a961;
-    --gold-light: #e0c88a;
-    --gold-dark: #9d7f3f;
+    --gold-2: #e0c88a;
+    --gold-3: #9d7f3f;
     --success: #10b981;
-    --success-bg: #ecfdf5;
-    --danger: #dc2626;
-    --danger-bg: #fef2f2;
+    --danger: #ef4444;
     --warning: #f59e0b;
-    --warning-bg: #fffbeb;
     --info: #3b82f6;
-    --info-bg: #eff6ff;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --gray-900: #111827;
-    --font-primary: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+    --bg: #eef2f6;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-2: #64748b;
+    --text-3: #94a3b8;
+    --font: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     --zoom-font: 100%;
     --zoom-table: 100%;
     --zoom-row: 100%;
     --zoom-image: 100%;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.15);
 }
 
 * {
@@ -53,26 +49,427 @@
 }
 
 html, body {
-    font-family: var(--font-primary);
+    font-family: var(--font);
     direction: rtl;
     text-align: right;
-    background: #e5e7eb;
-    color: var(--gray-900);
-    font-size: 12px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
     line-height: 1.5;
+    min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════ */
+/* 🎛️ CONTROL BAR — شريط التحكم الرئيسي       */
+/* ═══════════════════════════════════════════ */
+.control-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: linear-gradient(90deg, var(--navy) 0%, var(--navy-2) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 1000;
+    box-shadow: var(--shadow-lg);
+}
+
+.control-bar .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+}
+
+.control-bar .brand i {
+    color: var(--gold);
+    font-size: 20px;
+}
+
+.control-bar .actions {
+    display: flex;
+    gap: 10px;
+}
+
+.control-bar button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+}
+
+.btn-print {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    color: var(--navy);
+    box-shadow: 0 4px 12px rgba(201, 169, 97, 0.4);
+}
+
+.btn-print:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(201, 169, 97, 0.6);
+}
+
+.btn-close {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ═══════════════════════════════════════════ */
+/* 📊 SIDE PANEL — اللوحة الجانبية الاحترافية  */
+/* ═══════════════════════════════════════════ */
+.side-panel {
+    position: fixed;
+    top: 80px;
+    left: 16px;
+    width: 320px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    z-index: 999;
+    direction: rtl;
+    transition: all 0.3s ease;
+}
+
+.side-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.side-panel::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 3px;
+}
+
+.side-panel.collapsed {
+    width: 60px;
+    max-height: 60px;
+    overflow: hidden;
+    border-radius: 16px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 16px 16px 0 0;
+}
+
+.panel-header span {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.panel-header i {
+    color: var(--gold);
+    font-size: 16px;
+}
+
+.panel-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.panel-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.panel-body {
+    padding: 16px 18px;
+    transition: all 0.3s ease;
+}
+
+.side-panel.collapsed .panel-body {
+    display: none;
+}
+
+/* ═══════════════════════════════════════════ */
+/* 🎨 SECTION BLOCKS                            */
+/* ═══════════════════════════════════════════ */
+.panel-section {
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.panel-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.panel-section-title i {
+    color: var(--gold-3);
+    font-size: 14px;
+}
+
+/* ═══════════════════════════════════════════ */
+/* 🔘 BUTTON GROUPS                             */
+/* ═══════════════════════════════════════════ */
+.btn-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.btn-group.three {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.option-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 6px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 52px;
+}
+
+.option-btn i {
+    font-size: 14px;
+    color: var(--text-3);
+}
+
+.option-btn:hover {
+    border-color: var(--gold);
+    background: rgba(201, 169, 97, 0.05);
+    transform: translateY(-1px);
+}
+
+.option-btn:hover i {
+    color: var(--gold-3);
+}
+
+.option-btn.active {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    color: #fff;
+    border-color: var(--navy);
+    box-shadow: 0 4px 12px rgba(10, 22, 40, 0.25);
+}
+
+.option-btn.active i {
+    color: var(--gold);
+}
+
+/* ═══════════════════════════════════════════ */
+/* 🎚️ ZOOM SLIDERS                              */
+/* ═══════════════════════════════════════════ */
+.zoom-item {
+    display: grid;
+    grid-template-columns: 70px 1fr 70px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.zoom-item label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.zoom-item label i {
+    color: var(--gold-3);
+    font-size: 13px;
+    width: 16px;
+}
+
+.zoom-btns {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    grid-column: 2 / 4;
+}
+
+.zoom-btns button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: var(--card);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--navy);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    box-shadow: var(--shadow-sm);
+}
+
+.zoom-btns button:hover {
+    background: var(--navy);
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.zoom-btns button:active {
+    transform: scale(0.95);
+}
+
+.zoom-btns .zoom-value {
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--navy);
+    min-width: 50px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════════ */
+/* ⚡ PRESETS                                   */
+/* ═══════════════════════════════════════════ */
+.presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.preset-btn {
+    padding: 8px 4px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.preset-btn:hover {
+    background: #f8fafc;
+    transform: translateY(-1px);
+}
+
+.preset-btn.active {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    color: var(--navy);
+    border-color: var(--gold);
+    box-shadow: 0 4px 12px rgba(201, 169, 97, 0.4);
+}
+
+/* ═══════════════════════════════════════════ */
+/* 🔄 RESET BUTTON                              */
+/* ═══════════════════════════════════════════ */
+.reset-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.reset-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════ */
+/* 📄 PAGE — محتوى الطباعة                     */
+/* ═══════════════════════════════════════════ */
+.page-container {
+    margin: 80px auto 30px;
+    max-width: 297mm;
+    padding: 0 20px;
 }
 
 .page {
     width: 297mm;
     min-height: 210mm;
-    margin: 10mm auto;
+    margin: 0 auto 20px;
     padding: 12mm 15mm 15mm 15mm;
-    background: #ffffff;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    background: var(--card);
+    box-shadow: var(--shadow-md);
     position: relative;
+    border-radius: 4px;
 }
 
-/* ═══════════════ HEADER ═══════════════ */
+/* ═══════════════════════════════════════════ */
+/* 🏛️ HEADER                                   */
+/* ═══════════════════════════════════════════ */
 .official-header {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -145,7 +542,7 @@ html, body {
 
 .header-center .subtitle {
     font-size: 9pt;
-    color: var(--gray-600);
+    color: var(--text-2);
     font-weight: 500;
     margin-top: 1mm;
 }
@@ -161,7 +558,7 @@ html, body {
 .doc-ref-block {
     margin-top: 3mm;
     padding-top: 2mm;
-    border-top: 1px solid var(--gold-light);
+    border-top: 1px solid var(--gold-2);
     display: flex;
     align-items: center;
     gap: 2mm;
@@ -171,7 +568,7 @@ html, body {
 }
 
 .doc-ref-label {
-    color: var(--gold-dark);
+    color: var(--gold-3);
     font-weight: 900;
     font-size: 12pt;
     white-space: nowrap;
@@ -185,7 +582,9 @@ html, body {
     margin: 0 2mm;
 }
 
-/* ═══════════════ KPI ═══════════════ */
+/* ═══════════════════════════════════════════ */
+/* 📊 KPI                                       */
+/* ═══════════════════════════════════════════ */
 .kpi-section {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -195,8 +594,8 @@ html, body {
 
 .kpi-card {
     padding: 4mm 3mm;
-    background: linear-gradient(135deg, #ffffff 0%, var(--gray-50) 100%);
-    border: 1px solid var(--gray-200);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--border);
     border-radius: 3mm;
     text-align: center;
     position: relative;
@@ -216,7 +615,7 @@ html, body {
 .kpi-card.success::before { background: var(--success); }
 .kpi-card.warning::before { background: var(--warning); }
 .kpi-card.danger::before { background: var(--danger); }
-.kpi-card.gold::before { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+.kpi-card.gold::before { background: linear-gradient(90deg, var(--gold), var(--gold-2)); }
 
 .kpi-value {
     font-size: calc(22pt * var(--zoom-font) / 100);
@@ -230,21 +629,23 @@ html, body {
 .kpi-card.success .kpi-value { color: var(--success); }
 .kpi-card.warning .kpi-value { color: var(--warning); }
 .kpi-card.danger .kpi-value { color: var(--danger); }
-.kpi-card.gold .kpi-value { color: var(--gold-dark); }
+.kpi-card.gold .kpi-value { color: var(--gold-3); }
 
 .kpi-label {
     font-size: calc(8.5pt * var(--zoom-font) / 100);
-    color: var(--gray-600);
+    color: var(--text-2);
     font-weight: 600;
 }
 
-/* ═══════════════ SECTION TITLE ═══════════════ */
+/* ═══════════════════════════════════════════ */
+/* 📋 SECTION TITLE                             */
+/* ═══════════════════════════════════════════ */
 .section-title {
     display: flex;
     align-items: center;
     gap: 3mm;
     padding: 2mm 4mm;
-    background: linear-gradient(90deg, var(--navy) 0%, var(--navy-light) 100%);
+    background: linear-gradient(90deg, var(--navy) 0%, var(--navy-2) 100%);
     color: #ffffff;
     border-radius: 2mm 2mm 0 0;
     font-size: calc(10pt * var(--zoom-font) / 100);
@@ -256,9 +657,11 @@ html, body {
     font-size: 11pt;
 }
 
-/* ═══════════════ TABLE ═══════════════ */
+/* ═══════════════════════════════════════════ */
+/* 📊 TABLE                                     */
+/* ═══════════════════════════════════════════ */
 .table-wrapper {
-    border: 1px solid var(--gray-300);
+    border: 1px solid var(--border);
     border-top: none;
     border-radius: 0 0 2mm 2mm;
     overflow: hidden;
@@ -273,7 +676,7 @@ table.data-table {
 }
 
 table.data-table thead {
-    background: var(--gray-100);
+    background: #f1f5f9;
     display: table-header-group;
 }
 
@@ -284,7 +687,7 @@ table.data-table thead th {
     font-size: calc(8pt * var(--zoom-table) / 100);
     text-align: center;
     border-bottom: 1.5px solid var(--navy);
-    border-left: 1px solid var(--gray-200);
+    border-left: 1px solid var(--border);
     white-space: nowrap;
     vertical-align: middle;
 }
@@ -297,16 +700,16 @@ table.data-table tbody tr {
     height: calc(34mm * var(--zoom-row) / 100);
 }
 
-table.data-table tbody tr:nth-child(even) { background: var(--gray-50); }
+table.data-table tbody tr:nth-child(even) { background: #f8fafc; }
 
 table.data-table tbody td {
     padding: calc(2mm * var(--zoom-row) / 100) 1mm;
     text-align: center;
     vertical-align: middle;
-    border-bottom: 1px solid var(--gray-200);
-    border-left: 1px solid var(--gray-200);
+    border-bottom: 1px solid var(--border);
+    border-left: 1px solid var(--border);
     font-size: calc(8pt * var(--zoom-table) / 100);
-    color: var(--gray-800);
+    color: var(--text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -317,13 +720,13 @@ table.data-table tbody td {
 table.data-table tbody td:last-child { border-left: none; }
 table.data-table tbody tr:last-child td { border-bottom: none; }
 
-/* ═══════════════ IMAGE CELL — 120px ═══════════════ */
+/* IMAGE CELL */
 td.cell-image {
     width: 34mm !important;
     min-width: 34mm !important;
     max-width: 34mm !important;
     padding: 2mm !important;
-    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     vertical-align: middle;
     text-align: center;
 }
@@ -335,8 +738,8 @@ td.cell-image img {
     max-height: 30mm !important;
     object-fit: cover;
     border-radius: 2mm;
-    border: 2px solid var(--gray-300);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    border: 2px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     display: block;
     margin: 0 auto;
     background: #ffffff;
@@ -345,16 +748,14 @@ td.cell-image img {
 td.cell-image .no-image {
     width: 30mm !important;
     height: 30mm !important;
-    max-width: 30mm !important;
-    max-height: 30mm !important;
     margin: 0 auto;
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-    border: 2px dashed var(--gray-400);
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    border: 2px dashed var(--text-3);
     border-radius: 2mm;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--gray-500);
+    color: var(--text-3);
     font-size: 20pt;
 }
 
@@ -362,10 +763,9 @@ td.cell-number {
     font-family: 'Courier New', monospace;
     font-weight: 700;
     color: var(--navy);
-    font-size: calc(8pt * var(--zoom-table) / 100);
 }
 
-/* ═══════════════ BADGES ═══════════════ */
+/* BADGES */
 .badge {
     display: inline-block;
     padding: 0.6mm 2mm;
@@ -377,23 +777,23 @@ td.cell-number {
     line-height: 1.3;
 }
 
-.badge-success { background: var(--success-bg); color: #059669; border-color: var(--success); }
-.badge-danger { background: var(--danger-bg); color: #b91c1c; border-color: var(--danger); }
-.badge-warning { background: var(--warning-bg); color: #b45309; border-color: var(--warning); }
-.badge-info { background: var(--info-bg); color: #1d4ed8; border-color: var(--info); }
-.badge-neutral { background: var(--gray-100); color: var(--gray-700); border-color: var(--gray-300); }
+.badge-success { background: #ecfdf5; color: #059669; border-color: var(--success); }
+.badge-danger { background: #fef2f2; color: #b91c1c; border-color: var(--danger); }
+.badge-warning { background: #fffbeb; color: #b45309; border-color: var(--warning); }
+.badge-info { background: #eff6ff; color: #1d4ed8; border-color: var(--info); }
+.badge-neutral { background: #f1f5f9; color: #475569; border-color: var(--text-3); }
 
-/* ═══════════════ FOOTER ═══════════════ */
+/* FOOTER */
 .official-footer {
     margin-top: 6mm;
     padding-top: 4mm;
-    border-top: 1px solid var(--gray-300);
+    border-top: 1px solid var(--border);
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     gap: 5mm;
     align-items: center;
     font-size: calc(8pt * var(--zoom-font) / 100);
-    color: var(--gray-600);
+    color: var(--text-2);
 }
 
 .footer-left { text-align: right; }
@@ -410,377 +810,24 @@ td.cell-number {
     font-weight: 700;
 }
 
-/* ═══════════════ CONTROLS ═══════════════ */
-.controls {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
-    z-index: 9999;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 10px;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    border: 1px solid var(--gray-200);
-}
-
-.controls button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
-    color: #ffffff;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(10, 22, 40, 0.3);
-}
-
-.btn-secondary {
-    background: var(--gray-100);
-    color: var(--gray-700);
-}
-
-.btn-secondary:hover { background: var(--gray-200); }
-
-/* ═══════════════ PRINT SETTINGS PANEL ═══════════════ */
-.print-settings {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    width: 340px;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--gray-200);
-    z-index: 9998;
-    direction: rtl;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.print-settings-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #c9a961 0%, #e0c88a 100%);
-    color: #0a1628;
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    user-select: none;
-}
-
-.print-settings-title span {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.print-settings-toggle {
-    background: rgba(10, 22, 40, 0.15);
-    border: none;
-    color: #0a1628;
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
-    font-size: 18px;
-    font-weight: 900;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-}
-
-.print-settings-body {
-    padding: 14px 16px;
-    max-height: 700px;
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
-
-.print-settings.collapsed .print-settings-body {
-    max-height: 0;
-    padding: 0 16px;
-}
-
-.print-settings-group {
-    margin-bottom: 14px;
-}
-
-.print-settings-group label {
-    display: block;
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--gray-700);
-    margin-bottom: 8px;
-}
-
-.print-settings-buttons {
-    display: flex;
-    gap: 6px;
-}
-
-.print-settings-buttons button {
-    flex: 1;
-    padding: 9px 6px;
-    border: 1px solid var(--gray-300);
-    background: #fff;
-    border-radius: 8px;
-    font-family: var(--font-primary);
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--gray-700);
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-}
-
-.print-settings-buttons button:hover {
-    background: var(--gray-100);
-    transform: translateY(-1px);
-}
-
-.print-settings-buttons button.active {
-    background: linear-gradient(135deg, #0a1628 0%, #1a2942 100%);
-    color: #ffffff;
-    border-color: #0a1628;
-    box-shadow: 0 4px 12px rgba(10, 22, 40, 0.3);
-}
-
-.print-settings-save {
-    width: 100%;
-    padding: 12px;
-    margin-top: 12px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    font-family: var(--font-primary);
-    font-size: 13px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.print-settings-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-}
-
-.print-settings-reset {
-    width: 100%;
-    padding: 10px;
-    margin-top: 8px;
-    background: var(--danger-bg);
-    color: var(--danger);
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    font-family: var(--font-primary);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.print-settings-reset:hover {
-    background: #fee2e2;
-}
-
-/* ═══════════════ ZOOM ═══════════════ */
-.zoom-controls {
-    position: fixed;
-    top: 340px;
-    left: 20px;
-    width: 340px;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--gray-200);
-    z-index: 9998;
-    direction: rtl;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.zoom-controls .zoom-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #0a1628 0%, #1a2942 100%);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    user-select: none;
-}
-
-.zoom-controls .zoom-title span {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.zoom-controls .zoom-toggle {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: #fff;
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
-    font-size: 18px;
-    font-weight: 900;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-}
-
-.zoom-controls .zoom-body {
-    padding: 14px 16px;
-    max-height: 600px;
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
-
-.zoom-controls.collapsed .zoom-body {
-    max-height: 0;
-    padding: 0 16px;
-}
-
-.zoom-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-.zoom-row label {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--gray-700);
-    flex: 0 0 auto;
-    min-width: 65px;
-}
-
-.zoom-row button {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--gray-300);
-    background: #fff;
-    border-radius: 8px;
-    font-size: 18px;
-    font-weight: 900;
-    color: var(--gray-700);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-}
-
-.zoom-row button:hover {
-    background: var(--navy);
-    color: #fff;
-    border-color: var(--navy);
-}
-
-.zoom-row .zoom-value {
-    font-size: 13px;
-    font-weight: 900;
-    color: var(--navy);
-    min-width: 55px;
-    text-align: center;
-    padding: 6px 8px;
-    background: var(--gray-100);
-    border-radius: 8px;
-    font-variant-numeric: tabular-nums;
-}
-
-.zoom-presets {
-    display: flex;
-    gap: 6px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--gray-200);
-}
-
-.zoom-presets button {
-    flex: 1;
-    padding: 10px 0;
-    border: 1px solid var(--gray-300);
-    background: #fff;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--gray-700);
-    cursor: pointer;
-}
-
-.zoom-presets button:hover { background: var(--gray-100); }
-
-.zoom-presets button.active {
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
-    color: var(--navy);
-    border-color: var(--gold);
-}
-
-.zoom-reset {
-    width: 100%;
-    margin-top: 10px;
-    padding: 10px;
-    background: var(--danger-bg);
-    color: var(--danger);
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    font-size: 12.5px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.zoom-reset:hover { background: #fee2e2; }
-
-/* ═══════════════ LOADING ═══════════════ */
+/* LOADING */
 .loading-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(238, 242, 246, 0.98);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
-    gap: 15px;
+    z-index: 9999;
+    gap: 20px;
 }
 
 .spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid var(--gray-200);
-    border-top-color: var(--navy);
+    border: 4px solid #e2e8f0;
+    border-top-color: var(--gold);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -789,11 +836,13 @@ td.cell-number {
 
 .loading-text {
     font-size: 14px;
-    color: var(--gray-600);
+    color: var(--text-2);
     font-weight: 600;
 }
 
-/* ═══════════════ PRINT ═══════════════ */
+/* ═══════════════════════════════════════════ */
+/* 🖨️ PRINT                                     */
+/* ═══════════════════════════════════════════ */
 @page {
     size: A4 landscape;
     margin: 8mm 10mm;
@@ -806,9 +855,16 @@ td.cell-number {
         padding: 0 !important;
     }
     
-    .controls,
-    .zoom-controls,
-    .print-settings,
+    .control-bar,
+    .side-panel,
+    .loading-overlay,
+    .page-container { 
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .control-bar,
+    .side-panel,
     .loading-overlay {
         display: none !important;
     }
@@ -818,10 +874,6 @@ td.cell-number {
     #user-info-badge,
     #dev-signature {
         display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        width: 0 !important;
-        overflow: hidden !important;
     }
     
     .page {
@@ -830,7 +882,7 @@ td.cell-number {
         margin: 0 !important;
         padding: 0 !important;
         box-shadow: none !important;
-        background: #ffffff !important;
+        border-radius: 0 !important;
     }
     
     .official-header {
@@ -859,202 +911,267 @@ td.cell-number {
     }
 }
 
+/* ═══════════════════════════════════════════ */
+/* 📱 RESPONSIVE                                */
+/* ═══════════════════════════════════════════ */
 @media screen and (max-width: 1024px) {
-    .page { width: 100%; margin: 5mm; padding: 8mm; }
-    .kpi-section { grid-template-columns: repeat(2, 1fr); }
-    .official-header { grid-template-columns: 1fr; text-align: center; gap: 5mm; }
-    .header-left, .header-right { text-align: center; }
-    .doc-ref-block { justify-content: center; }
+    .page-container {
+        padding: 0 10px;
+    }
+    
+    .page {
+        width: 100%;
+        margin: 0 auto 10px;
+        padding: 8mm;
+    }
+    
+    .kpi-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .official-header {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 5mm;
+    }
+    
+    .header-left, .header-right {
+        text-align: center;
+    }
+    
+    .doc-ref-block {
+        justify-content: center;
+    }
 }
 
 @media screen and (max-width: 768px) {
-    .print-settings {
-        top: auto;
-        bottom: 340px;
+    .side-panel {
+        top: 74px;
         left: 10px;
         right: 10px;
         width: auto;
+        max-height: 60vh;
     }
     
-    .zoom-controls {
-        top: auto;
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
-        width: auto;
+    .control-bar {
+        padding: 0 12px;
     }
     
-    .controls {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        justify-content: center;
+    .control-bar .brand {
+        font-size: 13px;
+    }
+    
+    .control-bar button {
+        padding: 8px 14px;
+        font-size: 12px;
     }
 }
 </style>
 </head>
 <body>
 
-<!-- 🎛️ Controls — أعلى اليمين -->
-<div class="controls">
-    <button class="btn-primary" onclick="window.print()">
-        <i class="fas fa-print"></i> طباعة / PDF
-    </button>
-    <button class="btn-secondary" onclick="window.close()">
-        <i class="fas fa-times"></i> إغلاق
-    </button>
-</div>
-
-<!-- 🖨️ Print Settings — أعلى اليسار -->
-<div class="print-settings" id="printSettings">
-    <div class="print-settings-title" onclick="toggleSettingsPanel()">
-        <span>🖨️ إعدادات الطباعة</span>
-        <button class="print-settings-toggle" id="settingsToggle">−</button>
+<!-- ═══════════════════════════════════════════ -->
+<!-- 🎛️ CONTROL BAR                                -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="control-bar">
+    <div class="brand">
+        <i class="fas fa-print"></i>
+        <span>إعداد الطباعة — منظومة الوسائل البحرية</span>
     </div>
-    <div class="print-settings-body" id="settingsBody">
-        
-        <!-- 📄 اتجاه الصفحة -->
-        <div class="print-settings-group">
-            <label>📄 اتجاه الصفحة:</label>
-            <div class="print-settings-buttons">
-                <button data-orientation="portrait" onclick="setOrientation('portrait')">
-                    <i class="fas fa-file"></i> عمودي
-                </button>
-                <button data-orientation="landscape" class="active" onclick="setOrientation('landscape')">
-                    <i class="fas fa-file-alt"></i> أفقي
-                </button>
-            </div>
-        </div>
-        
-        <!-- 📏 حجم الورق -->
-        <div class="print-settings-group">
-            <label>📏 حجم الورق:</label>
-            <div class="print-settings-buttons">
-                <button data-size="A4" class="active" onclick="setPaperSize('A4')">A4</button>
-                <button data-size="A3" onclick="setPaperSize('A3')">A3</button>
-                <button data-size="Letter" onclick="setPaperSize('Letter')">Letter</button>
-            </div>
-        </div>
-        
-        <!-- 📐 الهوامش -->
-        <div class="print-settings-group">
-            <label>📐 الهوامش:</label>
-            <div class="print-settings-buttons">
-                <button data-margin="5mm" onclick="setMargins('5mm')">ضيق</button>
-                <button data-margin="8mm 10mm" class="active" onclick="setMargins('8mm 10mm')">عادي</button>
-                <button data-margin="15mm 20mm" onclick="setMargins('15mm 20mm')">واسع</button>
-            </div>
-        </div>
-        
-        <!-- 💾 حفظ -->
-        <button class="print-settings-save" onclick="saveAndPrint()">
-            💾 حفظ الإعدادات + طباعة
+    <div class="actions">
+        <button class="btn-print" onclick="window.print()">
+            <i class="fas fa-print"></i> طباعة / PDF
         </button>
-        
-        <!-- 🔄 إعادة ضبط -->
-        <button class="print-settings-reset" onclick="resetSettings()">
-            🔄 إعادة الضبط
+        <button class="btn-close" onclick="window.close()">
+            <i class="fas fa-times"></i> إغلاق
         </button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 📊 SIDE PANEL                                 -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="side-panel" id="sidePanel">
+    <div class="panel-header" onclick="togglePanel()">
+        <span><i class="fas fa-sliders-h"></i> إعدادات متقدمة</span>
+        <button class="panel-toggle" id="panelToggle">−</button>
+    </div>
+    
+    <div class="panel-body">
+        
+        <!-- 📄 Page Setup -->
+        <div class="panel-section">
+            <div class="panel-section-title">
+                <i class="fas fa-file-alt"></i> إعدادات الصفحة
+            </div>
+            
+            <!-- Orientation -->
+            <div style="margin-bottom: 10px;">
+                <div style="font-size: 11px; color: var(--text-2); font-weight: 700; margin-bottom: 6px;">اتجاه الصفحة</div>
+                <div class="btn-group">
+                    <button class="option-btn" data-orientation="portrait" onclick="setOrientation('portrait')">
+                        <i class="fas fa-file"></i>
+                        <span>عمودي</span>
+                    </button>
+                    <button class="option-btn active" data-orientation="landscape" onclick="setOrientation('landscape')">
+                        <i class="fas fa-file-alt"></i>
+                        <span>أفقي</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Paper Size -->
+            <div style="margin-bottom: 10px;">
+                <div style="font-size: 11px; color: var(--text-2); font-weight: 700; margin-bottom: 6px;">حجم الورق</div>
+                <div class="btn-group three">
+                    <button class="option-btn active" data-size="A4" onclick="setPaperSize('A4')">
+                        <span>A4</span>
+                    </button>
+                    <button class="option-btn" data-size="A3" onclick="setPaperSize('A3')">
+                        <span>A3</span>
+                    </button>
+                    <button class="option-btn" data-size="Letter" onclick="setPaperSize('Letter')">
+                        <span>Letter</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Margins -->
+            <div>
+                <div style="font-size: 11px; color: var(--text-2); font-weight: 700; margin-bottom: 6px;">الهوامش</div>
+                <div class="btn-group three">
+                    <button class="option-btn" data-margin="5mm" onclick="setMargins('5mm')">
+                        <span>ضيق</span>
+                    </button>
+                    <button class="option-btn active" data-margin="8mm 10mm" onclick="setMargins('8mm 10mm')">
+                        <span>عادي</span>
+                    </button>
+                    <button class="option-btn" data-margin="15mm 20mm" onclick="setMargins('15mm 20mm')">
+                        <span>واسع</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 🔍 Zoom Controls -->
+        <div class="panel-section">
+            <div class="panel-section-title">
+                <i class="fas fa-search-plus"></i> حجم الطباعة
+            </div>
+            
+            <div class="zoom-item">
+                <label><i class="fas fa-font"></i> الخط:</label>
+                <div class="zoom-btns">
+                    <button onclick="adjustZoom('font', -1)">−</button>
+                    <span class="zoom-value" id="fontZoomValue">100%</span>
+                    <button onclick="adjustZoom('font', 1)">+</button>
+                </div>
+            </div>
+            
+            <div class="zoom-item">
+                <label><i class="fas fa-table"></i> الجدول:</label>
+                <div class="zoom-btns">
+                    <button onclick="adjustZoom('table', -1)">−</button>
+                    <span class="zoom-value" id="tableZoomValue">100%</span>
+                    <button onclick="adjustZoom('table', 1)">+</button>
+                </div>
+            </div>
+            
+            <div class="zoom-item">
+                <label><i class="fas fa-list"></i> الصفوف:</label>
+                <div class="zoom-btns">
+                    <button onclick="adjustZoom('row', -1)">−</button>
+                    <span class="zoom-value" id="rowZoomValue">100%</span>
+                    <button onclick="adjustZoom('row', 1)">+</button>
+                </div>
+            </div>
+            
+            <div class="zoom-item">
+                <label><i class="fas fa-image"></i> الصور:</label>
+                <div class="zoom-btns">
+                    <button onclick="adjustZoom('image', -1)">−</button>
+                    <span class="zoom-value" id="imageZoomValue">100%</span>
+                    <button onclick="adjustZoom('image', 1)">+</button>
+                </div>
+            </div>
+            
+            <!-- Presets -->
+            <div class="presets">
+                <button class="preset-btn" onclick="applyPreset('small')">صغير</button>
+                <button class="preset-btn active" onclick="applyPreset('normal')">عادي</button>
+                <button class="preset-btn" onclick="applyPreset('large')">كبير</button>
+                <button class="preset-btn" onclick="applyPreset('huge')">ضخم</button>
+            </div>
+            
+            <button class="reset-btn" onclick="resetAll()">
+                <i class="fas fa-redo"></i> إعادة ضبط الكل
+            </button>
+        </div>
         
     </div>
 </div>
 
-<!-- 🔍 Zoom Controls — أسفل اليسار -->
-<div class="zoom-controls" id="zoomControls">
-    <div class="zoom-title" onclick="toggleZoomPanel()">
-        <span>🔍 حجم الطباعة</span>
-        <button class="zoom-toggle" id="zoomToggle">−</button>
-    </div>
-    <div class="zoom-body" id="zoomBody">
-        <div class="zoom-row">
-            <label>📝 الخط:</label>
-            <button onclick="adjustZoom('font', -1)">−</button>
-            <span class="zoom-value" id="fontZoomValue">100%</span>
-            <button onclick="adjustZoom('font', 1)">+</button>
-        </div>
-        <div class="zoom-row">
-            <label>📊 الجدول:</label>
-            <button onclick="adjustZoom('table', -1)">−</button>
-            <span class="zoom-value" id="tableZoomValue">100%</span>
-            <button onclick="adjustZoom('table', 1)">+</button>
-        </div>
-        <div class="zoom-row">
-            <label>📐 الصفوف:</label>
-            <button onclick="adjustZoom('row', -1)">−</button>
-            <span class="zoom-value" id="rowZoomValue">100%</span>
-            <button onclick="adjustZoom('row', 1)">+</button>
-        </div>
-        <div class="zoom-row">
-            <label>🖼️ الصور:</label>
-            <button onclick="adjustZoom('image', -1)">−</button>
-            <span class="zoom-value" id="imageZoomValue">100%</span>
-            <button onclick="adjustZoom('image', 1)">+</button>
-        </div>
-        <div class="zoom-presets">
-            <button onclick="applyPreset('small')">ص</button>
-            <button onclick="applyPreset('normal')" class="active">ع</button>
-            <button onclick="applyPreset('large')">ك</button>
-            <button onclick="applyPreset('huge')">ض</button>
-        </div>
-        <button class="zoom-reset" onclick="resetZoom()">🔄 إعادة ضبط</button>
-    </div>
-</div>
-
-<!-- ⏳ Loading -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- ⏳ LOADING                                    -->
+<!-- ═══════════════════════════════════════════ -->
 <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
     <div class="loading-text">جاري تحضير التقرير...</div>
 </div>
 
-<!-- 📄 Page Content -->
-<div class="page" id="pageContent" style="display: none;">
+<!-- ═══════════════════════════════════════════ -->
+<!-- 📄 PAGE CONTENT                               -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page-container" id="pageContainer" style="display: none;">
+    <div class="page" id="pageContent">
 
-    <header class="official-header">
-        <div class="header-left">
-            <div class="republic">الجمهورية التونسية</div>
-            وزارة الداخلية<br>
-            كتابة الدولة للأمن<br>
-            الإدارة العامة للحرس الوطني<br>
-            الإدارة العامة لحرس الحدود<br>
-            إدارة إسناد الوحدات البحرية
-            
-            <div class="doc-ref-block">
-                <span class="doc-ref-label">ع/</span>
-                <span class="doc-ref-line"></span>
-                <span class="doc-ref-label">/دد</span>
+        <header class="official-header">
+            <div class="header-left">
+                <div class="republic">الجمهورية التونسية</div>
+                وزارة الداخلية<br>
+                كتابة الدولة للأمن<br>
+                الإدارة العامة للحرس الوطني<br>
+                الإدارة العامة لحرس الحدود<br>
+                إدارة إسناد الوحدات البحرية
+                
+                <div class="doc-ref-block">
+                    <span class="doc-ref-label">ع/</span>
+                    <span class="doc-ref-line"></span>
+                    <span class="doc-ref-label">/دد</span>
+                </div>
             </div>
-        </div>
-        
-        <div class="header-center">
-            <div class="emblem">⚓</div>
-            <h1 id="pageTitle">منظومة الوسائل البحرية</h1>
-            <div class="subtitle" id="pageSubtitle">Marine System Report</div>
-        </div>
-        
-        <div class="header-right">
-            <div style="margin-top: 2mm;">العوينة في: __________</div>
-        </div>
-    </header>
+            
+            <div class="header-center">
+                <div class="emblem">⚓</div>
+                <h1 id="pageTitle">منظومة الوسائل البحرية</h1>
+                <div class="subtitle" id="pageSubtitle">Marine System Report</div>
+            </div>
+            
+            <div class="header-right">
+                <div style="margin-top: 2mm;">العوينة في: __________</div>
+            </div>
+        </header>
 
-    <section class="kpi-section" id="kpiSection"></section>
+        <section class="kpi-section" id="kpiSection"></section>
 
-    <div class="section-title" id="sectionTitle">السجل التفصيلي</div>
+        <div class="section-title" id="sectionTitle">السجل التفصيلي</div>
 
-    <div class="table-wrapper">
-        <table class="data-table" id="dataTable">
-            <thead id="tableHead"></thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table class="data-table" id="dataTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <footer class="official-footer">
+            <div class="footer-left">منظومة الوسائل البحرية v11.2.0</div>
+            <div class="footer-center">إدارة إسناد الوحدات البحرية</div>
+            <div class="footer-right">
+                <span id="printDate"></span>
+                <span class="page-number" style="margin-right: 3mm;">صفحة 1</span>
+            </div>
+        </footer>
     </div>
-
-    <footer class="official-footer">
-        <div class="footer-left">منظومة الوسائل البحرية v11.2.0</div>
-        <div class="footer-center">إدارة إسناد الوحدات البحرية</div>
-        <div class="footer-right">
-            <span id="printDate"></span>
-            <span class="page-number" style="margin-right: 3mm;">صفحة 1</span>
-        </div>
-    </footer>
 </div>
 
 <script>
@@ -1137,7 +1254,7 @@ td.cell-number {
         
         if (!rows || !rows.length) {
             tbody.innerHTML = `<tr><td colspan="${columns.length || 5}" 
-                style="text-align:center;padding:30mm;color:#9ca3af;font-size:11pt;">
+                style="text-align:center;padding:30mm;color:#94a3b8;font-size:11pt;">
                 لا توجد بيانات للعرض</td></tr>`;
             return;
         }
@@ -1173,14 +1290,14 @@ td.cell-number {
     
     function init() {
         const overlay = document.getElementById('loadingOverlay');
-        const pageContent = document.getElementById('pageContent');
+        const pageContainer = document.getElementById('pageContainer');
         
         setTimeout(() => {
             buildKPI(data.stats);
             buildTable(data.columns, data.rows);
             
             if (overlay) overlay.style.display = 'none';
-            if (pageContent) pageContent.style.display = 'block';
+            if (pageContainer) pageContainer.style.display = 'block';
             
             console.log('%c✅ Print page ready', 
                 'background:#10b981;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;');
@@ -1233,7 +1350,7 @@ td.cell-number {
         if (!zoomState.hasOwnProperty(type)) return;
         const newValue = zoomState[type] + (direction * LIMITS.step);
         zoomState[type] = Math.max(LIMITS.min, Math.min(LIMITS.max, newValue));
-        document.querySelectorAll('.zoom-presets button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
         applyZoom();
     };
     
@@ -1246,25 +1363,19 @@ td.cell-number {
         };
         zoomState = { ...(PRESETS[preset] || DEFAULTS) };
         applyZoom();
-        document.querySelectorAll('.zoom-presets button').forEach(b => b.classList.remove('active'));
-        const btn = document.querySelector(`.zoom-presets button[onclick="applyPreset('${preset}')"]`);
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`.preset-btn[onclick="applyPreset('${preset}')"]`);
         if (btn) btn.classList.add('active');
     };
     
-    window.resetZoom = function() {
+    window.resetAll = function() {
         zoomState = { ...DEFAULTS };
         applyZoom();
-        document.querySelectorAll('.zoom-presets button').forEach(b => b.classList.remove('active'));
-        const normalBtn = document.querySelector(`.zoom-presets button[onclick="applyPreset('normal')"]`);
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        const normalBtn = document.querySelector(`.preset-btn[onclick="applyPreset('normal')"]`);
         if (normalBtn) normalBtn.classList.add('active');
-    };
-    
-    window.toggleZoomPanel = function() {
-        const panel = document.getElementById('zoomControls');
-        if (!panel) return;
-        panel.classList.toggle('collapsed');
-        const toggle = panel.querySelector('.zoom-toggle');
-        if (toggle) toggle.textContent = panel.classList.contains('collapsed') ? '+' : '−';
+        
+        if (typeof window.resetSettings === 'function') window.resetSettings();
     };
     
     if (document.readyState === 'loading') {
@@ -1324,20 +1435,14 @@ td.cell-number {
         applySettings();
     };
     
-    window.saveAndPrint = function() {
-        applySettings();
-        if (confirm('⚠️ لتطبيق الإعدادات الجديدة، يجب إعادة تحميل الصفحة.\n\nهل تريد المتابعة؟')) {
-            localStorage.setItem('print_settings', JSON.stringify(settings));
-            location.reload();
-        }
-    };
-    
-    window.toggleSettingsPanel = function() {
-        const panel = document.getElementById('printSettings');
+    window.togglePanel = function() {
+        const panel = document.getElementById('sidePanel');
         if (!panel) return;
         panel.classList.toggle('collapsed');
-        const toggle = panel.querySelector('.print-settings-toggle');
-        if (toggle) toggle.textContent = panel.classList.contains('collapsed') ? '+' : '−';
+        const toggle = panel.querySelector('.panel-toggle');
+        if (toggle) {
+            toggle.textContent = panel.classList.contains('collapsed') ? '+' : '−';
+        }
     };
     
     if (document.readyState === 'loading') {
@@ -1345,6 +1450,8 @@ td.cell-number {
     } else {
         applySettings();
     }
+    
+    console.log('%c🖨️ Print Settings Ready', 'background:#c9a961;color:#0a1628;padding:4px 8px;border-radius:4px;font-weight:bold;');
 })();
 </script>
 
