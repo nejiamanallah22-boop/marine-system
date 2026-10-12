@@ -3087,11 +3087,90 @@
         }
     }
 
-    function printPage() {
-        toast('🖨️ جاري الطباعة...', 'info', 1200);
-        _timeouts.push(setTimeout(function() { window.print(); }, 300));
-    }
+   function printPage() {
+    try {
+        // 1️⃣ جمع الإحصائيات
+        var stats = [
+            { value: document.getElementById('vehStatTotal')?.textContent || '0', label: '📊 المجموع', type: '' },
+            { value: document.getElementById('vehStatValid')?.textContent || '0', label: '✅ صالحة', type: 'success' },
+            { value: document.getElementById('vehStatMaint')?.textContent || '0', label: '🔧 صيانة', type: 'warning' },
+            { value: document.getElementById('vehStatBroken')?.textContent || '0', label: '🔴 معطبة', type: 'danger' },
+            { value: document.getElementById('vehStatEff')?.textContent || '0%', label: '📈 الجاهزية', type: 'gold' }
+        ];
 
+        // 2️⃣ جمع الأعمدة من رأس الجدول
+        var columns = [];
+        var headers = document.querySelectorAll('.veh-table-head > div');
+        headers.forEach(function(h, i) {
+            if (i === headers.length - 1) return; // تجاهل "إجراءات"
+            var text = h.textContent.trim().replace(/^\s*[#📸🖼️📷🔍]\s*/u, '').trim();
+            if (text) columns.push(text);
+        });
+
+        // 3️⃣ جمع الصفوف
+        var rows = [];
+        var tableRows = document.querySelectorAll('#vehTableBody .veh-table-row');
+        tableRows.forEach(function(row) {
+            var cells = row.querySelectorAll('.veh-cell');
+            if (cells.length === 0) return;
+
+            var rowCells = [];
+            cells.forEach(function(cell, i) {
+                if (i === cells.length - 1) return; // تجاهل "إجراءات"
+
+                // 🖼️ الصورة
+                var img = cell.querySelector('img.veh-thumb');
+                if (img && img.src) {
+                    rowCells.push({ type: 'image', url: img.src });
+                    return;
+                }
+                if (cell.querySelector('.veh-thumb-empty')) {
+                    rowCells.push({ type: 'image', url: null });
+                    return;
+                }
+
+                // 📝 نص عادي — استخرج النص من الشارات إن وُجدت
+                var text = cell.textContent.trim() || '—';
+                rowCells.push(text);
+            });
+
+            if (rowCells.length > 0) rows.push(rowCells);
+        });
+
+        // 4️⃣ حفظ في localStorage
+        var printData = {
+            type: 'vehicles',
+            title: 'الوسائل البرية — الحرس البحري',
+            subtitle: 'Land Vehicles — Coast Guard',
+            sectionTitle: 'السجل التفصيلي للوسائل البرية',
+            stats: stats,
+            columns: columns,
+            rows: rows
+        };
+
+        localStorage.setItem('print_data', JSON.stringify(printData));
+
+        // 5️⃣ فتح صفحة الطباعة
+        var printUrl = '/print.html?type=vehicles&key=print_data';
+        var newWindow = window.open(printUrl, '_blank');
+
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+            if (confirm('⚠️ المتصفح منع فتح نافذة جديدة.\nهل تريد الانتقال لصفحة الطباعة؟')) {
+                window.location.href = printUrl;
+            }
+            return;
+        }
+
+        toast('🖨️ تم تحضير الطباعة', 'success', 1500);
+        console.log('✅ Print data saved for vehicles');
+        console.log('   Rows:', rows.length);
+        console.log('   Columns:', columns.length);
+
+    } catch (e) {
+        console.error('❌ Print error:', e);
+        toast('❌ حدث خطأ: ' + e.message, 'error');
+    }
+}
     function toggleAutoRefresh() {
         var cb = $('#vehAutoRefresh');
         if (!cb) return;
