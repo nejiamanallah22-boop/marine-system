@@ -1041,10 +1041,81 @@
     }
 
     function dvPrint() {
-        dvToast('🖨️ جاري تحضير الطباعة...', 'info', 1500);
-        _timeouts.push(setTimeout(function() { window.print(); }, 300));
-    }
+        try {
+            // 1️⃣ جمع الإحصائيات
+            var stats = [
+                { value: document.getElementById('dvStatTotal')?.textContent || '0', label: '📊 إجمالي المطروحة', type: '' },
+                { value: document.getElementById('dvStatMonth')?.textContent || '0', label: '📅 هذا الشهر', type: 'info' },
+                { value: document.getElementById('dvStatYear')?.textContent || '0', label: '🗓️ هذه السنة', type: 'warning' },
+                { value: document.getElementById('dvStatTopReason')?.textContent || '—', label: '⚠️ السبب الأكثر شيوعاً', type: 'danger' },
+                { value: 'المراكب البحرية', label: '🚢 الفئة', type: 'gold' }
+            ];
 
+            // 2️⃣ جمع الأعمدة
+            var columns = ['#', 'الاسم', 'الرقم', 'الطول', 'الفئة', 'الإقليم', 'المنطقة', 'تاريخ الطرح', 'سبب الطرح', 'رقم القرار'];
+
+            // 3️⃣ جمع الصفوف من الفلترة الحالية
+            var filtered = getFiltered();
+
+            if (!filtered || filtered.length === 0) {
+                dvToast('⚠️ لا توجد بيانات للطباعة', 'error');
+                return;
+            }
+
+            var rows = [];
+            filtered.forEach(function(v, idx) {
+                var region = v.region || v.reg || '—';
+                var cat = v.cat || getCategory(v.len);
+                var disposalDate = v.disposalDate || v.disposedAt;
+
+                rows.push([
+                    String(idx + 1),
+                    v.name || '—',
+                    v.num || '—',
+                    (v.len || '—') + ' م',
+                    cat,
+                    getRegionShort(region),
+                    v.zone || '—',
+                    formatDate(disposalDate),
+                    v.disposalReason || '—',
+                    v.disposalDecision || '—'
+                ]);
+            });
+
+            // 4️⃣ حفظ في localStorage
+            var printData = {
+                type: 'disposals-vessels',
+                title: 'المراكب البحرية المطروحة',
+                subtitle: 'Disposed Vessels Registry',
+                sectionTitle: 'سجل المراكب البحرية المطروحة',
+                stats: stats,
+                columns: columns,
+                rows: rows
+            };
+
+            localStorage.setItem('print_data', JSON.stringify(printData));
+
+            // 5️⃣ فتح صفحة الطباعة
+            var printUrl = '/print.html?type=disposals-vessels&key=print_data';
+            var newWindow = window.open(printUrl, '_blank');
+
+            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                if (confirm('⚠️ المتصفح منع فتح نافذة جديدة.\nهل تريد الانتقال لصفحة الطباعة؟')) {
+                    window.location.href = printUrl;
+                }
+                return;
+            }
+
+            dvToast('🖨️ تم تحضير الطباعة (' + rows.length + ' مركب)', 'success');
+            console.log('✅ Print data saved for disposals-vessels');
+            console.log('   Rows:', rows.length);
+            console.log('   Columns:', columns.length);
+
+        } catch (e) {
+            console.error('❌ Print error:', e);
+            dvToast('❌ حدث خطأ: ' + e.message, 'error');
+        }
+    }
     function dvExportExcel() {
         try {
             var filtered = getFiltered();
