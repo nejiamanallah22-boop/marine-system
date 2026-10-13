@@ -2673,18 +2673,14 @@ function formatMaintenance(log) {
             });
         }
 
-        app.post('/api/vessels/:id/images',
-            authenticateAccessToken,
-            csrfProtection,
-            vesselUpload.array('images', VESSEL_MAX_IMAGES),
-            async (req, res) => {
-                try {
-                    const q = buildIdQuery(req.params.id);
-                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-
-                    const v = await Vessel.findOne(q);
-                    if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-
+       app.post('/api/vessels/:id/images',
+    authenticateAccessToken,
+    csrfProtection,
+    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
+    vesselUpload.array('images', VESSEL_MAX_IMAGES),
+    async (req, res) => {
+        try {
+            const v = req.item;  // ← ✅ من middleware (بدل findOne)
                     if (!req.files || req.files.length === 0) {
                         return res.status(400).json({ success: false, error: 'لم يتم رفع أي صورة' });
                     }
@@ -2733,18 +2729,15 @@ function formatMaintenance(log) {
             }
         );
 
-        app.delete('/api/vessels/:id/images/:imageId',
-            authenticateAccessToken,
-            csrfProtection,
-            async (req, res) => {
-                try {
-                    const q = buildIdQuery(req.params.id);
-                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+       app.delete('/api/vessels/:id/images/:imageId',
+    authenticateAccessToken,
+    csrfProtection,
+    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
+    async (req, res) => {
+        try {
+            const v = req.item;  // ← ✅ من middleware
 
-                    const v = await Vessel.findOne(q);
-                    if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-
-                    const img = v.images.id(req.params.imageId);
+            const img = v.images.id(req.params.imageId);
                     if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
 
                     if (img.filename) {
@@ -2762,18 +2755,15 @@ function formatMaintenance(log) {
             }
         );
 
-        app.patch('/api/vessels/:id/images/:imageId/primary',
-            authenticateAccessToken,
-            csrfProtection,
-            async (req, res) => {
-                try {
-                    const q = buildIdQuery(req.params.id);
-                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+       app.patch('/api/vessels/:id/images/:imageId/primary',
+    authenticateAccessToken,
+    csrfProtection,
+    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
+    async (req, res) => {
+        try {
+            const v = req.item;  // ← ✅ من middleware
 
-                    const v = await Vessel.findOne(q);
-                    if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-
-                    const img = v.images.id(req.params.imageId);
+            const img = v.images.id(req.params.imageId);
                     if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
 
                     v.setPrimaryImage(req.params.imageId);
@@ -2811,69 +2801,95 @@ function formatMaintenance(log) {
         res.json(vessels.map(formatVessel));
     } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
 });
-    app.get('/api/vessels/disposed',
-        authenticateAccessToken,
-        requirePermission('vessels:read'),
-        async (req, res) => {
-        try {
-            const limit = Math.min(parseInt(req.query.limit) || 500, 1000);
-            const disposed = await Vessel.find({ status: 'طرح' })
-                .sort({ disposalDate: -1, updatedAt: -1 })
-                .limit(limit);
-            res.json({ success: true, count: disposed.length, vessels: disposed.map(formatVessel) });
-        } catch (e) {
-            console.error('❌ GET /api/vessels/disposed:', e.message);
-            res.status(500).json({ success: false, error: 'فشل التحميل' });
+   app.get('/api/vessels/disposed',
+    authenticateAccessToken,
+    requirePermission('vessels:read'),
+    async (req, res) => {
+    try {
+        const user = req.user;
+        const role = normalizeRole(user.role);
+        const limit = Math.min(parseInt(req.query.limit) || 500, 1000);
+
+        // 🎯 فلترة الإقليم — ضد IDOR
+        let filter = { status: 'طرح' };
+        if (role !== 'admin' && user.region) {
+            filter.region = user.region;
         }
-    });
 
-    app.get('/api/vessels/disposal-stats',
-        authenticateAccessToken,
-        requirePermission('vessels:read'),
-        async (req, res) => {
-        try {
-            const [disposed, active] = await Promise.all([
-                Vessel.countDocuments({ status: 'طرح' }),
-                Vessel.countDocuments({ status: { $ne: 'طرح' } })
-            ]);
-            res.json({ success: true, stats: { disposed, active, total: disposed + active } });
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
-    });
+        const disposed = await Vessel.find(filter)
+            .sort({ disposalDate: -1, updatedAt: -1 })
+            .limit(limit);
+        res.json({ success: true, count: disposed.length, vessels: disposed.map(formatVessel) });
+    } catch (e) {
+        console.error('❌ GET /api/vessels/disposed:', e.message);
+        res.status(500).json({ success: false, error: 'فشل التحميل' });
+    }
+});
 
+ app.get('/api/vessels/disposal-stats',
+    authenticateAccessToken,
+    requirePermission('vessels:read'),
+    async (req, res) => {
+    try {
+        const user = req.user;
+        const role = normalizeRole(user.role);
+
+        // 🎯 فلترة الإقليم — ضد IDOR
+        let baseFilter = {};
+        if (role !== 'admin' && user.region) {
+            baseFilter.region = user.region;
+        }
+
+        const [disposed, active] = await Promise.all([
+            Vessel.countDocuments({ ...baseFilter, status: 'طرح' }),
+            Vessel.countDocuments({ ...baseFilter, status: { $ne: 'طرح' } })
+        ]);
+        res.json({ success: true, stats: { disposed, active, total: disposed + active } });
+    } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+});
     app.post('/api/vessels/:id/dispose',
-        authenticateAccessToken,
-        csrfProtection,
-        requirePermission('vessels:update'),
-        async (req, res) => {
-        try {
-            const q = buildIdQuery(req.params.id);
-            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+    authenticateAccessToken,
+    csrfProtection,
+    requirePermission('vessels:update'),
+    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
+    async (req, res) => {
+    try {
+        const { reason, decisionNumber, decidedBy, notes, decision, disposedBy } = req.body;
 
-            const vessel = await Vessel.findOne(q);
-            if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+        if (!reason || !String(reason).trim()) {
+            return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
+        }
 
-            if (vessel.status === 'طرح') {
-                return res.status(400).json({ success: false, error: 'المركب مطروح بالفعل' });
-            }
+        // 🎯 قفل ذري — يمنع Race Condition + IDOR
+        const vessel = await Vessel.findOneAndUpdate(
+            { 
+                _id: req.item._id, 
+                status: { $ne: 'طرح' }
+            },
+            {
+                $set: {
+                    status: 'طرح',
+                    stat: 'طرح',
+                    disposalDate: new Date(),
+                    disposedAt: new Date(),
+                    disposalReason: String(reason).substring(0, 1000),
+                    disposalDecision: String(decisionNumber || decision || '').substring(0, 200),
+                    disposedBy: String(decidedBy || disposedBy || req.user.name || req.user.username).substring(0, 200),
+                    disposalNotes: String(notes || '').substring(0, 2000),
+                    break: String(notes || reason).substring(0, 500),
+                    updatedAt: new Date()
+                }
+            },
+            { new: true }
+        );
 
-            const { reason, decisionNumber, decidedBy, notes, decision, disposedBy } = req.body;
-
-            if (!reason || !String(reason).trim()) {
-                return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
-            }
-
-            vessel.status = 'طرح';
-            vessel.stat = 'طرح';
-            vessel.disposalDate = new Date();
-            vessel.disposedAt = new Date();
-            vessel.disposalReason = String(reason).substring(0, 1000);
-            vessel.disposalDecision = String(decisionNumber || decision || '').substring(0, 200);
-            vessel.disposedBy = String(decidedBy || disposedBy || req.user.name || req.user.username).substring(0, 200);
-            vessel.disposalNotes = String(notes || '').substring(0, 2000);
-            vessel.break = String(notes || reason).substring(0, 500);
-            vessel.updatedAt = new Date();
-            await vessel.save();
-
+        if (!vessel) {
+            return res.status(409).json({ 
+                success: false, 
+                error: 'المركب مطروح بالفعل',
+                code: 'ALREADY_DISPOSED'
+            });
+        }
             await addSystemLog({
                 userId: req.user.id, userName: req.user.name,
                 action: 'dispose', resource: 'vessel',
