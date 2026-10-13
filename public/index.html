@@ -2621,48 +2621,44 @@ const PAGE_PERMISSIONS = {
             const method = (options.method || 'GET').toUpperCase();
             const isSafeMethod = ['GET', 'HEAD', 'OPTIONS'].includes(method);
 
-            async function buildHeaders() {
-                const headers = Object.assign({}, options.headers || {});
-                const token = getToken();
+           async function buildHeaders() {
+    const headers = Object.assign({}, options.headers || {});
 
-                if (token && !headers['Authorization']) {
-                    headers['Authorization'] = 'Bearer ' + token;
-                }
+    // ✅ لا Authorization — Cookie يُرسل تلقائياً
+    if (!isSafeMethod && !headers['X-CSRF-Token']) {
+        const csrfToken = await csrfManager.getToken();
+        if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+    }
+    return headers;
+}
 
-                if (!isSafeMethod && !headers['X-CSRF-Token']) {
-                    const csrfToken = await csrfManager.getToken();
-                    if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
-                }
-                return headers;
-            }
+const headers = await buildHeaders();
 
-            const headers = await buildHeaders();
+let response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include'
+});
 
-            let response = await fetch(url, {
-                ...options,
-                headers,
-                credentials: 'include'
-            });
+if (response.status === 401) {
+    console.log('🔄 401 مستلم — محاولة تجديد access token...');
+    const newToken = await refreshAccessToken();
 
-            if (response.status === 401 && getToken()) {
-                console.log('🔄 401 مستلم — محاولة تجديد access token...');
-                const newToken = await refreshAccessToken();
+    if (newToken) {
+        const retryHeaders = await buildHeaders();
+        response = await fetch(url, {
+            ...options,
+            headers: retryHeaders,
+            credentials: 'include'
+        });
+    } else {
+        console.warn('⚠️ فشل تجديد التوكن — يتطلب إعادة تسجيل الدخول');
+        handleSessionExpired();
+    }
+}
 
-                if (newToken) {
-                    const retryHeaders = await buildHeaders();
-                    response = await fetch(url, {
-                        ...options,
-                        headers: retryHeaders,
-                        credentials: 'include'
-                    });
-                } else {
-                    console.warn('⚠️ فشل تجديد التوكن — يتطلب إعادة تسجيل الدخول');
-                    handleSessionExpired();
-                }
-            }
-
-            return response;
-        }
+return response;
+}
 
         function handleSessionExpired() {
             clearToken();
@@ -2692,10 +2688,8 @@ const PAGE_PERMISSIONS = {
                 this.pollingInterval = 60000;
             }
 
-            async fetch() {
-                if (!getToken()) return;
-                if (this.isLoading) return;
-
+   async fetch() {
+    if (this.isLoading) return;
                 this.isLoading = true;
 
                 try {
@@ -3244,11 +3238,6 @@ if (data.success && data.user) {
         // ============================================================
 
         async function fetchServerStatus() {
-            const token = getToken();
-            if (!token) {
-                console.log('🖥️ Server status: skipped (no token)');
-                return;
-            }
             try {
                 const response = await apiFetch(CONFIG.API + '/session-status', {
                     method: 'GET',
@@ -3273,9 +3262,6 @@ if (data.success && data.user) {
         // ============================================================
 
         async function loadAllData() {
-            const token = getToken();
-            if (!token) return;
-
             try {
                 const [vesselsRes, usersRes] = await Promise.all([
                     apiFetch(CONFIG.API + '/vessels', { method: 'GET' }),
@@ -3510,33 +3496,28 @@ if (data.success && data.user) {
         // ============================================================
         // 🚪 LOGOUT
         // ============================================================
+async function doLogout() {
+    if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
 
-        async function doLogout() {
-            if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+    console.log('🚪 Starting logout...');
 
-            console.log('🚪 Starting logout...');
+    try {
+        const csrfToken = await csrfManager.getToken();
 
-            try {
-                const csrfToken = await csrfManager.getToken();
-                const token = getToken();
-
-                if (token) {
-                    try {
-                        await fetch('/api/auth/logout', {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': 'Bearer ' + token,
-                                ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            },
-                            credentials: 'include'
-                        });
-                    } catch (e) {
-                        console.warn('⚠️ Logout request failed:', e.message);
-                    }
-                }
-            } catch (e) {}
+        try {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+        } catch (e) {
+            console.warn('⚠️ Logout request failed:', e.message);
+        }
+    } catch (e) {}
 
             notificationManager.reset();
 
@@ -3789,32 +3770,20 @@ try {
             const tid1 = setTimeout(fetchServerStatus, 1000);
             window._pageTimeouts.push(tid1);
 
-            // VERIFY TOKEN
-            if (!window._tokenVerified) {
-                window._tokenVerified = true;
-                const token = getToken();
-                if (token) {
-                    const isValid = await verifyToken(token);
-                    if (isValid) {
-                        document.getElementById('loginOverlay').style.display = 'none';
-                        document.getElementById('mainApp').style.display = 'block';
-                        updateUserDisplay();
-                        applyRBACToUI();
-
-                        const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
-                        const safePage = canAccessPage(savedPage) ? savedPage : 'dashboard';
-                        loadPage(safePage);
-                        showToast('👋 مرحباً بعودتك', 'success');
-                        setTimeout(loadAllData, 500);
-
-                        notificationManager.startPolling();
-                    } else {
-                        clearToken();
-                        csrfManager.clearToken();
-                    }
-                }
-            }
-
+           // VERIFY TOKEN
+if (!window._tokenVerified) {
+    window._tokenVerified = true;
+    // ✅ لا نحتاج token — Cookie يُرسل تلقائياً
+    const isValid = await verifyToken();
+    if (isValid) {
+        document.getElementById('loginOverlay').style.display = 'none';
+        // ...
+        notificationManager.startPolling();
+    } else {
+        clearToken();
+        csrfManager.clearToken();
+    }
+}
                           /* ============================================================
                🖨️ PRINT SETTINGS SYSTEM — DISABLED (v9.16)
                ═══════════════════════════════════════════════════════════
