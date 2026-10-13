@@ -1089,9 +1089,15 @@ async function notify({ userId=null, type='info', category='system', title,
 }
 
 function extractBearerToken(req) {
+    // 🍪 1. اقرأ من Cookie أولاً (الطريقة الآمنة)
+    const cookieName = isProduction ? '__Secure-marine.access' : 'marine.access';
+    if (req.cookies && req.cookies[cookieName]) {
+        return req.cookies[cookieName];
+    }
+    // 🔄 2. احتياطي: Bearer (لـ Socket.IO فقط)
     const h = req.headers.authorization;
-    if (!h || !h.startsWith('Bearer ')) return null;
-    return h.slice(7).trim() || null;
+    if (h && h.startsWith('Bearer ')) return h.slice(7).trim();
+    return null;
 }
 function authenticateAccessToken(req, res, next) {
     const token = extractBearerToken(req);
@@ -1486,18 +1492,32 @@ function formatMaintenance(log) {
                 });
             });
 
-            const csrf = ensureCsrfToken(req, res);
+             const csrf = ensureCsrfToken(req, res);
             const rcn = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             res.cookie(rcn, rt, { httpOnly: true, secure: isProduction,
                 sameSite: COOKIE_SAMESITE, maxAge: REFRESH_TOKEN_MAX_AGE, path: '/api/auth' });
 
+            // 🍪 ضع access token في HttpOnly Cookie
+            const acn = isProduction ? '__Secure-marine.access' : 'marine.access';
+            res.cookie(acn, at, {
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: COOKIE_SAMESITE,
+                maxAge: ACCESS_TOKEN_MAX_AGE,
+                path: '/'
+            });
+
             await addSystemLog({ userId: user.id, userName: user.name, userEmail: user.email,
                 action: 'login', resource: 'user', status: 'success', ip, requestId: req.requestId });
 
-            res.json({ success: true, token: at, expiresIn: ACCESS_TOKEN_MAX_AGE,
+            res.json({ 
+                success: true, 
+                // ❌ token: at,   ← احذف هذا السطر
+                expiresIn: ACCESS_TOKEN_MAX_AGE,
                 csrfToken: csrf,
                 session: { csrfToken: csrf, csrfExpiry: req.session?.csrfExpiry || (Date.now()+CSRF_MAX_AGE) },
-                user: formatUser(user) });
+                user: formatUser(user) 
+            });
         } catch (e) {
             console.error('❌ Login error:', e.message);
             res.status(500).json({ success: false, error: 'خطأ في الخادم' });
@@ -1538,21 +1558,50 @@ function formatMaintenance(log) {
             await saveRefreshSession({ sessionId: nsid, userId: user.id, refreshToken: nrt });
             if (req.session) { req.session.userId = user.id; req.session.sessionId = nsid; }
             await new Promise(r => { if (!req.session) return r(); req.session.save(() => r()); });
-            const csrf = ensureCsrfToken(req, res);
-            res.cookie(cn, nrt, { httpOnly: true, secure: isProduction,
-                sameSite: COOKIE_SAMESITE, maxAge: REFRESH_TOKEN_MAX_AGE, path: '/api/auth' });
-            res.json({ success: true, token: nat, expiresIn: ACCESS_TOKEN_MAX_AGE,
-                csrfToken: csrf,
-                session: { csrfToken: csrf, csrfExpiry: req.session?.csrfExpiry || (Date.now()+CSRF_MAX_AGE) },
-                user: formatUser(user) });
+           const csrf = ensureCsrfToken(req, res);
+res.cookie(cn, nrt, { httpOnly: true, secure: isProduction,
+    sameSite: COOKIE_SAMESITE, maxAge: REFRESH_TOKEN_MAX_AGE, path: '/api/auth' });
+
+// 🍪 حدّث access token
+const acn = isProduction ? '__Secure-marine.access' : 'marine.access';
+res.cookie(acn, nat, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: COOKIE_SAMESITE,
+    maxAge: ACCESS_TOKEN_MAX_AGE,
+    path: '/'
+});
+
+res.json({ 
+    success: true, 
+    // token: nat,   ← ❌ احذف
+    expiresIn: ACCESS_TOKEN_MAX_AGE,
+    csrfToken: csrf,
+    session: { csrfToken: csrf, csrfExpiry: req.session?.csrfExpiry || (Date.now()+CSRF_MAX_AGE) },
+    user: formatUser(user) 
+});
         } catch (e) { res.status(401).json({ success: false, error: 'Refresh غير صالح أو منتهي' }); }
+    });
+    // ============ SOCKET TOKEN (مؤقت — 5 دقائق) ============
+    app.post('/api/auth/socket-token', authenticateAccessToken, csrfProtection, (req, res) => {
+        try {
+            const socketToken = jwt.sign(
+                { sub: req.user.id, sid: req.auth.sid, type: 'socket' },
+                JWT_SECRET,
+                { expiresIn: '5m', issuer: 'marine-system', audience: 'marine-system-client' }
+            );
+            res.json({ success: true, token: socketToken, expiresIn: 5 * 60 * 1000 });
+        } catch (e) {
+            console.error('❌ socket-token error:', e.message);
+            res.status(500).json({ success: false, error: 'خطأ' });
+        }
     });
 
     // ============ ME ============
     app.get('/api/auth/me', authenticateAccessToken, (req, res) => {
         res.json({ success: true, user: formatUser(req.user) });
     });
-
+    
     // ============ PERMISSIONS ============
     app.get('/api/auth/permissions', authenticateAccessToken, (req, res) => {
         const role = normalizeRole(req.user.role);
@@ -1583,7 +1632,7 @@ function formatMaintenance(log) {
         });
     });
 
-    // ============ LOGOUT ============
+        // ============ LOGOUT ============
     app.post('/api/auth/logout', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             const ip = req.ip || req.socket.remoteAddress;
@@ -1595,15 +1644,19 @@ function formatMaintenance(log) {
             await addSystemLog({ userId: req.user?.id || null, userName: req.user?.name || '',
                 action: 'logout', resource: 'user', status: 'success', ip, requestId: req.requestId });
             await new Promise(r => { if (!req.session) return r(); req.session.destroy(() => r()); });
+
+            // 🍪 امسح كل الـ Cookies
+            const acn = isProduction ? '__Secure-marine.access' : 'marine.access';
             const rcn = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             const scn = isProduction ? '__Secure-marine.sid' : 'marine.sid';
+            res.clearCookie(acn, { httpOnly: true, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/' });
             res.clearCookie(rcn, { httpOnly: true, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/api/auth' });
             res.clearCookie(scn, { httpOnly: true, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/' });
             res.clearCookie('marine_csrf', { httpOnly: false, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/' });
+
             res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ أثناء الخروج' }); }
     });
-
     // ============ PASSWORD RESET ============
     app.post('/api/auth/forgot-password', forgotPasswordLimiter, async (req, res) => {
         try {
@@ -3622,11 +3675,10 @@ const maintenanceOwnership = createMaintenanceOwnershipCheck(Vessel);
                         audience: 'marine-system-client'
                     });
 
-                    if (decoded.type !== 'access' || decoded.sub !== userId) {
+                                      if ((decoded.type !== 'access' && decoded.type !== 'socket') || decoded.sub !== userId) {
                         socket.emit('error', { message: 'توكن غير صالح' });
                         return socket.disconnect(true);
                     }
-
                     const revoked = await isAccessTokenRevoked(decoded.jti);
                     if (revoked) {
                         socket.emit('error', { message: 'التوكن ملغى' });
