@@ -2428,10 +2428,7 @@ const PAGE_PERMISSIONS = {
         window.currentUser = currentUser;
         window.allVessels = allVessels;
         window.allUsers = allUsers;
-        window.allLogs = allLogs;
-
-        // ✅ نقل csrfManager للأعلى لتفادي TDZ
-        // (يُعرَّف فعلياً بعد class CSRFTokenManager — انظر التعديل 3)
+               window.allLogs = allLogs;
 
         // ============================================================
         // 🔒 CSRF TOKEN MANAGER
@@ -3172,11 +3169,11 @@ if (data.success && data.user) {
             credentials: 'include'
         });
 
-        if (response.status === 401) {
+               if (response.status === 401) {
             console.warn('⚠️ التوكن غير صالح (401) — محاولة تجديد...');
             const newToken = await refreshAccessToken();
             if (newToken) {
-                return verifyTokenOnce(newToken);
+                return verifyTokenOnce();
             }
             clearToken();
             csrfManager.clearToken();
@@ -3211,7 +3208,7 @@ if (data.success && data.user) {
     }
 }
          
-       async function verifyTokenOnce(token) {
+          async function verifyTokenOnce() {
     try {
         // ✅ Cookie يُرسل تلقائياً
         const response = await fetch('/api/auth/me', {
@@ -3468,12 +3465,17 @@ if (data.success && data.user) {
                         }
                     });
 
+                                  // ✅ حقن CSRF token (فوري + بعد 150ms للنماذج الديناميكية)
                     if (csrfManager && typeof csrfManager.injectTokenToForms === 'function') {
                         csrfManager.injectTokenToForms();
+                        const csrfTid = setTimeout(() => {
+                            try { csrfManager.injectTokenToForms(); } catch (e) {}
+                        }, 150);
+                        window._pageTimeouts = window._pageTimeouts || [];
+                        window._pageTimeouts.push(csrfTid);
                     }
 
                     if (loader) loader.style.display = 'none';
-                    document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
 
                     syncDateTimeInterval();
 
@@ -3793,16 +3795,31 @@ async function doLogout() {
 
            // VERIFY TOKEN
 if (!window._tokenVerified) {
-    window._tokenVerified = true;
     // ✅ لا نحتاج token — Cookie يُرسل تلقائياً
     const isValid = await verifyToken();
     if (isValid) {
+        window._tokenVerified = true;                    // ✅ بعد النجاح
         document.getElementById('loginOverlay').style.display = 'none';
-        // ...
+        document.getElementById('mainApp').style.display = 'block';
+
+        updateUserDisplay();
+        applyRBACToUI();
+
+        const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
+        if (canAccessPage(savedPage)) {
+            loadPage(savedPage);
+        } else if (canAccessPage('dashboard')) {
+            loadPage('dashboard');
+        } else {
+            loadPage('fleet');
+        }
+
         notificationManager.startPolling();
+        setTimeout(loadAllData, 300);
     } else {
         clearToken();
         csrfManager.clearToken();
+        // ✅ _tokenVerified تبقى false لإعادة المحاولة
     }
 }
                           /* ============================================================
