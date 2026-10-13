@@ -3128,18 +3128,7 @@ app.post('/api/vessels/:id/dispose',
     // ═══════════════════════════════════════════════════════════
 // 🎯 MAINTENANCE OWNERSHIP CHECK — ضد IDOR
 // ═══════════════════════════════════════════════════════════
-const maintenanceOwnership = createOwnershipCheck(Maintenance, {
-    regionField: null,              // Maintenance لا يحتوي region
-    modelName: 'Maintenance',
-    itemKey: 'item',
-    getRegion: async function(maint) {
-        if (!maint.vesselId) return null;
-        const vq = buildIdQuery(maint.vesselId);
-        if (!vq) return null;
-        const vessel = await Vessel.findOne(vq);
-        return vessel ? vessel.region : null;
-    }
-});
+const maintenanceOwnership = createMaintenanceOwnershipCheck(Vessel);
     async function handleGetMaint(req, res) {
         try {
             const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
