@@ -3092,7 +3092,11 @@ function formatMaintenance(log) {
         res.status(500).json({ success: false, error: 'خطأ' }); 
     }
 });
-         // ============ MAINTENANCE ============
+       // ============ MAINTENANCE ============
+    
+    // 🎯 MAINTENANCE OWNERSHIP CHECK (مرة واحدة)
+    const maintenanceOwnership = createOwnershipCheck.createMaintenanceOwnershipCheck(Vessel);
+    
     async function handleGetMaint(req, res) {
         try {
             const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
@@ -3152,12 +3156,9 @@ function formatMaintenance(log) {
     app.post('/api/maintenance', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, handleCreateMaint);
     app.post('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, handleCreateMaint);
 
-    async function handleUpdateMaint(req, res) {
+        async function handleUpdateMaint(req, res) {
         try {
-            const q = buildIdQuery(req.params.id);
-            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-            const l = await Maintenance.findOne(q);
-            if (!l) return res.status(404).json({ success: false, error: 'غير موجود' });
+            const l = req.item;  // ← ✅ من middleware
             const allowed = ['status','cost','notes','description','endDate','priority','repairUnit','supervisorName','type','faultType'];
             allowed.forEach(f => {
                 if (req.body[f] !== undefined) {
@@ -3182,15 +3183,11 @@ function formatMaintenance(log) {
             res.json({ success: true, message: 'تم التحديث', log: f, record: f, data: f });
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     }
-    app.put('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleUpdateMaint);
-    app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleUpdateMaint);
-
-    async function handleDeleteMaint(req, res) {
+    app.put('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, maintenanceOwnership, handleUpdateMaint);
+    app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, maintenanceOwnership, handleUpdateMaint);
+        async function handleDeleteMaint(req, res) {
         try {
-            const q = buildIdQuery(req.params.id);
-            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-            const l = await Maintenance.findOne(q);
-            if (!l) return res.status(404).json({ success: false, error: 'غير موجود' });
+            const l = req.item;  // ← ✅ من middleware
             const name = l.vesselName, id = l.id;
             await Maintenance.deleteOne({ _id: l._id });
             await addSystemLog({ userId: req.user.id, userName: req.user.name,
@@ -3199,15 +3196,11 @@ function formatMaintenance(log) {
             res.json({ success: true, message: 'تم الحذف' });
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     }
-    app.delete('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, handleDeleteMaint);
-    app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, handleDeleteMaint);
-
-    async function handleCompleteMaint(req, res) {
+    app.delete('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, maintenanceOwnership, handleDeleteMaint);
+    app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, maintenanceOwnership, handleDeleteMaint);
+        async function handleCompleteMaint(req, res) {
         try {
-            const q = buildIdQuery(req.params.id);
-            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-            const l = await Maintenance.findOne(q);
-            if (!l) return res.status(404).json({ success: false, error: 'غير موجود' });
+            const l = req.item;  // ← ✅ من middleware
             l.status = 'مكتملة'; l.endDate = new Date(); await l.save();
             let vUpdated = false;
             try {
@@ -3233,9 +3226,8 @@ function formatMaintenance(log) {
                 log: formatMaintenance(l), record: formatMaintenance(l), vesselUpdated: vUpdated });
         } catch (e) { res.status(500).json({ success: false, error: e.message }); }
     }
-    app.post('/api/maintenance/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleCompleteMaint);
-    app.post('/api/maintenance-logs/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleCompleteMaint);
-
+    app.post('/api/maintenance/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, maintenanceOwnership, handleCompleteMaint);
+    app.post('/api/maintenance-logs/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, maintenanceOwnership, handleCompleteMaint);
     // ============ USERS ============
     app.get('/api/users', authenticateAccessToken, requirePermission('users:manage'), async (req, res) => {
         try {
@@ -4815,7 +4807,7 @@ return html;
     process.on('unhandledRejection', (r) => console.error('❌ Unhandled rejection:', r));
     process.on('uncaughtException', (e) => { console.error('❌ Uncaught:', e); shutdown('uncaughtException'); });
         // ═══════════════════════════════════════════════════════════
-     // ═══════════════════════════════════════════════════════════
+      // ═══════════════════════════════════════════════════════════
     // 📤 EXPOSE MIDDLEWARE (قبل نهاية IIFE)
     // ═══════════════════════════════════════════════════════════
     app.locals.csrfProtection = csrfProtection;
@@ -4829,6 +4821,10 @@ return html;
     app.locals.getRedisClient = getRedisClient;
     app.locals.isRedisAvailable = isRedisAvailable;
 
+    // 🆕 إضافة النماذج للـ middleware الخارجي
+    app.locals.Maintenance = Maintenance;
+    app.locals.Vessel = Vessel;
+
     // ═══════════════════════════════════════════════════════════
     // 🌐 EXPOSE HELPERS AS GLOBALS (للـ middleware الخارجي)
     // ═══════════════════════════════════════════════════════════
@@ -4836,7 +4832,6 @@ return html;
     global.buildIdQuery = buildIdQuery;
     global.addSystemLog = addSystemLog;
 })();
-
 
 // ═══════════════════════════════════════════════════════════
 // 📤 MODULE EXPORTS (آمن — يعتمد على app.locals)
