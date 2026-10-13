@@ -2790,15 +2790,23 @@ function formatMaintenance(log) {
     })();
 
     // ============ VESSELS ============
-    app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
-        try {
-            const includeDisposed = req.query.includeDisposed === 'true';
-            const filter = includeDisposed ? {} : { status: { $ne: 'طرح' } };
-            const vessels = await Vessel.find(filter).sort({ createdAt: -1 }).limit(500);
-            res.json(vessels.map(formatVessel));
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
-    });
-
+   app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
+    try {
+        const user = req.user;
+        const role = normalizeRole(user.role);
+        const includeDisposed = req.query.includeDisposed === 'true';
+        
+        let filter = includeDisposed ? {} : { status: { $ne: 'طرح' } };
+        
+        // 🎯 فلترة حسب الدور والإقليم
+        if (role !== 'admin' && user.region) {
+            filter.region = user.region;
+        }
+        
+        const vessels = await Vessel.find(filter).sort({ createdAt: -1 }).limit(500);
+        res.json(vessels.map(formatVessel));
+    } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+});
     app.get('/api/vessels/disposed',
         authenticateAccessToken,
         requirePermission('vessels:read'),
