@@ -2244,12 +2244,13 @@
         // 📦 CONFIGURATION
         // ============================================================
 
-        const CONFIG = {
-            API: '/api',
-            KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },
-            PAGES: {
+            const CONFIG = {
+    API: '/api',
+    KEYS: { PAGE: 'marine_page' },  // ✅ لا TOKEN (التوكن في Cookie)
+    PAGES: {
                 dashboard: 'لوحة التحكم',
                 fleet: 'السجل العام',
+                vehicles: 'الوسائل البرية',   // ✅ مُضاف
                 maintenance: 'الصيانة',
                 efficiency: 'الجاهزية',
                 support: 'الدعم',
@@ -2418,7 +2419,7 @@ const PAGE_PERMISSIONS = {
         // 📦 STATE
         // ============================================================
 
-        var currentUser = null;
+              var currentUser = null;
         var currentPage = 'dashboard';
         var allVessels = [];
         var allUsers = [];
@@ -2428,6 +2429,9 @@ const PAGE_PERMISSIONS = {
         window.allVessels = allVessels;
         window.allUsers = allUsers;
         window.allLogs = allLogs;
+
+        // ✅ نقل csrfManager للأعلى لتفادي TDZ
+        // (يُعرَّف فعلياً بعد class CSRFTokenManager — انظر التعديل 3)
 
         // ============================================================
         // 🔒 CSRF TOKEN MANAGER
@@ -2452,25 +2456,24 @@ const PAGE_PERMISSIONS = {
             }
 
             async fetchFromServer() {
-                if (this.fetchingPromise) return this.fetchingPromise;
+    if (this.fetchingPromise) return this.fetchingPromise;
 
-                this.fetchingPromise = fetch('/api/csrf-token', {
-                    credentials: 'include',
-                    headers: { 'Accept': 'application/json' }
-                })
-                    .then(res => res.ok ? res.json() : null)
-                    .then(data => {
-                        if (data && data.success && data.token) {
-                            this.setToken(data.token, Date.now() + (data.expiresIn || 8 * 60 * 60 * 1000));
-                        }
-                        return this.token;
-                    })
-                    .catch(() => null)
-                    .finally(() => { this.fetchingPromise = null; });
-
-                return this.fetchingPromise;
+    this.fetchingPromise = fetch('/api/csrf-token', {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+    })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+            if (data && data.success && data.token) {
+                this.setToken(data.token, Date.now() + (data.expiresIn || 8 * 60 * 60 * 1000));
             }
+            return this.token;
+        })
+        .catch(() => null)
+        .finally(() => { this.fetchingPromise = null; });
 
+    return this.fetchingPromise;
+}
             async getToken() {
                 if (this.isValid()) return this.token;
                 return this.fetchFromServer();
@@ -2504,11 +2507,18 @@ const PAGE_PERMISSIONS = {
         // 🔧 HELPERS
         // ============================================================
 
-        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
-
-        function setToken(token) { localStorage.setItem(CONFIG.KEYS.TOKEN, token); }
-
-        function clearToken() { localStorage.removeItem(CONFIG.KEYS.TOKEN); }
+       // ✅ التوكن الآن في HttpOnly Cookie — لا نحتاجه في العميل
+function getToken() { return null; }
+function setToken(token) { /* لا شيء */ }
+function clearToken() {
+    try {
+        localStorage.removeItem('marine_token');
+        localStorage.removeItem('marine_auth_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('accessToken');
+    } catch (e) {}
+}
 
         function getRoleName(r) {
             const normalized = normalizeRole(r);
@@ -2574,49 +2584,47 @@ const PAGE_PERMISSIONS = {
         // ============================================================
 
         let _refreshInFlight = null;
+async function refreshAccessToken() {
+    if (_refreshInFlight) return _refreshInFlight;
 
-        async function refreshAccessToken() {
-            if (_refreshInFlight) return _refreshInFlight;
+    _refreshInFlight = (async () => {
+        try {
+            const res = await fetch('/api/auth/refresh', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
 
-            _refreshInFlight = (async () => {
-                try {
-                    const res = await fetch('/api/auth/refresh', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Accept': 'application/json' }
-                    });
+            if (!res.ok) return null;
 
-                    if (!res.ok) return null;
+            const data = await res.json();
 
-                    const data = await res.json();
-
-                    if (data && data.success && data.token) {
-                        setToken(data.token);
-
-                        if (data.csrfToken) {
-                            csrfManager.setToken(
-                                data.csrfToken,
-                                data.session?.csrfExpiry || (Date.now() + 8 * 60 * 60 * 1000)
-                            );
-                        }
-                        if (data.user) {
-                            currentUser = data.user;
-                            window.currentUser = data.user;
-                        }
-                        return data.token;
-                    }
-                    return null;
-                } catch (e) {
-                    console.debug('⚠️ refreshAccessToken error:', e.message);
-                    return null;
-                } finally {
-                    _refreshInFlight = null;
+            if (data && data.success) {
+                // ✅ التوكن الآن في Cookie — لا تخزين
+                if (data.csrfToken) {
+                    csrfManager.setToken(
+                        data.csrfToken,
+                        data.session?.csrfExpiry || (Date.now() + 8 * 60 * 60 * 1000)
+                    );
                 }
-            })();
-
-            return _refreshInFlight;
+                if (data.user) {
+                    currentUser = data.user;
+                    window.currentUser = data.user;
+                }
+                return 'refreshed';
+            }
+            return null;
+        } catch (e) {
+            console.debug('⚠️ refreshAccessToken error:', e.message);
+            return null;
+        } finally {
+            _refreshInFlight = null;
         }
+    })();
 
+    return _refreshInFlight;
+}
+          
         async function apiFetch(url, options = {}) {
             const method = (options.method || 'GET').toUpperCase();
             const isSafeMethod = ['GET', 'HEAD', 'OPTIONS'].includes(method);
@@ -2660,11 +2668,18 @@ if (response.status === 401) {
 return response;
 }
 
-        function handleSessionExpired() {
+                function handleSessionExpired() {
             clearToken();
             csrfManager.clearToken();
             currentUser = null;
             window.currentUser = null;
+
+            // ✅ إيقاف الإشعارات + تصفير البيانات
+            if (window.notificationManager) {
+                try { window.notificationManager.reset(); } catch (e) {}
+            }
+            allVessels = []; allUsers = []; allLogs = [];
+            window.allVessels = []; window.allUsers = []; window.allLogs = [];
 
             const loginOverlay = document.getElementById('loginOverlay');
             const mainApp = document.getElementById('mainApp');
@@ -2964,15 +2979,16 @@ return response;
             }
 
             startPolling() {
-                this.stopPolling();
-                this.fetch();
-                window._notifPollingInterval = setInterval(() => {
-                    if (getToken() && !document.hidden) {
-                        this.fetch();
-                    }
-                }, this.pollingInterval);
-                console.log('🔔 Notifications polling started (60s)');
-            }
+    this.stopPolling();
+    this.fetch();
+    window._notifPollingInterval = setInterval(() => {
+        // ✅ Cookie يُرسل تلقائياً — لا حاجة لفحص token
+        if (!document.hidden) {
+            this.fetch();
+        }
+    }, this.pollingInterval);
+    console.log('🔔 Notifications polling started (60s)');
+}
 
             stopPolling() {
                 if (window._notifPollingInterval) {
@@ -3146,8 +3162,7 @@ if (data.success && data.user) {
         // ============================================================
         // 🛡️ VERIFY TOKEN
         // ============================================================
-
-     async function verifyToken(token) {
+     async function verifyToken() {
     try {
         console.log('🛡️ التحقق من الجلسة...');
 
@@ -3525,15 +3540,21 @@ async function doLogout() {
                 try { _globalCleanup(); } catch (e) {}
             }
 
-            currentUser = null;
+              currentUser = null;
             window.currentUser = null;
             clearToken();
             csrfManager.clearToken();
+
+            // ✅ تصفير البيانات العالمية
+            allVessels = []; allUsers = []; allLogs = [];
+            window.allVessels = []; window.allUsers = []; window.allLogs = [];
+
             // ✅ احذف بيانات المستخدم من localStorage
-try {
-    localStorage.removeItem('marine_user');
-    localStorage.removeItem('currentUser');
-} catch (e) {}
+            try {
+                localStorage.removeItem('marine_user');
+                localStorage.removeItem('currentUser');
+            } catch (e) {}
+
             window._tokenVerified = false;
 
             const loginOverlay = document.getElementById('loginOverlay');
