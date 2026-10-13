@@ -3096,14 +3096,10 @@ const PAGE_PERMISSIONS = {
 
                     loginBtn.disabled = false;
                     loginBtn.classList.remove('loading');
-
-                    if (data.success && data.user) {
-                        const token = data.token;
-                        if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
-
-                        currentUser = data.user;
-                        window.currentUser = data.user;
-                        setToken(token);
+if (data.success && data.user) {
+    // ✅ التوكن الآن في HttpOnly Cookie — لا نحتاجه في العميل
+    currentUser = data.user;
+    window.currentUser = data.user;
     // ✅ احفظ المستخدم في localStorage لـ Clarity
     try {
         localStorage.setItem('marine_user', JSON.stringify(data.user));
@@ -3157,20 +3153,13 @@ const PAGE_PERMISSIONS = {
         // 🛡️ VERIFY TOKEN
         // ============================================================
 
-       async function verifyToken(token) {
+     async function verifyToken(token) {
     try {
-        console.log('🛡️ التحقق من التوكن...');
+        console.log('🛡️ التحقق من الجلسة...');
 
-        if (!token) {
-            console.warn('⚠️ لا يوجد توكن');
-            return false;
-        }
-
+        // ✅ Cookie يُرسل تلقائياً — لا Authorization
         const response = await fetch('/api/auth/me', {
-            headers: {
-                'Authorization': 'Bearer ' + token,
-                'Accept': 'application/json'
-            },
+            headers: { 'Accept': 'application/json' },
             credentials: 'include'
         });
 
@@ -3213,15 +3202,13 @@ const PAGE_PERMISSIONS = {
     }
 }
          
-        async function verifyTokenOnce(token) {
-            try {
-                const response = await fetch('/api/auth/me', {
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include'
-                });
+       async function verifyTokenOnce(token) {
+    try {
+        // ✅ Cookie يُرسل تلقائياً
+        const response = await fetch('/api/auth/me', {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+        });
 
                 if (!response.ok) {
                     clearToken();
