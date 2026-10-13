@@ -2847,11 +2847,12 @@ function formatMaintenance(log) {
         res.json({ success: true, stats: { disposed, active, total: disposed + active } });
     } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
 });
-    app.post('/api/vessels/:id/dispose',
+  
+app.post('/api/vessels/:id/dispose',
     authenticateAccessToken,
     csrfProtection,
     requirePermission('vessels:update'),
-    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
+    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),
     async (req, res) => {
     try {
         const { reason, decisionNumber, decidedBy, notes, decision, disposedBy } = req.body;
@@ -2890,27 +2891,28 @@ function formatMaintenance(log) {
                 code: 'ALREADY_DISPOSED'
             });
         }
-            await addSystemLog({
-                userId: req.user.id, userName: req.user.name,
-                action: 'dispose', resource: 'vessel',
-                resourceId: vessel.id, resourceName: vessel.name,
-                status: 'success', ip: req.ip, requestId: req.requestId
-            });
 
-            await notify({
-                type: 'warning', category: 'vessel', title: 'طرح مركب',
-                message: 'تم طرح "' + vessel.name + '"',
-                link: '/pages/disposals.html', icon: 'archive',
-                actorName: req.user.name || req.user.username
-            });
+        await addSystemLog({
+            userId: req.user.id, userName: req.user.name,
+            action: 'dispose', resource: 'vessel',
+            resourceId: vessel.id, resourceName: vessel.name,
+            status: 'success', ip: req.ip, requestId: req.requestId
+        });
 
-            res.json({ success: true, message: 'تم طرح المركب بنجاح', vessel: formatVessel(vessel) });
-        } catch (e) {
-            console.error('❌ POST /api/vessels/:id/dispose:', e.message);
-            res.status(500).json({ success: false, error: 'فشل الطرح' });
-        }
-    });
+        await notify({
+            type: 'warning', category: 'vessel', title: 'طرح مركب',
+            message: 'تم طرح "' + vessel.name + '"',
+            link: '/pages/disposals.html', icon: 'archive',
+            actorName: req.user.name || req.user.username
+        });
 
+        res.json({ success: true, message: 'تم طرح المركب بنجاح', vessel: formatVessel(vessel) });
+
+    } catch (e) {
+        console.error('❌ POST /api/vessels/:id/dispose:', e.message);
+        res.status(500).json({ success: false, error: 'فشل الطرح' });
+    }
+});
     app.post('/api/vessels/:id/restore',
         authenticateAccessToken,
         csrfProtection,
@@ -3095,8 +3097,21 @@ function formatMaintenance(log) {
        // ============ MAINTENANCE ============
     
     // 🎯 MAINTENANCE OWNERSHIP CHECK (مرة واحدة)
-    const maintenanceOwnership = createOwnershipCheck.createMaintenanceOwnershipCheck(Vessel);
-    
+    // ═══════════════════════════════════════════════════════════
+// 🎯 MAINTENANCE OWNERSHIP CHECK — ضد IDOR
+// ═══════════════════════════════════════════════════════════
+const maintenanceOwnership = createOwnershipCheck(Maintenance, {
+    regionField: null,              // Maintenance لا يحتوي region
+    modelName: 'Maintenance',
+    itemKey: 'item',
+    getRegion: async function(maint) {
+        if (!maint.vesselId) return null;
+        const vq = buildIdQuery(maint.vesselId);
+        if (!vq) return null;
+        const vessel = await Vessel.findOne(vq);
+        return vessel ? vessel.region : null;
+    }
+});
     async function handleGetMaint(req, res) {
         try {
             const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
@@ -4922,4 +4937,3 @@ module.exports.getRedisClient = (...args) =>
 
 module.exports.isRedisAvailable = (...args) =>
     app.locals.isRedisAvailable(...args);
-   
