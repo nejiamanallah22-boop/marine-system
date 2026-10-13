@@ -139,6 +139,10 @@ const aiAndImportRoutes = require('./routes/ai-and-import');
 const settingsRoutes = require('./routes/settings');
 const vehiclesRoutes = require('./routes/vehicles');
 
+// ═══════════════════════════════════════════════════════════
+// 🎯 OWNERSHIP CHECK — ضد IDOR
+// ═══════════════════════════════════════════════════════════
+const createOwnershipCheck = require('./middleware/ownership');  // ← 🆕
 let ticketRoutesModule = null;
 try {
     ticketRoutesModule = require('./routes/ticket');
@@ -2987,12 +2991,14 @@ function formatMaintenance(log) {
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     });
 
-    app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:update'), csrfProtection, async (req, res) => {
+      app.put('/api/vessels/:id', 
+        authenticateAccessToken, 
+        requirePermission('vessels:update'), 
+        csrfProtection,
+        createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),
+        async (req, res) => {
         try {
-            const q = buildIdQuery(req.params.id);
-            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-            const v = await Vessel.findOne(q);
-            if (!v) return res.status(404).json({ success: false, error: 'غير موجود' });
+            const v = req.item;  // ← ✅ من middleware (بدل findOne)
             const b = req.body, old = v.status || v.stat;
             if (b.name !== undefined) {
                 const n = validateString(b.name, { required: true, max: 100 });
@@ -3038,25 +3044,39 @@ function formatMaintenance(log) {
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     });
 
-    app.delete('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:delete'), csrfProtection, async (req, res) => {
-        try {
-            const q = buildIdQuery(req.params.id);
-            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-            const v = await Vessel.findOne(q);
-            if (!v) return res.status(404).json({ success: false, error: 'غير موجود' });
-            const name = v.name, id = v.id;
-            await Vessel.deleteOne({ _id: v._id });
-            await addSystemLog({ userId: req.user.id, userName: req.user.name,
-                action: 'delete', resource: 'vessel', resourceId: id, resourceName: name,
-                status: 'success', ip: req.ip, requestId: req.requestId });
-            await notify({ type: 'warning', category: 'vessel', title: 'حذف مركب',
-                message: 'تم حذف "' + name + '"', link: '/pages/fleet.html',
-                icon: 'trash', actorName: req.user.name || req.user.username });
-            res.json({ success: true, message: 'تم الحذف' });
-        } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
-    });
-
-    // ============ MAINTENANCE ============
+  app.delete('/api/vessels/:id', 
+    authenticateAccessToken, 
+    requirePermission('vessels:delete'), 
+    csrfProtection,
+    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
+    async (req, res) => {
+    try {
+        // ✅ req.item من middleware — مضمون أنه في إقليم المستخدم
+        const v = req.item;
+        const name = v.name, id = v.id;
+        
+        await Vessel.deleteOne({ _id: v._id });
+        
+        await addSystemLog({ 
+            userId: req.user.id, userName: req.user.name,
+            action: 'delete', resource: 'vessel', 
+            resourceId: id, resourceName: name,
+            status: 'success', ip: req.ip, requestId: req.requestId 
+        });
+        
+        await notify({ 
+            type: 'warning', category: 'vessel', title: 'حذف مركب',
+            message: 'تم حذف "' + name + '"', link: '/pages/fleet.html',
+            icon: 'trash', actorName: req.user.name || req.user.username 
+        });
+        
+        res.json({ success: true, message: 'تم الحذف' });
+    } catch (e) { 
+        console.error('❌ DELETE vessel error:', e.message);
+        res.status(500).json({ success: false, error: 'خطأ' }); 
+    }
+});
+         // ============ MAINTENANCE ============
     async function handleGetMaint(req, res) {
         try {
             const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
@@ -4779,6 +4799,7 @@ return html;
     process.on('unhandledRejection', (r) => console.error('❌ Unhandled rejection:', r));
     process.on('uncaughtException', (e) => { console.error('❌ Uncaught:', e); shutdown('uncaughtException'); });
         // ═══════════════════════════════════════════════════════════
+     // ═══════════════════════════════════════════════════════════
     // 📤 EXPOSE MIDDLEWARE (قبل نهاية IIFE)
     // ═══════════════════════════════════════════════════════════
     app.locals.csrfProtection = csrfProtection;
@@ -4791,6 +4812,13 @@ return html;
     app.locals.addSystemLog = addSystemLog;
     app.locals.getRedisClient = getRedisClient;
     app.locals.isRedisAvailable = isRedisAvailable;
+
+    // ═══════════════════════════════════════════════════════════
+    // 🌐 EXPOSE HELPERS AS GLOBALS (للـ middleware الخارجي)
+    // ═══════════════════════════════════════════════════════════
+    global.normalizeRole = normalizeRole;
+    global.buildIdQuery = buildIdQuery;
+    global.addSystemLog = addSystemLog;
 })();
 
 
