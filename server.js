@@ -3390,41 +3390,96 @@ function formatMaintenance(log) {
     const LOCATION_PREFIX = 'marine:loc:';
 
     app.get('/api/locations', authenticateAccessToken, async (req, res) => {
-        try {
-            const now = Date.now();
-            const list = [];
-            if (isRedisAvailable()) {
-                try {
-                    let cursor = 0;
-                    do {
-                        const r = await redisClient.scan(cursor, { MATCH: `${LOCATION_PREFIX}*`, COUNT: 200 });
-                        cursor = Number(r.cursor) || 0;
-                        for (const key of (r.keys || [])) {
-                            const d = await redisClient.get(key);
-                            if (!d) continue;
-                            try {
-                                const loc = JSON.parse(d);
-                                if (now - new Date(loc.timestamp).getTime() > LOCATION_MAX_AGE) {
-                                    await redisClient.del(key);
-                                    continue;
-                                }
-                                list.push(loc);
-                            } catch (e) {}
-                        }
-                    } while (cursor !== 0);
-                } catch (e) {}
-            } else if (app.locals.__locMem) {
-                for (const [uid, loc] of app.locals.__locMem) {
-                    if (now - new Date(loc.timestamp).getTime() <= LOCATION_MAX_AGE) list.push(loc);
-                }
-            }
-            list.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            res.json({ success: true, count: list.length, locations: list,
-                viewer: { id: req.user.id, username: req.user.username,
-                    role: normalizeRole(req.user.role) } });
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
-    });
+    try {
+        const now = Date.now();
+        const list = [];
 
+        // ═══════════════════════════════════════════════════════
+        // 1️⃣ جمع كل المواقع (من Redis أو Memory)
+        // ═══════════════════════════════════════════════════════
+        if (isRedisAvailable()) {
+            try {
+                let cursor = 0;
+                do {
+                    const r = await redisClient.scan(cursor, { MATCH: `${LOCATION_PREFIX}*`, COUNT: 200 });
+                    cursor = Number(r.cursor) || 0;
+                    for (const key of (r.keys || [])) {
+                        const d = await redisClient.get(key);
+                        if (!d) continue;
+                        try {
+                            const loc = JSON.parse(d);
+                            if (now - new Date(loc.timestamp).getTime() > LOCATION_MAX_AGE) {
+                                await redisClient.del(key);
+                                continue;
+                            }
+                            list.push(loc);
+                        } catch (e) {}
+                    }
+                } while (cursor !== 0);
+            } catch (e) {}
+        } else if (app.locals.__locMem) {
+            for (const [uid, loc] of app.locals.__locMem) {
+                if (now - new Date(loc.timestamp).getTime() <= LOCATION_MAX_AGE) list.push(loc);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // 🎯 2️⃣ فلترة المواقع حسب الدور والإقليم — ضد التسريب
+        // ═══════════════════════════════════════════════════════
+        const user = req.user;
+        const role = normalizeRole(user.role);
+
+        let filtered = list;
+
+        if (role === 'admin') {
+            // ✅ admin يرى الكل
+            filtered = list;
+        } else if (role === 'manager') {
+            // ✅ manager يرى إقليمه فقط
+            if (user.region) {
+                filtered = list.filter(l => l.region === user.region);
+            } else {
+                filtered = [];
+            }
+        } else if (role === 'editor' || role === 'maintenance_unit') {
+            // ✅ يرى إقليمه فقط
+            if (user.region) {
+                filtered = list.filter(l => l.region === user.region);
+            } else {
+                filtered = [];
+            }
+        } else if (role === 'viewer') {
+            // ✅ viewer يرى نفسه فقط
+            filtered = list.filter(l => l.userId === user.id);
+        } else {
+            // أي دور آخر — نفسه فقط
+            filtered = list.filter(l => l.userId === user.id);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // 3️⃣ ترتيب النتائج
+        // ═══════════════════════════════════════════════════════
+        filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        // ═══════════════════════════════════════════════════════
+        // 4️⃣ إرجاع النتيجة المفلترة
+        // ═══════════════════════════════════════════════════════
+        res.json({
+            success: true,
+            count: filtered.length,
+            locations: filtered,
+            viewer: {
+                id: user.id,
+                username: user.username,
+                role: role
+            }
+        });
+
+    } catch (e) {
+        console.error('❌ GET /api/locations:', e.message);
+        res.status(500).json({ success: false, error: 'فشل' });
+    }
+});
     app.post('/api/locations', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             const { latitude, longitude, accuracy, vesselId } = req.body;
