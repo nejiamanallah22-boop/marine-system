@@ -3096,10 +3096,14 @@ const PAGE_PERMISSIONS = {
 
                     loginBtn.disabled = false;
                     loginBtn.classList.remove('loading');
-if (data.success && data.user) {
-    // ✅ التوكن الآن في HttpOnly Cookie — لا نحتاجه في العميل
-    currentUser = data.user;
-    window.currentUser = data.user;
+
+                    if (data.success && data.user) {
+                        const token = data.token;
+                        if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
+
+                        currentUser = data.user;
+                        window.currentUser = data.user;
+                        setToken(token);
     // ✅ احفظ المستخدم في localStorage لـ Clarity
     try {
         localStorage.setItem('marine_user', JSON.stringify(data.user));
@@ -3153,13 +3157,20 @@ if (data.success && data.user) {
         // 🛡️ VERIFY TOKEN
         // ============================================================
 
-     async function verifyToken(token) {
+       async function verifyToken(token) {
     try {
-        console.log('🛡️ التحقق من الجلسة...');
+        console.log('🛡️ التحقق من التوكن...');
 
-        // ✅ Cookie يُرسل تلقائياً — لا Authorization
+        if (!token) {
+            console.warn('⚠️ لا يوجد توكن');
+            return false;
+        }
+
         const response = await fetch('/api/auth/me', {
-            headers: { 'Accept': 'application/json' },
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json'
+            },
             credentials: 'include'
         });
 
@@ -3202,13 +3213,15 @@ if (data.success && data.user) {
     }
 }
          
-       async function verifyTokenOnce(token) {
-    try {
-        // ✅ Cookie يُرسل تلقائياً
-        const response = await fetch('/api/auth/me', {
-            headers: { 'Accept': 'application/json' },
-            credentials: 'include'
-        });
+        async function verifyTokenOnce(token) {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                });
 
                 if (!response.ok) {
                     clearToken();
