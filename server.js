@@ -142,7 +142,8 @@ const vehiclesRoutes = require('./routes/vehicles');
 // ═══════════════════════════════════════════════════════════
 // 🎯 OWNERSHIP CHECK — ضد IDOR
 // ═══════════════════════════════════════════════════════════
-const createOwnershipCheck = require('./middleware/ownership');  // ← 🆕
+const createOwnershipCheck = require('./middleware/ownership');
+const { createMaintenanceOwnershipCheck } = require('./middleware/ownership');
 let ticketRoutesModule = null;
 try {
     ticketRoutesModule = require('./routes/ticket');
@@ -2415,13 +2416,37 @@ function formatMaintenance(log) {
         }
     });
 
-    app.delete('/api/notes/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
+   app.delete('/api/notes/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Note) return res.status(500).json({ success: false, error: 'غير متاح' });
             const q = buildIdQuery(req.params.id);
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
             const note = await Note.findOne(q);
             if (!note) return res.status(404).json({ success: false, error: 'غير موجودة' });
+
+            // 🎯 فحص الملكية — ضد IDOR
+            const isOwner = note.createdBy && String(note.createdBy) === String(req.user._id);
+            const isAdmin = normalizeRole(req.user.role) === 'admin';
+
+            if (!isOwner && !isAdmin) {
+                await addSystemLog({
+                    userId: req.user.id,
+                    userName: req.user.name,
+                    action: 'security',
+                    resource: 'note_ownership_violation',
+                    status: 'warning',
+                    ip: req.ip,
+                    details: {
+                        noteId: note._id.toString(),
+                        noteOwner: note.createdBy ? note.createdBy.toString() : null
+                    }
+                });
+                return res.status(403).json({
+                    success: false,
+                    error: 'غير مصرح بالحذف',
+                    code: 'NOT_OWNER'
+                });
+            }
 
             // ⚠️ حماية: لا تحذف الوثائق من هذا المسار
             if (note.noteType === 'document') {
@@ -2485,12 +2510,17 @@ function formatMaintenance(log) {
             res.json({ success: true, unreadCount: c });
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
-    app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, async (req, res) => {
+app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Notification) return res.json({ success: true, updated: 0 });
             const q = buildIdQuery(req.params.id);
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-            const r = await Notification.updateOne(q, { $set: { isRead: true } });
+
+            // 🎯 فلترة: فقط إشعارات المستخدم — ضد IDOR
+            const r = await Notification.updateOne(
+                { ...q, $or: [{ userId: req.user.id }, { userId: null }] },
+                { $set: { isRead: true } }
+            );
             res.json({ success: true, updated: r.modifiedCount });
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
@@ -2503,20 +2533,18 @@ function formatMaintenance(log) {
             res.json({ success: true, updated: r.modifiedCount });
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
-    app.delete('/api/notifications/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
+  app.delete('/api/notifications/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Notification) return res.json({ success: true });
             const q = buildIdQuery(req.params.id);
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-            await Notification.deleteOne(q);
+
+            // 🎯 فلترة: فقط إشعارات المستخدم — ضد IDOR
+            await Notification.deleteOne({
+                ...q,
+                $or: [{ userId: req.user.id }, { userId: null }]
+            });
             res.json({ success: true });
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
-    });
-    app.delete('/api/notifications', authenticateAccessToken, csrfProtection, async (req, res) => {
-        try {
-            if (!Notification) return res.json({ success: true, deleted: 0 });
-            const r = await Notification.deleteMany({ $or: [{ userId: req.user.id }, { userId: null }] });
-            res.json({ success: true, deleted: r.deletedCount });
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
 
@@ -4877,7 +4905,8 @@ return html;
     process.on('unhandledRejection', (r) => console.error('❌ Unhandled rejection:', r));
     process.on('uncaughtException', (e) => { console.error('❌ Uncaught:', e); shutdown('uncaughtException'); });
         // ═══════════════════════════════════════════════════════════
-      // ═══════════════════════════════════════════════════════════
+      
+       // ═══════════════════════════════════════════════════════════
     // 📤 EXPOSE MIDDLEWARE (قبل نهاية IIFE)
     // ═══════════════════════════════════════════════════════════
     app.locals.csrfProtection = csrfProtection;
@@ -4891,16 +4920,16 @@ return html;
     app.locals.getRedisClient = getRedisClient;
     app.locals.isRedisAvailable = isRedisAvailable;
 
-    // 🆕 إضافة النماذج للـ middleware الخارجي
-    app.locals.Maintenance = Maintenance;
-    app.locals.Vessel = Vessel;
-
     // ═══════════════════════════════════════════════════════════
     // 🌐 EXPOSE HELPERS AS GLOBALS (للـ middleware الخارجي)
     // ═══════════════════════════════════════════════════════════
     global.normalizeRole = normalizeRole;
     global.buildIdQuery = buildIdQuery;
     global.addSystemLog = addSystemLog;
+
+    // 📦 EXPOSE MODELS (للـ maintenanceOwnershipCheck)
+    app.locals.Maintenance = Maintenance;
+    app.locals.Vessel = Vessel;
 })();
 
 // ═══════════════════════════════════════════════════════════
