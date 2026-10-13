@@ -139,11 +139,6 @@ const aiAndImportRoutes = require('./routes/ai-and-import');
 const settingsRoutes = require('./routes/settings');
 const vehiclesRoutes = require('./routes/vehicles');
 
-// ═══════════════════════════════════════════════════════════
-// 🎯 OWNERSHIP CHECK — ضد IDOR
-// ═══════════════════════════════════════════════════════════
-const createOwnershipCheck = require('./middleware/ownership');
-const { createMaintenanceOwnershipCheck } = require('./middleware/ownership');
 let ticketRoutesModule = null;
 try {
     ticketRoutesModule = require('./routes/ticket');
@@ -1089,15 +1084,9 @@ async function notify({ userId=null, type='info', category='system', title,
 }
 
 function extractBearerToken(req) {
-    // 🍪 1. اقرأ من Cookie أولاً (الطريقة الآمنة)
-    const cookieName = isProduction ? '__Secure-marine.access' : 'marine.access';
-    if (req.cookies && req.cookies[cookieName]) {
-        return req.cookies[cookieName];
-    }
-    // 🔄 2. احتياطي: Bearer (لـ Socket.IO فقط)
     const h = req.headers.authorization;
-    if (h && h.startsWith('Bearer ')) return h.slice(7).trim();
-    return null;
+    if (!h || !h.startsWith('Bearer ')) return null;
+    return h.slice(7).trim() || null;
 }
 function authenticateAccessToken(req, res, next) {
     const token = extractBearerToken(req);
@@ -1492,32 +1481,18 @@ function formatMaintenance(log) {
                 });
             });
 
-             const csrf = ensureCsrfToken(req, res);
+            const csrf = ensureCsrfToken(req, res);
             const rcn = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             res.cookie(rcn, rt, { httpOnly: true, secure: isProduction,
                 sameSite: COOKIE_SAMESITE, maxAge: REFRESH_TOKEN_MAX_AGE, path: '/api/auth' });
 
-            // 🍪 ضع access token في HttpOnly Cookie
-            const acn = isProduction ? '__Secure-marine.access' : 'marine.access';
-            res.cookie(acn, at, {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: COOKIE_SAMESITE,
-                maxAge: ACCESS_TOKEN_MAX_AGE,
-                path: '/'
-            });
-
             await addSystemLog({ userId: user.id, userName: user.name, userEmail: user.email,
                 action: 'login', resource: 'user', status: 'success', ip, requestId: req.requestId });
 
-            res.json({ 
-                success: true, 
-                // ❌ token: at,   ← احذف هذا السطر
-                expiresIn: ACCESS_TOKEN_MAX_AGE,
+            res.json({ success: true, token: at, expiresIn: ACCESS_TOKEN_MAX_AGE,
                 csrfToken: csrf,
                 session: { csrfToken: csrf, csrfExpiry: req.session?.csrfExpiry || (Date.now()+CSRF_MAX_AGE) },
-                user: formatUser(user) 
-            });
+                user: formatUser(user) });
         } catch (e) {
             console.error('❌ Login error:', e.message);
             res.status(500).json({ success: false, error: 'خطأ في الخادم' });
@@ -1558,50 +1533,21 @@ function formatMaintenance(log) {
             await saveRefreshSession({ sessionId: nsid, userId: user.id, refreshToken: nrt });
             if (req.session) { req.session.userId = user.id; req.session.sessionId = nsid; }
             await new Promise(r => { if (!req.session) return r(); req.session.save(() => r()); });
-           const csrf = ensureCsrfToken(req, res);
-res.cookie(cn, nrt, { httpOnly: true, secure: isProduction,
-    sameSite: COOKIE_SAMESITE, maxAge: REFRESH_TOKEN_MAX_AGE, path: '/api/auth' });
-
-// 🍪 حدّث access token
-const acn = isProduction ? '__Secure-marine.access' : 'marine.access';
-res.cookie(acn, nat, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: COOKIE_SAMESITE,
-    maxAge: ACCESS_TOKEN_MAX_AGE,
-    path: '/'
-});
-
-res.json({ 
-    success: true, 
-    // token: nat,   ← ❌ احذف
-    expiresIn: ACCESS_TOKEN_MAX_AGE,
-    csrfToken: csrf,
-    session: { csrfToken: csrf, csrfExpiry: req.session?.csrfExpiry || (Date.now()+CSRF_MAX_AGE) },
-    user: formatUser(user) 
-});
+            const csrf = ensureCsrfToken(req, res);
+            res.cookie(cn, nrt, { httpOnly: true, secure: isProduction,
+                sameSite: COOKIE_SAMESITE, maxAge: REFRESH_TOKEN_MAX_AGE, path: '/api/auth' });
+            res.json({ success: true, token: nat, expiresIn: ACCESS_TOKEN_MAX_AGE,
+                csrfToken: csrf,
+                session: { csrfToken: csrf, csrfExpiry: req.session?.csrfExpiry || (Date.now()+CSRF_MAX_AGE) },
+                user: formatUser(user) });
         } catch (e) { res.status(401).json({ success: false, error: 'Refresh غير صالح أو منتهي' }); }
-    });
-    // ============ SOCKET TOKEN (مؤقت — 5 دقائق) ============
-    app.post('/api/auth/socket-token', authenticateAccessToken, csrfProtection, (req, res) => {
-        try {
-            const socketToken = jwt.sign(
-                { sub: req.user.id, sid: req.auth.sid, type: 'socket' },
-                JWT_SECRET,
-                { expiresIn: '5m', issuer: 'marine-system', audience: 'marine-system-client' }
-            );
-            res.json({ success: true, token: socketToken, expiresIn: 5 * 60 * 1000 });
-        } catch (e) {
-            console.error('❌ socket-token error:', e.message);
-            res.status(500).json({ success: false, error: 'خطأ' });
-        }
     });
 
     // ============ ME ============
     app.get('/api/auth/me', authenticateAccessToken, (req, res) => {
         res.json({ success: true, user: formatUser(req.user) });
     });
-    
+
     // ============ PERMISSIONS ============
     app.get('/api/auth/permissions', authenticateAccessToken, (req, res) => {
         const role = normalizeRole(req.user.role);
@@ -1632,7 +1578,7 @@ res.json({
         });
     });
 
-        // ============ LOGOUT ============
+    // ============ LOGOUT ============
     app.post('/api/auth/logout', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             const ip = req.ip || req.socket.remoteAddress;
@@ -1644,19 +1590,15 @@ res.json({
             await addSystemLog({ userId: req.user?.id || null, userName: req.user?.name || '',
                 action: 'logout', resource: 'user', status: 'success', ip, requestId: req.requestId });
             await new Promise(r => { if (!req.session) return r(); req.session.destroy(() => r()); });
-
-            // 🍪 امسح كل الـ Cookies
-            const acn = isProduction ? '__Secure-marine.access' : 'marine.access';
             const rcn = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             const scn = isProduction ? '__Secure-marine.sid' : 'marine.sid';
-            res.clearCookie(acn, { httpOnly: true, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/' });
             res.clearCookie(rcn, { httpOnly: true, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/api/auth' });
             res.clearCookie(scn, { httpOnly: true, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/' });
             res.clearCookie('marine_csrf', { httpOnly: false, secure: isProduction, sameSite: COOKIE_SAMESITE, path: '/' });
-
             res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ أثناء الخروج' }); }
     });
+
     // ============ PASSWORD RESET ============
     app.post('/api/auth/forgot-password', forgotPasswordLimiter, async (req, res) => {
         try {
@@ -2469,37 +2411,13 @@ res.json({
         }
     });
 
-   app.delete('/api/notes/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
+    app.delete('/api/notes/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Note) return res.status(500).json({ success: false, error: 'غير متاح' });
             const q = buildIdQuery(req.params.id);
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
             const note = await Note.findOne(q);
             if (!note) return res.status(404).json({ success: false, error: 'غير موجودة' });
-
-            // 🎯 فحص الملكية — ضد IDOR
-            const isOwner = note.createdBy && String(note.createdBy) === String(req.user._id);
-            const isAdmin = normalizeRole(req.user.role) === 'admin';
-
-            if (!isOwner && !isAdmin) {
-                await addSystemLog({
-                    userId: req.user.id,
-                    userName: req.user.name,
-                    action: 'security',
-                    resource: 'note_ownership_violation',
-                    status: 'warning',
-                    ip: req.ip,
-                    details: {
-                        noteId: note._id.toString(),
-                        noteOwner: note.createdBy ? note.createdBy.toString() : null
-                    }
-                });
-                return res.status(403).json({
-                    success: false,
-                    error: 'غير مصرح بالحذف',
-                    code: 'NOT_OWNER'
-                });
-            }
 
             // ⚠️ حماية: لا تحذف الوثائق من هذا المسار
             if (note.noteType === 'document') {
@@ -2563,17 +2481,12 @@ res.json({
             res.json({ success: true, unreadCount: c });
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
-app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, async (req, res) => {
+    app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Notification) return res.json({ success: true, updated: 0 });
             const q = buildIdQuery(req.params.id);
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-
-            // 🎯 فلترة: فقط إشعارات المستخدم — ضد IDOR
-            const r = await Notification.updateOne(
-                { ...q, $or: [{ userId: req.user.id }, { userId: null }] },
-                { $set: { isRead: true } }
-            );
+            const r = await Notification.updateOne(q, { $set: { isRead: true } });
             res.json({ success: true, updated: r.modifiedCount });
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
@@ -2586,18 +2499,20 @@ app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, 
             res.json({ success: true, updated: r.modifiedCount });
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
-  app.delete('/api/notifications/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
+    app.delete('/api/notifications/:id', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             if (!Notification) return res.json({ success: true });
             const q = buildIdQuery(req.params.id);
             if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-
-            // 🎯 فلترة: فقط إشعارات المستخدم — ضد IDOR
-            await Notification.deleteOne({
-                ...q,
-                $or: [{ userId: req.user.id }, { userId: null }]
-            });
+            await Notification.deleteOne(q);
             res.json({ success: true });
+        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+    });
+    app.delete('/api/notifications', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            if (!Notification) return res.json({ success: true, deleted: 0 });
+            const r = await Notification.deleteMany({ $or: [{ userId: req.user.id }, { userId: null }] });
+            res.json({ success: true, deleted: r.deletedCount });
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
     });
 
@@ -2754,14 +2669,18 @@ app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, 
             });
         }
 
-       app.post('/api/vessels/:id/images',
-    authenticateAccessToken,
-    csrfProtection,
-    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
-    vesselUpload.array('images', VESSEL_MAX_IMAGES),
-    async (req, res) => {
-        try {
-            const v = req.item;  // ← ✅ من middleware (بدل findOne)
+        app.post('/api/vessels/:id/images',
+            authenticateAccessToken,
+            csrfProtection,
+            vesselUpload.array('images', VESSEL_MAX_IMAGES),
+            async (req, res) => {
+                try {
+                    const q = buildIdQuery(req.params.id);
+                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+                    const v = await Vessel.findOne(q);
+                    if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+
                     if (!req.files || req.files.length === 0) {
                         return res.status(400).json({ success: false, error: 'لم يتم رفع أي صورة' });
                     }
@@ -2810,15 +2729,18 @@ app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, 
             }
         );
 
-       app.delete('/api/vessels/:id/images/:imageId',
-    authenticateAccessToken,
-    csrfProtection,
-    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
-    async (req, res) => {
-        try {
-            const v = req.item;  // ← ✅ من middleware
+        app.delete('/api/vessels/:id/images/:imageId',
+            authenticateAccessToken,
+            csrfProtection,
+            async (req, res) => {
+                try {
+                    const q = buildIdQuery(req.params.id);
+                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
-            const img = v.images.id(req.params.imageId);
+                    const v = await Vessel.findOne(q);
+                    if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+
+                    const img = v.images.id(req.params.imageId);
                     if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
 
                     if (img.filename) {
@@ -2836,15 +2758,18 @@ app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, 
             }
         );
 
-       app.patch('/api/vessels/:id/images/:imageId/primary',
-    authenticateAccessToken,
-    csrfProtection,
-    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
-    async (req, res) => {
-        try {
-            const v = req.item;  // ← ✅ من middleware
+        app.patch('/api/vessels/:id/images/:imageId/primary',
+            authenticateAccessToken,
+            csrfProtection,
+            async (req, res) => {
+                try {
+                    const q = buildIdQuery(req.params.id);
+                    if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
-            const img = v.images.id(req.params.imageId);
+                    const v = await Vessel.findOne(q);
+                    if (!v) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+
+                    const img = v.images.id(req.params.imageId);
                     if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
 
                     v.setPrimaryImage(req.params.imageId);
@@ -2865,135 +2790,99 @@ app.put('/api/notifications/:id/read', authenticateAccessToken, csrfProtection, 
     })();
 
     // ============ VESSELS ============
-   app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
-    try {
-        const user = req.user;
-        const role = normalizeRole(user.role);
-        const includeDisposed = req.query.includeDisposed === 'true';
-        
-        let filter = includeDisposed ? {} : { status: { $ne: 'طرح' } };
-        
-        // 🎯 فلترة حسب الدور والإقليم
-        if (role !== 'admin' && user.region) {
-            filter.region = user.region;
+    app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
+        try {
+            const includeDisposed = req.query.includeDisposed === 'true';
+            const filter = includeDisposed ? {} : { status: { $ne: 'طرح' } };
+            const vessels = await Vessel.find(filter).sort({ createdAt: -1 }).limit(500);
+            res.json(vessels.map(formatVessel));
+        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+    });
+
+    app.get('/api/vessels/disposed',
+        authenticateAccessToken,
+        requirePermission('vessels:read'),
+        async (req, res) => {
+        try {
+            const limit = Math.min(parseInt(req.query.limit) || 500, 1000);
+            const disposed = await Vessel.find({ status: 'طرح' })
+                .sort({ disposalDate: -1, updatedAt: -1 })
+                .limit(limit);
+            res.json({ success: true, count: disposed.length, vessels: disposed.map(formatVessel) });
+        } catch (e) {
+            console.error('❌ GET /api/vessels/disposed:', e.message);
+            res.status(500).json({ success: false, error: 'فشل التحميل' });
         }
-        
-        const vessels = await Vessel.find(filter).sort({ createdAt: -1 }).limit(500);
-        res.json(vessels.map(formatVessel));
-    } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
-});
-   app.get('/api/vessels/disposed',
-    authenticateAccessToken,
-    requirePermission('vessels:read'),
-    async (req, res) => {
-    try {
-        const user = req.user;
-        const role = normalizeRole(user.role);
-        const limit = Math.min(parseInt(req.query.limit) || 500, 1000);
+    });
 
-        // 🎯 فلترة الإقليم — ضد IDOR
-        let filter = { status: 'طرح' };
-        if (role !== 'admin' && user.region) {
-            filter.region = user.region;
-        }
+    app.get('/api/vessels/disposal-stats',
+        authenticateAccessToken,
+        requirePermission('vessels:read'),
+        async (req, res) => {
+        try {
+            const [disposed, active] = await Promise.all([
+                Vessel.countDocuments({ status: 'طرح' }),
+                Vessel.countDocuments({ status: { $ne: 'طرح' } })
+            ]);
+            res.json({ success: true, stats: { disposed, active, total: disposed + active } });
+        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+    });
 
-        const disposed = await Vessel.find(filter)
-            .sort({ disposalDate: -1, updatedAt: -1 })
-            .limit(limit);
-        res.json({ success: true, count: disposed.length, vessels: disposed.map(formatVessel) });
-    } catch (e) {
-        console.error('❌ GET /api/vessels/disposed:', e.message);
-        res.status(500).json({ success: false, error: 'فشل التحميل' });
-    }
-});
+    app.post('/api/vessels/:id/dispose',
+        authenticateAccessToken,
+        csrfProtection,
+        requirePermission('vessels:update'),
+        async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
- app.get('/api/vessels/disposal-stats',
-    authenticateAccessToken,
-    requirePermission('vessels:read'),
-    async (req, res) => {
-    try {
-        const user = req.user;
-        const role = normalizeRole(user.role);
+            const vessel = await Vessel.findOne(q);
+            if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
 
-        // 🎯 فلترة الإقليم — ضد IDOR
-        let baseFilter = {};
-        if (role !== 'admin' && user.region) {
-            baseFilter.region = user.region;
-        }
+            if (vessel.status === 'طرح') {
+                return res.status(400).json({ success: false, error: 'المركب مطروح بالفعل' });
+            }
 
-        const [disposed, active] = await Promise.all([
-            Vessel.countDocuments({ ...baseFilter, status: 'طرح' }),
-            Vessel.countDocuments({ ...baseFilter, status: { $ne: 'طرح' } })
-        ]);
-        res.json({ success: true, stats: { disposed, active, total: disposed + active } });
-    } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
-});
-  
-app.post('/api/vessels/:id/dispose',
-    authenticateAccessToken,
-    csrfProtection,
-    requirePermission('vessels:update'),
-    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),
-    async (req, res) => {
-    try {
-        const { reason, decisionNumber, decidedBy, notes, decision, disposedBy } = req.body;
+            const { reason, decisionNumber, decidedBy, notes, decision, disposedBy } = req.body;
 
-        if (!reason || !String(reason).trim()) {
-            return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
-        }
+            if (!reason || !String(reason).trim()) {
+                return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
+            }
 
-        // 🎯 قفل ذري — يمنع Race Condition + IDOR
-        const vessel = await Vessel.findOneAndUpdate(
-            { 
-                _id: req.item._id, 
-                status: { $ne: 'طرح' }
-            },
-            {
-                $set: {
-                    status: 'طرح',
-                    stat: 'طرح',
-                    disposalDate: new Date(),
-                    disposedAt: new Date(),
-                    disposalReason: String(reason).substring(0, 1000),
-                    disposalDecision: String(decisionNumber || decision || '').substring(0, 200),
-                    disposedBy: String(decidedBy || disposedBy || req.user.name || req.user.username).substring(0, 200),
-                    disposalNotes: String(notes || '').substring(0, 2000),
-                    break: String(notes || reason).substring(0, 500),
-                    updatedAt: new Date()
-                }
-            },
-            { new: true }
-        );
+            vessel.status = 'طرح';
+            vessel.stat = 'طرح';
+            vessel.disposalDate = new Date();
+            vessel.disposedAt = new Date();
+            vessel.disposalReason = String(reason).substring(0, 1000);
+            vessel.disposalDecision = String(decisionNumber || decision || '').substring(0, 200);
+            vessel.disposedBy = String(decidedBy || disposedBy || req.user.name || req.user.username).substring(0, 200);
+            vessel.disposalNotes = String(notes || '').substring(0, 2000);
+            vessel.break = String(notes || reason).substring(0, 500);
+            vessel.updatedAt = new Date();
+            await vessel.save();
 
-        if (!vessel) {
-            return res.status(409).json({ 
-                success: false, 
-                error: 'المركب مطروح بالفعل',
-                code: 'ALREADY_DISPOSED'
+            await addSystemLog({
+                userId: req.user.id, userName: req.user.name,
+                action: 'dispose', resource: 'vessel',
+                resourceId: vessel.id, resourceName: vessel.name,
+                status: 'success', ip: req.ip, requestId: req.requestId
             });
+
+            await notify({
+                type: 'warning', category: 'vessel', title: 'طرح مركب',
+                message: 'تم طرح "' + vessel.name + '"',
+                link: '/pages/disposals.html', icon: 'archive',
+                actorName: req.user.name || req.user.username
+            });
+
+            res.json({ success: true, message: 'تم طرح المركب بنجاح', vessel: formatVessel(vessel) });
+        } catch (e) {
+            console.error('❌ POST /api/vessels/:id/dispose:', e.message);
+            res.status(500).json({ success: false, error: 'فشل الطرح' });
         }
+    });
 
-        await addSystemLog({
-            userId: req.user.id, userName: req.user.name,
-            action: 'dispose', resource: 'vessel',
-            resourceId: vessel.id, resourceName: vessel.name,
-            status: 'success', ip: req.ip, requestId: req.requestId
-        });
-
-        await notify({
-            type: 'warning', category: 'vessel', title: 'طرح مركب',
-            message: 'تم طرح "' + vessel.name + '"',
-            link: '/pages/disposals.html', icon: 'archive',
-            actorName: req.user.name || req.user.username
-        });
-
-        res.json({ success: true, message: 'تم طرح المركب بنجاح', vessel: formatVessel(vessel) });
-
-    } catch (e) {
-        console.error('❌ POST /api/vessels/:id/dispose:', e.message);
-        res.status(500).json({ success: false, error: 'فشل الطرح' });
-    }
-});
     app.post('/api/vessels/:id/restore',
         authenticateAccessToken,
         csrfProtection,
@@ -3090,14 +2979,12 @@ app.post('/api/vessels/:id/dispose',
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     });
 
-      app.put('/api/vessels/:id', 
-        authenticateAccessToken, 
-        requirePermission('vessels:update'), 
-        csrfProtection,
-        createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),
-        async (req, res) => {
+    app.put('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:update'), csrfProtection, async (req, res) => {
         try {
-            const v = req.item;  // ← ✅ من middleware (بدل findOne)
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+            const v = await Vessel.findOne(q);
+            if (!v) return res.status(404).json({ success: false, error: 'غير موجود' });
             const b = req.body, old = v.status || v.stat;
             if (b.name !== undefined) {
                 const n = validateString(b.name, { required: true, max: 100 });
@@ -3143,45 +3030,25 @@ app.post('/api/vessels/:id/dispose',
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     });
 
-  app.delete('/api/vessels/:id', 
-    authenticateAccessToken, 
-    requirePermission('vessels:delete'), 
-    csrfProtection,
-    createOwnershipCheck(Vessel, { regionField: 'region', modelName: 'Vessel' }),  // ← 🆕
-    async (req, res) => {
-    try {
-        // ✅ req.item من middleware — مضمون أنه في إقليم المستخدم
-        const v = req.item;
-        const name = v.name, id = v.id;
-        
-        await Vessel.deleteOne({ _id: v._id });
-        
-        await addSystemLog({ 
-            userId: req.user.id, userName: req.user.name,
-            action: 'delete', resource: 'vessel', 
-            resourceId: id, resourceName: name,
-            status: 'success', ip: req.ip, requestId: req.requestId 
-        });
-        
-        await notify({ 
-            type: 'warning', category: 'vessel', title: 'حذف مركب',
-            message: 'تم حذف "' + name + '"', link: '/pages/fleet.html',
-            icon: 'trash', actorName: req.user.name || req.user.username 
-        });
-        
-        res.json({ success: true, message: 'تم الحذف' });
-    } catch (e) { 
-        console.error('❌ DELETE vessel error:', e.message);
-        res.status(500).json({ success: false, error: 'خطأ' }); 
-    }
-});
-       // ============ MAINTENANCE ============
-    
-    // 🎯 MAINTENANCE OWNERSHIP CHECK (مرة واحدة)
-    // ═══════════════════════════════════════════════════════════
-// 🎯 MAINTENANCE OWNERSHIP CHECK — ضد IDOR
-// ═══════════════════════════════════════════════════════════
-const maintenanceOwnership = createMaintenanceOwnershipCheck(Vessel);
+    app.delete('/api/vessels/:id', authenticateAccessToken, requirePermission('vessels:delete'), csrfProtection, async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+            const v = await Vessel.findOne(q);
+            if (!v) return res.status(404).json({ success: false, error: 'غير موجود' });
+            const name = v.name, id = v.id;
+            await Vessel.deleteOne({ _id: v._id });
+            await addSystemLog({ userId: req.user.id, userName: req.user.name,
+                action: 'delete', resource: 'vessel', resourceId: id, resourceName: name,
+                status: 'success', ip: req.ip, requestId: req.requestId });
+            await notify({ type: 'warning', category: 'vessel', title: 'حذف مركب',
+                message: 'تم حذف "' + name + '"', link: '/pages/fleet.html',
+                icon: 'trash', actorName: req.user.name || req.user.username });
+            res.json({ success: true, message: 'تم الحذف' });
+        } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
+    });
+
+    // ============ MAINTENANCE ============
     async function handleGetMaint(req, res) {
         try {
             const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
@@ -3241,9 +3108,12 @@ const maintenanceOwnership = createMaintenanceOwnershipCheck(Vessel);
     app.post('/api/maintenance', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, handleCreateMaint);
     app.post('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:create'), csrfProtection, handleCreateMaint);
 
-        async function handleUpdateMaint(req, res) {
+    async function handleUpdateMaint(req, res) {
         try {
-            const l = req.item;  // ← ✅ من middleware
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+            const l = await Maintenance.findOne(q);
+            if (!l) return res.status(404).json({ success: false, error: 'غير موجود' });
             const allowed = ['status','cost','notes','description','endDate','priority','repairUnit','supervisorName','type','faultType'];
             allowed.forEach(f => {
                 if (req.body[f] !== undefined) {
@@ -3268,11 +3138,15 @@ const maintenanceOwnership = createMaintenanceOwnershipCheck(Vessel);
             res.json({ success: true, message: 'تم التحديث', log: f, record: f, data: f });
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     }
-    app.put('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, maintenanceOwnership, handleUpdateMaint);
-    app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, maintenanceOwnership, handleUpdateMaint);
-        async function handleDeleteMaint(req, res) {
+    app.put('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleUpdateMaint);
+    app.put('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleUpdateMaint);
+
+    async function handleDeleteMaint(req, res) {
         try {
-            const l = req.item;  // ← ✅ من middleware
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+            const l = await Maintenance.findOne(q);
+            if (!l) return res.status(404).json({ success: false, error: 'غير موجود' });
             const name = l.vesselName, id = l.id;
             await Maintenance.deleteOne({ _id: l._id });
             await addSystemLog({ userId: req.user.id, userName: req.user.name,
@@ -3281,11 +3155,15 @@ const maintenanceOwnership = createMaintenanceOwnershipCheck(Vessel);
             res.json({ success: true, message: 'تم الحذف' });
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     }
-    app.delete('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, maintenanceOwnership, handleDeleteMaint);
-    app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, maintenanceOwnership, handleDeleteMaint);
-        async function handleCompleteMaint(req, res) {
+    app.delete('/api/maintenance/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, handleDeleteMaint);
+    app.delete('/api/maintenance-logs/:id', authenticateAccessToken, requirePermission('maintenance:delete'), csrfProtection, handleDeleteMaint);
+
+    async function handleCompleteMaint(req, res) {
         try {
-            const l = req.item;  // ← ✅ من middleware
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+            const l = await Maintenance.findOne(q);
+            if (!l) return res.status(404).json({ success: false, error: 'غير موجود' });
             l.status = 'مكتملة'; l.endDate = new Date(); await l.save();
             let vUpdated = false;
             try {
@@ -3311,8 +3189,9 @@ const maintenanceOwnership = createMaintenanceOwnershipCheck(Vessel);
                 log: formatMaintenance(l), record: formatMaintenance(l), vesselUpdated: vUpdated });
         } catch (e) { res.status(500).json({ success: false, error: e.message }); }
     }
-    app.post('/api/maintenance/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, maintenanceOwnership, handleCompleteMaint);
-    app.post('/api/maintenance-logs/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, maintenanceOwnership, handleCompleteMaint);
+    app.post('/api/maintenance/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleCompleteMaint);
+    app.post('/api/maintenance-logs/:id/complete', authenticateAccessToken, requirePermission('maintenance:update'), csrfProtection, handleCompleteMaint);
+
     // ============ USERS ============
     app.get('/api/users', authenticateAccessToken, requirePermission('users:manage'), async (req, res) => {
         try {
@@ -3475,96 +3354,41 @@ const maintenanceOwnership = createMaintenanceOwnershipCheck(Vessel);
     const LOCATION_PREFIX = 'marine:loc:';
 
     app.get('/api/locations', authenticateAccessToken, async (req, res) => {
-    try {
-        const now = Date.now();
-        const list = [];
-
-        // ═══════════════════════════════════════════════════════
-        // 1️⃣ جمع كل المواقع (من Redis أو Memory)
-        // ═══════════════════════════════════════════════════════
-        if (isRedisAvailable()) {
-            try {
-                let cursor = 0;
-                do {
-                    const r = await redisClient.scan(cursor, { MATCH: `${LOCATION_PREFIX}*`, COUNT: 200 });
-                    cursor = Number(r.cursor) || 0;
-                    for (const key of (r.keys || [])) {
-                        const d = await redisClient.get(key);
-                        if (!d) continue;
-                        try {
-                            const loc = JSON.parse(d);
-                            if (now - new Date(loc.timestamp).getTime() > LOCATION_MAX_AGE) {
-                                await redisClient.del(key);
-                                continue;
-                            }
-                            list.push(loc);
-                        } catch (e) {}
-                    }
-                } while (cursor !== 0);
-            } catch (e) {}
-        } else if (app.locals.__locMem) {
-            for (const [uid, loc] of app.locals.__locMem) {
-                if (now - new Date(loc.timestamp).getTime() <= LOCATION_MAX_AGE) list.push(loc);
+        try {
+            const now = Date.now();
+            const list = [];
+            if (isRedisAvailable()) {
+                try {
+                    let cursor = 0;
+                    do {
+                        const r = await redisClient.scan(cursor, { MATCH: `${LOCATION_PREFIX}*`, COUNT: 200 });
+                        cursor = Number(r.cursor) || 0;
+                        for (const key of (r.keys || [])) {
+                            const d = await redisClient.get(key);
+                            if (!d) continue;
+                            try {
+                                const loc = JSON.parse(d);
+                                if (now - new Date(loc.timestamp).getTime() > LOCATION_MAX_AGE) {
+                                    await redisClient.del(key);
+                                    continue;
+                                }
+                                list.push(loc);
+                            } catch (e) {}
+                        }
+                    } while (cursor !== 0);
+                } catch (e) {}
+            } else if (app.locals.__locMem) {
+                for (const [uid, loc] of app.locals.__locMem) {
+                    if (now - new Date(loc.timestamp).getTime() <= LOCATION_MAX_AGE) list.push(loc);
+                }
             }
-        }
+            list.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            res.json({ success: true, count: list.length, locations: list,
+                viewer: { id: req.user.id, username: req.user.username,
+                    role: normalizeRole(req.user.role) } });
+        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
+    });
 
-        // ═══════════════════════════════════════════════════════
-        // 🎯 2️⃣ فلترة المواقع حسب الدور والإقليم — ضد التسريب
-        // ═══════════════════════════════════════════════════════
-        const user = req.user;
-        const role = normalizeRole(user.role);
-
-        let filtered = list;
-
-        if (role === 'admin') {
-            // ✅ admin يرى الكل
-            filtered = list;
-        } else if (role === 'manager') {
-            // ✅ manager يرى إقليمه فقط
-            if (user.region) {
-                filtered = list.filter(l => l.region === user.region);
-            } else {
-                filtered = [];
-            }
-        } else if (role === 'editor' || role === 'maintenance_unit') {
-            // ✅ يرى إقليمه فقط
-            if (user.region) {
-                filtered = list.filter(l => l.region === user.region);
-            } else {
-                filtered = [];
-            }
-        } else if (role === 'viewer') {
-            // ✅ viewer يرى نفسه فقط
-            filtered = list.filter(l => l.userId === user.id);
-        } else {
-            // أي دور آخر — نفسه فقط
-            filtered = list.filter(l => l.userId === user.id);
-        }
-
-        // ═══════════════════════════════════════════════════════
-        // 3️⃣ ترتيب النتائج
-        // ═══════════════════════════════════════════════════════
-        filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-        // ═══════════════════════════════════════════════════════
-        // 4️⃣ إرجاع النتيجة المفلترة
-        // ═══════════════════════════════════════════════════════
-        res.json({
-            success: true,
-            count: filtered.length,
-            locations: filtered,
-            viewer: {
-                id: user.id,
-                username: user.username,
-                role: role
-            }
-        });
-
-    } catch (e) {
-        console.error('❌ GET /api/locations:', e.message);
-        res.status(500).json({ success: false, error: 'فشل' });
-    }
-});
     app.post('/api/locations', authenticateAccessToken, csrfProtection, async (req, res) => {
         try {
             const { latitude, longitude, accuracy, vesselId } = req.body;
@@ -3675,10 +3499,11 @@ const maintenanceOwnership = createMaintenanceOwnershipCheck(Vessel);
                         audience: 'marine-system-client'
                     });
 
-                                      if ((decoded.type !== 'access' && decoded.type !== 'socket') || decoded.sub !== userId) {
+                    if (decoded.type !== 'access' || decoded.sub !== userId) {
                         socket.emit('error', { message: 'توكن غير صالح' });
                         return socket.disconnect(true);
                     }
+
                     const revoked = await isAccessTokenRevoked(decoded.jti);
                     if (revoked) {
                         socket.emit('error', { message: 'التوكن ملغى' });
@@ -4946,8 +4771,6 @@ return html;
     process.on('unhandledRejection', (r) => console.error('❌ Unhandled rejection:', r));
     process.on('uncaughtException', (e) => { console.error('❌ Uncaught:', e); shutdown('uncaughtException'); });
         // ═══════════════════════════════════════════════════════════
-      
-       // ═══════════════════════════════════════════════════════════
     // 📤 EXPOSE MIDDLEWARE (قبل نهاية IIFE)
     // ═══════════════════════════════════════════════════════════
     app.locals.csrfProtection = csrfProtection;
@@ -4960,18 +4783,8 @@ return html;
     app.locals.addSystemLog = addSystemLog;
     app.locals.getRedisClient = getRedisClient;
     app.locals.isRedisAvailable = isRedisAvailable;
-
-    // ═══════════════════════════════════════════════════════════
-    // 🌐 EXPOSE HELPERS AS GLOBALS (للـ middleware الخارجي)
-    // ═══════════════════════════════════════════════════════════
-    global.normalizeRole = normalizeRole;
-    global.buildIdQuery = buildIdQuery;
-    global.addSystemLog = addSystemLog;
-
-    // 📦 EXPOSE MODELS (للـ maintenanceOwnershipCheck)
-    app.locals.Maintenance = Maintenance;
-    app.locals.Vessel = Vessel;
 })();
+
 
 // ═══════════════════════════════════════════════════════════
 // 📤 MODULE EXPORTS (آمن — يعتمد على app.locals)
@@ -5007,3 +4820,4 @@ module.exports.getRedisClient = (...args) =>
 
 module.exports.isRedisAvailable = (...args) =>
     app.locals.isRedisAvailable(...args);
+   
