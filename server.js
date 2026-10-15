@@ -203,6 +203,34 @@ async function initRedis() {
             redisClient = null; return null;
         }
     })();
+    
+// ═══════════════════════════════════════════════════════════
+// 🛡️ DEV TOOLS BLOCKER — إغلاق أدوات التطوير
+// ═══════════════════════════════════════════════════════════
+app.use((req, res, next) => {
+    const DEV_ENABLED = process.env.DEV_TOOLS === 'true';
+    if (DEV_ENABLED) return next();
+
+    const blockedPaths = [
+        '/phpinfo', '/phpinfo.php', '/info.php',
+        '/_debugbar', '/debugbar', '/telescope', '/horizon',
+        '/__clockwork', '/_profiler', '/pma', '/adminer.php',
+        '/.git', '/.svn', '/.hg', '/.DS_Store'
+    ];
+    const lowerPath = (req.path || '').toLowerCase();
+    for (const bp of blockedPaths) {
+        if (lowerPath === bp || lowerPath.startsWith(bp + '/')) {
+            return res.status(404).json({ success: false, error: 'Not Found' });
+        }
+    }
+
+    if (req.query && typeof req.query === 'object') {
+        ['debug', 'dev', 'test', 'demo', 'trace', 'profiler', 'xdebug']
+            .forEach(k => { try { delete req.query[k]; } catch(e) {} });
+    }
+
+    next();
+});
     return redisInitPromise;
 }
 function getRedisClient() { return redisAvailable ? redisClient : null; }
