@@ -3359,6 +3359,13 @@ if (data.success && data.user) {
         function loadPage(page) {
             (async () => {
                 try {
+                    // ✅ إخفاء الشريط على الشاشات الصغيرة عند التنقل
+if (window.innerWidth <= 992) {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('open');
+    const menuBtn = document.getElementById('menuToggle');
+    if (menuBtn) menuBtn.classList.remove('active');
+}
                     if (!canAccessPage(page)) {
                         console.warn('🚫 Access denied:', page, '| Role:', currentUser ? normalizeRole(currentUser.role) : null);
                         showToast('🚫 ليس لديك صلاحية الوصول لهذه الصفحة', 'error');
@@ -3880,3 +3887,5 @@ try {
 
 </body>
 </html>
+
+     
