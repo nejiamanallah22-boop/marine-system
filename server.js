@@ -231,6 +231,58 @@ app.use((req, res, next) => {
 
     next();
 });
+
+// ═══════════════════════════════════════════════════════════
+// 🛡️ BLOCK FAKE ACCOUNTS — منع الحسابات الوهمية
+// ═══════════════════════════════════════════════════════════
+const ALLOW_REGISTRATION = process.env.ALLOW_REGISTRATION === 'true';
+const ALLOW_DEMO = process.env.ALLOW_DEMO_ACCOUNTS === 'true';
+const ALLOW_GUEST = process.env.ALLOW_GUEST_LOGIN === 'true';
+
+app.use((req, res, next) => {
+    const method = req.method.toUpperCase();
+    if (method !== 'POST') return next();
+
+    const path = (req.path || '').toLowerCase();
+
+    if (!ALLOW_REGISTRATION) {
+        const registerPaths = ['/register', '/signup', '/sign-up', '/api/register', '/api/signup'];
+        for (const rp of registerPaths) {
+            if (path === rp || path.startsWith(rp + '/')) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'Registration is disabled'
+                });
+            }
+        }
+    }
+
+    if (!ALLOW_DEMO) {
+        const demoPaths = ['/demo', '/demo-login', '/api/demo'];
+        for (const dp of demoPaths) {
+            if (path === dp || path.startsWith(dp + '/')) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'Demo accounts disabled'
+                });
+            }
+        }
+    }
+
+    if (!ALLOW_GUEST) {
+        const guestPaths = ['/guest', '/guest-login', '/api/guest'];
+        for (const gp of guestPaths) {
+            if (path === gp || path.startsWith(gp + '/')) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'Guest access disabled'
+                });
+            }
+        }
+    }
+
+    next();
+});
     return redisInitPromise;
 }
 function getRedisClient() { return redisAvailable ? redisClient : null; }
