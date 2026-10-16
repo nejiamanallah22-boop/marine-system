@@ -3428,19 +3428,39 @@ if (window.innerWidth <= 992) {
 
                     let html = null;
                     let lastError = null;
-
-                    for (const path of possiblePaths) {
-                        try {
-                            const response = await fetch(path, { cache: 'no-store' });
-                            if (response.ok) {
-                                html = await response.text();
-                                break;
-                            }
-                            lastError = new Error('HTTP ' + response.status + ' على ' + path);
-                        } catch (err) {
-                            lastError = err;
-                        }
-                    }
+for (const path of possiblePaths) {
+    try {
+        const response = await fetch(path, { 
+            cache: 'no-store',
+            redirect: 'error'   // ✅ لا تتبع redirects
+        });
+        
+        if (response.ok) {
+            const content = await response.text();
+            
+            // ✅ ارفض index.html — يحتوي على loginOverlay
+            if (content.includes('id="loginOverlay"')) {
+                console.warn('⚠️ تم استلام index.html بدل ' + page);
+                lastError = new Error('index.html بدل ' + page);
+                continue;
+            }
+            
+            // ✅ ارفض الصفحات الفارغة
+            if (content.length < 200) {
+                lastError = new Error('صفحة فارغة: ' + path);
+                continue;
+            }
+            
+            html = content;
+            console.log('✅ تم تحميل:', path, '(' + content.length + ' bytes)');
+            break;
+        }
+        
+        lastError = new Error('HTTP ' + response.status + ' على ' + path);
+    } catch (err) {
+        lastError = err;
+    }
+}
 
                     if (html === null) {
                         if (loader) loader.style.display = 'none';
