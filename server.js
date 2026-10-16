@@ -3542,6 +3542,77 @@ function formatMaintenance(log) {
         console.warn('⚠️ Settings disabled (models missing)');
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // 🖼️ FALLBACK: مسارات الشعار الاحتياطية
+    // تعمل حتى لو كان SystemLogo غير محمّل
+    // ═══════════════════════════════════════════════════════════
+    
+    // GET — قراءة الشعار
+    app.get('/api/settings/logo', authenticateAccessToken, async (req, res) => {
+        try {
+            if (!SystemLogo) {
+                return res.json({
+                    success: true,
+                    logo: null,
+                    source: 'no_model',
+                    message: 'SystemLogo model not loaded'
+                });
+            }
+            const logo = await SystemLogo.findOne({ key: 'main_logo' }).lean();
+            if (!logo || !logo.url) {
+                return res.json({
+                    success: true,
+                    logo: null,
+                    source: 'not_uploaded'
+                });
+            }
+            res.json({
+                success: true,
+                logo: {
+                    url: logo.url,
+                    filename: logo.filename || '',
+                    uploadedAt: logo.uploadedAt || logo.createdAt
+                },
+                source: 'db'
+            });
+        } catch (e) {
+            console.error('❌ GET /api/settings/logo:', e.message);
+            res.status(500).json({ success: false, error: 'فشل تحميل الشعار' });
+        }
+    });
+
+    // POST — تحديث الشعار (admin فقط)
+    app.post('/api/settings/logo', authenticateAccessToken, csrfProtection, async (req, res) => {
+        try {
+            if (!isAdminUser(req.user)) {
+                return res.status(403).json({ success: false, error: 'للمسؤول فقط' });
+            }
+            if (!SystemLogo) {
+                return res.status(503).json({ success: false, error: 'SystemLogo model غير متاح' });
+            }
+            const { url, filename } = req.body || {};
+            if (!url || typeof url !== 'string') {
+                return res.status(400).json({ success: false, error: 'URL مطلوب' });
+            }
+            const updated = await SystemLogo.findOneAndUpdate(
+                { key: 'main_logo' },
+                {
+                    key: 'main_logo',
+                    url: String(url).substring(0, 500),
+                    filename: String(filename || '').substring(0, 200),
+                    uploadedAt: new Date(),
+                    uploadedBy: req.user.id
+                },
+                { upsert: true, new: true }
+            );
+            res.json({ success: true, logo: { url: updated.url, filename: updated.filename } });
+        } catch (e) {
+            console.error('❌ POST /api/settings/logo:', e.message);
+            res.status(500).json({ success: false, error: 'فشل التحديث' });
+        }
+    });
+
+    console.log('✅ [LOGO] Fallback routes registered');
     // ============================================================
     // 🎥 SOCKET.IO
     // ============================================================
@@ -4116,7 +4187,7 @@ const CLARITY_IDENTIFY_SCRIPT = `
         init();
     }
 })();<\/script>`;
-    const AUTO_GPS_SCRIPT = `
+   const AUTO_GPS_SCRIPT = `
 <script>(function(){
     'use strict';
     var INTERVAL = 30000;
@@ -4126,6 +4197,8 @@ const CLARITY_IDENTIFY_SCRIPT = `
     var lastVerify = 0;
     var asking = false;
     var promptShown = false;
+    var authFailed = false;
+
     function getToken() {
         try {
             return localStorage.getItem('marine_auth_token')
@@ -4134,13 +4207,28 @@ const CLARITY_IDENTIFY_SCRIPT = `
                 || '';
         } catch(e) { return ''; }
     }
+
     function getCsrf() {
         try {
             var m = document.cookie.match(/marine_csrf=([^;]+)/);
             return m ? decodeURIComponent(m[1]) : '';
         } catch(e) { return ''; }
     }
+
+    function isTokenValid() {
+        var t = getToken();
+        if (!t || t.length < 20) return false;
+        try {
+            var parts = t.split('.');
+            if (parts.length !== 3) return false;
+            var payload = JSON.parse(atob(parts[1]));
+            if (!payload.exp) return true;
+            return (payload.exp * 1000) > (Date.now() + 60000);
+        } catch(e) { return false; }
+    }
+
     function verifyLogin(cb) {
+        if (authFailed) { cb(false); return; }
         var t = getToken();
         if (!t) { cb(false); return; }
         if (verified && (Date.now() - lastVerify < 60000)) { cb(true); return; }
@@ -4152,12 +4240,24 @@ const CLARITY_IDENTIFY_SCRIPT = `
         x.onreadystatechange = function() {
             if (x.readyState !== 4) return;
             if (x.status === 200) { verified = true; lastVerify = Date.now(); cb(true); }
-            else { verified = false; cb(false); }
+            else {
+                verified = false;
+                if (x.status === 401) {
+                    authFailed = true;
+                    console.warn('%c🔒 GPS: التوكن منتهي — إيقاف الإرسال', 'background:#ef4444;color:white;padding:6px 12px;font-weight:bold;');
+                }
+                cb(false);
+            }
         };
         x.onerror = function() { cb(false); };
         x.send();
     }
+
     function postLoc(coords) {
+        if (authFailed) return Promise.resolve({ ok: false, reason: 'auth_failed' });
+        if (!isTokenValid()) {
+            return Promise.resolve({ ok: false, reason: 'invalid_token' });
+        }
         var t = getToken();
         var c = getCsrf();
         return fetch('/api/locations', {
@@ -4175,15 +4275,21 @@ const CLARITY_IDENTIFY_SCRIPT = `
             })
         }).then(function(r) {
             if (r.ok) { lastSent = Date.now(); return { ok: true }; }
+            if (r.status === 401) {
+                authFailed = true;
+                verified = false;
+                console.error('%c🔒 GPS: 401 — إيقاف الإرسال نهائياً', 'background:#ef4444;color:white;padding:6px 12px;font-weight:bold;');
+            }
             return { ok: false, status: r.status };
         }).catch(function(e) { return { ok: false, status: 0, error: e.message }; });
     }
+
     function startWatch() {
-        if (watchId !== null || !navigator.geolocation) return;
+        if (watchId !== null || !navigator.geolocation || authFailed) return;
         try {
             watchId = navigator.geolocation.watchPosition(
                 function(p) {
-                    if (!verified) return;
+                    if (!verified || authFailed) return;
                     if (Date.now() - lastSent < INTERVAL) return;
                     postLoc(p.coords);
                 },
@@ -4192,8 +4298,9 @@ const CLARITY_IDENTIFY_SCRIPT = `
             );
         } catch(e) {}
     }
+
     function requestLocation() {
-        if (asking) return;
+        if (asking || authFailed) return;
         asking = true;
         if (!navigator.geolocation) { asking = false; return; }
         verifyLogin(function(ok) {
@@ -4203,8 +4310,7 @@ const CLARITY_IDENTIFY_SCRIPT = `
                     postLoc(p.coords).then(function(r) {
                         asking = false;
                         if (r.ok) {
-                            console.log('%c📍 تم تسجيل موقعك تلقائياً',
-                                'background: #10b981; color: white; padding: 4px 8px; font-weight: bold;');
+                            console.log('%c📍 تم تسجيل موقعك تلقائياً', 'background: #10b981; color: white; padding: 4px 8px; font-weight: bold;');
                             startWatch();
                         }
                     });
@@ -4213,16 +4319,17 @@ const CLARITY_IDENTIFY_SCRIPT = `
                     asking = false;
                     if (err.code === 1 && !promptShown) {
                         promptShown = true;
-                        console.warn('%c📍 ⚠️ يجب السماح بالوصول إلى الموقع',
-                            'background: #ef4444; color: white; padding: 6px 12px; font-size: 14px; font-weight: bold;');
+                        console.warn('%c📍 ⚠️ يجب السماح بالوصول إلى الموقع', 'background: #ef4444; color: white; padding: 6px 12px; font-size: 14px; font-weight: bold;');
                     }
                 },
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
             );
         });
     }
+
     function startPeriodicSend() {
         setInterval(function() {
+            if (authFailed) return;
             if (watchId === null) return;
             if (Date.now() - lastSent < INTERVAL) return;
             if (!navigator.geolocation || !verified) return;
@@ -4233,17 +4340,19 @@ const CLARITY_IDENTIFY_SCRIPT = `
             );
         }, INTERVAL);
     }
+
     function init() {
         setTimeout(requestLocation, 800);
         setInterval(function() {
+            if (authFailed) return;
             if (!verified) return;
             if (lastSent > 0) return;
             requestLocation();
-        }, 5000);
+        }, 30000);
         startPeriodicSend();
-        console.log('%c📍 Auto GPS ready (silent mode)',
-            'background: #60a5fa; color: white; padding: 3px 6px;');
+        console.log('%c📍 Auto GPS ready (silent mode)', 'background: #60a5fa; color: white; padding: 3px 6px;');
     }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
