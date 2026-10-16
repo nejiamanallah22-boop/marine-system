@@ -202,8 +202,42 @@ async function initRedis() {
             try { if (redisClient?.isOpen) await redisClient.quit(); } catch(_) {}
             redisClient = null; return null;
         }
-    })();
-    
+        })();
+    return redisInitPromise;
+}
+function getRedisClient() { return redisAvailable ? redisClient : null; }
+function isRedisAvailable() { return !!(redisAvailable && redisClient); }
+async function redisSafe(fn, fallback = null) {
+    if (!isRedisAvailable()) return fallback;
+    try { return await fn(redisClient); } catch (e) { return fallback; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🌐 EXPRESS APP
+// ═══════════════════════════════════════════════════════════
+const app = express();
+const PORT = Number(process.env.PORT) || 5000;
+const isProduction = process.env.NODE_ENV === 'production';
+const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
+
+// ═══════════════════════════════════════════════════════════
+// 🎥 Socket.IO — إعلان مسبق (لتجنب TDZ)
+// ═══════════════════════════════════════════════════════════
+let httpServer = null;
+let io = null;
+const onlineUsers = new Map();
+const screenSessions = new Map();
+
+app.disable('x-powered-by');
+app.set('trust proxy', isProduction ? 1 : 0);
+
+app.use((req, res, next) => {
+    if (isSensitivePath(req.path)) {
+        return res.status(404).json({ success: false, error: 'Not Found' });
+    }
+    next();
+});
+
 // ═══════════════════════════════════════════════════════════
 // 🛡️ DEV TOOLS BLOCKER — إغلاق أدوات التطوير
 // ═══════════════════════════════════════════════════════════
@@ -229,6 +263,14 @@ app.use((req, res, next) => {
             .forEach(k => { try { delete req.query[k]; } catch(e) {} });
     }
 
+    next();
+});
+app.use((req, res, next) => {
+    res.setHeader('X-System-Name', 'Marine System');
+    res.setHeader('X-System-Version', '11.2.0');
+    res.setHeader('X-Developer', 'Aman Allah Naji');
+    res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
+    res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
     next();
 });
 
@@ -281,75 +323,6 @@ app.use((req, res, next) => {
         }
     }
 
-    next();
-});
-    return redisInitPromise;
-}
-function getRedisClient() { return redisAvailable ? redisClient : null; }
-function isRedisAvailable() { return !!(redisAvailable && redisClient); }
-async function redisSafe(fn, fallback = null) {
-    if (!isRedisAvailable()) return fallback;
-    try { return await fn(redisClient); } catch (e) { return fallback; }
-}
-
-// ═══════════════════════════════════════════════════════════
-// 🌐 EXPRESS APP
-// ═══════════════════════════════════════════════════════════
-const app = express();
-const PORT = Number(process.env.PORT) || 5000;
-const isProduction = process.env.NODE_ENV === 'production';
-const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || 'lax';
-
-// ═══════════════════════════════════════════════════════════
-// 🎥 Socket.IO — إعلان مسبق (لتجنب TDZ)
-// ═══════════════════════════════════════════════════════════
-let httpServer = null;
-let io = null;
-const onlineUsers = new Map();
-const screenSessions = new Map();
-
-app.disable('x-powered-by');
-app.set('trust proxy', isProduction ? 1 : 0);
-
-app.use((req, res, next) => {
-    if (isSensitivePath(req.path)) {
-        return res.status(404).json({ success: false, error: 'Not Found' });
-    }
-    next();
-});
-// ═══════════════════════════════════════════════════════════
-// 🛡️ DEV TOOLS BLOCKER — إغلاق أدوات التطوير
-// ═══════════════════════════════════════════════════════════
-app.use((req, res, next) => {
-    const DEV_ENABLED = process.env.DEV_TOOLS === 'true';
-    if (DEV_ENABLED) return next();
-
-    const blockedPaths = [
-        '/phpinfo', '/phpinfo.php', '/info.php',
-        '/_debugbar', '/debugbar', '/telescope', '/horizon',
-        '/__clockwork', '/_profiler', '/pma', '/adminer.php',
-        '/.git', '/.svn', '/.hg', '/.DS_Store'
-    ];
-    const lowerPath = (req.path || '').toLowerCase();
-    for (const bp of blockedPaths) {
-        if (lowerPath === bp || lowerPath.startsWith(bp + '/')) {
-            return res.status(404).json({ success: false, error: 'Not Found' });
-        }
-    }
-
-    if (req.query && typeof req.query === 'object') {
-        ['debug', 'dev', 'test', 'demo', 'trace', 'profiler', 'xdebug']
-            .forEach(k => { try { delete req.query[k]; } catch(e) {} });
-    }
-
-    next();
-});
-app.use((req, res, next) => {
-    res.setHeader('X-System-Name', 'Marine System');
-    res.setHeader('X-System-Version', '11.2.0');
-    res.setHeader('X-Developer', 'Aman Allah Naji');
-    res.setHeader('X-Organization', 'Direction des Moyens Maritimes - Garde Nationale Tunisienne');
-    res.setHeader('X-Copyright', 'Copyright 2024-' + new Date().getFullYear() + ' Aman Allah Naji');
     next();
 });
 
@@ -3925,13 +3898,14 @@ function formatMaintenance(log) {
 <meta name="application-name" content="منظومة الوسائل البحرية">
 <meta name="generator" content="Marine System v11.2.0 - Aman Allah Naji">
 `;
-    const OWNERSHIP_CSS = `
+   const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
-#dev-signature{position:fixed!important;bottom:6px!important;left:50%!important;transform:translateX(-50%)!important;padding:3px 10px!important;background:rgba(6,9,17,0.35)!important;backdrop-filter:blur(6px)!important;border:1px solid rgba(230,179,30,0.1)!important;border-radius:20px!important;font-family:'Cairo','Segoe UI',Tahoma,sans-serif!important;z-index:1!important;pointer-events:none!important;user-select:none!important;opacity:0.4!important;direction:rtl!important;line-height:1.2!important;max-width:200px!important;white-space:nowrap!important;display:flex!important;align-items:center!important;gap:5px!important;}
-#dev-signature:hover{opacity:0.8!important;}
-#dev-signature .sig-icon{color:#e6b31e!important;font-size:9px!important;}
-#dev-signature .sig-name{color:#f7d774!important;font-weight:700!important;font-size:9.5px!important;}
-#dev-signature .sig-role{display:none!important;}
+#dev-signature{position:fixed!important;bottom:6px!important;left:50%!important;transform:translateX(-50%)!important;padding:4px 12px!important;background:rgba(6,9,17,0.55)!important;backdrop-filter:blur(8px)!important;border:1px solid rgba(230,179,30,0.2)!important;border-radius:20px!important;font-family:'Cairo','Segoe UI',Tahoma,sans-serif!important;z-index:9999!important;pointer-events:none!important;user-select:none!important;opacity:0.7!important;direction:rtl!important;line-height:1.3!important;white-space:nowrap!important;display:flex!important;align-items:center!important;gap:6px!important;box-shadow:0 2px 12px rgba(0,0,0,0.3)!important;}
+#dev-signature:hover{opacity:1!important;}
+#dev-signature .sig-icon{color:#e6b31e!important;font-size:10px!important;}
+#dev-signature .sig-name{color:#f7d774!important;font-weight:700!important;font-size:10px!important;}
+#dev-signature .sig-role{color:#60a5fa!important;font-weight:600!important;font-size:9px!important;}
+#dev-signature .sig-copyright{color:#f7d774!important;font-weight:700!important;font-size:9.5px!important;padding-right:6px!important;border-right:1px solid rgba(230,179,30,0.3)!important;}
 @media (max-width:1024px){#dev-signature{display:none!important;}}
 @media print{#dev-signature{display:none!important;}}
 </style>`;
