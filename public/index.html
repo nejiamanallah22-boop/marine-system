@@ -745,29 +745,19 @@
         }
 
         /* ===== MAIN APP ===== */
-#mainApp { display: none; min-height: 100vh; }
+        #mainApp { display: none; min-height: 100vh; }
 
-#mainApp.active {
-    display: flex;
-    flex-direction: row-reverse;
-    flex-wrap: wrap;
-    align-content: flex-start;
-}
-
-#mainApp.active .main-header {
-    width: 100%;
-    flex-basis: 100%;
-    flex-shrink: 0;
-}
-
-#mainApp.active .sidebar {
-    flex-shrink: 0;
-}
-
-#mainApp.active .main-content {
-    flex: 1;
-    min-width: 0;
-}
+        .main-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10,14,26,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(230,179,30,0.04);
+            height: 64px;
+            display: flex;
+            align-items: center;
+        }
 
         .header-container {
             display: flex;
@@ -1127,22 +1117,23 @@
         .user-arrow { font-size: 11px; color: rgba(255,255,255,0.2); }
 
         /* ===== SIDEBAR ===== */
-       .sidebar {
-    position: sticky;
-    top: 64px;
-    right: 0;
-    height: calc(100vh - 64px);
-    width: 240px;
-    background: rgba(10,14,26,0.98);
-    backdrop-filter: blur(20px);
-    border-left: 1px solid rgba(230,179,30,0.04);
-    padding: 16px 12px;
-    overflow-y: auto;
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
-}
+        .sidebar {
+            position: fixed;
+            top: 64px;
+            right: 0;
+            bottom: 0;
+            width: 240px;
+            background: rgba(10,14,26,0.98);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(230,179,30,0.04);
+            padding: 16px 12px;
+            overflow-y: auto;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 10px; }
 
@@ -1360,11 +1351,10 @@
         .footer-logout:hover { background: rgba(239,68,68,0.08); }
 
         .main-content {
-    flex: 1;
-    min-height: calc(100vh - 64px);
-    padding: 20px 24px;
-    min-width: 0;
-}
+            margin-right: 240px;
+            min-height: calc(100vh - 64px);
+            padding: 20px 24px;
+        }
 
         .page-container { max-width: 1440px; margin: 0 auto; }
 
@@ -1898,8 +1888,8 @@
         </div>
     </div>
 
-      <!-- ===== MAIN APP ===== -->
-    <div id="mainApp">
+    <!-- ===== MAIN APP ===== -->
+    <div id="mainApp" style="display:none;">
         <header class="main-header">
             <div class="header-container">
                 <div class="header-left">
@@ -2680,18 +2670,19 @@ const PAGE_PERMISSIONS = {
             currentUser = null;
             window.currentUser = null;
 
-           const loginOverlay = document.getElementById('loginOverlay');
-const mainApp = document.getElementById('mainApp');
-if (mainApp && mainApp.classList.contains('active')) {
-    if (loginOverlay) loginOverlay.style.display = 'flex';
-           if (mainApp) mainApp.classList.remove('active');
-        showToast('⏳ انتهت الجلسة، يرجى تسجيل الدخول من جديد', 'warning');
-    }
-}    // ← ← ← ✅ أضف هذا السطر
+            const loginOverlay = document.getElementById('loginOverlay');
+            const mainApp = document.getElementById('mainApp');
+            if (mainApp && mainApp.style.display !== 'none') {
+                if (loginOverlay) loginOverlay.style.display = 'flex';
+                if (mainApp) mainApp.style.display = 'none';
+                showToast('⏳ انتهت الجلسة، يرجى تسجيل الدخول من جديد', 'warning');
+            }
+        }
 
-// ============================================================
-// 🔔 NOTIFICATIONS MANAGER
-// ============================================================
+        // ============================================================
+        // 🔔 NOTIFICATIONS MANAGER
+        // ============================================================
+
         class NotificationManager {
             constructor() {
                 this.notifications = [];
@@ -3127,8 +3118,9 @@ if (mainApp && mainApp.classList.contains('active')) {
                         console.log('✅ Login successful for user: ' + currentUser.username);
                         console.log('👤 Role:', normalizeRole(currentUser.role));
 
-                    document.getElementById('loginOverlay').style.display = 'none';
-document.getElementById('mainApp').classList.add('active');
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'block';
+
                         updateUserDisplay();
                         applyRBACToUI();
 
@@ -3575,11 +3567,12 @@ try {
     localStorage.removeItem('currentUser');
 } catch (e) {}
             window._tokenVerified = false;
-const loginOverlay = document.getElementById('loginOverlay');
-const mainApp = document.getElementById('mainApp');
-if (loginOverlay) loginOverlay.style.display = 'flex';
-if (mainApp) mainApp.classList.remove('active');
-   
+
+            const loginOverlay = document.getElementById('loginOverlay');
+            const mainApp = document.getElementById('mainApp');
+            if (loginOverlay) loginOverlay.style.display = 'flex';
+            if (mainApp) mainApp.style.display = 'none';
+
             const uEl = document.getElementById('username');
             const pEl = document.getElementById('password');
             const eEl = document.getElementById('loginError');
@@ -3816,8 +3809,8 @@ if (mainApp) mainApp.classList.remove('active');
                 if (token) {
                     const isValid = await verifyToken(token);
                     if (isValid) {
-                       document.getElementById('loginOverlay').style.display = 'none';
-document.getElementById('mainApp').classList.add('active');
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'block';
                         updateUserDisplay();
                         applyRBACToUI();
 
