@@ -3898,9 +3898,9 @@ function formatMaintenance(log) {
 <meta name="application-name" content="منظومة الوسائل البحرية">
 <meta name="generator" content="Marine System v11.2.0 - Aman Allah Naji">
 `;
-   const OWNERSHIP_CSS = `
+ const OWNERSHIP_CSS = `
 <style id="ownership-signature-style">
-#dev-signature{position:fixed!important;bottom:6px!important;left:50%!important;transform:translateX(-50%)!important;padding:4px 12px!important;background:rgba(6,9,17,0.55)!important;backdrop-filter:blur(8px)!important;border:1px solid rgba(230,179,30,0.2)!important;border-radius:20px!important;font-family:'Cairo','Segoe UI',Tahoma,sans-serif!important;z-index:9999!important;pointer-events:none!important;user-select:none!important;opacity:0.7!important;direction:rtl!important;line-height:1.3!important;white-space:nowrap!important;display:flex!important;align-items:center!important;gap:6px!important;box-shadow:0 2px 12px rgba(0,0,0,0.3)!important;}
+#dev-signature{position:fixed!important;bottom:6px!important;left:50%!important;transform:translateX(-50%)!important;padding:4px 12px!important;background:rgba(6,9,17,0.55)!important;backdrop-filter:blur(8px)!important;border:1px solid rgba(230,179,30,0.2)!important;border-radius:20px!important;font-family:'Cairo','Segoe UI',Tahoma,sans-serif!important;z-index:1!important;pointer-events:none!important;user-select:none!important;opacity:0.7!important;direction:rtl!important;line-height:1.3!important;white-space:nowrap!important;display:flex!important;align-items:center!important;gap:6px!important;box-shadow:0 2px 12px rgba(0,0,0,0.3)!important;}
 #dev-signature:hover{opacity:1!important;}
 #dev-signature .sig-icon{color:#e6b31e!important;font-size:10px!important;}
 #dev-signature .sig-name{color:#f7d774!important;font-weight:700!important;font-size:10px!important;}
@@ -4531,12 +4531,12 @@ const CLARITY_IDENTIFY_SCRIPT = `
         console.log('%c🖨️ تجهيز الطباعة...', 'background:#2563eb;color:white;padding:4px 8px;border-radius:4px;');
         
         // ✅ إخفاء العناصر غير الضرورية
-        const HIDE_SELECTORS = [
-            '#user-info-badge', '#dev-signature',
-            'nav', 'aside', '.sidebar', '.navbar', '.topbar',
-            'button', '.btn', '.fab', '.toast',
-            '.pagination', '.search-box', '.filter-bar'
-        ];
+     const HIDE_SELECTORS = [
+    '#user-info-badge', '#dev-signature',
+    '.navbar', '.topbar',
+    '.btn', '.fab', '.toast',
+    '.pagination', '.search-box', '.filter-bar'
+];
         
         HIDE_SELECTORS.forEach(sel => {
             document.querySelectorAll(sel).forEach(el => {
