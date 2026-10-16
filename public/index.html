@@ -3419,13 +3419,11 @@ if (window.innerWidth <= 992) {
                     if (loader) loader.style.display = 'flex';
                     container.innerHTML = '';
 
-                    const possiblePaths = [
-                        '/pages/' + page + '.html',
-                        '/public/pages/' + page + '.html',
-                        '/public/' + page + '.html',
-                        '/' + page + '.html'
-                    ];
-
+                 const possiblePaths = [
+    '/pages/' + page + '.html',
+    '/public/pages/' + page + '.html',
+    '/public/' + page + '.html'
+];
                     let html = null;
                     let lastError = null;
 for (const path of possiblePaths) {
