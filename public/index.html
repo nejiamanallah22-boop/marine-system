@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1117,22 +1118,23 @@
         .user-arrow { font-size: 11px; color: rgba(255,255,255,0.2); }
 
         /* ===== SIDEBAR ===== */
-       .sidebar {
-    position: sticky;
-    top: 64px;
-    right: 0;
-    height: calc(100vh - 64px);
-    width: 240px;
-    background: rgba(10,14,26,0.98);
-    backdrop-filter: blur(20px);
-    border-left: 1px solid rgba(230,179,30,0.04);
-    padding: 16px 12px;
-    overflow-y: auto;
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
-}
+        .sidebar {
+            position: fixed;
+            top: 64px;
+            right: 0;
+            bottom: 0;
+            width: 240px;
+            background: rgba(10,14,26,0.98);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(230,179,30,0.04);
+            padding: 16px 12px;
+            overflow-y: auto;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 10px; }
 
