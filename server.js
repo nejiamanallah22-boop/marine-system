@@ -4793,9 +4793,8 @@ if (!html.includes('CLARITY_IDENTIFY_INJECTED')) {
 
 return html;
 }
-
-    app.use((req, res, next) => {
-        if (req.path.startsWith('/api/') || INJECTION_SKIP_REGEX.test(req.path)) return next();
+app.use((req, res, next) => {
+            if (req.path.startsWith('/api/') || INJECTION_SKIP_REGEX.test(req.path)) return next();
         const originalSend = res.send;
         const originalSendFile = res.sendFile;
         res.send = function (body) {
@@ -4891,11 +4890,27 @@ return html;
         next();
     });
 
-    // ============ 404 ============
-    app.use((req, res) => {
-        if (req.path.startsWith('/api')) return res.status(404).json({ success: false, error: 'API not found' });
-        res.redirect('/');
-    });
+// ============ 404 ============
+app.use((req, res) => {
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ success: false, error: 'API not found' });
+    }
+    // ✅ لا redirect — أرجع 404 صريح
+    res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>404 - غير موجود</title>
+        </head>
+        <body style="font-family:Arial;text-align:center;padding:50px;background:#0a0e1a;color:#e8edf5;">
+            <h1 style="font-size:80px;color:#e6b31e;margin:0;">404</h1>
+            <p>الصفحة المطلوبة غير موجودة</p>
+            <a href="/" style="color:#e6b31e;text-decoration:none;">→ العودة للرئيسية</a>
+        </body>
+        </html>
+    `);
+});
 
     // ============ ERROR ============
     app.use((err, req, res, next) => {
