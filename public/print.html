@@ -60,13 +60,23 @@ html, body {
 .loading-text { font-size: 14px; color: #475569; font-weight: 700; }
 
 /* ───────── المحتوى ───────── */
-.page-wrapper { max-width: 297mm; margin: 80px auto 30px; padding: 0 20px; }
+.page-wrapper { 
+    max-width: 297mm; 
+    margin: 80px auto 30px; 
+    padding: 0 20px; 
+}
 .page {
-    width: 297mm; min-height: 210mm; margin: 0 auto; background: #fff;
-    box-shadow: 0 4px 24px rgba(0,0,0,.15); border-radius: 8px;
-    overflow: hidden; position: relative;
+    width: 297mm; 
+    min-height: 210mm; 
+    margin: 0 auto; 
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,.15); 
+    border-radius: 8px;
+    overflow: hidden; 
+    position: relative;
 }
 
+/* إخفاء العناصر التفاعلية */
 #copied-content button,
 #copied-content .eff-header-actions,
 #copied-content .filter-bar,
@@ -78,7 +88,7 @@ html, body {
 #copied-content .back-to-top,
 #copied-content .pagination { display: none !important; }
 
-/* ───────── الصور (أكبر) ───────── */
+/* ───────── الصور ───────── */
 #copied-content img, .print-table img {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
@@ -90,7 +100,7 @@ html, body {
     background: #fffbeb; display: block; margin: 0 auto;
 }
 
-/* ───────── الجدول الرئيسي الذي يحمل الترويسة الثابتة ───────── */
+/* ───────── الجدول الرئيسي ───────── */
 .master-table { width: 100%; border-collapse: collapse; }
 .master-table > thead { display: table-header-group; }
 .master-table > tbody > tr > td.master-body { padding: 0; vertical-align: top; }
@@ -106,35 +116,45 @@ html, body {
 
 /* ═════════════════ PRINT ═════════════════ */
 @media print {
-    html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+    /* ✅ السر: إزالة هوامش المتصفح الافتراضية */
+    html, body { 
+        background: #fff !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        width: 100% !important;
+        height: auto !important;
+    }
 
     .top-controls, .loading-overlay { display: none !important; }
 
-    .page-wrapper { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+    .page-wrapper { 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        max-width: none !important;
+        width: 100% !important;
+    }
+    
     .page {
-        width: 100% !important; min-height: auto !important;
-        box-shadow: none !important; border-radius: 0 !important;
-        margin: 0 !important; padding: 0 !important; overflow: visible !important;
+        width: 100% !important; 
+        min-height: auto !important;
+        box-shadow: none !important; 
+        border-radius: 0 !important;
+        margin: 0 !important; 
+        padding: 0 !important; 
+        overflow: visible !important;
         background: #fff !important;
     }
 
     #official-print-header, #user-info-badge, #dev-signature, .print-unified-header { display: none !important; }
 
-    /* ═══ المحتوى المنسوخ يُطبع بنفس مظهر الشاشة (خلفية داكنة وألوان كاملة) ═══ */
+    /* ✅ إجبار المتصفح على طباعة الألوان الداكنة */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
 
-    .snapshot-body, .snapshot-body * {
-        animation: none !important;
-        transition: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-    }
-
-    /* ضغط المساحات الفارغة فقط دون تغيير الألوان */
+    /* ✅ ضغط المساحات الفارغة فقط */
     .snapshot-body .eff-header, .snapshot-body .fleet-header {
         min-height: 0 !important; height: auto !important;
         padding: 4mm 6mm !important; margin: 0 0 3mm !important;
@@ -148,13 +168,13 @@ html, body {
     }
     .snapshot-body .stat-card { break-inside: avoid !important; page-break-inside: avoid !important; }
 
-    /* الجداول: تتصل عبر الصفحات ورأس الأعمدة يتكرر */
+    /* ✅ الجداول: تتصل عبر الصفحات ورأس الأعمدة يتكرر */
     .snapshot-body table { width: 100% !important; border-collapse: collapse; }
     thead { display: table-header-group !important; }
     tfoot { display: table-footer-group !important; }
     tr { page-break-inside: avoid !important; break-inside: avoid !important; }
 
-    /* الصور داخل الجداول (أكبر) */
+    /* ✅ الصور داخل الجداول */
     .print-table tbody td img,
     .snapshot-body table td img {
         width: 28mm !important; height: 28mm !important;
@@ -218,7 +238,6 @@ html, body {
         return null;
     }
 
-    // الترويسة الرسمية: تظهر مرة واحدة في أعلى الصفحة الأولى فقط
     function buildLetterhead(title) {
         return `
         <header class="letterhead" style="padding:5mm 12mm 3.5mm;margin-bottom:4mm;border-bottom:3px double #0a1628;">
@@ -255,13 +274,11 @@ html, body {
         </footer>`;
     }
 
-    // وضع النسخ (htmlSnapshot): ترويسة مرة واحدة ثم المحتوى
     function wrapWithFixedHeader(innerHTML, title) {
         return buildLetterhead(title) +
             `<div class="snapshot-body" style="padding:0 6mm;">${innerHTML}${buildFooter()}</div>`;
     }
 
-    // وضع البيانات (rows/columns)
     function buildFromData(data) {
         const section = data.sectionTitle || 'السجل التفصيلي';
         const stats = data.stats || [];
@@ -378,7 +395,6 @@ html, body {
         const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
 
         if (data.htmlSnapshot) {
-            // تنظيف العناصر التفاعلية قبل الإدراج
             const tmp = document.createElement('div');
             tmp.innerHTML = data.htmlSnapshot;
             tmp.querySelectorAll(
@@ -394,7 +410,6 @@ html, body {
 
         prepareImages(content);
 
-        // لا نُخفي شاشة التحميل قبل اكتمال الصور
         waitForImages(content).then(() => { if (loading) loading.style.display = 'none'; });
     }
 
