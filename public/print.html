@@ -59,7 +59,7 @@ html, body {
     animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 14px; color: #475569; font-weight: 700; }
+.loading-text { font-size: 14px; color: #475569; font-weight: 700; max-width: 90%; text-align: center; line-height: 1.8; }
 
 /* ───────── المحتوى ───────── */
 .page-wrapper { max-width: 297mm; margin: 80px auto 30px; padding: 0 20px; }
@@ -81,7 +81,7 @@ html, body {
 #copied-content .pagination { display: none !important; }
 
 .print-table tbody td img {
-    width: 32mm; height: 32mm; object-fit: cover;
+    width: 38mm; height: 38mm; object-fit: cover;
     border-radius: 1.5mm; border: 1px solid #d4a843;
     background: #fffbeb; display: block; margin: 0 auto;
 }
@@ -102,6 +102,8 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
    عرض ثابت للمحتوى حتى لا يتأثر بحجم شاشة الجوال
    ═══════════════════════════════════════════════════════════════ */
 body.exporting { background: #fff !important; }
+/* html2canvas يفصل حروف العربية إذا وُجدت مسافة بين الحروف، فنلغيها أثناء التصدير */
+body.exporting * { letter-spacing: normal !important; }
 body.exporting .top-controls { display: none !important; }
 body.exporting .page-wrapper { margin: 0 !important; padding: 0 !important; max-width: none !important; }
 body.exporting .page {
@@ -172,12 +174,18 @@ body.exporting .page {
 
     .print-table tbody td img,
     .snapshot-body table td img {
-        width: 32mm !important; height: 32mm !important;
+        width: 38mm !important; height: 38mm !important;
         object-fit: cover !important; border-radius: 1.5mm !important;
         border: 1px solid #d4a843 !important; background: #fffbeb !important;
         display: block !important; margin: 0 auto !important;
     }
 }
+
+/* ── FIX 6: تثبيت تخطيط المحتوى المنسوخ كما في المعاينة ──
+   عرض ثابت 1100px ثم تصغير (zoom) ليناسب عرض الورقة. هكذا لا تتحول الشبكات
+   (مثل بطاقات الإحصائيات) إلى عمودين حتى لو اختار النظام ورقة عمودية (أندرويد). */
+@media print { .snapshot-body { width: 1100px !important; zoom: 0.96; } }
+@media print and (orientation: portrait) { .snapshot-body { zoom: 0.66; } }
 </style>
 </head>
 <body>
@@ -308,7 +316,7 @@ body.exporting .page {
         const imgCols = new Set();
         rows.forEach(r => rowCells(r).forEach((c, i) => { if (isImg(c)) imgCols.add(i); }));
         const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
-        const IMG = '32mm';
+        const IMG = '38mm';
 
         let html = buildLetterhead(title);
 
@@ -332,14 +340,14 @@ body.exporting .page {
         html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:auto;font-size:8pt;">';
         // عرض الأعمدة يُحدَّد من محتواها: عمود الصورة عريض وعمود الرقم ضيق
         html += '<colgroup>' + columns.map((c, i) =>
-            imgCols.has(i) ? '<col style="width:38mm">' : (labelOf(c) === 'م' ? '<col style="width:9mm">' : '<col>')
+            imgCols.has(i) ? '<col style="width:44mm">' : (labelOf(c) === 'م' ? '<col style="width:9mm">' : '<col>')
         ).join('') + '</colgroup>';
         html += '<thead>';
         if (columns.length) {
             html += '<tr>';
             columns.forEach((c, i) => {
                 const label = typeof c === 'string' ? c : (c.label || '');
-                const style = imgCols.has(i) ? 'width:38mm;' : '';
+                const style = imgCols.has(i) ? 'width:44mm;' : '';
                 html += `<th style="${style}padding:2mm 1mm;background:#1a2942;color:#ffffff;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #d4a843;border-left:1px solid rgba(255,255,255,.15);white-space:nowrap;">${esc(label)}</th>`;
             });
             html += '</tr>';
@@ -356,9 +364,9 @@ body.exporting .page {
                     if (cell.type === 'image') {
                         const url = cell.url || cell.src || '';
                         if (url) {
-                            html += `<td style="width:38mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG};height:${IMG};object-fit:cover;border-radius:1.5mm;border:1px solid #d4a843;display:block;margin:0 auto;"></td>`;
+                            html += `<td style="width:44mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG};height:${IMG};object-fit:cover;border-radius:1.5mm;border:1px solid #d4a843;display:block;margin:0 auto;"></td>`;
                         } else {
-                            html += `<td style="width:38mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><div style="width:${IMG};height:18mm;margin:0 auto;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:12pt;color:#94a3b8;">📷</div></td>`;
+                            html += `<td style="width:44mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><div style="width:${IMG};height:18mm;margin:0 auto;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:12pt;color:#94a3b8;">📷</div></td>`;
                         }
                         return;
                     }
@@ -421,28 +429,71 @@ body.exporting .page {
     // كل تعديل يُسجَّل ويُسترجع بعد الطباعة، فلا تتغير الشاشة.
     // ═══════════════════════════════════════════════════════════════
     let baked = [];
+    let exporting = false;
 
     function parseRGBA(str) {
         const m = str && str.match(/rgba?\(([^)]+)\)/);
         if (!m) return null;
-        const p = m[1].split(',').map(x => parseFloat(x));
+        const p = m[1].split(/[,\s\/]+/).filter(Boolean).map(x => parseFloat(x));
         return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
     }
-    function firstColor(str) {
-        const m = str && str.match(/rgba?\([^)]*\)/);
-        return m ? m[0] : null;
+
+    // ألوان CSS الحديثة (oklch, color-mix, color(...)) لا يفهمها html2canvas ويتعطل بسببها،
+    // فنحوّلها إلى rgb/hex عبر canvas قبل التصدير
+    const MODERN_RE = /(?:oklch|oklab|lab|lch|color-mix|color)\(/i;
+    const MODERN_G  = /(?:oklch|oklab|lab|lch|color-mix|color)\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)/gi;
+    const ANY_COLOR = /rgba?\([^)]*\)|#[0-9a-fA-F]{3,8}\b|(?:oklch|oklab|lab|lch|color-mix|color)\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)/i;
+    const COLOR_PROPS = ['color', 'backgroundColor', 'borderTopColor', 'borderRightColor', 'borderBottomColor',
+        'borderLeftColor', 'outlineColor', 'textDecorationColor', 'backgroundImage', 'boxShadow', 'textShadow'];
+    let _ctx = null;
+    function normModern(token) {
+        try {
+            _ctx = _ctx || document.createElement('canvas').getContext('2d');
+            _ctx.fillStyle = '#010203';
+            _ctx.fillStyle = token;
+            const v = _ctx.fillStyle;
+            return v === '#010203' && token.indexOf('010203') < 0 ? 'rgba(0,0,0,0)' : v;
+        } catch (e) { return 'rgba(0,0,0,0)'; }
+    }
+    function usableColor(str) {
+        if (!str) return null;
+        if (MODERN_RE.test(str)) str = normModern(str);
+        const p = parseRGBA(str);
+        if (p) return p.a > 0.01 ? str : null;
+        return /^#/.test(str) ? str : null;
     }
 
     function bake(mode) {          // mode: 'print' | 'export'
         unbake();
         const seen = new Set();
         const touch = el => {
-            if (!seen.has(el)) { seen.add(el); baked.push({ el, style: el.getAttribute('style') }); }
+            if (!seen.has(el)) { seen.add(el); baked.push({ el: el, style: el.getAttribute('style') }); }
+        };
+        const paint = (el, color) => {
+            const c2 = getComputedStyle(el);
+            const orig = (c2.boxShadow && c2.boxShadow !== 'none') ? ', ' + c2.boxShadow : '';  // نُبقي التوهّج الأصلي
+            touch(el);
+            el.style.setProperty('box-shadow', 'inset 0 0 0 9999px ' + color + orig, 'important');
+        };
+        const hasOwnBg = el => {
+            const c3 = getComputedStyle(el);
+            return !!usableColor(c3.backgroundColor) || /gradient/.test(c3.backgroundImage || '');
         };
 
         root.querySelectorAll('*').forEach(el => {
-            if (/^(script|style|img|svg|path|g|circle|rect|line|polyline|polygon|br)$/i.test(el.tagName)) return;
+            if (/^(script|style|img|svg|path|g|circle|rect|line|polyline|polygon|br|use|defs|text|tspan)$/i.test(el.tagName)) return;
             const cs = getComputedStyle(el);
+
+            // تحويل الألوان الحديثة (للتصدير فقط)
+            if (mode === 'export') {
+                COLOR_PROPS.forEach(prop => {
+                    const v = cs[prop];
+                    if (v && MODERN_RE.test(v)) {
+                        touch(el);
+                        el.style.setProperty(prop.replace(/[A-Z]/g, m => '-' + m.toLowerCase()), v.replace(MODERN_G, normModern), 'important');
+                    }
+                });
+            }
 
             // (ج) فتح الحاويات المقيّدة
             const oy = cs.overflowY;
@@ -461,7 +512,8 @@ body.exporting .page {
             // (ب) النص المتدرّج
             const clip = cs.webkitBackgroundClip === 'text' || cs.backgroundClip === 'text';
             if (clip) {
-                const c = firstColor(cs.backgroundImage) || cs.color;
+                const m = (cs.backgroundImage || '').match(ANY_COLOR);
+                const c = (m && usableColor(m[0])) || cs.color;
                 touch(el);
                 el.style.setProperty('background', 'none', 'important');
                 el.style.setProperty('-webkit-text-fill-color', c, 'important');
@@ -470,19 +522,18 @@ body.exporting .page {
 
             // (أ) تحويل الخلفية إلى ظل داخلي — للطباعة فقط
             if (mode !== 'print') return;
-            let color = null;
-            const bg = parseRGBA(cs.backgroundColor);
-            if (bg && bg.a > 0.01) {
-                color = cs.backgroundColor;
-            } else if (cs.backgroundImage && cs.backgroundImage.indexOf('gradient') > -1) {
-                const c = firstColor(cs.backgroundImage);
-                const p = parseRGBA(c);
-                if (p && p.a > 0.01) color = c;
+            let color = usableColor(cs.backgroundColor);
+            if (!color && cs.backgroundImage && cs.backgroundImage.indexOf('gradient') > -1) {
+                const m = cs.backgroundImage.match(ANY_COLOR);
+                color = m ? usableColor(m[0]) : null;
             }
-            if (color) {
-                touch(el);
-                el.style.setProperty('box-shadow', 'inset 0 0 0 9999px ' + color, 'important');
+            if (!color) return;
+            if (el.tagName === 'TR') {           // الظل لا يُرسم على الصفوف، فننقل اللون لخلاياها
+                Array.from(el.children).forEach(td => { if (!hasOwnBg(td)) paint(td, color); });
+                return;
             }
+            if (/^(THEAD|TBODY|TFOOT|COLGROUP|COL)$/.test(el.tagName)) return;
+            paint(el, color);
         });
     }
 
@@ -494,41 +545,52 @@ body.exporting .page {
         baked = [];
     }
 
-    // يغطي الطباعة من القائمة (Ctrl+P / قائمة المتصفح) وليس فقط من الزر
-    window.addEventListener('beforeprint', () => bake('print'));
-    window.addEventListener('afterprint', unbake);
-    if (window.matchMedia) {
-        const mq = window.matchMedia('print');
-        const h = e => { if (e.matches) bake('print'); else unbake(); };
-        if (mq.addEventListener) mq.addEventListener('change', h); else if (mq.addListener) mq.addListener(h);
-    }
+    // لا نُرجع الأنماط بعد الطباعة (afterprint): في أندرويد يُعاد توليد المعاينة
+    // عند تغيير إعدادات الورق بعد انتهاء الحدث، فكانت الخلفيات تختفي.
+    window.addEventListener('beforeprint', () => { if (!exporting) bake('print'); });
 
     window.printNative = function () {
-        bake('print');
-        requestAnimationFrame(() => setTimeout(() => window.print(), 80));
+        if (!exporting) bake('print');
+        requestAnimationFrame(() => setTimeout(() => window.print(), 120));
     };
 
     // ═══════════════════════════════════════════════════════════════
-    // FIX 5 (الحل الجذري): حفظ PDF بالألوان — مضمون في كل المتصفحات
-    //
-    // لا يعتمد على إعدادات الطباعة إطلاقًا: يلتقط كل صفحة كصورة
-    // (html2canvas) ثم يجمّعها في ملف PDF بصيغة A4 أفقي (jsPDF).
-    // • الخلفيات الداكنة تظهر كما في الشاشة لأنها صورة.
-    // • لا صفحات فارغة: كل صفحة تُرسم على حدة.
-    // • القطع يتم عند حدود الصفوف والأقسام، فلا يُشطر صف.
-    // • رأس الجدول (thead) يُعاد رسمه أعلى كل صفحة تكمل جدولًا.
-    // • الترويسة الرسمية في الصفحة الأولى فقط (لأنها أول المحتوى).
-    // • ترقيم الصفحات في التذييل.
-    // ملاحظة: النص في هذا الملف صورة (غير قابل للتحديد/البحث).
+    // FIX 5: حفظ PDF بالألوان (التقاط الصفحات كصور)
+    // • تحميل المكتبات من 3 مصادر بالتتابع (cdnjs ثم jsdelivr ثم unpkg)
+    // • الرسم على دفعات (3 صفحات لكل التقاط) لتسريع العملية على الجوال
+    // • إعادة تلقائية بجودة أقل عند الفشل (ذاكرة الجوال)
+    // • أي خطأ يظهر نصه على الشاشة بدل أن يختفي
     // ═══════════════════════════════════════════════════════════════
-    function loadScript(src) {
+    const H2C_URLS = [
+        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+        'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+        'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
+    ];
+    const JSPDF_URLS = [
+        'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+        'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+        'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
+    ];
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const withTimeout = (p, ms, label) => Promise.race([
+        p, new Promise((_, rej) => setTimeout(() => rej(new Error(label + ' استغرق وقتًا طويلًا')), ms))
+    ]);
+
+    function loadScript(urls, isReady) {
         return new Promise((resolve, reject) => {
-            if (document.querySelector('script[data-lib="' + src + '"]')) return resolve();
-            const s = document.createElement('script');
-            s.src = src; s.dataset.lib = src;
-            s.onload = resolve;
-            s.onerror = () => reject(new Error('تعذر تحميل المكتبة: ' + src));
-            document.head.appendChild(s);
+            if (isReady()) return resolve();
+            let i = 0;
+            const next = () => {
+                if (i >= urls.length) return reject(new Error('تعذر تحميل مكتبة التصدير، تأكد من اتصال الإنترنت'));
+                const sc = document.createElement('script');
+                const t = setTimeout(() => { sc.remove(); next(); }, 20000);
+                sc.src = urls[i++];
+                sc.onload = () => { clearTimeout(t); isReady() ? resolve() : next(); };
+                sc.onerror = () => { clearTimeout(t); sc.remove(); next(); };
+                document.head.appendChild(sc);
+            };
+            next();
         });
     }
 
@@ -543,99 +605,96 @@ body.exporting .page {
         return c.toDataURL('image/png');
     }
 
-    window.exportPdf = async function () {
-        const overlay = document.getElementById('loadingOverlay');
-        const msg = overlay.querySelector('.loading-text');
-        const oldMsg = msg.textContent;
-        const setMsg = m => { msg.textContent = m; };
-        overlay.style.display = 'flex';
-        setMsg('جاري تجهيز ملف PDF...');
+    async function buildPdf(scale, setMsg) {
+        const rootRect = root.getBoundingClientRect();
+        const R = Math.round(rootRect.width);
+        if (R < 200) throw new Error('عرض المحتوى غير صالح (' + R + ')');
+        const K = 287 / R;                              // مم لكل بكسل
+        const H = Math.floor(193 / K);                  // ارتفاع المحتوى المفيد في الصفحة (بكسل)
+        const totalH = Math.ceil(rootRect.height);
+        const rel = el => {
+            const r = el.getBoundingClientRect();
+            return { top: r.top - rootRect.top, bottom: r.bottom - rootRect.top };
+        };
 
-        try {
-            await Promise.all([loadScript(H2C_URL), loadScript(JSPDF_URL)]);
-            if (document.fonts && document.fonts.ready) await document.fonts.ready;
-            await waitForImages(root);
+        // نقاط القطع المسموحة: نهاية كل صف/قسم، وبداية كل قسم
+        const cand = new Set([0, totalH]);
+        root.querySelectorAll('tbody tr, tfoot tr, .eff-section, .chart-section, .stat-card, .eff-header, .fleet-header, .letterhead, .chart-box, footer')
+            .forEach(el => cand.add(Math.round(rel(el).bottom)));
+        root.querySelectorAll('.eff-section, .chart-section')
+            .forEach(el => cand.add(Math.round(rel(el).top)));
+        const sorted = Array.from(cand).filter(v => v >= 0 && v <= totalH).sort((a, b) => a - b);
 
-            document.body.classList.add('exporting');
-            window.scrollTo(0, 0);
-            bake('export');
-            await new Promise(r => setTimeout(r, 300));
+        const tables = Array.from(root.querySelectorAll('table')).filter(t => t.tHead).map(t => {
+            const tr = rel(t), th = rel(t.tHead);
+            return { bottom: tr.bottom, hTop: th.top, hBottom: th.bottom };
+        });
+        const headerFor = y0 => {
+            let found = null;
+            tables.forEach(T => { if (y0 > T.hBottom + 2 && y0 < T.bottom - 2) found = T; });
+            return found;
+        };
 
-            // قياسات التخطيط (بكسل)
-            const rootRect = root.getBoundingClientRect();
-            const R = Math.round(rootRect.width);          // عرض المحتوى
-            const K = 287 / R;                              // مم لكل بكسل (عرض الصفحة المفيد 287مم)
-            const H = Math.floor(193 / K);                  // ارتفاع المحتوى المفيد في الصفحة
-            const totalH = Math.ceil(rootRect.height);
-            const baseX = rootRect.left + window.scrollX;
-            const baseY = rootRect.top + window.scrollY;
-            const rel = el => {
-                const r = el.getBoundingClientRect();
-                return { top: r.top - rootRect.top, bottom: r.bottom - rootRect.top };
-            };
-
-            // نقاط القطع المسموحة: نهاية كل صف/قسم، وبداية كل قسم
-            const cand = new Set([0, totalH]);
-            root.querySelectorAll('tbody tr, tfoot tr, .eff-section, .chart-section, .stat-card, .eff-header, .fleet-header, .letterhead, .chart-box, footer')
-                .forEach(el => cand.add(Math.round(rel(el).bottom)));
-            root.querySelectorAll('.eff-section, .chart-section')
-                .forEach(el => cand.add(Math.round(rel(el).top)));
-            const sorted = Array.from(cand).filter(v => v >= 0 && v <= totalH).sort((a, b) => a - b);
-
-            // الجداول ذات الرأس (لتكرار thead)
-            const tables = Array.from(root.querySelectorAll('table')).filter(t => t.tHead).map(t => {
-                const tr = rel(t), th = rel(t.tHead);
-                return { t, bottom: tr.bottom, hTop: th.top, hBottom: th.bottom };
-            });
-            const headerFor = y0 => {
-                let found = null;
-                tables.forEach(T => { if (y0 > T.hBottom + 2 && y0 < T.bottom - 2) found = T; });
-                return found;
-            };
-
-            // توزيع الصفحات
-            const pages = [];
-            let y0 = 0;
-            while (y0 < totalH - 1 && pages.length < 300) {
-                const T = headerFor(y0);
-                const hh = T ? Math.ceil(T.hBottom - T.hTop) : 0;
-                const limit = y0 + (H - hh);
-                let end;
-                if (totalH <= limit) {
-                    end = totalH;
-                } else {
-                    end = null;
-                    for (const c of sorted) {
-                        if (c <= y0 + 20) continue;
-                        if (c > limit) break;
-                        end = c;
-                    }
-                    if (end === null) end = limit;          // عنصر أطول من صفحة: قطع قسري
+        const pages = [];
+        let y0 = 0;
+        while (y0 < totalH - 1 && pages.length < 400) {
+            const T = headerFor(y0);
+            const hh = T ? Math.ceil(T.hBottom - T.hTop) : 0;
+            const limit = y0 + (H - hh);
+            let end;
+            if (totalH <= limit) {
+                end = totalH;
+            } else {
+                end = null;
+                for (const c of sorted) {
+                    if (c <= y0 + 20) continue;
+                    if (c > limit) break;
+                    end = c;
                 }
-                pages.push({ y0, end, T, hh });
-                y0 = end;
+                if (end === null) end = limit;
             }
+            pages.push({ y0: y0, end: end, T: T });
+            y0 = end;
+        }
 
-            const jsPDF = window.jspdf.jsPDF;
-            const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
-            const headCache = new Map();
-            const capOpts = (y, h) => ({
-                scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false,
-                x: baseX, y: baseY + y, width: R, height: h, scrollX: 0, scrollY: 0
-            });
+        // تجميع الصفحات في دفعات (حتى 3 صفحات للالتقاط الواحد)
+        const groups = [];
+        let g = null;
+        pages.forEach(p => {
+            if (g && p.end - g.top <= H * 3) { g.pages.push(p); g.bottom = p.end; }
+            else { g = { top: p.y0, bottom: p.end, pages: [p] }; groups.push(g); }
+        });
 
-            for (let i = 0; i < pages.length; i++) {
-                const p = pages[i];
-                setMsg('جاري إنشاء الصفحة ' + (i + 1) + ' من ' + pages.length + '...');
-                const h = Math.ceil(p.end - p.y0);
-                const canvas = await window.html2canvas(root, capOpts(p.y0, h));
-                if (i > 0) pdf.addPage();
+        const jsPDF = window.jspdf.jsPDF;
+        const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+        const headCache = new Map();
+        const capOpts = (y, h) => ({
+            scale: scale, backgroundColor: '#ffffff', useCORS: true, logging: false,
+            imageTimeout: 15000, x: 0, y: y, width: R, height: h, scrollX: 0, scrollY: 0
+        });
+
+        let pageNo = 0;
+        for (const grp of groups) {
+            setMsg('جاري رسم الصفحات ' + (pageNo + 1) + ' – ' + (pageNo + grp.pages.length) + ' من ' + pages.length + '...');
+            await sleep(30);
+            const gc = await withTimeout(window.html2canvas(root, capOpts(grp.top, Math.ceil(grp.bottom - grp.top))), 150000, 'رسم الصفحات');
+
+            for (const p of grp.pages) {
+                const sy = Math.round((p.y0 - grp.top) * scale);
+                const sh = Math.min(Math.round((p.end - p.y0) * scale), gc.height - sy);
+                if (sh <= 0) continue;
+                const pc = document.createElement('canvas');
+                pc.width = gc.width; pc.height = sh;
+                const cx = pc.getContext('2d');
+                cx.fillStyle = '#fff'; cx.fillRect(0, 0, pc.width, pc.height);
+                cx.drawImage(gc, 0, sy, gc.width, sh, 0, 0, gc.width, sh);
+
+                if (pageNo > 0) pdf.addPage();
                 let y = 5;
-
-                if (p.T) {
+                if (p.T) {                                   // تكرار رأس الجدول
                     if (!headCache.has(p.T)) {
                         const hhInt = Math.ceil(p.T.hBottom - p.T.hTop);
-                        const hc = await window.html2canvas(root, capOpts(p.T.hTop, hhInt));
+                        const hc = await withTimeout(window.html2canvas(root, capOpts(p.T.hTop, hhInt)), 120000, 'رسم رأس الجدول');
                         headCache.set(p.T, { img: hc.toDataURL('image/jpeg', 0.92), h: hhInt });
                         hc.width = hc.height = 0;
                     }
@@ -643,24 +702,78 @@ body.exporting .page {
                     pdf.addImage(hd.img, 'JPEG', 5, y, 287, hd.h * K);
                     y += hd.h * K;
                 }
-                pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 5, y, 287, h * K);
-                canvas.width = canvas.height = 0;   // تحرير الذاكرة (مهم على الجوال)
+                pdf.addImage(pc.toDataURL('image/jpeg', 0.92), 'JPEG', 5, y, 287, (sh / scale) * K);
+                pc.width = pc.height = 0;
+                pageNo++;
             }
+            gc.width = gc.height = 0;                         // تحرير الذاكرة
+        }
 
-            for (let i = 0; i < pages.length; i++) {
-                pdf.setPage(i + 1);
-                pdf.addImage(pageNumberImage(i + 1, pages.length), 'PNG', 148.5 - 24, 201, 48, 4.8);
+        const N = pdf.getNumberOfPages();
+        for (let i = 1; i <= N; i++) {
+            pdf.setPage(i);
+            pdf.addImage(pageNumberImage(i, N), 'PNG', 148.5 - 24, 201, 48, 4.8);
+        }
+        return pdf;
+    }
+
+    window.exportPdf = async function () {
+        if (exporting) return;
+        const overlay = document.getElementById('loadingOverlay');
+        const msg = overlay.querySelector('.loading-text');
+        const spinner = overlay.querySelector('.spinner');
+        const oldMsg = msg.textContent;
+        const old = overlay.querySelector('#ovClose'); if (old) old.remove();
+        const setMsg = m => { msg.textContent = m; };
+        spinner.style.display = '';
+        overlay.style.display = 'flex';
+        exporting = true;
+        let failed = null;
+
+        try {
+            setMsg('جاري تحميل مكتبات التصدير...');
+            await Promise.all([
+                loadScript(H2C_URLS, () => !!window.html2canvas),
+                loadScript(JSPDF_URLS, () => !!(window.jspdf && window.jspdf.jsPDF))
+            ]);
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+            await waitForImages(root);
+
+            setMsg('جاري تجهيز الصفحة...');
+            document.body.classList.add('exporting');
+            window.scrollTo(0, 0);
+            bake('export');
+            await sleep(400);
+
+            let pdf;
+            try {
+                pdf = await buildPdf(2, setMsg);
+            } catch (e1) {
+                console.warn('retry with lower scale:', e1);
+                setMsg('إعادة المحاولة بجودة أقل...');
+                await sleep(300);
+                pdf = await buildPdf(1.25, setMsg);
             }
-
-            const stamp = new Date().toISOString().slice(0, 10);
-            pdf.save('report-' + pageType + '-' + stamp + '.pdf');
+            pdf.save('report-' + pageType + '-' + new Date().toISOString().slice(0, 10) + '.pdf');
         } catch (err) {
             console.error(err);
-            alert('تعذر إنشاء PDF: ' + (err && err.message ? err.message : err) +
-                  '\nيمكنك استخدام زر "طباعة" بدلًا من ذلك.');
+            failed = err;
         } finally {
             unbake();
             document.body.classList.remove('exporting');
+            exporting = false;
+            try { bake('print'); } catch (e) { /* تجاهل */ }
+        }
+
+        if (failed) {
+            spinner.style.display = 'none';
+            setMsg('تعذر إنشاء PDF: ' + (failed && failed.message ? failed.message : failed) + '\nيمكنك استخدام زر "طباعة".');
+            const b = document.createElement('button');
+            b.id = 'ovClose'; b.textContent = 'حسنًا';
+            b.style.cssText = 'padding:10px 28px;border:0;border-radius:10px;background:#0a1628;color:#fff;font:800 14px Cairo,sans-serif;cursor:pointer;';
+            b.onclick = () => { overlay.style.display = 'none'; spinner.style.display = ''; msg.textContent = oldMsg; b.remove(); };
+            overlay.appendChild(b);
+        } else {
             msg.textContent = oldMsg;
             overlay.style.display = 'none';
         }
@@ -710,7 +823,10 @@ body.exporting .page {
         }
 
         prepareImages(root);
-        waitForImages(root).then(() => { loading.style.display = 'none'; });
+        waitForImages(root).then(() => {
+            loading.style.display = 'none';
+            try { bake('print'); } catch (e) { console.error('bake failed', e); }
+        });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
