@@ -151,69 +151,36 @@ html, body {
     height: auto;
 }
 
-.print-table tbody td img {
-    width: 24mm;
-    height: 24mm;
-    object-fit: cover;
-    border-radius: 1.5mm;
-    border: 1px solid #d4a843;
-    background: #fffbeb;
-    display: block;
-    margin: 0 auto;
+/* ═══════════════════════════════════════════════════════════ */
+/* 🏛️ الترويسة المخفية (تُطبع في كل صفحة عبر @page)              */
+/* ═══════════════════════════════════════════════════════════ */
+.print-header-running {
+    display: none;
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* 📊 قواعد الجداول الطويلة                                    */
-/* ═══════════════════════════════════════════════════════════ */
-.eff-section,
-.chart-section {
-    page-break-inside: auto !important;
-    break-inside: auto !important;
-}
-
-.print-table {
-    page-break-inside: auto !important;
-    break-inside: auto !important;
-}
-
-.print-table thead {
-    display: table-header-group !important;
-}
-
-.print-table tfoot {
-    display: table-footer-group !important;
-}
-
-.print-table tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-}
-
-/* ═══════════════════════════════════════════════════════════ */
-/* 📄 A4 Landscape                                             */
+/* 📄 إعدادات الطباعة A4 Landscape                             */
 /* ═══════════════════════════════════════════════════════════ */
 @page {
     size: A4 landscape;
-    margin: 6mm 8mm;
+    margin: 45mm 8mm 15mm 8mm; /* مساحة علوية للترويسة، وسفلية للتذييل */
+    
+    /* ✅ تكرار الترويسة في كل صفحة */
+    @top-center {
+        content: element(printHeader);
+        width: 100%;
+    }
+    
+    /* ✅ تذييل الترقيم في كل صفحة */
+    @bottom-center {
+        content: "صفحة " counter(page) " من " counter(pages);
+        font-family: 'Cairo', sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+    }
 }
 
-/* ═══════════════════════════════════════════════════════════ */
-/* 🖨️ PRINT MODE                                               */
-/* ═══════════════════════════════════════════════════════════ */
 @media print {
-    @page {
-        size: A4 landscape;
-        margin: 6mm 8mm;
-
-        /* ✅ تذييل في كل صفحة */
-        @bottom-center {
-            content: "صفحة " counter(page) " من " counter(pages);
-            font-family: 'Cairo', sans-serif;
-            font-size: 8pt;
-            color: #64748b;
-        }
-    }
-
     html, body {
         background: #ffffff !important;
         margin: 0 !important;
@@ -238,11 +205,16 @@ html, body {
         padding: 0 !important;
     }
 
-    /* ✅ إخفاء الترويسات الافتراضية من الحقن */
+    /* ✅ تفعيل الترويسة المتكررة */
+    .print-header-running {
+        display: block !important;
+        position: running(printHeader);
+    }
+
+    /* إخفاء الترويسات الافتراضية */
     #official-print-header,
     #user-info-badge,
-    #dev-signature,
-    .print-unified-header { display: none !important; }
+    #dev-signature { display: none !important; }
 
     /* إخفاء الخلفيات الداكنة */
     #page-efficiency,
@@ -254,13 +226,12 @@ html, body {
         background-image: none !important;
     }
 
-    #page-efficiency::before { display: none !important; }
-
     /* الترويسات الداخلية */
     .eff-header, .fleet-header {
         background: #ffffff !important;
         border: 2px solid #0a1628 !important;
         box-shadow: none !important;
+        page-break-inside: avoid !important;
     }
 
     .eff-header-left h2,
@@ -268,28 +239,22 @@ html, body {
         color: #0a1628 !important;
         -webkit-text-fill-color: #0a1628 !important;
         background: none !important;
-        -webkit-background-clip: unset !important;
-        background-clip: unset !important;
     }
-
-    .eff-header-left p,
-    .fleet-header-left p { color: #475569 !important; }
 
     /* الإحصائيات */
     .stat-card {
         background: #ffffff !important;
         border: 1.5px solid #d4a843 !important;
         box-shadow: none !important;
+        page-break-inside: avoid !important;
     }
 
-    .stat-card .number { text-shadow: none !important; filter: none !important; }
-    .stat-card .label { color: #1e293b !important; }
-
-    /* الأقسام */
+    /* الأقسام والبطاقات */
     .eff-section {
         background: #ffffff !important;
         border: 1.5px solid #0a1628 !important;
         box-shadow: none !important;
+        page-break-inside: avoid !important; /* منع تقسيم البطاقة */
         margin-bottom: 4mm !important;
     }
 
@@ -300,24 +265,16 @@ html, body {
     }
 
     .section-header h3 { color: #f7d774 !important; }
-    .section-header h3 i { color: #f7d774 !important; filter: none !important; }
 
     /* رؤوس الجداول */
-    thead {
-        display: table-header-group !important;
-    }
-
+    thead { display: table-header-group !important; }
     thead th {
         background: #0a1628 !important;
         color: #f7d774 !important;
         border-bottom: 2px solid #d4a843 !important;
-        text-shadow: none !important;
-        -webkit-text-fill-color: #f7d774 !important;
         padding: 2mm 1mm !important;
         font-size: 8pt !important;
     }
-
-    thead th i { color: #f7d774 !important; filter: none !important; }
 
     /* الخلايا */
     tbody td {
@@ -330,7 +287,7 @@ html, body {
 
     tbody tr:nth-child(even) { background: #f8fafc !important; }
 
-    /* ✅ صور واضحة في الطباعة */
+    /* الصور */
     .print-table tbody td img,
     #copied-content img {
         width: 22mm !important;
@@ -338,90 +295,12 @@ html, body {
         object-fit: cover !important;
         border-radius: 1.5mm !important;
         border: 1px solid #d4a843 !important;
-        background: #fffbeb !important;
         image-rendering: -webkit-optimize-contrast !important;
-        image-rendering: crisp-edges !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        display: block !important;
-        margin: 0 auto !important;
-    }
-
-    /* الصفوف الملونة */
-    .row-high {
-        background: #d1fae5 !important;
-        border-right: 4px solid #10b981 !important;
-    }
-    .row-high td:first-child { color: #059669 !important; font-weight: 800 !important; }
-
-    .row-mid {
-        background: #fef3c7 !important;
-        border-right: 4px solid #f59e0b !important;
-    }
-    .row-mid td:first-child { color: #b45309 !important; font-weight: 800 !important; }
-
-    .row-low {
-        background: #fee2e2 !important;
-        border-right: 4px solid #ef4444 !important;
-    }
-    .row-low td:first-child { color: #b91c1c !important; font-weight: 800 !important; }
-
-    /* الشارات */
-    .status-badge {
-        padding: 1mm 3mm !important;
-        border-radius: 3mm !important;
-        font-weight: 800 !important;
-        color: #ffffff !important;
-        display: inline-block !important;
-        box-shadow: none !important;
-        animation: none !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
-    .status-badge.excellent { background: #059669 !important; }
-    .status-badge.good { background: #047857 !important; }
-    .status-badge.medium { background: #d97706 !important; }
-    .status-badge.low { background: #dc2626 !important; }
-    .status-badge.critical { background: #991b1b !important; }
-
-    .badge { box-shadow: none !important; animation: none !important; }
-    .badge.success { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #10b981 !important; }
-    .badge.warning { background: #fffbeb !important; color: #b45309 !important; border: 1px solid #f59e0b !important; }
-    .badge.danger { background: #fef2f2 !important; color: #b91c1c !important; border: 1px solid #ef4444 !important; }
-    .badge.gold { background: #fffbeb !important; color: #a88a2e !important; border: 1px solid #d4a843 !important; }
-
-    /* أشرطة التقدم */
-    .progress-bar {
-        background: #e2e8f0 !important;
-        border: 0.5px solid #cbd5e1 !important;
-    }
-    .progress-fill.high { background: linear-gradient(90deg, #047857, #10b981) !important; }
-    .progress-fill.mid { background: linear-gradient(90deg, #b45309, #f59e0b) !important; }
-    .progress-fill.low { background: linear-gradient(90deg, #b91c1c, #ef4444) !important; }
-
-    /* الرسم البياني */
-    .chart-section {
-        background: #ffffff !important;
-        border: 1.5px solid #0a1628 !important;
-    }
-
-    .chart-section .chart-switch { display: none !important; }
-
-    .chart-box {
-        background: #ffffff !important;
-        border: none !important;
-        padding: 3mm !important;
-    }
-
-    .chart-box h4 {
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        border-bottom: 1pt solid #12121a !important;
-        padding-bottom: 2mm !important;
-    }
-
-    /* ═══ عام ═══ */
+    /* عام */
     * {
         animation: none !important;
         transition: none !important;
@@ -430,17 +309,8 @@ html, body {
         color-adjust: exact !important;
     }
 
-    table { 
-        page-break-inside: auto !important;
-        width: 100% !important;
-        border-collapse: collapse !important;
-    }
-    tr { 
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-    }
-    thead { display: table-header-group !important; }
-    tfoot { display: table-footer-group !important; }
+    table { page-break-inside: auto !important; }
+    tr { page-break-inside: avoid !important; }
 }
 </style>
 </head>
@@ -461,6 +331,32 @@ html, body {
 </div>
 
 <div class="page-wrapper">
+
+    <!-- ✅ الترويسة الرسمية (تتكرر في كل صفحة عبر CSS) -->
+    <div class="print-header-running">
+        <div style="padding:4mm 6mm 3mm; border-bottom:2px solid #0a1628; background:#ffffff;">
+            <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:8mm; align-items:flex-start;">
+                <div style="text-align:right; font-size:8.5pt; line-height:1.5; color:#0a1628; font-weight:600;">
+                    <div style="font-weight:900; font-size:9.5pt;">الجمهورية التونسية</div>
+                    وزارة الداخلية<br>
+                    كتابة الدولة للأمن<br>
+                    الإدارة العامة للحرس الوطني<br>
+                    الإدارة العامة لحرس الحدود<br>
+                    إدارة إسناد الوحدات البحرية
+                    <div style="margin-top:2mm; font-size:9pt; font-weight:800;">ع/ ________ /دد</div>
+                </div>
+                <div style="text-align:center; align-self:center; min-width:70mm;">
+                    <div style="font-size:14pt; color:#d4a843; margin-bottom:1mm;">⚓</div>
+                    <h1 id="printHeaderTitle" style="font-size:12pt; font-weight:900; color:#0a1628; margin:0;">منظومة الوسائل البحرية</h1>
+                </div>
+                <div style="text-align:left; font-size:8.5pt; color:#0a1628; font-weight:600;">
+                    العوينة في: __________
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- المحتوى المُستنسخ -->
     <div class="page" id="copied-content"></div>
 </div>
 
@@ -472,231 +368,51 @@ html, body {
     const storageKey = params.get('key') || 'print_data';
     const pageType = params.get('type') || 'fleet';
 
-    // ═══════════════════════════════════════════════════════════
-    // 📋 العناوين الافتراضية لكل نوع صفحة
-    // ═══════════════════════════════════════════════════════════
     const TITLES = {
         fleet: 'الأسطول البحري',
         vehicles: 'الوسائل البرية - الحرس البحري',
         efficiency: 'جاهزية الأسطول',
         maintenance: 'سجل الصيانة والتدخلات',
-        logs: 'سجلات الصيانة',
-        users: 'إدارة المستخدمين',
-        notes: 'المذكرات',
-        support: 'مركز الدعم الفني',
-        'disposals-vessels': 'الوسائل البحرية المطروحة',
-        'disposals-vehicles': 'الوسائل البرية المطروحة'
-    };
-
-    const SUBTITLES = {
-        fleet: 'السجل التفصيلي للوحدات البحرية',
-        vehicles: 'سجل الوسائل البرية',
-        efficiency: 'مؤشرات الجاهزية التشغيلية',
-        maintenance: 'سجل التدخلات والصيانة',
-        logs: 'سجل النشاطات',
-        users: 'قائمة مستخدمي النظام'
+        logs: 'سجلات الصيانة'
     };
 
     document.title = (TITLES[pageType] || 'طباعة') + ' — منظومة الوسائل البحرية';
 
-    // ═══════════════════════════════════════════════════════════
-    // 📥 تحميل البيانات
-    // ═══════════════════════════════════════════════════════════
     function loadData() {
         try {
             const raw = localStorage.getItem(storageKey);
             if (raw) return JSON.parse(raw);
-        } catch (e) {
-            console.error('❌ Load error:', e);
-        }
+        } catch (e) {}
         return null;
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 🏗️ بناء الترويسة الرسمية (داخل thead - تتكرر)
-    // ═══════════════════════════════════════════════════════════
-    function buildHeaderHTML(title, colspan) {
-        return `
-        <tr class="repeat-header-row">
-            <td colspan="${colspan}" style="padding:4mm 6mm 3mm;background:#ffffff;border-bottom:2px solid #0a1628;border-left:none;">
-                <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8mm;align-items:flex-start;">
-                    <div style="text-align:right;font-size:8.5pt;line-height:1.5;color:#0a1628;font-weight:600;">
-                        <div style="font-weight:900;font-size:9.5pt;">الجمهورية التونسية</div>
-                        وزارة الداخلية<br>
-                        كتابة الدولة للأمن<br>
-                        الإدارة العامة للحرس الوطني<br>
-                        الإدارة العامة لحرس الحدود<br>
-                        إدارة إسناد الوحدات البحرية
-                        <div style="margin-top:2mm;font-size:9pt;font-weight:800;">ع/ ________ /دد</div>
-                    </div>
-                    <div style="text-align:center;align-self:center;min-width:70mm;">
-                        <div style="font-size:14pt;color:#d4a843;margin-bottom:1mm;">⚓</div>
-                        <h1 style="font-size:12pt;font-weight:900;color:#0a1628;margin:0;">${title}</h1>
-                    </div>
-                    <div style="text-align:left;font-size:8.5pt;color:#0a1628;font-weight:600;">
-                        العوينة في: __________
-                    </div>
-                </div>
-            </td>
-        </tr>`;
+    function updateHeaderTitle(data) {
+        const titleEl = document.getElementById('printHeaderTitle');
+        if (titleEl) {
+            const title = (data && data.title) || TITLES[pageType] || 'منظومة الوسائل البحرية';
+            titleEl.textContent = title;
+        }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 🏗️ بناء المحتوى من البيانات (data-driven)
-    // ═══════════════════════════════════════════════════════════
-    function buildFromData(data) {
-        const section = data.sectionTitle || 'السجل التفصيلي';
-        const stats = data.stats || [];
-        const columns = data.columns || [];
-        const rows = data.rows || [];
-        const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
-
-        let html = '';
-
-        // ═══════════════════════════════════════════════════════
-        // 📊 الإحصائيات
-        // ═══════════════════════════════════════════════════════
-        if (stats.length) {
-            html += '<section style="display:grid;grid-template-columns:repeat(' + stats.length + ',1fr);gap:4mm;padding:5mm 12mm 4mm;">';
-            stats.forEach((s, i) => {
-                const colors = ['#0a1628', '#10b981', '#f59e0b', '#ef4444', '#d4a843'];
-                const bgs = ['#f8fafc', '#ecfdf5', '#fffbeb', '#fef2f2', '#fffbeb'];
-                const color = colors[i] || '#0a1628';
-                const bg = bgs[i] || '#f8fafc';
-                html += `
-                <div style="padding:3mm 2mm;background:${bg};border:1.5px solid ${color};border-radius:3mm;text-align:center;">
-                    <div style="font-size:20pt;font-weight:900;color:${color};line-height:1;margin-bottom:1.5mm;">${s.value || '0'}</div>
-                    <div style="font-size:8pt;color:#1e293b;font-weight:700;">${s.label || ''}</div>
-                </div>`;
-            });
-            html += '</section>';
-        }
-
-        // ═══════════════════════════════════════════════════════
-        // 📋 عنوان القسم
-        // ═══════════════════════════════════════════════════════
-        html += `<div style="padding:2.5mm 5mm;background:linear-gradient(90deg,#0a1628 0%,#1a2942 100%);color:#ffffff;font-size:10pt;font-weight:800;border-bottom:3px solid #d4a843;margin:0 12mm;">📋 ${section}</div>`;
-
-        // ═══════════════════════════════════════════════════════
-        // 📊 الجدول
-        // ═══════════════════════════════════════════════════════
-        html += '<div style="margin:0 12mm 4mm;border:1px solid #e2e8f0;border-top:none;overflow:hidden;">';
-        html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt;">';
-
-        const headerCols = columns.length || 1;
-
-        // ═══════════════════════════════════════════════════════
-        // ✅ thead: الترويسة + رؤوس الأعمدة (تتكرر في كل صفحة)
-        // ═══════════════════════════════════════════════════════
-        html += '<thead>';
-
-        // ✅ الصف 1: الترويسة الرسمية
-        html += buildHeaderHTML(title, headerCols);
-
-        // ✅ الصف 2: رؤوس الأعمدة
-        if (columns.length) {
-            html += '<tr>';
-            columns.forEach((c, i) => {
-                const label = typeof c === 'string' ? c : (c.label || '');
-                const style = i === 0 ? 'width:24mm;' : '';
-                html += `<th style="${style}padding:2mm 1mm;background:linear-gradient(135deg,#0a1628 0%,#1a2942 100%);color:#f7d774;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #d4a843;border-left:1px solid rgba(247,215,116,0.15);white-space:nowrap;">${label}</th>`;
-            });
-            html += '</tr>';
-        }
-
-        html += '</thead>';
-
-        // ═══════════════════════════════════════════════════════
-        // 📊 البيانات
-        // ═══════════════════════════════════════════════════════
-        html += '<tbody>';
-        rows.forEach(row => {
-            const cells = Array.isArray(row) ? row : Object.values(row);
-            html += '<tr>';
-            cells.forEach((cell, i) => {
-                if (typeof cell === 'object' && cell !== null) {
-                    if (cell.type === 'image') {
-                        const url = cell.url || cell.src || '';
-                        if (url) {
-                            html += `<td style="width:24mm;padding:1mm;text-align:center;background:#fffbeb;border-bottom:1px solid #e2e8f0;border-left:1px solid #e2e8f0;"><img src="${url}" alt="صورة" crossorigin="anonymous" style="width:22mm;height:22mm;object-fit:cover;border-radius:1.5mm;border:1px solid #d4a843;display:block;margin:0 auto;"></td>`;
-                        } else {
-                            html += `<td style="width:24mm;padding:1mm;text-align:center;background:#fffbeb;border-bottom:1px solid #e2e8f0;border-left:1px solid #e2e8f0;"><div style="width:22mm;height:22mm;margin:0 auto;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:9pt;color:#94a3b8;">📷</div></td>`;
-                        }
-                        return;
-                    }
-                    if (cell.type === 'badge') {
-                        const variants = {
-                            success: 'background:#10b981;color:#fff;border:1px solid #047857;',
-                            danger: 'background:#ef4444;color:#fff;border:1px solid #b91c1c;',
-                            warning: 'background:#f59e0b;color:#fff;border:1px solid #b45309;',
-                            info: 'background:#3b82f6;color:#fff;border:1px solid #1e40af;',
-                            neutral: 'background:#64748b;color:#fff;border:1px solid #334155;'
-                        };
-                        const style = variants[cell.variant] || variants.neutral;
-                        html += `<td style="padding:1mm;text-align:center;border-bottom:1px solid #e2e8f0;border-left:1px solid #e2e8f0;"><span style="${style}padding:0.5mm 2mm;border-radius:3mm;font-size:6.5pt;font-weight:800;display:inline-block;">${cell.text || ''}</span></td>`;
-                        return;
-                    }
-                }
-                const value = (cell === null || cell === undefined || cell === '') ? '—' : cell;
-                html += `<td style="padding:1.5mm 1mm;text-align:center;font-size:7.5pt;color:#1e293b;border-bottom:1px solid #e2e8f0;border-left:1px solid #e2e8f0;font-weight:600;">${value}</td>`;
-            });
-            html += '</tr>';
-        });
-        html += '</tbody></table></div>';
-
-        // ═══════════════════════════════════════════════════════
-        // 📅 التذييل (يظهر مرة واحدة في نهاية المستند)
-        // ═══════════════════════════════════════════════════════
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('ar-TN', {
-            year: 'numeric', month: 'long', day: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        });
-        html += `
-        <footer style="margin:4mm 12mm;padding:2.5mm;background:linear-gradient(135deg,#0a1628 0%,#1a2942 100%);border-radius:2mm;display:grid;grid-template-columns:1fr auto 1fr;gap:4mm;align-items:center;font-size:7.5pt;color:#f7d774;border-top:3px solid #d4a843;">
-            <div style="text-align:right;">منظومة الوسائل البحرية v11.2.0</div>
-            <div style="text-align:center;font-weight:800;color:#ffffff;">إدارة إسناد الوحدات البحرية</div>
-            <div style="text-align:left;">${dateStr}</div>
-        </footer>`;
-
-        return html;
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // 🖼️ معالجة الصور داخل المحتوى (ضمان الوضوح)
-    // ═══════════════════════════════════════════════════════════
     function prepareImages(container) {
         const images = container.querySelectorAll('img');
-
         images.forEach(img => {
             img.loading = 'eager';
             img.decoding = 'sync';
-
             if (img.src && !img.src.startsWith('data:')) {
                 img.crossOrigin = 'anonymous';
             }
-
-            img.style.removeProperty('max-width');
-            img.style.removeProperty('max-height');
-
             img.style.imageRendering = '-webkit-optimize-contrast';
             img.style.imageRendering = 'crisp-edges';
             img.style.webkitPrintColorAdjust = 'exact';
             img.style.printColorAdjust = 'exact';
-
             img.classList.add('print-img-optimized');
         });
-
-        console.log('🖼️ Images prepared:', images.length);
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 🚀 التهيئة
-    // ═══════════════════════════════════════════════════════════
     function init() {
         const loading = document.getElementById('loadingOverlay');
         const content = document.getElementById('copied-content');
-
         const data = loadData();
 
         if (!data) {
@@ -705,33 +421,19 @@ html, body {
             return;
         }
 
+        // ✅ تحديث عنوان الترويسة
+        updateHeaderTitle(data);
+
         // عرض المحتوى
         if (data.htmlSnapshot) {
             content.innerHTML = data.htmlSnapshot;
-
-            content.querySelectorAll(
-                'button, .eff-header-actions, .filter-bar, .scroll-nav, ' +
-                '.btn-action, .btn-filter, .chart-switch, .no-print, ' +
-                '.back-to-top, .pagination'
-            ).forEach(el => el.remove());
-
+            content.querySelectorAll('button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, .chart-switch, .no-print, .back-to-top, .pagination').forEach(el => el.remove());
             prepareImages(content);
-
-        } else if (data.rows && data.rows.length > 0) {
-            content.innerHTML = buildFromData(data);
-            prepareImages(content);
-
         } else {
             content.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
         }
 
         if (loading) loading.style.display = 'none';
-
-        console.log('%c✅ Print page ready', 'background:#10b981;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;');
-        console.log('   Type:', pageType);
-        console.log('   Title:', data.title || TITLES[pageType]);
-        console.log('   Mode:', data.htmlSnapshot ? 'HTML Clone' : 'Data Build');
-        console.log('   Rows:', data.rows ? data.rows.length : 'N/A');
     }
 
     if (document.readyState === 'loading') {
