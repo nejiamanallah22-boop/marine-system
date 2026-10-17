@@ -61,11 +61,6 @@ html, body {
     overflow: hidden; position: relative;
 }
 
-/* أي عنصر يحقنه الموقع خارج الصفحة يُخفى */
-body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script):not(style):not(link):not(noscript) {
-    display: none !important;
-}
-
 #copied-content button,
 #copied-content .eff-header-actions,
 #copied-content .filter-bar,
@@ -79,9 +74,6 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 
 /* ═══════════════════════════════════════════════════════════════
    قاعدة التصميم: كل التعبئات تُرسم بطريقتين معًا
-       background        ← للشاشة ولمكتبة التصدير
-       box-shadow inset  ← يُطبع حتى لو ألغى المتصفح "Background graphics"
-   لذلك تظهر الألوان دائمًا دون الاعتماد على إعدادات الطباعة.
    ═══════════════════════════════════════════════════════════════ */
 @page { size: A4 landscape; margin: 6mm 8mm 12mm; }
 
@@ -105,11 +97,7 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 
 /* ═══════════════════════════════════════════════════════════════
    ثيم الوثيقة الرسمية للمحتوى المنسوخ (.snapshot-body)
-   يحوّل واجهة الشاشة الداكنة إلى وثيقة ورقية: خلفية بيضاء، نص داكن،
-   عناوين كحلية، حالات ملوّنة. يظهر في المعاينة كما سيُطبع تمامًا.
    ═══════════════════════════════════════════════════════════════ */
-
-/* 1) تحييد كل ما هو خاص بالواجهة الداكنة */
 .snapshot-body, .snapshot-body * {
     background: transparent !important;
     background-image: none !important;
@@ -132,14 +120,12 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 }
 .snapshot-body { font-size: 8.5pt; line-height: 1.5; }
 
-/* 2) إخفاء الزخرفة التي لا مكان لها في وثيقة رسمية */
 .snapshot-body .eff-header,
 .snapshot-body .fleet-header,
 .snapshot-body canvas,
 .snapshot-body i[class*="fa-"],
 .snapshot-body .fas, .snapshot-body .far, .snapshot-body .fab { display: none !important; }
 
-/* 3) بطاقات الإحصائيات */
 .snapshot-body :has(> .stat-card) {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(28mm, 1fr)) !important;
@@ -172,7 +158,6 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 .snapshot-body .stat-card:nth-child(4) .number { color: #dc2626 !important; -webkit-text-fill-color: #dc2626 !important; }
 .snapshot-body .stat-card:nth-child(5) .number { color: #b8860b !important; -webkit-text-fill-color: #b8860b !important; }
 
-/* 4) الأقسام */
 .snapshot-body .eff-section,
 .snapshot-body .chart-section {
     border: 1px solid #94a3b8 !important; border-radius: 0 !important;
@@ -191,7 +176,6 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
     font-size: 9.5pt !important; font-weight: 800 !important;
 }
 
-/* 5) الجداول */
 .snapshot-body table {
     width: 100% !important; border-collapse: collapse !important;
     table-layout: auto !important; margin: 0 !important;
@@ -213,7 +197,6 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 .snapshot-body tr { break-inside: avoid; page-break-inside: avoid; }
 .snapshot-body tbody tr:nth-child(even) td { background: #f8fafc !important; box-shadow: inset 0 0 0 9999px #f8fafc !important; }
 
-/* صفوف الحالة (بعد الزيبرا ليتغلّب عليها) */
 .snapshot-body tbody tr.row-high td { background: #ecfdf5 !important; box-shadow: inset 0 0 0 9999px #ecfdf5 !important; }
 .snapshot-body tbody tr.row-mid  td { background: #fffbeb !important; box-shadow: inset 0 0 0 9999px #fffbeb !important; }
 .snapshot-body tbody tr.row-low  td { background: #fef2f2 !important; box-shadow: inset 0 0 0 9999px #fef2f2 !important; }
@@ -221,7 +204,6 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 .snapshot-body tbody tr.row-mid  td:first-child { border-right: 4px solid #f59e0b !important; font-weight: 800 !important; }
 .snapshot-body tbody tr.row-low  td:first-child { border-right: 4px solid #ef4444 !important; font-weight: 800 !important; }
 
-/* 6) شارات الحالة */
 .snapshot-body .status-badge {
     display: inline-block !important; padding: .6mm 3mm !important; border-radius: 3mm !important;
     font-size: 7pt !important; font-weight: 800 !important; border: 0 !important;
@@ -242,7 +224,6 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 .snapshot-body .badge.danger  { background: #fef2f2 !important; box-shadow: inset 0 0 0 9999px #fef2f2 !important; color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; border-color: #ef4444 !important; }
 .snapshot-body .badge.gold    { background: #fffbeb !important; box-shadow: inset 0 0 0 9999px #fffbeb !important; color: #8a6d12 !important; -webkit-text-fill-color: #8a6d12 !important; border-color: #c9a227 !important; }
 
-/* 7) أشرطة التقدم */
 .snapshot-body .progress-bar {
     height: 2.6mm !important; border: .4mm solid #cbd5e1 !important; border-radius: 2mm !important;
     background: #eef2f7 !important; box-shadow: inset 0 0 0 9999px #eef2f7 !important;
@@ -253,7 +234,6 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 .snapshot-body .progress-fill.mid  { background: #f59e0b !important; box-shadow: inset 0 0 0 9999px #f59e0b !important; }
 .snapshot-body .progress-fill.low  { background: #ef4444 !important; box-shadow: inset 0 0 0 9999px #ef4444 !important; }
 
-/* 8) الصور داخل الجداول: كبيرة وواضحة */
 .snapshot-body table td img {
     width: 48mm !important; height: 36mm !important; object-fit: cover !important;
     border: 1px solid #94a3b8 !important; border-radius: 1.5mm !important;
@@ -261,7 +241,7 @@ body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script)
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   وضع التصدير المصوّر: عرض ثابت ليخرج الالتقاط مطابقًا
+   وضع التصدير المصوّر
    ═══════════════════════════════════════════════════════════════ */
 body.exporting { background: #fff !important; }
 body.exporting * { letter-spacing: normal !important; }
@@ -351,12 +331,8 @@ body.exporting .page {
         return null;
     }
 
-    // تعبئة تُطبع دائمًا: background للشاشة + ظل داخلي للطباعة
     const fill = c => 'background:' + c + ';box-shadow:inset 0 0 0 9999px ' + c + ';';
 
-    // ───────────────────────────────────────────────────────────
-    // الترويسة الرسمية: مرة واحدة في أعلى الصفحة الأولى فقط
-    // ───────────────────────────────────────────────────────────
     function buildLetterhead(title) {
         return `
         <header class="letterhead" style="padding:5mm 12mm 3.5mm;margin-bottom:4mm;border-bottom:3px double #0f2744;">
@@ -393,24 +369,18 @@ body.exporting .page {
         </footer>`;
     }
 
-    // ───────────────────────────────────────────────────────────
-    // وضع النسخ (htmlSnapshot)
-    // ───────────────────────────────────────────────────────────
     const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]/gu;
 
     function cleanSnapshot(container) {
-        // أزرار وعناصر تفاعلية
         container.querySelectorAll(
             'button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, ' +
             '.chart-switch, .no-print, .back-to-top, .pagination, script'
         ).forEach(el => el.remove());
 
-        // الرسوم البيانية (canvas) لا تُنسخ كصورة فتظهر فارغة: نحذفها، ونحذف الأقسام التي لا تحوي جدولًا
         container.querySelectorAll('canvas').forEach(c => c.remove());
         container.querySelectorAll('.chart-section').forEach(sec => { if (!sec.querySelector('table')) sec.remove(); });
         container.querySelectorAll('.chart-box').forEach(box => { if (!box.querySelector('table')) box.remove(); });
 
-        // الرموز التعبيرية (✅ 🔧 📈 ...) لا تليق بوثيقة رسمية
         const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
         const nodes = [];
         while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -425,9 +395,6 @@ body.exporting .page {
             `<div class="snapshot-body" style="padding:0 6mm;">${innerHTML}${buildFooter()}</div>`;
     }
 
-    // ───────────────────────────────────────────────────────────
-    // وضع البيانات (rows/columns)
-    // ───────────────────────────────────────────────────────────
     function buildFromData(data) {
         const section = data.sectionTitle || 'السجل التفصيلي';
         const stats = data.stats || [];
@@ -435,10 +402,8 @@ body.exporting .page {
         const rows = data.rows || [];
         const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
 
-        // أبعاد الصورة (أفقية 4:3 لتناسب صور الوسائل دون قصّ كبير)
         const IMG_W = '48mm', IMG_H = '36mm', IMG_COL = '52mm';
 
-        // محاذاة الأعمدة مع الخلايا (خلية إضافية في البداية مثل رقم تسلسلي)
         const isImg = c => c && typeof c === 'object' && c.type === 'image';
         const rowCells = r => Array.isArray(r) ? r : Object.values(r);
         const labelOf = c => typeof c === 'string' ? c : ((c && c.label) || '');
@@ -546,7 +511,6 @@ body.exporting .page {
         });
     }
 
-    // العناصر fixed/sticky تتكرر أو تُفرغ صفحات الطباعة
     function unpinElements(container) {
         container.querySelectorAll('*').forEach(el => {
             const p = getComputedStyle(el).position;
@@ -554,7 +518,6 @@ body.exporting .page {
         });
     }
 
-    // حذف العناصر الدخيلة التي يحقنها الموقع خارج الصفحة
     function purgeInjected() {
         document.querySelectorAll('#official-print-header, #user-info-badge, #dev-signature, .print-unified-header')
             .forEach(el => el.remove());
@@ -567,17 +530,8 @@ body.exporting .page {
     purgeInjected();
     new MutationObserver(purgeInjected).observe(document.body, { childList: true });
 
-    // ───────────────────────────────────────────────────────────
-    // الطباعة
-    // ───────────────────────────────────────────────────────────
     window.printNative = function () { window.print(); };
 
-    // ═══════════════════════════════════════════════════════════════
-    // PDF مصوّر (اختياري): يلتقط كل صفحة كصورة، فيطابق الشاشة تمامًا
-    // • تحميل المكتبات من 3 مصادر بالتتابع
-    // • قطع الصفحات عند حدود الصفوف والأقسام وتكرار رأس الجدول
-    // • إعادة تلقائية بجودة أقل عند الفشل، وإظهار نص الخطأ على الشاشة
-    // ═══════════════════════════════════════════════════════════════
     let exporting = false;
 
     const H2C_URLS = [
@@ -793,9 +747,6 @@ body.exporting .page {
         }
     };
 
-    // ───────────────────────────────────────────────────────────
-    // التهيئة
-    // ───────────────────────────────────────────────────────────
     function init() {
         const loading = document.getElementById('loadingOverlay');
         const data = loadData();
