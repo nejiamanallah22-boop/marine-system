@@ -17,7 +17,7 @@ html, body {
     font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     direction: rtl;
     background: #e5e7eb;
-    color: #111827;
+    color: #0f172a;
     min-height: 100vh;
 }
 
@@ -34,18 +34,10 @@ html, body {
     padding: 10px 18px; border: none; border-radius: 10px;
     font-family: inherit; font-size: 13px; font-weight: 800;
     cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-    transition: all .2s;
 }
-.btn-pdf {
-    background: linear-gradient(135deg,#10b981 0%,#34d399 100%);
-    color: #022c22; box-shadow: 0 4px 12px rgba(16,185,129,.4);
-}
-.btn-print {
-    background: linear-gradient(135deg,#d4a843 0%,#e8c77a 100%);
-    color: #0f172a; box-shadow: 0 4px 12px rgba(212,168,67,.4);
-}
+.btn-print { background: linear-gradient(135deg,#0f2744 0%,#1e3a5f 100%); color: #fff; }
+.btn-pdf   { background: #eef2f7; color: #0f2744; border: 1px solid #cbd5e1; }
 .btn-close { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-.btn-close:hover { background: #e2e8f0; }
 
 /* ───────── Loading ───────── */
 .loading-overlay {
@@ -55,18 +47,23 @@ html, body {
 }
 .spinner {
     width: 52px; height: 52px; border: 4px solid #e2e8f0;
-    border-top-color: #d4a843; border-radius: 50%;
+    border-top-color: #0f2744; border-radius: 50%;
     animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 14px; color: #475569; font-weight: 700; max-width: 90%; text-align: center; line-height: 1.8; }
+.loading-text { font-size: 14px; color: #475569; font-weight: 700; max-width: 90%; text-align: center; line-height: 1.8; white-space: pre-line; }
 
-/* ───────── المحتوى ───────── */
+/* ───────── الورقة ───────── */
 .page-wrapper { max-width: 297mm; margin: 80px auto 30px; padding: 0 20px; }
 .page {
     width: 297mm; min-height: 210mm; margin: 0 auto; background: #fff;
     box-shadow: 0 4px 24px rgba(0,0,0,.15); border-radius: 8px;
     overflow: hidden; position: relative;
+}
+
+/* أي عنصر يحقنه الموقع خارج الصفحة يُخفى */
+body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script):not(style):not(link):not(noscript) {
+    display: none !important;
 }
 
 #copied-content button,
@@ -80,29 +77,193 @@ html, body {
 #copied-content .back-to-top,
 #copied-content .pagination { display: none !important; }
 
-.print-table tbody td img {
-    width: 38mm; height: 38mm; object-fit: cover;
-    border-radius: 1.5mm; border: 1px solid #d4a843;
-    background: #fffbeb; display: block; margin: 0 auto;
+/* ═══════════════════════════════════════════════════════════════
+   قاعدة التصميم: كل التعبئات تُرسم بطريقتين معًا
+       background        ← للشاشة ولمكتبة التصدير
+       box-shadow inset  ← يُطبع حتى لو ألغى المتصفح "Background graphics"
+   لذلك تظهر الألوان دائمًا دون الاعتماد على إعدادات الطباعة.
+   ═══════════════════════════════════════════════════════════════ */
+@page { size: A4 landscape; margin: 6mm 8mm 12mm; }
+
+*, *::before, *::after {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
+
+.letterhead { page-break-inside: avoid; break-inside: avoid; }
+
+/* ───────── جداول وضع البيانات ───────── */
 .print-table { page-break-inside: auto; break-inside: auto; }
 .print-table thead { display: table-header-group; }
 .print-table tr { page-break-inside: avoid; break-inside: avoid; }
-.letterhead { page-break-inside: avoid; break-inside: avoid; }
-
-/* ── إصلاح: أي عنصر دخيل يحقنه الموقع خارج الصفحة (ترويسة مكررة، شارة مستخدم، توقيع) يُخفى ── */
-body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script):not(style):not(link):not(noscript) {
-    display: none !important;
+.print-table tbody tr:nth-child(even) td { background: #f8fafc; box-shadow: inset 0 0 0 9999px #f8fafc; }
+.print-table tbody td img {
+    width: 48mm; height: 36mm; object-fit: cover;
+    border-radius: 1.5mm; border: 1px solid #94a3b8;
+    background: #fff; display: block; margin: 0 auto;
 }
 
-@page { size: A4 landscape; margin: 6mm 8mm 12mm; }
+/* ═══════════════════════════════════════════════════════════════
+   ثيم الوثيقة الرسمية للمحتوى المنسوخ (.snapshot-body)
+   يحوّل واجهة الشاشة الداكنة إلى وثيقة ورقية: خلفية بيضاء، نص داكن،
+   عناوين كحلية، حالات ملوّنة. يظهر في المعاينة كما سيُطبع تمامًا.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 1) تحييد كل ما هو خاص بالواجهة الداكنة */
+.snapshot-body, .snapshot-body * {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+    transition: none !important;
+    mix-blend-mode: normal !important;
+    will-change: auto !important;
+    contain: none !important;
+    overflow: visible !important;
+    max-height: none !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+    letter-spacing: normal !important;
+}
+.snapshot-body { font-size: 8.5pt; line-height: 1.5; }
+
+/* 2) إخفاء الزخرفة التي لا مكان لها في وثيقة رسمية */
+.snapshot-body .eff-header,
+.snapshot-body .fleet-header,
+.snapshot-body canvas,
+.snapshot-body i[class*="fa-"],
+.snapshot-body .fas, .snapshot-body .far, .snapshot-body .fab { display: none !important; }
+
+/* 3) بطاقات الإحصائيات */
+.snapshot-body :has(> .stat-card) {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(28mm, 1fr)) !important;
+    gap: 3mm !important; margin: 0 0 4mm !important; padding: 0 !important;
+}
+.snapshot-body .stat-card {
+    border: 1px solid #cbd5e1 !important;
+    border-top: 3px solid #0f2744 !important;
+    border-radius: 1.5mm !important;
+    padding: 2.5mm 2mm !important; margin: 0 !important;
+    text-align: center !important;
+    background: #ffffff !important; box-shadow: inset 0 0 0 9999px #ffffff !important;
+    break-inside: avoid; page-break-inside: avoid;
+}
+.snapshot-body .stat-card .number {
+    display: block !important; font-size: 18pt !important; font-weight: 900 !important; line-height: 1.15 !important;
+}
+.snapshot-body .stat-card .label {
+    display: block !important; font-size: 7.5pt !important; font-weight: 700 !important;
+    color: #475569 !important; -webkit-text-fill-color: #475569 !important; margin-top: 1mm !important;
+}
+.snapshot-body .stat-card:nth-child(1) { border-top-color: #0f2744 !important; }
+.snapshot-body .stat-card:nth-child(2) { border-top-color: #059669 !important; }
+.snapshot-body .stat-card:nth-child(3) { border-top-color: #2563eb !important; }
+.snapshot-body .stat-card:nth-child(4) { border-top-color: #dc2626 !important; }
+.snapshot-body .stat-card:nth-child(5) { border-top-color: #b8860b !important; }
+.snapshot-body .stat-card:nth-child(1) .number { color: #0f2744 !important; -webkit-text-fill-color: #0f2744 !important; }
+.snapshot-body .stat-card:nth-child(2) .number { color: #059669 !important; -webkit-text-fill-color: #059669 !important; }
+.snapshot-body .stat-card:nth-child(3) .number { color: #2563eb !important; -webkit-text-fill-color: #2563eb !important; }
+.snapshot-body .stat-card:nth-child(4) .number { color: #dc2626 !important; -webkit-text-fill-color: #dc2626 !important; }
+.snapshot-body .stat-card:nth-child(5) .number { color: #b8860b !important; -webkit-text-fill-color: #b8860b !important; }
+
+/* 4) الأقسام */
+.snapshot-body .eff-section,
+.snapshot-body .chart-section {
+    border: 1px solid #94a3b8 !important; border-radius: 0 !important;
+    margin: 0 0 4mm !important; padding: 0 !important;
+    break-inside: avoid; page-break-inside: avoid;
+}
+.snapshot-body .section-header {
+    background: #0f2744 !important; box-shadow: inset 0 0 0 9999px #0f2744 !important;
+    border: 0 !important; border-bottom: 2px solid #c9a227 !important;
+    padding: 2mm 4mm !important; margin: 0 !important;
+    break-after: avoid; page-break-after: avoid;
+}
+.snapshot-body .section-header,
+.snapshot-body .section-header * {
+    color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
+    font-size: 9.5pt !important; font-weight: 800 !important;
+}
+
+/* 5) الجداول */
+.snapshot-body table {
+    width: 100% !important; border-collapse: collapse !important;
+    table-layout: auto !important; margin: 0 !important;
+}
+.snapshot-body thead { display: table-header-group !important; position: static !important; }
+.snapshot-body thead th {
+    background: #e8edf5 !important; box-shadow: inset 0 0 0 9999px #e8edf5 !important;
+    color: #0f2744 !important; -webkit-text-fill-color: #0f2744 !important;
+    font-size: 8pt !important; font-weight: 800 !important;
+    padding: 1.8mm 1mm !important; text-align: center !important;
+    border-bottom: 2px solid #0f2744 !important; white-space: nowrap !important;
+    position: static !important;
+}
+.snapshot-body tbody td {
+    padding: 1.6mm 1mm !important; font-size: 8pt !important;
+    text-align: center !important; vertical-align: middle !important;
+    border-bottom: 1px solid #e2e8f0 !important; border-left: 1px solid #eef2f7 !important;
+}
+.snapshot-body tr { break-inside: avoid; page-break-inside: avoid; }
+.snapshot-body tbody tr:nth-child(even) td { background: #f8fafc !important; box-shadow: inset 0 0 0 9999px #f8fafc !important; }
+
+/* صفوف الحالة (بعد الزيبرا ليتغلّب عليها) */
+.snapshot-body tbody tr.row-high td { background: #ecfdf5 !important; box-shadow: inset 0 0 0 9999px #ecfdf5 !important; }
+.snapshot-body tbody tr.row-mid  td { background: #fffbeb !important; box-shadow: inset 0 0 0 9999px #fffbeb !important; }
+.snapshot-body tbody tr.row-low  td { background: #fef2f2 !important; box-shadow: inset 0 0 0 9999px #fef2f2 !important; }
+.snapshot-body tbody tr.row-high td:first-child { border-right: 4px solid #10b981 !important; font-weight: 800 !important; }
+.snapshot-body tbody tr.row-mid  td:first-child { border-right: 4px solid #f59e0b !important; font-weight: 800 !important; }
+.snapshot-body tbody tr.row-low  td:first-child { border-right: 4px solid #ef4444 !important; font-weight: 800 !important; }
+
+/* 6) شارات الحالة */
+.snapshot-body .status-badge {
+    display: inline-block !important; padding: .6mm 3mm !important; border-radius: 3mm !important;
+    font-size: 7pt !important; font-weight: 800 !important; border: 0 !important;
+    color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; white-space: nowrap !important;
+}
+.snapshot-body .status-badge.excellent { background: #059669 !important; box-shadow: inset 0 0 0 9999px #059669 !important; }
+.snapshot-body .status-badge.good      { background: #0d9488 !important; box-shadow: inset 0 0 0 9999px #0d9488 !important; }
+.snapshot-body .status-badge.medium    { background: #d97706 !important; box-shadow: inset 0 0 0 9999px #d97706 !important; }
+.snapshot-body .status-badge.low       { background: #dc2626 !important; box-shadow: inset 0 0 0 9999px #dc2626 !important; }
+.snapshot-body .status-badge.critical  { background: #991b1b !important; box-shadow: inset 0 0 0 9999px #991b1b !important; }
+
+.snapshot-body .badge {
+    display: inline-block !important; padding: .5mm 2.5mm !important; border-radius: 3mm !important;
+    font-size: 7pt !important; font-weight: 800 !important; border: 1px solid #cbd5e1 !important;
+}
+.snapshot-body .badge.success { background: #ecfdf5 !important; box-shadow: inset 0 0 0 9999px #ecfdf5 !important; color: #047857 !important; -webkit-text-fill-color: #047857 !important; border-color: #10b981 !important; }
+.snapshot-body .badge.warning { background: #fffbeb !important; box-shadow: inset 0 0 0 9999px #fffbeb !important; color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; border-color: #f59e0b !important; }
+.snapshot-body .badge.danger  { background: #fef2f2 !important; box-shadow: inset 0 0 0 9999px #fef2f2 !important; color: #b91c1c !important; -webkit-text-fill-color: #b91c1c !important; border-color: #ef4444 !important; }
+.snapshot-body .badge.gold    { background: #fffbeb !important; box-shadow: inset 0 0 0 9999px #fffbeb !important; color: #8a6d12 !important; -webkit-text-fill-color: #8a6d12 !important; border-color: #c9a227 !important; }
+
+/* 7) أشرطة التقدم */
+.snapshot-body .progress-bar {
+    height: 2.6mm !important; border: .4mm solid #cbd5e1 !important; border-radius: 2mm !important;
+    background: #eef2f7 !important; box-shadow: inset 0 0 0 9999px #eef2f7 !important;
+    overflow: hidden !important;
+}
+.snapshot-body .progress-fill { display: block !important; height: 100% !important; border-radius: 2mm !important; }
+.snapshot-body .progress-fill.high { background: #10b981 !important; box-shadow: inset 0 0 0 9999px #10b981 !important; }
+.snapshot-body .progress-fill.mid  { background: #f59e0b !important; box-shadow: inset 0 0 0 9999px #f59e0b !important; }
+.snapshot-body .progress-fill.low  { background: #ef4444 !important; box-shadow: inset 0 0 0 9999px #ef4444 !important; }
+
+/* 8) الصور داخل الجداول: كبيرة وواضحة */
+.snapshot-body table td img {
+    width: 48mm !important; height: 36mm !important; object-fit: cover !important;
+    border: 1px solid #94a3b8 !important; border-radius: 1.5mm !important;
+    display: block !important; margin: 0 auto !important; background: #fff !important;
+}
 
 /* ═══════════════════════════════════════════════════════════════
-   وضع التصدير (حفظ PDF بالألوان): يُضاف على body مؤقتًا أثناء الالتقاط
-   عرض ثابت للمحتوى حتى لا يتأثر بحجم شاشة الجوال
+   وضع التصدير المصوّر: عرض ثابت ليخرج الالتقاط مطابقًا
    ═══════════════════════════════════════════════════════════════ */
 body.exporting { background: #fff !important; }
-/* html2canvas يفصل حروف العربية إذا وُجدت مسافة بين الحروف، فنلغيها أثناء التصدير */
 body.exporting * { letter-spacing: normal !important; }
 body.exporting .top-controls { display: none !important; }
 body.exporting .page-wrapper { margin: 0 !important; padding: 0 !important; max-width: none !important; }
@@ -111,81 +272,29 @@ body.exporting .page {
     box-shadow: none !important; border-radius: 0 !important; overflow: visible !important;
 }
 
-/* ═════════════════════════ الطباعة العادية ═════════════════════════ */
+/* ═════════════════════════ الطباعة ═════════════════════════ */
 @media print {
-
-    /* ── FIX 1: فرض طباعة الألوان والخلفيات (الطبقة الأولى) ── */
-    *, *::before, *::after {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        color-adjust: exact !important;
-    }
-
-    /* ── FIX 2: إزالة أسباب الصفحات الفارغة ──
-       height/min-height/overflow على html وbody، وعناصر 100vh تُنتج صفحات فارغة */
     html, body {
         background: #fff !important; margin: 0 !important; padding: 0 !important;
         height: auto !important; min-height: 0 !important; overflow: visible !important;
     }
     .top-controls, .loading-overlay { display: none !important; }
-
     .page-wrapper { margin: 0 !important; padding: 0 !important; max-width: none !important; }
     .page {
         width: 100% !important; min-height: 0 !important; height: auto !important;
         box-shadow: none !important; border-radius: 0 !important;
-        margin: 0 !important; padding: 0 !important;
-        overflow: visible !important; background: #fff !important;
+        margin: 0 !important; padding: 0 !important; overflow: visible !important; background: #fff !important;
     }
+    [id^="page-"] { min-height: 0 !important; height: auto !important; }
 
-    #official-print-header, #user-info-badge, #dev-signature, .print-unified-header { display: none !important; }
-
-    [id^="page-"] { min-height: 0 !important; height: auto !important; overflow: visible !important; }
-
-    /* عناصر تُسقط الطباعة أو تُفرغ صفحاتها: ضبابية، فلاتر، ظلال نص، حركة، contain */
-    .snapshot-body, .snapshot-body * {
-        animation: none !important;
-        transition: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        filter: none !important;
-        text-shadow: none !important;
-        will-change: auto !important;
-        contain: none !important;
-        content-visibility: visible !important;
-        mix-blend-mode: normal !important;
-    }
-
-    .snapshot-body .eff-header, .snapshot-body .fleet-header {
-        min-height: 0 !important; height: auto !important;
-        padding: 4mm 6mm !important; margin: 0 0 3mm !important;
-    }
-    .snapshot-body .eff-section, .snapshot-body .chart-section {
-        margin: 0 0 3mm !important;
-        page-break-inside: auto !important; break-inside: auto !important;
-    }
-    .snapshot-body .section-header { page-break-after: avoid !important; break-after: avoid !important; }
-    .snapshot-body .stat-card { page-break-inside: avoid !important; break-inside: avoid !important; }
-
-    /* ── FIX 4: الجداول تنقسم طبيعيًا ورأس الأعمدة يتكرر ── */
-    .snapshot-body table { width: 100% !important; border-collapse: collapse; }
     thead { display: table-header-group !important; }
     tfoot { display: table-footer-group !important; }
     tr { page-break-inside: avoid !important; break-inside: avoid !important; }
 
-    .print-table tbody td img,
-    .snapshot-body table td img {
-        width: 38mm !important; height: 38mm !important;
-        object-fit: cover !important; border-radius: 1.5mm !important;
-        border: 1px solid #d4a843 !important; background: #fffbeb !important;
-        display: block !important; margin: 0 auto !important;
+    .print-table tbody td img, .snapshot-body table td img {
+        width: 48mm !important; height: 36mm !important;
     }
 }
-
-/* ── FIX 6: تثبيت تخطيط المحتوى المنسوخ كما في المعاينة ──
-   عرض ثابت 1100px ثم تصغير (zoom) ليناسب عرض الورقة. هكذا لا تتحول الشبكات
-   (مثل بطاقات الإحصائيات) إلى عمودين حتى لو اختار النظام ورقة عمودية (أندرويد). */
-@media print { .snapshot-body { width: 1100px !important; zoom: 0.96; } }
-@media print and (orientation: portrait) { .snapshot-body { zoom: 0.66; } }
 </style>
 </head>
 <body>
@@ -196,8 +305,8 @@ body.exporting .page {
 </div>
 
 <div class="top-controls">
-    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> حفظ PDF بالألوان</button>
     <button class="btn-print" onclick="window.printNative()"><i class="fas fa-print"></i> طباعة</button>
+    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> PDF مصوّر</button>
     <button class="btn-close" onclick="window.close()"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
@@ -212,9 +321,6 @@ body.exporting .page {
     const params = new URLSearchParams(location.search);
     const storageKey = params.get('key') || 'print_data';
     const pageType = params.get('type') || 'fleet';
-
-    const H2C_URL   = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    const JSPDF_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
 
     const TITLES = {
         fleet: 'الأسطول البحري',
@@ -245,14 +351,17 @@ body.exporting .page {
         return null;
     }
 
+    // تعبئة تُطبع دائمًا: background للشاشة + ظل داخلي للطباعة
+    const fill = c => 'background:' + c + ';box-shadow:inset 0 0 0 9999px ' + c + ';';
+
     // ───────────────────────────────────────────────────────────
-    // الترويسة الرسمية: تظهر مرة واحدة فقط في أعلى الصفحة الأولى (FIX 3)
+    // الترويسة الرسمية: مرة واحدة في أعلى الصفحة الأولى فقط
     // ───────────────────────────────────────────────────────────
     function buildLetterhead(title) {
         return `
-        <header class="letterhead" style="padding:5mm 12mm 3.5mm;margin-bottom:4mm;border-bottom:3px double #0a1628;background:#fff;">
+        <header class="letterhead" style="padding:5mm 12mm 3.5mm;margin-bottom:4mm;border-bottom:3px double #0f2744;">
             <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8mm;align-items:start;">
-                <div style="text-align:right;font-size:8.5pt;line-height:1.55;color:#0a1628;font-weight:600;">
+                <div style="text-align:right;font-size:8.5pt;line-height:1.55;color:#0f2744;font-weight:600;">
                     <div style="font-weight:900;font-size:10pt;margin-bottom:1mm;">الجمهورية التونسية</div>
                     وزارة الداخلية<br>
                     كتابة الدولة للأمن<br>
@@ -261,11 +370,11 @@ body.exporting .page {
                     إدارة إسناد الوحدات البحرية
                     <div style="margin-top:2.5mm;font-size:9pt;font-weight:800;">ع/ ________ /دد</div>
                 </div>
-                <div style="align-self:center;text-align:center;min-width:80mm;border:1.5px solid #0a1628;padding:3mm 8mm;">
+                <div style="align-self:center;text-align:center;min-width:80mm;border:1.5px solid #0f2744;padding:3mm 8mm;">
                     <div style="font-size:7.5pt;color:#64748b;font-weight:700;margin-bottom:1mm;">منظومة الوسائل البحرية</div>
-                    <h1 style="font-size:13pt;font-weight:900;color:#0a1628;margin:0;">${esc(title)}</h1>
+                    <h1 style="font-size:13pt;font-weight:900;color:#0f2744;margin:0;">${esc(title)}</h1>
                 </div>
-                <div style="text-align:left;font-size:8.5pt;color:#0a1628;font-weight:600;">
+                <div style="text-align:left;font-size:8.5pt;color:#0f2744;font-weight:600;">
                     العوينة في: __________
                 </div>
             </div>
@@ -277,11 +386,38 @@ body.exporting .page {
             year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
         return `
-        <footer style="margin:5mm 0 0;padding-top:2.5mm;border-top:1.5px solid #0a1628;display:grid;grid-template-columns:1fr auto 1fr;gap:4mm;align-items:center;font-size:7.5pt;color:#475569;font-weight:600;background:#fff;page-break-inside:avoid;break-inside:avoid;">
+        <footer style="margin:5mm 0 0;padding-top:2.5mm;border-top:1.5px solid #0f2744;display:grid;grid-template-columns:1fr auto 1fr;gap:4mm;align-items:center;font-size:7.5pt;color:#475569;font-weight:600;page-break-inside:avoid;break-inside:avoid;">
             <div style="text-align:right;">منظومة الوسائل البحرية v11.2.0</div>
-            <div style="text-align:center;font-weight:800;color:#0a1628;">إدارة إسناد الوحدات البحرية</div>
+            <div style="text-align:center;font-weight:800;color:#0f2744;">إدارة إسناد الوحدات البحرية</div>
             <div style="text-align:left;">${dateStr}</div>
         </footer>`;
+    }
+
+    // ───────────────────────────────────────────────────────────
+    // وضع النسخ (htmlSnapshot)
+    // ───────────────────────────────────────────────────────────
+    const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]/gu;
+
+    function cleanSnapshot(container) {
+        // أزرار وعناصر تفاعلية
+        container.querySelectorAll(
+            'button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, ' +
+            '.chart-switch, .no-print, .back-to-top, .pagination, script'
+        ).forEach(el => el.remove());
+
+        // الرسوم البيانية (canvas) لا تُنسخ كصورة فتظهر فارغة: نحذفها، ونحذف الأقسام التي لا تحوي جدولًا
+        container.querySelectorAll('canvas').forEach(c => c.remove());
+        container.querySelectorAll('.chart-section').forEach(sec => { if (!sec.querySelector('table')) sec.remove(); });
+        container.querySelectorAll('.chart-box').forEach(box => { if (!box.querySelector('table')) box.remove(); });
+
+        // الرموز التعبيرية (✅ 🔧 📈 ...) لا تليق بوثيقة رسمية
+        const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        nodes.forEach(n => {
+            if (EMOJI_RE.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(EMOJI_RE, '').replace(/^\s+|\s+$/g, ' ');
+            EMOJI_RE.lastIndex = 0;
+        });
     }
 
     function wrapSnapshot(innerHTML, title) {
@@ -289,15 +425,20 @@ body.exporting .page {
             `<div class="snapshot-body" style="padding:0 6mm;">${innerHTML}${buildFooter()}</div>`;
     }
 
+    // ───────────────────────────────────────────────────────────
     // وضع البيانات (rows/columns)
+    // ───────────────────────────────────────────────────────────
     function buildFromData(data) {
         const section = data.sectionTitle || 'السجل التفصيلي';
         const stats = data.stats || [];
         let columns = (data.columns || []).slice();
         const rows = data.rows || [];
-        // ── إصلاح: محاذاة الأعمدة مع الخلايا ──
-        // إن كان في الصفوف خلية إضافية في البداية (مثل رقم تسلسلي) دون عمود في الترويسة
-        // تُزاح كل الأعمدة؛ نُضيف عمودًا مطابقًا ليقع كل شيء في مكانه.
+        const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
+
+        // أبعاد الصورة (أفقية 4:3 لتناسب صور الوسائل دون قصّ كبير)
+        const IMG_W = '48mm', IMG_H = '36mm', IMG_COL = '52mm';
+
+        // محاذاة الأعمدة مع الخلايا (خلية إضافية في البداية مثل رقم تسلسلي)
         const isImg = c => c && typeof c === 'object' && c.type === 'image';
         const rowCells = r => Array.isArray(r) ? r : Object.values(r);
         const labelOf = c => typeof c === 'string' ? c : ((c && c.label) || '');
@@ -315,40 +456,35 @@ body.exporting .page {
         while (columns.length < maxCells) columns.push('');
         const imgCols = new Set();
         rows.forEach(r => rowCells(r).forEach((c, i) => { if (isImg(c)) imgCols.add(i); }));
-        const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
-        const IMG = '38mm';
 
         let html = buildLetterhead(title);
 
         if (stats.length) {
             html += '<section style="display:grid;grid-template-columns:repeat(' + stats.length + ',1fr);gap:4mm;padding:4mm 12mm 3mm;">';
-            const colors = ['#0a1628', '#10b981', '#f59e0b', '#ef4444', '#d4a843'];
+            const colors = ['#0f2744', '#059669', '#2563eb', '#dc2626', '#b8860b'];
             stats.forEach((s, i) => {
-                const color = colors[i] || '#0a1628';
+                const color = colors[i] || '#0f2744';
                 html += `
-                <div class="stat-card" style="padding:3mm 2mm;background:#ffffff;border:1px solid #cbd5e1;border-top:3px solid ${color};border-radius:1.5mm;text-align:center;">
-                    <div style="font-size:20pt;font-weight:900;color:${color};line-height:1;margin-bottom:1.5mm;">${esc(s.value || '0')}</div>
-                    <div style="font-size:8pt;color:#1e293b;font-weight:700;">${esc(s.label || '')}</div>
+                <div style="padding:3mm 2mm;border:1px solid #cbd5e1;border-top:3px solid ${color};border-radius:1.5mm;text-align:center;break-inside:avoid;">
+                    <div style="font-size:20pt;font-weight:900;color:${color};line-height:1.1;margin-bottom:1.5mm;">${esc(s.value || '0')}</div>
+                    <div style="font-size:8pt;color:#475569;font-weight:700;">${esc(s.label || '')}</div>
                 </div>`;
             });
             html += '</section>';
         }
 
-        html += `<div class="section-header" style="padding:2.5mm 5mm;background:#0a1628;color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2px solid #d4a843;margin:0 12mm;">${esc(section)}</div>`;
+        html += `<div style="padding:2.5mm 5mm;${fill('#0f2744')}color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2px solid #c9a227;margin:0 12mm;break-after:avoid;">${esc(section)}</div>`;
 
-        html += '<div style="margin:0 12mm 4mm;border:1px solid #e2e8f0;border-top:none;">';
+        html += '<div style="margin:0 12mm 4mm;border:1px solid #cbd5e1;border-top:none;">';
         html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:auto;font-size:8pt;">';
-        // عرض الأعمدة يُحدَّد من محتواها: عمود الصورة عريض وعمود الرقم ضيق
         html += '<colgroup>' + columns.map((c, i) =>
-            imgCols.has(i) ? '<col style="width:44mm">' : (labelOf(c) === 'م' ? '<col style="width:9mm">' : '<col>')
+            imgCols.has(i) ? `<col style="width:${IMG_COL}">` : (labelOf(c) === 'م' ? '<col style="width:9mm">' : '<col>')
         ).join('') + '</colgroup>';
         html += '<thead>';
         if (columns.length) {
             html += '<tr>';
             columns.forEach((c, i) => {
-                const label = typeof c === 'string' ? c : (c.label || '');
-                const style = imgCols.has(i) ? 'width:44mm;' : '';
-                html += `<th style="${style}padding:2mm 1mm;background:#1a2942;color:#ffffff;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #d4a843;border-left:1px solid rgba(255,255,255,.15);white-space:nowrap;">${esc(label)}</th>`;
+                html += `<th style="${imgCols.has(i) ? 'width:' + IMG_COL + ';' : ''}padding:2mm 1mm;${fill('#e8edf5')}color:#0f2744;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #0f2744;border-left:1px solid #cbd5e1;white-space:nowrap;">${esc(labelOf(c))}</th>`;
             });
             html += '</tr>';
         }
@@ -364,22 +500,19 @@ body.exporting .page {
                     if (cell.type === 'image') {
                         const url = cell.url || cell.src || '';
                         if (url) {
-                            html += `<td style="width:44mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG};height:${IMG};object-fit:cover;border-radius:1.5mm;border:1px solid #d4a843;display:block;margin:0 auto;"></td>`;
+                            html += `<td style="width:${IMG_COL};padding:1.5mm;text-align:center;vertical-align:middle;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG_W};height:${IMG_H};object-fit:cover;border-radius:1.5mm;border:1px solid #94a3b8;display:block;margin:0 auto;"></td>`;
                         } else {
-                            html += `<td style="width:44mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><div style="width:${IMG};height:18mm;margin:0 auto;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:12pt;color:#94a3b8;">📷</div></td>`;
+                            html += `<td style="width:${IMG_COL};padding:1.5mm;text-align:center;vertical-align:middle;${tdBase}"><div style="width:${IMG_W};height:16mm;margin:0 auto;${fill('#f1f5f9')}border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:9pt;color:#94a3b8;">لا توجد صورة</div></td>`;
                         }
                         return;
                     }
                     if (cell.type === 'badge') {
                         const variants = {
-                            success: 'background:#10b981;color:#fff;border:1px solid #047857;',
-                            danger: 'background:#ef4444;color:#fff;border:1px solid #b91c1c;',
-                            warning: 'background:#f59e0b;color:#fff;border:1px solid #b45309;',
-                            info: 'background:#3b82f6;color:#fff;border:1px solid #1e40af;',
-                            neutral: 'background:#64748b;color:#fff;border:1px solid #334155;'
+                            success: ['#059669', '#047857'], danger: ['#dc2626', '#b91c1c'],
+                            warning: ['#d97706', '#b45309'], info: ['#2563eb', '#1e40af'], neutral: ['#64748b', '#334155']
                         };
-                        const st = variants[cell.variant] || variants.neutral;
-                        html += `<td style="padding:1mm;text-align:center;${tdBase}"><span style="${st}padding:.5mm 2mm;border-radius:3mm;font-size:6.5pt;font-weight:800;display:inline-block;">${esc(cell.text || '')}</span></td>`;
+                        const v = variants[cell.variant] || variants.neutral;
+                        html += `<td style="padding:1mm;text-align:center;vertical-align:middle;${tdBase}"><span style="${fill(v[0])}color:#fff;border:1px solid ${v[1]};padding:.5mm 2.5mm;border-radius:3mm;font-size:6.5pt;font-weight:800;display:inline-block;white-space:nowrap;">${esc(cell.text || '')}</span></td>`;
                         return;
                     }
                 }
@@ -413,154 +546,40 @@ body.exporting .page {
         });
     }
 
+    // العناصر fixed/sticky تتكرر أو تُفرغ صفحات الطباعة
+    function unpinElements(container) {
+        container.querySelectorAll('*').forEach(el => {
+            const p = getComputedStyle(el).position;
+            if (p === 'fixed' || p === 'sticky') el.style.setProperty('position', 'static', 'important');
+        });
+    }
+
+    // حذف العناصر الدخيلة التي يحقنها الموقع خارج الصفحة
+    function purgeInjected() {
+        document.querySelectorAll('#official-print-header, #user-info-badge, #dev-signature, .print-unified-header')
+            .forEach(el => el.remove());
+        Array.from(document.body.children).forEach(el => {
+            if (!el.matches('.loading-overlay, .top-controls, .page-wrapper, script, style, link, noscript')) el.remove();
+        });
+        const wrap = document.querySelector('.page-wrapper');
+        if (wrap) Array.from(wrap.children).forEach(el => { if (!el.classList.contains('page')) el.remove(); });
+    }
+    purgeInjected();
+    new MutationObserver(purgeInjected).observe(document.body, { childList: true });
+
+    // ───────────────────────────────────────────────────────────
+    // الطباعة
+    // ───────────────────────────────────────────────────────────
+    window.printNative = function () { window.print(); };
+
     // ═══════════════════════════════════════════════════════════════
-    // FIX 1 (الطبقة الثانية) + FIX 2 (الطبقة الثانية):
-    // تجهيز المحتوى قبل الطباعة / التصدير
-    //
-    // أ) الخلفيات: إذا ألغى المتصفح "Background graphics" عند حفظ PDF فإنه يحذف
-    //    background-color وbackground-image حتى مع print-color-adjust. لكنه لا
-    //    يحذف box-shadow. لذلك نرسم لون الخلفية كظل داخلي ضخم
-    //    (inset 0 0 0 9999px اللون) فيُطبع مهما كان الإعداد.
-    // ب) النص المتدرّج (background-clip:text) يصبح شفافًا عند حذف الخلفية،
-    //    فنستبدله بلون نص صريح.
-    // ج) الحاويات القابلة للتمرير أو المحدّدة الارتفاع (overflow:auto + max-height)
-    //    هي السبب الأرجح لظهور "جزء بسيط من البيانات" فقط؛ نفتحها بالكامل.
-    // د) العناصر fixed/sticky تُحوَّل إلى static لأنها تتكرر أو تُفرغ الصفحات.
-    // كل تعديل يُسجَّل ويُسترجع بعد الطباعة، فلا تتغير الشاشة.
+    // PDF مصوّر (اختياري): يلتقط كل صفحة كصورة، فيطابق الشاشة تمامًا
+    // • تحميل المكتبات من 3 مصادر بالتتابع
+    // • قطع الصفحات عند حدود الصفوف والأقسام وتكرار رأس الجدول
+    // • إعادة تلقائية بجودة أقل عند الفشل، وإظهار نص الخطأ على الشاشة
     // ═══════════════════════════════════════════════════════════════
-    let baked = [];
     let exporting = false;
 
-    function parseRGBA(str) {
-        const m = str && str.match(/rgba?\(([^)]+)\)/);
-        if (!m) return null;
-        const p = m[1].split(/[,\s\/]+/).filter(Boolean).map(x => parseFloat(x));
-        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
-    }
-
-    // ألوان CSS الحديثة (oklch, color-mix, color(...)) لا يفهمها html2canvas ويتعطل بسببها،
-    // فنحوّلها إلى rgb/hex عبر canvas قبل التصدير
-    const MODERN_RE = /(?:oklch|oklab|lab|lch|color-mix|color)\(/i;
-    const MODERN_G  = /(?:oklch|oklab|lab|lch|color-mix|color)\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)/gi;
-    const ANY_COLOR = /rgba?\([^)]*\)|#[0-9a-fA-F]{3,8}\b|(?:oklch|oklab|lab|lch|color-mix|color)\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)/i;
-    const COLOR_PROPS = ['color', 'backgroundColor', 'borderTopColor', 'borderRightColor', 'borderBottomColor',
-        'borderLeftColor', 'outlineColor', 'textDecorationColor', 'backgroundImage', 'boxShadow', 'textShadow'];
-    let _ctx = null;
-    function normModern(token) {
-        try {
-            _ctx = _ctx || document.createElement('canvas').getContext('2d');
-            _ctx.fillStyle = '#010203';
-            _ctx.fillStyle = token;
-            const v = _ctx.fillStyle;
-            return v === '#010203' && token.indexOf('010203') < 0 ? 'rgba(0,0,0,0)' : v;
-        } catch (e) { return 'rgba(0,0,0,0)'; }
-    }
-    function usableColor(str) {
-        if (!str) return null;
-        if (MODERN_RE.test(str)) str = normModern(str);
-        const p = parseRGBA(str);
-        if (p) return p.a > 0.01 ? str : null;
-        return /^#/.test(str) ? str : null;
-    }
-
-    function bake(mode) {          // mode: 'print' | 'export'
-        unbake();
-        const seen = new Set();
-        const touch = el => {
-            if (!seen.has(el)) { seen.add(el); baked.push({ el: el, style: el.getAttribute('style') }); }
-        };
-        const paint = (el, color) => {
-            const c2 = getComputedStyle(el);
-            const orig = (c2.boxShadow && c2.boxShadow !== 'none') ? ', ' + c2.boxShadow : '';  // نُبقي التوهّج الأصلي
-            touch(el);
-            el.style.setProperty('box-shadow', 'inset 0 0 0 9999px ' + color + orig, 'important');
-        };
-        const hasOwnBg = el => {
-            const c3 = getComputedStyle(el);
-            return !!usableColor(c3.backgroundColor) || /gradient/.test(c3.backgroundImage || '');
-        };
-
-        root.querySelectorAll('*').forEach(el => {
-            if (/^(script|style|img|svg|path|g|circle|rect|line|polyline|polygon|br|use|defs|text|tspan)$/i.test(el.tagName)) return;
-            const cs = getComputedStyle(el);
-
-            // تحويل الألوان الحديثة (للتصدير فقط)
-            if (mode === 'export') {
-                COLOR_PROPS.forEach(prop => {
-                    const v = cs[prop];
-                    if (v && MODERN_RE.test(v)) {
-                        touch(el);
-                        el.style.setProperty(prop.replace(/[A-Z]/g, m => '-' + m.toLowerCase()), v.replace(MODERN_G, normModern), 'important');
-                    }
-                });
-            }
-
-            // (ج) فتح الحاويات المقيّدة
-            const oy = cs.overflowY;
-            if (oy === 'auto' || oy === 'scroll' || (oy === 'hidden' && cs.maxHeight !== 'none')) {
-                touch(el);
-                el.style.setProperty('overflow', 'visible', 'important');
-                el.style.setProperty('max-height', 'none', 'important');
-            }
-
-            // (د) fixed / sticky
-            if (cs.position === 'fixed' || cs.position === 'sticky') {
-                touch(el);
-                el.style.setProperty('position', 'static', 'important');
-            }
-
-            // (ب) النص المتدرّج
-            const clip = cs.webkitBackgroundClip === 'text' || cs.backgroundClip === 'text';
-            if (clip) {
-                const m = (cs.backgroundImage || '').match(ANY_COLOR);
-                const c = (m && usableColor(m[0])) || cs.color;
-                touch(el);
-                el.style.setProperty('background', 'none', 'important');
-                el.style.setProperty('-webkit-text-fill-color', c, 'important');
-                return;
-            }
-
-            // (أ) تحويل الخلفية إلى ظل داخلي — للطباعة فقط
-            if (mode !== 'print') return;
-            let color = usableColor(cs.backgroundColor);
-            if (!color && cs.backgroundImage && cs.backgroundImage.indexOf('gradient') > -1) {
-                const m = cs.backgroundImage.match(ANY_COLOR);
-                color = m ? usableColor(m[0]) : null;
-            }
-            if (!color) return;
-            if (el.tagName === 'TR') {           // الظل لا يُرسم على الصفوف، فننقل اللون لخلاياها
-                Array.from(el.children).forEach(td => { if (!hasOwnBg(td)) paint(td, color); });
-                return;
-            }
-            if (/^(THEAD|TBODY|TFOOT|COLGROUP|COL)$/.test(el.tagName)) return;
-            paint(el, color);
-        });
-    }
-
-    function unbake() {
-        baked.forEach(b => {
-            if (b.style === null) b.el.removeAttribute('style');
-            else b.el.setAttribute('style', b.style);
-        });
-        baked = [];
-    }
-
-    // لا نُرجع الأنماط بعد الطباعة (afterprint): في أندرويد يُعاد توليد المعاينة
-    // عند تغيير إعدادات الورق بعد انتهاء الحدث، فكانت الخلفيات تختفي.
-    window.addEventListener('beforeprint', () => { if (!exporting) bake('print'); });
-
-    window.printNative = function () {
-        if (!exporting) bake('print');
-        requestAnimationFrame(() => setTimeout(() => window.print(), 120));
-    };
-
-    // ═══════════════════════════════════════════════════════════════
-    // FIX 5: حفظ PDF بالألوان (التقاط الصفحات كصور)
-    // • تحميل المكتبات من 3 مصادر بالتتابع (cdnjs ثم jsdelivr ثم unpkg)
-    // • الرسم على دفعات (3 صفحات لكل التقاط) لتسريع العملية على الجوال
-    // • إعادة تلقائية بجودة أقل عند الفشل (ذاكرة الجوال)
-    // • أي خطأ يظهر نصه على الشاشة بدل أن يختفي
-    // ═══════════════════════════════════════════════════════════════
     const H2C_URLS = [
         'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
         'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
@@ -609,17 +628,16 @@ body.exporting .page {
         const rootRect = root.getBoundingClientRect();
         const R = Math.round(rootRect.width);
         if (R < 200) throw new Error('عرض المحتوى غير صالح (' + R + ')');
-        const K = 287 / R;                              // مم لكل بكسل
-        const H = Math.floor(193 / K);                  // ارتفاع المحتوى المفيد في الصفحة (بكسل)
+        const K = 287 / R;
+        const H = Math.floor(193 / K);
         const totalH = Math.ceil(rootRect.height);
         const rel = el => {
             const r = el.getBoundingClientRect();
             return { top: r.top - rootRect.top, bottom: r.bottom - rootRect.top };
         };
 
-        // نقاط القطع المسموحة: نهاية كل صف/قسم، وبداية كل قسم
         const cand = new Set([0, totalH]);
-        root.querySelectorAll('tbody tr, tfoot tr, .eff-section, .chart-section, .stat-card, .eff-header, .fleet-header, .letterhead, .chart-box, footer')
+        root.querySelectorAll('tbody tr, tfoot tr, .eff-section, .chart-section, .stat-card, .letterhead, footer')
             .forEach(el => cand.add(Math.round(rel(el).bottom)));
         root.querySelectorAll('.eff-section, .chart-section')
             .forEach(el => cand.add(Math.round(rel(el).top)));
@@ -657,7 +675,6 @@ body.exporting .page {
             y0 = end;
         }
 
-        // تجميع الصفحات في دفعات (حتى 3 صفحات للالتقاط الواحد)
         const groups = [];
         let g = null;
         pages.forEach(p => {
@@ -691,7 +708,7 @@ body.exporting .page {
 
                 if (pageNo > 0) pdf.addPage();
                 let y = 5;
-                if (p.T) {                                   // تكرار رأس الجدول
+                if (p.T) {
                     if (!headCache.has(p.T)) {
                         const hhInt = Math.ceil(p.T.hBottom - p.T.hTop);
                         const hc = await withTimeout(window.html2canvas(root, capOpts(p.T.hTop, hhInt)), 120000, 'رسم رأس الجدول');
@@ -706,7 +723,7 @@ body.exporting .page {
                 pc.width = pc.height = 0;
                 pageNo++;
             }
-            gc.width = gc.height = 0;                         // تحرير الذاكرة
+            gc.width = gc.height = 0;
         }
 
         const N = pdf.getNumberOfPages();
@@ -742,7 +759,6 @@ body.exporting .page {
             setMsg('جاري تجهيز الصفحة...');
             document.body.classList.add('exporting');
             window.scrollTo(0, 0);
-            bake('export');
             await sleep(400);
 
             let pdf;
@@ -759,10 +775,8 @@ body.exporting .page {
             console.error(err);
             failed = err;
         } finally {
-            unbake();
             document.body.classList.remove('exporting');
             exporting = false;
-            try { bake('print'); } catch (e) { /* تجاهل */ }
         }
 
         if (failed) {
@@ -770,7 +784,7 @@ body.exporting .page {
             setMsg('تعذر إنشاء PDF: ' + (failed && failed.message ? failed.message : failed) + '\nيمكنك استخدام زر "طباعة".');
             const b = document.createElement('button');
             b.id = 'ovClose'; b.textContent = 'حسنًا';
-            b.style.cssText = 'padding:10px 28px;border:0;border-radius:10px;background:#0a1628;color:#fff;font:800 14px Cairo,sans-serif;cursor:pointer;';
+            b.style.cssText = 'padding:10px 28px;border:0;border-radius:10px;background:#0f2744;color:#fff;font:800 14px Cairo,sans-serif;cursor:pointer;';
             b.onclick = () => { overlay.style.display = 'none'; spinner.style.display = ''; msg.textContent = oldMsg; b.remove(); };
             overlay.appendChild(b);
         } else {
@@ -782,20 +796,6 @@ body.exporting .page {
     // ───────────────────────────────────────────────────────────
     // التهيئة
     // ───────────────────────────────────────────────────────────
-    // حذف العناصر الدخيلة نهائيًا (الحقن قد يحدث بعد التحميل، لذا نراقب DOM)
-    function purgeInjected() {
-        document.querySelectorAll('#official-print-header, #user-info-badge, #dev-signature, .print-unified-header')
-            .forEach(el => el.remove());
-        Array.from(document.body.children).forEach(el => {
-            if (!el.matches('.loading-overlay, .top-controls, .page-wrapper, script, style, link, noscript')) el.remove();
-        });
-        const wrap = document.querySelector('.page-wrapper');
-        if (wrap) Array.from(wrap.children).forEach(el => { if (!el.classList.contains('page')) el.remove(); });
-    }
-    purgeInjected();
-    // نراقب أبناء body فقط (دون subtree) حتى لا نمسّ المحتوى أبدًا
-    new MutationObserver(purgeInjected).observe(document.body, { childList: true });
-
     function init() {
         const loading = document.getElementById('loadingOverlay');
         const data = loadData();
@@ -811,11 +811,9 @@ body.exporting .page {
         if (data.htmlSnapshot) {
             const tmp = document.createElement('div');
             tmp.innerHTML = data.htmlSnapshot;
-            tmp.querySelectorAll(
-                'button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, ' +
-                '.chart-switch, .no-print, .back-to-top, .pagination, script'
-            ).forEach(el => el.remove());
+            cleanSnapshot(tmp);
             root.innerHTML = wrapSnapshot(tmp.innerHTML, title);
+            unpinElements(root);
         } else if (data.rows && data.rows.length > 0) {
             root.innerHTML = buildFromData(data);
         } else {
@@ -823,10 +821,7 @@ body.exporting .page {
         }
 
         prepareImages(root);
-        waitForImages(root).then(() => {
-            loading.style.display = 'none';
-            try { bake('print'); } catch (e) { console.error('bake failed', e); }
-        });
+        waitForImages(root).then(() => { loading.style.display = 'none'; });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
