@@ -60,23 +60,13 @@ html, body {
 .loading-text { font-size: 14px; color: #475569; font-weight: 700; }
 
 /* ───────── المحتوى ───────── */
-.page-wrapper { 
-    max-width: 297mm; 
-    margin: 80px auto 30px; 
-    padding: 0 20px; 
-}
+.page-wrapper { max-width: 297mm; margin: 80px auto 30px; padding: 0 20px; }
 .page {
-    width: 297mm; 
-    min-height: 210mm; 
-    margin: 0 auto; 
-    background: #fff;
-    box-shadow: 0 4px 24px rgba(0,0,0,.15); 
-    border-radius: 8px;
-    overflow: hidden; 
-    position: relative;
+    width: 297mm; min-height: 210mm; margin: 0 auto; background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,.15); border-radius: 8px;
+    overflow: hidden; position: relative;
 }
 
-/* إخفاء العناصر التفاعلية */
 #copied-content button,
 #copied-content .eff-header-actions,
 #copied-content .filter-bar,
@@ -88,7 +78,7 @@ html, body {
 #copied-content .back-to-top,
 #copied-content .pagination { display: none !important; }
 
-/* ───────── الصور ───────── */
+/* ───────── الصور (أكبر) ───────── */
 #copied-content img, .print-table img {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
@@ -100,7 +90,7 @@ html, body {
     background: #fffbeb; display: block; margin: 0 auto;
 }
 
-/* ───────── الجدول الرئيسي ───────── */
+/* ───────── الجدول الرئيسي الذي يحمل الترويسة الثابتة ───────── */
 .master-table { width: 100%; border-collapse: collapse; }
 .master-table > thead { display: table-header-group; }
 .master-table > tbody > tr > td.master-body { padding: 0; vertical-align: top; }
@@ -116,67 +106,35 @@ html, body {
 
 /* ═════════════════ PRINT ═════════════════ */
 @media print {
-    html, body { 
-        background: #fff !important; 
-        margin: 0 !important; 
-        padding: 0 !important; 
-        width: 100% !important;
-        height: auto !important;
-    }
+    html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
 
     .top-controls, .loading-overlay { display: none !important; }
 
-    .page-wrapper { 
-        margin: 0 !important; 
-        padding: 0 !important; 
-        max-width: none !important;
-        width: 100% !important;
-    }
-    
+    .page-wrapper { margin: 0 !important; padding: 0 !important; max-width: none !important; }
     .page {
-        width: 100% !important; 
-        min-height: auto !important;
-        box-shadow: none !important; 
-        border-radius: 0 !important;
-        margin: 0 !important; 
-        padding: 0 !important; 
-        overflow: visible !important;
+        width: 100% !important; min-height: auto !important;
+        box-shadow: none !important; border-radius: 0 !important;
+        margin: 0 !important; padding: 0 !important; overflow: visible !important;
         background: #fff !important;
     }
 
-    /* ✅ إخفاء الترويسات الافتراضية فقط */
     #official-print-header, #user-info-badge, #dev-signature, .print-unified-header { display: none !important; }
 
-    /* ✅ السر: إجبار المتصفح على طباعة الألوان */
-    *, *::before, *::after {
+    /* ═══ المحتوى المنسوخ يُطبع بنفس مظهر الشاشة (خلفية داكنة وألوان كاملة) ═══ */
+    * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
 
-    /* ✅ السر الأكبر: منع المتصفح من إخفاء المحتوى */
-    #copied-content {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+    .snapshot-body, .snapshot-body * {
+        animation: none !important;
+        transition: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
-    /* ✅ إجبار الخلفيات الداكنة على الظهور */
-    .snapshot-body, 
-    .snapshot-body .eff-section, 
-    .snapshot-body .chart-section,
-    .snapshot-body .stat-card,
-    .snapshot-body table,
-    .snapshot-body thead,
-    .snapshot-body th,
-    .snapshot-body .section-header {
-        background-color: inherit !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        display: block !important;
-    }
-
-    /* ✅ ضغط المساحات الفارغة فقط */
+    /* ضغط المساحات الفارغة فقط دون تغيير الألوان */
     .snapshot-body .eff-header, .snapshot-body .fleet-header {
         min-height: 0 !important; height: auto !important;
         padding: 4mm 6mm !important; margin: 0 0 3mm !important;
@@ -184,24 +142,19 @@ html, body {
     .snapshot-body .eff-section, .snapshot-body .chart-section {
         margin: 0 0 3mm !important;
         page-break-inside: auto !important; break-inside: auto !important;
-        display: block !important;
     }
     .snapshot-body .section-header {
         page-break-after: avoid !important; break-after: avoid !important;
     }
+    .snapshot-body .stat-card { break-inside: avoid !important; page-break-inside: avoid !important; }
 
-    /* ✅ الجداول: تتصل عبر الصفحات ورأس الأعمدة يتكرر */
-    .snapshot-body table { 
-        width: 100% !important; 
-        border-collapse: collapse; 
-        display: table !important;
-    }
+    /* الجداول: تتصل عبر الصفحات ورأس الأعمدة يتكرر */
+    .snapshot-body table { width: 100% !important; border-collapse: collapse; }
     thead { display: table-header-group !important; }
     tfoot { display: table-footer-group !important; }
     tr { page-break-inside: avoid !important; break-inside: avoid !important; }
-    td, th { display: table-cell !important; }
 
-    /* ✅ الصور داخل الجداول */
+    /* الصور داخل الجداول (أكبر) */
     .print-table tbody td img,
     .snapshot-body table td img {
         width: 28mm !important; height: 28mm !important;
@@ -265,6 +218,7 @@ html, body {
         return null;
     }
 
+    // الترويسة الرسمية: تظهر مرة واحدة في أعلى الصفحة الأولى فقط
     function buildLetterhead(title) {
         return `
         <header class="letterhead" style="padding:5mm 12mm 3.5mm;margin-bottom:4mm;border-bottom:3px double #0a1628;">
@@ -301,9 +255,92 @@ html, body {
         </footer>`;
     }
 
+    // وضع النسخ (htmlSnapshot): ترويسة مرة واحدة ثم المحتوى
     function wrapWithFixedHeader(innerHTML, title) {
         return buildLetterhead(title) +
             `<div class="snapshot-body" style="padding:0 6mm;">${innerHTML}${buildFooter()}</div>`;
+    }
+
+    // وضع البيانات (rows/columns)
+    function buildFromData(data) {
+        const section = data.sectionTitle || 'السجل التفصيلي';
+        const stats = data.stats || [];
+        const columns = data.columns || [];
+        const rows = data.rows || [];
+        const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
+        const IMG = '30mm';
+
+        let html = buildLetterhead(title);
+
+        if (stats.length) {
+            html += '<section style="display:grid;grid-template-columns:repeat(' + stats.length + ',1fr);gap:4mm;padding:4mm 12mm 3mm;">';
+            const colors = ['#0a1628', '#10b981', '#f59e0b', '#ef4444', '#d4a843'];
+            const bgs = ['#f8fafc', '#ecfdf5', '#fffbeb', '#fef2f2', '#fffbeb'];
+            stats.forEach((s, i) => {
+                const color = colors[i] || '#0a1628';
+                const bg = bgs[i] || '#f8fafc';
+                html += `
+                <div style="padding:3mm 2mm;background:#ffffff;border:1px solid #cbd5e1;border-top:3px solid ${color};border-radius:1.5mm;text-align:center;">
+                    <div style="font-size:20pt;font-weight:900;color:${color};line-height:1;margin-bottom:1.5mm;">${esc(s.value || '0')}</div>
+                    <div style="font-size:8pt;color:#1e293b;font-weight:700;">${esc(s.label || '')}</div>
+                </div>`;
+            });
+            html += '</section>';
+        }
+
+        html += `<div style="padding:2.5mm 5mm;background:#0a1628;color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2px solid #d4a843;margin:0 12mm;">${esc(section)}</div>`;
+
+        html += '<div style="margin:0 12mm 4mm;border:1px solid #e2e8f0;border-top:none;">';
+        html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt;">';
+        html += '<thead>';
+
+        if (columns.length) {
+            html += '<tr>';
+            columns.forEach((c, i) => {
+                const label = typeof c === 'string' ? c : (c.label || '');
+                const style = i === 0 ? 'width:34mm;' : '';
+                html += `<th style="${style}padding:2mm 1mm;background:#1a2942;color:#ffffff;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #d4a843;border-left:1px solid rgba(247,215,116,.15);white-space:nowrap;">${esc(label)}</th>`;
+            });
+            html += '</tr>';
+        }
+        html += '</thead><tbody>';
+
+        const tdBase = 'border-bottom:1px solid #e2e8f0;border-left:1px solid #e2e8f0;';
+        rows.forEach(row => {
+            const cells = Array.isArray(row) ? row : Object.values(row);
+            html += '<tr>';
+            cells.forEach(cell => {
+                if (typeof cell === 'object' && cell !== null) {
+                    if (cell.type === 'image') {
+                        const url = cell.url || cell.src || '';
+                        if (url) {
+                            html += `<td style="width:34mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG};height:${IMG};object-fit:cover;border-radius:1.5mm;border:1px solid #d4a843;display:block;margin:0 auto;"></td>`;
+                        } else {
+                            html += `<td style="width:34mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><div style="width:${IMG};height:${IMG};margin:0 auto;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:12pt;color:#94a3b8;">📷</div></td>`;
+                        }
+                        return;
+                    }
+                    if (cell.type === 'badge') {
+                        const variants = {
+                            success: 'background:#10b981;color:#fff;border:1px solid #047857;',
+                            danger: 'background:#ef4444;color:#fff;border:1px solid #b91c1c;',
+                            warning: 'background:#f59e0b;color:#fff;border:1px solid #b45309;',
+                            info: 'background:#3b82f6;color:#fff;border:1px solid #1e40af;',
+                            neutral: 'background:#64748b;color:#fff;border:1px solid #334155;'
+                        };
+                        const st = variants[cell.variant] || variants.neutral;
+                        html += `<td style="padding:1mm;text-align:center;${tdBase}"><span style="${st}padding:.5mm 2mm;border-radius:3mm;font-size:6.5pt;font-weight:800;display:inline-block;">${esc(cell.text || '')}</span></td>`;
+                        return;
+                    }
+                }
+                const value = (cell === null || cell === undefined || cell === '') ? '—' : esc(cell);
+                html += `<td style="padding:1.5mm 1mm;text-align:center;font-size:7.5pt;color:#1e293b;font-weight:600;${tdBase}">${value}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        html += buildFooter().replace('margin:5mm 0 0', 'margin:5mm 12mm 0');
+        return html;
     }
 
     function waitForImages(container) {
@@ -341,6 +378,7 @@ html, body {
         const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
 
         if (data.htmlSnapshot) {
+            // تنظيف العناصر التفاعلية قبل الإدراج
             const tmp = document.createElement('div');
             tmp.innerHTML = data.htmlSnapshot;
             tmp.querySelectorAll(
@@ -349,13 +387,14 @@ html, body {
             ).forEach(el => el.remove());
             content.innerHTML = wrapWithFixedHeader(tmp.innerHTML, title);
         } else if (data.rows && data.rows.length > 0) {
-            content.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
+            content.innerHTML = buildFromData(data);
         } else {
             content.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
         }
 
         prepareImages(content);
 
+        // لا نُخفي شاشة التحميل قبل اكتمال الصور
         waitForImages(content).then(() => { if (loading) loading.style.display = 'none'; });
     }
 
