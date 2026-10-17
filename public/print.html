@@ -21,7 +21,6 @@ html, body {
     min-height: 100vh;
 }
 
-/* ───────── شريط التحكم ───────── */
 .top-controls {
     position: fixed; top: 16px; right: 16px;
     display: flex; gap: 8px; z-index: 9999;
@@ -39,7 +38,6 @@ html, body {
 .btn-pdf   { background: #eef2f7; color: #0f2744; border: 1px solid #cbd5e1; }
 .btn-close { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 
-/* ───────── Loading ───────── */
 .loading-overlay {
     position: fixed; inset: 0; background: rgba(241,245,249,.98);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -53,7 +51,6 @@ html, body {
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text { font-size: 14px; color: #475569; font-weight: 700; max-width: 90%; text-align: center; line-height: 1.8; white-space: pre-line; }
 
-/* ───────── الورقة ───────── */
 .page-wrapper { max-width: 297mm; margin: 80px auto 30px; padding: 0 20px; }
 .page {
     width: 297mm; min-height: 210mm; margin: 0 auto; background: #fff;
@@ -91,9 +88,6 @@ html, body {
     background: #fff; display: block; margin: 0 auto;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   ثيم الوثيقة الرسمية للمحتوى المنسوخ (.snapshot-body)
-   ═══════════════════════════════════════════════════════════════ */
 .snapshot-body, .snapshot-body * {
     background: transparent !important;
     background-image: none !important;
@@ -236,13 +230,20 @@ html, body {
     display: block !important; margin: 0 auto !important; background: #fff !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   وضع التصدير المصوّر: نجبر العرض على أن يكون كبيراً جداً (1600px)
+   حتى تلتقط الصورة بحجم كبير وتظهر واضحة في PDF
+   ═══════════════════════════════════════════════════════════════ */
 body.exporting { background: #fff !important; }
 body.exporting * { letter-spacing: normal !important; }
 body.exporting .top-controls { display: none !important; }
 body.exporting .page-wrapper { margin: 0 !important; padding: 0 !important; max-width: none !important; }
 body.exporting .page {
-    width: 1120px !important; min-height: 0 !important; margin: 0 !important;
+    width: 1600px !important; min-height: 0 !important; margin: 0 !important;
     box-shadow: none !important; border-radius: 0 !important; overflow: visible !important;
+}
+body.exporting .snapshot-body {
+    width: 1600px !important;
 }
 
 @media print {
@@ -278,7 +279,7 @@ body.exporting .page {
 
 <div class="top-controls">
     <button class="btn-print" onclick="window.printNative()"><i class="fas fa-print"></i> طباعة</button>
-    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> PDF مصوّر (ألوان)</button>
+    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> PDF مصوّر (حجم كبير)</button>
     <button class="btn-close" onclick="window.close()"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
@@ -665,7 +666,6 @@ body.exporting .page {
                     pdf.addImage(hd.img, 'PNG', 5, y, 287, hd.h * K);
                     y += hd.h * K;
                 }
-                // هنا السر: جودة PNG بدلاً من JPEG لضمان عدم ضغط الصور
                 pdf.addImage(pc.toDataURL('image/png', 1.0), 'PNG', 5, y, 287, (sh / scale) * K);
                 pc.width = pc.height = 0;
                 pageNo++;
@@ -710,7 +710,6 @@ body.exporting .page {
 
             let pdf;
             try {
-                // زيادة الدقة إلى 3 لضمان وضوح أعلى
                 pdf = await buildPdf(3, setMsg);
             } catch (e1) {
                 console.warn('retry with lower scale:', e1);
