@@ -227,6 +227,14 @@ let httpServer = null;
 let io = null;
 const onlineUsers = new Map();
 const screenSessions = new Map();
+// 🧹 تنظيف جلسات مشاركة الشاشة المنتهية (منع Memory Leak)
+setInterval(() => {
+    const now = Date.now();
+    const MAX_AGE = 10 * 60 * 1000;
+    for (const [id, s] of screenSessions) {
+        if (now - s.createdAt > MAX_AGE) screenSessions.delete(id);
+    }
+}, 60000).unref();
 
 app.disable('x-powered-by');
 app.set('trust proxy', isProduction ? 1 : 0);
@@ -241,28 +249,53 @@ app.use((req, res, next) => {
 // ═══════════════════════════════════════════════════════════
 // 🛡️ DEV TOOLS BLOCKER — إغلاق أدوات التطوير
 // ═══════════════════════════════════════════════════════════
-app.use((req, res, next) => {
-    const DEV_ENABLED = process.env.DEV_TOOLS === 'true';
-    if (DEV_ENABLED) return next();
+// ═══ DEV TOOLS BLOCKER (hardened) ═══
+const DEV_BLOCKED_PATHS = [
+    '/phpinfo', '/phpinfo.php', '/info.php',
+    '/_debugbar', '/debugbar', '/telescope', '/horizon',
+    '/__clockwork', '/_profiler', '/pma', '/adminer.php',
+    '/.git', '/.svn', '/.hg', '/.ds_store'
+];
+const DANGEROUS_PARAMS = new Set(['debug','dev','test','demo','trace','profiler','xdebug']);
 
-    const blockedPaths = [
-        '/phpinfo', '/phpinfo.php', '/info.php',
-        '/_debugbar', '/debugbar', '/telescope', '/horizon',
-        '/__clockwork', '/_profiler', '/pma', '/adminer.php',
-        '/.git', '/.svn', '/.hg', '/.DS_Store'
-    ];
-    const lowerPath = (req.path || '').toLowerCase();
-    for (const bp of blockedPaths) {
-        if (lowerPath === bp || lowerPath.startsWith(bp + '/')) {
-            return res.status(404).json({ success: false, error: 'Not Found' });
-        }
+function normalizePath(p) {
+    if (typeof p !== 'string') return '';
+    let s = p;
+    try { s = decodeURIComponent(p); } catch (e) {}
+    return s.replace(/\\/g, '/').replace(/\/+/g, '/').toLowerCase().replace(/\/$/, '') || '/';
+}
+function isBlockedPath(rawPath) {
+    const p = normalizePath(rawPath);
+    for (const bp of DEV_BLOCKED_PATHS) {
+        if (p === bp || p.startsWith(bp + '/')) return true;
+    }
+    return false;
+}
+
+app.use((req, res, next) => {
+    if (process.env.DEV_TOOLS === 'true') return next();
+
+    if (isBlockedPath(req.path)) {
+        console.warn(`🚫 Blocked path: ${req.method} ${req.originalUrl} from ${req.ip}`);
+        return res.status(404).json({ success: false, error: 'Not Found' });
     }
 
     if (req.query && typeof req.query === 'object') {
-        ['debug', 'dev', 'test', 'demo', 'trace', 'profiler', 'xdebug']
-            .forEach(k => { try { delete req.query[k]; } catch(e) {} });
+        const cleaned = {};
+        let hasDangerous = false;
+        for (const [k, v] of Object.entries(req.query)) {
+            if (DANGEROUS_PARAMS.has(String(k).toLowerCase())) hasDangerous = true;
+            else cleaned[k] = v;
+        }
+        if (hasDangerous) {
+            console.warn(`🚫 Stripped query: ${req.originalUrl} from ${req.ip}`);
+            try {
+                Object.defineProperty(req, 'query', {
+                    value: cleaned, writable: true, configurable: true, enumerable: true
+                });
+            } catch (e) { req.query = cleaned; }
+        }
     }
-
     next();
 });
 app.use((req, res, next) => {
@@ -520,7 +553,7 @@ if (process.env.ADMIN_PASSWORD) {
 } else {
     if (isProduction) { console.error('❌ ADMIN_PASSWORD required'); process.exit(1); }
     ADMIN_PASSWORD = generateStrongPassword(); ADMIN_PASSWORD_GENERATED = true;
-    if (!isProduction) console.log('🔑 DEV PASSWORD:', ADMIN_PASSWORD);
+    if (!isProduction) console.log('🔑 DEV PASSWORD: [REDACTED — set ADMIN_PASSWORD in .env]');
 }
 if (isProduction && (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length !== 64)) {
     console.error('❌ ENCRYPTION_KEY must be 64 hex'); process.exit(1);
@@ -679,6 +712,17 @@ app.use(cors({
     allowedHeaders: ['Content-Type','Authorization','X-CSRF-Token','X-Request-ID'],
     exposedHeaders: ['X-CSRF-Token','X-Session-Expiry','X-Request-ID']
 }));
+// 🛡️ في الإنتاج: امنع طلبات الكتابة بدون Origin (curl/Postman/أدوات خارجية)
+// للسماح بها مؤقتاً: ALLOW_NO_ORIGIN_WRITES=true
+app.use((req, res, next) => {
+    if (!isProduction || process.env.ALLOW_NO_ORIGIN_WRITES === 'true') return next();
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+    if (!req.headers.origin) {
+        console.warn(`🚫 No-origin write blocked: ${req.method} ${req.originalUrl} from ${req.ip}`);
+        return res.status(403).json({ success: false, error: 'Origin required' });
+    }
+    next();
+});
 
 const apiLimiter = rateLimit({
     windowMs: 15*60*1000, max: 2000, standardHeaders: true, legacyHeaders: false,
@@ -1580,7 +1624,7 @@ function formatMaintenance(log) {
     });
 
     // ============ REFRESH ============
-    app.post('/api/auth/refresh', async (req, res) => {
+    app.post('/api/auth/refresh', authLimiter, async (req, res) => {
         try {
             const cn = isProduction ? '__Secure-marine.refresh' : 'marine.refresh';
             const rt = req.cookies[cn];
