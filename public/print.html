@@ -175,9 +175,37 @@ html, body {
 
 .snapshot-body .eff-header,
 .snapshot-body .fleet-header,
-.snapshot-body canvas,
 .snapshot-body i[class*="fa-"],
 .snapshot-body .fas, .snapshot-body .far, .snapshot-body .fab { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   إضافة الرسم البياني (Chart) - لا نحذفه بل نحوله لصورة
+   ═══════════════════════════════════════════════════════════════ */
+.snapshot-body canvas {
+    display: block !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 2mm auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+.snapshot-body .chart-section,
+.snapshot-body .chart-box {
+    display: block !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 2mm 0 !important;
+}
+
+.snapshot-body .chart-section canvas,
+.snapshot-body .chart-box canvas {
+    width: 100% !important;
+    max-width: 280mm !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
 
 .snapshot-body :has(> .stat-card) {
     display: grid !important;
@@ -297,6 +325,14 @@ body.exporting .snapshot-body { width: 1600px !important; }
     .print-table tbody td img, .snapshot-body table td img {
         width: 40mm !important; height: 30mm !important;
     }
+    
+    /* الرسوم البيانية تظهر كاملة في الطباعة */
+    .snapshot-body canvas {
+        max-width: 100% !important;
+        height: auto !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
 }
 </style>
 </head>
@@ -394,15 +430,33 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
     const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]/gu;
 
+    // ═══════════════════════════════════════════════════════════════
+    // تعديل دالة cleanSnapshot: نحول canvas إلى img بدلاً من حذفه
+    // ═══════════════════════════════════════════════════════════════
     function cleanSnapshot(container) {
         container.querySelectorAll(
             'button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, ' +
             '.chart-switch, .no-print, .back-to-top, .pagination, script'
         ).forEach(el => el.remove());
 
-        container.querySelectorAll('canvas').forEach(c => c.remove());
-        container.querySelectorAll('.chart-section').forEach(sec => { if (!sec.querySelector('table')) sec.remove(); });
-        container.querySelectorAll('.chart-box').forEach(box => { if (!box.querySelector('table')) box.remove(); });
+        // ✅ تحويل الرسوم البيانية (canvas) إلى صور (img) بدلاً من حذفها
+        container.querySelectorAll('canvas').forEach(canvas => {
+            try {
+                const dataUrl = canvas.toDataURL('image/png');
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.style.width = '100%';
+                img.style.maxWidth = '280mm';
+                img.style.height = 'auto';
+                img.style.display = 'block';
+                img.style.margin = '2mm auto';
+                img.alt = 'رسم بياني';
+                canvas.parentNode.replaceChild(img, canvas);
+            } catch (e) {
+                // إذا فشل التحويل (بسبب CORS) نحذفه
+                canvas.remove();
+            }
+        });
 
         const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
         const nodes = [];
