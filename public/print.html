@@ -12,40 +12,42 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
+/* ═══════════════════════════════════════════════════════════ */
+/* 🎨 إعدادات عامة                                             */
+/* ═══════════════════════════════════════════════════════════ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
     font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     direction: rtl;
-    background: #e5e7eb;
+    background: #525659; /* لون خلفية عارض PDF */
     color: #111827;
     min-height: 100vh;
 }
 
-/* ═══════════════════════════════════════════════════════════ */
-/* 🎨 شريط التحكم                                              */
-/* ═══════════════════════════════════════════════════════════ */
+/* شريط التحكم */
 .top-controls {
     position: fixed;
     top: 16px;
-    right: 16px;
+    right: 50%;
+    transform: translateX(50%);
     display: flex;
-    gap: 10px;
+    gap: 12px;
     z-index: 9999;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(12px);
-    padding: 10px;
-    border-radius: 14px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    padding: 12px 20px;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
     border: 1px solid #e2e8f0;
 }
 
 .top-controls button {
-    padding: 10px 22px;
+    padding: 10px 24px;
     border: none;
     border-radius: 10px;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 800;
     cursor: pointer;
     display: inline-flex;
@@ -60,124 +62,173 @@ html, body {
     box-shadow: 0 4px 12px rgba(212, 168, 67, 0.4);
 }
 
-.btn-print:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(212, 168, 67, 0.6);
-}
+.btn-print:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(212, 168, 67, 0.6); }
 
-.btn-close {
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #e2e8f0;
-}
-
+.btn-close { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 .btn-close:hover { background: #e2e8f0; }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* ⏳ Loading                                                   */
+/* ⏳ شاشة التحميل                                             */
 /* ═══════════════════════════════════════════════════════════ */
 .loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(241, 245, 249, 0.98);
+    position: fixed; inset: 0; background: #525659;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 10000; gap: 20px;
+}
+.spinner {
+    width: 52px; height: 52px; border: 4px solid #e2e8f0;
+    border-top-color: #d4a843; border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 16px; color: #fff; font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 📄 هيكل الصفحة A4 Landscape                                 */
+/* ═══════════════════════════════════════════════════════════ */
+.page-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    z-index: 10000;
+    padding: 80px 20px 40px;
     gap: 20px;
 }
 
-.spinner {
-    width: 52px;
-    height: 52px;
-    border: 4px solid #e2e8f0;
-    border-top-color: #d4a843;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.loading-text {
-    font-size: 14px;
-    color: #475569;
-    font-weight: 700;
-}
-
-/* ═══════════════════════════════════════════════════════════ */
-/* 📄 المحتوى                                                   */
-/* ═══════════════════════════════════════════════════════════ */
-.page-wrapper {
-    max-width: 297mm;
-    margin: 80px auto 30px;
-    padding: 0 20px;
-}
-
-.page {
+.a4-page {
     width: 297mm;
-    min-height: 210mm;
-    margin: 0 auto;
+    height: 210mm;
     background: #ffffff;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-    border-radius: 8px;
-    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     position: relative;
-}
-
-/* إخفاء العناصر التفاعلية داخل المحتوى */
-#copied-content button,
-#copied-content .eff-header-actions,
-#copied-content .filter-bar,
-#copied-content .scroll-nav,
-#copied-content .btn-action,
-#copied-content .btn-filter,
-#copied-content .chart-switch,
-#copied-content .no-print,
-#copied-content .back-to-top,
-#copied-content .pagination {
-    display: none !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    page-break-after: always;
+    /* حدود آمنة داخل الصفحة */
+    padding: 8mm 10mm 12mm 10mm; 
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* 🖼️ صور واضحة في الشاشة                                      */
+/* 🏛️ الترويسة والتذييل (لكل صفحة)                            */
 /* ═══════════════════════════════════════════════════════════ */
-#copied-content img,
-.print-table img {
+.page-header {
+    border-bottom: 2px solid #0a1628;
+    padding-bottom: 3mm;
+    margin-bottom: 4mm;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8mm;
+    align-items: flex-start;
+}
+
+.page-header .header-right {
+    text-align: right; font-size: 8.5pt; line-height: 1.5; color: #0a1628; font-weight: 600;
+}
+.page-header .header-right .country {
+    font-weight: 900; font-size: 9.5pt; margin-bottom: 1mm;
+}
+.page-header .header-right .ref {
+    margin-top: 2mm; font-size: 9pt; font-weight: 800;
+}
+
+.page-header .header-center {
+    text-align: center; align-self: center; min-width: 70mm;
+}
+.page-header .header-center .anchor {
+    font-size: 14pt; color: #d4a843; margin-bottom: 1mm;
+}
+.page-header .header-center h1 {
+    font-size: 12pt; font-weight: 900; color: #0a1628; margin: 0;
+}
+
+.page-header .header-left {
+    text-align: left; font-size: 8.5pt; color: #0a1628; font-weight: 600;
+}
+
+.page-footer {
+    position: absolute;
+    bottom: 6mm;
+    left: 10mm;
+    right: 10mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7.5pt;
+    color: #64748b;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 2mm;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 📊 محتوى الصفحة والجداول                                    */
+/* ═══════════════════════════════════════════════════════════ */
+.page-content {
+    flex: 1;
+    overflow: hidden;
+}
+
+.section-title {
+    padding: 2mm 4mm;
+    background: linear-gradient(90deg, #0a1628 0%, #1a2942 100%);
+    color: #ffffff;
+    font-size: 10pt;
+    font-weight: 800;
+    border-bottom: 2px solid #d4a843;
+    margin-bottom: 2mm;
+    border-radius: 4px 4px 0 0;
+}
+
+/* الجداول */
+.print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+}
+
+.print-table thead {
+    display: table-header-group;
+}
+
+.print-table th {
+    background: #0a1628 !important;
+    color: #f7d774 !important;
+    font-weight: 800;
+    text-align: center;
+    padding: 2mm 1mm;
+    border: 1px solid #1a2942;
+    border-bottom: 2px solid #d4a843;
+}
+
+.print-table td {
+    padding: 1.5mm 1mm;
+    text-align: center;
+    font-size: 7.5pt;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    font-weight: 600;
+}
+
+.print-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+/* الصور */
+.print-table td img {
+    width: 18mm;
+    height: 18mm;
+    object-fit: cover;
+    border-radius: 1.5mm;
+    border: 1px solid #d4a843;
+    display: block;
+    margin: 0 auto;
     image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    -ms-interpolation-mode: bicubic;
-    max-width: 100%;
-    height: auto;
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* 🏛️ الترويسة المخفية (تُطبع في كل صفحة عبر @page)              */
-/* ═══════════════════════════════════════════════════════════ */
-.print-header-running {
-    display: none;
-}
-
-/* ═══════════════════════════════════════════════════════════ */
-/* 📄 إعدادات الطباعة A4 Landscape                             */
+/* 🖨️ إعدادات الطباعة النهائية (إخفاء واجهة المستخدم)            */
 /* ═══════════════════════════════════════════════════════════ */
 @page {
     size: A4 landscape;
-    margin: 45mm 8mm 15mm 8mm; /* مساحة علوية للترويسة، وسفلية للتذييل */
-    
-    /* ✅ تكرار الترويسة في كل صفحة */
-    @top-center {
-        content: element(printHeader);
-        width: 100%;
-    }
-    
-    /* ✅ تذييل الترقيم في كل صفحة */
-    @bottom-center {
-        content: "صفحة " counter(page) " من " counter(pages);
-        font-family: 'Cairo', sans-serif;
-        font-size: 8pt;
-        color: #64748b;
-    }
+    margin: 0; /* الهوامش تتم داخلياً في .a4-page */
 }
 
 @media print {
@@ -187,130 +238,33 @@ html, body {
         padding: 0 !important;
     }
 
-    .top-controls,
-    .loading-overlay { display: none !important; }
+    .top-controls, .loading-overlay {
+        display: none !important;
+    }
 
     .page-wrapper {
-        margin: 0 !important;
         padding: 0 !important;
-        max-width: none !important;
-    }
-
-    .page {
-        width: 100% !important;
-        min-height: auto !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
         margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* ✅ تفعيل الترويسة المتكررة */
-    .print-header-running {
+        gap: 0 !important;
         display: block !important;
-        position: running(printHeader);
     }
 
-    /* إخفاء الترويسات الافتراضية */
-    #official-print-header,
-    #user-info-badge,
-    #dev-signature { display: none !important; }
-
-    /* إخفاء الخلفيات الداكنة */
-    #page-efficiency,
-    #page-fleet,
-    #page-vehicles,
-    #page-maintenance,
-    #page-users {
-        background: #ffffff !important;
-        background-image: none !important;
-    }
-
-    /* الترويسات الداخلية */
-    .eff-header, .fleet-header {
-        background: #ffffff !important;
-        border: 2px solid #0a1628 !important;
+    .a4-page {
         box-shadow: none !important;
-        page-break-inside: avoid !important;
+        margin: 0 !important;
+        border: none !important;
+        page-break-after: always;
+        /* الحفاظ على الأبعاد الفعلية للصفحة */
+        width: 297mm;
+        height: 210mm;
     }
 
-    .eff-header-left h2,
-    .fleet-header-left h2 {
-        color: #0a1628 !important;
-        -webkit-text-fill-color: #0a1628 !important;
-        background: none !important;
-    }
-
-    /* الإحصائيات */
-    .stat-card {
-        background: #ffffff !important;
-        border: 1.5px solid #d4a843 !important;
-        box-shadow: none !important;
-        page-break-inside: avoid !important;
-    }
-
-    /* الأقسام والبطاقات */
-    .eff-section {
-        background: #ffffff !important;
-        border: 1.5px solid #0a1628 !important;
-        box-shadow: none !important;
-        page-break-inside: avoid !important; /* منع تقسيم البطاقة */
-        margin-bottom: 4mm !important;
-    }
-
-    .section-header {
-        background: linear-gradient(90deg, #0a1628 0%, #1a2942 100%) !important;
-        color: #ffffff !important;
-        border-bottom: 3px solid #d4a843 !important;
-    }
-
-    .section-header h3 { color: #f7d774 !important; }
-
-    /* رؤوس الجداول */
-    thead { display: table-header-group !important; }
-    thead th {
-        background: #0a1628 !important;
-        color: #f7d774 !important;
-        border-bottom: 2px solid #d4a843 !important;
-        padding: 2mm 1mm !important;
-        font-size: 8pt !important;
-    }
-
-    /* الخلايا */
-    tbody td {
-        color: #0a1628 !important;
-        border-bottom: 1px solid #e2e8f0 !important;
-        border-left: 1px solid #e2e8f0 !important;
-        padding: 1.5mm 1mm !important;
-        font-size: 7.5pt !important;
-    }
-
-    tbody tr:nth-child(even) { background: #f8fafc !important; }
-
-    /* الصور */
-    .print-table tbody td img,
-    #copied-content img {
-        width: 22mm !important;
-        height: 22mm !important;
-        object-fit: cover !important;
-        border-radius: 1.5mm !important;
-        border: 1px solid #d4a843 !important;
-        image-rendering: -webkit-optimize-contrast !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-
-    /* عام */
+    /* ضمان طباعة الألوان */
     * {
-        animation: none !important;
-        transition: none !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
-
-    table { page-break-inside: auto !important; }
-    tr { page-break-inside: avoid !important; }
 }
 </style>
 </head>
@@ -318,7 +272,7 @@ html, body {
 
 <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
-    <div class="loading-text">جاري تحضير الطباعة...</div>
+    <div class="loading-text">جاري تحضير الطباعة الاحترافية...</div>
 </div>
 
 <div class="top-controls">
@@ -330,35 +284,8 @@ html, body {
     </button>
 </div>
 
-<div class="page-wrapper">
-
-    <!-- ✅ الترويسة الرسمية (تتكرر في كل صفحة عبر CSS) -->
-    <div class="print-header-running">
-        <div style="padding:4mm 6mm 3mm; border-bottom:2px solid #0a1628; background:#ffffff;">
-            <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:8mm; align-items:flex-start;">
-                <div style="text-align:right; font-size:8.5pt; line-height:1.5; color:#0a1628; font-weight:600;">
-                    <div style="font-weight:900; font-size:9.5pt;">الجمهورية التونسية</div>
-                    وزارة الداخلية<br>
-                    كتابة الدولة للأمن<br>
-                    الإدارة العامة للحرس الوطني<br>
-                    الإدارة العامة لحرس الحدود<br>
-                    إدارة إسناد الوحدات البحرية
-                    <div style="margin-top:2mm; font-size:9pt; font-weight:800;">ع/ ________ /دد</div>
-                </div>
-                <div style="text-align:center; align-self:center; min-width:70mm;">
-                    <div style="font-size:14pt; color:#d4a843; margin-bottom:1mm;">⚓</div>
-                    <h1 id="printHeaderTitle" style="font-size:12pt; font-weight:900; color:#0a1628; margin:0;">منظومة الوسائل البحرية</h1>
-                </div>
-                <div style="text-align:left; font-size:8.5pt; color:#0a1628; font-weight:600;">
-                    العوينة في: __________
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- المحتوى المُستنسخ -->
-    <div class="page" id="copied-content"></div>
-</div>
+<!-- هنا سيتم حقن الصفحات (Divs) برمجياً -->
+<div class="page-wrapper" id="pagesContainer"></div>
 
 <script>
 (function() {
@@ -370,14 +297,18 @@ html, body {
 
     const TITLES = {
         fleet: 'الأسطول البحري',
-        vehicles: 'الوسائل البرية - الحرس البحري',
+        vehicles: 'الوسائل البرية',
         efficiency: 'جاهزية الأسطول',
-        maintenance: 'سجل الصيانة والتدخلات',
+        maintenance: 'سجل الصيانة',
         logs: 'سجلات الصيانة'
     };
 
     document.title = (TITLES[pageType] || 'طباعة') + ' — منظومة الوسائل البحرية';
 
+    const printData = loadData();
+    const pagesContainer = document.getElementById('pagesContainer');
+
+    // دوال مساعدة
     function loadData() {
         try {
             const raw = localStorage.getItem(storageKey);
@@ -386,61 +317,169 @@ html, body {
         return null;
     }
 
-    function updateHeaderTitle(data) {
-        const titleEl = document.getElementById('printHeaderTitle');
-        if (titleEl) {
-            const title = (data && data.title) || TITLES[pageType] || 'منظومة الوسائل البحرية';
-            titleEl.textContent = title;
-        }
+    function getHeaderHTML(title) {
+        return `
+        <div class="page-header">
+            <div class="header-right">
+                <div class="country">الجمهورية التونسية</div>
+                وزارة الداخلية<br>
+                كتابة الدولة للأمن<br>
+                الإدارة العامة للحرس الوطني<br>
+                الإدارة العامة لحرس الحدود<br>
+                إدارة إسناد الوحدات البحرية
+                <div class="ref">ع/ ________ /دد</div>
+            </div>
+            <div class="header-center">
+                <div class="anchor">⚓</div>
+                <h1>${title}</h1>
+            </div>
+            <div class="header-left">
+                العوينة في: __________
+            </div>
+        </div>`;
+    }
+
+    function getFooterHTML(pageNum, totalPages) {
+        const now = new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' });
+        return `
+        <div class="page-footer">
+            <div>منظومة الوسائل البحرية v11.2.0</div>
+            <div>تاريخ الطباعة: ${now}</div>
+            <div>صفحة ${pageNum} من ${totalPages}</div>
+        </div>`;
     }
 
     function prepareImages(container) {
-        const images = container.querySelectorAll('img');
-        images.forEach(img => {
+        container.querySelectorAll('img').forEach(img => {
             img.loading = 'eager';
-            img.decoding = 'sync';
-            if (img.src && !img.src.startsWith('data:')) {
-                img.crossOrigin = 'anonymous';
-            }
+            if (img.src && !img.src.startsWith('data:')) img.crossOrigin = 'anonymous';
             img.style.imageRendering = '-webkit-optimize-contrast';
-            img.style.imageRendering = 'crisp-edges';
-            img.style.webkitPrintColorAdjust = 'exact';
-            img.style.printColorAdjust = 'exact';
-            img.classList.add('print-img-optimized');
         });
     }
 
-    function init() {
-        const loading = document.getElementById('loadingOverlay');
-        const content = document.getElementById('copied-content');
-        const data = loadData();
+    // ═══════════════════════════════════════════════════════════
+    // 🚀 الخوارزمية الاحترافية لتقسيم الصفحات
+    // ═══════════════════════════════════════════════════════════
+    function buildProfessionalPages() {
+        const title = printData.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
+        const htmlSnapshot = printData.htmlSnapshot || '';
 
-        if (!data) {
-            content.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">⚠️ لا توجد بيانات للطباعة</div>';
-            if (loading) loading.style.display = 'none';
-            return;
+        // 1. استخراج الجداول والأقسام من الـ Snapshot
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlSnapshot;
+
+        // إزالة العناصر غير المرغوبة
+        tempDiv.querySelectorAll('button, .no-print, .filter-bar, .chart-switch').forEach(el => el.remove());
+
+        // البحث عن الجداول أو البطاقات
+        let blocks = Array.from(tempDiv.querySelectorAll('.eff-section, .print-table, table'));
+
+        // إذا لم نجد جداول، نأخذ المحتوى كاملاً كصفحة واحدة
+        if (blocks.length === 0) {
+            blocks = [tempDiv];
         }
 
-        // ✅ تحديث عنوان الترويسة
-        updateHeaderTitle(data);
+        let pagesHTML = [];
+        let currentPageContent = document.createElement('div');
+        let currentHeight = 0;
+        
+        // الحد الأقصى لارتفاع المحتوى داخل الصفحة (تقريبياً 680 بكسل)
+        // الصفحة 210mm - الهوامش - الترويسة - التذييل
+        const MAX_CONTENT_HEIGHT = 680; 
 
-        // عرض المحتوى
-        if (data.htmlSnapshot) {
-            content.innerHTML = data.htmlSnapshot;
-            content.querySelectorAll('button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, .chart-switch, .no-print, .back-to-top, .pagination').forEach(el => el.remove());
-            prepareImages(content);
-        } else {
-            content.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
+        // دالة لإنشاء صفحة جديدة
+        function createNewPage() {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'a4-page';
+            
+            // إضافة الترويسة
+            const headerWrapper = document.createElement('div');
+            headerWrapper.innerHTML = getHeaderHTML(title);
+            pageDiv.appendChild(headerWrapper.firstElementChild);
+
+            // إضافة حاوية المحتوى
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'page-content';
+            pageDiv.appendChild(contentDiv);
+
+            // إضافة التذييل (مؤقتاً، سيتم ترقيمه لاحقاً)
+            const footerWrapper = document.createElement('div');
+            footerWrapper.innerHTML = getFooterHTML('X', 'Y');
+            pageDiv.appendChild(footerWrapper.firstElementChild);
+
+            return { pageDiv, contentDiv };
         }
 
-        if (loading) loading.style.display = 'none';
+        // إنشاء الصفحة الأولى
+        let { pageDiv: currentPage, contentDiv: currentContent } = createNewPage();
+
+        // توزيع الكتل (الجداول/البطاقات) على الصفحات
+        blocks.forEach(block => {
+            // نأخذ نسخة من الكتلة لقياس ارتفاعها
+            const clone = block.cloneNode(true);
+            currentContent.appendChild(clone);
+            
+            // قياس الارتفاع الفعلي
+            const blockHeight = clone.offsetHeight;
+            
+            // إذا كان العنصر أطول من صفحة كاملة (مستحيل احتواؤه)
+            if (blockHeight > MAX_CONTENT_HEIGHT) {
+                // نتركه في الصفحة الحالية (سيمتد على الصفحة التالية)
+                currentHeight += blockHeight;
+                pagesHTML.push(currentPage);
+                currentPageContent = null; // إجبار إنشاء صفحة جديدة
+                return;
+            }
+
+            // إذا تجاوزنا الارتفاع المسموح
+            if (currentHeight + blockHeight > MAX_CONTENT_HEIGHT) {
+                // إزالة الكتلة من الصفحة الحالية
+                currentContent.removeChild(clone);
+                
+                // حفظ الصفحة الحالية
+                pagesHTML.push(currentPage);
+
+                // إنشاء صفحة جديدة ووضع الكتلة فيها
+                const newPage = createNewPage();
+                currentPage = newPage.pageDiv;
+                currentContent = newPage.contentDiv;
+                currentContent.appendChild(clone);
+                currentHeight = blockHeight;
+            } else {
+                currentHeight += blockHeight;
+            }
+        });
+
+        // حفظ الصفحة الأخيرة
+        if (currentPage.querySelector('.page-content').children.length > 0) {
+            pagesHTML.push(currentPage);
+        }
+
+        // الآن، ترقيم الصفحات وإضافتها للـ DOM
+        const totalPages = pagesHTML.length;
+        pagesHTML.forEach((page, index) => {
+            // تحديث التذييل
+            const footer = page.querySelector('.page-footer');
+            if (footer) {
+                footer.innerHTML = getFooterHTML(index + 1, totalPages);
+            }
+            pagesContainer.appendChild(page);
+            prepareImages(page);
+        });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+    // تشغيل
+    if (!printData) {
+        pagesContainer.innerHTML = '<div class="a4-page" style="display:flex;align-items:center;justify-content:center;"><h2>لا توجد بيانات للطباعة</h2></div>';
+        document.getElementById('loadingOverlay').style.display = 'none';
     } else {
-        init();
+        // ننتظر قليلاً لضمان تحميل الخطوط والصور قبل قياس الارتفاع
+        setTimeout(() => {
+            buildProfessionalPages();
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }, 300);
     }
+
 })();
 </script>
 
