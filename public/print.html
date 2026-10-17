@@ -179,54 +179,71 @@ html, body {
 .snapshot-body .fas, .snapshot-body .far, .snapshot-body .fab { display: none !important; }
 
 /* ═══════════════════════════════════════════════════════════════
-   🔑 السر: تكبير الرسم البياني في الطباعة
-   نستهدف أي canvas أو svg أو img داخل chart-section
+   🔑 الحل: الرسم البياني يتكبر لملء الصفحة
+   نستخدم !important على الأبعاد الأساسية
    ═══════════════════════════════════════════════════════════════ */
 .snapshot-body .chart-section,
 .snapshot-body .chart-box,
-.snapshot-body .charts-container {
+.snapshot-body .charts-container,
+.snapshot-body .chart-wrapper,
+.snapshot-body [class*="chart"] {
     display: block !important;
     width: 100% !important;
-    min-height: 100mm !important;  /* ← ارتفاع كبير للطباعة */
+    max-width: 100% !important;
+    min-height: 120mm !important;
+    height: auto !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     margin: 3mm 0 !important;
     padding: 3mm !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
 }
 
 .snapshot-body .chart-section canvas,
 .snapshot-body .chart-box canvas,
 .snapshot-body .charts-container canvas,
+.snapshot-body .chart-wrapper canvas,
+.snapshot-body [class*="chart"] canvas,
 .snapshot-body .chart-section svg,
 .snapshot-body .chart-box svg,
 .snapshot-body .charts-container svg,
-.snapshot-body .chart-section img.chart,
-.snapshot-body .chart-box img.chart,
-.snapshot-body .charts-container img.chart {
+.snapshot-body .chart-wrapper svg,
+.snapshot-body [class*="chart"] svg {
     display: block !important;
     width: 100% !important;
+    max-width: 100% !important;
     height: auto !important;
-    min-height: 90mm !important;  /* ← الرسم البياني كبير */
-    max-height: 180mm !important;
+    min-height: 110mm !important;
+    max-height: 200mm !important;
     margin: 0 auto !important;
-    object-fit: contain !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     background: #ffffff !important;
 }
 
-/* إذا لم تكن هناك حاوية، نستهدف أي canvas مباشر */
+.snapshot-body img.chart,
+.snapshot-body img[src*="chart"] {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 110mm !important;
+    max-height: 200mm !important;
+    margin: 0 auto !important;
+    object-fit: contain !important;
+    background: #ffffff !important;
+}
+
+/* أي canvas في أي مكان آخر */
 .snapshot-body canvas {
     display: block !important;
     width: 100% !important;
+    max-width: 100% !important;
     height: auto !important;
-    min-height: 90mm !important;
-    max-height: 180mm !important;
-    margin: 3mm auto !important;
+    min-height: 80mm !important;
+    margin: 2mm auto !important;
     background: #ffffff !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
 }
 
 .snapshot-body :has(> .stat-card) {
@@ -347,17 +364,12 @@ body.exporting .snapshot-body { width: 1600px !important; }
         width: 40mm !important; height: 30mm !important;
     }
 
-    /* في الطباعة أيضاً: الرسم البياني كبير */
-    .snapshot-body .chart-section,
-    .snapshot-body .chart-box,
-    .snapshot-body .charts-container {
-        min-height: 100mm !important;
-    }
+    /* الطباعة: الرسم البياني كبير جداً */
     .snapshot-body canvas,
-    .snapshot-body svg,
-    .snapshot-body img.chart {
-        min-height: 90mm !important;
+    .snapshot-body svg {
         width: 100% !important;
+        max-width: 100% !important;
+        min-height: 100mm !important;
     }
 }
 </style>
@@ -456,31 +468,83 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
     const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]/gu;
 
+    // ═══════════════════════════════════════════════════════════════
+    // 🔑 الحل: تعديل أبعاد الرسم البياني بالكامل
+    // ═══════════════════════════════════════════════════════════════
+    function resizeCharts(container) {
+        // 1. البحث عن canvas
+        container.querySelectorAll('canvas').forEach(canvas => {
+            try {
+                // حفظ محتوى canvas كصورة قبل تغيير الأبعاد
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                
+                // إنشاء صورة جديدة بأبعاد كبيرة
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.className = 'chart';
+                img.alt = 'رسم بياني';
+                // الأبعاد الأساسية (attributes) كبيرة
+                img.width = 1200;
+                img.height = 600;
+                img.style.width = '100%';
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+                img.style.minHeight = '100mm';
+                img.style.maxHeight = '200mm';
+                img.style.display = 'block';
+                img.style.margin = '0 auto';
+                img.style.objectFit = 'contain';
+                img.style.backgroundColor = '#ffffff';
+                
+                canvas.parentNode.replaceChild(img, canvas);
+            } catch (e) {
+                console.warn('Could not resize canvas:', e);
+                // إذا فشل التحويل، نحاول تغيير خصائص canvas مباشرة
+                canvas.setAttribute('width', '1200');
+                canvas.setAttribute('height', '600');
+                canvas.style.width = '100%';
+                canvas.style.maxWidth = '100%';
+                canvas.style.height = 'auto';
+                canvas.style.minHeight = '100mm';
+            }
+        });
+        
+        // 2. البحث عن svg
+        container.querySelectorAll('svg').forEach(svg => {
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', 'auto');
+            svg.style.width = '100%';
+            svg.style.maxWidth = '100%';
+            svg.style.height = 'auto';
+            svg.style.minHeight = '100mm';
+            svg.style.maxHeight = '200mm';
+            svg.style.display = 'block';
+            svg.style.margin = '0 auto';
+        });
+        
+        // 3. البحث عن img داخل chart-section
+        container.querySelectorAll('.chart-section img, .chart-box img, [class*="chart"] img').forEach(img => {
+            img.setAttribute('width', '1200');
+            img.setAttribute('height', '600');
+            img.style.width = '100%';
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.minHeight = '100mm';
+            img.style.maxHeight = '200mm';
+            img.style.display = 'block';
+            img.style.margin = '0 auto';
+            img.style.objectFit = 'contain';
+        });
+    }
+
     function cleanSnapshot(container) {
         container.querySelectorAll(
             'button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, ' +
             '.chart-switch, .no-print, .back-to-top, .pagination, script'
         ).forEach(el => el.remove());
 
-        // تحويل canvas إلى img كبير (لضمان الحجم الكبير)
-        container.querySelectorAll('canvas').forEach(canvas => {
-            try {
-                const dataUrl = canvas.toDataURL('image/png', 1.0);
-                const img = document.createElement('img');
-                img.src = dataUrl;
-                img.className = 'chart';
-                img.alt = 'رسم بياني';
-                img.style.width = '100%';
-                img.style.maxWidth = '100%';
-                img.style.height = 'auto';
-                img.style.minHeight = '90mm';
-                img.style.display = 'block';
-                img.style.margin = '0 auto';
-                canvas.parentNode.replaceChild(img, canvas);
-            } catch (e) {
-                // إذا فشل التحويل، نبقي canvas
-            }
-        });
+        // تكبير الرسوم البيانية
+        resizeCharts(container);
 
         const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
         const nodes = [];
