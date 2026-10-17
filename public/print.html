@@ -678,11 +678,10 @@ body.exporting .page {
         });
         const wrap = document.querySelector('.page-wrapper');
         if (wrap) Array.from(wrap.children).forEach(el => { if (!el.classList.contains('page')) el.remove(); });
-        const pg = document.querySelector('.page');
-        if (pg) Array.from(pg.children).forEach(el => { if (el.id !== 'copied-content') el.remove(); });
     }
     purgeInjected();
-    new MutationObserver(purgeInjected).observe(document.body, { childList: true, subtree: true });
+    // نراقب أبناء body فقط (دون subtree) حتى لا نمسّ المحتوى أبدًا
+    new MutationObserver(purgeInjected).observe(document.body, { childList: true });
 
     function init() {
         const loading = document.getElementById('loadingOverlay');
