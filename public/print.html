@@ -78,14 +78,65 @@ html, body {
 
 .letterhead { page-break-inside: avoid; break-inside: avoid; }
 
-.print-table { page-break-inside: auto; break-inside: auto; }
-.print-table thead { display: table-header-group; }
-.print-table tr { page-break-inside: avoid; break-inside: avoid; }
-.print-table tbody tr:nth-child(even) td { background: #f8fafc; box-shadow: inset 0 0 0 9999px #f8fafc; }
+/* ═══════════════════════════════════════════════════════════════
+   الحل: عودة table-layout: auto لتوزيع الأعمدة حسب المحتوى
+   ═══════════════════════════════════════════════════════════════ */
+.print-table,
+.snapshot-body table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important; /* ← توزيع حسب المحتوى */
+    font-size: 8pt !important;
+}
+
+.print-table thead,
+.snapshot-body thead {
+    display: table-header-group !important;
+    position: static !important;
+}
+
+.print-table th,
+.snapshot-body thead th {
+    background: #e8edf5 !important;
+    color: #0f2744 !important;
+    -webkit-text-fill-color: #0f2744 !important;
+    font-size: 8pt !important;
+    font-weight: 800 !important;
+    padding: 1.8mm 1mm !important;
+    text-align: center !important;
+    border-bottom: 2px solid #0f2744 !important;
+    white-space: normal !important;
+    position: static !important;
+    vertical-align: middle !important;
+    word-break: break-word !important;
+}
+
+.print-table td,
+.snapshot-body tbody td {
+    padding: 1.6mm 1mm !important;
+    font-size: 8pt !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-left: 1px solid #eef2f7 !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+}
+
+.print-table tr,
+.snapshot-body tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.print-table tbody tr:nth-child(even) td,
+.snapshot-body tbody tr:nth-child(even) td {
+    background: #f8fafc !important;
+    box-shadow: inset 0 0 0 9999px #f8fafc !important;
+}
 
 /* ═══════════════════════════════════════════════════════════════
-   الحل الجذري: إجبار الصور على أبعاد ثابتة (48mm × 36mm)
-   في كل مكان داخل الجدول (سواء كان HTML أو بيانات)
+   إجبار الصور على أبعاد ثابتة (48mm × 36mm)
    ═══════════════════════════════════════════════════════════════ */
 .snapshot-body table td img,
 .print-table tbody td img,
@@ -181,27 +232,6 @@ html, body {
     color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
     font-size: 9.5pt !important; font-weight: 800 !important;
 }
-
-.snapshot-body table {
-    width: 100% !important; border-collapse: collapse !important;
-    table-layout: auto !important; margin: 0 !important;
-}
-.snapshot-body thead { display: table-header-group !important; position: static !important; }
-.snapshot-body thead th {
-    background: #e8edf5 !important; box-shadow: inset 0 0 0 9999px #e8edf5 !important;
-    color: #0f2744 !important; -webkit-text-fill-color: #0f2744 !important;
-    font-size: 8pt !important; font-weight: 800 !important;
-    padding: 1.8mm 1mm !important; text-align: center !important;
-    border-bottom: 2px solid #0f2744 !important; white-space: nowrap !important;
-    position: static !important;
-}
-.snapshot-body tbody td {
-    padding: 1.6mm 1mm !important; font-size: 8pt !important;
-    text-align: center !important; vertical-align: middle !important;
-    border-bottom: 1px solid #e2e8f0 !important; border-left: 1px solid #eef2f7 !important;
-}
-.snapshot-body tr { break-inside: avoid; page-break-inside: avoid; }
-.snapshot-body tbody tr:nth-child(even) td { background: #f8fafc !important; box-shadow: inset 0 0 0 9999px #f8fafc !important; }
 
 .snapshot-body tbody tr.row-high td { background: #ecfdf5 !important; box-shadow: inset 0 0 0 9999px #ecfdf5 !important; }
 .snapshot-body tbody tr.row-mid  td { background: #fffbeb !important; box-shadow: inset 0 0 0 9999px #fffbeb !important; }
@@ -446,7 +476,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
         if (columns.length) {
             html += '<tr>';
             columns.forEach((c, i) => {
-                html += `<th style="${imgCols.has(i) ? 'width:' + IMG_COL + ';' : ''}padding:2mm 1mm;${fill('#e8edf5')}color:#0f2744;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #0f2744;border-left:1px solid #cbd5e1;white-space:nowrap;">${esc(labelOf(c))}</th>`;
+                html += `<th style="${imgCols.has(i) ? 'width:' + IMG_COL + ';' : ''}padding:2mm 1mm;${fill('#e8edf5')}color:#0f2744;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #0f2744;border-left:1px solid #cbd5e1;white-space:normal;">${esc(labelOf(c))}</th>`;
             });
             html += '</tr>';
         }
@@ -498,9 +528,6 @@ body.exporting .snapshot-body { width: 1600px !important; }
             });
         }));
     }
-
-    // ⚠️ لا نستخدم prepareImages لأنها كانت تسبب تغيير أحجام الصور
-    // بدلاً من ذلك، نترك CSS يتحكم في الحجم بشكل ثابت
 
     function unpinElements(container) {
         container.querySelectorAll('*').forEach(el => {
@@ -761,9 +788,6 @@ body.exporting .snapshot-body { width: 1600px !important; }
         } else {
             root.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
         }
-
-        // ⚠️ تم إزالة prepareImages لأنها كانت تسبب المشكلة
-        // لا نحتاج إليها لأن CSS يفرض الأبعاد الثابتة
 
         waitForImages(root).then(() => { loading.style.display = 'none'; });
     }
