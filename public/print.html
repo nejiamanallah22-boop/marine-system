@@ -24,24 +24,26 @@ html, body {
 /* ───────── شريط التحكم ───────── */
 .top-controls {
     position: fixed; top: 16px; right: 16px;
-    display: flex; gap: 10px; z-index: 9999;
+    display: flex; gap: 8px; z-index: 9999;
     background: rgba(255,255,255,.98);
-    backdrop-filter: blur(12px);
     padding: 10px; border-radius: 14px;
     box-shadow: 0 12px 40px rgba(0,0,0,.2);
     border: 1px solid #e2e8f0;
 }
 .top-controls button {
-    padding: 10px 22px; border: none; border-radius: 10px;
+    padding: 10px 18px; border: none; border-radius: 10px;
     font-family: inherit; font-size: 13px; font-weight: 800;
     cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
     transition: all .2s;
+}
+.btn-pdf {
+    background: linear-gradient(135deg,#10b981 0%,#34d399 100%);
+    color: #022c22; box-shadow: 0 4px 12px rgba(16,185,129,.4);
 }
 .btn-print {
     background: linear-gradient(135deg,#d4a843 0%,#e8c77a 100%);
     color: #0f172a; box-shadow: 0 4px 12px rgba(212,168,67,.4);
 }
-.btn-print:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(212,168,67,.6); }
 .btn-close { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 .btn-close:hover { background: #e2e8f0; }
 
@@ -78,63 +80,79 @@ html, body {
 #copied-content .back-to-top,
 #copied-content .pagination { display: none !important; }
 
-/* ───────── الصور (أكبر) ───────── */
-#copied-content img, .print-table img {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    max-width: 100%; height: auto;
-}
 .print-table tbody td img {
-    width: 30mm; height: 30mm; object-fit: cover;
+    width: 32mm; height: 32mm; object-fit: cover;
     border-radius: 1.5mm; border: 1px solid #d4a843;
     background: #fffbeb; display: block; margin: 0 auto;
 }
-
-/* ───────── الجدول الرئيسي الذي يحمل الترويسة الثابتة ───────── */
-.master-table { width: 100%; border-collapse: collapse; }
-.master-table > thead { display: table-header-group; }
-.master-table > tbody > tr > td.master-body { padding: 0; vertical-align: top; }
-
 .print-table { page-break-inside: auto; break-inside: auto; }
 .print-table thead { display: table-header-group; }
-.print-table tfoot { display: table-footer-group; }
 .print-table tr { page-break-inside: avoid; break-inside: avoid; }
+.letterhead { page-break-inside: avoid; break-inside: avoid; }
+
+/* ── إصلاح: أي عنصر دخيل يحقنه الموقع خارج الصفحة (ترويسة مكررة، شارة مستخدم، توقيع) يُخفى ── */
+body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script):not(style):not(link):not(noscript) {
+    display: none !important;
+}
 
 @page { size: A4 landscape; margin: 6mm 8mm 12mm; }
 
-.letterhead { page-break-inside: avoid; break-inside: avoid; }
+/* ═══════════════════════════════════════════════════════════════
+   وضع التصدير (حفظ PDF بالألوان): يُضاف على body مؤقتًا أثناء الالتقاط
+   عرض ثابت للمحتوى حتى لا يتأثر بحجم شاشة الجوال
+   ═══════════════════════════════════════════════════════════════ */
+body.exporting { background: #fff !important; }
+body.exporting .top-controls { display: none !important; }
+body.exporting .page-wrapper { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+body.exporting .page {
+    width: 1120px !important; min-height: 0 !important; margin: 0 !important;
+    box-shadow: none !important; border-radius: 0 !important; overflow: visible !important;
+}
 
-/* ═════════════════ PRINT ═════════════════ */
+/* ═════════════════════════ الطباعة العادية ═════════════════════════ */
 @media print {
-    html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
 
-    .top-controls, .loading-overlay { display: none !important; }
-
-    .page-wrapper { margin: 0 !important; padding: 0 !important; max-width: none !important; }
-    .page {
-        width: 100% !important; min-height: auto !important;
-        box-shadow: none !important; border-radius: 0 !important;
-        margin: 0 !important; padding: 0 !important; overflow: visible !important;
-        background: #fff !important;
-    }
-
-    #official-print-header, #user-info-badge, #dev-signature, .print-unified-header { display: none !important; }
-
-    /* ═══ المحتوى المنسوخ يُطبع بنفس مظهر الشاشة (خلفية داكنة وألوان كاملة) ═══ */
-    * {
+    /* ── FIX 1: فرض طباعة الألوان والخلفيات (الطبقة الأولى) ── */
+    *, *::before, *::after {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
 
+    /* ── FIX 2: إزالة أسباب الصفحات الفارغة ──
+       height/min-height/overflow على html وbody، وعناصر 100vh تُنتج صفحات فارغة */
+    html, body {
+        background: #fff !important; margin: 0 !important; padding: 0 !important;
+        height: auto !important; min-height: 0 !important; overflow: visible !important;
+    }
+    .top-controls, .loading-overlay { display: none !important; }
+
+    .page-wrapper { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+    .page {
+        width: 100% !important; min-height: 0 !important; height: auto !important;
+        box-shadow: none !important; border-radius: 0 !important;
+        margin: 0 !important; padding: 0 !important;
+        overflow: visible !important; background: #fff !important;
+    }
+
+    #official-print-header, #user-info-badge, #dev-signature, .print-unified-header { display: none !important; }
+
+    [id^="page-"] { min-height: 0 !important; height: auto !important; overflow: visible !important; }
+
+    /* عناصر تُسقط الطباعة أو تُفرغ صفحاتها: ضبابية، فلاتر، ظلال نص، حركة، contain */
     .snapshot-body, .snapshot-body * {
         animation: none !important;
         transition: none !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
+        filter: none !important;
+        text-shadow: none !important;
+        will-change: auto !important;
+        contain: none !important;
+        content-visibility: visible !important;
+        mix-blend-mode: normal !important;
     }
 
-    /* ضغط المساحات الفارغة فقط دون تغيير الألوان */
     .snapshot-body .eff-header, .snapshot-body .fleet-header {
         min-height: 0 !important; height: auto !important;
         padding: 4mm 6mm !important; margin: 0 0 3mm !important;
@@ -143,25 +161,20 @@ html, body {
         margin: 0 0 3mm !important;
         page-break-inside: auto !important; break-inside: auto !important;
     }
-    .snapshot-body .section-header {
-        page-break-after: avoid !important; break-after: avoid !important;
-    }
-    .snapshot-body .stat-card { break-inside: avoid !important; page-break-inside: avoid !important; }
+    .snapshot-body .section-header { page-break-after: avoid !important; break-after: avoid !important; }
+    .snapshot-body .stat-card { page-break-inside: avoid !important; break-inside: avoid !important; }
 
-    /* الجداول: تتصل عبر الصفحات ورأس الأعمدة يتكرر */
+    /* ── FIX 4: الجداول تنقسم طبيعيًا ورأس الأعمدة يتكرر ── */
     .snapshot-body table { width: 100% !important; border-collapse: collapse; }
     thead { display: table-header-group !important; }
     tfoot { display: table-footer-group !important; }
     tr { page-break-inside: avoid !important; break-inside: avoid !important; }
 
-    /* الصور داخل الجداول (أكبر) */
     .print-table tbody td img,
     .snapshot-body table td img {
-        width: 28mm !important; height: 28mm !important;
+        width: 32mm !important; height: 32mm !important;
         object-fit: cover !important; border-radius: 1.5mm !important;
         border: 1px solid #d4a843 !important; background: #fffbeb !important;
-        image-rendering: -webkit-optimize-contrast !important;
-        image-rendering: crisp-edges !important;
         display: block !important; margin: 0 auto !important;
     }
 }
@@ -175,7 +188,8 @@ html, body {
 </div>
 
 <div class="top-controls">
-    <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة / PDF</button>
+    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> حفظ PDF بالألوان</button>
+    <button class="btn-print" onclick="window.printNative()"><i class="fas fa-print"></i> طباعة</button>
     <button class="btn-close" onclick="window.close()"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
@@ -190,6 +204,9 @@ html, body {
     const params = new URLSearchParams(location.search);
     const storageKey = params.get('key') || 'print_data';
     const pageType = params.get('type') || 'fleet';
+
+    const H2C_URL   = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    const JSPDF_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
 
     const TITLES = {
         fleet: 'الأسطول البحري',
@@ -206,6 +223,8 @@ html, body {
 
     document.title = (TITLES[pageType] || 'طباعة') + ' — منظومة الوسائل البحرية';
 
+    const root = document.getElementById('copied-content');
+
     function esc(v) {
         return String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
@@ -218,10 +237,12 @@ html, body {
         return null;
     }
 
-    // الترويسة الرسمية: تظهر مرة واحدة في أعلى الصفحة الأولى فقط
+    // ───────────────────────────────────────────────────────────
+    // الترويسة الرسمية: تظهر مرة واحدة فقط في أعلى الصفحة الأولى (FIX 3)
+    // ───────────────────────────────────────────────────────────
     function buildLetterhead(title) {
         return `
-        <header class="letterhead" style="padding:5mm 12mm 3.5mm;margin-bottom:4mm;border-bottom:3px double #0a1628;">
+        <header class="letterhead" style="padding:5mm 12mm 3.5mm;margin-bottom:4mm;border-bottom:3px double #0a1628;background:#fff;">
             <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8mm;align-items:start;">
                 <div style="text-align:right;font-size:8.5pt;line-height:1.55;color:#0a1628;font-weight:600;">
                     <div style="font-weight:900;font-size:10pt;margin-bottom:1mm;">الجمهورية التونسية</div>
@@ -233,7 +254,7 @@ html, body {
                     <div style="margin-top:2.5mm;font-size:9pt;font-weight:800;">ع/ ________ /دد</div>
                 </div>
                 <div style="align-self:center;text-align:center;min-width:80mm;border:1.5px solid #0a1628;padding:3mm 8mm;">
-                    <div style="font-size:7.5pt;color:#64748b;font-weight:700;letter-spacing:.3px;margin-bottom:1mm;">منظومة الوسائل البحرية</div>
+                    <div style="font-size:7.5pt;color:#64748b;font-weight:700;margin-bottom:1mm;">منظومة الوسائل البحرية</div>
                     <h1 style="font-size:13pt;font-weight:900;color:#0a1628;margin:0;">${esc(title)}</h1>
                 </div>
                 <div style="text-align:left;font-size:8.5pt;color:#0a1628;font-weight:600;">
@@ -248,15 +269,14 @@ html, body {
             year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
         return `
-        <footer style="margin:5mm 0 0;padding-top:2.5mm;border-top:1.5px solid #0a1628;display:grid;grid-template-columns:1fr auto 1fr;gap:4mm;align-items:center;font-size:7.5pt;color:#475569;font-weight:600;page-break-inside:avoid;break-inside:avoid;">
+        <footer style="margin:5mm 0 0;padding-top:2.5mm;border-top:1.5px solid #0a1628;display:grid;grid-template-columns:1fr auto 1fr;gap:4mm;align-items:center;font-size:7.5pt;color:#475569;font-weight:600;background:#fff;page-break-inside:avoid;break-inside:avoid;">
             <div style="text-align:right;">منظومة الوسائل البحرية v11.2.0</div>
             <div style="text-align:center;font-weight:800;color:#0a1628;">إدارة إسناد الوحدات البحرية</div>
             <div style="text-align:left;">${dateStr}</div>
         </footer>`;
     }
 
-    // وضع النسخ (htmlSnapshot): ترويسة مرة واحدة ثم المحتوى
-    function wrapWithFixedHeader(innerHTML, title) {
+    function wrapSnapshot(innerHTML, title) {
         return buildLetterhead(title) +
             `<div class="snapshot-body" style="padding:0 6mm;">${innerHTML}${buildFooter()}</div>`;
     }
@@ -265,22 +285,40 @@ html, body {
     function buildFromData(data) {
         const section = data.sectionTitle || 'السجل التفصيلي';
         const stats = data.stats || [];
-        const columns = data.columns || [];
+        let columns = (data.columns || []).slice();
         const rows = data.rows || [];
+        // ── إصلاح: محاذاة الأعمدة مع الخلايا ──
+        // إن كان في الصفوف خلية إضافية في البداية (مثل رقم تسلسلي) دون عمود في الترويسة
+        // تُزاح كل الأعمدة؛ نُضيف عمودًا مطابقًا ليقع كل شيء في مكانه.
+        const isImg = c => c && typeof c === 'object' && c.type === 'image';
+        const rowCells = r => Array.isArray(r) ? r : Object.values(r);
+        const labelOf = c => typeof c === 'string' ? c : ((c && c.label) || '');
+        let maxCells = 0, imgIdx = -1;
+        rows.forEach(r => {
+            const cs = rowCells(r);
+            maxCells = Math.max(maxCells, cs.length);
+            if (imgIdx < 0) { const k = cs.findIndex(isImg); if (k >= 0) imgIdx = k; }
+        });
+        const hdrImg = columns.findIndex(c => /صورة/.test(labelOf(c)));
+        let lead = 0;
+        if (imgIdx >= 0 && hdrImg >= 0 && imgIdx > hdrImg) lead = imgIdx - hdrImg;
+        else if (maxCells > columns.length) lead = maxCells - columns.length;
+        for (let i = 0; i < lead; i++) columns.unshift('م');
+        while (columns.length < maxCells) columns.push('');
+        const imgCols = new Set();
+        rows.forEach(r => rowCells(r).forEach((c, i) => { if (isImg(c)) imgCols.add(i); }));
         const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
-        const IMG = '30mm';
+        const IMG = '32mm';
 
         let html = buildLetterhead(title);
 
         if (stats.length) {
             html += '<section style="display:grid;grid-template-columns:repeat(' + stats.length + ',1fr);gap:4mm;padding:4mm 12mm 3mm;">';
             const colors = ['#0a1628', '#10b981', '#f59e0b', '#ef4444', '#d4a843'];
-            const bgs = ['#f8fafc', '#ecfdf5', '#fffbeb', '#fef2f2', '#fffbeb'];
             stats.forEach((s, i) => {
                 const color = colors[i] || '#0a1628';
-                const bg = bgs[i] || '#f8fafc';
                 html += `
-                <div style="padding:3mm 2mm;background:#ffffff;border:1px solid #cbd5e1;border-top:3px solid ${color};border-radius:1.5mm;text-align:center;">
+                <div class="stat-card" style="padding:3mm 2mm;background:#ffffff;border:1px solid #cbd5e1;border-top:3px solid ${color};border-radius:1.5mm;text-align:center;">
                     <div style="font-size:20pt;font-weight:900;color:${color};line-height:1;margin-bottom:1.5mm;">${esc(s.value || '0')}</div>
                     <div style="font-size:8pt;color:#1e293b;font-weight:700;">${esc(s.label || '')}</div>
                 </div>`;
@@ -288,18 +326,21 @@ html, body {
             html += '</section>';
         }
 
-        html += `<div style="padding:2.5mm 5mm;background:#0a1628;color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2px solid #d4a843;margin:0 12mm;">${esc(section)}</div>`;
+        html += `<div class="section-header" style="padding:2.5mm 5mm;background:#0a1628;color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2px solid #d4a843;margin:0 12mm;">${esc(section)}</div>`;
 
         html += '<div style="margin:0 12mm 4mm;border:1px solid #e2e8f0;border-top:none;">';
-        html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt;">';
+        html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:auto;font-size:8pt;">';
+        // عرض الأعمدة يُحدَّد من محتواها: عمود الصورة عريض وعمود الرقم ضيق
+        html += '<colgroup>' + columns.map((c, i) =>
+            imgCols.has(i) ? '<col style="width:38mm">' : (labelOf(c) === 'م' ? '<col style="width:9mm">' : '<col>')
+        ).join('') + '</colgroup>';
         html += '<thead>';
-
         if (columns.length) {
             html += '<tr>';
             columns.forEach((c, i) => {
                 const label = typeof c === 'string' ? c : (c.label || '');
-                const style = i === 0 ? 'width:34mm;' : '';
-                html += `<th style="${style}padding:2mm 1mm;background:#1a2942;color:#ffffff;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #d4a843;border-left:1px solid rgba(247,215,116,.15);white-space:nowrap;">${esc(label)}</th>`;
+                const style = imgCols.has(i) ? 'width:38mm;' : '';
+                html += `<th style="${style}padding:2mm 1mm;background:#1a2942;color:#ffffff;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #d4a843;border-left:1px solid rgba(255,255,255,.15);white-space:nowrap;">${esc(label)}</th>`;
             });
             html += '</tr>';
         }
@@ -307,16 +348,17 @@ html, body {
 
         const tdBase = 'border-bottom:1px solid #e2e8f0;border-left:1px solid #e2e8f0;';
         rows.forEach(row => {
-            const cells = Array.isArray(row) ? row : Object.values(row);
+            const cells = rowCells(row).slice();
+            while (cells.length < columns.length) cells.push('');
             html += '<tr>';
             cells.forEach(cell => {
                 if (typeof cell === 'object' && cell !== null) {
                     if (cell.type === 'image') {
                         const url = cell.url || cell.src || '';
                         if (url) {
-                            html += `<td style="width:34mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG};height:${IMG};object-fit:cover;border-radius:1.5mm;border:1px solid #d4a843;display:block;margin:0 auto;"></td>`;
+                            html += `<td style="width:38mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG};height:${IMG};object-fit:cover;border-radius:1.5mm;border:1px solid #d4a843;display:block;margin:0 auto;"></td>`;
                         } else {
-                            html += `<td style="width:34mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><div style="width:${IMG};height:${IMG};margin:0 auto;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:12pt;color:#94a3b8;">📷</div></td>`;
+                            html += `<td style="width:38mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><div style="width:${IMG};height:18mm;margin:0 auto;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:12pt;color:#94a3b8;">📷</div></td>`;
                         }
                         return;
                     }
@@ -334,7 +376,7 @@ html, body {
                     }
                 }
                 const value = (cell === null || cell === undefined || cell === '') ? '—' : esc(cell);
-                html += `<td style="padding:1.5mm 1mm;text-align:center;font-size:7.5pt;color:#1e293b;font-weight:600;${tdBase}">${value}</td>`;
+                html += `<td style="padding:1.5mm 1mm;text-align:center;vertical-align:middle;word-break:break-word;font-size:7.5pt;color:#1e293b;font-weight:600;${tdBase}">${value}</td>`;
             });
             html += '</tr>';
         });
@@ -360,42 +402,316 @@ html, body {
             img.decoding = 'sync';
             img.style.removeProperty('max-width');
             img.style.removeProperty('max-height');
-            img.style.imageRendering = 'crisp-edges';
         });
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // FIX 1 (الطبقة الثانية) + FIX 2 (الطبقة الثانية):
+    // تجهيز المحتوى قبل الطباعة / التصدير
+    //
+    // أ) الخلفيات: إذا ألغى المتصفح "Background graphics" عند حفظ PDF فإنه يحذف
+    //    background-color وbackground-image حتى مع print-color-adjust. لكنه لا
+    //    يحذف box-shadow. لذلك نرسم لون الخلفية كظل داخلي ضخم
+    //    (inset 0 0 0 9999px اللون) فيُطبع مهما كان الإعداد.
+    // ب) النص المتدرّج (background-clip:text) يصبح شفافًا عند حذف الخلفية،
+    //    فنستبدله بلون نص صريح.
+    // ج) الحاويات القابلة للتمرير أو المحدّدة الارتفاع (overflow:auto + max-height)
+    //    هي السبب الأرجح لظهور "جزء بسيط من البيانات" فقط؛ نفتحها بالكامل.
+    // د) العناصر fixed/sticky تُحوَّل إلى static لأنها تتكرر أو تُفرغ الصفحات.
+    // كل تعديل يُسجَّل ويُسترجع بعد الطباعة، فلا تتغير الشاشة.
+    // ═══════════════════════════════════════════════════════════════
+    let baked = [];
+
+    function parseRGBA(str) {
+        const m = str && str.match(/rgba?\(([^)]+)\)/);
+        if (!m) return null;
+        const p = m[1].split(',').map(x => parseFloat(x));
+        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+    }
+    function firstColor(str) {
+        const m = str && str.match(/rgba?\([^)]*\)/);
+        return m ? m[0] : null;
+    }
+
+    function bake(mode) {          // mode: 'print' | 'export'
+        unbake();
+        const seen = new Set();
+        const touch = el => {
+            if (!seen.has(el)) { seen.add(el); baked.push({ el, style: el.getAttribute('style') }); }
+        };
+
+        root.querySelectorAll('*').forEach(el => {
+            if (/^(script|style|img|svg|path|g|circle|rect|line|polyline|polygon|br)$/i.test(el.tagName)) return;
+            const cs = getComputedStyle(el);
+
+            // (ج) فتح الحاويات المقيّدة
+            const oy = cs.overflowY;
+            if (oy === 'auto' || oy === 'scroll' || (oy === 'hidden' && cs.maxHeight !== 'none')) {
+                touch(el);
+                el.style.setProperty('overflow', 'visible', 'important');
+                el.style.setProperty('max-height', 'none', 'important');
+            }
+
+            // (د) fixed / sticky
+            if (cs.position === 'fixed' || cs.position === 'sticky') {
+                touch(el);
+                el.style.setProperty('position', 'static', 'important');
+            }
+
+            // (ب) النص المتدرّج
+            const clip = cs.webkitBackgroundClip === 'text' || cs.backgroundClip === 'text';
+            if (clip) {
+                const c = firstColor(cs.backgroundImage) || cs.color;
+                touch(el);
+                el.style.setProperty('background', 'none', 'important');
+                el.style.setProperty('-webkit-text-fill-color', c, 'important');
+                return;
+            }
+
+            // (أ) تحويل الخلفية إلى ظل داخلي — للطباعة فقط
+            if (mode !== 'print') return;
+            let color = null;
+            const bg = parseRGBA(cs.backgroundColor);
+            if (bg && bg.a > 0.01) {
+                color = cs.backgroundColor;
+            } else if (cs.backgroundImage && cs.backgroundImage.indexOf('gradient') > -1) {
+                const c = firstColor(cs.backgroundImage);
+                const p = parseRGBA(c);
+                if (p && p.a > 0.01) color = c;
+            }
+            if (color) {
+                touch(el);
+                el.style.setProperty('box-shadow', 'inset 0 0 0 9999px ' + color, 'important');
+            }
+        });
+    }
+
+    function unbake() {
+        baked.forEach(b => {
+            if (b.style === null) b.el.removeAttribute('style');
+            else b.el.setAttribute('style', b.style);
+        });
+        baked = [];
+    }
+
+    // يغطي الطباعة من القائمة (Ctrl+P / قائمة المتصفح) وليس فقط من الزر
+    window.addEventListener('beforeprint', () => bake('print'));
+    window.addEventListener('afterprint', unbake);
+    if (window.matchMedia) {
+        const mq = window.matchMedia('print');
+        const h = e => { if (e.matches) bake('print'); else unbake(); };
+        if (mq.addEventListener) mq.addEventListener('change', h); else if (mq.addListener) mq.addListener(h);
+    }
+
+    window.printNative = function () {
+        bake('print');
+        requestAnimationFrame(() => setTimeout(() => window.print(), 80));
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // FIX 5 (الحل الجذري): حفظ PDF بالألوان — مضمون في كل المتصفحات
+    //
+    // لا يعتمد على إعدادات الطباعة إطلاقًا: يلتقط كل صفحة كصورة
+    // (html2canvas) ثم يجمّعها في ملف PDF بصيغة A4 أفقي (jsPDF).
+    // • الخلفيات الداكنة تظهر كما في الشاشة لأنها صورة.
+    // • لا صفحات فارغة: كل صفحة تُرسم على حدة.
+    // • القطع يتم عند حدود الصفوف والأقسام، فلا يُشطر صف.
+    // • رأس الجدول (thead) يُعاد رسمه أعلى كل صفحة تكمل جدولًا.
+    // • الترويسة الرسمية في الصفحة الأولى فقط (لأنها أول المحتوى).
+    // • ترقيم الصفحات في التذييل.
+    // ملاحظة: النص في هذا الملف صورة (غير قابل للتحديد/البحث).
+    // ═══════════════════════════════════════════════════════════════
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector('script[data-lib="' + src + '"]')) return resolve();
+            const s = document.createElement('script');
+            s.src = src; s.dataset.lib = src;
+            s.onload = resolve;
+            s.onerror = () => reject(new Error('تعذر تحميل المكتبة: ' + src));
+            document.head.appendChild(s);
+        });
+    }
+
+    function pageNumberImage(n, N) {
+        const c = document.createElement('canvas');
+        c.width = 480; c.height = 48;
+        const x = c.getContext('2d');
+        x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillStyle = '#475569';
+        x.font = '700 26px Cairo, Tahoma, sans-serif';
+        x.fillText('صفحة ' + n + ' من ' + N, 240, 24);
+        return c.toDataURL('image/png');
+    }
+
+    window.exportPdf = async function () {
+        const overlay = document.getElementById('loadingOverlay');
+        const msg = overlay.querySelector('.loading-text');
+        const oldMsg = msg.textContent;
+        const setMsg = m => { msg.textContent = m; };
+        overlay.style.display = 'flex';
+        setMsg('جاري تجهيز ملف PDF...');
+
+        try {
+            await Promise.all([loadScript(H2C_URL), loadScript(JSPDF_URL)]);
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+            await waitForImages(root);
+
+            document.body.classList.add('exporting');
+            window.scrollTo(0, 0);
+            bake('export');
+            await new Promise(r => setTimeout(r, 300));
+
+            // قياسات التخطيط (بكسل)
+            const rootRect = root.getBoundingClientRect();
+            const R = Math.round(rootRect.width);          // عرض المحتوى
+            const K = 287 / R;                              // مم لكل بكسل (عرض الصفحة المفيد 287مم)
+            const H = Math.floor(193 / K);                  // ارتفاع المحتوى المفيد في الصفحة
+            const totalH = Math.ceil(rootRect.height);
+            const baseX = rootRect.left + window.scrollX;
+            const baseY = rootRect.top + window.scrollY;
+            const rel = el => {
+                const r = el.getBoundingClientRect();
+                return { top: r.top - rootRect.top, bottom: r.bottom - rootRect.top };
+            };
+
+            // نقاط القطع المسموحة: نهاية كل صف/قسم، وبداية كل قسم
+            const cand = new Set([0, totalH]);
+            root.querySelectorAll('tbody tr, tfoot tr, .eff-section, .chart-section, .stat-card, .eff-header, .fleet-header, .letterhead, .chart-box, footer')
+                .forEach(el => cand.add(Math.round(rel(el).bottom)));
+            root.querySelectorAll('.eff-section, .chart-section')
+                .forEach(el => cand.add(Math.round(rel(el).top)));
+            const sorted = Array.from(cand).filter(v => v >= 0 && v <= totalH).sort((a, b) => a - b);
+
+            // الجداول ذات الرأس (لتكرار thead)
+            const tables = Array.from(root.querySelectorAll('table')).filter(t => t.tHead).map(t => {
+                const tr = rel(t), th = rel(t.tHead);
+                return { t, bottom: tr.bottom, hTop: th.top, hBottom: th.bottom };
+            });
+            const headerFor = y0 => {
+                let found = null;
+                tables.forEach(T => { if (y0 > T.hBottom + 2 && y0 < T.bottom - 2) found = T; });
+                return found;
+            };
+
+            // توزيع الصفحات
+            const pages = [];
+            let y0 = 0;
+            while (y0 < totalH - 1 && pages.length < 300) {
+                const T = headerFor(y0);
+                const hh = T ? Math.ceil(T.hBottom - T.hTop) : 0;
+                const limit = y0 + (H - hh);
+                let end;
+                if (totalH <= limit) {
+                    end = totalH;
+                } else {
+                    end = null;
+                    for (const c of sorted) {
+                        if (c <= y0 + 20) continue;
+                        if (c > limit) break;
+                        end = c;
+                    }
+                    if (end === null) end = limit;          // عنصر أطول من صفحة: قطع قسري
+                }
+                pages.push({ y0, end, T, hh });
+                y0 = end;
+            }
+
+            const jsPDF = window.jspdf.jsPDF;
+            const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+            const headCache = new Map();
+            const capOpts = (y, h) => ({
+                scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false,
+                x: baseX, y: baseY + y, width: R, height: h, scrollX: 0, scrollY: 0
+            });
+
+            for (let i = 0; i < pages.length; i++) {
+                const p = pages[i];
+                setMsg('جاري إنشاء الصفحة ' + (i + 1) + ' من ' + pages.length + '...');
+                const h = Math.ceil(p.end - p.y0);
+                const canvas = await window.html2canvas(root, capOpts(p.y0, h));
+                if (i > 0) pdf.addPage();
+                let y = 5;
+
+                if (p.T) {
+                    if (!headCache.has(p.T)) {
+                        const hhInt = Math.ceil(p.T.hBottom - p.T.hTop);
+                        const hc = await window.html2canvas(root, capOpts(p.T.hTop, hhInt));
+                        headCache.set(p.T, { img: hc.toDataURL('image/jpeg', 0.92), h: hhInt });
+                        hc.width = hc.height = 0;
+                    }
+                    const hd = headCache.get(p.T);
+                    pdf.addImage(hd.img, 'JPEG', 5, y, 287, hd.h * K);
+                    y += hd.h * K;
+                }
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 5, y, 287, h * K);
+                canvas.width = canvas.height = 0;   // تحرير الذاكرة (مهم على الجوال)
+            }
+
+            for (let i = 0; i < pages.length; i++) {
+                pdf.setPage(i + 1);
+                pdf.addImage(pageNumberImage(i + 1, pages.length), 'PNG', 148.5 - 24, 201, 48, 4.8);
+            }
+
+            const stamp = new Date().toISOString().slice(0, 10);
+            pdf.save('report-' + pageType + '-' + stamp + '.pdf');
+        } catch (err) {
+            console.error(err);
+            alert('تعذر إنشاء PDF: ' + (err && err.message ? err.message : err) +
+                  '\nيمكنك استخدام زر "طباعة" بدلًا من ذلك.');
+        } finally {
+            unbake();
+            document.body.classList.remove('exporting');
+            msg.textContent = oldMsg;
+            overlay.style.display = 'none';
+        }
+    };
+
+    // ───────────────────────────────────────────────────────────
+    // التهيئة
+    // ───────────────────────────────────────────────────────────
+    // حذف العناصر الدخيلة نهائيًا (الحقن قد يحدث بعد التحميل، لذا نراقب DOM)
+    function purgeInjected() {
+        document.querySelectorAll('#official-print-header, #user-info-badge, #dev-signature, .print-unified-header')
+            .forEach(el => el.remove());
+        Array.from(document.body.children).forEach(el => {
+            if (!el.matches('.loading-overlay, .top-controls, .page-wrapper, script, style, link, noscript')) el.remove();
+        });
+        const wrap = document.querySelector('.page-wrapper');
+        if (wrap) Array.from(wrap.children).forEach(el => { if (!el.classList.contains('page')) el.remove(); });
+        const pg = document.querySelector('.page');
+        if (pg) Array.from(pg.children).forEach(el => { if (el.id !== 'copied-content') el.remove(); });
+    }
+    purgeInjected();
+    new MutationObserver(purgeInjected).observe(document.body, { childList: true, subtree: true });
+
     function init() {
         const loading = document.getElementById('loadingOverlay');
-        const content = document.getElementById('copied-content');
         const data = loadData();
 
         if (!data) {
-            content.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">⚠️ لا توجد بيانات للطباعة</div>';
-            if (loading) loading.style.display = 'none';
+            root.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">⚠️ لا توجد بيانات للطباعة</div>';
+            loading.style.display = 'none';
             return;
         }
 
         const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
 
         if (data.htmlSnapshot) {
-            // تنظيف العناصر التفاعلية قبل الإدراج
             const tmp = document.createElement('div');
             tmp.innerHTML = data.htmlSnapshot;
             tmp.querySelectorAll(
                 'button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, ' +
                 '.chart-switch, .no-print, .back-to-top, .pagination, script'
             ).forEach(el => el.remove());
-            content.innerHTML = wrapWithFixedHeader(tmp.innerHTML, title);
+            root.innerHTML = wrapSnapshot(tmp.innerHTML, title);
         } else if (data.rows && data.rows.length > 0) {
-            content.innerHTML = buildFromData(data);
+            root.innerHTML = buildFromData(data);
         } else {
-            content.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
+            root.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
         }
 
-        prepareImages(content);
-
-        // لا نُخفي شاشة التحميل قبل اكتمال الصور
-        waitForImages(content).then(() => { if (loading) loading.style.display = 'none'; });
+        prepareImages(root);
+        waitForImages(root).then(() => { loading.style.display = 'none'; });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
