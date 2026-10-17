@@ -35,6 +35,7 @@ html, body {
     cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
 }
 .btn-print { background: linear-gradient(135deg,#0f2744 0%,#1e3a5f 100%); color: #fff; }
+.btn-pdf   { background: #eef2f7; color: #0f2744; border: 1px solid #cbd5e1; }
 .btn-close { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 
 .loading-overlay {
@@ -307,7 +308,8 @@ body.exporting .snapshot-body { width: 1600px !important; }
 </div>
 
 <div class="top-controls">
-    <button class="btn-print" onclick="window.printNative()"><i class="fas fa-print"></i> طباعة / حفظ PDF</button>
+    <button class="btn-print" onclick="window.printNative()"><i class="fas fa-print"></i> طباعة</button>
+    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> PDF مصوّر</button>
     <button class="btn-close" onclick="window.close()"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
@@ -543,6 +545,221 @@ body.exporting .snapshot-body { width: 1600px !important; }
     new MutationObserver(purgeInjected).observe(document.body, { childList: true });
 
     window.printNative = function () { window.print(); };
+
+    let exporting = false;
+
+    const H2C_URLS = [
+        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+        'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+        'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
+    ];
+    const JSPDF_URLS = [
+        'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+        'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+        'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
+    ];
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const withTimeout = (p, ms, label) => Promise.race([
+        p, new Promise((_, rej) => setTimeout(() => rej(new Error(label + ' استغرق وقتًا طويلًا')), ms))
+    ]);
+
+    function loadScript(urls, isReady) {
+        return new Promise((resolve, reject) => {
+            if (isReady()) return resolve();
+            let i = 0;
+            const next = () => {
+                if (i >= urls.length) return reject(new Error('تعذر تحميل مكتبة التصدير، تأكد من اتصال الإنترنت'));
+                const sc = document.createElement('script');
+                const t = setTimeout(() => { sc.remove(); next(); }, 20000);
+                sc.src = urls[i++];
+                sc.onload = () => { clearTimeout(t); isReady() ? resolve() : next(); };
+                sc.onerror = () => { clearTimeout(t); sc.remove(); next(); };
+                document.head.appendChild(sc);
+            };
+            next();
+        });
+    }
+
+    function pageNumberImage(n, N) {
+        const c = document.createElement('canvas');
+        c.width = 480; c.height = 48;
+        const x = c.getContext('2d');
+        x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillStyle = '#475569';
+        x.font = '700 26px Cairo, Tahoma, sans-serif';
+        x.fillText('صفحة ' + n + ' من ' + N, 240, 24);
+        return c.toDataURL('image/png');
+    }
+
+    async function buildPdf(scale, setMsg) {
+        const rootRect = root.getBoundingClientRect();
+        const R = Math.round(rootRect.width);
+        if (R < 200) throw new Error('عرض المحتوى غير صالح (' + R + ')');
+        const K = 287 / R;
+        const H = Math.floor(193 / K);
+        const totalH = Math.ceil(rootRect.height);
+        const rel = el => {
+            const r = el.getBoundingClientRect();
+            return { top: r.top - rootRect.top, bottom: r.bottom - rootRect.top };
+        };
+
+        const cand = new Set([0, totalH]);
+        root.querySelectorAll('tbody tr, tfoot tr, .eff-section, .chart-section, .stat-card, .letterhead, footer')
+            .forEach(el => cand.add(Math.round(rel(el).bottom)));
+        root.querySelectorAll('.eff-section, .chart-section')
+            .forEach(el => cand.add(Math.round(rel(el).top)));
+        const sorted = Array.from(cand).filter(v => v >= 0 && v <= totalH).sort((a, b) => a - b);
+
+        const tables = Array.from(root.querySelectorAll('table')).filter(t => t.tHead).map(t => {
+            const tr = rel(t), th = rel(t.tHead);
+            return { bottom: tr.bottom, hTop: th.top, hBottom: th.bottom };
+        });
+        const headerFor = y0 => {
+            let found = null;
+            tables.forEach(T => { if (y0 > T.hBottom + 2 && y0 < T.bottom - 2) found = T; });
+            return found;
+        };
+
+        const pages = [];
+        let y0 = 0;
+        while (y0 < totalH - 1 && pages.length < 400) {
+            const T = headerFor(y0);
+            const hh = T ? Math.ceil(T.hBottom - T.hTop) : 0;
+            const limit = y0 + (H - hh);
+            let end;
+            if (totalH <= limit) {
+                end = totalH;
+            } else {
+                end = null;
+                for (const c of sorted) {
+                    if (c <= y0 + 20) continue;
+                    if (c > limit) break;
+                    end = c;
+                }
+                if (end === null) end = limit;
+            }
+            pages.push({ y0: y0, end: end, T: T });
+            y0 = end;
+        }
+
+        const groups = [];
+        let g = null;
+        pages.forEach(p => {
+            if (g && p.end - g.top <= H * 3) { g.pages.push(p); g.bottom = p.end; }
+            else { g = { top: p.y0, bottom: p.end, pages: [p] }; groups.push(g); }
+        });
+
+        const jsPDF = window.jspdf.jsPDF;
+        const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+        const headCache = new Map();
+        const capOpts = (y, h) => ({
+            scale: scale, backgroundColor: '#ffffff', useCORS: true, logging: false,
+            imageTimeout: 15000, x: 0, y: y, width: R, height: h, scrollX: 0, scrollY: 0
+        });
+
+        let pageNo = 0;
+        for (const grp of groups) {
+            setMsg('جاري رسم الصفحات ' + (pageNo + 1) + ' – ' + (pageNo + grp.pages.length) + ' من ' + pages.length + '...');
+            await sleep(30);
+            const gc = await withTimeout(window.html2canvas(root, capOpts(grp.top, Math.ceil(grp.bottom - grp.top))), 150000, 'رسم الصفحات');
+
+            for (const p of grp.pages) {
+                const sy = Math.round((p.y0 - grp.top) * scale);
+                const sh = Math.min(Math.round((p.end - p.y0) * scale), gc.height - sy);
+                if (sh <= 0) continue;
+                const pc = document.createElement('canvas');
+                pc.width = gc.width; pc.height = sh;
+                const cx = pc.getContext('2d');
+                cx.fillStyle = '#fff'; cx.fillRect(0, 0, pc.width, pc.height);
+                cx.drawImage(gc, 0, sy, gc.width, sh, 0, 0, gc.width, sh);
+
+                if (pageNo > 0) pdf.addPage();
+                let y = 5;
+                if (p.T) {
+                    if (!headCache.has(p.T)) {
+                        const hhInt = Math.ceil(p.T.hBottom - p.T.hTop);
+                        const hc = await withTimeout(window.html2canvas(root, capOpts(p.T.hTop, hhInt)), 120000, 'رسم رأس الجدول');
+                        headCache.set(p.T, { img: hc.toDataURL('image/png', 1.0), h: hhInt });
+                        hc.width = hc.height = 0;
+                    }
+                    const hd = headCache.get(p.T);
+                    pdf.addImage(hd.img, 'PNG', 5, y, 287, hd.h * K);
+                    y += hd.h * K;
+                }
+                pdf.addImage(pc.toDataURL('image/png', 1.0), 'PNG', 5, y, 287, (sh / scale) * K);
+                pc.width = pc.height = 0;
+                pageNo++;
+            }
+            gc.width = gc.height = 0;
+        }
+
+        const N = pdf.getNumberOfPages();
+        for (let i = 1; i <= N; i++) {
+            pdf.setPage(i);
+            pdf.addImage(pageNumberImage(i, N), 'PNG', 148.5 - 24, 201, 48, 4.8);
+        }
+        return pdf;
+    }
+
+    window.exportPdf = async function () {
+        if (exporting) return;
+        const overlay = document.getElementById('loadingOverlay');
+        const msg = overlay.querySelector('.loading-text');
+        const spinner = overlay.querySelector('.spinner');
+        const oldMsg = msg.textContent;
+        const old = overlay.querySelector('#ovClose'); if (old) old.remove();
+        const setMsg = m => { msg.textContent = m; };
+        spinner.style.display = '';
+        overlay.style.display = 'flex';
+        exporting = true;
+        let failed = null;
+
+        try {
+            setMsg('جاري تحميل مكتبات التصدير...');
+            await Promise.all([
+                loadScript(H2C_URLS, () => !!window.html2canvas),
+                loadScript(JSPDF_URLS, () => !!(window.jspdf && window.jspdf.jsPDF))
+            ]);
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+            await waitForImages(root);
+
+            setMsg('جاري تجهيز الصفحة...');
+            document.body.classList.add('exporting');
+            window.scrollTo(0, 0);
+            await sleep(400);
+
+            let pdf;
+            try {
+                pdf = await buildPdf(3, setMsg);
+            } catch (e1) {
+                console.warn('retry with lower scale:', e1);
+                setMsg('إعادة المحاولة بجودة أقل...');
+                await sleep(300);
+                pdf = await buildPdf(2, setMsg);
+            }
+            pdf.save('report-' + pageType + '-' + new Date().toISOString().slice(0, 10) + '.pdf');
+        } catch (err) {
+            console.error(err);
+            failed = err;
+        } finally {
+            document.body.classList.remove('exporting');
+            exporting = false;
+        }
+
+        if (failed) {
+            spinner.style.display = 'none';
+            setMsg('تعذر إنشاء PDF: ' + (failed && failed.message ? failed.message : failed) + '\nيمكنك استخدام زر "طباعة".');
+            const b = document.createElement('button');
+            b.id = 'ovClose'; b.textContent = 'حسنًا';
+            b.style.cssText = 'padding:10px 28px;border:0;border-radius:10px;background:#0f2744;color:#fff;font:800 14px Cairo,sans-serif;cursor:pointer;';
+            b.onclick = () => { overlay.style.display = 'none'; spinner.style.display = ''; msg.textContent = oldMsg; b.remove(); };
+            overlay.appendChild(b);
+        } else {
+            msg.textContent = oldMsg;
+            overlay.style.display = 'none';
+        }
+    };
 
     function init() {
         const loading = document.getElementById('loadingOverlay');
