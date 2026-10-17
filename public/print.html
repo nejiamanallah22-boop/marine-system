@@ -79,14 +79,14 @@ html, body {
 .letterhead { page-break-inside: avoid; break-inside: avoid; }
 
 /* ═══════════════════════════════════════════════════════════════
-   الحل: عودة table-layout: auto لتوزيع الأعمدة حسب المحتوى
+   إعداد الجدول ليكون منظماً (عرض ثابت + خط أصغر)
    ═══════════════════════════════════════════════════════════════ */
 .print-table,
 .snapshot-body table {
     width: 100% !important;
     border-collapse: collapse !important;
-    table-layout: auto !important; /* ← توزيع حسب المحتوى */
-    font-size: 8pt !important;
+    table-layout: fixed !important; /* ← عرض ثابت لتوزيع المساحات */
+    font-size: 7pt !important; /* ← خط أصغر ليتسع للبيانات */
 }
 
 .print-table thead,
@@ -100,9 +100,9 @@ html, body {
     background: #e8edf5 !important;
     color: #0f2744 !important;
     -webkit-text-fill-color: #0f2744 !important;
-    font-size: 8pt !important;
+    font-size: 7pt !important;
     font-weight: 800 !important;
-    padding: 1.8mm 1mm !important;
+    padding: 1mm 0.5mm !important; /* ← تقليل الحشو */
     text-align: center !important;
     border-bottom: 2px solid #0f2744 !important;
     white-space: normal !important;
@@ -113,8 +113,8 @@ html, body {
 
 .print-table td,
 .snapshot-body tbody td {
-    padding: 1.6mm 1mm !important;
-    font-size: 8pt !important;
+    padding: 0.8mm 0.5mm !important; /* ← تقليل الحشو */
+    font-size: 7pt !important;
     text-align: center !important;
     vertical-align: middle !important;
     border-bottom: 1px solid #e2e8f0 !important;
@@ -175,7 +175,7 @@ html, body {
     border-color: #cbd5e1 !important;
     letter-spacing: normal !important;
 }
-.snapshot-body { font-size: 8.5pt; line-height: 1.5; }
+.snapshot-body { font-size: 8pt; line-height: 1.4; }
 
 .snapshot-body .eff-header,
 .snapshot-body .fleet-header,
@@ -230,7 +230,7 @@ html, body {
 .snapshot-body .section-header,
 .snapshot-body .section-header * {
     color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
-    font-size: 9.5pt !important; font-weight: 800 !important;
+    font-size: 9pt !important; font-weight: 800 !important;
 }
 
 .snapshot-body tbody tr.row-high td { background: #ecfdf5 !important; box-shadow: inset 0 0 0 9999px #ecfdf5 !important; }
@@ -241,8 +241,8 @@ html, body {
 .snapshot-body tbody tr.row-low  td:first-child { border-right: 4px solid #ef4444 !important; font-weight: 800 !important; }
 
 .snapshot-body .status-badge {
-    display: inline-block !important; padding: .6mm 3mm !important; border-radius: 3mm !important;
-    font-size: 7pt !important; font-weight: 800 !important; border: 0 !important;
+    display: inline-block !important; padding: .4mm 2mm !important; border-radius: 2mm !important;
+    font-size: 6.5pt !important; font-weight: 800 !important; border: 0 !important;
     color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; white-space: nowrap !important;
 }
 .snapshot-body .status-badge.excellent { background: #059669 !important; box-shadow: inset 0 0 0 9999px #059669 !important; }
@@ -252,8 +252,8 @@ html, body {
 .snapshot-body .status-badge.critical  { background: #991b1b !important; box-shadow: inset 0 0 0 9999px #991b1b !important; }
 
 .snapshot-body .badge {
-    display: inline-block !important; padding: .5mm 2.5mm !important; border-radius: 3mm !important;
-    font-size: 7pt !important; font-weight: 800 !important; border: 1px solid #cbd5e1 !important;
+    display: inline-block !important; padding: .4mm 2mm !important; border-radius: 2mm !important;
+    font-size: 6.5pt !important; font-weight: 800 !important; border: 1px solid #cbd5e1 !important;
 }
 .snapshot-body .badge.success { background: #ecfdf5 !important; box-shadow: inset 0 0 0 9999px #ecfdf5 !important; color: #047857 !important; -webkit-text-fill-color: #047857 !important; border-color: #10b981 !important; }
 .snapshot-body .badge.warning { background: #fffbeb !important; box-shadow: inset 0 0 0 9999px #fffbeb !important; color: #b45309 !important; -webkit-text-fill-color: #b45309 !important; border-color: #f59e0b !important; }
@@ -261,7 +261,7 @@ html, body {
 .snapshot-body .badge.gold    { background: #fffbeb !important; box-shadow: inset 0 0 0 9999px #fffbeb !important; color: #8a6d12 !important; -webkit-text-fill-color: #8a6d12 !important; border-color: #c9a227 !important; }
 
 .snapshot-body .progress-bar {
-    height: 2.6mm !important; border: .4mm solid #cbd5e1 !important; border-radius: 2mm !important;
+    height: 2.2mm !important; border: .3mm solid #cbd5e1 !important; border-radius: 2mm !important;
     background: #eef2f7 !important; box-shadow: inset 0 0 0 9999px #eef2f7 !important;
     overflow: hidden !important;
 }
@@ -313,7 +313,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
 <div class="top-controls">
     <button class="btn-print" onclick="window.printNative()"><i class="fas fa-print"></i> طباعة</button>
-    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> PDF مصوّر (حجم كبير)</button>
+    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> PDF مصوّر</button>
     <button class="btn-close" onclick="window.close()"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
@@ -468,7 +468,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
         html += `<div style="padding:2.5mm 5mm;${fill('#0f2744')}color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2px solid #c9a227;margin:0 12mm;break-after:avoid;">${esc(section)}</div>`;
 
         html += '<div style="margin:0 12mm 4mm;border:1px solid #cbd5e1;border-top:none;">';
-        html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:auto;font-size:8pt;">';
+        html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:7pt;">';
         html += '<colgroup>' + columns.map((c, i) =>
             imgCols.has(i) ? `<col style="width:${IMG_COL}">` : (labelOf(c) === 'م' ? '<col style="width:9mm">' : '<col>')
         ).join('') + '</colgroup>';
@@ -476,7 +476,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
         if (columns.length) {
             html += '<tr>';
             columns.forEach((c, i) => {
-                html += `<th style="${imgCols.has(i) ? 'width:' + IMG_COL + ';' : ''}padding:2mm 1mm;${fill('#e8edf5')}color:#0f2744;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #0f2744;border-left:1px solid #cbd5e1;white-space:normal;">${esc(labelOf(c))}</th>`;
+                html += `<th style="${imgCols.has(i) ? 'width:' + IMG_COL + ';' : ''}padding:1.5mm 0.5mm;${fill('#e8edf5')}color:#0f2744;font-weight:800;font-size:7pt;text-align:center;border-bottom:2px solid #0f2744;border-left:1px solid #cbd5e1;white-space:normal;">${esc(labelOf(c))}</th>`;
             });
             html += '</tr>';
         }
@@ -504,12 +504,12 @@ body.exporting .snapshot-body { width: 1600px !important; }
                             warning: ['#d97706', '#b45309'], info: ['#2563eb', '#1e40af'], neutral: ['#64748b', '#334155']
                         };
                         const v = variants[cell.variant] || variants.neutral;
-                        html += `<td style="padding:1mm;text-align:center;vertical-align:middle;${tdBase}"><span style="${fill(v[0])}color:#fff;border:1px solid ${v[1]};padding:.5mm 2.5mm;border-radius:3mm;font-size:6.5pt;font-weight:800;display:inline-block;white-space:nowrap;">${esc(cell.text || '')}</span></td>`;
+                        html += `<td style="padding:0.5mm;text-align:center;vertical-align:middle;${tdBase}"><span style="${fill(v[0])}color:#fff;border:1px solid ${v[1]};padding:.4mm 2mm;border-radius:2mm;font-size:6.5pt;font-weight:800;display:inline-block;white-space:nowrap;">${esc(cell.text || '')}</span></td>`;
                         return;
                     }
                 }
                 const value = (cell === null || cell === undefined || cell === '') ? '—' : esc(cell);
-                html += `<td style="padding:1.5mm 1mm;text-align:center;vertical-align:middle;word-break:break-word;font-size:7.5pt;color:#1e293b;font-weight:600;${tdBase}">${value}</td>`;
+                html += `<td style="padding:1mm 0.5mm;text-align:center;vertical-align:middle;word-break:break-word;font-size:7pt;color:#1e293b;font-weight:600;${tdBase}">${value}</td>`;
             });
             html += '</tr>';
         });
