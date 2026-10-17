@@ -144,13 +144,21 @@ html, body {
         background: #fff !important;
     }
 
+    /* ✅ إخفاء الترويسات الافتراضية فقط */
     #official-print-header, #user-info-badge, #dev-signature, .print-unified-header { display: none !important; }
 
-    /* ✅ إجبار المتصفح على طباعة الألوان الداكنة */
+    /* ✅ السر: إجبار المتصفح على طباعة الألوان */
     *, *::before, *::after {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
+    }
+
+    /* ✅ السر الأكبر: منع المتصفح من إخفاء المحتوى */
+    #copied-content {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 
     /* ✅ إجبار الخلفيات الداكنة على الظهور */
@@ -165,6 +173,7 @@ html, body {
         background-color: inherit !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        display: block !important;
     }
 
     /* ✅ ضغط المساحات الفارغة فقط */
@@ -175,16 +184,22 @@ html, body {
     .snapshot-body .eff-section, .snapshot-body .chart-section {
         margin: 0 0 3mm !important;
         page-break-inside: auto !important; break-inside: auto !important;
+        display: block !important;
     }
     .snapshot-body .section-header {
         page-break-after: avoid !important; break-after: avoid !important;
     }
 
     /* ✅ الجداول: تتصل عبر الصفحات ورأس الأعمدة يتكرر */
-    .snapshot-body table { width: 100% !important; border-collapse: collapse; }
+    .snapshot-body table { 
+        width: 100% !important; 
+        border-collapse: collapse; 
+        display: table !important;
+    }
     thead { display: table-header-group !important; }
     tfoot { display: table-footer-group !important; }
     tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+    td, th { display: table-cell !important; }
 
     /* ✅ الصور داخل الجداول */
     .print-table tbody td img,
@@ -195,11 +210,6 @@ html, body {
         image-rendering: -webkit-optimize-contrast !important;
         image-rendering: crisp-edges !important;
         display: block !important; margin: 0 auto !important;
-    }
-
-    /* ✅ السر النهائي: استخدام transform لمنع المتصفح من تغيير التصميم */
-    .snapshot-body {
-        transform: translateZ(0);
     }
 }
 </style>
