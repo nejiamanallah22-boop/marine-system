@@ -179,12 +179,54 @@ html, body {
 .snapshot-body .fas, .snapshot-body .far, .snapshot-body .fab { display: none !important; }
 
 /* ═══════════════════════════════════════════════════════════════
-   حذف الرسم البياني نهائياً من الطباعة
+   🔑 السر: تكبير الرسم البياني في الطباعة
+   نستهدف أي canvas أو svg أو img داخل chart-section
    ═══════════════════════════════════════════════════════════════ */
-.snapshot-body canvas,
 .snapshot-body .chart-section,
-.snapshot-body .chart-box {
-    display: none !important;
+.snapshot-body .chart-box,
+.snapshot-body .charts-container {
+    display: block !important;
+    width: 100% !important;
+    min-height: 100mm !important;  /* ← ارتفاع كبير للطباعة */
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 3mm 0 !important;
+    padding: 3mm !important;
+    box-sizing: border-box !important;
+}
+
+.snapshot-body .chart-section canvas,
+.snapshot-body .chart-box canvas,
+.snapshot-body .charts-container canvas,
+.snapshot-body .chart-section svg,
+.snapshot-body .chart-box svg,
+.snapshot-body .charts-container svg,
+.snapshot-body .chart-section img.chart,
+.snapshot-body .chart-box img.chart,
+.snapshot-body .charts-container img.chart {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 90mm !important;  /* ← الرسم البياني كبير */
+    max-height: 180mm !important;
+    margin: 0 auto !important;
+    object-fit: contain !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background: #ffffff !important;
+}
+
+/* إذا لم تكن هناك حاوية، نستهدف أي canvas مباشر */
+.snapshot-body canvas {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 90mm !important;
+    max-height: 180mm !important;
+    margin: 3mm auto !important;
+    background: #ffffff !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
 }
 
 .snapshot-body :has(> .stat-card) {
@@ -304,9 +346,19 @@ body.exporting .snapshot-body { width: 1600px !important; }
     .print-table tbody td img, .snapshot-body table td img {
         width: 40mm !important; height: 30mm !important;
     }
-    
-    /* حذف أي canvas متبقٍ */
-    .snapshot-body canvas { display: none !important; }
+
+    /* في الطباعة أيضاً: الرسم البياني كبير */
+    .snapshot-body .chart-section,
+    .snapshot-body .chart-box,
+    .snapshot-body .charts-container {
+        min-height: 100mm !important;
+    }
+    .snapshot-body canvas,
+    .snapshot-body svg,
+    .snapshot-body img.chart {
+        min-height: 90mm !important;
+        width: 100% !important;
+    }
 }
 </style>
 </head>
@@ -410,8 +462,25 @@ body.exporting .snapshot-body { width: 1600px !important; }
             '.chart-switch, .no-print, .back-to-top, .pagination, script'
         ).forEach(el => el.remove());
 
-        // حذف الرسوم البيانية نهائياً من الطباعة
-        container.querySelectorAll('canvas, .chart-section, .chart-box').forEach(el => el.remove());
+        // تحويل canvas إلى img كبير (لضمان الحجم الكبير)
+        container.querySelectorAll('canvas').forEach(canvas => {
+            try {
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.className = 'chart';
+                img.alt = 'رسم بياني';
+                img.style.width = '100%';
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+                img.style.minHeight = '90mm';
+                img.style.display = 'block';
+                img.style.margin = '0 auto';
+                canvas.parentNode.replaceChild(img, canvas);
+            } catch (e) {
+                // إذا فشل التحويل، نبقي canvas
+            }
+        });
 
         const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
         const nodes = [];
