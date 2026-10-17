@@ -27,57 +27,29 @@ html, body {
 
 /* شريط التحكم */
 .top-controls {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 12px;
-    z-index: 9999;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 10px 20px;
-    border-radius: 16px;
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 12px; z-index: 9999;
+    background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+    padding: 10px 20px; border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
-
 .top-controls button {
-    padding: 10px 24px;
-    border: none;
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
+    padding: 10px 24px; border: none; border-radius: 10px;
+    font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;
 }
-
-.btn-print {
-    background: linear-gradient(135deg, #d4a843 0%, #e8c77a 100%);
-    color: #0f172a;
-    box-shadow: 0 4px 12px rgba(212, 168, 67, 0.4);
-}
-
-.btn-print:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(212, 168, 67, 0.6); }
-
+.btn-print { background: linear-gradient(135deg, #d4a843, #e8c77a); color: #0f172a; box-shadow: 0 4px 12px rgba(212,168,67,0.4); }
+.btn-print:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(212,168,67,0.6); }
 .btn-close { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-.btn-close:hover { background: #e2e8f0; }
 
 /* ═══════════════════════════════════════════════════════════ */
 /* ⏳ Loading                                                   */
 /* ═══════════════════════════════════════════════════════════ */
 .loading-overlay {
     position: fixed; inset: 0; background: #525659;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 10000; gap: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; gap: 20px;
 }
-.spinner {
-    width: 52px; height: 52px; border: 4px solid #e2e8f0;
-    border-top-color: #d4a843; border-radius: 50%; animation: spin 0.8s linear infinite;
-}
+.spinner { width: 52px; height: 52px; border: 4px solid #e2e8f0; border-top-color: #d4a843; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text { font-size: 16px; color: #fff; font-weight: 700; }
 
@@ -85,149 +57,86 @@ html, body {
 /* 📄 هيكل الصفحة A4 Landscape                                 */
 /* ═══════════════════════════════════════════════════════════ */
 .pages-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 80px 20px 40px;
-    gap: 30px;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 80px 20px 40px; gap: 20px;
 }
 
 .a4-page {
-    width: 297mm;
-    height: 210mm;
-    background: #ffffff;
+    width: 297mm; height: 210mm; background: #ffffff;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
     page-break-after: always;
-    padding: 8mm 10mm 12mm 10mm; /* هوامش داخلية */
+    padding: 8mm 10mm 12mm 10mm; 
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* 🏛️ الترويسة الموحدة                                         */
+/* 🏛️ الترويسة والتذييل                                        */
 /* ═══════════════════════════════════════════════════════════ */
 .page-header {
-    border-bottom: 2px solid #0a1628;
-    padding-bottom: 3mm;
-    margin-bottom: 4mm;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 8mm;
-    align-items: flex-start;
+    border-bottom: 2px solid #0a1628; padding-bottom: 3mm; margin-bottom: 4mm;
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 8mm; align-items: flex-start;
 }
+.page-header .header-right { text-align: right; font-size: 8.5pt; line-height: 1.5; color: #0a1628; font-weight: 600; }
+.page-header .header-right .country { font-weight: 900; font-size: 9.5pt; margin-bottom: 1mm; }
+.page-header .header-right .ref { margin-top: 2mm; font-size: 9pt; font-weight: 800; }
+.page-header .header-center { text-align: center; align-self: center; min-width: 70mm; }
+.page-header .header-center .anchor { font-size: 14pt; color: #d4a843; margin-bottom: 1mm; }
+.page-header .header-center h1 { font-size: 12pt; font-weight: 900; color: #0a1628; margin: 0; }
+.page-header .header-left { text-align: left; font-size: 8.5pt; color: #0a1628; font-weight: 600; }
 
-.page-header .header-right {
-    text-align: right; font-size: 8.5pt; line-height: 1.5; color: #0a1628; font-weight: 600;
-}
-.page-header .header-right .country {
-    font-weight: 900; font-size: 9.5pt; margin-bottom: 1mm;
-}
-.page-header .header-right .ref {
-    margin-top: 2mm; font-size: 9pt; font-weight: 800;
-}
-
-.page-header .header-center {
-    text-align: center; align-self: center; min-width: 70mm;
-}
-.page-header .header-center .anchor {
-    font-size: 14pt; color: #d4a843; margin-bottom: 1mm;
-}
-.page-header .header-center h1 {
-    font-size: 12pt; font-weight: 900; color: #0a1628; margin: 0;
-}
-
-.page-header .header-left {
-    text-align: left; font-size: 8.5pt; color: #0a1628; font-weight: 600;
-}
-
-/* ═══════════════════════════════════════════════════════════ */
-/* 📝 التذييل                                                  */
-/* ═══════════════════════════════════════════════════════════ */
 .page-footer {
-    position: absolute;
-    bottom: 6mm;
-    left: 10mm;
-    right: 10mm;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 7.5pt;
-    color: #64748b;
-    border-top: 1px solid #e2e8f0;
-    padding-top: 2mm;
+    position: absolute; bottom: 6mm; left: 10mm; right: 10mm;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 7.5pt; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 2mm;
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* 🎯 تنسيق المحتوى الداخلي (نسخة طبق الأصل من الشاشة)          */
+/* 🎯 تنسيق المحتوى الداخلي                                    */
 /* ═══════════════════════════════════════════════════════════ */
 .page-content {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
+    flex: 1; overflow: hidden; position: relative;
+    display: flex; flex-direction: column; gap: 3mm;
 }
 
-/* تحسينات للجداول والبطاقات لتكون واضحة جداً في الطباعة */
-.page-content .eff-section,
+/* ✅ إجبار المتصفح على طباعة الألوان (حل مشكلة المربع الأسود) */
+.page-content * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+}
+
+/* منع قطع العناصر */
+.page-content .eff-section, 
 .page-content .fleet-section,
-.page-content .stat-card {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    box-shadow: none !important; /* إزالة الظلال لأنها غير ضرورية في الطباعة */
-}
-
-/* منع الصفوف من الانقسام */
+.page-content .stat-card,
 .page-content table tr {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+}
+
+/* إزالة الهوامش والظلال الزائدة عند الطباعة */
+.page-content .eff-section {
+    box-shadow: none !important;
+    margin-bottom: 0 !important;
 }
 
 /* تحسين وضوح الصور */
 .page-content img {
     image-rendering: -webkit-optimize-contrast !important;
     image-rendering: crisp-edges !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-/* 🖨️ إعدادات الطباعة النهائية                                 */
+/* 🖨️ إعدادات الطباعة                                          */
 /* ═══════════════════════════════════════════════════════════ */
-@page {
-    size: A4 landscape;
-    margin: 0;
-}
+@page { size: A4 landscape; margin: 0; }
 
 @media print {
-    html, body {
-        background: #ffffff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
+    html, body { background: #ffffff !important; margin: 0 !important; padding: 0 !important; }
     .top-controls, .loading-overlay { display: none !important; }
-
-    .pages-wrapper {
-        padding: 0 !important;
-        margin: 0 !important;
-        gap: 0 !important;
-        display: block !important;
-    }
-
-    .a4-page {
-        box-shadow: none !important;
-        margin: 0 !important;
-        page-break-after: always;
-        width: 297mm;
-        height: 210mm;
-    }
-
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        color-adjust: exact !important;
-    }
+    .pages-wrapper { padding: 0 !important; margin: 0 !important; gap: 0 !important; display: block !important; }
+    .a4-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; width: 297mm; height: 210mm; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 </style>
 </head>
@@ -235,7 +144,7 @@ html, body {
 
 <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
-    <div class="loading-text">جاري تحضير الطباعة...</div>
+    <div class="loading-text">جاري تحضير الطباعة الاحترافية...</div>
 </div>
 
 <div class="top-controls">
@@ -283,20 +192,14 @@ html, body {
         <div class="page-header">
             <div class="header-right">
                 <div class="country">الجمهورية التونسية</div>
-                وزارة الداخلية<br>
-                كتابة الدولة للأمن<br>
-                الإدارة العامة للحرس الوطني<br>
-                الإدارة العامة لحرس الحدود<br>
-                إدارة إسناد الوحدات البحرية
+                وزارة الداخلية<br>كتابة الدولة للأمن<br>الإدارة العامة للحرس الوطني<br>الإدارة العامة لحرس الحدود<br>إدارة إسناد الوحدات البحرية
                 <div class="ref">ع/ ________ /دد</div>
             </div>
             <div class="header-center">
                 <div class="anchor">⚓</div>
                 <h1>${title}</h1>
             </div>
-            <div class="header-left">
-                العوينة في: __________
-            </div>
+            <div class="header-left">العوينة في: __________</div>
         </div>`;
     }
 
@@ -318,7 +221,7 @@ html, body {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 🚀 محرك التقطيع الذكي (يحافظ على التصميم الأصلي)
+    // 🚀 محرك التقطيع الذكي (يمنع قطع البطاقات نهائياً)
     // ═══════════════════════════════════════════════════════════
     function buildPages() {
         const title = printData.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
@@ -330,38 +233,32 @@ html, body {
         // إزالة العناصر غير المرغوبة
         tempDiv.querySelectorAll('button, .no-print, .filter-bar, .chart-switch, .search-box').forEach(el => el.remove());
 
-        // البحث عن العناصر الأساسية (البطاقات، الجداول، الإحصائيات)
-        // نقوم بجمع كل العناصر التي قد تشكل "كتلة" مستقلة
+        // جلب العناصر الرئيسية (البطاقات، الجداول)
         let blocks = Array.from(tempDiv.children).filter(el => {
             return el.tagName !== 'SCRIPT' && el.tagName !== 'STYLE' && el.offsetHeight > 0;
         });
 
-        // إذا لم نجد، نأخذ كل المحتوى
         if (blocks.length === 0) blocks = [tempDiv];
 
         let pagesHTML = [];
         let currentPageContent = document.createElement('div');
         let currentHeight = 0;
         
-        // الارتفاع المتاح داخل الصفحة الواحدة بعد خصم الترويسة والتذييل (بالبكسل)
-        // 210mm - (الترويسة ~ 35mm) - (التذييل ~ 15mm) = ~160mm (حوالي 600px)
-        const MAX_CONTENT_HEIGHT = 600; 
+        // أقصى ارتفاع للمحتوى داخل الصفحة (حوالي 160mm بالبكسل)
+        const MAX_CONTENT_HEIGHT = 590; 
 
         function createNewPage() {
             const page = document.createElement('div');
             page.className = 'a4-page';
             
-            // الترويسة
             const header = document.createElement('div');
             header.innerHTML = getHeaderHTML(title);
             page.appendChild(header.firstElementChild);
 
-            // حاوية المحتوى
             const content = document.createElement('div');
             content.className = 'page-content';
             page.appendChild(content);
 
-            // التذييل (سيتم ترقيمه لاحقاً)
             const footer = document.createElement('div');
             footer.innerHTML = getFooterHTML('X', 'Y');
             page.appendChild(footer.firstElementChild);
@@ -375,12 +272,10 @@ html, body {
             const clone = block.cloneNode(true);
             currentContent.appendChild(clone);
             
-            // قياس الارتفاع الفعلي للكتلة (بما فيها الهوامش)
-            const blockHeight = clone.offsetHeight + 15; // +15px هامش أمان
+            const blockHeight = clone.offsetHeight + 10; // هامش أمان
             
-            // إذا كان العنصر أطول من صفحة كاملة (مثل جدول ضخم جداً)
+            // إذا كانت البطاقة أطول من صفحة كاملة (مستحيل احتواؤها)
             if (blockHeight > MAX_CONTENT_HEIGHT) {
-                // نتركه يمتد (المتصفح سيقسمه بشكل طبيعي)
                 currentHeight += blockHeight;
                 pagesHTML.push(currentPage);
                 const newPage = createNewPage();
@@ -390,39 +285,34 @@ html, body {
                 return;
             }
 
-            // إذا تجاوزنا الارتفاع المسموح
-            if (currentHeight + blockHeight > MAX_CONTENT_HEIGHT) {
-                // نزيل العنصر من الصفحة الحالية
-                currentContent.removeChild(clone);
+            // إذا كانت البطاقة ستتجاوز حدود الصفحة، ننقلها للصفحة التالية
+            if (currentHeight + blockHeight > MAX_CONTENT_HEIGHT && currentContent.children.length > 1) {
+                currentContent.removeChild(clone); // إزالتها من الصفحة الحالية
                 
-                // نحفظ الصفحة الحالية
-                pagesHTML.push(currentPage);
+                pagesHTML.push(currentPage); // حفظ الصفحة الحالية
                 
-                // ننشئ صفحة جديدة
-                const newPage = createNewPage();
+                const newPage = createNewPage(); // إنشاء صفحة جديدة
                 currentPage = newPage.page;
                 currentContent = newPage.content;
                 currentHeight = 0;
                 
-                // نضع العنصر في الصفحة الجديدة
-                currentContent.appendChild(clone);
+                currentContent.appendChild(clone); // وضع البطاقة في الصفحة الجديدة
                 currentHeight = blockHeight;
             } else {
                 currentHeight += blockHeight;
             }
         });
 
-        // حفظ الصفحة الأخيرة (إذا كانت تحتوي على محتوى)
+        // حفظ الصفحة الأخيرة
         if (currentContent.children.length > 0) {
             pagesHTML.push(currentPage);
         }
 
-        // الآن، إضافة الصفحات إلى الصفحة الرئيسية وترقيمها
+        // إضافة الصفحات وترقيمها
         const totalPages = pagesHTML.length;
         pagesHTML.forEach((page, index) => {
             const footer = page.querySelector('.page-footer');
             if (footer) footer.innerHTML = getFooterHTML(index + 1, totalPages);
-            
             pagesContainer.appendChild(page);
             prepareImages(page);
         });
@@ -432,7 +322,6 @@ html, body {
         pagesContainer.innerHTML = '<div class="a4-page" style="display:flex;align-items:center;justify-content:center;"><h2>لا توجد بيانات للطباعة</h2></div>';
         document.getElementById('loadingOverlay').style.display = 'none';
     } else {
-        // ننتظر قليلاً لضمان تحميل الخطوط والصور قبل قياس الارتفاع
         setTimeout(() => {
             buildPages();
             document.getElementById('loadingOverlay').style.display = 'none';
