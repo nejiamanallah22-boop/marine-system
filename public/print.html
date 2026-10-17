@@ -116,7 +116,6 @@ html, body {
 
 /* ═════════════════ PRINT ═════════════════ */
 @media print {
-    /* ✅ السر: إزالة هوامش المتصفح الافتراضية */
     html, body { 
         background: #fff !important; 
         margin: 0 !important; 
@@ -148,10 +147,24 @@ html, body {
     #official-print-header, #user-info-badge, #dev-signature, .print-unified-header { display: none !important; }
 
     /* ✅ إجبار المتصفح على طباعة الألوان الداكنة */
-    * {
+    *, *::before, *::after {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
+    }
+
+    /* ✅ إجبار الخلفيات الداكنة على الظهور */
+    .snapshot-body, 
+    .snapshot-body .eff-section, 
+    .snapshot-body .chart-section,
+    .snapshot-body .stat-card,
+    .snapshot-body table,
+    .snapshot-body thead,
+    .snapshot-body th,
+    .snapshot-body .section-header {
+        background-color: inherit !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
     /* ✅ ضغط المساحات الفارغة فقط */
@@ -166,7 +179,6 @@ html, body {
     .snapshot-body .section-header {
         page-break-after: avoid !important; break-after: avoid !important;
     }
-    .snapshot-body .stat-card { break-inside: avoid !important; page-break-inside: avoid !important; }
 
     /* ✅ الجداول: تتصل عبر الصفحات ورأس الأعمدة يتكرر */
     .snapshot-body table { width: 100% !important; border-collapse: collapse; }
@@ -183,6 +195,11 @@ html, body {
         image-rendering: -webkit-optimize-contrast !important;
         image-rendering: crisp-edges !important;
         display: block !important; margin: 0 auto !important;
+    }
+
+    /* ✅ السر النهائي: استخدام transform لمنع المتصفح من تغيير التصميم */
+    .snapshot-body {
+        transform: translateZ(0);
     }
 }
 </style>
@@ -279,87 +296,6 @@ html, body {
             `<div class="snapshot-body" style="padding:0 6mm;">${innerHTML}${buildFooter()}</div>`;
     }
 
-    function buildFromData(data) {
-        const section = data.sectionTitle || 'السجل التفصيلي';
-        const stats = data.stats || [];
-        const columns = data.columns || [];
-        const rows = data.rows || [];
-        const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
-        const IMG = '30mm';
-
-        let html = buildLetterhead(title);
-
-        if (stats.length) {
-            html += '<section style="display:grid;grid-template-columns:repeat(' + stats.length + ',1fr);gap:4mm;padding:4mm 12mm 3mm;">';
-            const colors = ['#0a1628', '#10b981', '#f59e0b', '#ef4444', '#d4a843'];
-            const bgs = ['#f8fafc', '#ecfdf5', '#fffbeb', '#fef2f2', '#fffbeb'];
-            stats.forEach((s, i) => {
-                const color = colors[i] || '#0a1628';
-                const bg = bgs[i] || '#f8fafc';
-                html += `
-                <div style="padding:3mm 2mm;background:#ffffff;border:1px solid #cbd5e1;border-top:3px solid ${color};border-radius:1.5mm;text-align:center;">
-                    <div style="font-size:20pt;font-weight:900;color:${color};line-height:1;margin-bottom:1.5mm;">${esc(s.value || '0')}</div>
-                    <div style="font-size:8pt;color:#1e293b;font-weight:700;">${esc(s.label || '')}</div>
-                </div>`;
-            });
-            html += '</section>';
-        }
-
-        html += `<div style="padding:2.5mm 5mm;background:#0a1628;color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2px solid #d4a843;margin:0 12mm;">${esc(section)}</div>`;
-
-        html += '<div style="margin:0 12mm 4mm;border:1px solid #e2e8f0;border-top:none;">';
-        html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt;">';
-        html += '<thead>';
-
-        if (columns.length) {
-            html += '<tr>';
-            columns.forEach((c, i) => {
-                const label = typeof c === 'string' ? c : (c.label || '');
-                const style = i === 0 ? 'width:34mm;' : '';
-                html += `<th style="${style}padding:2mm 1mm;background:#1a2942;color:#ffffff;font-weight:800;font-size:8pt;text-align:center;border-bottom:2px solid #d4a843;border-left:1px solid rgba(247,215,116,.15);white-space:nowrap;">${esc(label)}</th>`;
-            });
-            html += '</tr>';
-        }
-        html += '</thead><tbody>';
-
-        const tdBase = 'border-bottom:1px solid #e2e8f0;border-left:1px solid #e2e8f0;';
-        rows.forEach(row => {
-            const cells = Array.isArray(row) ? row : Object.values(row);
-            html += '<tr>';
-            cells.forEach(cell => {
-                if (typeof cell === 'object' && cell !== null) {
-                    if (cell.type === 'image') {
-                        const url = cell.url || cell.src || '';
-                        if (url) {
-                            html += `<td style="width:34mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG};height:${IMG};object-fit:cover;border-radius:1.5mm;border:1px solid #d4a843;display:block;margin:0 auto;"></td>`;
-                        } else {
-                            html += `<td style="width:34mm;padding:1mm;text-align:center;background:#fffbeb;${tdBase}"><div style="width:${IMG};height:${IMG};margin:0 auto;background:#f1f5f9;border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:12pt;color:#94a3b8;">📷</div></td>`;
-                        }
-                        return;
-                    }
-                    if (cell.type === 'badge') {
-                        const variants = {
-                            success: 'background:#10b981;color:#fff;border:1px solid #047857;',
-                            danger: 'background:#ef4444;color:#fff;border:1px solid #b91c1c;',
-                            warning: 'background:#f59e0b;color:#fff;border:1px solid #b45309;',
-                            info: 'background:#3b82f6;color:#fff;border:1px solid #1e40af;',
-                            neutral: 'background:#64748b;color:#fff;border:1px solid #334155;'
-                        };
-                        const st = variants[cell.variant] || variants.neutral;
-                        html += `<td style="padding:1mm;text-align:center;${tdBase}"><span style="${st}padding:.5mm 2mm;border-radius:3mm;font-size:6.5pt;font-weight:800;display:inline-block;">${esc(cell.text || '')}</span></td>`;
-                        return;
-                    }
-                }
-                const value = (cell === null || cell === undefined || cell === '') ? '—' : esc(cell);
-                html += `<td style="padding:1.5mm 1mm;text-align:center;font-size:7.5pt;color:#1e293b;font-weight:600;${tdBase}">${value}</td>`;
-            });
-            html += '</tr>';
-        });
-        html += '</tbody></table></div>';
-        html += buildFooter().replace('margin:5mm 0 0', 'margin:5mm 12mm 0');
-        return html;
-    }
-
     function waitForImages(container) {
         const imgs = Array.from(container.querySelectorAll('img'));
         return Promise.all(imgs.map(img => {
@@ -403,7 +339,7 @@ html, body {
             ).forEach(el => el.remove());
             content.innerHTML = wrapWithFixedHeader(tmp.innerHTML, title);
         } else if (data.rows && data.rows.length > 0) {
-            content.innerHTML = buildFromData(data);
+            content.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
         } else {
             content.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
         }
