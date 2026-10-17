@@ -179,29 +179,39 @@ html, body {
 .snapshot-body .fas, .snapshot-body .far, .snapshot-body .fab { display: none !important; }
 
 /* ═══════════════════════════════════════════════════════════════
-   إضافة الرسم البياني (Chart) - لا نحذفه بل نحوله لصورة
+   إجبار الرسم البياني على التمدد لملء الصفحة (حجم كبير جداً)
    ═══════════════════════════════════════════════════════════════ */
 .snapshot-body canvas {
     display: block !important;
-    max-width: 100% !important;
+    width: 100% !important;
+    max-width: 270mm !important;
     height: auto !important;
-    margin: 2mm auto !important;
+    min-height: 120mm !important; /* ← ارتفاع كبير وواضح */
+    max-height: 180mm !important;
+    margin: 4mm auto !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 2mm !important;
+    padding: 2mm !important;
+    box-sizing: border-box !important;
 }
 
 .snapshot-body .chart-section,
 .snapshot-body .chart-box {
     display: block !important;
+    width: 100% !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    margin: 2mm 0 !important;
+    margin: 3mm 0 !important;
+    padding: 2mm !important;
 }
 
 .snapshot-body .chart-section canvas,
 .snapshot-body .chart-box canvas {
     width: 100% !important;
-    max-width: 280mm !important;
+    max-width: 100% !important;
+    min-height: 120mm !important;
     height: auto !important;
     display: block !important;
     margin: 0 auto !important;
@@ -325,13 +335,13 @@ body.exporting .snapshot-body { width: 1600px !important; }
     .print-table tbody td img, .snapshot-body table td img {
         width: 40mm !important; height: 30mm !important;
     }
-    
-    /* الرسوم البيانية تظهر كاملة في الطباعة */
+
+    /* ✅ في الطباعة، الرسم البياني يظهر كبيراً */
     .snapshot-body canvas {
+        width: 100% !important;
         max-width: 100% !important;
+        min-height: 120mm !important;
         height: auto !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
     }
 }
 </style>
@@ -430,30 +440,25 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
     const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]/gu;
 
-    // ═══════════════════════════════════════════════════════════════
-    // تعديل دالة cleanSnapshot: نحول canvas إلى img بدلاً من حذفه
-    // ═══════════════════════════════════════════════════════════════
     function cleanSnapshot(container) {
         container.querySelectorAll(
             'button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, ' +
             '.chart-switch, .no-print, .back-to-top, .pagination, script'
         ).forEach(el => el.remove());
 
-        // ✅ تحويل الرسوم البيانية (canvas) إلى صور (img) بدلاً من حذفها
+        // نحول canvas إلى img (بدون تكبير من هنا، سيكبره CSS)
         container.querySelectorAll('canvas').forEach(canvas => {
             try {
                 const dataUrl = canvas.toDataURL('image/png');
                 const img = document.createElement('img');
                 img.src = dataUrl;
                 img.style.width = '100%';
-                img.style.maxWidth = '280mm';
                 img.style.height = 'auto';
                 img.style.display = 'block';
-                img.style.margin = '2mm auto';
+                img.style.margin = '0 auto';
                 img.alt = 'رسم بياني';
                 canvas.parentNode.replaceChild(img, canvas);
             } catch (e) {
-                // إذا فشل التحويل (بسبب CORS) نحذفه
                 canvas.remove();
             }
         });
