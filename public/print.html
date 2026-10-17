@@ -69,7 +69,10 @@ html, body {
 #copied-content .back-to-top,
 #copied-content .pagination { display: none !important; }
 
-@page { size: A4 landscape; margin: 6mm 8mm 12mm; }
+/* ═══════════════════════════════════════════════════════════════
+   تقليل الهوامش لزيادة مساحة الجدول
+   ═══════════════════════════════════════════════════════════════ */
+@page { size: A4 landscape; margin: 5mm 5mm 10mm 5mm; }
 
 *, *::before, *::after {
     -webkit-print-color-adjust: exact;
@@ -79,14 +82,14 @@ html, body {
 .letterhead { page-break-inside: avoid; break-inside: avoid; }
 
 /* ═══════════════════════════════════════════════════════════════
-   إعداد الجدول ليكون منظماً (عرض ثابت + خط أصغر)
+   إعداد الجدول ليكون كبيراً ومنظماً (عرض تلقائي مع حد أدنى)
    ═══════════════════════════════════════════════════════════════ */
 .print-table,
 .snapshot-body table {
     width: 100% !important;
     border-collapse: collapse !important;
-    table-layout: fixed !important; /* ← عرض ثابت لتوزيع المساحات */
-    font-size: 7pt !important; /* ← خط أصغر ليتسع للبيانات */
+    table-layout: auto !important; /* ← توزيع تلقائي حسب المحتوى */
+    font-size: 7.5pt !important;
 }
 
 .print-table thead,
@@ -100,27 +103,29 @@ html, body {
     background: #e8edf5 !important;
     color: #0f2744 !important;
     -webkit-text-fill-color: #0f2744 !important;
-    font-size: 7pt !important;
+    font-size: 7.5pt !important;
     font-weight: 800 !important;
-    padding: 1mm 0.5mm !important; /* ← تقليل الحشو */
+    padding: 1.2mm 0.6mm !important;
     text-align: center !important;
     border-bottom: 2px solid #0f2744 !important;
     white-space: normal !important;
     position: static !important;
     vertical-align: middle !important;
     word-break: break-word !important;
+    min-width: 12mm !important; /* ← حد أدنى لعرض العمود */
 }
 
 .print-table td,
 .snapshot-body tbody td {
-    padding: 0.8mm 0.5mm !important; /* ← تقليل الحشو */
-    font-size: 7pt !important;
+    padding: 1mm 0.6mm !important;
+    font-size: 7.5pt !important;
     text-align: center !important;
     vertical-align: middle !important;
     border-bottom: 1px solid #e2e8f0 !important;
     border-left: 1px solid #eef2f7 !important;
     word-break: break-word !important;
     white-space: normal !important;
+    min-width: 12mm !important;
 }
 
 .print-table tr,
@@ -136,17 +141,17 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   إجبار الصور على أبعاد ثابتة (48mm × 36mm)
+   إجبار الصور على أبعاد ثابتة (40mm × 30mm) - أصغر قليلاً لتوفير مساحة
    ═══════════════════════════════════════════════════════════════ */
 .snapshot-body table td img,
 .print-table tbody td img,
 #copied-content table td img {
-    width: 48mm !important;
-    height: 36mm !important;
-    min-width: 48mm !important;
-    min-height: 36mm !important;
-    max-width: 48mm !important;
-    max-height: 36mm !important;
+    width: 40mm !important;
+    height: 30mm !important;
+    min-width: 40mm !important;
+    min-height: 30mm !important;
+    max-width: 40mm !important;
+    max-height: 30mm !important;
     object-fit: cover !important;
     border-radius: 1.5mm !important;
     border: 1px solid #94a3b8 !important;
@@ -218,7 +223,7 @@ html, body {
 .snapshot-body .eff-section,
 .snapshot-body .chart-section {
     border: 1px solid #94a3b8 !important; border-radius: 0 !important;
-    margin: 0 0 4mm !important; padding: 0 !important;
+    margin: 0 0 3mm !important; padding: 0 !important;
     break-inside: avoid; page-break-inside: avoid;
 }
 .snapshot-body .section-header {
@@ -299,7 +304,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
     tr { page-break-inside: avoid !important; break-inside: avoid !important; }
 
     .print-table tbody td img, .snapshot-body table td img {
-        width: 48mm !important; height: 36mm !important;
+        width: 40mm !important; height: 30mm !important;
     }
 }
 </style>
@@ -419,7 +424,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
     function wrapSnapshot(innerHTML, title) {
         return buildLetterhead(title) +
-            `<div class="snapshot-body" style="padding:0 6mm;">${innerHTML}${buildFooter()}</div>`;
+            `<div class="snapshot-body" style="padding:0 4mm;">${innerHTML}${buildFooter()}</div>`;
     }
 
     function buildFromData(data) {
@@ -429,7 +434,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
         const rows = data.rows || [];
         const title = data.title || TITLES[pageType] || 'منظومة الوسائل البحرية';
 
-        const IMG_W = '48mm', IMG_H = '36mm', IMG_COL = '52mm';
+        const IMG_W = '40mm', IMG_H = '30mm', IMG_COL = '44mm';
 
         const isImg = c => c && typeof c === 'object' && c.type === 'image';
         const rowCells = r => Array.isArray(r) ? r : Object.values(r);
@@ -467,8 +472,8 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
         html += `<div style="padding:2.5mm 5mm;${fill('#0f2744')}color:#ffffff;font-size:10pt;font-weight:800;border-bottom:2px solid #c9a227;margin:0 12mm;break-after:avoid;">${esc(section)}</div>`;
 
-        html += '<div style="margin:0 12mm 4mm;border:1px solid #cbd5e1;border-top:none;">';
-        html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:7pt;">';
+        html += '<div style="margin:0 4mm 4mm;border:1px solid #cbd5e1;border-top:none;">';
+        html += '<table class="print-table" style="width:100%;border-collapse:collapse;table-layout:auto;font-size:7.5pt;">';
         html += '<colgroup>' + columns.map((c, i) =>
             imgCols.has(i) ? `<col style="width:${IMG_COL}">` : (labelOf(c) === 'م' ? '<col style="width:9mm">' : '<col>')
         ).join('') + '</colgroup>';
@@ -476,7 +481,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
         if (columns.length) {
             html += '<tr>';
             columns.forEach((c, i) => {
-                html += `<th style="${imgCols.has(i) ? 'width:' + IMG_COL + ';' : ''}padding:1.5mm 0.5mm;${fill('#e8edf5')}color:#0f2744;font-weight:800;font-size:7pt;text-align:center;border-bottom:2px solid #0f2744;border-left:1px solid #cbd5e1;white-space:normal;">${esc(labelOf(c))}</th>`;
+                html += `<th style="${imgCols.has(i) ? 'width:' + IMG_COL + ';' : ''}padding:1.2mm 0.6mm;${fill('#e8edf5')}color:#0f2744;font-weight:800;font-size:7.5pt;text-align:center;border-bottom:2px solid #0f2744;border-left:1px solid #cbd5e1;white-space:normal;">${esc(labelOf(c))}</th>`;
             });
             html += '</tr>';
         }
@@ -492,9 +497,9 @@ body.exporting .snapshot-body { width: 1600px !important; }
                     if (cell.type === 'image') {
                         const url = cell.url || cell.src || '';
                         if (url) {
-                            html += `<td style="width:${IMG_COL};padding:1.5mm;text-align:center;vertical-align:middle;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG_W};height:${IMG_H};object-fit:cover;border-radius:1.5mm;border:1px solid #94a3b8;display:block;margin:0 auto;"></td>`;
+                            html += `<td style="width:${IMG_COL};padding:1mm;text-align:center;vertical-align:middle;${tdBase}"><img src="${esc(url)}" alt="صورة" style="width:${IMG_W};height:${IMG_H};object-fit:cover;border-radius:1.5mm;border:1px solid #94a3b8;display:block;margin:0 auto;"></td>`;
                         } else {
-                            html += `<td style="width:${IMG_COL};padding:1.5mm;text-align:center;vertical-align:middle;${tdBase}"><div style="width:${IMG_W};height:16mm;margin:0 auto;${fill('#f1f5f9')}border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:9pt;color:#94a3b8;">لا توجد صورة</div></td>`;
+                            html += `<td style="width:${IMG_COL};padding:1mm;text-align:center;vertical-align:middle;${tdBase}"><div style="width:${IMG_W};height:16mm;margin:0 auto;${fill('#f1f5f9')}border:1px dashed #94a3b8;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;font-size:9pt;color:#94a3b8;">لا توجد صورة</div></td>`;
                         }
                         return;
                     }
@@ -509,12 +514,12 @@ body.exporting .snapshot-body { width: 1600px !important; }
                     }
                 }
                 const value = (cell === null || cell === undefined || cell === '') ? '—' : esc(cell);
-                html += `<td style="padding:1mm 0.5mm;text-align:center;vertical-align:middle;word-break:break-word;font-size:7pt;color:#1e293b;font-weight:600;${tdBase}">${value}</td>`;
+                html += `<td style="padding:1mm 0.6mm;text-align:center;vertical-align:middle;word-break:break-word;font-size:7.5pt;color:#1e293b;font-weight:600;${tdBase}">${value}</td>`;
             });
             html += '</tr>';
         });
         html += '</tbody></table></div>';
-        html += buildFooter().replace('margin:5mm 0 0', 'margin:5mm 12mm 0');
+        html += buildFooter().replace('margin:5mm 0 0', 'margin:5mm 4mm 0');
         return html;
     }
 
