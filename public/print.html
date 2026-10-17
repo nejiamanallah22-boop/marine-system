@@ -72,9 +72,6 @@ html, body {
 #copied-content .back-to-top,
 #copied-content .pagination { display: none !important; }
 
-/* ═══════════════════════════════════════════════════════════════
-   قاعدة التصميم: كل التعبئات تُرسم بطريقتين معًا
-   ═══════════════════════════════════════════════════════════════ */
 @page { size: A4 landscape; margin: 6mm 8mm 12mm; }
 
 *, *::before, *::after {
@@ -84,7 +81,6 @@ html, body {
 
 .letterhead { page-break-inside: avoid; break-inside: avoid; }
 
-/* ───────── جداول وضع البيانات ───────── */
 .print-table { page-break-inside: auto; break-inside: auto; }
 .print-table thead { display: table-header-group; }
 .print-table tr { page-break-inside: avoid; break-inside: avoid; }
@@ -240,9 +236,6 @@ html, body {
     display: block !important; margin: 0 auto !important; background: #fff !important;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   وضع التصدير المصوّر
-   ═══════════════════════════════════════════════════════════════ */
 body.exporting { background: #fff !important; }
 body.exporting * { letter-spacing: normal !important; }
 body.exporting .top-controls { display: none !important; }
@@ -252,7 +245,6 @@ body.exporting .page {
     box-shadow: none !important; border-radius: 0 !important; overflow: visible !important;
 }
 
-/* ═════════════════════════ الطباعة ═════════════════════════ */
 @media print {
     html, body {
         background: #fff !important; margin: 0 !important; padding: 0 !important;
@@ -286,7 +278,7 @@ body.exporting .page {
 
 <div class="top-controls">
     <button class="btn-print" onclick="window.printNative()"><i class="fas fa-print"></i> طباعة</button>
-    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> PDF مصوّر</button>
+    <button class="btn-pdf" onclick="window.exportPdf()"><i class="fas fa-file-pdf"></i> PDF مصوّر (ألوان)</button>
     <button class="btn-close" onclick="window.close()"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
@@ -666,14 +658,15 @@ body.exporting .page {
                     if (!headCache.has(p.T)) {
                         const hhInt = Math.ceil(p.T.hBottom - p.T.hTop);
                         const hc = await withTimeout(window.html2canvas(root, capOpts(p.T.hTop, hhInt)), 120000, 'رسم رأس الجدول');
-                        headCache.set(p.T, { img: hc.toDataURL('image/jpeg', 0.92), h: hhInt });
+                        headCache.set(p.T, { img: hc.toDataURL('image/png', 1.0), h: hhInt });
                         hc.width = hc.height = 0;
                     }
                     const hd = headCache.get(p.T);
-                    pdf.addImage(hd.img, 'JPEG', 5, y, 287, hd.h * K);
+                    pdf.addImage(hd.img, 'PNG', 5, y, 287, hd.h * K);
                     y += hd.h * K;
                 }
-                pdf.addImage(pc.toDataURL('image/jpeg', 0.92), 'JPEG', 5, y, 287, (sh / scale) * K);
+                // هنا السر: جودة PNG بدلاً من JPEG لضمان عدم ضغط الصور
+                pdf.addImage(pc.toDataURL('image/png', 1.0), 'PNG', 5, y, 287, (sh / scale) * K);
                 pc.width = pc.height = 0;
                 pageNo++;
             }
@@ -717,12 +710,13 @@ body.exporting .page {
 
             let pdf;
             try {
-                pdf = await buildPdf(2, setMsg);
+                // زيادة الدقة إلى 3 لضمان وضوح أعلى
+                pdf = await buildPdf(3, setMsg);
             } catch (e1) {
                 console.warn('retry with lower scale:', e1);
                 setMsg('إعادة المحاولة بجودة أقل...');
                 await sleep(300);
-                pdf = await buildPdf(1.25, setMsg);
+                pdf = await buildPdf(2, setMsg);
             }
             pdf.save('report-' + pageType + '-' + new Date().toISOString().slice(0, 10) + '.pdf');
         } catch (err) {
