@@ -69,6 +69,8 @@ html, body {
 #copied-content .back-to-top,
 #copied-content .pagination { display: none !important; }
 
+body > *:not(.loading-overlay):not(.top-controls):not(.page-wrapper):not(script):not(style):not(link):not(noscript) { display: none !important; }
+
 @page { size: A4 landscape; margin: 5mm 5mm 10mm 5mm; }
 
 *, *::before, *::after {
@@ -95,6 +97,7 @@ html, body {
 .print-table th,
 .snapshot-body thead th {
     background: #e8edf5 !important;
+    box-shadow: inset 0 0 0 9999px #e8edf5 !important;
     color: #0f2744 !important;
     -webkit-text-fill-color: #0f2744 !important;
     font-size: 7.5pt !important;
@@ -178,73 +181,49 @@ html, body {
 .snapshot-body i[class*="fa-"],
 .snapshot-body .fas, .snapshot-body .far, .snapshot-body .fab { display: none !important; }
 
+/* الرسوم الأصلية (canvas) لا تنتقل مع النسخة فتظهر فارغة، لذلك تُحذف
+   وتُستبدل بمبيانات تُرسم من أرقام الجداول (انظر .print-charts) */
+.snapshot-body .chart-section, .snapshot-body .chart-box, .snapshot-body canvas { display: none !important; }
+
 /* ═══════════════════════════════════════════════════════════════
-   🔑 الحل: الرسم البياني يتكبر لملء الصفحة
-   نستخدم !important على الأبعاد الأساسية
+   المبيانات التحليلية أسفل صفحة الجاهزية (HTML/CSS خالص)
+   ألوانها تُرسم بالخلفية + الظل الداخلي لتُطبع دائمًا، والنص حقيقي وحاد
    ═══════════════════════════════════════════════════════════════ */
-.snapshot-body .chart-section,
-.snapshot-body .chart-box,
-.snapshot-body .charts-container,
-.snapshot-body .chart-wrapper,
-.snapshot-body [class*="chart"] {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 120mm !important;
-    height: auto !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    margin: 3mm 0 !important;
-    padding: 3mm !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
+.print-charts { margin: 3mm 4mm 4mm; break-inside: avoid; page-break-inside: avoid; }
+.pc-title {
+    padding: 2mm 4mm; background: #0f2744; box-shadow: inset 0 0 0 9999px #0f2744;
+    color: #fff; font-size: 9.5pt; font-weight: 800; border-bottom: 2px solid #c9a227;
 }
-
-.snapshot-body .chart-section canvas,
-.snapshot-body .chart-box canvas,
-.snapshot-body .charts-container canvas,
-.snapshot-body .chart-wrapper canvas,
-.snapshot-body [class*="chart"] canvas,
-.snapshot-body .chart-section svg,
-.snapshot-body .chart-box svg,
-.snapshot-body .charts-container svg,
-.snapshot-body .chart-wrapper svg,
-.snapshot-body [class*="chart"] svg {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: 110mm !important;
-    max-height: 200mm !important;
-    margin: 0 auto !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    background: #ffffff !important;
+.pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 4mm 0; }
+.pc-card { border: 1px solid #94a3b8; padding: 3mm 4mm 3.5mm; break-inside: avoid; page-break-inside: avoid; }
+.pc-card-title {
+    font-size: 9pt; font-weight: 800; color: #0f2744;
+    border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5mm; margin-bottom: 3mm;
 }
-
-.snapshot-body img.chart,
-.snapshot-body img[src*="chart"] {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: 110mm !important;
-    max-height: 200mm !important;
-    margin: 0 auto !important;
-    object-fit: contain !important;
-    background: #ffffff !important;
+.pc-card-sub { font-size: 7pt; color: #64748b; font-weight: 600; margin-top: 1.5mm; }
+.pc-row { display: grid; grid-template-columns: 38mm 1fr 11mm; align-items: center; gap: 2mm; margin-bottom: 2.2mm; font-size: 7.5pt; }
+.pc-lab { font-weight: 700; color: #0f172a; line-height: 1.25; }
+.pc-val { font-weight: 900; text-align: left; font-size: 8pt; color: #0f172a; }
+.pc-track {
+    position: relative; height: 4.4mm; background: #eef2f7; box-shadow: inset 0 0 0 9999px #eef2f7;
+    border: .3mm solid #cbd5e1; border-radius: 1mm; overflow: hidden;
 }
-
-/* أي canvas في أي مكان آخر */
-.snapshot-body canvas {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: 80mm !important;
-    margin: 2mm auto !important;
-    background: #ffffff !important;
-}
+.pc-fill { position: absolute; top: 0; bottom: 0; right: 0; }
+.pc-mark { position: absolute; top: 0; bottom: 0; border-right: .3mm dashed #475569; }
+.pc-stack { display: flex; height: 4.4mm; border: .3mm solid #cbd5e1; border-radius: 1mm; overflow: hidden; }
+.pc-seg { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 6.5pt; font-weight: 800; min-width: 0; }
+.pc-axis { display: flex; justify-content: space-between; font-size: 6.5pt; color: #64748b; margin: 0 13mm 0 40mm; direction: rtl; }
+.pc-wide { margin-bottom: 3mm; }
+.pc-cols { position: relative; display: flex; align-items: flex-end; gap: 4mm; height: 46mm; border-bottom: 1px solid #475569; padding: 0 2mm; }
+.pc-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.pc-colval { font-size: 8pt; font-weight: 900; margin-bottom: .8mm; }
+.pc-bar { width: 55%; max-width: 22mm; border-radius: 1mm 1mm 0 0; }
+.pc-target { position: absolute; right: 0; left: 0; border-top: .3mm dashed #475569; }
+.pc-target span { position: absolute; left: 0; top: -3.4mm; font-size: 6.5pt; color: #475569; font-weight: 700; background: #fff; padding: 0 1mm; }
+.pc-collabels { display: flex; gap: 4mm; padding: 0 2mm; margin-top: 1.6mm; }
+.pc-collabels div { flex: 1; text-align: center; font-size: 7.5pt; font-weight: 700; line-height: 1.25; }
+.pc-legend { display: flex; gap: 6mm; justify-content: center; font-size: 7.5pt; font-weight: 700; color: #334155; margin-top: 2mm; }
+.pc-legend i { display: inline-block; width: 3mm; height: 3mm; border-radius: .6mm; margin-left: 1.5mm; vertical-align: -.4mm; }
 
 .snapshot-body :has(> .stat-card) {
     display: grid !important;
@@ -363,14 +342,6 @@ body.exporting .snapshot-body { width: 1600px !important; }
     .print-table tbody td img, .snapshot-body table td img {
         width: 40mm !important; height: 30mm !important;
     }
-
-    /* الطباعة: الرسم البياني كبير جداً */
-    .snapshot-body canvas,
-    .snapshot-body svg {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-height: 100mm !important;
-    }
 }
 </style>
 </head>
@@ -468,96 +439,152 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
     const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]/gu;
 
-    // ═══════════════════════════════════════════════════════════════
-    // 🔑 الحل: تعديل أبعاد الرسم البياني بالكامل
-    // ═══════════════════════════════════════════════════════════════
-    function resizeCharts(container) {
-        // 1. البحث عن canvas
-        container.querySelectorAll('canvas').forEach(canvas => {
-            try {
-                // حفظ محتوى canvas كصورة قبل تغيير الأبعاد
-                const dataUrl = canvas.toDataURL('image/png', 1.0);
-                
-                // إنشاء صورة جديدة بأبعاد كبيرة
-                const img = document.createElement('img');
-                img.src = dataUrl;
-                img.className = 'chart';
-                img.alt = 'رسم بياني';
-                // الأبعاد الأساسية (attributes) كبيرة
-                img.width = 1200;
-                img.height = 600;
-                img.style.width = '100%';
-                img.style.maxWidth = '100%';
-                img.style.height = 'auto';
-                img.style.minHeight = '100mm';
-                img.style.maxHeight = '200mm';
-                img.style.display = 'block';
-                img.style.margin = '0 auto';
-                img.style.objectFit = 'contain';
-                img.style.backgroundColor = '#ffffff';
-                
-                canvas.parentNode.replaceChild(img, canvas);
-            } catch (e) {
-                console.warn('Could not resize canvas:', e);
-                // إذا فشل التحويل، نحاول تغيير خصائص canvas مباشرة
-                canvas.setAttribute('width', '1200');
-                canvas.setAttribute('height', '600');
-                canvas.style.width = '100%';
-                canvas.style.maxWidth = '100%';
-                canvas.style.height = 'auto';
-                canvas.style.minHeight = '100mm';
-            }
+    const txt = s => String(s || '').replace(EMOJI_RE, '').replace(/\s+/g, ' ').trim();
+    const normDigits = s => String(s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+    const toNum = s => {
+        const v = parseFloat(normDigits(s).replace(/[^\d.,\-]/g, '').replace(',', '.'));
+        return isFinite(v) ? v : NaN;
+    };
+
+    // قراءة أرقام صفحة الجاهزية من الجداول المنسوخة
+    // (الـ canvas لا يُنسخ كصورة داخل نص HTML، فنرسم المبيانات من الأرقام نفسها)
+    function extractEfficiency(container) {
+        const sections = [];
+        container.querySelectorAll('.eff-section').forEach((sec, idx) => {
+            const head = sec.querySelector('.section-header');
+            const table = sec.querySelector('table');
+            if (!head || !table) return;
+            const tEl = head.querySelector('h1,h2,h3,h4,h5') || head;
+            const title = txt(tEl.textContent);
+            const rest = txt(head.textContent).replace(title, ' ');
+            const m = rest.match(/(\d+(?:[.,]\d+)?)\s*%/);
+
+            const heads = Array.from(table.querySelectorAll('thead th')).map(th => txt(th.textContent));
+            const find = (re, d) => { const i = heads.findIndex(h => re.test(h)); return i >= 0 ? i : d; };
+            const iCat = find(/الفئة/, 0), iOk = find(/صالح/, 1), iBad = find(/معطب/, 2), iPct = find(/النجاعة/, 3);
+
+            const rows = [];
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const td = tr.children;
+                if (td.length < 3) return;
+                const ok = toNum(td[iOk] && td[iOk].textContent);
+                const bad = toNum(td[iBad] && td[iBad].textContent);
+                if (!isFinite(ok) && !isFinite(bad)) return;
+                const o = isFinite(ok) ? ok : 0, b = isFinite(bad) ? bad : 0;
+                let pct = td[iPct] ? toNum(td[iPct].textContent) : NaN;
+                if (!isFinite(pct)) pct = (o + b) > 0 ? (o / (o + b)) * 100 : 0;
+                rows.push({ cat: txt(td[iCat] && td[iCat].textContent), ok: o, bad: b, pct: pct });
+            });
+            if (!rows.length) return;
+
+            const sumOk = rows.reduce((a, r) => a + r.ok, 0);
+            const sumBad = rows.reduce((a, r) => a + r.bad, 0);
+            const ready = m ? parseFloat(m[1].replace(',', '.'))
+                            : ((sumOk + sumBad) > 0 ? (sumOk / (sumOk + sumBad)) * 100 : 0);
+            sections.push({ title: title, rows: rows, ok: sumOk, bad: sumBad, ready: ready,
+                            overall: idx === 0 || /العامة/.test(title) });
         });
-        
-        // 2. البحث عن svg
-        container.querySelectorAll('svg').forEach(svg => {
-            svg.setAttribute('width', '100%');
-            svg.setAttribute('height', 'auto');
-            svg.style.width = '100%';
-            svg.style.maxWidth = '100%';
-            svg.style.height = 'auto';
-            svg.style.minHeight = '100mm';
-            svg.style.maxHeight = '200mm';
-            svg.style.display = 'block';
-            svg.style.margin = '0 auto';
-        });
-        
-        // 3. البحث عن img داخل chart-section
-        container.querySelectorAll('.chart-section img, .chart-box img, [class*="chart"] img').forEach(img => {
-            img.setAttribute('width', '1200');
-            img.setAttribute('height', '600');
-            img.style.width = '100%';
-            img.style.maxWidth = '100%';
-            img.style.height = 'auto';
-            img.style.minHeight = '100mm';
-            img.style.maxHeight = '200mm';
-            img.style.display = 'block';
-            img.style.margin = '0 auto';
-            img.style.objectFit = 'contain';
-        });
+        return sections;
+    }
+
+    // المبيانات التحليلية (أسفل صفحة الجاهزية)
+    const clr = p => p >= 85 ? '#059669' : (p >= 60 ? '#d97706' : '#dc2626');
+    const f1 = v => String(Math.round(v * 10) / 10);
+
+    function buildCharts(sections) {
+        if (sections.length < 2) return '';
+        const overall = sections.find(s => s.overall) || sections[0];
+        const units = sections.filter(s => s !== overall);
+        if (!units.length) return '';
+
+        // (أ) الجاهزية حسب الإقليم والوحدة
+        const hbar = units.map(u => {
+            const c = clr(u.ready), w = Math.max(0, Math.min(100, u.ready));
+            return `<div class="pc-row">
+                <div class="pc-lab">${esc(u.title)}</div>
+                <div class="pc-track"><div class="pc-fill" style="width:${w}%;${fill(c)}"></div><div class="pc-mark" style="right:85%"></div></div>
+                <div class="pc-val" style="color:${c}">${f1(u.ready)}%</div></div>`;
+        }).join('');
+
+        // (ب) الوسائل الصالحة والمعطبة
+        const stacked = units.map(u => {
+            const tot = (u.ok + u.bad) || 1, pOk = (u.ok / tot) * 100;
+            return `<div class="pc-row">
+                <div class="pc-lab">${esc(u.title)}</div>
+                <div class="pc-stack">
+                    ${u.ok ? `<div class="pc-seg" style="flex:0 0 ${pOk}%;${fill('#059669')}">${u.ok}</div>` : ''}
+                    ${u.bad ? `<div class="pc-seg" style="flex:0 0 ${100 - pOk}%;${fill('#dc2626')}">${u.bad}</div>` : ''}
+                </div>
+                <div class="pc-val">${u.ok + u.bad}</div></div>`;
+        }).join('');
+
+        // (ج) النجاعة العامة حسب الفئة (أعمدة)
+        const MAXH = 38;     // مم
+        const cols = overall.rows.map(r => {
+            const p = Math.max(0, Math.min(100, r.pct)), c = clr(p);
+            return `<div class="pc-col"><div class="pc-colval" style="color:${c}">${f1(r.pct)}%</div>
+                <div class="pc-bar" style="height:${(p * MAXH / 100).toFixed(1)}mm;${fill(c)}"></div></div>`;
+        }).join('');
+        const labels = overall.rows.map(r => `<div>${esc(r.cat)}</div>`).join('');
+
+        const totOk = units.reduce((a, u) => a + u.ok, 0), totBad = units.reduce((a, u) => a + u.bad, 0);
+
+        return `
+        <section class="print-charts">
+            <div class="pc-title">المبيانات التحليلية</div>
+            <div class="pc-grid">
+                <div class="pc-card">
+                    <div class="pc-card-title">الجاهزية حسب الإقليم والوحدة (%)</div>
+                    ${hbar}
+                    <div class="pc-axis"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+                    <div class="pc-card-sub">الخط المتقطع: هدف الجاهزية 85%</div>
+                </div>
+                <div class="pc-card">
+                    <div class="pc-card-title">توزيع الوسائل: صالحة / معطبة</div>
+                    ${stacked}
+                    <div class="pc-card-sub">الأرقام داخل الأعمدة: عدد الوسائل — المجموع: صالح ${totOk} / معطب ${totBad}</div>
+                </div>
+            </div>
+            <div class="pc-card pc-wide">
+                <div class="pc-card-title">النجاعة العامة للأسطول حسب الفئة (%)</div>
+                <div class="pc-cols">${cols}<div class="pc-target" style="bottom:${(0.85 * MAXH).toFixed(1)}mm"><span>الهدف 85%</span></div></div>
+                <div class="pc-collabels">${labels}</div>
+            </div>
+            <div class="pc-legend">
+                <span><i style="${fill('#059669')}"></i>ممتاز (85% فأكثر)</span>
+                <span><i style="${fill('#d97706')}"></i>متوسط (60% – 85%)</span>
+                <span><i style="${fill('#dc2626')}"></i>منخفض (أقل من 60%)</span>
+            </div>
+        </section>`;
     }
 
     function cleanSnapshot(container) {
+        const charts = buildCharts(extractEfficiency(container));   // قبل أي حذف
+
         container.querySelectorAll(
             'button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, ' +
             '.chart-switch, .no-print, .back-to-top, .pagination, script'
         ).forEach(el => el.remove());
 
-        // تكبير الرسوم البيانية
-        resizeCharts(container);
+        container.querySelectorAll('canvas').forEach(c => c.remove());
+        container.querySelectorAll('.chart-section').forEach(sec => { if (!sec.querySelector('table')) sec.remove(); });
+        container.querySelectorAll('.chart-box').forEach(box => { if (!box.querySelector('table')) box.remove(); });
 
         const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
         const nodes = [];
         while (walker.nextNode()) nodes.push(walker.currentNode);
         nodes.forEach(n => {
-            if (EMOJI_RE.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(EMOJI_RE, '').replace(/^\s+|\s+$/g, ' ');
-            EMOJI_RE.lastIndex = 0;
+            const v = n.nodeValue.replace(EMOJI_RE, '');
+            if (v !== n.nodeValue) n.nodeValue = v.replace(/^\s+|\s+$/g, ' ');
         });
+        return charts;
     }
 
-    function wrapSnapshot(innerHTML, title) {
+    function wrapSnapshot(innerHTML, title, charts) {
         return buildLetterhead(title) +
-            `<div class="snapshot-body" style="padding:0 4mm;">${innerHTML}${buildFooter()}</div>`;
+            `<div class="snapshot-body" style="padding:0 4mm;">${innerHTML}</div>` +
+            (charts || '') +
+            `<div style="padding:0 4mm;">${buildFooter()}</div>`;
     }
 
     function buildFromData(data) {
@@ -747,9 +774,9 @@ body.exporting .snapshot-body { width: 1600px !important; }
         };
 
         const cand = new Set([0, totalH]);
-        root.querySelectorAll('tbody tr, tfoot tr, .eff-section, .chart-section, .stat-card, .letterhead, footer')
+        root.querySelectorAll('tbody tr, tfoot tr, .eff-section, .chart-section, .stat-card, .letterhead, footer, .pc-card, .print-charts')
             .forEach(el => cand.add(Math.round(rel(el).bottom)));
-        root.querySelectorAll('.eff-section, .chart-section')
+        root.querySelectorAll('.eff-section, .chart-section, .print-charts')
             .forEach(el => cand.add(Math.round(rel(el).top)));
         const sorted = Array.from(cand).filter(v => v >= 0 && v <= totalH).sort((a, b) => a - b);
 
@@ -785,10 +812,13 @@ body.exporting .snapshot-body { width: 1600px !important; }
             y0 = end;
         }
 
+        // ميزانية البكسلات: ذاكرة الجوال لا تتحمّل لوحة رسم ضخمة
+        const perPage = (R * scale) * (H * scale);
+        const maxPages = Math.max(1, Math.min(3, Math.floor(14e6 / perPage)));
         const groups = [];
         let g = null;
         pages.forEach(p => {
-            if (g && p.end - g.top <= H * 3) { g.pages.push(p); g.bottom = p.end; }
+            if (g && p.end - g.top <= H * maxPages) { g.pages.push(p); g.bottom = p.end; }
             else { g = { top: p.y0, bottom: p.end, pages: [p] }; groups.push(g); }
         });
 
@@ -822,14 +852,14 @@ body.exporting .snapshot-body { width: 1600px !important; }
                     if (!headCache.has(p.T)) {
                         const hhInt = Math.ceil(p.T.hBottom - p.T.hTop);
                         const hc = await withTimeout(window.html2canvas(root, capOpts(p.T.hTop, hhInt)), 120000, 'رسم رأس الجدول');
-                        headCache.set(p.T, { img: hc.toDataURL('image/png', 1.0), h: hhInt });
+                        headCache.set(p.T, { img: hc.toDataURL('image/jpeg', 0.95), h: hhInt });
                         hc.width = hc.height = 0;
                     }
                     const hd = headCache.get(p.T);
-                    pdf.addImage(hd.img, 'PNG', 5, y, 287, hd.h * K);
+                    pdf.addImage(hd.img, 'JPEG', 5, y, 287, hd.h * K);
                     y += hd.h * K;
                 }
-                pdf.addImage(pc.toDataURL('image/png', 1.0), 'PNG', 5, y, 287, (sh / scale) * K);
+                pdf.addImage(pc.toDataURL('image/jpeg', 0.95), 'JPEG', 5, y, 287, (sh / scale) * K);
                 pc.width = pc.height = 0;
                 pageNo++;
             }
@@ -873,12 +903,12 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
             let pdf;
             try {
-                pdf = await buildPdf(3, setMsg);
+                pdf = await buildPdf(2, setMsg);
             } catch (e1) {
                 console.warn('retry with lower scale:', e1);
                 setMsg('إعادة المحاولة بجودة أقل...');
                 await sleep(300);
-                pdf = await buildPdf(2, setMsg);
+                pdf = await buildPdf(1.4, setMsg);
             }
             pdf.save('report-' + pageType + '-' + new Date().toISOString().slice(0, 10) + '.pdf');
         } catch (err) {
@@ -918,8 +948,8 @@ body.exporting .snapshot-body { width: 1600px !important; }
         if (data.htmlSnapshot) {
             const tmp = document.createElement('div');
             tmp.innerHTML = data.htmlSnapshot;
-            cleanSnapshot(tmp);
-            root.innerHTML = wrapSnapshot(tmp.innerHTML, title);
+            const charts = cleanSnapshot(tmp);
+            root.innerHTML = wrapSnapshot(tmp.innerHTML, title, charts);
             unpinElements(root);
         } else if (data.rows && data.rows.length > 0) {
             root.innerHTML = buildFromData(data);
@@ -927,6 +957,7 @@ body.exporting .snapshot-body { width: 1600px !important; }
             root.innerHTML = '<div style="padding:40mm;text-align:center;color:#999;font-size:14pt;">لا توجد بيانات</div>';
         }
 
+        root.querySelectorAll('img').forEach(img => { img.loading = 'eager'; img.decoding = 'sync'; });
         waitForImages(root).then(() => { loading.style.display = 'none'; });
     }
 
