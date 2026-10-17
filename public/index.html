@@ -1433,7 +1433,64 @@
         .toast-error { background: rgba(239,68,68,0.92); }
         .toast-warning { background: rgba(245,158,11,0.92); }
         .toast-info { background: rgba(59,130,246,0.92); }
+/* ═══════════════════════════════════════════════════════════ */
+/* 🖥️ DESKTOP SIDEBAR COLLAPSE — جديد                          */
+/* ═══════════════════════════════════════════════════════════ */
 
+/* ✅ زر الطي (desktop فقط) */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 76px;
+    right: 256px;
+    z-index: 51;
+    width: 32px;
+    height: 32px;
+    background: rgba(230,179,30,0.15);
+    border: 1px solid rgba(230,179,30,0.3);
+    border-radius: 8px;
+    color: var(--gold-light);
+    font-size: 16px;
+    cursor: pointer;
+    transition: right 0.3s cubic-bezier(0.16,1,0.3,1),
+                background 0.3s;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+}
+
+.sidebar-toggle::before {
+    content: '✕';
+}
+
+.sidebar-toggle:hover {
+    background: rgba(230,179,30,0.25);
+}
+
+/* ✅ إظهار الزر على desktop فقط */
+@media (min-width: 993px) {
+    .sidebar-toggle {
+        display: flex;
+    }
+    .menu-toggle {
+        display: none;
+    }
+
+    /* ✅ حالة الطي على desktop */
+    body.sidebar-collapsed .sidebar {
+        transform: translateX(100%);
+    }
+    body.sidebar-collapsed .main-content {
+        margin-right: 0;
+    }
+    body.sidebar-collapsed .sidebar-toggle {
+        right: 16px;
+    }
+    body.sidebar-collapsed .sidebar-toggle::before {
+        content: '☰';
+    }
+}
+        
         @media (max-width: 992px) {
             .search-wrapper input { width: 120px; }
             .brand .brand-tag { display: none; }
@@ -2027,6 +2084,9 @@
                 <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
             </div>
         </nav>
+
+        <!-- ✅ زر طي الشريط (desktop only) -->
+        <button class="sidebar-toggle" id="sidebarToggle" title="طي القائمة"></button>
 
         <main class="main-content">
             <div class="page-container">
@@ -3899,6 +3959,52 @@ try {
         window.PAGE_PERMISSIONS = PAGE_PERMISSIONS;
         window.normalizeRole = normalizeRole;
         window.notificationManager = notificationManager;
+                // ═══════════════════════════════════════════════════════════
+        // 🖥️ DESKTOP SIDEBAR TOGGLE — جديد
+        // ═══════════════════════════════════════════════════════════
+        (function() {
+            'use strict';
+
+            const toggle = document.getElementById('sidebarToggle');
+            if (!toggle) return;
+
+            const MOBILE_BREAKPOINT = 992;
+            const STORAGE_KEY = 'sidebarCollapsed';
+
+            function isMobile() {
+                return window.innerWidth <= MOBILE_BREAKPOINT;
+            }
+
+            function restoreState() {
+                if (isMobile()) {
+                    document.body.classList.remove('sidebar-collapsed');
+                    return;
+                }
+                const collapsed = localStorage.getItem(STORAGE_KEY) === 'true';
+                document.body.classList.toggle('sidebar-collapsed', collapsed);
+                toggle.textContent = collapsed ? '☰' : '✕';
+                toggle.title = collapsed ? 'فتح القائمة' : 'طي القائمة';
+            }
+
+            function toggleSidebarDesktop() {
+                if (isMobile()) return;
+                const collapsed = document.body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem(STORAGE_KEY, collapsed);
+                toggle.textContent = collapsed ? '☰' : '✕';
+                toggle.title = collapsed ? 'فتح القائمة' : 'طي القائمة';
+            }
+
+            toggle.addEventListener('click', toggleSidebarDesktop);
+
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(restoreState, 150);
+            });
+
+            restoreState();
+            console.log('%c✅ Sidebar toggle ready', 'background:#10b981;color:white;padding:4px 8px;border-radius:4px;');
+        })();
 
         console.log('✅ Marine System v9.16 loaded successfully');
     </script>
