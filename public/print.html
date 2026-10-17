@@ -179,32 +179,12 @@ html, body {
 .snapshot-body .fas, .snapshot-body .far, .snapshot-body .fab { display: none !important; }
 
 /* ═══════════════════════════════════════════════════════════════
-   الرسم البياني المحول: يظهر كبيراً وواضحاً
+   حذف الرسم البياني نهائياً من الطباعة
    ═══════════════════════════════════════════════════════════════ */
-.snapshot-body img.chart-img {
-    display: block !important;
-    width: 100% !important;
-    max-width: 270mm !important;
-    height: auto !important;
-    min-height: 100mm !important;
-    margin: 4mm auto !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 2mm !important;
-    background: #ffffff !important;
-    object-fit: contain !important;
-    padding: 2mm !important;
-    box-sizing: border-box !important;
-}
-
+.snapshot-body canvas,
 .snapshot-body .chart-section,
 .snapshot-body .chart-box {
-    display: block !important;
-    width: 100% !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    margin: 3mm 0 !important;
+    display: none !important;
 }
 
 .snapshot-body :has(> .stat-card) {
@@ -239,8 +219,7 @@ html, body {
 .snapshot-body .stat-card:nth-child(4) .number { color: #dc2626 !important; -webkit-text-fill-color: #dc2626 !important; }
 .snapshot-body .stat-card:nth-child(5) .number { color: #b8860b !important; -webkit-text-fill-color: #b8860b !important; }
 
-.snapshot-body .eff-section,
-.snapshot-body .chart-section {
+.snapshot-body .eff-section {
     border: 1px solid #94a3b8 !important; border-radius: 0 !important;
     margin: 0 0 3mm !important; padding: 0 !important;
     break-inside: avoid; page-break-inside: avoid;
@@ -326,12 +305,8 @@ body.exporting .snapshot-body { width: 1600px !important; }
         width: 40mm !important; height: 30mm !important;
     }
     
-    /* ✅ الرسم البياني يظهر كبيراً في الطباعة */
-    .snapshot-body img.chart-img {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-height: 100mm !important;
-    }
+    /* حذف أي canvas متبقٍ */
+    .snapshot-body canvas { display: none !important; }
 }
 </style>
 </head>
@@ -429,60 +404,14 @@ body.exporting .snapshot-body { width: 1600px !important; }
 
     const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]/gu;
 
-    // ═══════════════════════════════════════════════════════════════
-    // دالة تكبير الرسوم البيانية: ترسم canvas جديد بحجم كبير
-    // ═══════════════════════════════════════════════════════════════
-    function enlargeCharts(container) {
-        container.querySelectorAll('canvas').forEach(canvas => {
-            try {
-                // إذا كان canvas يحتوي على بيانات (له عرض وارتفاع)
-                const origW = canvas.width || 300;
-                const origH = canvas.height || 150;
-                
-                // إنشاء canvas جديد بحجم كبير (1200x600)
-                const newW = 1200;
-                const newH = 600;
-                const bigCanvas = document.createElement('canvas');
-                bigCanvas.width = newW;
-                bigCanvas.height = newH;
-                
-                const ctx = bigCanvas.getContext('2d');
-                // تعبئة خلفية بيضاء
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, newW, newH);
-                
-                // رسم canvas الأصلي بحجم كبير
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
-                ctx.drawImage(canvas, 0, 0, origW, origH, 0, 0, newW, newH);
-                
-                // تحويل الـ canvas الكبير إلى صورة
-                const dataUrl = bigCanvas.toDataURL('image/png', 1.0);
-                const img = document.createElement('img');
-                img.src = dataUrl;
-                img.className = 'chart-img';
-                img.alt = 'رسم بياني';
-                img.style.width = '100%';
-                img.style.display = 'block';
-                img.style.margin = '0 auto';
-                
-                // استبدال canvas الأصلي بالصورة الكبيرة
-                canvas.parentNode.replaceChild(img, canvas);
-            } catch (e) {
-                console.warn('Could not enlarge chart:', e);
-                canvas.remove();
-            }
-        });
-    }
-
     function cleanSnapshot(container) {
         container.querySelectorAll(
             'button, .eff-header-actions, .filter-bar, .scroll-nav, .btn-action, .btn-filter, ' +
             '.chart-switch, .no-print, .back-to-top, .pagination, script'
         ).forEach(el => el.remove());
 
-        // تحويل canvas إلى صور كبيرة
-        enlargeCharts(container);
+        // حذف الرسوم البيانية نهائياً من الطباعة
+        container.querySelectorAll('canvas, .chart-section, .chart-box').forEach(el => el.remove());
 
         const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
         const nodes = [];
