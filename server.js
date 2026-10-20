@@ -2913,11 +2913,24 @@ function formatMaintenance(log) {
         console.log('   📌 PATCH  /api/vessels/:id/images/:imageId/primary');
     })();
 
-    // ============ VESSELS ============
+     // ============ VESSELS ============
     app.get('/api/vessels', authenticateAccessToken, requirePermission('vessels:read'), async (req, res) => {
         try {
             const includeDisposed = req.query.includeDisposed === 'true';
-            const filter = includeDisposed ? {} : { status: { $ne: 'طرح' } };
+            
+            // 1. الفلتر الأساسي
+            let filter = includeDisposed ? {} : { status: { $ne: 'طرح' } };
+
+            // 2. 🔒 تطبيق حماية الأقاليم (Row-Level Security)
+            const userRole = normalizeRole(req.user.role);
+            const isAdminOrManager = ['admin', 'manager'].includes(userRole);
+            
+            // إذا لم يكن المستخدم أدمن أو مدير، أضف شرط الإقليم
+            if (!isAdminOrManager && req.user.region) {
+                filter.region = req.user.region;
+                console.log(`🔒 Filtering vessels for user ${req.user.username} (region: ${req.user.region})`);
+            }
+
             const vessels = await Vessel.find(filter).sort({ createdAt: -1 }).limit(500);
             res.json(vessels.map(formatVessel));
         } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
@@ -2929,81 +2942,26 @@ function formatMaintenance(log) {
         async (req, res) => {
         try {
             const limit = Math.min(parseInt(req.query.limit) || 500, 1000);
-            const disposed = await Vessel.find({ status: 'طرح' })
+            
+            // 1. الفلتر الأساسي (المطروحة فقط)
+            let filter = { status: 'طرح' };
+
+            // 2. 🔒 تطبيق حماية الأقاليم (Row-Level Security)
+            const userRole = normalizeRole(req.user.role);
+            const isAdminOrManager = ['admin', 'manager'].includes(userRole);
+            
+            if (!isAdminOrManager && req.user.region) {
+                filter.region = req.user.region;
+                console.log(`🔒 Filtering disposed vessels for user ${req.user.username} (region: ${req.user.region})`);
+            }
+
+            const disposed = await Vessel.find(filter)
                 .sort({ disposalDate: -1, updatedAt: -1 })
                 .limit(limit);
             res.json({ success: true, count: disposed.length, vessels: disposed.map(formatVessel) });
         } catch (e) {
             console.error('❌ GET /api/vessels/disposed:', e.message);
             res.status(500).json({ success: false, error: 'فشل التحميل' });
-        }
-    });
-
-    app.get('/api/vessels/disposal-stats',
-        authenticateAccessToken,
-        requirePermission('vessels:read'),
-        async (req, res) => {
-        try {
-            const [disposed, active] = await Promise.all([
-                Vessel.countDocuments({ status: 'طرح' }),
-                Vessel.countDocuments({ status: { $ne: 'طرح' } })
-            ]);
-            res.json({ success: true, stats: { disposed, active, total: disposed + active } });
-        } catch (e) { res.status(500).json({ success: false, error: 'فشل' }); }
-    });
-
-    app.post('/api/vessels/:id/dispose',
-        authenticateAccessToken,
-        csrfProtection,
-        requirePermission('vessels:update'),
-        async (req, res) => {
-        try {
-            const q = buildIdQuery(req.params.id);
-            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-
-            const vessel = await Vessel.findOne(q);
-            if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-
-            if (vessel.status === 'طرح') {
-                return res.status(400).json({ success: false, error: 'المركب مطروح بالفعل' });
-            }
-
-            const { reason, decisionNumber, decidedBy, notes, decision, disposedBy } = req.body;
-
-            if (!reason || !String(reason).trim()) {
-                return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
-            }
-
-            vessel.status = 'طرح';
-            vessel.stat = 'طرح';
-            vessel.disposalDate = new Date();
-            vessel.disposedAt = new Date();
-            vessel.disposalReason = String(reason).substring(0, 1000);
-            vessel.disposalDecision = String(decisionNumber || decision || '').substring(0, 200);
-            vessel.disposedBy = String(decidedBy || disposedBy || req.user.name || req.user.username).substring(0, 200);
-            vessel.disposalNotes = String(notes || '').substring(0, 2000);
-            vessel.break = String(notes || reason).substring(0, 500);
-            vessel.updatedAt = new Date();
-            await vessel.save();
-
-            await addSystemLog({
-                userId: req.user.id, userName: req.user.name,
-                action: 'dispose', resource: 'vessel',
-                resourceId: vessel.id, resourceName: vessel.name,
-                status: 'success', ip: req.ip, requestId: req.requestId
-            });
-
-            await notify({
-                type: 'warning', category: 'vessel', title: 'طرح مركب',
-                message: 'تم طرح "' + vessel.name + '"',
-                link: '/pages/disposals.html', icon: 'archive',
-                actorName: req.user.name || req.user.username
-            });
-
-            res.json({ success: true, message: 'تم طرح المركب بنجاح', vessel: formatVessel(vessel) });
-        } catch (e) {
-            console.error('❌ POST /api/vessels/:id/dispose:', e.message);
-            res.status(500).json({ success: false, error: 'فشل الطرح' });
         }
     });
 
@@ -3172,11 +3130,24 @@ function formatMaintenance(log) {
         } catch (e) { res.status(500).json({ success: false, error: 'خطأ' }); }
     });
 
-    // ============ MAINTENANCE ============
+        // ============ MAINTENANCE ============
     async function handleGetMaint(req, res) {
         try {
-            const logs = await Maintenance.find().sort({ createdAt: -1 }).limit(500);
+            // 1. الفلتر الأساسي
+            let filter = {};
+
+            // 2. 🔒 تطبيق حماية الأقاليم (Row-Level Security)
+            const userRole = normalizeRole(req.user.role);
+            const isAdminOrManager = ['admin', 'manager'].includes(userRole);
+            
+            if (!isAdminOrManager && req.user.region) {
+                filter.region = req.user.region;
+                console.log(`🔒 Filtering maintenance for user ${req.user.username} (region: ${req.user.region})`);
+            }
+
+            const logs = await Maintenance.find(filter).sort({ createdAt: -1 }).limit(500);
             const recs = logs.map(formatMaintenance);
+            
             res.json({ success: true, records: recs, data: recs, total: recs.length,
                 stats: {
                     total: recs.length,
@@ -3189,7 +3160,6 @@ function formatMaintenance(log) {
     }
     app.get('/api/maintenance', authenticateAccessToken, requirePermission('maintenance:read'), handleGetMaint);
     app.get('/api/maintenance-logs', authenticateAccessToken, requirePermission('maintenance:read'), handleGetMaint);
-
     async function handleCreateMaint(req, res) {
         try {
             const b = req.body;
