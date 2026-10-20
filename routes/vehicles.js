@@ -1,5 +1,6 @@
 // ============================================================
-// 🚛 routes/vehicles.js — v9.0
+// 🚛 routes/vehicles.js — v9.1 (SECURED)
+// 🔒 Row-Level Security: كل المسارات محمية حسب الإقليم
 // + 🆕 الصور (Cloudinary) + 🆕 الطرح
 // ✅ إصلاح: التحقق من المنطقة (zones validation)
 // ✅ إصلاح: تحميل VEHICLE_ZONES_ALL
@@ -20,7 +21,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         addSystemLog,
         notify,
         buildIdQuery,
-        normalizeRole  // ✅ أضف هذا السطر
+        normalizeRole  // ✅ مطلوب
     } = deps || {};
 
     if (!Vehicle) {
@@ -28,7 +29,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
         return;
     }
 
-    // 🛡️ حماية إضافية: دالة احتياطية إذا لم يتم تمرير normalizeRole
+    // 🛡️ دالة احتياطية
     const safeNormalizeRole = typeof normalizeRole === 'function'
         ? normalizeRole
         : (role) => String(role || '').toLowerCase().trim();
@@ -63,7 +64,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     console.log('✅ [VEHICLES] Registering vehicles routes...');
 
     // ═══════════════════════════════════════════════════════════
-    // 📋 تحميل قوائم المناطق من Model
+    // 📋 تحميل قوائم المناطق
     // ═══════════════════════════════════════════════════════════
     let VEHICLE_ZONES = {};
     let VEHICLE_ZONES_ALL = [];
@@ -87,87 +88,80 @@ module.exports = function registerVehicleRoutes(app, deps) {
     const MAX_IMAGES = 10;
 
     // ═══════════════════════════════════════════════════════════
-    // ✅ دالة التحقق من المنطقة (مرنة وآمنة)
+    // 🔒 دالة مركزية: هل المستخدم أدمن/مدير؟
     // ═══════════════════════════════════════════════════════════
-    /**
-     * تتحقق من صحة المنطقة حسب الإقليم
-     * @param {string} region - الإقليم / الإدارة
-     * @param {string} zone - المنطقة
-     * @returns {{ valid: boolean, reason?: string }}
-     */
-    function validateZone(region, zone) {
-        // 1️⃣ إذا كانت المنطقة فارغة → مقبول (للإدارات المركزية)
-        if (!zone || !String(zone).trim()) {
-            return { valid: true };
-        }
-
-        const zoneTrimmed = String(zone).trim();
-        const allowedZones = VEHICLE_ZONES[region] || [];
-
-        // 2️⃣ إذا كان الإقليم غير معروف → اسمح (مرونة)
-        if (allowedZones.length === 0) {
-            return { valid: true };
-        }
-
-        // 3️⃣ المنطقة موجودة في قائمة الإقليم → ✅
-        if (allowedZones.indexOf(zoneTrimmed) !== -1) {
-            return { valid: true };
-        }
-
-        // 4️⃣ المنطقة موجودة في القائمة العامة → ✅ (مرونة)
-        if (VEHICLE_ZONES_ALL.indexOf(zoneTrimmed) !== -1) {
-            return { valid: true };
-        }
-
-        // ❌ مرفوض
-        return {
-            valid: false,
-            reason: `المنطقة "${zoneTrimmed}" لا تتبع "${region}"`
-        };
+    function isPrivileged(req) {
+        const role = safeNormalizeRole(req.user && req.user.role);
+        return ['admin', 'manager'].includes(role);
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 🎨 formatVehicle — مع روابط صور بجودات متعددة
+    // 🔒 دالة مركزية: بناء فلتر الأمان حسب الإقليم
+    // تُستخدم في القوائم (find)
+    // ═══════════════════════════════════════════════════════════
+    function buildRegionFilter(req, baseFilter = {}) {
+        const filter = { ...baseFilter };
+        if (!isPrivileged(req) && req.user && req.user.region) {
+            filter.region = req.user.region;
+            console.log(`🔒 [VEHICLES] Filtering for ${req.user.username} (region: ${req.user.region})`);
+        }
+        return filter;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🔒 دالة مركزية: هل يحق للمستخدم الوصول لهذه المركبة؟
+    // تُستخدم في :id (GET/PUT/DELETE/...)
+    // ═══════════════════════════════════════════════════════════
+    function canAccessVehicle(req, vehicle) {
+        if (!vehicle) return false;
+        if (isPrivileged(req)) return true;
+        if (!req.user || !req.user.region) return false;
+        return vehicle.region === req.user.region;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🔒 دالة مركزية: هل يحق للمستخدم الكتابة في هذا الإقليم؟
+    // تُستخدم في POST (إنشاء) للتحقق من الإقليم المطلوب
+    // ═══════════════════════════════════════════════════════════
+    function canWriteRegion(req, region) {
+        if (isPrivileged(req)) return true;
+        if (!req.user || !req.user.region) return false;
+        return region === req.user.region;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // ✅ دالة التحقق من المنطقة
+    // ═══════════════════════════════════════════════════════════
+    function validateZone(region, zone) {
+        if (!zone || !String(zone).trim()) return { valid: true };
+        const zoneTrimmed = String(zone).trim();
+        const allowedZones = VEHICLE_ZONES[region] || [];
+        if (allowedZones.length === 0) return { valid: true };
+        if (allowedZones.indexOf(zoneTrimmed) !== -1) return { valid: true };
+        if (VEHICLE_ZONES_ALL.indexOf(zoneTrimmed) !== -1) return { valid: true };
+        return { valid: false, reason: `المنطقة "${zoneTrimmed}" لا تتبع "${region}"` };
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🎨 formatVehicle
     // ═══════════════════════════════════════════════════════════
     function formatVehicle(v) {
         if (!v) return null;
-        
+
         const images = Array.isArray(v.images) ? v.images.map(img => {
             const baseUrl = img.url || '';
-            
-            // ✅ إنشاء روابط بأحجام مختلفة
-            let thumbUrl = baseUrl;
-            let mediumUrl = baseUrl;
-            let largeUrl = baseUrl;
-            
+            let thumbUrl = baseUrl, mediumUrl = baseUrl, largeUrl = baseUrl;
             if (baseUrl.includes('cloudinary.com') && baseUrl.includes('/upload/')) {
-                // ✅ Thumbnail عالي الجودة (240×240 = 2x من 120)
-                thumbUrl = baseUrl.replace(
-                    '/upload/',
-                    '/upload/w_240,h_240,c_fill,g_auto,q_90,f_auto,dpr_auto,fl_progressive/'
-                );
-                
-                // ✅ Medium للعرض المتوسط (800×800)
-                mediumUrl = baseUrl.replace(
-                    '/upload/',
-                    '/upload/w_800,h_800,c_limit,q_85,f_auto,dpr_auto,fl_progressive/'
-                );
-                
-                // ✅ Large للعرض الكامل (1920×1920)
-                largeUrl = baseUrl.replace(
-                    '/upload/',
-                    '/upload/w_1920,h_1920,c_limit,q_auto:best,f_auto,fl_progressive/'
-                );
+                thumbUrl = baseUrl.replace('/upload/', '/upload/w_240,h_240,c_fill,g_auto,q_90,f_auto,dpr_auto,fl_progressive/');
+                mediumUrl = baseUrl.replace('/upload/', '/upload/w_800,h_800,c_limit,q_85,f_auto,dpr_auto,fl_progressive/');
+                largeUrl = baseUrl.replace('/upload/', '/upload/w_1920,h_1920,c_limit,q_auto:best,f_auto,fl_progressive/');
             }
-            
             return {
                 _id: img._id ? img._id.toString() : null,
                 filename: img.filename || '',
                 originalName: img.originalName || '',
                 url: baseUrl,
-                thumbUrl: thumbUrl,        // ✅ جديد
-                mediumUrl: mediumUrl,      // ✅ جديد
-                largeUrl: largeUrl,        // ✅ جديد
+                thumbUrl, mediumUrl, largeUrl,
                 cloudinaryId: img.cloudinaryId || '',
                 size: img.size || 0,
                 mimetype: img.mimetype || '',
@@ -198,27 +192,19 @@ module.exports = function registerVehicleRoutes(app, deps) {
             appointmentDate: v.appointmentDate || null,
             faultDate: v.faultDate || null,
             notes: v.notes || '',
-
-            // 🆕 الطرح
-            disposalDate:     v.disposalDate || null,
-            disposalReason:   v.disposalReason || '',
+            disposalDate: v.disposalDate || null,
+            disposalReason: v.disposalReason || '',
             disposalDecision: v.disposalDecision || '',
-            disposedBy:       v.disposedBy || '',
-            disposalNotes:    v.disposalNotes || '',
-            disposedAt:       v.disposedAt || null,
-
-            // 🆕 الصور
-            images,
-            primaryImage: primary,
-            imagesCount: images.length,
-
-            createdAt: v.createdAt,
-            updatedAt: v.updatedAt
+            disposedBy: v.disposedBy || '',
+            disposalNotes: v.disposalNotes || '',
+            disposedAt: v.disposedAt || null,
+            images, primaryImage: primary, imagesCount: images.length,
+            createdAt: v.createdAt, updatedAt: v.updatedAt
         };
     }
 
     // ============================================================
-    // 🔍 GET /api/vehicles
+    // 🔍 GET /api/vehicles  (🔒 محمي)
     // ============================================================
     app.get('/api/vehicles',
         authenticateAccessToken,
@@ -226,7 +212,8 @@ module.exports = function registerVehicleRoutes(app, deps) {
         async (req, res) => {
             try {
                 const includeDisposed = req.query.includeDisposed === 'true';
-                const query = includeDisposed ? {} : { status: { $ne: 'طرح' } };
+                const base = includeDisposed ? {} : { status: { $ne: 'طرح' } };
+                const query = buildRegionFilter(req, base);
 
                 const vehicles = await Vehicle.find(query)
                     .sort({ createdAt: -1 })
@@ -242,7 +229,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     );
 
     // ============================================================
-    // 🔍 GET /api/vehicles/disposed
+    // 🔍 GET /api/vehicles/disposed  (🔒 محمي)
     // ============================================================
     app.get('/api/vehicles/disposed',
         authenticateAccessToken,
@@ -250,19 +237,19 @@ module.exports = function registerVehicleRoutes(app, deps) {
         async (req, res) => {
             try {
                 const { q, region, zone, type, brand, decision, from, to } = req.query;
-                const query = { status: 'طرح' };
-                if (region)   query.region = region;
-                if (zone)     query.zone = zone;
-                if (type)     query.type = type;
-                if (brand)    query.brand = brand;
-                if (decision) query.disposalDecision = new RegExp(decision, 'i');
+                const baseQuery = { status: 'طرح' };
+                if (region)   baseQuery.region = region;
+                if (zone)     baseQuery.zone = zone;
+                if (type)     baseQuery.type = type;
+                if (brand)    baseQuery.brand = brand;
+                if (decision) baseQuery.disposalDecision = new RegExp(decision, 'i');
                 if (from || to) {
-                    query.disposedAt = {};
-                    if (from) query.disposedAt.$gte = new Date(from);
-                    if (to)   query.disposedAt.$lte = new Date(to);
+                    baseQuery.disposedAt = {};
+                    if (from) baseQuery.disposedAt.$gte = new Date(from);
+                    if (to)   baseQuery.disposedAt.$lte = new Date(to);
                 }
                 if (q) {
-                    query.$or = [
+                    baseQuery.$or = [
                         { plateNumber: new RegExp(q, 'i') },
                         { name:        new RegExp(q, 'i') },
                         { brand:       new RegExp(q, 'i') },
@@ -271,6 +258,9 @@ module.exports = function registerVehicleRoutes(app, deps) {
                         { disposalDecision: new RegExp(q, 'i') }
                     ];
                 }
+
+                // 🔒 إجبار فلتر الإقليم (لا يمكن تجاوزه بـ ?region=)
+                const query = buildRegionFilter(req, baseQuery);
 
                 const vehicles = await Vehicle.find(query)
                     .sort({ disposedAt: -1, createdAt: -1 })
@@ -286,23 +276,25 @@ module.exports = function registerVehicleRoutes(app, deps) {
     );
 
     // ============================================================
-    // 📊 GET /api/vehicles/disposal-stats
+    // 📊 GET /api/vehicles/disposal-stats  (🔒 محمي)
     // ============================================================
     app.get('/api/vehicles/disposal-stats',
         authenticateAccessToken,
         requirePermission('vessels:read'),
         async (req, res) => {
             try {
+                const regionFilter = buildRegionFilter(req, {});
+
                 const [total, disposed, byRegion, byType] = await Promise.all([
-                    Vehicle.countDocuments(),
-                    Vehicle.countDocuments({ status: 'طرح' }),
+                    Vehicle.countDocuments(regionFilter),
+                    Vehicle.countDocuments({ ...regionFilter, status: 'طرح' }),
                     Vehicle.aggregate([
-                        { $match: { status: 'طرح' } },
+                        { $match: { ...regionFilter, status: 'طرح' } },
                         { $group: { _id: '$region', count: { $sum: 1 } } },
                         { $sort: { count: -1 } }
                     ]),
                     Vehicle.aggregate([
-                        { $match: { status: 'طرح' } },
+                        { $match: { ...regionFilter, status: 'طرح' } },
                         { $group: { _id: '$type', count: { $sum: 1 } } },
                         { $sort: { count: -1 } }
                     ])
@@ -324,7 +316,7 @@ module.exports = function registerVehicleRoutes(app, deps) {
     );
 
     // ============================================================
-    // 🔍 GET /api/vehicles/config
+    // 🔍 GET /api/vehicles/config  (🔓 لا يحتاج فلترة - قوائم ثابتة)
     // ============================================================
     app.get('/api/vehicles/config',
         authenticateAccessToken,
@@ -348,39 +340,35 @@ module.exports = function registerVehicleRoutes(app, deps) {
         }
     );
 
-   // ============================================================
-// 🔍 GET /api/vehicles/:id
-// ============================================================
-app.get('/api/vehicles/:id',
-    authenticateAccessToken,
-    requirePermission('vessels:read'),
-    async (req, res) => {
-        try {
-            const q = buildIdQuery(req.params.id);
-            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
-
-            const v = await Vehicle.findOne(q).lean();
-            if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
-
-            // 🔒 التحقق من صلاحية الإقليم (Row-Level Security)
-            const userRole = safeNormalizeRole(req.user.role);
-            const isAdminOrManager = ['admin', 'manager'].includes(userRole);
-
-            if (!isAdminOrManager && req.user.region && v.region !== req.user.region) {
-                console.warn(`🚫 [VEHICLES] Access denied for ${req.user.username} (region: ${req.user.region}) → vehicle ${v._id} (region: ${v.region})`);
-                return res.status(403).json({ success: false, error: 'غير مصرح لك بالوصول لهذه الوسيلة' });
-            }
-
-            res.json({ success: true, vehicle: formatVehicle(v) });
-        } catch (e) {
-            console.error('❌ [VEHICLES] GET /:id error:', e.message);
-            res.status(500).json({ success: false, error: 'فشل التحميل' });
-        }
-    }
-);
-   
     // ============================================================
-    // ➕ POST /api/vehicles
+    // 🔍 GET /api/vehicles/:id  (🔒 محمي - موجود مسبقاً)
+    // ============================================================
+    app.get('/api/vehicles/:id',
+        authenticateAccessToken,
+        requirePermission('vessels:read'),
+        async (req, res) => {
+            try {
+                const q = buildIdQuery(req.params.id);
+                if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+
+                const v = await Vehicle.findOne(q).lean();
+                if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+
+                if (!canAccessVehicle(req, v)) {
+                    console.warn(`🚫 [VEHICLES] GET /:id denied for ${req.user.username} → vehicle ${v._id}`);
+                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                }
+
+                res.json({ success: true, vehicle: formatVehicle(v) });
+            } catch (e) {
+                console.error('❌ [VEHICLES] GET /:id error:', e.message);
+                res.status(500).json({ success: false, error: 'فشل التحميل' });
+            }
+        }
+    );
+
+    // ============================================================
+    // ➕ POST /api/vehicles  (🔒 محمي - منع الإنشاء في إقليم آخر)
     // ============================================================
     app.post('/api/vehicles',
         authenticateAccessToken,
@@ -396,42 +384,34 @@ app.get('/api/vehicles/:id',
                     appointmentDate, faultDate, notes
                 } = req.body;
 
-                // ✅ التحقق الأساسي
                 if (typeof plateNumber !== 'string' || !plateNumber.trim())
                     return res.status(400).json({ success: false, error: 'رقم الوسيلة مطلوب' });
 
                 if (typeof region !== 'string' || !region.trim())
                     return res.status(400).json({ success: false, error: 'الإدارة / الإقليم مطلوب' });
 
-                // ⚠️ المنطقة: قد تكون فارغة (للإدارات المركزية)
+                // 🔒 منع إنشاء مركبة في إقليم آخر
+                const cleanRegion = region.trim();
+                if (!canWriteRegion(req, cleanRegion)) {
+                    console.warn(`🚫 [VEHICLES] POST denied for ${req.user.username} (region: ${req.user.region}) → attempt to create in region: ${cleanRegion}`);
+                    return res.status(403).json({ success: false, error: 'غير مصرح لك بإضافة وسيلة في إقليم آخر' });
+                }
+
                 const zoneStr = (typeof zone === 'string') ? zone.trim() : '';
-
-                // ✅ التحقق المرن من المنطقة
-                const zoneCheck = validateZone(region.trim(), zoneStr);
+                const zoneCheck = validateZone(cleanRegion, zoneStr);
                 if (!zoneCheck.valid) {
-                    console.warn('⚠️ [VEHICLES] Zone rejected on POST:',
-                        { region, zone, reason: zoneCheck.reason });
-                    return res.status(400).json({
-                        success: false,
-                        error: zoneCheck.reason
-                    });
+                    return res.status(400).json({ success: false, error: zoneCheck.reason });
                 }
 
-                // ✅ تاريخ العطب
                 if (status === 'معطبة' && (!faultDate || !String(faultDate).trim())) {
-                    return res.status(400).json({
-                        success: false,
-                        error: 'تاريخ العطب مطلوب عند الحالة "معطبة"'
-                    });
+                    return res.status(400).json({ success: false, error: 'تاريخ العطب مطلوب عند الحالة "معطبة"' });
                 }
 
-                // ✅ رقم الوسيلة فريد
                 const existing = await Vehicle.findOne({ plateNumber: plateNumber.trim() });
                 if (existing) {
                     return res.status(400).json({ success: false, error: 'رقم الوسيلة موجود مسبقاً' });
                 }
 
-                // ✅ الإنشاء
                 const newVehicle = await Vehicle.create({
                     id: randomId(8),
                     name: typeof name === 'string' ? name.trim() : '',
@@ -441,8 +421,8 @@ app.get('/api/vehicles/:id',
                     model: typeof model === 'string' ? model.trim() : '',
                     year: Number(year) || null,
                     color: typeof color === 'string' ? color.trim() : '',
-                    region: region.trim(),
-                    zone: zoneStr,               // ← قد تكون فارغة
+                    region: cleanRegion,
+                    zone: zoneStr,
                     status: status || 'صالحة',
                     workCondition: workCondition || 'جديدة',
                     appointmentDate: appointmentDate || null,
@@ -484,7 +464,7 @@ app.get('/api/vehicles/:id',
     );
 
     // ============================================================
-    // ✏️ PUT /api/vehicles/:id
+    // ✏️ PUT /api/vehicles/:id  (🔒 محمي)
     // ============================================================
     app.put('/api/vehicles/:id',
         authenticateAccessToken,
@@ -497,6 +477,12 @@ app.get('/api/vehicles/:id',
 
                 const v = await Vehicle.findOne(q);
                 if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+
+                // 🔒 منع تعديل مركبة إقليم آخر
+                if (!canAccessVehicle(req, v)) {
+                    console.warn(`🚫 [VEHICLES] PUT denied for ${req.user.username} → vehicle ${v._id} (region: ${v.region})`);
+                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                }
 
                 const {
                     name, plateNumber, type,
@@ -514,10 +500,8 @@ app.get('/api/vehicles/:id',
                     });
                 }
 
-                // ✅ تحديث الاسم
                 if (typeof name === 'string') v.name = name.trim();
 
-                // ✅ تحديث رقم الوسيلة (مع فحص التكرار)
                 if (typeof plateNumber === 'string' && plateNumber.trim() && plateNumber.trim() !== v.plateNumber) {
                     const dup = await Vehicle.findOne({
                         plateNumber: plateNumber.trim(),
@@ -527,26 +511,25 @@ app.get('/api/vehicles/:id',
                     v.plateNumber = plateNumber.trim();
                 }
 
-                // ✅ حقول بسيطة
                 if (type !== undefined) v.type = type;
                 if (typeof brand === 'string') v.brand = brand.trim();
                 if (typeof model === 'string') v.model = model.trim();
                 if (year !== undefined) v.year = Number(year) || null;
                 if (typeof color === 'string') v.color = color.trim();
 
-                // ✅ الإقليم والمنطقة (مع التحقق المرن)
                 const newRegion = (typeof region === 'string' && region.trim()) ? region.trim() : v.region;
                 const newZone = (typeof zone === 'string') ? zone.trim() : v.zone;
+
+                // 🔒 منع نقل المركبة إلى إقليم آخر (لغير الأدمن)
+                if (region !== undefined && newRegion !== v.region && !canWriteRegion(req, newRegion)) {
+                    console.warn(`🚫 [VEHICLES] PUT move-to-region denied for ${req.user.username} → ${newRegion}`);
+                    return res.status(403).json({ success: false, error: 'غير مصرح لك بنقل الوسيلة إلى إقليم آخر' });
+                }
 
                 if (region !== undefined || zone !== undefined) {
                     const zoneCheck = validateZone(newRegion, newZone);
                     if (!zoneCheck.valid) {
-                        console.warn('⚠️ [VEHICLES] Zone rejected on PUT:',
-                            { region: newRegion, zone: newZone, reason: zoneCheck.reason });
-                        return res.status(400).json({
-                            success: false,
-                            error: zoneCheck.reason
-                        });
+                        return res.status(400).json({ success: false, error: zoneCheck.reason });
                     }
                 }
 
@@ -557,12 +540,8 @@ app.get('/api/vehicles/:id',
                 if (appointmentDate !== undefined) v.appointmentDate = appointmentDate || null;
                 if (faultDate !== undefined) v.faultDate = faultDate || null;
 
-                // ✅ تاريخ العطب
                 if (v.status === 'معطبة' && (!v.faultDate || !String(v.faultDate).trim())) {
-                    return res.status(400).json({
-                        success: false,
-                        error: 'تاريخ العطب مطلوب عند الحالة "معطبة"'
-                    });
+                    return res.status(400).json({ success: false, error: 'تاريخ العطب مطلوب عند الحالة "معطبة"' });
                 }
 
                 if (typeof notes === 'string') v.notes = notes.trim();
@@ -594,7 +573,7 @@ app.get('/api/vehicles/:id',
     );
 
     // ============================================================
-    // 🗑️ DELETE /api/vehicles/:id — يحذف الصور من Cloudinary
+    // 🗑️ DELETE /api/vehicles/:id  (🔒 محمي)
     // ============================================================
     app.delete('/api/vehicles/:id',
         authenticateAccessToken,
@@ -608,18 +587,19 @@ app.get('/api/vehicles/:id',
                 const v = await Vehicle.findOne(q);
                 if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
+                if (!canAccessVehicle(req, v)) {
+                    console.warn(`🚫 [VEHICLES] DELETE denied for ${req.user.username} → vehicle ${v._id}`);
+                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                }
+
                 const plate = v.plateNumber;
                 const vid = v.id;
 
-                // ☁️ حذف الصور من Cloudinary
                 if (cloudinary && v.images && v.images.length > 0) {
                     for (const img of v.images) {
                         if (img.cloudinaryId) {
-                            try {
-                                await cloudinary.uploader.destroy(img.cloudinaryId);
-                            } catch (err) {
-                                console.warn('⚠️ Cloudinary delete:', err.message);
-                            }
+                            try { await cloudinary.uploader.destroy(img.cloudinaryId); }
+                            catch (err) { console.warn('⚠️ Cloudinary delete:', err.message); }
                         }
                     }
                 }
@@ -642,7 +622,7 @@ app.get('/api/vehicles/:id',
     );
 
     // ============================================================
-    // ⚫ POST /api/vehicles/:id/dispose
+    // ⚫ POST /api/vehicles/:id/dispose  (🔒 محمي)
     // ============================================================
     app.post('/api/vehicles/:id/dispose',
         authenticateAccessToken,
@@ -656,11 +636,15 @@ app.get('/api/vehicles/:id',
                 const v = await Vehicle.findOne(q);
                 if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
+                if (!canAccessVehicle(req, v)) {
+                    console.warn(`🚫 [VEHICLES] dispose denied for ${req.user.username} → vehicle ${v._id}`);
+                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                }
+
                 if (v.status === 'طرح')
                     return res.status(400).json({ success: false, error: 'الوسيلة مطروحة مسبقاً' });
 
                 const { reason, decision, disposedBy, notes, date } = req.body || {};
-
                 if (!reason || !String(reason).trim())
                     return res.status(400).json({ success: false, error: 'سبب الطرح مطلوب' });
 
@@ -690,11 +674,7 @@ app.get('/api/vehicles/:id',
                     actorName: req.user.name || req.user.username
                 });
 
-                res.json({
-                    success: true,
-                    message: 'تم طرح الوسيلة بنجاح',
-                    vehicle: formatVehicle(v)
-                });
+                res.json({ success: true, message: 'تم طرح الوسيلة بنجاح', vehicle: formatVehicle(v) });
             } catch (e) {
                 console.error('❌ [VEHICLES] dispose error:', e.message);
                 res.status(500).json({ success: false, error: 'خطأ في الطرح' });
@@ -703,7 +683,7 @@ app.get('/api/vehicles/:id',
     );
 
     // ============================================================
-    // ♻️ POST /api/vehicles/:id/restore
+    // ♻️ POST /api/vehicles/:id/restore  (🔒 محمي)
     // ============================================================
     app.post('/api/vehicles/:id/restore',
         authenticateAccessToken,
@@ -716,6 +696,11 @@ app.get('/api/vehicles/:id',
 
                 const v = await Vehicle.findOne(q);
                 if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+
+                if (!canAccessVehicle(req, v)) {
+                    console.warn(`🚫 [VEHICLES] restore denied for ${req.user.username} → vehicle ${v._id}`);
+                    return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                }
 
                 if (v.status !== 'طرح')
                     return res.status(400).json({ success: false, error: 'الوسيلة غير مطروحة' });
@@ -742,11 +727,7 @@ app.get('/api/vehicles/:id',
                     actorName: req.user.name || req.user.username
                 });
 
-                res.json({
-                    success: true,
-                    message: 'تم إلغاء الطرح بنجاح',
-                    vehicle: formatVehicle(v)
-                });
+                res.json({ success: true, message: 'تم إلغاء الطرح بنجاح', vehicle: formatVehicle(v) });
             } catch (e) {
                 console.error('❌ [VEHICLES] restore error:', e.message);
                 res.status(500).json({ success: false, error: 'خطأ في إلغاء الطرح' });
@@ -755,8 +736,7 @@ app.get('/api/vehicles/:id',
     );
 
     // ============================================================
-    // 📸 POST /api/vehicles/:id/images — رفع صور إلى Cloudinary
-    // ✅ جودة عالية + eager transformations
+    // 📸 POST /api/vehicles/:id/images  (🔒 محمي)
     // ============================================================
     if (upload && cloudinary) {
         app.post('/api/vehicles/:id/images',
@@ -772,15 +752,17 @@ app.get('/api/vehicles/:id',
                     const v = await Vehicle.findOne(q);
                     if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
+                    if (!canAccessVehicle(req, v)) {
+                        console.warn(`🚫 [VEHICLES] upload images denied for ${req.user.username} → vehicle ${v._id}`);
+                        return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+                    }
+
                     if (!req.files || req.files.length === 0)
                         return res.status(400).json({ success: false, error: 'لم يتم رفع أي صورة' });
 
                     const remaining = MAX_IMAGES - v.images.length;
                     if (remaining <= 0)
-                        return res.status(400).json({
-                            success: false,
-                            error: `الحد الأقصى ${MAX_IMAGES} صور`
-                        });
+                        return res.status(400).json({ success: false, error: `الحد الأقصى ${MAX_IMAGES} صور` });
 
                     const filesToAdd = req.files.slice(0, remaining);
                     const source  = req.body.source === 'camera' ? 'camera' : 'upload';
@@ -795,54 +777,32 @@ app.get('/api/vehicles/:id',
                                 const stream = cloudinary.uploader.upload_stream({
                                     folder: `marine-system/vehicles/${v.plateNumber || v.id}`,
                                     resource_type: 'image',
-                                    // ✅ جودة عالية للصورة الأصلية
                                     transformation: [
                                         { width: 1920, height: 1920, crop: 'limit' },
                                         { quality: 92 },
                                         { fetch_format: 'auto' },
                                         { flags: 'progressive' }
                                     ],
-                                    // ✅ إنشاء نسخ إضافية تلقائياً
                                     eager: [
-                                        // Thumbnail عالي الجودة (240×240 = 2x من 120)
-                                        { 
-                                            width: 240, height: 240, 
-                                            crop: 'fill', gravity: 'auto',
-                                            quality: 90, 
-                                            fetch_format: 'auto',
-                                            flags: 'progressive',
-                                            dpr: 'auto'
-                                        },
-                                        // Medium للعرض المتوسط
-                                        { 
-                                            width: 800, height: 800, 
-                                            crop: 'limit',
-                                            quality: 85,
-                                            fetch_format: 'auto',
-                                            flags: 'progressive'
-                                        }
+                                        { width: 240, height: 240, crop: 'fill', gravity: 'auto',
+                                          quality: 90, fetch_format: 'auto', flags: 'progressive', dpr: 'auto' },
+                                        { width: 800, height: 800, crop: 'limit',
+                                          quality: 85, fetch_format: 'auto', flags: 'progressive' }
                                     ],
                                     eager_async: false
                                 }, (err, r) => err ? reject(err) : resolve(r));
                                 stream.end(file.buffer);
                             });
 
-                            // ✅ استخراج روابط النسخ الإضافية
                             const baseUrl = result.secure_url;
-                            const thumbUrl = (result.eager && result.eager[0]) 
-                                ? result.eager[0].secure_url 
-                                : baseUrl;
-                            const mediumUrl = (result.eager && result.eager[1]) 
-                                ? result.eager[1].secure_url 
-                                : baseUrl;
+                            const thumbUrl = (result.eager && result.eager[0]) ? result.eager[0].secure_url : baseUrl;
+                            const mediumUrl = (result.eager && result.eager[1]) ? result.eager[1].secure_url : baseUrl;
 
                             uploaded.push({
                                 filename:     result.public_id.split('/').pop(),
                                 originalName: file.originalname,
                                 url:          baseUrl,
-                                thumbUrl:     thumbUrl,        // ✅ جديد
-                                mediumUrl:    mediumUrl,       // ✅ جديد
-                                largeUrl:     baseUrl,         // ✅ الأصلي
+                                thumbUrl, mediumUrl, largeUrl: baseUrl,
                                 cloudinaryId: result.public_id,
                                 size:         result.bytes,
                                 mimetype:     file.mimetype,
@@ -884,9 +844,7 @@ app.get('/api/vehicles/:id',
             }
         );
 
-        // ============================================================
-        // 🗑️ DELETE /api/vehicles/:id/images/:imageId
-        // ============================================================
+        // 🗑️ DELETE image
         app.delete('/api/vehicles/:id/images/:imageId',
             authenticateAccessToken,
             requirePermission('vessels:update'),
@@ -899,15 +857,15 @@ app.get('/api/vehicles/:id',
                     const v = await Vehicle.findOne(q);
                     if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
+                    if (!canAccessVehicle(req, v))
+                        return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+
                     const img = v.images.id(req.params.imageId);
                     if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
 
                     if (img.cloudinaryId) {
-                        try {
-                            await cloudinary.uploader.destroy(img.cloudinaryId);
-                        } catch (err) {
-                            console.warn('⚠️ Cloudinary delete:', err.message);
-                        }
+                        try { await cloudinary.uploader.destroy(img.cloudinaryId); }
+                        catch (err) { console.warn('⚠️ Cloudinary delete:', err.message); }
                     }
 
                     v.removeImage(req.params.imageId);
@@ -920,11 +878,7 @@ app.get('/api/vehicles/:id',
                         status: 'success', ip: req.ip, requestId: req.requestId
                     });
 
-                    res.json({
-                        success: true,
-                        message: 'تم حذف الصورة',
-                        images: v.images
-                    });
+                    res.json({ success: true, message: 'تم حذف الصورة', images: v.images });
                 } catch (e) {
                     console.error('❌ [VEHICLES] delete image error:', e.message);
                     res.status(500).json({ success: false, error: 'خطأ في حذف الصورة' });
@@ -932,9 +886,7 @@ app.get('/api/vehicles/:id',
             }
         );
 
-        // ============================================================
-        // ⭐ PATCH /api/vehicles/:id/images/:imageId/primary
-        // ============================================================
+        // ⭐ PATCH primary
         app.patch('/api/vehicles/:id/images/:imageId/primary',
             authenticateAccessToken,
             requirePermission('vessels:update'),
@@ -947,17 +899,16 @@ app.get('/api/vehicles/:id',
                     const v = await Vehicle.findOne(q);
                     if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
+                    if (!canAccessVehicle(req, v))
+                        return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+
                     const img = v.images.id(req.params.imageId);
                     if (!img) return res.status(404).json({ success: false, error: 'الصورة غير موجودة' });
 
                     v.setPrimaryImage(req.params.imageId);
                     await v.save();
 
-                    res.json({
-                        success: true,
-                        message: 'تم تعيين الصورة الرئيسية',
-                        images: v.images
-                    });
+                    res.json({ success: true, message: 'تم تعيين الصورة الرئيسية', images: v.images });
                 } catch (e) {
                     console.error('❌ [VEHICLES] primary error:', e.message);
                     res.status(500).json({ success: false, error: 'خطأ في التحديث' });
@@ -968,23 +919,5 @@ app.get('/api/vehicles/:id',
         console.warn('⚠️ [VEHICLES] Image endpoints disabled (Cloudinary not configured)');
     }
 
-    // ============================================================
-    // ✅ سجل
-    // ============================================================
-    console.log('✅ [VEHICLES] Routes registered successfully');
-    console.log('   📌 GET    /api/vehicles');
-    console.log('   📌 GET    /api/vehicles/disposed');
-    console.log('   📌 GET    /api/vehicles/disposal-stats');
-    console.log('   📌 GET    /api/vehicles/config');
-    console.log('   📌 GET    /api/vehicles/:id');
-    console.log('   📌 POST   /api/vehicles');
-    console.log('   📌 PUT    /api/vehicles/:id');
-    console.log('   📌 DELETE /api/vehicles/:id');
-    console.log('   📌 POST   /api/vehicles/:id/dispose');
-    console.log('   📌 POST   /api/vehicles/:id/restore');
-    if (upload && cloudinary) {
-        console.log('   📌 POST   /api/vehicles/:id/images (Cloudinary)');
-        console.log('   📌 DELETE /api/vehicles/:id/images/:imageId');
-        console.log('   📌 PATCH  /api/vehicles/:id/images/:imageId/primary');
-    }
+    console.log('✅ [VEHICLES] Routes registered successfully (🔒 secured)');
 };
