@@ -19,13 +19,19 @@ module.exports = function registerVehicleRoutes(app, deps) {
         randomId,
         addSystemLog,
         notify,
-        buildIdQuery
+        buildIdQuery,
+        normalizeRole  // ✅ أضف هذا السطر
     } = deps || {};
 
     if (!Vehicle) {
         console.warn('⚠️ [VEHICLES] Vehicle model not loaded');
         return;
     }
+
+    // 🛡️ حماية إضافية: دالة احتياطية إذا لم يتم تمرير normalizeRole
+    const safeNormalizeRole = typeof normalizeRole === 'function'
+        ? normalizeRole
+        : (role) => String(role || '').toLowerCase().trim();
 
     // 🆕 Multer (Memory Storage)
     let upload = null;
@@ -342,28 +348,37 @@ module.exports = function registerVehicleRoutes(app, deps) {
         }
     );
 
-    // ============================================================
-    // 🔍 GET /api/vehicles/:id
-    // ============================================================
-    app.get('/api/vehicles/:id',
-        authenticateAccessToken,
-        requirePermission('vessels:read'),
-        async (req, res) => {
-            try {
-                const q = buildIdQuery(req.params.id);
-                if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
+   // ============================================================
+// 🔍 GET /api/vehicles/:id
+// ============================================================
+app.get('/api/vehicles/:id',
+    authenticateAccessToken,
+    requirePermission('vessels:read'),
+    async (req, res) => {
+        try {
+            const q = buildIdQuery(req.params.id);
+            if (!q) return res.status(400).json({ success: false, error: 'معرّف غير صالح' });
 
-                const v = await Vehicle.findOne(q).lean();
-                if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
+            const v = await Vehicle.findOne(q).lean();
+            if (!v) return res.status(404).json({ success: false, error: 'الوسيلة غير موجودة' });
 
-                res.json({ success: true, vehicle: formatVehicle(v) });
-            } catch (e) {
-                console.error('❌ [VEHICLES] GET /:id error:', e.message);
-                res.status(500).json({ success: false, error: 'فشل التحميل' });
+            // 🔒 التحقق من صلاحية الإقليم (Row-Level Security)
+            const userRole = safeNormalizeRole(req.user.role);
+            const isAdminOrManager = ['admin', 'manager'].includes(userRole);
+
+            if (!isAdminOrManager && req.user.region && v.region !== req.user.region) {
+                console.warn(`🚫 [VEHICLES] Access denied for ${req.user.username} (region: ${req.user.region}) → vehicle ${v._id} (region: ${v.region})`);
+                return res.status(403).json({ success: false, error: 'غير مصرح لك بالوصول لهذه الوسيلة' });
             }
-        }
-    );
 
+            res.json({ success: true, vehicle: formatVehicle(v) });
+        } catch (e) {
+            console.error('❌ [VEHICLES] GET /:id error:', e.message);
+            res.status(500).json({ success: false, error: 'فشل التحميل' });
+        }
+    }
+);
+   
     // ============================================================
     // ➕ POST /api/vehicles
     // ============================================================
