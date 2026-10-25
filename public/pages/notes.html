@@ -771,7 +771,7 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     var f = (nvDocs[id] && nvDocs[id].file) || {};
     var urls = ['/api/notes/verbale/' + encodeURIComponent(id) + '/download'];
     if (f.url) urls.push(f.url);
-    var lastErr = 'فشل تحميل الملف';
+    var lastErr = 'فشل تحميل الملف', netFail = false;
     for (var i = 0; i < urls.length; i++) {
       try {
         var res = await fetcher(urls[i], { method: 'GET' });
@@ -781,9 +781,9 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
           return await res.blob();
         }
         lastErr = (res.status === 401 || res.status === 403) ? 'غير مصرح — أعد تسجيل الدخول ثم حاول مجدداً' : ('فشل تحميل الملف: ' + res.status);
-      } catch (e) { lastErr = e.message || lastErr; }
+      } catch (e) { lastErr = e.message || lastErr; netFail = true; console.error('[notes] fetch failed:', urls[i], e); }
     }
-    throw new Error(lastErr);
+    var er = new Error(lastErr); er.network = netFail; throw er;
   }
   function saveBlob(blob, name) {
     var url = URL.createObjectURL(blob), a = document.createElement('a');
@@ -819,6 +819,16 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
       fr.src = url; document.body.appendChild(fr);
       setTimeout(function () { fr.remove(); }, 120000);
     } catch (err) {
+      if (err.network) {
+        var direct = f.url || ('/api/notes/verbale/' + encodeURIComponent(id) + '/download');
+        if (action === 'download') {
+          var a = document.createElement('a'); a.href = direct; a.target = '_blank'; a.rel = 'noopener'; a.download = name;
+          document.body.appendChild(a); a.click(); a.remove();
+        } else if (win) win.location.href = direct;
+        else window.open(direct, '_blank');
+        showToast('تعذّر الجلب المباشر، فُتح الرابط مباشرة', 'warning');
+        return;
+      }
       if (win) win.close();
       showToast(err.message, 'error');
     }
