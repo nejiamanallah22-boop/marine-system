@@ -1,4 +1,4 @@
-<!-- public/pages/notes.html — v13.0 (Final Fixed) -->
+<!-- public/pages/notes.html — v15.0 (Final Production) -->
 <div id="page-notes" dir="rtl">
 <style>
 #page-notes{--gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.035);--line:rgba(255,255,255,.07);--tx:#e8edf5;--mut:rgba(255,255,255,.5);--ok:#22c55e;--bad:#f87171;--info:#60a5fa;
@@ -182,7 +182,7 @@ body{background:#0a0e1a}
 .np-tab{padding:10px;font-size:13px}.nv-current{padding:18px}.nv-title{font-size:18px}
 .np-toast{left:12px;right:12px;max-width:none}}
 
-/* ===== PRINT: letterhead + archive table only ===== */
+/* ===== 🖨️ PRINT: الترويسة + الجدول ===== */
 @media print{
 @page{size:A4;margin:14mm}
 body{background:#fff!important}
@@ -789,34 +789,95 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     a.href = url; a.download = name || 'document'; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
   }
+  
+  // دالة الطباعة المحسنة (للصور والـ PDF) مع الترويسة
   async function docAction(action, id) {
     if (_isDestroyed || !id) return;
     var f = (nvDocs[id] && nvDocs[id].file) || {}, name = f.originalName || 'document';
     var kind = guessType(name, f.mimetype);
     var previewable = /pdf|image\//.test(kind);
     var win = null;
-    if (action === 'view' && previewable) win = window.open('', '_blank');
+    
+    if (action === 'view' || (action === 'print' && previewable)) {
+      win = window.open('', '_blank');
+      if (win) win.document.write('<div style="font-family:sans-serif;text-align:center;margin-top:50px;color:#333;">جاري تحضير الوثيقة...</div>');
+    }
+
     try {
       var raw = await fetchDocBlob(id);
       var type = guessType(name, raw.type);
       var blob = raw.type === type ? raw : new Blob([raw], { type: type });
-      if (action === 'download' || !/pdf|image\//.test(type)) {
+      
+      if (action === 'download' || !previewable) {
         if (win) win.close();
         saveBlob(blob, name);
         if (action !== 'download') showToast('هذا النوع من الملفات لا يُعرض ولا يُطبع مباشرة، تم تحميله', 'info');
         return;
       }
+
+      // إذا كان Action هو طباعة
+      if (action === 'print') {
+        if (type.startsWith('image/')) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            var imgData = e.target.result;
+            var html = `
+              <!DOCTYPE html>
+              <html dir="rtl">
+              <head>
+                  <title>طباعة الوثيقة</title>
+                  <style>
+                      @page { size: A4 portrait; margin: 15mm; }
+                      body { font-family: 'Cairo', 'Tajawal', sans-serif; background: #fff; color: #000; margin: 0; padding: 0; }
+                      .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+                      .header-right { text-align: center; line-height: 1.6; font-size: 14px; font-weight: bold; }
+                      .header-left { text-align: right; font-size: 13px; line-height: 1.8; }
+                      .title { text-align: center; font-size: 18px; font-weight: 900; margin: 15px 0; padding: 8px 0; border-top: 2px solid #000; border-bottom: 2px solid #000; }
+                      .image-container { width: 100%; text-align: center; margin-top: 20px; }
+                      .image-container img { max-width: 100%; max-height: 240mm; object-fit: contain; display: block; margin: 0 auto; page-break-inside: avoid; }
+                  </style>
+              </head>
+              <body>
+                  <div class="header">
+                      <div class="header-right">
+                          الجمهورية التونسية<br>
+                          وزارة الداخلية<br>
+                          الإدارة العامة للحرس الوطني<br>
+                          إدارة إسناد الوحدات البحرية
+                      </div>
+                      <div class="header-left">
+                          العوينة في: ${new Date().toLocaleDateString('ar-TN')}<br>
+                          عدد: ....................
+                      </div>
+                  </div>
+                  <div class="title">${escapeHtml(name)}</div>
+                  <div class="image-container">
+                      <img src="${imgData}" alt="الوثيقة">
+                  </div>
+              </body>
+              </html>
+            `;
+            win.document.open();
+            win.document.write(html);
+            win.document.close();
+            setTimeout(function() { try { win.focus(); win.print(); } catch(e) {} }, 800);
+          };
+          reader.readAsDataURL(blob);
+        } else {
+          // PDF
+          var blobUrl = URL.createObjectURL(blob);
+          win.location.href = blobUrl;
+          setTimeout(function() { try { win.print(); } catch(e) {} }, 1000);
+        }
+        return;
+      }
+
+      // عرض عادي (View)
       var url = URL.createObjectURL(blob);
       setTimeout(function () { URL.revokeObjectURL(url); }, 120000);
-      if (action === 'view') { if (win) win.location.href = url; else window.open(url, '_blank'); return; }
-      var fr = document.createElement('iframe');
-      fr.style.cssText = 'position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none';
-      fr.onload = function () {
-        try { fr.contentWindow.focus(); fr.contentWindow.print(); }
-        catch (e) { window.open(url, '_blank'); }
-      };
-      fr.src = url; document.body.appendChild(fr);
-      setTimeout(function () { fr.remove(); }, 120000);
+      if (win) win.location.href = url;
+      else window.open(url, '_blank');
+
     } catch (err) {
       if (err.network) {
         var direct = f.url || ('/api/notes/verbale/' + encodeURIComponent(id) + '/download');
