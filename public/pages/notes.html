@@ -1,4 +1,4 @@
-<!-- public/pages/notes.html — v12.2 (Final Fix) -->
+<!-- public/pages/notes.html — v13.0 (Final) -->
 <div id="page-notes" dir="rtl">
 <style>
 #page-notes{--gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.035);--line:rgba(255,255,255,.07);--tx:#e8edf5;--mut:rgba(255,255,255,.5);--ok:#22c55e;--bad:#f87171;--info:#60a5fa;
@@ -114,6 +114,7 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
 .ab{width:34px;height:34px;border:0;border-radius:9px;display:grid;place-items:center;cursor:pointer;font-size:13px;text-decoration:none;transition:background .2s}
 .ab.view{background:rgba(96,165,250,.12);color:var(--info)}.ab.download{background:rgba(34,197,94,.12);color:#4ade80}
 .ab.promote{background:rgba(230,179,30,.12);color:var(--gold2)}.ab.delete{background:rgba(248,113,113,.12);color:var(--bad)}
+.ab.print{background:rgba(167,139,250,.12);color:#a78bfa}
 .ab:hover{filter:brightness(1.4)}
 
 /* States */
@@ -603,8 +604,11 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
       '<td><div class="doc-cell"><div class="ficon"><i class="fas ' + getFileIcon(f.mimetype, f.originalName) + '"></i></div><div><div class="doc-title">' + escapeHtml(n.title || 'بدون عنوان') + '</div>' +
       '<div class="doc-desc">' + escapeHtml(n.description || f.originalName || '') + '</div></div></div></td>' +
       '<td><span class="chip">' + escapeHtml(weekTxt) + '</span></td><td>' + escapeHtml(uploader) + '</td><td>' + escapeHtml(formatDate(up)) + '</td><td>' + escapeHtml(f.sizeFormatted || '0 B') + '</td>' +
-      '<td><div class="row-actions"><a class="ab view" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="عرض"><i class="fas fa-eye"></i></a>' +
-      '<a class="ab download" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="تحميل"><i class="fas fa-download"></i></a></div></td></tr></tbody></table></div></section>';
+      '<td><div class="row-actions">' +
+      '<a class="ab view" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="عرض"><i class="fas fa-eye"></i></a>' +
+      '<a class="ab download" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="تحميل"><i class="fas fa-download"></i></a>' +
+      '<a class="ab print" href="javascript:void(0)" onclick="printDocument(\'' + escapeHtml(id) + '\')" title="طباعة الوثيقة"><i class="fas fa-print"></i></a>' +
+      '</div></td></tr></tbody></table></div></section>';
   }
 
   function renderEmptyCurrent() {
@@ -667,6 +671,7 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
       var uploader = n.uploadedBy && n.uploadedBy.name ? n.uploadedBy.name : (n.createdByName || 'مستخدم');
       var acts = '<a class="ab view" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="عرض"><i class="fas fa-eye"></i></a>';
       acts += '<button class="ab download" data-action="download" data-id="' + escapeHtml(id) + '" title="تحميل"><i class="fas fa-download"></i></button>';
+      acts += '<a class="ab print" href="javascript:void(0)" onclick="printDocument(\'' + escapeHtml(id) + '\')" title="طباعة الوثيقة"><i class="fas fa-print"></i></a>';
       if (cp) acts += '<button class="ab promote" data-action="promote" data-id="' + escapeHtml(id) + '" title="تعيين كحالية"><i class="fas fa-star"></i></button>' +
         '<button class="ab delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف"><i class="fas fa-trash"></i></button>';
       html += '<tr><td class="num">' + (i + 1) + '</td>' +
@@ -677,6 +682,20 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     });
     body.innerHTML = html;
   }
+
+  // دالة الطباعة المخصصة للوثيقة
+  window.printDocument = function(id) {
+    if (!id) return;
+    var url = '/api/notes/verbale/' + encodeURIComponent(id) + '/download';
+    var win = window.open(url, '_blank');
+    if (win) {
+      win.onload = function() {
+        try { win.print(); } catch(e) {}
+      };
+      // بعض المتصفحات تحتاج تأخيراً بسيطاً لتحميل ملف PDF قبل الطباعة
+      setTimeout(function() { try { win.print(); } catch(e) {} }, 1000);
+    }
+  };
 
   // ---------- Upload ----------
   function handleFileSelected(file) {
