@@ -165,135 +165,40 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
   .np-toast{left:12px;right:12px;max-width:none}
 }
 
-/* ================= 🖨️ PRINT STYLES (الطباعة الحقيقية) ================= */
-/* هذه الحاوية مخفية تماماً على الشاشة، وتظهر فقط عند الطباعة */
+/* ================= 🖨️ PRINT STYLES (الطباعة الحقيقية للسجل) ================= */
 #print-container { display: none; }
 
 @media print {
   @page { size: A4 portrait; margin: 12mm; }
-  
-  /* إخفاء واجهة التطبيق بالكامل */
   body > *:not(#print-container) { display: none !important; }
-  
-  /* إظهار حاوية الطباعة فقط */
   #print-container { 
-    display: block !important; 
-    position: static !important; 
-    width: 100% !important; 
-    background: #fff !important; 
-    color: #000 !important; 
-    direction: rtl !important;
-    font-family: 'Cairo', 'Tajawal', sans-serif !important;
-    font-size: 12px;
-    line-height: 1.6;
+    display: block !important; position: static !important; width: 100% !important; 
+    background: #fff !important; color: #000 !important; direction: rtl !important;
+    font-family: 'Cairo', 'Tajawal', sans-serif !important; font-size: 12px; line-height: 1.6;
   }
-
   #print-container * { box-sizing: border-box; }
-
-  /* الترويسة الرسمية */
-  .p-letterhead {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: flex-start !important;
-    border-bottom: 2px solid #000;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-    color: #000;
-  }
-  .p-letterhead-right {
-    text-align: center;
-    line-height: 1.8;
-    font-size: 14px;
-    font-weight: bold;
-    min-width: 250px;
-  }
+  
+  .p-letterhead { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; color: #000; }
+  .p-letterhead-right { text-align: center; line-height: 1.8; font-size: 14px; font-weight: bold; min-width: 250px; }
   .p-letterhead-right .a { font-size: 15px; font-weight: 900; }
   .p-letterhead-right .b { font-size: 13px; font-weight: 700; }
   .p-letterhead-right .c { font-size: 12px; }
+  .p-letterhead-left { text-align: right; font-size: 13px; line-height: 2; padding-top: 5px; }
   
-  .p-letterhead-left {
-    text-align: right;
-    font-size: 13px;
-    line-height: 2;
-    padding-top: 5px;
-  }
+  .p-title { text-align: center; font-size: 18px; font-weight: 900; margin: 15px 0 10px; padding: 8px 0; border-top: 2px solid #000; border-bottom: 2px solid #000; color: #000; }
+  .p-subtitle { text-align: center; font-size: 12px; margin: 0 0 15px; color: #333; }
 
-  /* عنوان التقرير الرئيسي */
-  .p-title {
-    text-align: center;
-    font-size: 18px;
-    font-weight: 900;
-    margin: 15px 0 10px;
-    padding: 8px 0;
-    border-top: 2px solid #000;
-    border-bottom: 2px solid #000;
-    color: #000;
-  }
-  .p-subtitle {
-    text-align: center;
-    font-size: 12px;
-    margin: 0 0 15px;
-    color: #333;
-  }
-
-  /* الجداول */
-  table.p-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 15px;
-  }
-  table.p-table th, table.p-table td {
-    border: 1px solid #000;
-    padding: 6px 8px;
-    font-size: 11px;
-    text-align: right;
-    vertical-align: top;
-    color: #000;
-  }
-  table.p-table th {
-    background: #eee !important;
-    font-weight: 800;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
+  table.p-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+  table.p-table th, table.p-table td { border: 1px solid #000; padding: 6px 8px; font-size: 11px; text-align: right; vertical-align: top; color: #000; }
+  table.p-table th { background: #eee !important; font-weight: 800; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   table.p-table thead { display: table-header-group; }
   table.p-table tr { page-break-inside: avoid; break-inside: avoid; }
 
-  /* الصور */
-  .p-img-wrap {
-    text-align: center;
-    margin-top: 10px;
-  }
-  .p-img-wrap img {
-    max-width: 100%;
-    max-height: 190mm;
-    object-fit: contain;
-    border: 1px solid #ccc;
-    display: block;
-    margin: 0 auto;
-  }
-
-  /* التذييل والتوقيع */
-  .p-signatures {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
-    font-size: 12px;
-    font-weight: bold;
-    page-break-inside: avoid;
-  }
+  .p-signatures { display: flex; justify-content: space-between; margin-top: 30px; font-size: 12px; font-weight: bold; page-break-inside: avoid; }
   .p-signatures div { width: 45%; text-align: center; }
   .p-signatures span { display: block; margin-top: 40px; border-top: 1px dotted #000; }
   
-  .p-footer {
-    margin-top: 20px;
-    padding-top: 5px;
-    border-top: 1px solid #888;
-    font-size: 10px;
-    color: #555;
-    display: flex;
-    justify-content: space-between;
-  }
+  .p-footer { margin-top: 20px; padding-top: 5px; border-top: 1px solid #888; font-size: 10px; color: #555; display: flex; justify-content: space-between; }
 }
 </style>
 
@@ -384,9 +289,7 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
 </div>
 
 <!-- ================= 🖨️ PRINT CONTAINER (Hidden on screen, Visible on print) ================= -->
-<div id="print-container">
-  <!-- سيتم حقن محتوى الطباعة هنا ديناميكياً بواسطة JavaScript -->
-</div>
+<div id="print-container"></div>
 
 <script>
 (function () {
@@ -902,7 +805,7 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     await Promise.all([loadNoteVerbaleCurrent(), loadNoteVerbaleArchive()]);
   }
 
-  /* Document Actions (View/Download/Print) */
+  /* Document Actions */
   function guessType(name, type) {
     var n = (name || '').toLowerCase(), t = (type || '').toLowerCase();
     if (t && t !== 'application/octet-stream') return t;
@@ -913,6 +816,7 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     if (/\.gif$/.test(n)) return 'image/gif';
     return t || 'application/octet-stream';
   }
+  
   async function fetchDocBlob(id) {
     var f = (nvDocs[id] && nvDocs[id].file) || {};
     var urls = ['/api/notes/verbale/' + encodeURIComponent(id) + '/download'];
@@ -931,15 +835,11 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     }
     var er = new Error(lastErr); er.network = netFail; throw er;
   }
+  
   function saveBlob(blob, name) {
     var url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = name || 'document'; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
-  }
-  function blobToDataUrl(blob) {
-    return new Promise(function (resolve, reject) {
-      var r = new FileReader(); r.onload = function () { resolve(r.result); }; r.onerror = function () { reject(new Error('تعذّرت قراءة الملف')); }; r.readAsDataURL(blob);
-    });
   }
 
   /* ================= PRINT LOGIC ================= */
@@ -969,7 +869,6 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
   function doPrint(htmlContent) {
     if (destroyed) return;
     printContainer.innerHTML = htmlContent;
-    // ننتظر قليلاً لضمان تحميل الصور إن وجدت
     setTimeout(function() {
       try {
         window.focus();
@@ -1002,50 +901,78 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
     doPrint(html);
   }
 
-  async function printDocument(id) {
+  /* الطباعة المحدثة: بدون fetch، باستخدام رابط الصورة المباشر */
+  function printDocument(id) {
     if (destroyed || !id) return;
     var meta = nvDocs[id] || {}, f = meta.file || {}, name = f.originalName || 'document';
     var kind = guessType(name, f.mimetype);
+    
     if (!kind.startsWith('image/')) {
       showToast('طباعة الترويسة متاحة حالياً للصور فقط. لملفات PDF استخدم زر التحميل.', 'info');
       return;
     }
-    var btn = document.querySelector('[data-action="print"][data-id="' + id + '"]');
-    setBusy(btn, true);
-    try {
-      var raw = await fetchDocBlob(id);
-      var type = guessType(name, raw.type);
-      var blob = raw.type === type ? raw : new Blob([raw], { type: type });
-      var data = await blobToDataUrl(blob);
-      
-      var html = buildLetterhead() + 
-        '<div class="p-title">Rapport Technique</div>' +
-        '<div class="p-subtitle">' + escapeHtml(meta.title || name) + '</div>' +
-        '<table class="p-table"><tbody>' +
-          '<tr><td style="width:15%;font-weight:bold;background:#eee">الأسبوع</td><td>' + escapeHtml(weekLabel(meta)) + '</td><td style="width:15%;font-weight:bold;background:#eee">الرافع</td><td>' + escapeHtml(uploaderName(meta)) + '</td></tr>' +
-          '<tr><td style="font-weight:bold;background:#eee">تاريخ الرفع</td><td>' + escapeHtml(formatDate(meta.createdAt || meta.archivedAt)) + '</td><td style="font-weight:bold;background:#eee">الحجم</td><td>' + escapeHtml(f.sizeFormatted || formatFileSize(f.size)) + '</td></tr>' +
-        '</tbody></table>' +
-        '<div class="p-img-wrap"><img src="' + data + '" alt="الوثيقة"></div>' +
-        '<div class="p-signatures"><div>المُعدّ<span></span></div><div>الإمضاء والختم<span></span></div></div>' + buildFooter();
 
-      doPrint(html);
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      if (!destroyed) setBusy(btn, false);
+    var imgUrl = f.url;
+    if (!imgUrl) {
+      showToast('لا يوجد رابط مباشر للصورة لطباعتها.', 'error');
+      return;
     }
+
+    // نفتح نافذة جديدة متزامنة مع النقر لتجنب حظر النوافذ المنبثقة
+    var win = window.open('', '_blank');
+    if (!win) {
+      showToast('الرجاء السماح بالنوافذ المنبثقة (Pop-ups) لهذا الموقع.', 'error');
+      return;
+    }
+
+    var html = `
+      <!DOCTYPE html>
+      <html dir="rtl">
+      <head>
+          <title>طباعة الوثيقة - ${escapeHtml(meta.title || name)}</title>
+          <style>
+              @page { size: A4 portrait; margin: 15mm; }
+              body { font-family: 'Cairo', 'Tajawal', sans-serif; background: #fff; color: #000; margin: 0; padding: 0; }
+              .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+              .header-right { text-align: center; line-height: 1.6; font-size: 14px; font-weight: bold; }
+              .header-left { text-align: right; font-size: 13px; line-height: 1.8; }
+              .title { text-align: center; font-size: 18px; font-weight: 900; margin: 15px 0; padding: 8px 0; border-top: 2px solid #000; border-bottom: 2px solid #000; }
+              .image-container { width: 100%; text-align: center; margin-top: 20px; }
+              .image-container img { max-width: 100%; max-height: 240mm; object-fit: contain; display: block; margin: 0 auto; page-break-inside: avoid; }
+              .footer { margin-top: 20px; padding-top: 5px; border-top: 1px solid #888; font-size: 10px; color: #555; display: flex; justify-content: space-between; }
+          </style>
+      </head>
+      <body>
+          <div class="header">
+              <div class="header-right">
+                  الجمهورية التونسية<br>
+                  وزارة الداخلية<br>
+                  الإدارة العامة للحرس الوطني<br>
+                  إدارة إسناد الوحدات البحرية
+              </div>
+              <div class="header-left">
+                  العوينة في: ${new Date().toLocaleDateString('ar-TN')}<br>
+                  عدد: ....................
+              </div>
+          </div>
+          <div class="title">Rapport Technique</div>
+          <div class="image-container">
+              <img src="${escapeHtml(imgUrl)}" alt="الوثيقة" onload="setTimeout(function(){ window.print(); }, 500);" onerror="alert('تعذر تحميل الصورة للطباعة، قد يكون الرابط محمياً.');">
+          </div>
+          <div class="footer">
+              <span>منظومة الوسائل البحرية</span>
+              <span>${escapeHtml(meta.title || name)}</span>
+          </div>
+      </body>
+      </html>
+    `;
+
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
   }
 
   /* ================= INIT ================= */
-  function handleDocClick(e) {
-    var b = e.target.closest('[data-action]'); if (!b) return;
-    var a = b.getAttribute('data-action'), id = b.getAttribute('data-id');
-    if (a === 'view' || a === 'download') docAction(a, id, b);
-    else if (a === 'print') printDocument(id);
-    else if (a === 'promote') promoteArchiveItem(id);
-    else if (a === 'delete') deleteArchiveItem(id);
-  }
-  
   async function docAction(action, id, btn) {
     if (destroyed || !id) return;
     var meta = nvDocs[id] || {}, f = meta.file || {}, name = f.originalName || 'document';
@@ -1098,6 +1025,15 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
       if (!res.ok) { var e = null; try { e = await res.json(); } catch (_) {} throw new Error((e && e.error) || 'فشل'); }
       showToast('تم حذف الوثيقة', 'success'); await reloadVerbale();
     } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  function handleDocClick(e) {
+    var b = e.target.closest('[data-action]'); if (!b) return;
+    var a = b.getAttribute('data-action'), id = b.getAttribute('data-id');
+    if (a === 'view' || a === 'download') docAction(a, id, b);
+    else if (a === 'print') printDocument(id);
+    else if (a === 'promote') promoteArchiveItem(id);
+    else if (a === 'delete') deleteArchiveItem(id);
   }
 
   function handleRetry(e) {
