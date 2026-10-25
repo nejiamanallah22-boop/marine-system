@@ -1,733 +1,852 @@
-<!-- public/pages/notes.html -->
-<div id="page-notes">
-    <style>
-        body { background: #0a0e1a; }
+<!-- public/pages/notes.html — v11.0 -->
+<div id="page-notes" dir="rtl">
+<style>
+#page-notes{--gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.035);--line:rgba(255,255,255,.07);--tx:#e8edf5;--mut:rgba(255,255,255,.5);--ok:#22c55e;--bad:#f87171;--info:#60a5fa;
+width:100%;max-width:100%;padding:20px;margin:0;font-family:'Cairo','Tajawal','Segoe UI',system-ui,sans-serif;color:var(--tx);min-height:100vh;position:relative;z-index:2}
+#page-notes *,#page-notes *::before,#page-notes *::after{box-sizing:border-box}
+#page-notes button,#page-notes input,#page-notes select,#page-notes textarea{font-family:inherit}
+#page-notes :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#page-notes .print-only{display:none}
 
-        #page-notes {
-            width: 100%; max-width: 100%;
-            padding: 20px; margin: 0;
-            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-            background: transparent;
-            color: #e8edf5;
-            min-height: 100vh;
-            position: relative;
-            z-index: 2;
-        }
-        #page-notes *, #page-notes *::before, #page-notes *::after { box-sizing: border-box; }
-        
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        ::-webkit-scrollbar-thumb { background: #e6b31e; border-radius: 10px; }
+/* Header */
+.np-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 22px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:18px}
+.np-brand{display:flex;align-items:center;gap:14px}
+.np-logo{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:grid;place-items:center;color:#0a1628;font-size:20px;overflow:hidden}
+.np-logo img{width:100%;height:100%;object-fit:cover;display:none}
+.np-logo.has-logo{background:transparent}.np-logo.has-logo img{display:block}.np-logo.has-logo i{display:none}
+.np-brand h2{margin:0;font-size:22px;font-weight:800;color:var(--gold2)}
+.np-brand p{margin:2px 0 0;font-size:12px;color:var(--mut)}
 
-        /* ===== HEADER ===== */
-        .notes-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px 24px; flex-wrap: wrap; gap: 12px;
-            background: rgba(255,255,255,0.04);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            margin-bottom: 20px;
-        }
-        .notes-header-left { display: flex; align-items: center; gap: 14px; }
-        .notes-header-left .header-icon {
-            width: 44px; height: 44px; border-radius: 50%;
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: #0a1628;
-            box-shadow: 0 0 40px rgba(230,179,30,0.15);
-            overflow: hidden;
-        }
-        .notes-header-left .header-icon img {
-            width: 100%; height: 100%; object-fit: cover;
-            border-radius: 50%; display: none;
-        }
-        .notes-header-left .header-icon.has-logo img { display: block; }
-        .notes-header-left .header-icon.has-logo { background: transparent; box-shadow: 0 0 20px rgba(230,179,30,0.3); }
-        .notes-header-left .header-icon.has-logo i { display: none; }
-        .notes-header-left h2 {
-            font-size: 22px; font-weight: 800;
-            background: linear-gradient(135deg, #f5d76e, #fff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-        .notes-header-left p { font-size: 12px; color: rgba(255,255,255,0.3); margin: 0; }
-        
-        .btn-print {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer;
-            font-weight: 600; font-family: inherit; font-size: 13px;
-            display: flex; align-items: center; gap: 8px; transition: 0.2s;
-        }
-        .btn-print:hover { background: rgba(255,255,255,0.1); border-color: #e6b31e; color: #e6b31e; }
+/* Tabs */
+.np-tabs{display:flex;gap:6px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:18px}
+.np-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border:0;border-radius:10px;background:transparent;color:var(--mut);font-size:14px;font-weight:700;cursor:pointer;transition:background .25s,color .25s}
+.np-tab:hover{background:rgba(255,255,255,.05);color:#fff}
+.np-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
+.np-badge{background:rgba(0,0,0,.25);padding:1px 9px;border-radius:10px;font-size:11px;font-weight:800}
+.np-panel{display:none}.np-panel.active{display:block}
 
-        /* ===== TABS ===== */
-        .notes-tabs {
-            display: flex; gap: 8px; padding: 6px;
-            background: rgba(255,255,255,0.03);
-            backdrop-filter: blur(12px);
-            border-radius: 14px; margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .notes-tab {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            gap: 10px; padding: 12px 20px;
-            border: none; border-radius: 10px;
-            background: transparent;
-            color: rgba(255,255,255,0.5);
-            font-size: 14px; font-weight: 700;
-            font-family: 'Cairo', sans-serif;
-            cursor: pointer; transition: all 0.3s;
-        }
-        .notes-tab:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.8); }
-        .notes-tab.active {
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
-            color: #0a1628;
-            box-shadow: 0 4px 20px rgba(230,179,30,0.3);
-        }
-        .notes-tab .tab-badge {
-            background: rgba(0,0,0,0.2);
-            padding: 2px 8px; border-radius: 10px;
-            font-size: 10px; font-weight: 800;
-        }
-        .notes-tab.active .tab-badge { background: rgba(10,22,40,0.15); }
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 18px;border:0;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s,background .2s}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
+.btn.success{background:linear-gradient(135deg,var(--ok),#4ade80);color:#0a1628}
+.btn.danger{background:linear-gradient(135deg,#ef4444,var(--bad));color:#fff}
+.btn.secondary{background:var(--panel);border:1px solid var(--line);color:var(--mut)}
+.btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(230,179,30,.2)}
+.btn.secondary:hover{color:#fff}
 
-        .notes-panel { display: none; animation: fadeIn 0.3s ease-out; }
-        .notes-panel.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* Cards / forms */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden}
+.card.top::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.card.green::before{background:linear-gradient(90deg,var(--ok),#4ade80)}
+.card h3{margin:0 0 16px;font-size:16px;font-weight:700;color:var(--gold2);display:flex;align-items:center;gap:8px}
+.card.green h3{color:#4ade80}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px}
+.fg{display:flex;flex-direction:column;gap:6px}.fg.full{grid-column:1/-1}
+.fg label{font-size:12px;font-weight:600;color:var(--mut)}.req{color:#ef4444}
+.fg input,.fg textarea,.fg select,.nv-filter{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:rgba(10,16,32,.6);color:var(--tx);font-size:14px;transition:border-color .2s,box-shadow .2s}
+.fg input:focus,.fg textarea:focus,.fg select:focus,.nv-filter:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 4px rgba(230,179,30,.08)}
+.fg textarea{resize:vertical;min-height:80px}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 
-        /* ===== BUTTONS ===== */
-        .btn-action {
-            padding: 8px 18px; border: none; border-radius: 30px;
-            font-weight: 600; font-size: 0.8rem; cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex; align-items: center; gap: 8px;
-            font-family: 'Cairo', sans-serif;
-        }
-        .btn-action.primary { background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; }
-        .btn-action.success { background: linear-gradient(135deg, #22c55e, #4ade80); color: #0a1628; }
-        .btn-action.secondary { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); }
-        
-        /* ===== ADD NOTE FORM ===== */
-        .add-note-card {
-            background: rgba(255,255,255,0.03); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px; margin-bottom: 20px;
-        }
-        .add-note-card h3 { font-size: 16px; font-weight: 700; color: #f5d76e; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        .form-group.full { grid-column: 1 / -1; }
-        .form-group label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 6px; }
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%; padding: 10px 14px; border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03);
-            color: #e8edf5; font-size: 14px; font-family: 'Cairo', sans-serif; transition: all 0.3s;
-        }
-        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #e6b31e; background: rgba(230,179,30,0.04); }
-        .form-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+/* Notes */
+.note-list{display:flex;flex-direction:column;gap:14px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
+.note::before{content:'';position:absolute;inset:0 0 0 auto;width:3px;background:var(--gold)}
+.note.p-مهم::before{background:#fbbf24}.note.p-عاجل::before{background:var(--bad)}
+.note:hover{border-color:rgba(230,179,30,.25)}
+.note-h{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.note-t{margin:0;font-size:16px;font-weight:700;color:#fff;flex:1;min-width:200px}
+.meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.05);color:var(--mut)}
+.chip i{color:var(--gold)}
+.chip.urgent{background:rgba(239,68,68,.15);color:var(--bad);font-weight:600}.chip.important{background:rgba(245,158,11,.15);color:#fbbf24;font-weight:600}
+.note-c{font-size:14px;line-height:1.8;color:rgba(255,255,255,.7);white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
+.note-f{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
+.btn-sm{padding:5px 12px;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:5px;align-items:center;transition:background .2s}
+.btn-sm.edit{background:rgba(96,165,250,.12);color:var(--info)}.btn-sm.edit:hover{background:rgba(96,165,250,.25)}
+.btn-sm.delete{background:rgba(248,113,113,.12);color:var(--bad)}.btn-sm.delete:hover{background:rgba(248,113,113,.25)}
 
-        /* ===== NOTES LIST ===== */
-        .notes-list { display: flex; flex-direction: column; gap: 14px; }
-        .note-card {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px; padding: 18px 20px; transition: all 0.3s;
-            border-right: 3px solid #e6b31e;
-        }
-        .note-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-        .note-card-title { font-size: 16px; font-weight: 700; color: #fff; margin: 0; flex: 1; }
-        .note-card-date { font-size: 11px; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.03); padding: 3px 10px; border-radius: 20px; }
-        .note-card-content { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.6); margin-bottom: 12px; }
-        .note-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.04); }
-        .btn-sm { padding: 5px 12px; border: none; border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Cairo', sans-serif; display: inline-flex; align-items: center; gap: 4px; }
-        .btn-sm.edit { background: rgba(96,165,250,0.12); color: #60a5fa; }
-        .btn-sm.delete { background: rgba(248,113,113,0.12); color: #f87171; }
+/* Current document */
+.nv-current{background:linear-gradient(135deg,rgba(230,179,30,.09),rgba(245,215,110,.03));border:2px solid rgba(230,179,30,.28);border-radius:16px;padding:24px 28px;margin-bottom:18px;position:relative;overflow:hidden}
+.nv-current-h{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.nv-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:linear-gradient(135deg,var(--ok),#4ade80);color:#0a1628;border-radius:20px;font-size:12px;font-weight:800}
+.nv-title{font-size:22px;font-weight:800;color:#fff;margin:0 0 8px}
+.nv-desc{font-size:13px;color:var(--mut);margin:0 0 16px;line-height:1.7}
+.nv-file{display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(10,16,32,.5);border:1px solid rgba(230,179,30,.18);border-radius:12px;margin-bottom:16px}
+.ficon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:21px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
+.fname{font-size:14px;font-weight:700;color:#fff;word-break:break-word}.fsize{font-size:11px;color:var(--mut)}
+.nv-empty{border:2px dashed rgba(230,179,30,.3);border-radius:16px;padding:44px 24px;text-align:center;margin-bottom:18px}
+.nv-empty i{font-size:52px;color:rgba(230,179,30,.35);display:block;margin-bottom:12px}
+.nv-empty h3{margin:0 0 6px;font-size:18px;color:rgba(255,255,255,.7)}.nv-empty p{margin:0;font-size:13px;color:var(--mut)}
 
-        /* ============================================================
-           📄 NOTE VERBALE (تم تعديلها لتصبح جدولاً)
-           ============================================================ */
+/* Upload */
+.dropzone{border:2px dashed rgba(255,255,255,.18);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;background:rgba(10,16,32,.4);margin-bottom:16px;transition:border-color .2s,background .2s}
+.dropzone:hover,.dropzone.dragover{border-color:var(--ok);background:rgba(34,197,94,.07)}
+.dropzone i{font-size:40px;color:rgba(34,197,94,.7);display:block;margin-bottom:10px}
+.dropzone h4{margin:0 0 6px;font-size:15px;color:#fff}.dropzone p{margin:0;font-size:12px;color:var(--mut)}
+.preview{display:none;align-items:center;gap:14px;padding:14px 18px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;margin-bottom:16px}
+.preview.show{display:flex}.preview .info{flex:1;min-width:0}
+.preview .ficon{width:42px;height:42px;font-size:18px;background:linear-gradient(135deg,var(--ok),#4ade80)}
+.icon-btn{width:34px;height:34px;border:0;border-radius:8px;display:grid;place-items:center;cursor:pointer;background:rgba(239,68,68,.15);color:var(--bad)}
+.progress{display:none;padding:12px 16px;background:rgba(230,179,30,.08);border-radius:10px;margin-bottom:16px}.progress.show{display:block}
+.bar{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .25s}
+.ptext{font-size:11px;text-align:center;color:var(--gold2);font-weight:600}
 
-        .nv-current-card {
-            background: linear-gradient(135deg, rgba(230,179,30,0.08), rgba(245,215,110,0.04));
-            border: 2px solid rgba(230,179,30,0.25); border-radius: 16px; padding: 24px 28px;
-            margin-bottom: 20px; box-shadow: 0 8px 40px rgba(230,179,30,0.08);
-        }
-        .nv-current-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
-        .nv-current-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: linear-gradient(135deg, #22c55e, #4ade80); color: #0a1628; border-radius: 20px; font-size: 11px; font-weight: 800; }
-        .nv-current-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: rgba(255,255,255,0.5); }
-        .nv-current-title { font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 10px 0; }
-        .nv-current-file-info { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: rgba(10,16,32,0.5); border: 1px solid rgba(230,179,30,0.15); border-radius: 12px; margin-bottom: 18px; flex-wrap: wrap; }
-        .nv-file-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; }
-        .nv-current-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+/* Archive table */
+.arch-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:14px}
+.arch-head h3{margin:0;font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
+.arch-head h3 i{color:var(--gold)}.arch-head .count{background:rgba(230,179,30,.15);color:var(--gold2);padding:2px 10px;border-radius:20px;font-size:11px;font-weight:800}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:14px 18px;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:12px}
+.nv-filter{flex:1;min-width:150px;font-size:13px;padding:8px 14px}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
+.nv-table th{padding:13px 16px;text-align:right;font-size:12px;font-weight:800;color:var(--gold2);background:rgba(230,179,30,.08);border-bottom:1px solid rgba(230,179,30,.25);white-space:nowrap}
+.nv-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:middle}
+.nv-table tbody tr{transition:background .2s}.nv-table tbody tr:hover{background:rgba(230,179,30,.06)}
+.nv-table tbody tr:last-child td{border-bottom:0}
+.doc-cell{display:flex;align-items:center;gap:12px}
+.doc-cell .ficon{width:38px;height:38px;font-size:16px;border-radius:10px;background:linear-gradient(135deg,#475569,#1e293b);color:var(--gold2)}
+.doc-title{font-weight:700;color:#fff;word-break:break-word}.doc-desc{font-size:11px;color:var(--mut);margin-top:2px}
+.num{color:var(--mut);font-weight:700;text-align:center}
+.row-actions{display:flex;gap:6px}
+.ab{width:34px;height:34px;border:0;border-radius:9px;display:grid;place-items:center;cursor:pointer;font-size:13px;text-decoration:none;transition:background .2s}
+.ab.view{background:rgba(96,165,250,.12);color:var(--info)}.ab.download{background:rgba(34,197,94,.12);color:#4ade80}
+.ab.promote{background:rgba(230,179,30,.12);color:var(--gold2)}.ab.delete{background:rgba(248,113,113,.12);color:var(--bad)}
+.ab:hover{filter:brightness(1.4)}
 
-        /* ===== ARCHIVE TABLE (الجدول الجديد) ===== */
-        .nv-archive-section { margin-top: 30px; }
-        .nv-archive-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
-        .nv-archive-title { font-size: 16px; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 10px; }
-        .nv-archive-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-        .nv-filter { flex: 1; min-width: 140px; padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(10,16,32,0.6); color: #e8edf5; font-size: 12px; font-family: 'Cairo', sans-serif; }
-        
-        .table-responsive { width: 100%; overflow-x: auto; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; }
-        .archive-table { width: 100%; border-collapse: collapse; text-align: right; white-space: nowrap; }
-        .archive-table th { background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.5); padding: 14px 16px; font-size: 12px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.06); }
-        .archive-table td { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #e8edf5; font-size: 13px; vertical-align: middle; }
-        .archive-table tbody tr:hover { background: rgba(255,255,255,0.04); }
-        .archive-table tbody tr:last-child td { border-bottom: none; }
-        
-        .file-cell { display: flex; align-items: center; gap: 12px; white-space: normal; min-width: 250px; }
-        .file-cell-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(230,179,30,0.1); color: #e6b31e; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-        .file-cell-info { display: flex; flex-direction: column; }
-        .file-cell-name { font-weight: 700; color: #fff; margin-bottom: 2px; word-break: break-all; }
-        .file-cell-desc { font-size: 11px; color: rgba(255,255,255,0.4); }
+/* States */
+.empty{text-align:center;padding:50px 20px;color:var(--mut)}
+.empty i{font-size:3rem;color:rgba(255,255,255,.1);display:block;margin-bottom:10px}.empty h3{margin:0 0 4px;font-size:1rem;color:rgba(255,255,255,.55)}.empty p{margin:0;font-size:.8rem}
+.empty.err h3,.empty.err i{color:var(--bad)}
+.sk{border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:sk 1.3s linear infinite}
+@keyframes sk{to{background-position:-200% 0}}
+.sk-card{height:96px;margin-bottom:14px;border-radius:14px}.sk-row{height:46px;margin:10px 14px}
 
-        .nv-action-btn { width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.2s; text-decoration: none; margin: 0 2px; }
-        .nv-action-btn.view { background: rgba(96,165,250,0.12); color: #60a5fa; }
-        .nv-action-btn.download { background: rgba(34,197,94,0.12); color: #4ade80; }
-        .nv-action-btn.promote { background: rgba(230,179,30,0.12); color: #f5d76e; }
-        .nv-action-btn.delete { background: rgba(248,113,113,0.12); color: #f87171; }
+/* Toast + dialog */
+.np-toast{position:fixed;bottom:24px;left:24px;max-width:400px;padding:12px 20px;border-radius:12px;color:#fff;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.35);animation:tIn .35s ease-out;direction:rtl}
+.np-toast.success{background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4)}.np-toast.error{background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4)}
+.np-toast.warning{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4)}.np-toast.info{background:rgba(96,165,250,.2);border:1px solid rgba(96,165,250,.4)}
+.np-toast.out{opacity:0;transform:translateY(16px);transition:all .35s}
+@keyframes tIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.np-overlay{position:fixed;inset:0;background:rgba(5,8,16,.75);backdrop-filter:blur(4px);z-index:99998;display:grid;place-items:center;padding:20px;animation:oIn .2s}
+@keyframes oIn{from{opacity:0}to{opacity:1}}
+.np-dialog{width:100%;max-width:420px;background:#121829;border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:26px;text-align:center;direction:rtl;font-family:'Cairo','Tajawal',sans-serif;color:var(--tx)}
+.np-dialog .di{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:rgba(230,179,30,.15);color:var(--gold2)}
+.np-dialog.danger .di{background:rgba(239,68,68,.15);color:var(--bad)}
+.np-dialog h4{margin:0 0 8px;font-size:18px}.np-dialog p{margin:0 0 20px;font-size:13px;color:var(--mut);line-height:1.7}
+.np-dialog .actions{justify-content:center}
 
-        /* ===== EMPTY & TOAST ===== */
-        .empty-state { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.2); }
-        .empty-state .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.04); border-top-color: #e6b31e; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 12px; color: #fff; z-index: 99999; backdrop-filter: blur(12px); display: flex; align-items: center; gap: 10px; font-family: 'Cairo', sans-serif; }
-        .toast.success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); }
-        .toast.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
+/* ===== v11.1 design refinements ===== */
+body{background:#0a0e1a}
+#page-notes{background:radial-gradient(ellipse at 15% 0%,rgba(230,179,30,.08),transparent 55%),radial-gradient(ellipse at 90% 100%,rgba(167,139,250,.05),transparent 55%)}
+.np-header{background:linear-gradient(135deg,rgba(230,179,30,.1),rgba(255,255,255,.03));border-color:rgba(230,179,30,.22);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.np-brand h2{background:linear-gradient(135deg,var(--gold2),#fff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.np-logo{box-shadow:0 0 0 3px rgba(230,179,30,.25),0 0 30px rgba(230,179,30,.25)}
+.np-tabs{background:rgba(10,16,32,.6);backdrop-filter:blur(12px)}
+.np-tab.active{box-shadow:0 6px 22px rgba(230,179,30,.35)}
+.card{background:rgba(255,255,255,.04);backdrop-filter:blur(12px);box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.note{transition:transform .2s,border-color .2s,box-shadow .2s}
+.note:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.note::before{width:4px}
+.table-wrap{max-height:70vh;overflow:auto;box-shadow:0 10px 36px rgba(0,0,0,.25)}
+.nv-table thead th{position:sticky;top:0;z-index:2;background:#1b1f2c;box-shadow:inset 0 -1px 0 rgba(230,179,30,.35)}
+.nv-table tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
+.nv-table tbody tr:hover{background:rgba(230,179,30,.1)}
+.num{width:56px}
+.hint{margin:-6px 0 16px;font-size:12px;color:var(--mut);display:flex;gap:8px;align-items:center}.hint i{color:var(--gold)}
+.rt-current{background:linear-gradient(135deg,rgba(230,179,30,.09),rgba(10,16,32,.5));border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:22px 24px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:0 12px 44px rgba(230,179,30,.1)}
+.rt-current::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
+.rt-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}.rt-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.st{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.st-ok{background:rgba(34,197,94,.15);color:#4ade80}.st-warn{background:rgba(245,158,11,.15);color:#fbbf24}.st-late{background:rgba(239,68,68,.15);color:var(--bad)}
+.cycle{margin-bottom:18px}.cycle-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--tx);margin-bottom:8px}.cycle-top.sub{margin:8px 0 0;font-weight:500;color:var(--mut);font-size:11px}
+.cycle-bar{height:10px;background:rgba(255,255,255,.07);border-radius:6px;overflow:hidden}
+.cycle-fill{height:100%;border-radius:6px;transition:width .6s}.cycle-fill.ok{background:linear-gradient(90deg,var(--ok),#4ade80)}.cycle-fill.warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)}.cycle-fill.late{background:linear-gradient(90deg,#ef4444,var(--bad))}
+.table-wrap.cur{max-height:none}
+.rt-current .nv-table{min-width:700px}
+.doc-cell .ficon{box-shadow:inset 0 0 0 1px rgba(245,215,110,.25)}
+.ab{transition:transform .15s,filter .15s}.ab:hover{transform:translateY(-2px)}
+.nv-current{box-shadow:0 12px 44px rgba(230,179,30,.12)}
+.nv-current::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
+@media (prefers-reduced-motion:reduce){#page-notes *{transition:none!important;animation:none!important}}
+@media (max-width:768px){
+#page-notes{padding:12px}.np-header{padding:12px 16px}.np-brand h2{font-size:17px}
+.grid{grid-template-columns:1fr}.actions .btn{flex:1}
+.np-tab{padding:10px;font-size:13px}.nv-current{padding:18px}.nv-title{font-size:18px}
+.np-toast{left:12px;right:12px;max-width:none}}
 
-        /* ============================================================
-           🖨️ PRINT STYLES (تنسيقات الطباعة)
-           ============================================================ */
-        @media print {
-            /* إخفاء العناصر غير الضرورية */
-            body { background: #fff !important; color: #000 !important; }
-            #page-notes { padding: 0 !important; }
-            .no-print, .notes-header, .notes-tabs, .nv-upload-card, .nv-archive-filters, .notes-header .btn-print { display: none !important; }
-            
-            /* إخفاء البطاقات القديمة والاكتفاء بالجدول */
-            .notes-list, .nv-current-card { display: none !important; }
-            
-            /* إظهار الجدول بشكل رسمي */
-            .table-responsive { border: none !important; background: transparent !important; }
-            .archive-table { width: 100% !important; border-collapse: collapse !important; }
-            .archive-table th, .archive-table td {
-                border: 1px solid #000 !important;
-                color: #000 !important;
-                padding: 8px !important;
-                font-size: 11px !important;
-                white-space: normal !important;
-            }
-            .archive-table th { background: #eee !important; font-weight: bold !important; }
-            .file-cell-icon { display: none !important; }
-            .file-cell-name { color: #000 !important; font-weight: bold !important; }
-            .file-cell-desc { color: #555 !important; }
-            .nv-action-btn { display: none !important; }
-            
-            /* إظهار الترويسة الرسمية */
-            .print-header { display: block !important; width: 100%; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            .print-header-top { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; line-height: 1.5; color: #000; }
-            .print-title { text-align: center; font-size: 18px; font-weight: 900; margin-top: 15px; color: #000; }
-        }
-        
-        .print-header { display: none; }
-    </style>
+/* ===== PRINT: archive register only ===== */
+@media print{
+@page{size:A4;margin:14mm}
+body *{visibility:hidden!important}
+#nvPrintArea,#nvPrintArea *{visibility:visible!important}
+#nvPrintArea{position:absolute;inset:0 0 auto 0;width:100%;background:#fff!important;color:#000!important}
+#nvPrintArea .print-only{display:block!important}
+#nvPrintArea .table-wrap{overflow:visible;max-height:none;border:0;background:#fff;box-shadow:none}
+.nv-table thead th{position:static;box-shadow:none}
+.nv-table tbody tr:nth-child(even),.nv-table tbody tr:hover{background:#fff!important}
+body{background:#fff!important}
+.letterhead{text-align:center;color:#000;line-height:1.9;margin-bottom:14px}
+.letterhead .l1{font-size:15px;font-weight:800}.letterhead .l2{font-size:13px;font-weight:700}.letterhead .l3{font-size:12px}
+.letterhead h1{font-size:20px;margin:14px 0 4px;padding:8px 0;border-top:2px solid #000;border-bottom:2px solid #000}
+.letterhead .pd{font-size:12px;text-align:left;direction:rtl}
+table.nv-table{min-width:0;border:1.5px solid #000}
+.nv-table th,.nv-table td{border:1px solid #000!important;background:#fff!important;color:#000!important;padding:6px 8px;font-size:11px}
+.nv-table th{font-weight:800;background:#e5e5e5!important}
+.nv-table tr{page-break-inside:avoid}
+.nv-table .col-act,.ficon{display:none!important}
+.doc-title,.doc-desc{color:#000!important}
+}
+</style>
 
-    <!-- الترويسة الرسمية (تظهر فقط عند الطباعة) -->
-    <div class="print-header">
-        <div class="print-header-top">
-            <div>
-                الجمهورية التونسية<br>
-                وزارة الداخلية<br>
-                الإدارة العامة للحرس الوطني<br>
-                إدارة إسناد الوحدات البحرية
-            </div>
-            <div style="text-align: left;">
-                العوينة في: <span id="printDate"></span><br>
-                ع/ ______ /دد
-            </div>
-        </div>
-        <div class="print-title">سجل الوثائق الرسمية (Note Verbale)</div>
+<!-- HEADER -->
+<div class="np-header">
+  <div class="np-brand">
+    <div class="np-logo" id="notesHeaderIcon"><i class="fas fa-sticky-note"></i><img id="globalLogo" src="" alt="شعار"></div>
+    <div><h2>Rapport Technique</h2><p>الوسائل البحرية — التقرير الفني الأسبوعي والملاحظات</p></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="np-tabs" role="tablist">
+  <button class="np-tab active" data-tab="notes" role="tab"><i class="fas fa-sticky-note"></i><span>الملاحظات</span><span class="np-badge" id="tabNotesCount">0</span></button>
+  <button class="np-tab" data-tab="verbale" role="tab"><i class="fas fa-file-alt"></i><span>التقرير الفني الأسبوعي</span><span class="np-badge" id="tabVerbaleCount">0</span></button>
+</div>
+
+<!-- PANEL: NOTES -->
+<div class="np-panel active" id="panel-notes">
+  <div class="card top" id="addNoteCard">
+    <h3 id="formTitle"><i class="fas fa-pen"></i> إضافة ملاحظة جديدة</h3>
+    <div class="grid">
+      <div class="fg full"><label for="noteTitle">العنوان <span class="req">*</span></label><input type="text" id="noteTitle" placeholder="عنوان الملاحظة..." maxlength="200"></div>
+      <div class="fg full"><label for="noteContent">المحتوى <span class="req">*</span></label><textarea id="noteContent" rows="4" placeholder="نص الملاحظة..." maxlength="5000"></textarea></div>
+      <div class="fg"><label for="noteDate">التاريخ</label><input type="date" id="noteDate"></div>
+      <div class="fg"><label for="notePriority">الأولوية</label>
+        <select id="notePriority"><option value="عادي">📌 عادي</option><option value="مهم">⚠️ مهم</option><option value="عاجل">🚨 عاجل</option></select></div>
     </div>
-
-    <!-- ===== HEADER ===== -->
-    <div class="notes-header no-print">
-        <div class="notes-header-left">
-            <div class="header-icon" id="notesHeaderIcon">
-                <i class="fas fa-sticky-note"></i>
-                <img id="globalLogo" src="" alt="شعار" style="display:none;">
-            </div>
-            <div>
-                <h2>Note Verbale</h2>
-                <p>ملاحظات ومذكرات رسمية + وثائق أسبوعية</p>
-            </div>
-        </div>
-        <button class="btn-print" onclick="window.print()">
-            <i class="fas fa-print"></i> طباعة السجل
-        </button>
+    <div class="actions">
+      <button class="btn secondary" id="cancelEditBtn" hidden><i class="fas fa-times"></i> إلغاء</button>
+      <button class="btn success" id="saveNoteBtn"><i class="fas fa-save"></i> حفظ</button>
     </div>
+  </div>
+  <div class="note-list" id="notesList"></div>
+</div>
 
-    <!-- ===== TABS ===== -->
-    <div class="notes-tabs no-print">
-        <button class="notes-tab active" data-tab="notes">
-            <i class="fas fa-sticky-note"></i>
-            <span>الملاحظات</span>
-            <span class="tab-badge" id="tabNotesCount">0</span>
-        </button>
-        <button class="notes-tab" data-tab="verbale">
-            <i class="fas fa-file-alt"></i>
-            <span>Note Verbale</span>
-            <span class="tab-badge" id="tabVerbaleCount">0</span>
-        </button>
+<!-- PANEL: VERBALE -->
+<div class="np-panel" id="panel-verbale">
+  <div id="nvCurrentSection"></div>
+
+  <div class="card top green" id="nvUploadCard">
+    <h3><i class="fas fa-cloud-upload-alt"></i> رفع تقرير الأسبوع الجديد</h3>
+    <p class="hint"><i class="fas fa-info-circle"></i> عند رفع تقرير جديد يحلّ محل التقرير الحالي، وينتقل السابق إلى الأرشيف تلقائياً.</p>
+    <div class="dropzone" id="nvDropzone" tabindex="0" role="button">
+      <i class="fas fa-cloud-upload-alt"></i><h4>اسحب الملف هنا أو انقر للاختيار</h4><p>PDF, Word, Excel, صور — حتى 25 MB</p>
     </div>
-
-    <!-- ===== PANEL 1: NOTES (كما هو) ===== -->
-    <div class="notes-panel active" id="panel-notes">
-        <div class="add-note-card no-print" id="addNoteCard">
-            <h3 id="formTitle"><i class="fas fa-pen"></i> إضافة ملاحظة جديدة</h3>
-            <div class="form-grid">
-                <div class="form-group full">
-                    <label><i class="fas fa-heading"></i> العنوان <span class="required" style="color:red">*</span></label>
-                    <input type="text" id="noteTitle" placeholder="عنوان الملاحظة..." maxlength="200">
-                </div>
-                <div class="form-group full">
-                    <label><i class="fas fa-align-right"></i> المحتوى <span class="required" style="color:red">*</span></label>
-                    <textarea id="noteContent" rows="4" placeholder="نص الملاحظة..." maxlength="5000"></textarea>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-calendar"></i> التاريخ</label>
-                    <input type="date" id="noteDate">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-flag"></i> الأولوية</label>
-                    <select id="notePriority">
-                        <option value="عادي">📌 عادي</option>
-                        <option value="مهم">⚠️ مهم</option>
-                        <option value="عاجل">🚨 عاجل</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-actions">
-                <button class="btn-action secondary" id="cancelEditBtn" style="display:none;">إلغاء</button>
-                <button class="btn-action success" id="saveNoteBtn"><i class="fas fa-save"></i> حفظ</button>
-            </div>
-        </div>
-        <div class="notes-list" id="notesList">
-            <div class="empty-state"><div class="spinner"></div><h3>جاري تحميل الملاحظات...</h3></div>
-        </div>
+    <input type="file" id="nvFileInput" accept="*/*" hidden>
+    <div class="preview" id="nvFilePreview">
+      <div class="ficon"><i class="fas fa-file"></i></div>
+      <div class="info"><div class="fname" id="nvFileName">—</div><div class="fsize" id="nvFileSize">—</div></div>
+      <button type="button" class="icon-btn" id="nvFileRemove" aria-label="إزالة الملف"><i class="fas fa-times"></i></button>
     </div>
-
-    <!-- ===== PANEL 2: NOTE VERBALE (تم تعديلها) ===== -->
-    <div class="notes-panel" id="panel-verbale">
-        <!-- الوثيقة الحالية (تبقى كبطاقة علوية) -->
-        <div id="nvCurrentSection" class="no-print">
-            <div class="empty-state"><div class="spinner"></div><h3>جاري تحميل الوثيقة الحالية...</h3></div>
-        </div>
-
-        <!-- نموذج الرفع (يختفي عند الطباعة) -->
-        <div class="nv-upload-card no-print" id="nvUploadCard">
-            <h3><i class="fas fa-cloud-upload-alt"></i> رفع وثيقة جديدة</h3>
-            <div class="nv-dropzone" id="nvDropzone">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <h4>اسحب الملف هنا أو انقر للاختيار</h4>
-                <p>PDF, Word, Excel, صور — حتى 25 MB</p>
-            </div>
-            <input type="file" id="nvFileInput" accept="*/*" style="display:none;">
-            <div class="nv-file-preview" id="nvFilePreview">
-                <div class="file-icon"><i class="fas fa-file"></i></div>
-                <div class="file-info">
-                    <div class="file-name" id="nvFileName">—</div>
-                    <div class="file-size" id="nvFileSize">—</div>
-                </div>
-                <button type="button" class="file-remove" id="nvFileRemove"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="form-grid" id="nvUploadForm" style="display:none;">
-                <div class="form-group full">
-                    <label><i class="fas fa-heading"></i> عنوان الوثيقة <span class="required" style="color:red">*</span></label>
-                    <input type="text" id="nvTitle" placeholder="مثال: Note Verbale - الأسبوع 42" maxlength="200">
-                </div>
-                <div class="form-group full">
-                    <label><i class="fas fa-align-right"></i> وصف مختصر</label>
-                    <textarea id="nvDescription" rows="2" placeholder="وصف اختياري..." maxlength="1000"></textarea>
-                </div>
-            </div>
-            <div class="nv-upload-progress" id="nvProgress">
-                <div class="nv-progress-bar"><div class="nv-progress-fill" id="nvProgressFill"></div></div>
-                <div class="nv-progress-text" id="nvProgressText">0%</div>
-            </div>
-            <div class="form-actions" id="nvUploadActions" style="display:none;">
-                <button class="btn-action secondary" id="nvCancelUpload">إلغاء</button>
-                <button class="btn-action success" id="nvSubmitUpload"><i class="fas fa-upload"></i> رفع الوثيقة</button>
-            </div>
-        </div>
-
-        <!-- الأرشيف (تم تحويله إلى جدول) -->
-        <div class="nv-archive-section">
-            <div class="nv-archive-header no-print">
-                <h3 class="nv-archive-title">
-                    <i class="fas fa-archive"></i> الأرشيف
-                    <span class="count" id="nvArchiveCount">0</span>
-                </h3>
-                <button class="btn-action secondary" id="nvRefreshArchive">
-                    <i class="fas fa-sync-alt"></i> تحديث
-                </button>
-            </div>
-
-            <div class="nv-archive-filters no-print">
-                <input type="text" class="nv-filter" id="nvSearch" placeholder="🔍 بحث بالاسم أو الوصف...">
-                <select class="nv-filter" id="nvFilterYear"><option value="all">كل السنوات</option></select>
-                <select class="nv-filter" id="nvFilterUploader"><option value="all">كل الرافعين</option></select>
-            </div>
-
-            <!-- الجدول الجديد -->
-            <div class="table-responsive" id="nvArchiveTableContainer">
-                <table class="archive-table">
-                    <thead>
-                        <tr>
-                            <th width="40">#</th>
-                            <th>اسم الوثيقة / الوصف</th>
-                            <th>الرافع</th>
-                            <th>التاريخ</th>
-                            <th>الحجم</th>
-                            <th class="no-print" width="140">الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="nvArchiveList">
-                        <tr><td colspan="6" style="text-align:center;"><div class="spinner" style="display:inline-block;width:20px;height:20px;"></div> تحميل الأرشيف...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="grid" id="nvUploadForm" hidden>
+      <div class="fg full"><label for="nvTitle">عنوان التقرير <span class="req">*</span></label><input type="text" id="nvTitle" placeholder="Rapport technique - Semaine 42" maxlength="200"></div>
+      <div class="fg full"><label for="nvDescription">وصف مختصر</label><textarea id="nvDescription" rows="2" placeholder="وصف اختياري..." maxlength="1000"></textarea></div>
     </div>
+    <div class="progress" id="nvProgress"><div class="bar"><div id="nvProgressFill"></div></div><div class="ptext" id="nvProgressText">0%</div></div>
+    <div class="actions" id="nvUploadActions" hidden>
+      <button class="btn secondary" id="nvCancelUpload"><i class="fas fa-times"></i> إلغاء</button>
+      <button class="btn success" id="nvSubmitUpload"><i class="fas fa-upload"></i> رفع التقرير</button>
+    </div>
+  </div>
 
+  <div class="arch-head">
+    <h3><i class="fas fa-archive"></i> أرشيف التقارير <span class="count" id="nvArchiveCount">0</span></h3>
+    <div class="actions">
+      <button class="btn secondary" id="nvRefreshArchive"><i class="fas fa-sync-alt"></i> تحديث</button>
+      <button class="btn primary" id="nvPrintBtn"><i class="fas fa-print"></i> طباعة السجل</button>
+    </div>
+  </div>
+  <div class="filters">
+    <input type="text" class="nv-filter" id="nvSearch" placeholder="🔍 بحث بالاسم أو الوصف..." aria-label="بحث">
+    <select class="nv-filter" id="nvFilterYear" aria-label="السنة"><option value="all">كل السنوات</option></select>
+    <select class="nv-filter" id="nvFilterUploader" aria-label="الرافع"><option value="all">كل الرافعين</option></select>
+  </div>
+
+  <div id="nvPrintArea">
+    <div class="print-only letterhead">
+      <div class="l1">الجمهورية التونسية</div>
+      <div class="l2">وزارة الداخلية</div>
+      <div class="l2">الإدارة العامة للحرس الوطني</div>
+      <div class="l3">إدارة إسناد الوحدات البحرية</div>
+      <h1>سجل التقارير الفنية للوسائل البحرية</h1>
+      <div class="pd" id="nvPrintDate"></div>
+    </div>
+    <div class="table-wrap">
+      <table class="nv-table">
+        <thead><tr><th class="num">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th><th class="col-act">الإجراءات</th></tr></thead>
+        <tbody id="nvArchiveList"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <script>
-    // ============================================================
-    // 📝 NOTES PAGE v10.1 — JavaScript معدل (يتوافق مع الجدول)
-    // ============================================================
-    (function() {
-        'use strict';
+(function () {
+  'use strict';
+  var _isDestroyed = false, _pageTimeouts = [], _eventListeners = [];
 
-        var _isDestroyed = false;
-        var _pageTimeouts = [];
-        var _eventListeners = [];
+  function _notesCleanup() {
+    if (_isDestroyed) return;
+    _isDestroyed = true;
+    _pageTimeouts.forEach(function (id) { try { clearTimeout(id); } catch (e) {} });
+    _eventListeners.forEach(function (i) { try { i.el.removeEventListener(i.type, i.fn); } catch (e) {} });
+    _pageTimeouts = []; _eventListeners = [];
+    try {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('beforeunload', _notesCleanup);
+      window.removeEventListener('pagehide', _notesCleanup);
+      document.querySelectorAll('.np-toast,.np-overlay').forEach(function (n) { n.remove(); });
+      var old = document.getElementById('page-notes');
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+    } catch (e) {}
+    ['saveNote', 'loadNotes', 'editNote', 'deleteNote', 'switchNotesTab'].forEach(function (k) { try { delete window[k]; } catch (e) {} });
+  }
+  window._pageCleanup = window._pageCleanup || [];
+  window._pageCleanup.push(_notesCleanup);
+  window.addEventListener('beforeunload', _notesCleanup);
+  window.addEventListener('pagehide', _notesCleanup);
 
-        function _notesCleanup() {
-            if (_isDestroyed) return;
-            _isDestroyed = true;
-            _pageTimeouts.forEach(function(id) { try { clearTimeout(id); } catch (e) {} });
-            _eventListeners.forEach(function(item) { try { if (item.el && item.fn) item.el.removeEventListener(item.type, item.fn); } catch (e) {} });
-            console.log('🧹 Notes v10.1 cleanup done');
+  // ---------- Helpers ----------
+  function $(id) { return document.getElementById(id); }
+  function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    var d = document.createElement('div'); d.textContent = String(s); return d.innerHTML;
+  }
+  function getToken() { return localStorage.getItem('marine_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || null; }
+  function getCsrfToken() {
+    try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; }
+  }
+  function addSafeListener(el, type, fn) {
+    if (!el) return; el.addEventListener(type, fn); _eventListeners.push({ el: el, type: type, fn: fn });
+  }
+  function fetcher(url, options) {
+    if (typeof window.apiFetch === 'function') return window.apiFetch(url, options || {});
+    var token = getToken();
+    var headers = Object.assign({ 'Accept': 'application/json' }, (options && options.headers) || {});
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    if (options && options.method && options.method !== 'GET') {
+      var csrf = getCsrfToken(); if (csrf) headers['X-CSRF-Token'] = csrf;
+    }
+    return fetch(url, Object.assign({}, options || {}, { headers: headers, credentials: 'include' }));
+  }
+  function formatDate(d) {
+    if (!d) return '—';
+    try {
+      var dt = new Date(d); if (isNaN(dt.getTime())) return String(d);
+      return dt.toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (_) { return String(d); }
+  }
+  function formatFileSize(b) {
+    if (!b || b < 0) return '0 B';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    if (b < 1073741824) return (b / 1048576).toFixed(2) + ' MB';
+    return (b / 1073741824).toFixed(2) + ' GB';
+  }
+  function getFileIcon(mimetype, filename) {
+    var mt = (mimetype || '').toLowerCase(), fn = (filename || '').toLowerCase();
+    if (mt.indexOf('pdf') !== -1 || fn.endsWith('.pdf')) return 'fa-file-pdf';
+    if (mt.indexOf('word') !== -1 || /\.docx?$/.test(fn)) return 'fa-file-word';
+    if (mt.indexOf('excel') !== -1 || mt.indexOf('spreadsheet') !== -1 || /\.xlsx?$/.test(fn)) return 'fa-file-excel';
+    if (mt.indexOf('powerpoint') !== -1 || /\.pptx?$/.test(fn)) return 'fa-file-powerpoint';
+    if (mt.indexOf('image') !== -1 || /\.(jpg|jpeg|png|webp|gif|bmp)$/.test(fn)) return 'fa-file-image';
+    if (mt.indexOf('zip') !== -1 || mt.indexOf('rar') !== -1 || /\.(zip|rar)$/.test(fn)) return 'fa-file-archive';
+    if (mt.indexOf('text') !== -1 || /\.(txt|csv)$/.test(fn)) return 'fa-file-alt';
+    return 'fa-file';
+  }
+  function showToast(msg, type) {
+    if (_isDestroyed) return;
+    var old = document.querySelector('.np-toast'); if (old) old.remove();
+    var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    var n = document.createElement('div');
+    n.className = 'np-toast ' + (type || 'info'); n.setAttribute('role', 'status');
+    n.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span><span>' + escapeHtml(msg) + '</span>';
+    document.body.appendChild(n);
+    _pageTimeouts.push(setTimeout(function () {
+      n.classList.add('out'); _pageTimeouts.push(setTimeout(function () { n.remove(); }, 400));
+    }, 3000));
+  }
+
+  // Custom confirm dialog (Promise<boolean>)
+  function confirmDialog(opts) {
+    return new Promise(function (resolve) {
+      var ov = document.createElement('div'); ov.className = 'np-overlay';
+      ov.innerHTML = '<div class="np-dialog ' + (opts.danger ? 'danger' : '') + '" role="dialog" aria-modal="true">' +
+        '<div class="di"><i class="fas ' + (opts.icon || 'fa-question') + '"></i></div>' +
+        '<h4>' + escapeHtml(opts.title) + '</h4><p>' + escapeHtml(opts.text || '') + '</p>' +
+        '<div class="actions"><button class="btn secondary" data-r="0">إلغاء</button>' +
+        '<button class="btn ' + (opts.danger ? 'danger' : 'primary') + '" data-r="1">' + escapeHtml(opts.ok || 'تأكيد') + '</button></div></div>';
+      function done(v) { document.removeEventListener('keydown', onKey); ov.remove(); resolve(v); }
+      function onKey(e) { if (e.key === 'Escape') done(false); }
+      ov.addEventListener('click', function (e) {
+        if (e.target === ov) return done(false);
+        var b = e.target.closest('[data-r]'); if (b) done(b.getAttribute('data-r') === '1');
+      });
+      document.addEventListener('keydown', onKey);
+      document.body.appendChild(ov);
+      var first = ov.querySelector('[data-r="1"]'); if (first) first.focus();
+    });
+  }
+
+  function skeletonCards(n) { var h = ''; for (var i = 0; i < n; i++) h += '<div class="sk sk-card"></div>'; return h; }
+  function skeletonRows(n) { var h = ''; for (var i = 0; i < n; i++) h += '<tr><td colspan="7"><div class="sk sk-row"></div></td></tr>'; return h; }
+  function errorBlock(msg) {
+    return '<div class="empty err"><i class="fas fa-exclamation-triangle"></i><h3>تعذّر التحميل</h3><p>' + escapeHtml(msg) + '</p></div>';
+  }
+
+  // ---------- Logo ----------
+  function applyLogo() {
+    try {
+      var c = localStorage.getItem('marine_logo'); if (!c) return;
+      var img = $('globalLogo'), ic = $('notesHeaderIcon');
+      if (img) img.src = c;
+      if (ic) ic.classList.add('has-logo');
+    } catch (e) {}
+  }
+  function syncLogoFromServer() {
+    var token = getToken(), headers = { 'Accept': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    fetch('/api/logo', { headers: headers, credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && d.success && d.logo && d.logo.dataUrl) {
+          try { localStorage.setItem('marine_logo', d.logo.dataUrl); } catch (e) {}
+          applyLogo();
         }
-        window._pageCleanup = window._pageCleanup || [];
-        window._pageCleanup.push(_notesCleanup);
-        window.addEventListener('beforeunload', _notesCleanup);
+      }).catch(function () {});
+  }
+  function onStorage(e) { if (e.key === 'marine_logo' && e.newValue) applyLogo(); }
+  window.addEventListener('storage', onStorage);
 
-        function applyLogo() {
-            try {
-                var cachedLogo = localStorage.getItem('marine_logo');
-                if (!cachedLogo) return;
-                var iconDiv = document.getElementById('notesHeaderIcon');
-                var img = document.getElementById('globalLogo');
-                if (img) { img.src = cachedLogo; img.style.display = 'block'; }
-                if (iconDiv) iconDiv.classList.add('has-logo');
-            } catch (e) {}
-        }
-        applyLogo();
+  // ---------- Permissions ----------
+  var LEGACY = { super_admin: 'admin', 'مسؤول': 'admin', 'مدير': 'manager', 'محرر': 'editor', 'مشغل': 'maintenance_unit', operator: 'maintenance_unit', user: 'viewer', 'مشاهد': 'viewer' };
+  var ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
+  function normalizeRole(r) {
+    if (!r) return 'viewer'; r = String(r).trim();
+    return ROLES.indexOf(r) !== -1 ? r : (LEGACY[r] || 'viewer');
+  }
+  function roleIn(list) { var u = window.currentUser; return !!u && list.indexOf(normalizeRole(u.role)) !== -1; }
+  function canEdit() { var u = window.currentUser; return !!u && normalizeRole(u.role) !== 'viewer'; }
+  function canDelete() { return roleIn(['admin', 'manager']); }
+  function canUploadVerbale() { return roleIn(['admin', 'manager', 'editor', 'maintenance_unit']); }
+  function canDeleteVerbale() { return roleIn(['admin', 'manager']); }
 
-        function normalizeRole(role) {
-            var LEGACY_ROLE_MAP = { 'super_admin': 'admin', 'مسؤول': 'admin', 'مدير': 'manager', 'محرر': 'editor', 'مشغل': 'maintenance_unit', 'operator': 'maintenance_unit', 'user': 'viewer', 'مشاهد': 'viewer' };
-            var ALLOWED_ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-            if (!role) return 'viewer';
-            var r = String(role).trim();
-            if (ALLOWED_ROLES.indexOf(r) !== -1) return r;
-            return LEGACY_ROLE_MAP[r] || 'viewer';
-        }
-        function canEdit() { return window.currentUser && normalizeRole(window.currentUser.role) !== 'viewer'; }
-        function canDelete() { return window.currentUser && ['admin', 'manager'].indexOf(normalizeRole(window.currentUser.role)) !== -1; }
-        function canUploadVerbale() { return window.currentUser && ['admin', 'manager', 'editor', 'maintenance_unit'].indexOf(normalizeRole(window.currentUser.role)) !== -1; }
-        function canDeleteVerbale() { return window.currentUser && ['admin', 'manager'].indexOf(normalizeRole(window.currentUser.role)) !== -1; }
+  // ---------- Tabs ----------
+  var notesData = [], editingId = null, notesLoaded = false;
+  var verbaleCurrentLoaded = false, verbaleArchiveLoaded = false;
+  var nvSelectedFile = null, nvArchiveData = [];
 
-        function $(id) { return document.getElementById(id); }
-        function escapeHtml(str) { if (str === null || str === undefined) return ''; var div = document.createElement('div'); div.textContent = String(str); return div.innerHTML; }
-        function getToken() { return localStorage.getItem('marine_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || null; }
-        function getCsrfToken() { try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; } }
-        function addSafeListener(el, type, fn) { if (!el) return; el.addEventListener(type, fn); _eventListeners.push({ el: el, type: type, fn: fn }); }
+  function switchNotesTab(tab) {
+    if (tab !== 'notes' && tab !== 'verbale') return;
+    document.querySelectorAll('#page-notes .np-tab').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === tab); });
+    $('panel-notes').classList.toggle('active', tab === 'notes');
+    $('panel-verbale').classList.toggle('active', tab === 'verbale');
+    if (tab === 'notes') { if (!notesLoaded) loadNotes(); }
+    else {
+      if (!verbaleCurrentLoaded) loadNoteVerbaleCurrent();
+      if (!verbaleArchiveLoaded) loadNoteVerbaleArchive();
+    }
+  }
 
-        function fetcher(url, options) {
-            if (typeof window.apiFetch === 'function') return window.apiFetch(url, options || {});
-            var token = getToken();
-            var headers = Object.assign({ 'Accept': 'application/json' }, (options && options.headers) || {});
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            if (options && options.method && options.method !== 'GET') {
-                var csrf = getCsrfToken();
-                if (csrf) headers['X-CSRF-Token'] = csrf;
-            }
-            return fetch(url, Object.assign({}, options || {}, { headers: headers, credentials: 'include' }));
-        }
+  // ---------- Notes ----------
+  async function loadNotes() {
+    if (_isDestroyed) return;
+    var box = $('notesList'); if (!box) return;
+    notesLoaded = true; box.innerHTML = skeletonCards(3);
+    try {
+      var res = await fetcher('/api/notes', { method: 'GET' });
+      if (!res.ok) {
+        if (res.status === 401) throw new Error('انتهت الجلسة');
+        if (res.status === 404) { notesData = []; renderNotes(); return; }
+        throw new Error('فشل التحميل: ' + res.status);
+      }
+      var d = await res.json();
+      notesData = Array.isArray(d) ? d : (d && Array.isArray(d.notes) ? d.notes : (d && Array.isArray(d.data) ? d.data : []));
+      if ($('tabNotesCount')) $('tabNotesCount').textContent = notesData.length;
+      renderNotes();
+    } catch (err) {
+      if (_isDestroyed) return;
+      box.innerHTML = errorBlock(err.message);
+    }
+  }
 
-        function showToast(msg, type) {
-            if (_isDestroyed) return;
-            var old = document.querySelector('.toast'); if (old) old.remove();
-            var n = document.createElement('div'); n.className = 'toast ' + (type || 'info');
-            n.innerHTML = '<span>' + escapeHtml(msg) + '</span>'; document.body.appendChild(n);
-            _pageTimeouts.push(setTimeout(function() { n.remove(); }, 3000));
-        }
+  function renderNotes() {
+    if (_isDestroyed) return;
+    var box = $('notesList'); if (!box) return;
+    if (!notesData.length) {
+      box.innerHTML = '<div class="empty"><i class="fas fa-sticky-note"></i><h3>لا توجد ملاحظات بعد</h3><p>ابدأ بإضافة ملاحظة</p></div>'; return;
+    }
+    var ce = canEdit(), cd = canDelete(), html = '';
+    notesData.forEach(function (n) {
+      var id = n._id || n.id || '', pr = n.priority || 'عادي';
+      var badge = pr === 'عاجل' ? '<span class="chip urgent">🚨 عاجل</span>' : (pr === 'مهم' ? '<span class="chip important">⚠️ مهم</span>' : '');
+      html += '<article class="note p-' + escapeHtml(pr) + '"><div class="note-h"><h4 class="note-t">' + escapeHtml(n.title || 'بدون عنوان') + '</h4>' +
+        '<div class="meta">' + badge + '<span class="chip"><i class="fas fa-calendar"></i> ' + escapeHtml(formatDate(n.date || n.createdAt)) + '</span></div></div>' +
+        ((n.content || n.description) ? '<div class="note-c">' + escapeHtml(n.content || n.description) + '</div>' : '') +
+        '<div class="note-f"><span><i class="fas fa-user"></i> ' + escapeHtml(n.createdByName || n.author || 'مستخدم') + '</span><div class="meta">' +
+        (ce ? '<button class="btn-sm edit" data-act="edit" data-id="' + escapeHtml(id) + '"><i class="fas fa-edit"></i> تعديل</button>' : '') +
+        (cd ? '<button class="btn-sm delete" data-act="del" data-id="' + escapeHtml(id) + '"><i class="fas fa-trash"></i> حذف</button>' : '') +
+        '</div></div></article>';
+    });
+    box.innerHTML = html;
+  }
 
-        function formatDate(d) {
-            if (!d) return '—';
-            try { var dt = new Date(d); return isNaN(dt.getTime()) ? String(d) : dt.toLocaleDateString('ar-TN', { year: 'numeric', month: 'short', day: 'numeric' }); } catch (_) { return String(d); }
-        }
-        function formatFileSize(bytes) {
-            if (!bytes || bytes < 0) return '0 B';
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
-        }
-        function getFileIcon(mimetype, filename) {
-            var mt = (mimetype || '').toLowerCase(); var fn = (filename || '').toLowerCase();
-            if (mt.indexOf('pdf') !== -1 || fn.endsWith('.pdf')) return 'fa-file-pdf';
-            if (mt.indexOf('word') !== -1 || fn.endsWith('.doc') || fn.endsWith('.docx')) return 'fa-file-word';
-            if (mt.indexOf('excel') !== -1 || fn.endsWith('.xls') || fn.endsWith('.xlsx')) return 'fa-file-excel';
-            if (mt.indexOf('image') !== -1 || /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(fn)) return 'fa-file-image';
-            return 'fa-file-alt';
-        }
+  async function saveNote() {
+    if (_isDestroyed || !canEdit()) return;
+    var title = $('noteTitle').value.trim(), content = $('noteContent').value.trim();
+    var date = $('noteDate').value, priority = $('notePriority').value || 'عادي';
+    if (!title) { showToast('يرجى إدخال العنوان', 'error'); return; }
+    if (!content) { showToast('يرجى إدخال المحتوى', 'error'); return; }
+    var btn = $('saveNoteBtn'), orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحفظ...';
+    try {
+      var res = await fetcher(editingId ? '/api/notes/' + editingId : '/api/notes', {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title, content: content, date: date || new Date().toISOString(), priority: priority })
+      });
+      if (!res.ok) {
+        var e = null; try { e = await res.json(); } catch (_) {}
+        throw new Error((e && (e.error || e.message)) || 'فشل الحفظ');
+      }
+      showToast(editingId ? 'تم تحديث الملاحظة' : 'تمت إضافة الملاحظة', 'success');
+      clearForm(); notesLoaded = false; await loadNotes();
+    } catch (err) { showToast(err.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = editingId ? '<i class="fas fa-save"></i> تحديث' : orig; }
+  }
 
-        // ============================================================
-        // TABS
-        // ============================================================
-        var currentTab = 'notes';
-        var notesCount = 0;
-        var verbaleCount = 0;
+  function editNote(id) {
+    if (_isDestroyed || !canEdit()) return;
+    var n = notesData.find(function (x) { return String(x._id || x.id) === String(id); });
+    if (!n) { showToast('الملاحظة غير موجودة', 'warning'); return; }
+    editingId = n._id || n.id;
+    $('noteTitle').value = n.title || '';
+    $('noteContent').value = n.content || n.description || '';
+    $('notePriority').value = n.priority || 'عادي';
+    if (n.date || n.createdAt) { try { $('noteDate').value = new Date(n.date || n.createdAt).toISOString().split('T')[0]; } catch (_) {} }
+    $('formTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل الملاحظة';
+    $('cancelEditBtn').hidden = false;
+    $('saveNoteBtn').innerHTML = '<i class="fas fa-save"></i> تحديث';
+    $('addNoteCard').scrollIntoView({ behavior: 'smooth' });
+  }
 
-        function switchNotesTab(tabName) {
-            if (tabName !== 'notes' && tabName !== 'verbale') return;
-            currentTab = tabName;
-            document.querySelectorAll('.notes-tab').forEach(function(btn) { btn.classList.toggle('active', btn.dataset.tab === tabName); });
-            if ($('panel-notes')) $('panel-notes').classList.toggle('active', tabName === 'notes');
-            if ($('panel-verbale')) $('panel-verbale').classList.toggle('active', tabName === 'verbale');
-            if (tabName === 'notes' && !notesLoaded) loadNotes();
-            else if (tabName === 'verbale') {
-                if (!verbaleCurrentLoaded) loadNoteVerbaleCurrent();
-                if (!verbaleArchiveLoaded) loadNoteVerbaleArchive();
-            }
-        }
+  async function deleteNote(id) {
+    if (_isDestroyed || !canDelete()) return;
+    var ok = await confirmDialog({ title: 'حذف الملاحظة', text: 'سيتم حذف هذه الملاحظة نهائياً.', ok: 'حذف', icon: 'fa-trash', danger: true });
+    if (!ok) return;
+    try {
+      var res = await fetcher('/api/notes/' + id, { method: 'DELETE' });
+      if (!res.ok) throw new Error('فشل الحذف');
+      showToast('تم حذف الملاحظة', 'success'); notesLoaded = false; await loadNotes();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
 
-        // ============================================================
-        // NOTES (كما هي)
-        // ============================================================
-        var notesData = [];
-        var editingId = null;
-        var notesLoaded = false;
+  function clearForm() {
+    editingId = null;
+    $('noteTitle').value = ''; $('noteContent').value = '';
+    $('noteDate').value = new Date().toISOString().split('T')[0];
+    $('notePriority').value = 'عادي';
+    $('formTitle').innerHTML = '<i class="fas fa-pen"></i> إضافة ملاحظة جديدة';
+    $('cancelEditBtn').hidden = true;
+    $('saveNoteBtn').innerHTML = '<i class="fas fa-save"></i> حفظ';
+  }
 
-        async function loadNotes() {
-            var container = $('notesList'); if (!container) return;
-            notesLoaded = true;
-            container.innerHTML = '<div class="empty-state"><div class="spinner"></div><h3>جاري التحميل...</h3></div>';
-            try {
-                var response = await fetcher('/api/notes');
-                var data = await response.json();
-                notesData = Array.isArray(data) ? data : (data.notes || []);
-                if ($('tabNotesCount')) $('tabNotesCount').textContent = notesData.length;
-                renderNotes();
-            } catch (e) { container.innerHTML = '<div class="empty-state"><h3>تعذّر التحميل</h3></div>'; }
-        }
+  // ---------- Note Verbale: current ----------
+  async function loadNoteVerbaleCurrent() {
+    if (_isDestroyed) return;
+    var box = $('nvCurrentSection'); if (!box) return;
+    verbaleCurrentLoaded = true; box.innerHTML = '<div class="sk" style="height:200px;margin-bottom:18px;border-radius:16px"></div>';
+    try {
+      var res = await fetcher('/api/notes/current', { method: 'GET' });
+      if (!res.ok) throw new Error('فشل: ' + res.status);
+      var d = await res.json();
+      if (d && d.success && d.hasCurrent && d.note) renderCurrentDocument(d.note); else renderEmptyCurrent();
+    } catch (err) { if (!_isDestroyed) box.innerHTML = errorBlock(err.message); }
+  }
 
-        function renderNotes() {
-            var container = $('notesList'); if (!container) return;
-            if (notesData.length === 0) { container.innerHTML = '<div class="empty-state"><h3>لا توجد ملاحظات بعد</h3></div>'; return; }
-            var html = '';
-            notesData.forEach(function(note) {
-                var id = note._id || note.id;
-                html += '<div class="note-card"><div class="note-card-header"><h4 class="note-card-title">' + escapeHtml(note.title) + '</h4><span class="note-card-date">' + escapeHtml(formatDate(note.date || note.createdAt)) + '</span></div>' + (note.content ? '<div class="note-card-content">' + escapeHtml(note.content) + '</div>' : '') + '<div class="note-card-footer"><span>👤 ' + escapeHtml(note.createdByName || 'مستخدم') + '</span><div>' + (canEdit() ? '<button class="btn-sm edit" onclick="editNote(\'' + id + '\')">تعديل</button>' : '') + (canDelete() ? '<button class="btn-sm delete" onclick="deleteNote(\'' + id + '\')">حذف</button>' : '') + '</div></div></div>';
-            });
-            container.innerHTML = html;
-        }
+  var nvHasCurrent = false;
+  function isoWeek(d) {
+    var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
+    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil((((t - y0) / 86400000) + 1) / 7);
+  }
 
-        async function saveNote() {
-            var title = $('noteTitle') ? $('noteTitle').value.trim() : '';
-            var content = $('noteContent') ? $('noteContent').value.trim() : '';
-            if (!title || !content) { showToast('أدخل العنوان والمحتوى', 'error'); return; }
-            try {
-                var url = editingId ? '/api/notes/' + editingId : '/api/notes';
-                var method = editingId ? 'PUT' : 'POST';
-                await fetcher(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: title, content: content, date: new Date().toISOString() }) });
-                showToast('تم الحفظ', 'success');
-                clearForm(); notesLoaded = false; loadNotes();
-            } catch (e) { showToast('فشل الحفظ', 'error'); }
-        }
+  function renderCurrentDocument(n) {
+    var box = $('nvCurrentSection'); if (!box) return;
+    nvHasCurrent = true;
+    var f = n.file || {}, id = n.id || n._id;
+    var up = new Date(n.createdAt || n.archivedAt || Date.now());
+    var days = Math.max(0, Math.floor((Date.now() - up.getTime()) / 86400000)); if (isNaN(days)) days = 0;
+    var late = days > 7, pct = Math.min(100, Math.round(days / 7 * 100));
+    var due = new Date(up.getTime() + 7 * 86400000);
+    var uploader = n.uploadedBy && n.uploadedBy.name ? n.uploadedBy.name : (n.createdByName || 'مستخدم');
+    var weekTxt = n.weekNumber ? ('الأسبوع ' + n.weekNumber + (n.year ? ' / ' + n.year : '')) : '—';
+    var cls = late ? 'late' : (days >= 5 ? 'warn' : 'ok');
+    var stTxt = late ? 'متأخر — مضى أكثر من 7 أيام' : (days >= 5 ? 'يقترب موعد التحديث' : 'محدّث');
+    var remain = late ? ('تجاوز الموعد بـ ' + (days - 7) + ' يوم') : ('متبقٍّ ' + Math.max(0, 7 - days) + ' يوم للتقرير القادم');
+    box.innerHTML = '<section class="rt-current"><div class="rt-head"><div class="rt-title"><span class="nv-badge"><i class="fas fa-circle" style="font-size:8px"></i> التقرير الحالي</span>' +
+      '<span class="st st-' + cls + '"><i class="fas ' + (late ? 'fa-triangle-exclamation' : 'fa-circle-check') + '"></i> ' + stTxt + '</span></div>' +
+      '<div class="meta"><span class="chip"><i class="fas fa-calendar-week"></i> ' + escapeHtml(weekTxt) + '</span></div></div>' +
+      '<div class="cycle"><div class="cycle-top"><span>دورة التقرير الأسبوعية</span><span>' + escapeHtml(remain) + '</span></div>' +
+      '<div class="cycle-bar"><div class="cycle-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="cycle-top sub"><span>تاريخ الرفع: ' + escapeHtml(formatDate(up)) + '</span><span>الموعد القادم: ' + escapeHtml(formatDate(due)) + '</span></div></div>' +
+      '<div class="table-wrap cur"><table class="nv-table"><thead><tr><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>تاريخ الرفع</th><th>الحجم</th><th>الإجراءات</th></tr></thead><tbody><tr>' +
+      '<td><div class="doc-cell"><div class="ficon"><i class="fas ' + getFileIcon(f.mimetype, f.originalName) + '"></i></div><div><div class="doc-title">' + escapeHtml(n.title || 'بدون عنوان') + '</div>' +
+      '<div class="doc-desc">' + escapeHtml(n.description || f.originalName || '') + '</div></div></div></td>' +
+      '<td><span class="chip">' + escapeHtml(weekTxt) + '</span></td><td>' + escapeHtml(uploader) + '</td><td>' + escapeHtml(formatDate(up)) + '</td><td>' + escapeHtml(f.sizeFormatted || '0 B') + '</td>' +
+      '<td><div class="row-actions"><a class="ab view" href="' + escapeHtml(f.url || '#') + '" target="_blank" rel="noopener" title="عرض"><i class="fas fa-eye"></i></a>' +
+      '<a class="ab download" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="تحميل"><i class="fas fa-download"></i></a></div></td></tr></tbody></table></div></section>';
+  }
 
-        function editNote(id) {
-            var note = notesData.find(function(n) { return String(n._id || n.id) === String(id); });
-            if (!note) return;
-            editingId = note._id || note.id;
-            if ($('noteTitle')) $('noteTitle').value = note.title || '';
-            if ($('noteContent')) $('noteContent').value = note.content || '';
-            if ($('formTitle')) $('formTitle').innerHTML = 'تعديل الملاحظة';
-            if ($('cancelEditBtn')) $('cancelEditBtn').style.display = 'inline-flex';
-        }
+  function renderEmptyCurrent() {
+    var box = $('nvCurrentSection'); if (!box) return;
+    nvHasCurrent = false;
+    box.innerHTML = '<div class="nv-empty"><i class="fas fa-file-circle-question"></i><h3>لم يُرفع تقرير لهذا الأسبوع بعد</h3><p>ارفع التقرير الفني للوسائل البحرية ليظهر هنا حتى يتم استبداله بتقرير الأسبوع التالي</p></div>';
+  }
 
-        async function deleteNote(id) {
-            if (!confirm('حذف الملاحظة؟')) return;
-            await fetcher('/api/notes/' + id, { method: 'DELETE' });
-            showToast('تم الحذف', 'success'); notesLoaded = false; loadNotes();
-        }
+  // ---------- Note Verbale: archive ----------
+  async function loadNoteVerbaleArchive() {
+    if (_isDestroyed) return;
+    var body = $('nvArchiveList'); if (!body) return;
+    verbaleArchiveLoaded = true; body.innerHTML = skeletonRows(5);
+    try {
+      var search = ($('nvSearch').value || '').trim();
+      var year = $('nvFilterYear').value || 'all', uploader = $('nvFilterUploader').value || 'all';
+      var p = new URLSearchParams(); p.append('limit', '200');
+      if (year !== 'all') p.append('year', year);
+      if (uploader !== 'all') p.append('uploadedBy', uploader);
+      var res = await fetcher('/api/notes/archive?' + p.toString(), { method: 'GET' });
+      if (!res.ok) throw new Error('فشل: ' + res.status);
+      var d = await res.json();
+      nvArchiveData = (d && d.notes) || [];
+      $('tabVerbaleCount').textContent = nvArchiveData.length;
+      $('nvArchiveCount').textContent = nvArchiveData.length;
+      if (d && d.years && d.years.length) populateYearFilter(d.years);
+      if (d && d.uploaders && d.uploaders.length) populateUploaderFilter(d.uploaders);
+      if (search) {
+        var q = search.toLowerCase();
+        nvArchiveData = nvArchiveData.filter(function (n) { return ((n.title || '') + ' ' + (n.description || '')).toLowerCase().indexOf(q) !== -1; });
+      }
+      renderArchive();
+    } catch (err) {
+      if (!_isDestroyed) body.innerHTML = '<tr><td colspan="7">' + errorBlock(err.message) + '</td></tr>';
+    }
+  }
 
-        function clearForm() {
-            editingId = null;
-            if ($('noteTitle')) $('noteTitle').value = '';
-            if ($('noteContent')) $('noteContent').value = '';
-            if ($('formTitle')) $('formTitle').innerHTML = 'إضافة ملاحظة جديدة';
-            if ($('cancelEditBtn')) $('cancelEditBtn').style.display = 'none';
-        }
+  function populateYearFilter(years) {
+    var el = $('nvFilterYear'), cur = el.value, h = '<option value="all">كل السنوات</option>';
+    years.forEach(function (y) { h += '<option value="' + escapeHtml(y) + '">' + escapeHtml(y) + '</option>'; });
+    el.innerHTML = h; el.value = cur;
+  }
+  function populateUploaderFilter(list) {
+    var el = $('nvFilterUploader'), cur = el.value, h = '<option value="all">كل الرافعين</option>';
+    list.forEach(function (u) {
+      if (!u._id) return;
+      h += '<option value="' + escapeHtml(u._id) + '">' + escapeHtml(u.name || u.username || u._id) + ' (' + escapeHtml(u.count) + ')</option>';
+    });
+    el.innerHTML = h; el.value = cur;
+  }
 
-        // ============================================================
-        // NOTE VERBALE (تم تعديل RenderArchive ليتوافق مع الجدول)
-        // ============================================================
-        var verbaleCurrentLoaded = false;
-        var verbaleArchiveLoaded = false;
-        var nvSelectedFile = null;
-        var nvArchiveData = [];
+  function renderArchive() {
+    var body = $('nvArchiveList'); if (!body) return;
+    if (!nvArchiveData.length) {
+      body.innerHTML = '<tr><td colspan="7"><div class="empty"><i class="fas fa-archive"></i><h3>لا توجد تقارير في الأرشيف</h3></div></td></tr>'; return;
+    }
+    var cp = canDeleteVerbale(), html = '';
+    nvArchiveData.forEach(function (n, i) {
+      var id = n.id || n._id, f = n.file || {};
+      var uploader = n.uploadedBy && n.uploadedBy.name ? n.uploadedBy.name : (n.createdByName || 'مستخدم');
+      var acts = '<button class="ab download" data-action="download" data-id="' + escapeHtml(id) + '" title="تحميل"><i class="fas fa-download"></i></button>';
+      if (f.url) acts = '<a class="ab view" href="' + escapeHtml(f.url) + '" target="_blank" rel="noopener" title="عرض"><i class="fas fa-eye"></i></a>' + acts;
+      if (cp) acts += '<button class="ab promote" data-action="promote" data-id="' + escapeHtml(id) + '" title="تعيين كحالية"><i class="fas fa-star"></i></button>' +
+        '<button class="ab delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف"><i class="fas fa-trash"></i></button>';
+      html += '<tr><td class="num">' + (i + 1) + '</td>' +
+        '<td><div class="doc-cell"><div class="ficon"><i class="fas ' + getFileIcon(f.mimetype, f.originalName) + '"></i></div><div><div class="doc-title">' + escapeHtml(n.title || 'ملف') + '</div>' +
+        (n.description ? '<div class="doc-desc">' + escapeHtml(n.description) + '</div>' : '') + '</div></div></td>' +
+        '<td><span class="chip">' + escapeHtml(n.weekNumber ? ('الأسبوع ' + n.weekNumber + (n.year ? ' / ' + n.year : '')) : '—') + '</span></td><td>' + escapeHtml(uploader) + '</td><td>' + escapeHtml(formatDate(n.createdAt || n.archivedAt)) + '</td>' +
+        '<td>' + escapeHtml(f.sizeFormatted || '0 B') + '</td><td class="col-act"><div class="row-actions">' + acts + '</div></td></tr>';
+    });
+    body.innerHTML = html;
+  }
 
-        async function loadNoteVerbaleCurrent() {
-            var container = $('nvCurrentSection'); if (!container) return;
-            verbaleCurrentLoaded = true;
-            container.innerHTML = '<div class="empty-state"><div class="spinner"></div><h3>جاري التحميل...</h3></div>';
-            try {
-                var response = await fetcher('/api/notes/current');
-                var data = await response.json();
-                if (data && data.success && data.hasCurrent && data.note) renderCurrentDocument(data.note);
-                else container.innerHTML = '<div class="nv-empty-current" style="text-align:center;padding:40px;border:1px dashed #444;border-radius:12px;"><h3>لا توجد وثيقة حالية</h3></div>';
-            } catch (e) { container.innerHTML = '<div class="empty-state"><h3>تعذّر التحميل</h3></div>'; }
-        }
+  // ---------- Upload ----------
+  function handleFileSelected(file) {
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) { showToast('حجم الملف كبير جداً (الحد 25 MB)', 'error'); return; }
+    nvSelectedFile = file;
+    $('nvFileName').textContent = file.name; $('nvFileSize').textContent = formatFileSize(file.size);
+    $('nvFilePreview').classList.add('show');
+    $('nvUploadForm').hidden = false; $('nvUploadActions').hidden = false;
+    if (!$('nvTitle').value) $('nvTitle').value = 'Rapport technique des moyens maritimes - Semaine ' + isoWeek(new Date()) + ' / ' + new Date().getFullYear();
+  }
+  function clearUploadForm() {
+    nvSelectedFile = null;
+    $('nvFilePreview').classList.remove('show'); $('nvProgress').classList.remove('show');
+    $('nvUploadForm').hidden = true; $('nvUploadActions').hidden = true;
+    $('nvTitle').value = ''; $('nvDescription').value = ''; $('nvFileInput').value = '';
+    $('nvProgressFill').style.width = '0%'; $('nvProgressText').textContent = '0%';
+  }
 
-        function renderCurrentDocument(note) {
-            var container = $('nvCurrentSection'); if (!container) return;
-            var fileIcon = getFileIcon(note.file && note.file.mimetype, note.file && note.file.originalName);
-            var fileName = (note.file && note.file.originalName) || 'ملف';
-            var fileSize = (note.file && note.file.sizeFormatted) || '0 B';
-            var id = note.id || note._id;
-            container.innerHTML = '<div class="nv-current-card">' +
-                '<div class="nv-current-header"><span class="nv-current-badge">الوثيقة الحالية</span></div>' +
-                '<h3 class="nv-current-title">' + escapeHtml(note.title || 'بدون عنوان') + '</h3>' +
-                '<div class="nv-current-file-info"><div class="nv-file-icon"><i class="fas ' + fileIcon + '"></i></div><div><div style="font-weight:bold;color:#fff;">' + escapeHtml(fileName) + '</div><div style="font-size:12px;color:#888;">' + escapeHtml(fileSize) + '</div></div></div>' +
-                '<div class="nv-current-actions"><a class="btn-action primary" href="/api/notes/verbale/' + id + '/download" target="_blank"><i class="fas fa-download"></i> تحميل</a></div>' +
-            '</div>';
-        }
+  async function submitUpload() {
+    if (!nvSelectedFile) { showToast('اختر ملفاً أولاً', 'error'); return; }
+    var title = $('nvTitle').value.trim(), description = $('nvDescription').value.trim();
+    if (!title) { showToast('أدخل عنوان التقرير', 'error'); return; }
+    if (nvHasCurrent) {
+      var okRep = await confirmDialog({ title: 'استبدال التقرير الحالي', text: 'سيحلّ هذا التقرير محل التقرير الحالي، وينتقل السابق إلى الأرشيف.', ok: 'رفع واستبدال', icon: 'fa-rotate' });
+      if (!okRep) return;
+    }
+    var fd = new FormData();
+    fd.append('files', nvSelectedFile); fd.append('title', title); fd.append('description', description);
+    var btn = $('nvSubmitUpload');
+    $('nvProgress').classList.add('show');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الرفع...';
+    try {
+      var token = getToken(), csrf = getCsrfToken();
+      await new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/notes/upload');
+        if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.withCredentials = true;
+        xhr.upload.addEventListener('progress', function (e) {
+          if (!e.lengthComputable) return;
+          var pc = Math.round((e.loaded / e.total) * 100);
+          $('nvProgressFill').style.width = pc + '%'; $('nvProgressText').textContent = pc + '%';
+        });
+        xhr.addEventListener('load', function () {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try { resolve(JSON.parse(xhr.responseText || '{}')); } catch (e) { resolve({}); }
+          } else {
+            var msg = 'فشل الرفع';
+            try { var er = JSON.parse(xhr.responseText); msg = er.error || er.message || msg; } catch (e) {}
+            reject(new Error(msg));
+          }
+        });
+        xhr.addEventListener('error', function () { reject(new Error('خطأ في الاتصال')); });
+        xhr.send(fd);
+      });
+      showToast('تم رفع التقرير بنجاح', 'success');
+      clearUploadForm(); await reloadVerbale();
+    } catch (err) { showToast(err.message, 'error'); }
+    finally {
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> رفع التقرير';
+      _pageTimeouts.push(setTimeout(function () { var p = $('nvProgress'); if (p) p.classList.remove('show'); }, 1500));
+    }
+  }
 
-        async function loadNoteVerbaleArchive() {
-            var tbody = $('nvArchiveList'); if (!tbody) return;
-            verbaleArchiveLoaded = true;
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><div class="spinner" style="display:inline-block;width:20px;height:20px;"></div> جاري التحميل...</td></tr>';
-            try {
-                var response = await fetcher('/api/notes/archive?limit=200');
-                var data = await response.json();
-                nvArchiveData = (data && data.notes) || [];
-                if ($('tabVerbaleCount')) $('tabVerbaleCount').textContent = nvArchiveData.length;
-                if ($('nvArchiveCount')) $('nvArchiveCount').textContent = nvArchiveData.length;
-                renderArchiveTable();
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#f87171;">تعذّر التحميل</td></tr>'; }
-        }
+  async function reloadVerbale() {
+    verbaleCurrentLoaded = false; verbaleArchiveLoaded = false;
+    await loadNoteVerbaleCurrent(); await loadNoteVerbaleArchive();
+  }
+  function downloadArchiveItem(id) { if (id) window.open('/api/notes/verbale/' + encodeURIComponent(id) + '/download', '_blank'); }
 
-        function renderArchiveTable() {
-            var tbody = $('nvArchiveList'); if (!tbody) return;
-            if (nvArchiveData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#888;">لا توجد وثائق في الأرشيف</td></tr>'; return;
-            }
-            var html = '';
-            nvArchiveData.forEach(function(note, index) {
-                var id = note.id || note._id;
-                var fileIcon = getFileIcon(note.file && note.file.mimetype, note.file && note.file.originalName);
-                var fileSize = (note.file && note.file.sizeFormatted) || '0 B';
-                var uploader = note.uploadedBy && note.uploadedBy.name ? note.uploadedBy.name : (note.createdByName || 'مستخدم');
-                var uploadDate = note.createdAt || note.archivedAt;
+  async function promoteArchiveItem(id) {
+    if (!canDeleteVerbale()) { showToast('ليس لديك صلاحية', 'error'); return; }
+    var ok = await confirmDialog({ title: 'تعيين كوثيقة حالية', text: 'ستصبح هذه الوثيقة هي الوثيقة الحالية.', ok: 'تعيين', icon: 'fa-star' });
+    if (!ok) return;
+    try {
+      var res = await fetcher('/api/notes/verbale/' + encodeURIComponent(id) + '/set-current', { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
+      if (!res.ok) { var e = null; try { e = await res.json(); } catch (_) {} throw new Error((e && e.error) || 'فشل'); }
+      showToast('تم التعيين كوثيقة حالية', 'success'); await reloadVerbale();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
 
-                var actions = '<button class="nv-action-btn download" onclick="downloadArchiveItem(\'' + id + '\')" title="تحميل"><i class="fas fa-download"></i></button>';
-                if (canDeleteVerbale()) actions += '<button class="nv-action-btn delete" onclick="deleteArchiveItem(\'' + id + '\')" title="حذف"><i class="fas fa-trash"></i></button>';
+  async function deleteArchiveItem(id) {
+    if (!canDeleteVerbale()) { showToast('ليس لديك صلاحية', 'error'); return; }
+    var ok = await confirmDialog({ title: 'حذف الوثيقة', text: 'سيتم حذف هذه الوثيقة نهائياً ولا يمكن التراجع.', ok: 'حذف نهائي', icon: 'fa-trash', danger: true });
+    if (!ok) return;
+    try {
+      var res = await fetcher('/api/notes/verbale/' + encodeURIComponent(id), { method: 'DELETE' });
+      if (!res.ok) { var e = null; try { e = await res.json(); } catch (_) {} throw new Error((e && e.error) || 'فشل'); }
+      showToast('تم حذف الوثيقة', 'success'); await reloadVerbale();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
 
-                html += '<tr>' +
-                    '<td>' + (index + 1) + '</td>' +
-                    '<td><div class="file-cell"><div class="file-cell-icon"><i class="fas ' + fileIcon + '"></i></div><div class="file-cell-info"><span class="file-cell-name">' + escapeHtml(note.title || 'ملف') + '</span>' + (note.description ? '<span class="file-cell-desc">' + escapeHtml(note.description) + '</span>' : '') + '</div></div></td>' +
-                    '<td>' + escapeHtml(uploader) + '</td>' +
-                    '<td>' + escapeHtml(formatDate(uploadDate)) + '</td>' +
-                    '<td>' + escapeHtml(fileSize) + '</td>' +
-                    '<td class="no-print">' + actions + '</td>' +
-                '</tr>';
-            });
-            tbody.innerHTML = html;
-        }
+  // ---------- Print ----------
+  function printRegister() {
+    $('nvPrintDate').textContent = 'التاريخ: ' + new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' });
+    window.print();
+  }
+  function onBeforePrint() { var el = $('nvPrintDate'); if (el) el.textContent = 'التاريخ: ' + new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
+  window.addEventListener('beforeprint', onBeforePrint);
+  _eventListeners.push({ el: window, type: 'beforeprint', fn: onBeforePrint });
 
-        // (باقي دوال الرفع، الحذف، إلخ... تبقى كما هي، سأختصرها هنا لتوفير المساحة ولكنها موجودة في الملف الأصلي)
-        function handleFileSelected(file) {
-            if (!file) return;
-            nvSelectedFile = file;
-            if ($('nvFileName')) $('nvFileName').textContent = file.name;
-            if ($('nvFileSize')) $('nvFileSize').textContent = formatFileSize(file.size);
-            if ($('nvFilePreview')) $('nvFilePreview').classList.add('show');
-            if ($('nvUploadForm')) $('nvUploadForm').style.display = 'grid';
-            if ($('nvUploadActions')) $('nvUploadActions').style.display = 'flex';
-        }
-        function clearUploadForm() {
-            nvSelectedFile = null;
-            if ($('nvFilePreview')) $('nvFilePreview').classList.remove('show');
-            if ($('nvUploadForm')) $('nvUploadForm').style.display = 'none';
-            if ($('nvUploadActions')) $('nvUploadActions').style.display = 'none';
-            if ($('nvFileInput')) $('nvFileInput').value = '';
-        }
-        async function submitUpload() {
-            if (!nvSelectedFile) return;
-            var title = $('nvTitle') ? $('nvTitle').value.trim() : '';
-            if (!title) { showToast('أدخل العنوان', 'error'); return; }
-            var formData = new FormData();
-            formData.append('files', nvSelectedFile);
-            formData.append('title', title);
-            try {
-                var token = getToken();
-                await fetch('/api/notes/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'X-CSRF-Token': getCsrfToken() }, body: formData });
-                showToast('تم الرفع بنجاح', 'success');
-                clearUploadForm(); verbaleCurrentLoaded = false; verbaleArchiveLoaded = false;
-                loadNoteVerbaleCurrent(); loadNoteVerbaleArchive();
-            } catch (e) { showToast('فشل الرفع', 'error'); }
-        }
-        function downloadArchiveItem(id) { window.open('/api/notes/verbale/' + id + '/download', '_blank'); }
-        async function deleteArchiveItem(id) {
-            if (!confirm('حذف الوثيقة؟')) return;
-            await fetcher('/api/notes/verbale/' + id, { method: 'DELETE' });
-            showToast('تم الحذف', 'success'); verbaleArchiveLoaded = false; loadNoteVerbaleArchive();
-        }
+  // ---------- Init ----------
+  function init() {
+    if (_isDestroyed) return;
+    applyLogo(); syncLogoFromServer();
 
-        // ============================================================
-        // INIT
-        // ============================================================
-        function init() {
-            document.querySelectorAll('.notes-tab').forEach(function(btn) { addSafeListener(btn, 'click', function() { switchNotesTab(this.dataset.tab); }); });
-            addSafeListener($('saveNoteBtn'), 'click', saveNote);
-            addSafeListener($('cancelEditBtn'), 'click', clearForm);
-            
-            var dropzone = $('nvDropzone'); var fileInput = $('nvFileInput');
-            if (dropzone && fileInput) {
-                addSafeListener(dropzone, 'click', function() { fileInput.click(); });
-                addSafeListener(dropzone, 'dragover', function(e) { e.preventDefault(); dropzone.classList.add('dragover'); });
-                addSafeListener(dropzone, 'drop', function(e) { e.preventDefault(); dropzone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFileSelected(e.dataTransfer.files[0]); });
-            }
-            if (fileInput) addSafeListener(fileInput, 'change', function(e) { if (e.target.files[0]) handleFileSelected(e.target.files[0]); });
-            
-            addSafeListener($('nvFileRemove'), 'click', clearUploadForm);
-            addSafeListener($('nvSubmitUpload'), 'click', submitUpload);
-            addSafeListener($('nvCancelUpload'), 'click', clearUploadForm);
-            addSafeListener($('nvRefreshArchive'), 'click', function() { verbaleArchiveLoaded = false; loadNoteVerbaleArchive(); });
-            
-            // تاريخ الطباعة
-            window.addEventListener('beforeprint', function() {
-                if ($('printDate')) $('printDate').textContent = new Date().toLocaleDateString('ar-TN');
-            });
+    document.querySelectorAll('#page-notes .np-tab').forEach(function (b) {
+      addSafeListener(b, 'click', function () { switchNotesTab(this.dataset.tab); });
+    });
+    addSafeListener($('saveNoteBtn'), 'click', saveNote);
+    addSafeListener($('cancelEditBtn'), 'click', function () { clearForm(); showToast('تم الإلغاء', 'info'); });
+    $('noteDate').value = new Date().toISOString().split('T')[0];
 
-            loadNotes();
-        }
+    if (!canEdit()) {
+      $('saveNoteBtn').hidden = true;
+      ['noteTitle', 'noteContent', 'noteDate', 'notePriority'].forEach(function (id) { $(id).disabled = true; });
+    }
+    addSafeListener($('notesList'), 'click', function (e) {
+      var b = e.target.closest('[data-act]'); if (!b) return;
+      if (b.dataset.act === 'edit') editNote(b.dataset.id); else if (b.dataset.act === 'del') deleteNote(b.dataset.id);
+    });
 
-        window.saveNote = saveNote; window.loadNotes = loadNotes; window.editNote = editNote; window.deleteNote = deleteNote; window.switchNotesTab = switchNotesTab;
-        window.downloadArchiveItem = downloadArchiveItem; window.deleteArchiveItem = deleteArchiveItem;
+    if (!canUploadVerbale()) $('nvUploadCard').style.display = 'none';
+    var dz = $('nvDropzone'), fi = $('nvFileInput');
+    addSafeListener(dz, 'click', function () { fi.click(); });
+    addSafeListener(dz, 'keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
+    addSafeListener(dz, 'dragover', function (e) { e.preventDefault(); dz.classList.add('dragover'); });
+    addSafeListener(dz, 'dragleave', function (e) { e.preventDefault(); dz.classList.remove('dragover'); });
+    addSafeListener(dz, 'drop', function (e) {
+      e.preventDefault(); dz.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileSelected(e.dataTransfer.files[0]);
+    });
+    addSafeListener(fi, 'change', function (e) { if (e.target.files && e.target.files[0]) handleFileSelected(e.target.files[0]); });
+    addSafeListener($('nvFileRemove'), 'click', clearUploadForm);
+    addSafeListener($('nvCancelUpload'), 'click', clearUploadForm);
+    addSafeListener($('nvSubmitUpload'), 'click', submitUpload);
+    addSafeListener($('nvPrintBtn'), 'click', printRegister);
+    addSafeListener($('nvRefreshArchive'), 'click', function () { verbaleArchiveLoaded = false; loadNoteVerbaleArchive(); });
+    var timer = null;
+    addSafeListener($('nvSearch'), 'input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { verbaleArchiveLoaded = false; loadNoteVerbaleArchive(); }, 400);
+      _pageTimeouts.push(timer);
+    });
+    ['nvFilterYear', 'nvFilterUploader'].forEach(function (id) {
+      addSafeListener($(id), 'change', function () { verbaleArchiveLoaded = false; loadNoteVerbaleArchive(); });
+    });
+    addSafeListener($('nvArchiveList'), 'click', function (e) {
+      var b = e.target.closest('[data-action]'); if (!b) return;
+      var a = b.getAttribute('data-action'), id = b.getAttribute('data-id');
+      if (a === 'download') downloadArchiveItem(id);
+      else if (a === 'promote') promoteArchiveItem(id);
+      else if (a === 'delete') deleteArchiveItem(id);
+    });
 
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true }); else init();
-    })();
+    loadNotes();
+  }
+
+  window.saveNote = saveNote; window.loadNotes = loadNotes; window.editNote = editNote;
+  window.deleteNote = deleteNote; window.switchNotesTab = switchNotesTab;
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+})();
 </script>
 </div>
