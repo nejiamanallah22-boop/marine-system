@@ -1,4 +1,4 @@
-<!-- public/pages/notes.html — v14.0 (Final) -->
+<!-- public/pages/notes.html — v12.1 -->
 <div id="page-notes" dir="rtl">
 <style>
 #page-notes{--gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.035);--line:rgba(255,255,255,.07);--tx:#e8edf5;--mut:rgba(255,255,255,.5);--ok:#22c55e;--bad:#f87171;--info:#60a5fa;
@@ -139,7 +139,7 @@ table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
 .np-dialog h4{margin:0 0 8px;font-size:18px}.np-dialog p{margin:0 0 20px;font-size:13px;color:var(--mut);line-height:1.7}
 .np-dialog .actions{justify-content:center}
 
-/* ===== Design refinements ===== */
+/* ===== v11.1 design refinements ===== */
 body{background:#0a0e1a}
 #page-notes{background:radial-gradient(ellipse at 15% 0%,rgba(230,179,30,.08),transparent 55%),radial-gradient(ellipse at 90% 100%,rgba(167,139,250,.05),transparent 55%)}
 .np-header{background:linear-gradient(135deg,rgba(230,179,30,.1),rgba(255,255,255,.03));border-color:rgba(230,179,30,.22);box-shadow:0 10px 40px rgba(0,0,0,.25)}
@@ -182,15 +182,18 @@ body{background:#0a0e1a}
 .np-tab{padding:10px;font-size:13px}.nv-current{padding:18px}.nv-title{font-size:18px}
 .np-toast{left:12px;right:12px;max-width:none}}
 
-/* ===== 🖨️ PRINT: الترويسة + الجدول ===== */
+/* ===== PRINT: letterhead + archive table only ===== */
 @media print{
 @page{size:A4;margin:14mm}
 body{background:#fff!important}
 body *{visibility:hidden!important}
-#nvPrintWrapper, #nvPrintWrapper *{visibility:visible!important}
-#nvPrintWrapper{position:absolute;inset:0 0 auto 0;width:100%;background:#fff!important;color:#000!important;direction:rtl}
-#nvPrintWrapper .print-only{display:block!important}
-#nvPrintWrapper .table-wrap{overflow:visible;max-height:none;border:0;background:#fff;box-shadow:none}
+#nvLetterhead,#nvLetterhead *{background:none!important;color:#000!important;box-shadow:none!important}
+#nvLetterhead .lh-title{border-top:2px solid #000;border-bottom:2px solid #000}
+#nvPrintArea,#nvPrintArea *{visibility:visible!important}
+#page-notes{position:static!important;padding:0!important;margin:0!important;width:auto!important;min-height:0!important;background:#fff!important}
+#nvPrintArea{position:absolute;top:0;left:0;right:0;width:auto;background:#fff!important;color:#000!important;direction:rtl}
+#nvPrintArea .print-only{display:block!important}
+#nvPrintArea .table-wrap{overflow:visible;max-height:none;border:0;background:#fff;box-shadow:none}
 table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:collapse}
 .nv-table thead{display:table-header-group}
 .nv-table thead th{position:static;box-shadow:none}
@@ -200,7 +203,6 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
 .nv-table .col-act,.ficon{display:none!important}
 .chip{background:none!important;color:#000!important;padding:0}.chip i{display:none}
 .doc-title,.doc-desc{color:#000!important}
-.lh,.lh *{color:#000!important}
 }
 </style>
 
@@ -277,8 +279,7 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     <select class="nv-filter" id="nvFilterUploader" aria-label="الرافع"><option value="all">كل الرافعين</option></select>
   </div>
 
-  <!-- حاوية الطباعة (تشمل الترويسة + الجدول) -->
-  <div id="nvPrintWrapper">
+  <div id="nvPrintArea">
     <div class="print-only" id="nvLetterhead"></div>
     <div class="table-wrap">
       <table class="nv-table">
@@ -584,7 +585,7 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
   function renderCurrentDocument(n) {
     var box = $('nvCurrentSection'); if (!box) return;
     nvHasCurrent = true;
-    var f = n.file || {}, id = n.id || n._id;
+    var f = n.file || {}, id = n.id || n._id; nvDocs[id] = n;
     var up = new Date(n.createdAt || n.archivedAt || Date.now());
     var days = Math.max(0, Math.floor((Date.now() - up.getTime()) / 86400000)); if (isNaN(days)) days = 0;
     var late = days > 7, pct = Math.min(100, Math.round(days / 7 * 100));
@@ -604,11 +605,7 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
       '<td><div class="doc-cell"><div class="ficon"><i class="fas ' + getFileIcon(f.mimetype, f.originalName) + '"></i></div><div><div class="doc-title">' + escapeHtml(n.title || 'بدون عنوان') + '</div>' +
       '<div class="doc-desc">' + escapeHtml(n.description || f.originalName || '') + '</div></div></div></td>' +
       '<td><span class="chip">' + escapeHtml(weekTxt) + '</span></td><td>' + escapeHtml(uploader) + '</td><td>' + escapeHtml(formatDate(up)) + '</td><td>' + escapeHtml(f.sizeFormatted || '0 B') + '</td>' +
-      '<td><div class="row-actions">' +
-      '<a class="ab view" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="عرض"><i class="fas fa-eye"></i></a>' +
-      '<a class="ab download" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="تحميل"><i class="fas fa-download"></i></a>' +
-      '<a class="ab print" href="javascript:void(0)" onclick="printDocument(\'' + escapeHtml(id) + '\')" title="طباعة الوثيقة"><i class="fas fa-print"></i></a>' +
-      '</div></td></tr></tbody></table></div></section>';
+      '<td><div class="row-actions">' + docBtns(id) + '</div></td></tr></tbody></table></div></section>';
   }
 
   function renderEmptyCurrent() {
@@ -669,9 +666,8 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     nvArchiveData.forEach(function (n, i) {
       var id = n.id || n._id, f = n.file || {};
       var uploader = n.uploadedBy && n.uploadedBy.name ? n.uploadedBy.name : (n.createdByName || 'مستخدم');
-      var acts = '<a class="ab view" href="/api/notes/verbale/' + escapeHtml(id) + '/download" target="_blank" rel="noopener" title="عرض"><i class="fas fa-eye"></i></a>';
-      acts += '<button class="ab download" data-action="download" data-id="' + escapeHtml(id) + '" title="تحميل"><i class="fas fa-download"></i></button>';
-      acts += '<a class="ab print" href="javascript:void(0)" onclick="printDocument(\'' + escapeHtml(id) + '\')" title="طباعة الوثيقة"><i class="fas fa-print"></i></a>';
+      nvDocs[id] = n;
+      var acts = docBtns(id);
       if (cp) acts += '<button class="ab promote" data-action="promote" data-id="' + escapeHtml(id) + '" title="تعيين كحالية"><i class="fas fa-star"></i></button>' +
         '<button class="ab delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف"><i class="fas fa-trash"></i></button>';
       html += '<tr><td class="num">' + (i + 1) + '</td>' +
@@ -682,46 +678,6 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     });
     body.innerHTML = html;
   }
-
-  // دالة الطباعة المخصصة للوثيقة (تستخدم fetch لتجاوز مشكلة الـ Token)
-  window.printDocument = async function(id) {
-    if (!id) return;
-    var url = '/api/notes/verbale/' + encodeURIComponent(id) + '/download';
-    var win = window.open('', '_blank'); // فتح نافذة فارغة فوراً لتجنب حظر النوافذ المنبثقة
-    
-    if (win) {
-        win.document.write('<div style="font-family:sans-serif;text-align:center;margin-top:50px;color:#333;">جاري تحميل الوثيقة للطباعة...</div>');
-    }
-
-    try {
-        var token = getToken();
-        var headers = { 'Accept': '*/*' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-
-        var res = await fetch(url, { headers: headers, credentials: 'include' });
-        
-        if (!res.ok) {
-            throw new Error('فشل تحميل الملف: ' + res.status);
-        }
-
-        var blob = await res.blob();
-        var blobUrl = URL.createObjectURL(blob);
-
-        // فتح الملف في النافذة الجديدة
-        win.location.href = blobUrl;
-        
-        // محاولة الطباعة بعد التحميل
-        setTimeout(function() {
-            try { win.print(); } catch(e) {}
-        }, 1000);
-
-    } catch (err) {
-        if (win) {
-            win.document.body.innerHTML = '<div style="color:red;text-align:center;margin-top:50px;font-family:sans-serif;">حدث خطأ: ' + err.message + '</div>';
-        }
-        showToast(err.message, 'error');
-    }
-  };
 
   // ---------- Upload ----------
   function handleFileSelected(file) {
@@ -793,7 +749,80 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     verbaleCurrentLoaded = false; verbaleArchiveLoaded = false;
     await loadNoteVerbaleCurrent(); await loadNoteVerbaleArchive();
   }
-  function downloadArchiveItem(id) { if (id) window.open('/api/notes/verbale/' + encodeURIComponent(id) + '/download', '_blank'); }
+  // ---------- Authenticated document actions (view / download / print) ----------
+  var nvDocs = {};
+  function docBtns(id) {
+    var i = escapeHtml(id);
+    return '<button class="ab view" data-action="view" data-id="' + i + '" title="عرض"><i class="fas fa-eye"></i></button>' +
+      '<button class="ab download" data-action="download" data-id="' + i + '" title="تحميل"><i class="fas fa-download"></i></button>' +
+      '<button class="ab print" data-action="print" data-id="' + i + '" title="طباعة الوثيقة"><i class="fas fa-print"></i></button>';
+  }
+  function guessType(name, type) {
+    var n = (name || '').toLowerCase(), t = (type || '').toLowerCase();
+    if (t && t !== 'application/octet-stream') return t;
+    if (/\.pdf$/.test(n)) return 'application/pdf';
+    if (/\.png$/.test(n)) return 'image/png';
+    if (/\.(jpg|jpeg)$/.test(n)) return 'image/jpeg';
+    if (/\.webp$/.test(n)) return 'image/webp';
+    if (/\.gif$/.test(n)) return 'image/gif';
+    return t || 'application/octet-stream';
+  }
+  async function fetchDocBlob(id) {
+    var f = (nvDocs[id] && nvDocs[id].file) || {};
+    var urls = ['/api/notes/verbale/' + encodeURIComponent(id) + '/download'];
+    if (f.url) urls.push(f.url);
+    var lastErr = 'فشل تحميل الملف';
+    for (var i = 0; i < urls.length; i++) {
+      try {
+        var res = await fetcher(urls[i], { method: 'GET' });
+        if (res.ok) {
+          var ct = (res.headers.get('content-type') || '').toLowerCase();
+          if (ct.indexOf('application/json') !== -1) { lastErr = 'الخادم لم يُرجع الملف'; continue; }
+          return await res.blob();
+        }
+        lastErr = (res.status === 401 || res.status === 403) ? 'غير مصرح — أعد تسجيل الدخول ثم حاول مجدداً' : ('فشل تحميل الملف: ' + res.status);
+      } catch (e) { lastErr = e.message || lastErr; }
+    }
+    throw new Error(lastErr);
+  }
+  function saveBlob(blob, name) {
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name || 'document'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+  }
+  async function docAction(action, id) {
+    if (_isDestroyed || !id) return;
+    var f = (nvDocs[id] && nvDocs[id].file) || {}, name = f.originalName || 'document';
+    var kind = guessType(name, f.mimetype);
+    var previewable = /pdf|image\//.test(kind);
+    var win = null;
+    if (action === 'view' && previewable) win = window.open('', '_blank');
+    try {
+      var raw = await fetchDocBlob(id);
+      var type = guessType(name, raw.type);
+      var blob = raw.type === type ? raw : new Blob([raw], { type: type });
+      if (action === 'download' || !/pdf|image\//.test(type)) {
+        if (win) win.close();
+        saveBlob(blob, name);
+        if (action !== 'download') showToast('هذا النوع من الملفات لا يُعرض ولا يُطبع مباشرة، تم تحميله', 'info');
+        return;
+      }
+      var url = URL.createObjectURL(blob);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 120000);
+      if (action === 'view') { if (win) win.location.href = url; else window.open(url, '_blank'); return; }
+      var fr = document.createElement('iframe');
+      fr.style.cssText = 'position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none';
+      fr.onload = function () {
+        try { fr.contentWindow.focus(); fr.contentWindow.print(); }
+        catch (e) { window.open(url, '_blank'); }
+      };
+      fr.src = url; document.body.appendChild(fr);
+      setTimeout(function () { fr.remove(); }, 120000);
+    } catch (err) {
+      if (win) win.close();
+      showToast(err.message, 'error');
+    }
+  }
 
   async function promoteArchiveItem(id) {
     if (!canDeleteVerbale()) { showToast('ليس لديك صلاحية', 'error'); return; }
@@ -818,6 +847,7 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
   }
 
   // ---------- Print ----------
+  // ---------- Letterhead + document viewer ----------
   function lhDate() { return new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
   function letterheadHtml(title, editable) {
     return '<div class="lh"><div class="lh-r"><div class="a">الجمهورية التونسية</div><div class="b">وزارة الداخلية</div><div class="b">الإدارة العامة للحرس الوطني</div><div class="c">إدارة إسناد الوحدات البحرية</div></div>' +
@@ -879,11 +909,15 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     addSafeListener($('nvArchiveList'), 'click', function (e) {
       var b = e.target.closest('[data-action]'); if (!b) return;
       var a = b.getAttribute('data-action'), id = b.getAttribute('data-id');
-      if (a === 'download') downloadArchiveItem(id);
+      if (a === 'view' || a === 'download' || a === 'print') docAction(a, id);
       else if (a === 'promote') promoteArchiveItem(id);
       else if (a === 'delete') deleteArchiveItem(id);
     });
 
+    addSafeListener($('nvCurrentSection'), 'click', function (e) {
+      var b = e.target.closest('[data-action]'); if (!b) return;
+      docAction(b.getAttribute('data-action'), b.getAttribute('data-id'));
+    });
     $('nvLetterhead').innerHTML = letterheadHtml('سجل التقارير الفنية');
     loadNotes();
   }
