@@ -1,4 +1,4 @@
-<!-- public/pages/notes.html — v13.0 (Final) -->
+<!-- public/pages/notes.html — v14.0 (Final) -->
 <div id="page-notes" dir="rtl">
 <style>
 #page-notes{--gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.035);--line:rgba(255,255,255,.07);--tx:#e8edf5;--mut:rgba(255,255,255,.5);--ok:#22c55e;--bad:#f87171;--info:#60a5fa;
@@ -683,17 +683,43 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     body.innerHTML = html;
   }
 
-  // دالة الطباعة المخصصة للوثيقة
-  window.printDocument = function(id) {
+  // دالة الطباعة المخصصة للوثيقة (تستخدم fetch لتجاوز مشكلة الـ Token)
+  window.printDocument = async function(id) {
     if (!id) return;
     var url = '/api/notes/verbale/' + encodeURIComponent(id) + '/download';
-    var win = window.open(url, '_blank');
+    var win = window.open('', '_blank'); // فتح نافذة فارغة فوراً لتجنب حظر النوافذ المنبثقة
+    
     if (win) {
-      win.onload = function() {
-        try { win.print(); } catch(e) {}
-      };
-      // بعض المتصفحات تحتاج تأخيراً بسيطاً لتحميل ملف PDF قبل الطباعة
-      setTimeout(function() { try { win.print(); } catch(e) {} }, 1000);
+        win.document.write('<div style="font-family:sans-serif;text-align:center;margin-top:50px;color:#333;">جاري تحميل الوثيقة للطباعة...</div>');
+    }
+
+    try {
+        var token = getToken();
+        var headers = { 'Accept': '*/*' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        var res = await fetch(url, { headers: headers, credentials: 'include' });
+        
+        if (!res.ok) {
+            throw new Error('فشل تحميل الملف: ' + res.status);
+        }
+
+        var blob = await res.blob();
+        var blobUrl = URL.createObjectURL(blob);
+
+        // فتح الملف في النافذة الجديدة
+        win.location.href = blobUrl;
+        
+        // محاولة الطباعة بعد التحميل
+        setTimeout(function() {
+            try { win.print(); } catch(e) {}
+        }, 1000);
+
+    } catch (err) {
+        if (win) {
+            win.document.body.innerHTML = '<div style="color:red;text-align:center;margin-top:50px;font-family:sans-serif;">حدث خطأ: ' + err.message + '</div>';
+        }
+        showToast(err.message, 'error');
     }
   };
 
