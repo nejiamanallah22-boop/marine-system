@@ -1,206 +1,177 @@
-<!-- public/pages/notes.html — v15.0 (Final Production) -->
+<!-- public/pages/notes.html -->
 <div id="page-notes" dir="rtl">
 <style>
-#page-notes{--gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.035);--line:rgba(255,255,255,.07);--tx:#e8edf5;--mut:rgba(255,255,255,.5);--ok:#22c55e;--bad:#f87171;--info:#60a5fa;
-width:100%;max-width:100%;padding:20px;margin:0;font-family:'Cairo','Tajawal','Segoe UI',system-ui,sans-serif;color:var(--tx);min-height:100vh;position:relative;z-index:2}
-#page-notes *,#page-notes *::before,#page-notes *::after{box-sizing:border-box}
-#page-notes button,#page-notes input,#page-notes select,#page-notes textarea{font-family:inherit}
-#page-notes :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-#page-notes .print-only{display:none}
+/* كل القواعد محصورة داخل #page-notes (CSS Nesting) حتى لا تتسرب إلى بقية الصفحات */
+#page-notes{
+  --gold:#e6b31e;--gold2:#f5d76e;--bg:#0a0e1a;--panel:rgba(255,255,255,.04);--line:rgba(255,255,255,.08);
+  --tx:#e8edf5;--mut:rgba(255,255,255,.55);--ok:#22c55e;--ok2:#4ade80;--bad:#f87171;--info:#60a5fa;--warn:#fbbf24;
+  width:100%;max-width:100%;margin:0;padding:22px;position:relative;z-index:2;min-height:100vh;
+  font-family:'Cairo','Tajawal','Segoe UI',system-ui,sans-serif;color:var(--tx);
+  background-color:var(--bg);
+  background-image:radial-gradient(ellipse at 15% 0%,rgba(230,179,30,.09),transparent 55%),radial-gradient(ellipse at 90% 100%,rgba(167,139,250,.06),transparent 55%);
 
-/* Header */
-.np-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 22px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:18px}
-.np-brand{display:flex;align-items:center;gap:14px}
-.np-logo{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:grid;place-items:center;color:#0a1628;font-size:20px;overflow:hidden}
-.np-logo img{width:100%;height:100%;object-fit:cover;display:none}
-.np-logo.has-logo{background:transparent}.np-logo.has-logo img{display:block}.np-logo.has-logo i{display:none}
-.np-brand h2{margin:0;font-size:22px;font-weight:800;color:var(--gold2)}
-.np-brand p{margin:2px 0 0;font-size:12px;color:var(--mut)}
+  *,*::before,*::after{box-sizing:border-box}
+  button,input,select,textarea{font-family:inherit}
+  select option{background:#121829;color:var(--tx)}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  [hidden]{display:none!important}
 
-/* Tabs */
-.np-tabs{display:flex;gap:6px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:18px}
-.np-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border:0;border-radius:10px;background:transparent;color:var(--mut);font-size:14px;font-weight:700;cursor:pointer;transition:background .25s,color .25s}
-.np-tab:hover{background:rgba(255,255,255,.05);color:#fff}
-.np-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
-.np-badge{background:rgba(0,0,0,.25);padding:1px 9px;border-radius:10px;font-size:11px;font-weight:800}
-.np-panel{display:none}.np-panel.active{display:block}
+  /* Header */
+  .np-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 24px;margin-bottom:18px;border-radius:16px;
+    background:linear-gradient(135deg,rgba(230,179,30,.12),rgba(255,255,255,.03));border:1px solid rgba(230,179,30,.25);box-shadow:0 10px 40px rgba(0,0,0,.28)}
+  .np-brand{display:flex;align-items:center;gap:14px}
+  .np-logo{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:grid;place-items:center;color:#0a1628;font-size:21px;overflow:hidden;box-shadow:0 0 0 3px rgba(230,179,30,.25),0 0 30px rgba(230,179,30,.25)}
+  .np-logo img{width:100%;height:100%;object-fit:cover;display:none}
+  .np-logo.has-logo{background:transparent}.np-logo.has-logo img{display:block}.np-logo.has-logo i{display:none}
+  .np-brand h2{margin:0;font-size:23px;font-weight:800;background:linear-gradient(135deg,var(--gold2),#fff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .np-brand p{margin:3px 0 0;font-size:12px;color:var(--mut)}
 
-/* Buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 18px;border:0;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s,background .2s}
-.btn:disabled{opacity:.6;cursor:not-allowed}
-.btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
-.btn.success{background:linear-gradient(135deg,var(--ok),#4ade80);color:#0a1628}
-.btn.danger{background:linear-gradient(135deg,#ef4444,var(--bad));color:#fff}
-.btn.secondary{background:var(--panel);border:1px solid var(--line);color:var(--mut)}
-.btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(230,179,30,.2)}
-.btn.secondary:hover{color:#fff}
+  /* Tabs */
+  .np-tabs{display:flex;gap:6px;padding:6px;margin-bottom:18px;border-radius:14px;background:rgba(10,16,32,.65);border:1px solid var(--line);backdrop-filter:blur(12px)}
+  .np-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border:0;border-radius:10px;background:transparent;color:var(--mut);font-size:14px;font-weight:700;cursor:pointer;transition:background .25s,color .25s,box-shadow .25s}
+  .np-tab:hover{background:rgba(255,255,255,.05);color:#fff}
+  .np-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628;box-shadow:0 6px 22px rgba(230,179,30,.35)}
+  .np-badge{background:rgba(0,0,0,.25);padding:1px 9px;border-radius:10px;font-size:11px;font-weight:800}
+  .np-panel{display:none}.np-panel.active{display:block}
 
-/* Cards / forms */
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden}
-.card.top::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
-.card.green::before{background:linear-gradient(90deg,var(--ok),#4ade80)}
-.card h3{margin:0 0 16px;font-size:16px;font-weight:700;color:var(--gold2);display:flex;align-items:center;gap:8px}
-.card.green h3{color:#4ade80}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px}
-.fg{display:flex;flex-direction:column;gap:6px}.fg.full{grid-column:1/-1}
-.fg label{font-size:12px;font-weight:600;color:var(--mut)}.req{color:#ef4444}
-.fg input,.fg textarea,.fg select,.nv-filter{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:rgba(10,16,32,.6);color:var(--tx);font-size:14px;transition:border-color .2s,box-shadow .2s}
-.fg input:focus,.fg textarea:focus,.fg select:focus,.nv-filter:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 4px rgba(230,179,30,.08)}
-.fg textarea{resize:vertical;min-height:80px}
-.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 18px;border:0;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s,filter .2s}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
+  .btn.success{background:linear-gradient(135deg,var(--ok),var(--ok2));color:#0a1628}
+  .btn.danger{background:linear-gradient(135deg,#ef4444,var(--bad));color:#fff}
+  .btn.secondary{background:var(--panel);border:1px solid var(--line);color:var(--mut)}
+  .btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(230,179,30,.2)}
+  .btn.secondary:hover{color:#fff}
 
-/* Notes */
-.note-list{display:flex;flex-direction:column;gap:14px}
-.note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
-.note::before{content:'';position:absolute;inset:0 0 0 auto;width:3px;background:var(--gold)}
-.note.p-مهم::before{background:#fbbf24}.note.p-عاجل::before{background:var(--bad)}
-.note:hover{border-color:rgba(230,179,30,.25)}
-.note-h{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.note-t{margin:0;font-size:16px;font-weight:700;color:#fff;flex:1;min-width:200px}
-.meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.05);color:var(--mut)}
-.chip i{color:var(--gold)}
-.chip.urgent{background:rgba(239,68,68,.15);color:var(--bad);font-weight:600}.chip.important{background:rgba(245,158,11,.15);color:#fbbf24;font-weight:600}
-.note-c{font-size:14px;line-height:1.8;color:rgba(255,255,255,.7);white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
-.note-f{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
-.btn-sm{padding:5px 12px;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:5px;align-items:center;transition:background .2s}
-.btn-sm.edit{background:rgba(96,165,250,.12);color:var(--info)}.btn-sm.edit:hover{background:rgba(96,165,250,.25)}
-.btn-sm.delete{background:rgba(248,113,113,.12);color:var(--bad)}.btn-sm.delete:hover{background:rgba(248,113,113,.25)}
+  /* Cards / forms */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden;backdrop-filter:blur(12px);box-shadow:0 8px 30px rgba(0,0,0,.18)}
+  .card.top::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+  .card.green::before{background:linear-gradient(90deg,var(--ok),var(--ok2))}
+  .card h3{margin:0 0 16px;font-size:16px;font-weight:700;color:var(--gold2);display:flex;align-items:center;gap:8px}
+  .card.green h3{color:var(--ok2)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px}
+  .fg{display:flex;flex-direction:column;gap:6px}.fg.full{grid-column:1/-1}
+  .fg label{font-size:12px;font-weight:600;color:var(--mut)}.req{color:#ef4444}
+  .fg input,.fg textarea,.fg select,.np-filter{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:rgba(10,16,32,.6);color:var(--tx);font-size:14px;transition:border-color .2s,box-shadow .2s}
+  .fg input:focus,.fg textarea:focus,.fg select:focus,.np-filter:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 4px rgba(230,179,30,.1)}
+  .fg textarea{resize:vertical;min-height:80px}
+  .counter{font-size:11px;color:var(--mut);text-align:left}
+  .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+  .hint{margin:-6px 0 16px;font-size:12px;color:var(--mut);display:flex;gap:8px;align-items:center}.hint i{color:var(--gold)}
 
-/* Current document */
-.nv-current{background:linear-gradient(135deg,rgba(230,179,30,.09),rgba(245,215,110,.03));border:2px solid rgba(230,179,30,.28);border-radius:16px;padding:24px 28px;margin-bottom:18px;position:relative;overflow:hidden}
-.nv-current-h{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.nv-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:linear-gradient(135deg,var(--ok),#4ade80);color:#0a1628;border-radius:20px;font-size:12px;font-weight:800}
-.nv-title{font-size:22px;font-weight:800;color:#fff;margin:0 0 8px}
-.nv-desc{font-size:13px;color:var(--mut);margin:0 0 16px;line-height:1.7}
-.nv-file{display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(10,16,32,.5);border:1px solid rgba(230,179,30,.18);border-radius:12px;margin-bottom:16px}
-.ficon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:21px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628}
-.fname{font-size:14px;font-weight:700;color:#fff;word-break:break-word}.fsize{font-size:11px;color:var(--mut)}
-.nv-empty{border:2px dashed rgba(230,179,30,.3);border-radius:16px;padding:44px 24px;text-align:center;margin-bottom:18px}
-.nv-empty i{font-size:52px;color:rgba(230,179,30,.35);display:block;margin-bottom:12px}
-.nv-empty h3{margin:0 0 6px;font-size:18px;color:rgba(255,255,255,.7)}.nv-empty p{margin:0;font-size:13px;color:var(--mut)}
+  /* Notes */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:12px 16px;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:12px}
+  .np-filter{flex:1;min-width:150px;font-size:13px;padding:8px 14px}
+  .note-list{display:flex;flex-direction:column;gap:14px}
+  .note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
+  .note::before{content:'';position:absolute;inset:0 0 0 auto;width:4px;background:var(--gold)}
+  .note.p-important::before{background:var(--warn)}.note.p-urgent::before{background:var(--bad)}
+  .note:hover{border-color:rgba(230,179,30,.3);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .note-h{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .note-t{margin:0;font-size:16px;font-weight:700;color:#fff;flex:1;min-width:200px;word-break:break-word}
+  .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--mut)}
+  .chip i{color:var(--gold)}
+  .chip.urgent{background:rgba(239,68,68,.15);color:var(--bad);font-weight:600}
+  .chip.important{background:rgba(245,158,11,.15);color:var(--warn);font-weight:600}
+  .note-c{font-size:14px;line-height:1.9;color:rgba(255,255,255,.75);white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
+  .note-f{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
+  .btn-sm{padding:5px 12px;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:5px;align-items:center;transition:background .2s}
+  .btn-sm.edit{background:rgba(96,165,250,.12);color:var(--info)}.btn-sm.edit:hover{background:rgba(96,165,250,.25)}
+  .btn-sm.delete{background:rgba(248,113,113,.12);color:var(--bad)}.btn-sm.delete:hover{background:rgba(248,113,113,.25)}
 
-/* Upload */
-.dropzone{border:2px dashed rgba(255,255,255,.18);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;background:rgba(10,16,32,.4);margin-bottom:16px;transition:border-color .2s,background .2s}
-.dropzone:hover,.dropzone.dragover{border-color:var(--ok);background:rgba(34,197,94,.07)}
-.dropzone i{font-size:40px;color:rgba(34,197,94,.7);display:block;margin-bottom:10px}
-.dropzone h4{margin:0 0 6px;font-size:15px;color:#fff}.dropzone p{margin:0;font-size:12px;color:var(--mut)}
-.preview{display:none;align-items:center;gap:14px;padding:14px 18px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;margin-bottom:16px}
-.preview.show{display:flex}.preview .info{flex:1;min-width:0}
-.preview .ficon{width:42px;height:42px;font-size:18px;background:linear-gradient(135deg,var(--ok),#4ade80)}
-.icon-btn{width:34px;height:34px;border:0;border-radius:8px;display:grid;place-items:center;cursor:pointer;background:rgba(239,68,68,.15);color:var(--bad)}
-.progress{display:none;padding:12px 16px;background:rgba(230,179,30,.08);border-radius:10px;margin-bottom:16px}.progress.show{display:block}
-.bar{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:8px}
-.bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .25s}
-.ptext{font-size:11px;text-align:center;color:var(--gold2);font-weight:600}
+  /* Current report */
+  .rt-current{background:linear-gradient(135deg,rgba(230,179,30,.09),rgba(10,16,32,.5));border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:22px 24px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:0 12px 44px rgba(230,179,30,.1)}
+  .rt-current::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
+  .rt-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .rt-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .nv-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:linear-gradient(135deg,var(--ok),var(--ok2));color:#0a1628;border-radius:20px;font-size:12px;font-weight:800}
+  .st{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700}
+  .st-ok{background:rgba(34,197,94,.15);color:var(--ok2)}.st-warn{background:rgba(245,158,11,.15);color:var(--warn)}.st-late{background:rgba(239,68,68,.15);color:var(--bad)}
+  .cycle{margin-bottom:18px}
+  .cycle-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:700;margin-bottom:8px}
+  .cycle-top.sub{margin:8px 0 0;font-weight:500;color:var(--mut);font-size:11px}
+  .cycle-bar{height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
+  .cycle-fill{height:100%;border-radius:6px;transition:width .6s}
+  .cycle-fill.ok{background:linear-gradient(90deg,var(--ok),var(--ok2))}.cycle-fill.warn{background:linear-gradient(90deg,#f59e0b,var(--warn))}.cycle-fill.late{background:linear-gradient(90deg,#ef4444,var(--bad))}
+  .nv-empty{border:2px dashed rgba(230,179,30,.3);border-radius:16px;padding:44px 24px;text-align:center;margin-bottom:18px}
+  .nv-empty i{font-size:52px;color:rgba(230,179,30,.35);display:block;margin-bottom:12px}
+  .nv-empty h3{margin:0 0 6px;font-size:18px;color:rgba(255,255,255,.75)}.nv-empty p{margin:0;font-size:13px;color:var(--mut)}
 
-/* Archive table */
-.arch-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:14px}
-.arch-head h3{margin:0;font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
-.arch-head h3 i{color:var(--gold)}.arch-head .count{background:rgba(230,179,30,.15);color:var(--gold2);padding:2px 10px;border-radius:20px;font-size:11px;font-weight:800}
-.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:14px 18px;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:12px}
-.nv-filter{flex:1;min-width:150px;font-size:13px;padding:8px 14px}
-.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
-table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
-.nv-table th{padding:13px 16px;text-align:right;font-size:12px;font-weight:800;color:var(--gold2);background:rgba(230,179,30,.08);border-bottom:1px solid rgba(230,179,30,.25);white-space:nowrap}
-.nv-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:middle}
-.nv-table tbody tr{transition:background .2s}.nv-table tbody tr:hover{background:rgba(230,179,30,.06)}
-.nv-table tbody tr:last-child td{border-bottom:0}
-.doc-cell{display:flex;align-items:center;gap:12px}
-.doc-cell .ficon{width:38px;height:38px;font-size:16px;border-radius:10px;background:linear-gradient(135deg,#475569,#1e293b);color:var(--gold2)}
-.doc-title{font-weight:700;color:#fff;word-break:break-word}.doc-desc{font-size:11px;color:var(--mut);margin-top:2px}
-.num{color:var(--mut);font-weight:700;text-align:center}
-.row-actions{display:flex;gap:6px}
-.ab{width:34px;height:34px;border:0;border-radius:9px;display:grid;place-items:center;cursor:pointer;font-size:13px;text-decoration:none;transition:background .2s}
-.ab.view{background:rgba(96,165,250,.12);color:var(--info)}.ab.download{background:rgba(34,197,94,.12);color:#4ade80}
-.ab.promote{background:rgba(230,179,30,.12);color:var(--gold2)}.ab.delete{background:rgba(248,113,113,.12);color:var(--bad)}
-.ab.print{background:rgba(167,139,250,.12);color:#a78bfa}
-.ab:hover{filter:brightness(1.4)}
+  /* Upload */
+  .dropzone{border:2px dashed rgba(255,255,255,.18);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;background:rgba(10,16,32,.4);margin-bottom:16px;transition:border-color .2s,background .2s}
+  .dropzone:hover,.dropzone.dragover{border-color:var(--ok);background:rgba(34,197,94,.07)}
+  .dropzone i{font-size:40px;color:rgba(34,197,94,.7);display:block;margin-bottom:10px}
+  .dropzone h4{margin:0 0 6px;font-size:15px;color:#fff}.dropzone p{margin:0;font-size:12px;color:var(--mut)}
+  .preview{display:none;align-items:center;gap:14px;padding:14px 18px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:10px;margin-bottom:16px}
+  .preview.show{display:flex}.preview .info{flex:1;min-width:0}
+  .fname{font-size:14px;font-weight:700;color:#fff;word-break:break-word}.fsize{font-size:11px;color:var(--mut)}
+  .ficon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:18px;flex-shrink:0;background:linear-gradient(135deg,var(--ok),var(--ok2));color:#0a1628}
+  .icon-btn{width:34px;height:34px;border:0;border-radius:8px;display:grid;place-items:center;cursor:pointer;background:rgba(239,68,68,.15);color:var(--bad)}
+  .progress{display:none;padding:12px 16px;background:rgba(230,179,30,.08);border-radius:10px;margin-bottom:16px}.progress.show{display:block}
+  .bar{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:8px}
+  .bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .25s}
+  .ptext{font-size:11px;text-align:center;color:var(--gold2);font-weight:600}
 
-/* States */
-.empty{text-align:center;padding:50px 20px;color:var(--mut)}
-.empty i{font-size:3rem;color:rgba(255,255,255,.1);display:block;margin-bottom:10px}.empty h3{margin:0 0 4px;font-size:1rem;color:rgba(255,255,255,.55)}.empty p{margin:0;font-size:.8rem}
-.empty.err h3,.empty.err i{color:var(--bad)}
-.sk{border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:sk 1.3s linear infinite}
-@keyframes sk{to{background-position:-200% 0}}
-.sk-card{height:96px;margin-bottom:14px;border-radius:14px}.sk-row{height:46px;margin:10px 14px}
+  /* Archive */
+  .arch-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:14px}
+  .arch-head h3{margin:0;font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
+  .arch-head h3 i{color:var(--gold)}.count{background:rgba(230,179,30,.15);color:var(--gold2);padding:2px 10px;border-radius:20px;font-size:11px;font-weight:800}
+  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel);max-height:70vh;box-shadow:0 10px 36px rgba(0,0,0,.25)}
+  .table-wrap.cur{max-height:none;box-shadow:none}
+  table.nv-table{width:100%;border-collapse:collapse;min-width:760px}
+  .nv-table th{padding:13px 16px;text-align:right;font-size:12px;font-weight:800;color:var(--gold2);white-space:nowrap;position:sticky;top:0;z-index:2;background:#1b1f2c;box-shadow:inset 0 -1px 0 rgba(230,179,30,.35)}
+  .nv-table td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .nv-table tbody tr{transition:background .2s}
+  .nv-table tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
+  .nv-table tbody tr:hover{background:rgba(230,179,30,.1)}
+  .nv-table tbody tr:last-child td{border-bottom:0}
+  .doc-cell{display:flex;align-items:center;gap:12px}
+  .doc-cell .ficon{width:38px;height:38px;font-size:16px;border-radius:10px;background:linear-gradient(135deg,#475569,#1e293b);color:var(--gold2);box-shadow:inset 0 0 0 1px rgba(245,215,110,.25)}
+  .doc-title{font-weight:700;color:#fff;word-break:break-word}.doc-desc{font-size:11px;color:var(--mut);margin-top:2px}
+  .num{color:var(--mut);font-weight:700;text-align:center!important;width:56px}
+  .row-actions{display:flex;gap:6px}
+  .ab{width:34px;height:34px;border:0;border-radius:9px;display:grid;place-items:center;cursor:pointer;font-size:13px;transition:transform .15s,filter .15s}
+  .ab:hover{filter:brightness(1.4);transform:translateY(-2px)}
+  .ab:disabled{opacity:.6;cursor:wait;transform:none}
+  .ab.view{background:rgba(96,165,250,.12);color:var(--info)}.ab.download{background:rgba(34,197,94,.12);color:var(--ok2)}
+  .ab.promote{background:rgba(230,179,30,.12);color:var(--gold2)}.ab.delete{background:rgba(248,113,113,.12);color:var(--bad)}
+  .ab.print{background:rgba(167,139,250,.12);color:#a78bfa}
 
-/* Toast + dialog */
-.np-toast{position:fixed;bottom:24px;left:24px;max-width:400px;padding:12px 20px;border-radius:12px;color:#fff;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.35);animation:tIn .35s ease-out;direction:rtl}
-.np-toast.success{background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4)}.np-toast.error{background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4)}
-.np-toast.warning{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4)}.np-toast.info{background:rgba(96,165,250,.2);border:1px solid rgba(96,165,250,.4)}
-.np-toast.out{opacity:0;transform:translateY(16px);transition:all .35s}
-@keyframes tIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.np-overlay{position:fixed;inset:0;background:rgba(5,8,16,.75);backdrop-filter:blur(4px);z-index:99998;display:grid;place-items:center;padding:20px;animation:oIn .2s}
-@keyframes oIn{from{opacity:0}to{opacity:1}}
-.np-dialog{width:100%;max-width:420px;background:#121829;border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:26px;text-align:center;direction:rtl;font-family:'Cairo','Tajawal',sans-serif;color:var(--tx)}
-.np-dialog .di{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:rgba(230,179,30,.15);color:var(--gold2)}
-.np-dialog.danger .di{background:rgba(239,68,68,.15);color:var(--bad)}
-.np-dialog h4{margin:0 0 8px;font-size:18px}.np-dialog p{margin:0 0 20px;font-size:13px;color:var(--mut);line-height:1.7}
-.np-dialog .actions{justify-content:center}
+  /* States */
+  .empty{text-align:center;padding:50px 20px;color:var(--mut)}
+  .empty i{font-size:3rem;color:rgba(255,255,255,.12);display:block;margin-bottom:10px}
+  .empty h3{margin:0 0 4px;font-size:1rem;color:rgba(255,255,255,.6)}.empty p{margin:0;font-size:.8rem}
+  .empty.err h3,.empty.err i{color:var(--bad)}
+  .empty .btn{margin-top:14px}
+  .sk{border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:np-sk 1.3s linear infinite}
+  .sk-card{height:96px;margin-bottom:14px;border-radius:14px}.sk-row{height:46px;margin:10px 14px}
+  @keyframes np-sk{to{background-position:-200% 0}}
 
-/* ===== Design refinements ===== */
-body{background:#0a0e1a}
-#page-notes{background:radial-gradient(ellipse at 15% 0%,rgba(230,179,30,.08),transparent 55%),radial-gradient(ellipse at 90% 100%,rgba(167,139,250,.05),transparent 55%)}
-.np-header{background:linear-gradient(135deg,rgba(230,179,30,.1),rgba(255,255,255,.03));border-color:rgba(230,179,30,.22);box-shadow:0 10px 40px rgba(0,0,0,.25)}
-.np-brand h2{background:linear-gradient(135deg,var(--gold2),#fff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.np-logo{box-shadow:0 0 0 3px rgba(230,179,30,.25),0 0 30px rgba(230,179,30,.25)}
-.np-tabs{background:rgba(10,16,32,.6);backdrop-filter:blur(12px)}
-.np-tab.active{box-shadow:0 6px 22px rgba(230,179,30,.35)}
-.card{background:rgba(255,255,255,.04);backdrop-filter:blur(12px);box-shadow:0 8px 30px rgba(0,0,0,.18)}
-.note{transition:transform .2s,border-color .2s,box-shadow .2s}
-.note:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.note::before{width:4px}
-.table-wrap{max-height:70vh;overflow:auto;box-shadow:0 10px 36px rgba(0,0,0,.25)}
-.nv-table thead th{position:sticky;top:0;z-index:2;background:#1b1f2c;box-shadow:inset 0 -1px 0 rgba(230,179,30,.35)}
-.nv-table tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
-.nv-table tbody tr:hover{background:rgba(230,179,30,.1)}
-.num{width:56px}
-.hint{margin:-6px 0 16px;font-size:12px;color:var(--mut);display:flex;gap:8px;align-items:center}.hint i{color:var(--gold)}
-.rt-current{background:linear-gradient(135deg,rgba(230,179,30,.09),rgba(10,16,32,.5));border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:22px 24px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:0 12px 44px rgba(230,179,30,.1)}
-.rt-current::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
-.rt-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}.rt-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.st{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700}
-.st-ok{background:rgba(34,197,94,.15);color:#4ade80}.st-warn{background:rgba(245,158,11,.15);color:#fbbf24}.st-late{background:rgba(239,68,68,.15);color:var(--bad)}
-.cycle{margin-bottom:18px}.cycle-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--tx);margin-bottom:8px}.cycle-top.sub{margin:8px 0 0;font-weight:500;color:var(--mut);font-size:11px}
-.cycle-bar{height:10px;background:rgba(255,255,255,.07);border-radius:6px;overflow:hidden}
-.cycle-fill{height:100%;border-radius:6px;transition:width .6s}.cycle-fill.ok{background:linear-gradient(90deg,var(--ok),#4ade80)}.cycle-fill.warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)}.cycle-fill.late{background:linear-gradient(90deg,#ef4444,var(--bad))}
-.table-wrap.cur{max-height:none}
-.rt-current .nv-table{min-width:700px}
-.doc-cell .ficon{box-shadow:inset 0 0 0 1px rgba(245,215,110,.25)}
-.ab{transition:transform .15s,filter .15s}.ab:hover{transform:translateY(-2px)}
-.nv-current{box-shadow:0 12px 44px rgba(230,179,30,.12)}
-.nv-current::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
-.lh{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;color:#000;line-height:1.9;margin-bottom:10px}
-.lh-r{text-align:center;min-width:240px}.lh-r .a{font-size:15px;font-weight:800}.lh-r .b{font-size:14px;font-weight:700}.lh-r .c{font-size:13px}
-.lh-l{text-align:right;font-size:13px;padding-top:4px}.lh-num{display:inline-block;min-width:90px;border-bottom:1px dotted #000;outline:0}
-.lh-title{font-size:19px;font-weight:800;text-align:center;margin:12px 0 16px;padding:8px 0;border-top:2px solid #000;border-bottom:2px solid #000;color:#000}
-@media (prefers-reduced-motion:reduce){#page-notes *{transition:none!important;animation:none!important}}
-@media (max-width:768px){
-#page-notes{padding:12px}.np-header{padding:12px 16px}.np-brand h2{font-size:17px}
-.grid{grid-template-columns:1fr}.actions .btn{flex:1}
-.np-tab{padding:10px;font-size:13px}.nv-current{padding:18px}.nv-title{font-size:18px}
-.np-toast{left:12px;right:12px;max-width:none}}
+  /* Toast + dialog */
+  .np-toast{position:fixed;bottom:24px;left:24px;max-width:400px;padding:12px 20px;border-radius:12px;color:#fff;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.35);animation:np-in .35s ease-out;direction:rtl;background:rgba(18,24,41,.92)}
+  .np-toast.success{border:1px solid rgba(34,197,94,.5)}.np-toast.error{border:1px solid rgba(239,68,68,.5)}
+  .np-toast.warning{border:1px solid rgba(245,158,11,.5)}.np-toast.info{border:1px solid rgba(96,165,250,.5)}
+  .np-toast.out{opacity:0;transform:translateY(16px);transition:all .35s}
+  @keyframes np-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .np-overlay{position:fixed;inset:0;background:rgba(5,8,16,.75);backdrop-filter:blur(4px);z-index:99998;display:grid;place-items:center;padding:20px;animation:np-fade .2s}
+  @keyframes np-fade{from{opacity:0}to{opacity:1}}
+  .np-dialog{width:100%;max-width:420px;background:#121829;border:1px solid rgba(230,179,30,.3);border-radius:16px;padding:26px;text-align:center;direction:rtl;color:var(--tx)}
+  .np-dialog .di{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:rgba(230,179,30,.15);color:var(--gold2)}
+  .np-dialog.danger .di{background:rgba(239,68,68,.15);color:var(--bad)}
+  .np-dialog h4{margin:0 0 8px;font-size:18px}.np-dialog p{margin:0 0 20px;font-size:13px;color:var(--mut);line-height:1.7}
+  .np-dialog .actions{justify-content:center}
 
-/* ===== PRINT: الترويسة + الجدول ===== */
-@media print{
-@page{size:A4;margin:14mm}
-body{background:#fff!important}
-body *{visibility:hidden!important}
-#nvPrintWrapper, #nvPrintWrapper *{visibility:visible!important}
-#nvPrintWrapper{position:absolute;inset:0 0 auto 0;width:100%;background:#fff!important;color:#000!important;direction:rtl}
-#nvPrintWrapper .print-only{display:block!important}
-#nvPrintWrapper .table-wrap{overflow:visible;max-height:none;border:0;background:#fff;box-shadow:none}
-table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:collapse}
-.nv-table thead{display:table-header-group}
-.nv-table thead th{position:static;box-shadow:none}
-.nv-table th,.nv-table td{border:1px solid #000!important;background:#fff!important;color:#000!important;padding:6px 8px;font-size:11px}
-.nv-table th{font-weight:800;background:#e5e5e5!important}
-.nv-table tr{page-break-inside:avoid}
-.nv-table .col-act,.ficon{display:none!important}
-.chip{background:none!important;color:#000!important;padding:0}.chip i{display:none}
-.doc-title,.doc-desc{color:#000!important}
-.lh,.lh *{color:#000!important}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (max-width:768px){
+    padding:12px;
+    .np-header{padding:12px 16px}.np-brand h2{font-size:18px}
+    .grid{grid-template-columns:1fr}.actions .btn{flex:1}
+    .np-tab{padding:10px;font-size:13px}.np-tab span:not(.np-badge){font-size:12px}
+    .rt-current{padding:16px}
+    .np-toast{left:12px;right:12px;max-width:none}
+  }
 }
 </style>
 
@@ -213,18 +184,18 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
 </div>
 
 <!-- TABS -->
-<div class="np-tabs" role="tablist">
-  <button class="np-tab active" data-tab="notes" role="tab"><i class="fas fa-sticky-note"></i><span>الملاحظات</span><span class="np-badge" id="tabNotesCount">0</span></button>
-  <button class="np-tab" data-tab="verbale" role="tab"><i class="fas fa-file-alt"></i><span>التقرير الفني الأسبوعي</span><span class="np-badge" id="tabVerbaleCount">0</span></button>
+<div class="np-tabs" role="tablist" aria-label="أقسام الصفحة">
+  <button class="np-tab active" id="tab-notes" data-tab="notes" role="tab" aria-selected="true" aria-controls="panel-notes"><i class="fas fa-sticky-note"></i><span>الملاحظات</span><span class="np-badge" id="tabNotesCount">0</span></button>
+  <button class="np-tab" id="tab-verbale" data-tab="verbale" role="tab" aria-selected="false" aria-controls="panel-verbale" tabindex="-1"><i class="fas fa-file-alt"></i><span>التقرير الفني الأسبوعي</span><span class="np-badge" id="tabVerbaleCount">0</span></button>
 </div>
 
 <!-- PANEL: NOTES -->
-<div class="np-panel active" id="panel-notes">
+<div class="np-panel active" id="panel-notes" role="tabpanel" aria-labelledby="tab-notes">
   <div class="card top" id="addNoteCard">
     <h3 id="formTitle"><i class="fas fa-pen"></i> إضافة ملاحظة جديدة</h3>
     <div class="grid">
       <div class="fg full"><label for="noteTitle">العنوان <span class="req">*</span></label><input type="text" id="noteTitle" placeholder="عنوان الملاحظة..." maxlength="200"></div>
-      <div class="fg full"><label for="noteContent">المحتوى <span class="req">*</span></label><textarea id="noteContent" rows="4" placeholder="نص الملاحظة..." maxlength="5000"></textarea></div>
+      <div class="fg full"><label for="noteContent">المحتوى <span class="req">*</span></label><textarea id="noteContent" rows="4" placeholder="نص الملاحظة..." maxlength="5000"></textarea><div class="counter" id="noteCounter">0 / 5000</div></div>
       <div class="fg"><label for="noteDate">التاريخ</label><input type="date" id="noteDate"></div>
       <div class="fg"><label for="notePriority">الأولوية</label>
         <select id="notePriority"><option value="عادي">📌 عادي</option><option value="مهم">⚠️ مهم</option><option value="عاجل">🚨 عاجل</option></select></div>
@@ -234,22 +205,28 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
       <button class="btn success" id="saveNoteBtn"><i class="fas fa-save"></i> حفظ</button>
     </div>
   </div>
-  <div class="note-list" id="notesList"></div>
+  <div class="toolbar">
+    <input type="search" class="np-filter" id="noteSearch" placeholder="🔍 بحث في الملاحظات..." aria-label="بحث في الملاحظات">
+    <select class="np-filter" id="noteFilterPriority" aria-label="تصفية حسب الأولوية">
+      <option value="all">كل الأولويات</option><option value="عاجل">🚨 عاجل</option><option value="مهم">⚠️ مهم</option><option value="عادي">📌 عادي</option>
+    </select>
+  </div>
+  <div class="note-list" id="notesList" aria-live="polite"></div>
 </div>
 
 <!-- PANEL: VERBALE -->
-<div class="np-panel" id="panel-verbale">
+<div class="np-panel" id="panel-verbale" role="tabpanel" aria-labelledby="tab-verbale">
   <div id="nvCurrentSection"></div>
 
   <div class="card top green" id="nvUploadCard">
     <h3><i class="fas fa-cloud-upload-alt"></i> رفع تقرير الأسبوع الجديد</h3>
     <p class="hint"><i class="fas fa-info-circle"></i> عند رفع تقرير جديد يحلّ محل التقرير الحالي، وينتقل السابق إلى الأرشيف تلقائياً.</p>
-    <div class="dropzone" id="nvDropzone" tabindex="0" role="button">
+    <div class="dropzone" id="nvDropzone" tabindex="0" role="button" aria-label="اختيار ملف للرفع">
       <i class="fas fa-cloud-upload-alt"></i><h4>اسحب الملف هنا أو انقر للاختيار</h4><p>PDF, Word, Excel, صور — حتى 25 MB</p>
     </div>
-    <input type="file" id="nvFileInput" accept="*/*" hidden>
+    <input type="file" id="nvFileInput" hidden>
     <div class="preview" id="nvFilePreview">
-      <div class="ficon"><i class="fas fa-file"></i></div>
+      <div class="ficon"><i class="fas fa-file" id="nvFileIcon"></i></div>
       <div class="info"><div class="fname" id="nvFileName">—</div><div class="fsize" id="nvFileSize">—</div></div>
       <button type="button" class="icon-btn" id="nvFileRemove" aria-label="إزالة الملف"><i class="fas fa-times"></i></button>
     </div>
@@ -271,79 +248,68 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
       <button class="btn primary" id="nvPrintBtn"><i class="fas fa-print"></i> طباعة السجل</button>
     </div>
   </div>
-  <div class="filters">
-    <input type="text" class="nv-filter" id="nvSearch" placeholder="🔍 بحث بالاسم أو الوصف..." aria-label="بحث">
-    <select class="nv-filter" id="nvFilterYear" aria-label="السنة"><option value="all">كل السنوات</option></select>
-    <select class="nv-filter" id="nvFilterUploader" aria-label="الرافع"><option value="all">كل الرافعين</option></select>
+  <div class="toolbar">
+    <input type="search" class="np-filter" id="nvSearch" placeholder="🔍 بحث بالاسم أو الوصف..." aria-label="بحث">
+    <select class="np-filter" id="nvFilterYear" aria-label="السنة"><option value="all">كل السنوات</option></select>
+    <select class="np-filter" id="nvFilterUploader" aria-label="الرافع"><option value="all">كل الرافعين</option></select>
   </div>
 
-  <!-- حاوية الطباعة (تشمل الترويسة + الجدول) -->
-  <div id="nvPrintWrapper">
-    <div class="print-only" id="nvLetterhead"></div>
-    <div class="table-wrap">
-      <table class="nv-table">
-        <thead><tr><th class="num">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th><th class="col-act">الإجراءات</th></tr></thead>
-        <tbody id="nvArchiveList"></tbody>
-      </table>
-    </div>
+  <div class="table-wrap">
+    <table class="nv-table">
+      <thead><tr><th class="num">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th><th>الإجراءات</th></tr></thead>
+      <tbody id="nvArchiveList"></tbody>
+    </table>
   </div>
 </div>
 
 <script>
 (function () {
   'use strict';
-  var _isDestroyed = false, _pageTimeouts = [], _eventListeners = [];
+  var root = document.getElementById('page-notes');
+  var destroyed = false, timeouts = [], listeners = [], activeXhr = null;
 
-  function _notesCleanup() {
-    if (_isDestroyed) return;
-    _isDestroyed = true;
-    _pageTimeouts.forEach(function (id) { try { clearTimeout(id); } catch (e) {} });
-    _eventListeners.forEach(function (i) { try { i.el.removeEventListener(i.type, i.fn); } catch (e) {} });
-    _pageTimeouts = []; _eventListeners = [];
-    try {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('beforeunload', _notesCleanup);
-      window.removeEventListener('pagehide', _notesCleanup);
-      document.querySelectorAll('.np-toast,.np-overlay').forEach(function (n) { n.remove(); });
-      var old = document.getElementById('page-notes');
-      if (old && old.parentNode) old.parentNode.removeChild(old);
-    } catch (e) {}
+  function cleanup() {
+    if (destroyed) return;
+    destroyed = true;
+    timeouts.forEach(function (id) { try { clearTimeout(id); } catch (e) {} });
+    listeners.forEach(function (i) { try { i.el.removeEventListener(i.type, i.fn); } catch (e) {} });
+    timeouts = []; listeners = [];
+    try { if (activeXhr) activeXhr.abort(); } catch (e) {}
+    try { window.removeEventListener('storage', onStorage); } catch (e) {}
+    try { if (root && root.parentNode) root.parentNode.removeChild(root); } catch (e) {}
     ['saveNote', 'loadNotes', 'editNote', 'deleteNote', 'switchNotesTab'].forEach(function (k) { try { delete window[k]; } catch (e) {} });
   }
   window._pageCleanup = window._pageCleanup || [];
-  window._pageCleanup.push(_notesCleanup);
-  window.addEventListener('beforeunload', _notesCleanup);
-  window.addEventListener('pagehide', _notesCleanup);
+  window._pageCleanup.push(cleanup);
 
-  // ---------- Helpers ----------
+  /* ================= Helpers ================= */
   function $(id) { return document.getElementById(id); }
   function escapeHtml(s) {
     if (s === null || s === undefined) return '';
-    var d = document.createElement('div'); d.textContent = String(s); return d.innerHTML;
+    return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   }
-  function getToken() { return localStorage.getItem('marine_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || null; }
-  function getCsrfToken() {
-    try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; }
-  }
-  function addSafeListener(el, type, fn) {
-    if (!el) return; el.addEventListener(type, fn); _eventListeners.push({ el: el, type: type, fn: fn });
-  }
+  function later(fn, ms) { var t = setTimeout(function () { if (!destroyed) fn(); }, ms); timeouts.push(t); return t; }
+  function on(el, type, fn) { if (!el) return; el.addEventListener(type, fn); listeners.push({ el: el, type: type, fn: fn }); }
+  function getToken() { try { return localStorage.getItem('marine_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || null; } catch (e) { return null; } }
+  function getCsrfToken() { try { var m = document.cookie.match(/marine_csrf=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; } }
   function fetcher(url, options) {
     if (typeof window.apiFetch === 'function') return window.apiFetch(url, options || {});
-    var token = getToken();
     var headers = Object.assign({ 'Accept': 'application/json' }, (options && options.headers) || {});
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-    if (options && options.method && options.method !== 'GET') {
-      var csrf = getCsrfToken(); if (csrf) headers['X-CSRF-Token'] = csrf;
-    }
+    var token = getToken(); if (token) headers['Authorization'] = 'Bearer ' + token;
+    if (options && options.method && options.method !== 'GET') { var csrf = getCsrfToken(); if (csrf) headers['X-CSRF-Token'] = csrf; }
     return fetch(url, Object.assign({}, options || {}, { headers: headers, credentials: 'include' }));
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function todayInput() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function toDateInput(v) {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
+    var d = new Date(v); return isNaN(d.getTime()) ? todayInput() : d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   }
   function formatDate(d) {
     if (!d) return '—';
-    try {
-      var dt = new Date(d); if (isNaN(dt.getTime())) return String(d);
-      return dt.toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch (_) { return String(d); }
+    var dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt.getTime())) return '—';
+    try { return dt.toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (_) { return dt.toDateString(); }
   }
   function formatFileSize(b) {
     if (!b || b < 0) return '0 B';
@@ -354,7 +320,7 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
   }
   function getFileIcon(mimetype, filename) {
     var mt = (mimetype || '').toLowerCase(), fn = (filename || '').toLowerCase();
-    if (mt.indexOf('pdf') !== -1 || fn.endsWith('.pdf')) return 'fa-file-pdf';
+    if (mt.indexOf('pdf') !== -1 || /\.pdf$/.test(fn)) return 'fa-file-pdf';
     if (mt.indexOf('word') !== -1 || /\.docx?$/.test(fn)) return 'fa-file-word';
     if (mt.indexOf('excel') !== -1 || mt.indexOf('spreadsheet') !== -1 || /\.xlsx?$/.test(fn)) return 'fa-file-excel';
     if (mt.indexOf('powerpoint') !== -1 || /\.pptx?$/.test(fn)) return 'fa-file-powerpoint';
@@ -363,53 +329,67 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     if (mt.indexOf('text') !== -1 || /\.(txt|csv)$/.test(fn)) return 'fa-file-alt';
     return 'fa-file';
   }
+  function weekLabel(n) { return n && n.weekNumber ? ('الأسبوع ' + n.weekNumber + (n.year ? ' / ' + n.year : '')) : '—'; }
+  function uploaderName(n) { return (n.uploadedBy && n.uploadedBy.name) ? n.uploadedBy.name : (n.createdByName || 'مستخدم'); }
+
   function showToast(msg, type) {
-    if (_isDestroyed) return;
-    var old = document.querySelector('.np-toast'); if (old) old.remove();
+    if (destroyed) return;
+    var old = root.querySelector('.np-toast'); if (old) old.remove();
     var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
     var n = document.createElement('div');
     n.className = 'np-toast ' + (type || 'info'); n.setAttribute('role', 'status');
     n.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span><span>' + escapeHtml(msg) + '</span>';
-    document.body.appendChild(n);
-    _pageTimeouts.push(setTimeout(function () {
-      n.classList.add('out'); _pageTimeouts.push(setTimeout(function () { n.remove(); }, 400));
-    }, 3000));
+    root.appendChild(n);
+    later(function () { n.classList.add('out'); later(function () { n.remove(); }, 400); }, 3200);
   }
 
-  // Custom confirm dialog (Promise<boolean>)
   function confirmDialog(opts) {
     return new Promise(function (resolve) {
       var ov = document.createElement('div'); ov.className = 'np-overlay';
-      ov.innerHTML = '<div class="np-dialog ' + (opts.danger ? 'danger' : '') + '" role="dialog" aria-modal="true">' +
+      ov.innerHTML = '<div class="np-dialog ' + (opts.danger ? 'danger' : '') + '" role="alertdialog" aria-modal="true" aria-labelledby="npDlgT" aria-describedby="npDlgD">' +
         '<div class="di"><i class="fas ' + (opts.icon || 'fa-question') + '"></i></div>' +
-        '<h4>' + escapeHtml(opts.title) + '</h4><p>' + escapeHtml(opts.text || '') + '</p>' +
+        '<h4 id="npDlgT">' + escapeHtml(opts.title) + '</h4><p id="npDlgD">' + escapeHtml(opts.text || '') + '</p>' +
         '<div class="actions"><button class="btn secondary" data-r="0">إلغاء</button>' +
         '<button class="btn ' + (opts.danger ? 'danger' : 'primary') + '" data-r="1">' + escapeHtml(opts.ok || 'تأكيد') + '</button></div></div>';
-      function done(v) { document.removeEventListener('keydown', onKey); ov.remove(); resolve(v); }
-      function onKey(e) { if (e.key === 'Escape') done(false); }
+      var prev = document.activeElement;
+      function done(v) { document.removeEventListener('keydown', onKey, true); ov.remove(); try { if (prev && prev.focus) prev.focus(); } catch (e) {} resolve(v); }
+      function onKey(e) {
+        if (e.key === 'Escape') { e.stopPropagation(); done(false); }
+        else if (e.key === 'Tab') {
+          var bs = ov.querySelectorAll('button'); if (!bs.length) return;
+          var first = bs[0], last = bs[bs.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      }
       ov.addEventListener('click', function (e) {
         if (e.target === ov) return done(false);
         var b = e.target.closest('[data-r]'); if (b) done(b.getAttribute('data-r') === '1');
       });
-      document.addEventListener('keydown', onKey);
-      document.body.appendChild(ov);
-      var first = ov.querySelector('[data-r="1"]'); if (first) first.focus();
+      document.addEventListener('keydown', onKey, true);
+      root.appendChild(ov);
+      var okBtn = ov.querySelector('[data-r="1"]'); if (okBtn) okBtn.focus();
     });
   }
 
   function skeletonCards(n) { var h = ''; for (var i = 0; i < n; i++) h += '<div class="sk sk-card"></div>'; return h; }
   function skeletonRows(n) { var h = ''; for (var i = 0; i < n; i++) h += '<tr><td colspan="7"><div class="sk sk-row"></div></td></tr>'; return h; }
-  function errorBlock(msg) {
-    return '<div class="empty err"><i class="fas fa-exclamation-triangle"></i><h3>تعذّر التحميل</h3><p>' + escapeHtml(msg) + '</p></div>';
+  function errorBlock(msg, retryAttr) {
+    return '<div class="empty err"><i class="fas fa-exclamation-triangle"></i><h3>تعذّر التحميل</h3><p>' + escapeHtml(msg) + '</p>' +
+      (retryAttr ? '<button class="btn secondary" ' + retryAttr + '><i class="fas fa-redo"></i> إعادة المحاولة</button>' : '') + '</div>';
+  }
+  function setBusy(btn, busy) {
+    if (!btn) return;
+    if (busy) { btn.dataset.html = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true; }
+    else { if (btn.dataset.html) btn.innerHTML = btn.dataset.html; btn.disabled = false; }
   }
 
-  // ---------- Logo ----------
+  /* ================= Logo ================= */
   function applyLogo() {
     try {
       var c = localStorage.getItem('marine_logo'); if (!c) return;
       var img = $('globalLogo'), ic = $('notesHeaderIcon');
-      if (img) img.src = c;
-      if (ic) ic.classList.add('has-logo');
+      if (img) img.src = c; if (ic) ic.classList.add('has-logo');
     } catch (e) {}
   }
   function syncLogoFromServer() {
@@ -418,78 +398,98 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     fetch('/api/logo', { headers: headers, credentials: 'include' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (d && d.success && d.logo && d.logo.dataUrl) {
-          try { localStorage.setItem('marine_logo', d.logo.dataUrl); } catch (e) {}
-          applyLogo();
-        }
+        if (destroyed) return;
+        if (d && d.success && d.logo && d.logo.dataUrl) { try { localStorage.setItem('marine_logo', d.logo.dataUrl); } catch (e) {} applyLogo(); }
       }).catch(function () {});
   }
   function onStorage(e) { if (e.key === 'marine_logo' && e.newValue) applyLogo(); }
   window.addEventListener('storage', onStorage);
 
-  // ---------- Permissions ----------
+  /* ================= Permissions ================= */
   var LEGACY = { super_admin: 'admin', 'مسؤول': 'admin', 'مدير': 'manager', 'محرر': 'editor', 'مشغل': 'maintenance_unit', operator: 'maintenance_unit', user: 'viewer', 'مشاهد': 'viewer' };
   var ROLES = ['admin', 'manager', 'editor', 'maintenance_unit', 'viewer'];
-  function normalizeRole(r) {
-    if (!r) return 'viewer'; r = String(r).trim();
-    return ROLES.indexOf(r) !== -1 ? r : (LEGACY[r] || 'viewer');
-  }
+  function normalizeRole(r) { if (!r) return 'viewer'; r = String(r).trim(); return ROLES.indexOf(r) !== -1 ? r : (LEGACY[r] || 'viewer'); }
   function roleIn(list) { var u = window.currentUser; return !!u && list.indexOf(normalizeRole(u.role)) !== -1; }
   function canEdit() { var u = window.currentUser; return !!u && normalizeRole(u.role) !== 'viewer'; }
   function canDelete() { return roleIn(['admin', 'manager']); }
   function canUploadVerbale() { return roleIn(['admin', 'manager', 'editor', 'maintenance_unit']); }
   function canDeleteVerbale() { return roleIn(['admin', 'manager']); }
+  function applyPermissions() {
+    $('addNoteCard').hidden = !canEdit();
+    $('nvUploadCard').hidden = !canUploadVerbale();
+  }
+  function whenUserReady(cb) {
+    var tries = 0;
+    (function check() {
+      if (destroyed) return;
+      if (window.currentUser || tries++ >= 40) { cb(); return; }
+      later(check, 150);
+    })();
+  }
 
-  // ---------- Tabs ----------
+  /* ================= State ================= */
   var notesData = [], editingId = null, notesLoaded = false;
   var verbaleCurrentLoaded = false, verbaleArchiveLoaded = false;
-  var nvSelectedFile = null, nvArchiveData = [];
+  var nvSelectedFile = null, nvArchiveAll = [], nvArchiveView = [], nvHasCurrent = false, nvDocs = {}, nvUploading = false;
 
+  /* ================= Tabs ================= */
   function switchNotesTab(tab) {
     if (tab !== 'notes' && tab !== 'verbale') return;
-    document.querySelectorAll('#page-notes .np-tab').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === tab); });
+    root.querySelectorAll('.np-tab').forEach(function (b) {
+      var act = b.dataset.tab === tab;
+      b.classList.toggle('active', act); b.setAttribute('aria-selected', act ? 'true' : 'false'); b.tabIndex = act ? 0 : -1;
+    });
     $('panel-notes').classList.toggle('active', tab === 'notes');
     $('panel-verbale').classList.toggle('active', tab === 'verbale');
     if (tab === 'notes') { if (!notesLoaded) loadNotes(); }
-    else {
-      if (!verbaleCurrentLoaded) loadNoteVerbaleCurrent();
-      if (!verbaleArchiveLoaded) loadNoteVerbaleArchive();
-    }
+    else { if (!verbaleCurrentLoaded) loadNoteVerbaleCurrent(); if (!verbaleArchiveLoaded) loadNoteVerbaleArchive(); }
   }
 
-  // ---------- Notes ----------
+  /* ================= Notes ================= */
   async function loadNotes() {
-    if (_isDestroyed) return;
+    if (destroyed) return;
     var box = $('notesList'); if (!box) return;
     notesLoaded = true; box.innerHTML = skeletonCards(3);
     try {
       var res = await fetcher('/api/notes', { method: 'GET' });
       if (!res.ok) {
-        if (res.status === 401) throw new Error('انتهت الجلسة');
-        if (res.status === 404) { notesData = []; renderNotes(); return; }
+        if (res.status === 401) throw new Error('انتهت الجلسة، أعد تسجيل الدخول');
+        if (res.status === 404) { notesData = []; $('tabNotesCount').textContent = '0'; renderNotes(); return; }
         throw new Error('فشل التحميل: ' + res.status);
       }
       var d = await res.json();
       notesData = Array.isArray(d) ? d : (d && Array.isArray(d.notes) ? d.notes : (d && Array.isArray(d.data) ? d.data : []));
-      if ($('tabNotesCount')) $('tabNotesCount').textContent = notesData.length;
+      if (destroyed) return;
+      $('tabNotesCount').textContent = notesData.length;
       renderNotes();
     } catch (err) {
-      if (_isDestroyed) return;
-      box.innerHTML = errorBlock(err.message);
+      if (destroyed) return;
+      notesLoaded = false;
+      box.innerHTML = errorBlock(err.message, 'data-retry="notes"');
     }
   }
 
+  function priorityKey(pr) { return pr === 'عاجل' ? 'urgent' : (pr === 'مهم' ? 'important' : 'normal'); }
+  function noteTime(n) { var t = new Date(n.date || n.createdAt || 0).getTime(); return isNaN(t) ? 0 : t; }
+
   function renderNotes() {
-    if (_isDestroyed) return;
+    if (destroyed) return;
     var box = $('notesList'); if (!box) return;
     if (!notesData.length) {
       box.innerHTML = '<div class="empty"><i class="fas fa-sticky-note"></i><h3>لا توجد ملاحظات بعد</h3><p>ابدأ بإضافة ملاحظة</p></div>'; return;
     }
+    var q = ($('noteSearch').value || '').trim().toLowerCase(), pf = $('noteFilterPriority').value || 'all';
+    var list = notesData.filter(function (n) {
+      if (pf !== 'all' && (n.priority || 'عادي') !== pf) return false;
+      if (!q) return true;
+      return ((n.title || '') + ' ' + (n.content || n.description || '')).toLowerCase().indexOf(q) !== -1;
+    }).sort(function (a, b) { return noteTime(b) - noteTime(a); });
+    if (!list.length) { box.innerHTML = '<div class="empty"><i class="fas fa-search"></i><h3>لا توجد نتائج مطابقة</h3></div>'; return; }
     var ce = canEdit(), cd = canDelete(), html = '';
-    notesData.forEach(function (n) {
-      var id = n._id || n.id || '', pr = n.priority || 'عادي';
-      var badge = pr === 'عاجل' ? '<span class="chip urgent">🚨 عاجل</span>' : (pr === 'مهم' ? '<span class="chip important">⚠️ مهم</span>' : '');
-      html += '<article class="note p-' + escapeHtml(pr) + '"><div class="note-h"><h4 class="note-t">' + escapeHtml(n.title || 'بدون عنوان') + '</h4>' +
+    list.forEach(function (n) {
+      var id = n._id || n.id || '', pr = n.priority || 'عادي', pk = priorityKey(pr);
+      var badge = pk === 'urgent' ? '<span class="chip urgent">🚨 عاجل</span>' : (pk === 'important' ? '<span class="chip important">⚠️ مهم</span>' : '');
+      html += '<article class="note p-' + pk + '"><div class="note-h"><h4 class="note-t">' + escapeHtml(n.title || 'بدون عنوان') + '</h4>' +
         '<div class="meta">' + badge + '<span class="chip"><i class="fas fa-calendar"></i> ' + escapeHtml(formatDate(n.date || n.createdAt)) + '</span></div></div>' +
         ((n.content || n.description) ? '<div class="note-c">' + escapeHtml(n.content || n.description) + '</div>' : '') +
         '<div class="note-f"><span><i class="fas fa-user"></i> ' + escapeHtml(n.createdByName || n.author || 'مستخدم') + '</span><div class="meta">' +
@@ -500,80 +500,93 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     box.innerHTML = html;
   }
 
+  var saving = false;
   async function saveNote() {
-    if (_isDestroyed || !canEdit()) return;
+    if (destroyed || saving || !canEdit()) return;
     var title = $('noteTitle').value.trim(), content = $('noteContent').value.trim();
-    var date = $('noteDate').value, priority = $('notePriority').value || 'عادي';
-    if (!title) { showToast('يرجى إدخال العنوان', 'error'); return; }
-    if (!content) { showToast('يرجى إدخال المحتوى', 'error'); return; }
-    var btn = $('saveNoteBtn'), orig = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحفظ...';
+    var date = $('noteDate').value || todayInput(), priority = $('notePriority').value || 'عادي';
+    if (!title) { showToast('يرجى إدخال العنوان', 'error'); $('noteTitle').focus(); return; }
+    if (!content) { showToast('يرجى إدخال المحتوى', 'error'); $('noteContent').focus(); return; }
+    var btn = $('saveNoteBtn'), wasEditing = !!editingId;
+    saving = true; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحفظ...';
     try {
-      var res = await fetcher(editingId ? '/api/notes/' + editingId : '/api/notes', {
-        method: editingId ? 'PUT' : 'POST',
+      var res = await fetcher(wasEditing ? '/api/notes/' + encodeURIComponent(editingId) : '/api/notes', {
+        method: wasEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title, content: content, date: date || new Date().toISOString(), priority: priority })
+        body: JSON.stringify({ title: title, content: content, date: date, priority: priority })
       });
       if (!res.ok) {
         var e = null; try { e = await res.json(); } catch (_) {}
         throw new Error((e && (e.error || e.message)) || 'فشل الحفظ');
       }
-      showToast(editingId ? 'تم تحديث الملاحظة' : 'تمت إضافة الملاحظة', 'success');
+      showToast(wasEditing ? 'تم تحديث الملاحظة' : 'تمت إضافة الملاحظة', 'success');
       clearForm(); notesLoaded = false; await loadNotes();
-    } catch (err) { showToast(err.message, 'error'); }
-    finally { btn.disabled = false; btn.innerHTML = editingId ? '<i class="fas fa-save"></i> تحديث' : orig; }
+    } catch (err) {
+      showToast(err.message, 'error');
+      btn.innerHTML = wasEditing ? '<i class="fas fa-save"></i> تحديث' : '<i class="fas fa-save"></i> حفظ';
+    } finally { saving = false; btn.disabled = false; }
   }
 
   function editNote(id) {
-    if (_isDestroyed || !canEdit()) return;
+    if (destroyed || !canEdit()) return;
     var n = notesData.find(function (x) { return String(x._id || x.id) === String(id); });
     if (!n) { showToast('الملاحظة غير موجودة', 'warning'); return; }
     editingId = n._id || n.id;
     $('noteTitle').value = n.title || '';
     $('noteContent').value = n.content || n.description || '';
     $('notePriority').value = n.priority || 'عادي';
-    if (n.date || n.createdAt) { try { $('noteDate').value = new Date(n.date || n.createdAt).toISOString().split('T')[0]; } catch (_) {} }
+    $('noteDate').value = toDateInput(n.date || n.createdAt);
+    updateCounter();
     $('formTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل الملاحظة';
     $('cancelEditBtn').hidden = false;
     $('saveNoteBtn').innerHTML = '<i class="fas fa-save"></i> تحديث';
-    $('addNoteCard').scrollIntoView({ behavior: 'smooth' });
+    $('addNoteCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $('noteTitle').focus({ preventScroll: true });
   }
 
   async function deleteNote(id) {
-    if (_isDestroyed || !canDelete()) return;
+    if (destroyed || !canDelete()) return;
     var ok = await confirmDialog({ title: 'حذف الملاحظة', text: 'سيتم حذف هذه الملاحظة نهائياً.', ok: 'حذف', icon: 'fa-trash', danger: true });
     if (!ok) return;
     try {
-      var res = await fetcher('/api/notes/' + id, { method: 'DELETE' });
+      var res = await fetcher('/api/notes/' + encodeURIComponent(id), { method: 'DELETE' });
       if (!res.ok) throw new Error('فشل الحذف');
+      if (String(editingId) === String(id)) clearForm();
       showToast('تم حذف الملاحظة', 'success'); notesLoaded = false; await loadNotes();
     } catch (err) { showToast(err.message, 'error'); }
   }
 
+  function updateCounter() { var c = $('noteCounter'); if (c) c.textContent = $('noteContent').value.length + ' / 5000'; }
   function clearForm() {
     editingId = null;
-    $('noteTitle').value = ''; $('noteContent').value = '';
-    $('noteDate').value = new Date().toISOString().split('T')[0];
-    $('notePriority').value = 'عادي';
+    $('noteTitle').value = ''; $('noteContent').value = ''; $('noteDate').value = todayInput(); $('notePriority').value = 'عادي';
+    updateCounter();
     $('formTitle').innerHTML = '<i class="fas fa-pen"></i> إضافة ملاحظة جديدة';
     $('cancelEditBtn').hidden = true;
     $('saveNoteBtn').innerHTML = '<i class="fas fa-save"></i> حفظ';
   }
 
-  // ---------- Note Verbale: current ----------
+  /* ================= Weekly report: current ================= */
+  function docBtns(id) {
+    var i = escapeHtml(id);
+    return '<button class="ab view" data-action="view" data-id="' + i + '" title="عرض" aria-label="عرض"><i class="fas fa-eye"></i></button>' +
+      '<button class="ab download" data-action="download" data-id="' + i + '" title="تحميل" aria-label="تحميل"><i class="fas fa-download"></i></button>' +
+      '<button class="ab print" data-action="print" data-id="' + i + '" title="طباعة الوثيقة" aria-label="طباعة الوثيقة"><i class="fas fa-print"></i></button>';
+  }
+
   async function loadNoteVerbaleCurrent() {
-    if (_isDestroyed) return;
+    if (destroyed) return;
     var box = $('nvCurrentSection'); if (!box) return;
     verbaleCurrentLoaded = true; box.innerHTML = '<div class="sk" style="height:200px;margin-bottom:18px;border-radius:16px"></div>';
     try {
       var res = await fetcher('/api/notes/current', { method: 'GET' });
       if (!res.ok) throw new Error('فشل: ' + res.status);
       var d = await res.json();
+      if (destroyed) return;
       if (d && d.success && d.hasCurrent && d.note) renderCurrentDocument(d.note); else renderEmptyCurrent();
-    } catch (err) { if (!_isDestroyed) box.innerHTML = errorBlock(err.message); }
+    } catch (err) { if (!destroyed) { verbaleCurrentLoaded = false; box.innerHTML = errorBlock(err.message, 'data-retry="current"'); } }
   }
 
-  var nvHasCurrent = false;
   function isoWeek(d) {
     var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     var day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
@@ -585,41 +598,39 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     var box = $('nvCurrentSection'); if (!box) return;
     nvHasCurrent = true;
     var f = n.file || {}, id = n.id || n._id; nvDocs[id] = n;
-    var up = new Date(n.createdAt || n.archivedAt || Date.now());
-    var days = Math.max(0, Math.floor((Date.now() - up.getTime()) / 86400000)); if (isNaN(days)) days = 0;
+    var up = new Date(n.createdAt || n.archivedAt || Date.now()); if (isNaN(up.getTime())) up = new Date();
+    var days = Math.max(0, Math.floor((Date.now() - up.getTime()) / 86400000));
     var late = days > 7, pct = Math.min(100, Math.round(days / 7 * 100));
     var due = new Date(up.getTime() + 7 * 86400000);
-    var uploader = n.uploadedBy && n.uploadedBy.name ? n.uploadedBy.name : (n.createdByName || 'مستخدم');
-    var weekTxt = n.weekNumber ? ('الأسبوع ' + n.weekNumber + (n.year ? ' / ' + n.year : '')) : '—';
+    var weekTxt = weekLabel(n);
     var cls = late ? 'late' : (days >= 5 ? 'warn' : 'ok');
     var stTxt = late ? 'متأخر — مضى أكثر من 7 أيام' : (days >= 5 ? 'يقترب موعد التحديث' : 'محدّث');
     var remain = late ? ('تجاوز الموعد بـ ' + (days - 7) + ' يوم') : ('متبقٍّ ' + Math.max(0, 7 - days) + ' يوم للتقرير القادم');
-    box.innerHTML = '<section class="rt-current"><div class="rt-head"><div class="rt-title"><span class="nv-badge"><i class="fas fa-circle" style="font-size:8px"></i> التقرير الحالي</span>' +
-      '<span class="st st-' + cls + '"><i class="fas ' + (late ? 'fa-triangle-exclamation' : 'fa-circle-check') + '"></i> ' + stTxt + '</span></div>' +
+    box.innerHTML = '<section class="rt-current" aria-label="التقرير الحالي"><div class="rt-head"><div class="rt-title"><span class="nv-badge"><i class="fas fa-circle" style="font-size:8px"></i> التقرير الحالي</span>' +
+      '<span class="st st-' + cls + '"><i class="fas ' + (late ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + stTxt + '</span></div>' +
       '<div class="meta"><span class="chip"><i class="fas fa-calendar-week"></i> ' + escapeHtml(weekTxt) + '</span></div></div>' +
       '<div class="cycle"><div class="cycle-top"><span>دورة التقرير الأسبوعية</span><span>' + escapeHtml(remain) + '</span></div>' +
-      '<div class="cycle-bar"><div class="cycle-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="cycle-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><div class="cycle-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
       '<div class="cycle-top sub"><span>تاريخ الرفع: ' + escapeHtml(formatDate(up)) + '</span><span>الموعد القادم: ' + escapeHtml(formatDate(due)) + '</span></div></div>' +
       '<div class="table-wrap cur"><table class="nv-table"><thead><tr><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>تاريخ الرفع</th><th>الحجم</th><th>الإجراءات</th></tr></thead><tbody><tr>' +
       '<td><div class="doc-cell"><div class="ficon"><i class="fas ' + getFileIcon(f.mimetype, f.originalName) + '"></i></div><div><div class="doc-title">' + escapeHtml(n.title || 'بدون عنوان') + '</div>' +
       '<div class="doc-desc">' + escapeHtml(n.description || f.originalName || '') + '</div></div></div></td>' +
-      '<td><span class="chip">' + escapeHtml(weekTxt) + '</span></td><td>' + escapeHtml(uploader) + '</td><td>' + escapeHtml(formatDate(up)) + '</td><td>' + escapeHtml(f.sizeFormatted || '0 B') + '</td>' +
+      '<td><span class="chip">' + escapeHtml(weekTxt) + '</span></td><td>' + escapeHtml(uploaderName(n)) + '</td><td>' + escapeHtml(formatDate(up)) + '</td><td>' + escapeHtml(f.sizeFormatted || formatFileSize(f.size)) + '</td>' +
       '<td><div class="row-actions">' + docBtns(id) + '</div></td></tr></tbody></table></div></section>';
   }
 
   function renderEmptyCurrent() {
     var box = $('nvCurrentSection'); if (!box) return;
     nvHasCurrent = false;
-    box.innerHTML = '<div class="nv-empty"><i class="fas fa-file-circle-question"></i><h3>لم يُرفع تقرير لهذا الأسبوع بعد</h3><p>ارفع التقرير الفني للوسائل البحرية ليظهر هنا حتى يتم استبداله بتقرير الأسبوع التالي</p></div>';
+    box.innerHTML = '<div class="nv-empty"><i class="fas fa-folder-open"></i><h3>لم يُرفع تقرير لهذا الأسبوع بعد</h3><p>ارفع التقرير الفني للوسائل البحرية ليظهر هنا حتى يتم استبداله بتقرير الأسبوع التالي</p></div>';
   }
 
-  // ---------- Note Verbale: archive ----------
+  /* ================= Weekly report: archive ================= */
   async function loadNoteVerbaleArchive() {
-    if (_isDestroyed) return;
+    if (destroyed) return;
     var body = $('nvArchiveList'); if (!body) return;
     verbaleArchiveLoaded = true; body.innerHTML = skeletonRows(5);
     try {
-      var search = ($('nvSearch').value || '').trim();
       var year = $('nvFilterYear').value || 'all', uploader = $('nvFilterUploader').value || 'all';
       var p = new URLSearchParams(); p.append('limit', '200');
       if (year !== 'all') p.append('year', year);
@@ -627,19 +638,26 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
       var res = await fetcher('/api/notes/archive?' + p.toString(), { method: 'GET' });
       if (!res.ok) throw new Error('فشل: ' + res.status);
       var d = await res.json();
-      nvArchiveData = (d && d.notes) || [];
-      $('tabVerbaleCount').textContent = nvArchiveData.length;
-      $('nvArchiveCount').textContent = nvArchiveData.length;
+      if (destroyed) return;
+      nvArchiveAll = (d && d.notes) || [];
+      if (year === 'all' && uploader === 'all') $('tabVerbaleCount').textContent = nvArchiveAll.length;
       if (d && d.years && d.years.length) populateYearFilter(d.years);
       if (d && d.uploaders && d.uploaders.length) populateUploaderFilter(d.uploaders);
-      if (search) {
-        var q = search.toLowerCase();
-        nvArchiveData = nvArchiveData.filter(function (n) { return ((n.title || '') + ' ' + (n.description || '')).toLowerCase().indexOf(q) !== -1; });
-      }
-      renderArchive();
+      applyArchiveSearch();
     } catch (err) {
-      if (!_isDestroyed) body.innerHTML = '<tr><td colspan="7">' + errorBlock(err.message) + '</td></tr>';
+      if (destroyed) return;
+      verbaleArchiveLoaded = false;
+      body.innerHTML = '<tr><td colspan="7">' + errorBlock(err.message, 'data-retry="archive"') + '</td></tr>';
     }
+  }
+
+  function applyArchiveSearch() {
+    var q = ($('nvSearch').value || '').trim().toLowerCase();
+    nvArchiveView = !q ? nvArchiveAll.slice() : nvArchiveAll.filter(function (n) {
+      return ((n.title || '') + ' ' + (n.description || '')).toLowerCase().indexOf(q) !== -1;
+    });
+    $('nvArchiveCount').textContent = nvArchiveView.length;
+    renderArchive();
   }
 
   function populateYearFilter(years) {
@@ -658,37 +676,40 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
 
   function renderArchive() {
     var body = $('nvArchiveList'); if (!body) return;
-    if (!nvArchiveData.length) {
+    if (!nvArchiveView.length) {
       body.innerHTML = '<tr><td colspan="7"><div class="empty"><i class="fas fa-archive"></i><h3>لا توجد تقارير في الأرشيف</h3></div></td></tr>'; return;
     }
     var cp = canDeleteVerbale(), html = '';
-    nvArchiveData.forEach(function (n, i) {
+    nvArchiveView.forEach(function (n, i) {
       var id = n.id || n._id, f = n.file || {};
-      var uploader = n.uploadedBy && n.uploadedBy.name ? n.uploadedBy.name : (n.createdByName || 'مستخدم');
       nvDocs[id] = n;
       var acts = docBtns(id);
-      if (cp) acts += '<button class="ab promote" data-action="promote" data-id="' + escapeHtml(id) + '" title="تعيين كحالية"><i class="fas fa-star"></i></button>' +
-        '<button class="ab delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف"><i class="fas fa-trash"></i></button>';
+      if (cp) acts += '<button class="ab promote" data-action="promote" data-id="' + escapeHtml(id) + '" title="تعيين كحالية" aria-label="تعيين كحالية"><i class="fas fa-star"></i></button>' +
+        '<button class="ab delete" data-action="delete" data-id="' + escapeHtml(id) + '" title="حذف" aria-label="حذف"><i class="fas fa-trash"></i></button>';
       html += '<tr><td class="num">' + (i + 1) + '</td>' +
         '<td><div class="doc-cell"><div class="ficon"><i class="fas ' + getFileIcon(f.mimetype, f.originalName) + '"></i></div><div><div class="doc-title">' + escapeHtml(n.title || 'ملف') + '</div>' +
         (n.description ? '<div class="doc-desc">' + escapeHtml(n.description) + '</div>' : '') + '</div></div></td>' +
-        '<td><span class="chip">' + escapeHtml(n.weekNumber ? ('الأسبوع ' + n.weekNumber + (n.year ? ' / ' + n.year : '')) : '—') + '</span></td><td>' + escapeHtml(uploader) + '</td><td>' + escapeHtml(formatDate(n.createdAt || n.archivedAt)) + '</td>' +
-        '<td>' + escapeHtml(f.sizeFormatted || '0 B') + '</td><td class="col-act"><div class="row-actions">' + acts + '</div></td></tr>';
+        '<td><span class="chip">' + escapeHtml(weekLabel(n)) + '</span></td><td>' + escapeHtml(uploaderName(n)) + '</td><td>' + escapeHtml(formatDate(n.createdAt || n.archivedAt)) + '</td>' +
+        '<td>' + escapeHtml(f.sizeFormatted || formatFileSize(f.size)) + '</td><td><div class="row-actions">' + acts + '</div></td></tr>';
     });
     body.innerHTML = html;
   }
 
-  // ---------- Upload ----------
+  /* ================= Upload ================= */
   function handleFileSelected(file) {
-    if (!file) return;
+    if (!file || nvUploading) return;
     if (file.size > 25 * 1024 * 1024) { showToast('حجم الملف كبير جداً (الحد 25 MB)', 'error'); return; }
+    if (file.size === 0) { showToast('الملف فارغ', 'error'); return; }
     nvSelectedFile = file;
     $('nvFileName').textContent = file.name; $('nvFileSize').textContent = formatFileSize(file.size);
+    $('nvFileIcon').className = 'fas ' + getFileIcon(file.type, file.name);
     $('nvFilePreview').classList.add('show');
     $('nvUploadForm').hidden = false; $('nvUploadActions').hidden = false;
     if (!$('nvTitle').value) $('nvTitle').value = 'Rapport technique des moyens maritimes - Semaine ' + isoWeek(new Date()) + ' / ' + new Date().getFullYear();
+    $('nvTitle').focus();
   }
   function clearUploadForm() {
+    if (activeXhr) { try { activeXhr.abort(); } catch (e) {} }
     nvSelectedFile = null;
     $('nvFilePreview').classList.remove('show'); $('nvProgress').classList.remove('show');
     $('nvUploadForm').hidden = true; $('nvUploadActions').hidden = true;
@@ -697,65 +718,64 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
   }
 
   async function submitUpload() {
+    if (nvUploading) return;
     if (!nvSelectedFile) { showToast('اختر ملفاً أولاً', 'error'); return; }
     var title = $('nvTitle').value.trim(), description = $('nvDescription').value.trim();
-    if (!title) { showToast('أدخل عنوان التقرير', 'error'); return; }
+    if (!title) { showToast('أدخل عنوان التقرير', 'error'); $('nvTitle').focus(); return; }
     if (nvHasCurrent) {
-      var okRep = await confirmDialog({ title: 'استبدال التقرير الحالي', text: 'سيحلّ هذا التقرير محل التقرير الحالي، وينتقل السابق إلى الأرشيف.', ok: 'رفع واستبدال', icon: 'fa-rotate' });
+      var okRep = await confirmDialog({ title: 'استبدال التقرير الحالي', text: 'سيحلّ هذا التقرير محل التقرير الحالي، وينتقل السابق إلى الأرشيف.', ok: 'رفع واستبدال', icon: 'fa-sync-alt' });
       if (!okRep) return;
     }
     var fd = new FormData();
     fd.append('files', nvSelectedFile); fd.append('title', title); fd.append('description', description);
-    var btn = $('nvSubmitUpload');
-    $('nvProgress').classList.add('show');
+    var btn = $('nvSubmitUpload'), succeeded = false;
+    nvUploading = true;
+    $('nvProgress').classList.add('show'); $('nvProgressFill').style.width = '0%'; $('nvProgressText').textContent = '0%';
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الرفع...';
     try {
       var token = getToken(), csrf = getCsrfToken();
       await new Promise(function (resolve, reject) {
-        var xhr = new XMLHttpRequest();
+        var xhr = new XMLHttpRequest(); activeXhr = xhr;
         xhr.open('POST', '/api/notes/upload');
         if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
         if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf);
         xhr.setRequestHeader('Accept', 'application/json');
         xhr.withCredentials = true;
         xhr.upload.addEventListener('progress', function (e) {
-          if (!e.lengthComputable) return;
+          if (!e.lengthComputable || destroyed) return;
           var pc = Math.round((e.loaded / e.total) * 100);
           $('nvProgressFill').style.width = pc + '%'; $('nvProgressText').textContent = pc + '%';
         });
         xhr.addEventListener('load', function () {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try { resolve(JSON.parse(xhr.responseText || '{}')); } catch (e) { resolve({}); }
-          } else {
-            var msg = 'فشل الرفع';
+          if (xhr.status >= 200 && xhr.status < 300) { try { resolve(JSON.parse(xhr.responseText || '{}')); } catch (e) { resolve({}); } }
+          else {
+            var msg = xhr.status === 401 ? 'انتهت الجلسة، أعد تسجيل الدخول' : (xhr.status === 413 ? 'حجم الملف يتجاوز الحد المسموح' : 'فشل الرفع');
             try { var er = JSON.parse(xhr.responseText); msg = er.error || er.message || msg; } catch (e) {}
             reject(new Error(msg));
           }
         });
         xhr.addEventListener('error', function () { reject(new Error('خطأ في الاتصال')); });
+        xhr.addEventListener('abort', function () { reject(new Error('أُلغي الرفع')); });
         xhr.send(fd);
       });
-      showToast('تم رفع التقرير بنجاح', 'success');
-      clearUploadForm(); await reloadVerbale();
-    } catch (err) { showToast(err.message, 'error'); }
+      succeeded = true;
+    } catch (err) { if (!destroyed) showToast(err.message, 'error'); }
     finally {
-      btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> رفع التقرير';
-      _pageTimeouts.push(setTimeout(function () { var p = $('nvProgress'); if (p) p.classList.remove('show'); }, 1500));
+      activeXhr = null; nvUploading = false;
+      if (!destroyed) {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> رفع التقرير';
+        later(function () { var p = $('nvProgress'); if (p && !nvUploading) p.classList.remove('show'); }, 1500);
+      }
     }
+    if (succeeded && !destroyed) { showToast('تم رفع التقرير بنجاح', 'success'); clearUploadForm(); await reloadVerbale(); }
   }
 
   async function reloadVerbale() {
     verbaleCurrentLoaded = false; verbaleArchiveLoaded = false;
-    await loadNoteVerbaleCurrent(); await loadNoteVerbaleArchive();
+    await Promise.all([loadNoteVerbaleCurrent(), loadNoteVerbaleArchive()]);
   }
-  // ---------- Authenticated document actions (view / download / print) ----------
-  var nvDocs = {};
-  function docBtns(id) {
-    var i = escapeHtml(id);
-    return '<button class="ab view" data-action="view" data-id="' + i + '" title="عرض"><i class="fas fa-eye"></i></button>' +
-      '<button class="ab download" data-action="download" data-id="' + i + '" title="تحميل"><i class="fas fa-download"></i></button>' +
-      '<button class="ab print" data-action="print" data-id="' + i + '" title="طباعة الوثيقة"><i class="fas fa-print"></i></button>';
-  }
+
+  /* ================= Authenticated document actions ================= */
   function guessType(name, type) {
     var n = (name || '').toLowerCase(), t = (type || '').toLowerCase();
     if (t && t !== 'application/octet-stream') return t;
@@ -789,109 +809,122 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     a.href = url; a.download = name || 'document'; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
   }
-  
-  // دالة الطباعة المحسنة (للصور والـ PDF) مع الترويسة
-  async function docAction(action, id) {
-    if (_isDestroyed || !id) return;
-    var f = (nvDocs[id] && nvDocs[id].file) || {}, name = f.originalName || 'document';
-    var kind = guessType(name, f.mimetype);
-    var previewable = /pdf|image\//.test(kind);
-    var win = null;
-    
-    if (action === 'view' || (action === 'print' && previewable)) {
-      win = window.open('', '_blank');
-      if (win) win.document.write('<div style="font-family:sans-serif;text-align:center;margin-top:50px;color:#333;">جاري تحضير الوثيقة...</div>');
-    }
+  function blobToDataUrl(blob) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader(); r.onload = function () { resolve(r.result); }; r.onerror = function () { reject(new Error('تعذّرت قراءة الملف')); }; r.readAsDataURL(blob);
+    });
+  }
 
+  /* ---- Printing (hidden iframe: no popup, no global CSS hacks) ---- */
+  function lhDate() { return new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
+  function letterheadHtml() {
+    var logo = ''; try { logo = localStorage.getItem('marine_logo') || ''; } catch (e) {}
+    return '<div class="lh"><div class="lh-r">' + (logo ? '<img class="lh-logo" src="' + escapeHtml(logo) + '" alt="">' : '') +
+      '<div class="a">الجمهورية التونسية</div><div class="b">وزارة الداخلية</div><div class="b">الإدارة العامة للحرس الوطني</div><div class="c">إدارة إسناد الوحدات البحرية</div></div>' +
+      '<div class="lh-l"><div>العوينة في: ' + escapeHtml(lhDate()) + '</div><div>عدد: <span class="lh-num">&nbsp;</span></div></div></div>';
+  }
+  var PRINT_CSS = '@page{size:A4;margin:14mm 12mm 16mm}*{box-sizing:border-box}' +
+    'body{margin:0;font-family:"Cairo","Tajawal","Segoe UI",Tahoma,sans-serif;color:#000;background:#fff;font-size:12px;line-height:1.7;direction:rtl}' +
+    '.lh{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:6px}' +
+    '.lh-r{text-align:center;min-width:240px;line-height:1.9}.lh-r .a{font-size:15px;font-weight:800}.lh-r .b{font-size:14px;font-weight:700}.lh-r .c{font-size:13px}' +
+    '.lh-logo{display:block;margin:0 auto 4px;width:62px;height:62px;object-fit:contain}' +
+    '.lh-l{text-align:right;font-size:13px;padding-top:4px;line-height:2}.lh-num{display:inline-block;min-width:110px;border-bottom:1px dotted #000}' +
+    '.lh-title{font-size:19px;font-weight:800;text-align:center;margin:12px 0 10px;padding:8px 0;border-top:2px solid #000;border-bottom:2px solid #000}' +
+    '.sub{text-align:center;font-size:11px;margin:0 0 10px}' +
+    'table{width:100%;border-collapse:collapse;border:1.5px solid #000}thead{display:table-header-group}tr{break-inside:avoid;page-break-inside:avoid}' +
+    'th,td{border:1px solid #000;padding:6px 8px;font-size:11px;text-align:right;vertical-align:top}th{background:#e5e5e5;font-weight:800}' +
+    '.c{text-align:center}.d{font-size:10px;color:#333}.foot{margin-top:10px;font-size:11px;text-align:left}' +
+    '.img{text-align:center;margin-top:14px}.img img{max-width:100%;max-height:235mm;object-fit:contain;break-inside:avoid}';
+  function printDocument(title, bodyHtml) {
+    return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' + escapeHtml(title) + '</title><style>' + PRINT_CSS + '</style></head><body>' + bodyHtml + '</body></html>';
+  }
+  function printInFrame(srcHtml, srcUrl) {
+    var fr = document.createElement('iframe');
+    fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
+    fr.style.cssText = 'position:fixed;left:0;bottom:0;width:0;height:0;border:0';
+    var fired = false;
+    function go() {
+      if (fired) return; fired = true;
+      try { fr.contentWindow.focus(); fr.contentWindow.print(); }
+      catch (e) { showToast('تعذّرت الطباعة، جرّب زر العرض ثم اطبع من المتصفح', 'error'); }
+      setTimeout(function () { fr.remove(); }, 120000);
+    }
+    root.appendChild(fr);
+    if (srcUrl) { fr.onload = function () { setTimeout(go, 600); }; fr.src = srcUrl; setTimeout(go, 6000); return; }
+    var d = fr.contentWindow.document; d.open(); d.write(srcHtml); d.close();
+    var imgs = Array.prototype.slice.call(d.images || []), pending = imgs.filter(function (i) { return !i.complete; }).length;
+    if (!pending) { setTimeout(go, 150); return; }
+    imgs.forEach(function (i) { if (!i.complete) { var h = function () { if (--pending <= 0) setTimeout(go, 100); }; i.onload = h; i.onerror = h; } });
+    setTimeout(go, 5000);
+  }
+
+  function printRegister() {
+    if (!nvArchiveView.length) { showToast('لا توجد تقارير للطباعة', 'warning'); return; }
+    function selText(id) { var s = $(id), o = s && s.selectedOptions && s.selectedOptions[0]; return (s && s.value !== 'all' && o) ? o.textContent : ''; }
+    var bits = [], y = selText('nvFilterYear'), u = selText('nvFilterUploader'), q = ($('nvSearch').value || '').trim();
+    if (y) bits.push('السنة: ' + y); if (u) bits.push('الرافع: ' + u); if (q) bits.push('بحث: ' + q);
+    var rows = '';
+    nvArchiveView.forEach(function (n, i) {
+      var f = n.file || {};
+      rows += '<tr><td class="c">' + (i + 1) + '</td><td><b>' + escapeHtml(n.title || 'ملف') + '</b>' + (n.description ? '<div class="d">' + escapeHtml(n.description) + '</div>' : '') + '</td>' +
+        '<td>' + escapeHtml(weekLabel(n)) + '</td><td>' + escapeHtml(uploaderName(n)) + '</td><td>' + escapeHtml(formatDate(n.createdAt || n.archivedAt)) + '</td>' +
+        '<td>' + escapeHtml(f.sizeFormatted || formatFileSize(f.size)) + '</td></tr>';
+    });
+    var body = letterheadHtml() + '<div class="lh-title">سجل التقارير الفنية</div>' + (bits.length ? '<p class="sub">' + escapeHtml(bits.join(' — ')) + '</p>' : '') +
+      '<table><thead><tr><th class="c" style="width:36px">#</th><th>التقرير</th><th>الأسبوع</th><th>الرافع</th><th>التاريخ</th><th>الحجم</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="foot">عدد التقارير: ' + nvArchiveView.length + '</div>';
+    printInFrame(printDocument('سجل التقارير الفنية', body));
+  }
+
+  async function docAction(action, id, btn) {
+    if (destroyed || !id) return;
+    var meta = nvDocs[id] || {}, f = meta.file || {}, name = f.originalName || 'document';
+    var kind = guessType(name, f.mimetype), previewable = /pdf|image\//.test(kind);
+    var win = null;
+    if (action === 'view' && previewable) {
+      win = window.open('', '_blank');
+      if (win) { try { win.opener = null; win.document.write('<title>جارٍ التحضير</title><div style="font-family:sans-serif;text-align:center;margin-top:50px;color:#333">جارٍ تحضير الوثيقة...</div>'); } catch (e) {} }
+    }
+    setBusy(btn, true);
     try {
       var raw = await fetchDocBlob(id);
       var type = guessType(name, raw.type);
       var blob = raw.type === type ? raw : new Blob([raw], { type: type });
-      
+
       if (action === 'download' || !previewable) {
         if (win) win.close();
         saveBlob(blob, name);
         if (action !== 'download') showToast('هذا النوع من الملفات لا يُعرض ولا يُطبع مباشرة، تم تحميله', 'info');
         return;
       }
-
-      // إذا كان Action هو طباعة
       if (action === 'print') {
-        if (type.startsWith('image/')) {
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            var imgData = e.target.result;
-            var html = `
-              <!DOCTYPE html>
-              <html dir="rtl">
-              <head>
-                  <title>طباعة الوثيقة</title>
-                  <style>
-                      @page { size: A4 portrait; margin: 15mm; }
-                      body { font-family: 'Cairo', 'Tajawal', sans-serif; background: #fff; color: #000; margin: 0; padding: 0; }
-                      .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-                      .header-right { text-align: center; line-height: 1.6; font-size: 14px; font-weight: bold; }
-                      .header-left { text-align: right; font-size: 13px; line-height: 1.8; }
-                      .title { text-align: center; font-size: 18px; font-weight: 900; margin: 15px 0; padding: 8px 0; border-top: 2px solid #000; border-bottom: 2px solid #000; }
-                      .image-container { width: 100%; text-align: center; margin-top: 20px; }
-                      .image-container img { max-width: 100%; max-height: 240mm; object-fit: contain; display: block; margin: 0 auto; page-break-inside: avoid; }
-                  </style>
-              </head>
-              <body>
-                  <div class="header">
-                      <div class="header-right">
-                          الجمهورية التونسية<br>
-                          وزارة الداخلية<br>
-                          الإدارة العامة للحرس الوطني<br>
-                          إدارة إسناد الوحدات البحرية
-                      </div>
-                      <div class="header-left">
-                          العوينة في: ${new Date().toLocaleDateString('ar-TN')}<br>
-                          عدد: ....................
-                      </div>
-                  </div>
-                  <div class="title">${escapeHtml(name)}</div>
-                  <div class="image-container">
-                      <img src="${imgData}" alt="الوثيقة">
-                  </div>
-              </body>
-              </html>
-            `;
-            win.document.open();
-            win.document.write(html);
-            win.document.close();
-            setTimeout(function() { try { win.focus(); win.print(); } catch(e) {} }, 800);
-          };
-          reader.readAsDataURL(blob);
+        if (type.indexOf('image/') === 0) {
+          var data = await blobToDataUrl(blob);
+          var title = meta.title || name;
+          printInFrame(printDocument(title, letterheadHtml() + '<div class="lh-title">' + escapeHtml(title) + '</div><div class="img"><img src="' + data + '" alt=""></div>'));
         } else {
-          // PDF
-          var blobUrl = URL.createObjectURL(blob);
-          win.location.href = blobUrl;
-          setTimeout(function() { try { win.print(); } catch(e) {} }, 1000);
+          var pdfUrl = URL.createObjectURL(blob);
+          setTimeout(function () { URL.revokeObjectURL(pdfUrl); }, 180000);
+          printInFrame(null, pdfUrl);
         }
         return;
       }
-
-      // عرض عادي (View)
       var url = URL.createObjectURL(blob);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 120000);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 180000);
       if (win) win.location.href = url;
-      else window.open(url, '_blank');
-
+      else { var a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); showToast('إن لم يُفتح الملف، اسمح بالنوافذ المنبثقة لهذا الموقع', 'info'); }
     } catch (err) {
       if (err.network) {
         var direct = f.url || ('/api/notes/verbale/' + encodeURIComponent(id) + '/download');
-        if (action === 'download') {
-          var a = document.createElement('a'); a.href = direct; a.target = '_blank'; a.rel = 'noopener'; a.download = name;
-          document.body.appendChild(a); a.click(); a.remove();
-        } else if (win) win.location.href = direct;
+        if (action === 'download') { var b = document.createElement('a'); b.href = direct; b.target = '_blank'; b.rel = 'noopener'; b.download = name; document.body.appendChild(b); b.click(); b.remove(); }
+        else if (win) win.location.href = direct;
         else window.open(direct, '_blank');
         showToast('تعذّر الجلب المباشر، فُتح الرابط مباشرة', 'warning');
         return;
       }
       if (win) win.close();
       showToast(err.message, 'error');
-    }
+    } finally { if (!destroyed) setBusy(btn, false); }
   }
 
   async function promoteArchiveItem(id) {
@@ -904,7 +937,6 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
       showToast('تم التعيين كوثيقة حالية', 'success'); await reloadVerbale();
     } catch (err) { showToast(err.message, 'error'); }
   }
-
   async function deleteArchiveItem(id) {
     if (!canDeleteVerbale()) { showToast('ليس لديك صلاحية', 'error'); return; }
     var ok = await confirmDialog({ title: 'حذف الوثيقة', text: 'سيتم حذف هذه الوثيقة نهائياً ولا يمكن التراجع.', ok: 'حذف نهائي', icon: 'fa-trash', danger: true });
@@ -916,79 +948,72 @@ table.nv-table{min-width:0;width:100%;border:1.5px solid #000;border-collapse:co
     } catch (err) { showToast(err.message, 'error'); }
   }
 
-  // ---------- Print ----------
-  function lhDate() { return new Date().toLocaleDateString('ar-TN', { year: 'numeric', month: 'long', day: 'numeric' }); }
-  function letterheadHtml(title, editable) {
-    return '<div class="lh"><div class="lh-r"><div class="a">الجمهورية التونسية</div><div class="b">وزارة الداخلية</div><div class="b">الإدارة العامة للحرس الوطني</div><div class="c">إدارة إسناد الوحدات البحرية</div></div>' +
-      '<div class="lh-l"><div>العوينة في: <span class="lh-date">' + escapeHtml(lhDate()) + '</span></div><div>عدد: <span class="lh-num"' + (editable ? ' contenteditable="true" title="اكتب رقم العدد"' : '') + '>&nbsp;</span></div></div></div>' +
-      (title ? '<div class="lh-title">' + escapeHtml(title) + '</div>' : '');
+  /* ================= Init ================= */
+  function handleDocClick(e) {
+    var b = e.target.closest('[data-action]'); if (!b) return;
+    var a = b.getAttribute('data-action'), id = b.getAttribute('data-id');
+    if (a === 'view' || a === 'download' || a === 'print') docAction(a, id, b);
+    else if (a === 'promote') promoteArchiveItem(id);
+    else if (a === 'delete') deleteArchiveItem(id);
   }
-  function updateLhDates() { document.querySelectorAll('#page-notes .lh-date,.np-overlay .lh-date').forEach(function (e) { e.textContent = lhDate(); }); }
-  function printRegister() { updateLhDates(); window.print(); }
-  function onBeforePrint() { updateLhDates(); }
-  window.addEventListener('beforeprint', onBeforePrint);
-  _eventListeners.push({ el: window, type: 'beforeprint', fn: onBeforePrint });
+  function handleRetry(e) {
+    var b = e.target.closest('[data-retry]'); if (!b) return;
+    var k = b.getAttribute('data-retry');
+    if (k === 'notes') loadNotes(); else if (k === 'current') loadNoteVerbaleCurrent(); else if (k === 'archive') loadNoteVerbaleArchive();
+  }
 
-  // ---------- Init ----------
   function init() {
-    if (_isDestroyed) return;
+    if (destroyed) return;
     applyLogo(); syncLogoFromServer();
 
-    document.querySelectorAll('#page-notes .np-tab').forEach(function (b) {
-      addSafeListener(b, 'click', function () { switchNotesTab(this.dataset.tab); });
+    var tabs = Array.prototype.slice.call(root.querySelectorAll('.np-tab'));
+    tabs.forEach(function (b) {
+      on(b, 'click', function () { switchNotesTab(b.dataset.tab); });
+      on(b, 'keydown', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        var next = tabs[(tabs.indexOf(b) + 1) % tabs.length]; next.focus(); switchNotesTab(next.dataset.tab);
+      });
     });
-    addSafeListener($('saveNoteBtn'), 'click', saveNote);
-    addSafeListener($('cancelEditBtn'), 'click', function () { clearForm(); showToast('تم الإلغاء', 'info'); });
-    $('noteDate').value = new Date().toISOString().split('T')[0];
 
-    if (!canEdit()) {
-      $('saveNoteBtn').hidden = true;
-      ['noteTitle', 'noteContent', 'noteDate', 'notePriority'].forEach(function (id) { $(id).disabled = true; });
-    }
-    addSafeListener($('notesList'), 'click', function (e) {
+    on($('saveNoteBtn'), 'click', saveNote);
+    on($('cancelEditBtn'), 'click', function () { clearForm(); showToast('تم الإلغاء', 'info'); });
+    on($('noteContent'), 'input', updateCounter);
+    on($('noteSearch'), 'input', renderNotes);
+    on($('noteFilterPriority'), 'change', renderNotes);
+    on($('noteTitle'), 'keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('noteContent').focus(); } });
+    on($('notesList'), 'click', function (e) {
+      var r = e.target.closest('[data-retry]'); if (r) { handleRetry(e); return; }
       var b = e.target.closest('[data-act]'); if (!b) return;
       if (b.dataset.act === 'edit') editNote(b.dataset.id); else if (b.dataset.act === 'del') deleteNote(b.dataset.id);
     });
+    clearForm();
 
-    if (!canUploadVerbale()) $('nvUploadCard').style.display = 'none';
     var dz = $('nvDropzone'), fi = $('nvFileInput');
-    addSafeListener(dz, 'click', function () { fi.click(); });
-    addSafeListener(dz, 'keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
-    addSafeListener(dz, 'dragover', function (e) { e.preventDefault(); dz.classList.add('dragover'); });
-    addSafeListener(dz, 'dragleave', function (e) { e.preventDefault(); dz.classList.remove('dragover'); });
-    addSafeListener(dz, 'drop', function (e) {
+    on(dz, 'click', function () { fi.click(); });
+    on(dz, 'keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
+    on(dz, 'dragover', function (e) { e.preventDefault(); dz.classList.add('dragover'); });
+    on(dz, 'dragleave', function (e) { e.preventDefault(); dz.classList.remove('dragover'); });
+    on(dz, 'drop', function (e) {
       e.preventDefault(); dz.classList.remove('dragover');
       if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileSelected(e.dataTransfer.files[0]);
     });
-    addSafeListener(fi, 'change', function (e) { if (e.target.files && e.target.files[0]) handleFileSelected(e.target.files[0]); });
-    addSafeListener($('nvFileRemove'), 'click', clearUploadForm);
-    addSafeListener($('nvCancelUpload'), 'click', clearUploadForm);
-    addSafeListener($('nvSubmitUpload'), 'click', submitUpload);
-    addSafeListener($('nvPrintBtn'), 'click', printRegister);
-    addSafeListener($('nvRefreshArchive'), 'click', function () { verbaleArchiveLoaded = false; loadNoteVerbaleArchive(); });
-    var timer = null;
-    addSafeListener($('nvSearch'), 'input', function () {
-      clearTimeout(timer);
-      timer = setTimeout(function () { verbaleArchiveLoaded = false; loadNoteVerbaleArchive(); }, 400);
-      _pageTimeouts.push(timer);
-    });
-    ['nvFilterYear', 'nvFilterUploader'].forEach(function (id) {
-      addSafeListener($(id), 'change', function () { verbaleArchiveLoaded = false; loadNoteVerbaleArchive(); });
-    });
-    addSafeListener($('nvArchiveList'), 'click', function (e) {
-      var b = e.target.closest('[data-action]'); if (!b) return;
-      var a = b.getAttribute('data-action'), id = b.getAttribute('data-id');
-      if (a === 'view' || a === 'download' || a === 'print') docAction(a, id);
-      else if (a === 'promote') promoteArchiveItem(id);
-      else if (a === 'delete') deleteArchiveItem(id);
-    });
+    on(fi, 'change', function (e) { if (e.target.files && e.target.files[0]) handleFileSelected(e.target.files[0]); });
+    on($('nvFileRemove'), 'click', clearUploadForm);
+    on($('nvCancelUpload'), 'click', clearUploadForm);
+    on($('nvSubmitUpload'), 'click', submitUpload);
+    on($('nvPrintBtn'), 'click', printRegister);
+    on($('nvRefreshArchive'), 'click', function () { verbaleArchiveLoaded = false; loadNoteVerbaleArchive(); });
 
-    addSafeListener($('nvCurrentSection'), 'click', function (e) {
-      var b = e.target.closest('[data-action]'); if (!b) return;
-      docAction(b.getAttribute('data-action'), b.getAttribute('data-id'));
+    var timer = null;
+    on($('nvSearch'), 'input', function () { clearTimeout(timer); timer = later(applyArchiveSearch, 200); });
+    ['nvFilterYear', 'nvFilterUploader'].forEach(function (id) {
+      on($(id), 'change', function () { verbaleArchiveLoaded = false; loadNoteVerbaleArchive(); });
     });
-    $('nvLetterhead').innerHTML = letterheadHtml('سجل التقارير الفنية');
-    loadNotes();
+    on($('nvArchiveList'), 'click', function (e) { if (e.target.closest('[data-retry]')) handleRetry(e); else handleDocClick(e); });
+    on($('nvCurrentSection'), 'click', function (e) { if (e.target.closest('[data-retry]')) handleRetry(e); else handleDocClick(e); });
+
+    whenUserReady(function () { applyPermissions(); loadNotes(); });
   }
 
   window.saveNote = saveNote; window.loadNotes = loadNotes; window.editNote = editNote;
